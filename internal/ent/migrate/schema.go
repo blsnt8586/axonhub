@@ -556,6 +556,143 @@ var (
 			},
 		},
 	}
+	// PaymentEventsColumns holds the columns for the "payment_events" table.
+	PaymentEventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "event_key", Type: field.TypeString},
+		{Name: "provider_type", Type: field.TypeEnum, Enums: []string{"manual", "epay", "stripe", "custom"}},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "payload", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"received", "processed", "failed", "ignored"}, Default: "received"},
+		{Name: "error", Type: field.TypeString, Default: ""},
+		{Name: "payment_order_id", Type: field.TypeInt, Nullable: true},
+		{Name: "provider_instance_id", Type: field.TypeInt, Nullable: true},
+	}
+	// PaymentEventsTable holds the schema information for the "payment_events" table.
+	PaymentEventsTable = &schema.Table{
+		Name:       "payment_events",
+		Columns:    PaymentEventsColumns,
+		PrimaryKey: []*schema.Column{PaymentEventsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "payment_events_payment_orders_payment_events",
+				Columns:    []*schema.Column{PaymentEventsColumns[9]},
+				RefColumns: []*schema.Column{PaymentOrdersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "payment_events_payment_provider_instances_payment_events",
+				Columns:    []*schema.Column{PaymentEventsColumns[10]},
+				RefColumns: []*schema.Column{PaymentProviderInstancesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "payment_events_by_event_key",
+				Unique:  true,
+				Columns: []*schema.Column{PaymentEventsColumns[3]},
+			},
+			{
+				Name:    "payment_events_by_order_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentEventsColumns[9], PaymentEventsColumns[1]},
+			},
+		},
+	}
+	// PaymentOrdersColumns holds the columns for the "payment_orders" table.
+	PaymentOrdersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "order_no", Type: field.TypeString},
+		{Name: "project_id", Type: field.TypeInt},
+		{Name: "provider_type", Type: field.TypeEnum, Enums: []string{"manual", "epay", "stripe", "custom"}},
+		{Name: "purpose", Type: field.TypeEnum, Enums: []string{"recharge", "subscription"}, Default: "recharge"},
+		{Name: "amount_micros", Type: field.TypeInt64},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "paid", "failed", "canceled", "expired", "refunded"}, Default: "pending"},
+		{Name: "external_trade_no", Type: field.TypeString, Nullable: true},
+		{Name: "paid_at", Type: field.TypeTime, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "billing_account_id", Type: field.TypeInt},
+		{Name: "ledger_transaction_id", Type: field.TypeInt, Nullable: true},
+		{Name: "provider_instance_id", Type: field.TypeInt, Nullable: true},
+	}
+	// PaymentOrdersTable holds the schema information for the "payment_orders" table.
+	PaymentOrdersTable = &schema.Table{
+		Name:       "payment_orders",
+		Columns:    PaymentOrdersColumns,
+		PrimaryKey: []*schema.Column{PaymentOrdersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "payment_orders_billing_accounts_payment_orders",
+				Columns:    []*schema.Column{PaymentOrdersColumns[13]},
+				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "payment_orders_ledger_transactions_payment_orders",
+				Columns:    []*schema.Column{PaymentOrdersColumns[14]},
+				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "payment_orders_payment_provider_instances_payment_orders",
+				Columns:    []*schema.Column{PaymentOrdersColumns[15]},
+				RefColumns: []*schema.Column{PaymentProviderInstancesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "payment_orders_by_order_no",
+				Unique:  true,
+				Columns: []*schema.Column{PaymentOrdersColumns[3]},
+			},
+			{
+				Name:    "payment_orders_by_project_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[4], PaymentOrdersColumns[1]},
+			},
+			{
+				Name:    "payment_orders_by_account_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[13], PaymentOrdersColumns[1]},
+			},
+			{
+				Name:    "payment_orders_by_provider_trade_no",
+				Unique:  true,
+				Columns: []*schema.Column{PaymentOrdersColumns[5], PaymentOrdersColumns[10]},
+			},
+		},
+	}
+	// PaymentProviderInstancesColumns holds the columns for the "payment_provider_instances" table.
+	PaymentProviderInstancesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "name", Type: field.TypeString},
+		{Name: "provider_type", Type: field.TypeEnum, Enums: []string{"manual", "epay", "stripe", "custom"}},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"enabled", "disabled"}, Default: "enabled"},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "config", Type: field.TypeJSON, Nullable: true},
+	}
+	// PaymentProviderInstancesTable holds the schema information for the "payment_provider_instances" table.
+	PaymentProviderInstancesTable = &schema.Table{
+		Name:       "payment_provider_instances",
+		Columns:    PaymentProviderInstancesColumns,
+		PrimaryKey: []*schema.Column{PaymentProviderInstancesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "payment_provider_instances_by_type_name",
+				Unique:  true,
+				Columns: []*schema.Column{PaymentProviderInstancesColumns[4], PaymentProviderInstancesColumns[3]},
+			},
+		},
+	}
 	// ProjectsColumns holds the columns for the "projects" table.
 	ProjectsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1285,6 +1422,9 @@ var (
 		LedgerTransactionsTable,
 		ModelsTable,
 		OidcIdentitiesTable,
+		PaymentEventsTable,
+		PaymentOrdersTable,
+		PaymentProviderInstancesTable,
 		ProjectsTable,
 		PromptsTable,
 		PromptProtectionRulesTable,
@@ -1316,6 +1456,11 @@ func init() {
 	LedgerEntriesTable.ForeignKeys[0].RefTable = LedgerTransactionsTable
 	LedgerTransactionsTable.ForeignKeys[0].RefTable = BillingAccountsTable
 	OidcIdentitiesTable.ForeignKeys[0].RefTable = UsersTable
+	PaymentEventsTable.ForeignKeys[0].RefTable = PaymentOrdersTable
+	PaymentEventsTable.ForeignKeys[1].RefTable = PaymentProviderInstancesTable
+	PaymentOrdersTable.ForeignKeys[0].RefTable = BillingAccountsTable
+	PaymentOrdersTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
+	PaymentOrdersTable.ForeignKeys[2].RefTable = PaymentProviderInstancesTable
 	ProviderQuotaStatusTable.ForeignKeys[0].RefTable = ChannelsTable
 	RequestsTable.ForeignKeys[0].RefTable = APIKeysTable
 	RequestsTable.ForeignKeys[1].RefTable = ChannelsTable

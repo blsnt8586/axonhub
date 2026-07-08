@@ -116,6 +116,27 @@ func (_m *BillingAccount) UsageBillingRecords(
 	return _m.QueryUsageBillingRecords().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *BillingAccount) PaymentOrders(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PaymentOrderOrder, where *PaymentOrderWhereInput,
+) (*PaymentOrderConnection, error) {
+	opts := []PaymentOrderPaginateOption{
+		WithPaymentOrderOrder(orderBy),
+		WithPaymentOrderFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	if nodes, err := _m.NamedPaymentOrders(alias); err == nil || hasTotalCount {
+		pager, err := newPaymentOrderPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PaymentOrderConnection{Edges: []*PaymentOrderEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPaymentOrders().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *BillingAccountBinding) BillingAccount(ctx context.Context) (*BillingAccount, error) {
 	result, err := _m.Edges.BillingAccountOrErr()
 	if IsNotLoaded(err) {
@@ -363,12 +384,136 @@ func (_m *LedgerTransaction) UsageBillingRecords(
 	return _m.QueryUsageBillingRecords().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *LedgerTransaction) PaymentOrders(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PaymentOrderOrder, where *PaymentOrderWhereInput,
+) (*PaymentOrderConnection, error) {
+	opts := []PaymentOrderPaginateOption{
+		WithPaymentOrderOrder(orderBy),
+		WithPaymentOrderFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	if nodes, err := _m.NamedPaymentOrders(alias); err == nil || hasTotalCount {
+		pager, err := newPaymentOrderPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PaymentOrderConnection{Edges: []*PaymentOrderEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPaymentOrders().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *OIDCIdentity) User(ctx context.Context) (*User, error) {
 	result, err := _m.Edges.UserOrErr()
 	if IsNotLoaded(err) {
 		result, err = _m.QueryUser().Only(ctx)
 	}
 	return result, err
+}
+
+func (_m *PaymentEvent) PaymentOrder(ctx context.Context) (*PaymentOrder, error) {
+	result, err := _m.Edges.PaymentOrderOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPaymentOrder().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *PaymentEvent) ProviderInstance(ctx context.Context) (*PaymentProviderInstance, error) {
+	result, err := _m.Edges.ProviderInstanceOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryProviderInstance().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *PaymentOrder) BillingAccount(ctx context.Context) (*BillingAccount, error) {
+	result, err := _m.Edges.BillingAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryBillingAccount().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *PaymentOrder) ProviderInstance(ctx context.Context) (*PaymentProviderInstance, error) {
+	result, err := _m.Edges.ProviderInstanceOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryProviderInstance().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *PaymentOrder) LedgerTransaction(ctx context.Context) (*LedgerTransaction, error) {
+	result, err := _m.Edges.LedgerTransactionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryLedgerTransaction().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *PaymentOrder) PaymentEvents(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PaymentEventOrder, where *PaymentEventWhereInput,
+) (*PaymentEventConnection, error) {
+	opts := []PaymentEventPaginateOption{
+		WithPaymentEventOrder(orderBy),
+		WithPaymentEventFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	if nodes, err := _m.NamedPaymentEvents(alias); err == nil || hasTotalCount {
+		pager, err := newPaymentEventPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PaymentEventConnection{Edges: []*PaymentEventEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPaymentEvents().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *PaymentProviderInstance) PaymentOrders(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PaymentOrderOrder, where *PaymentOrderWhereInput,
+) (*PaymentOrderConnection, error) {
+	opts := []PaymentOrderPaginateOption{
+		WithPaymentOrderOrder(orderBy),
+		WithPaymentOrderFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[0][alias]
+	if nodes, err := _m.NamedPaymentOrders(alias); err == nil || hasTotalCount {
+		pager, err := newPaymentOrderPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PaymentOrderConnection{Edges: []*PaymentOrderEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPaymentOrders().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *PaymentProviderInstance) PaymentEvents(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PaymentEventOrder, where *PaymentEventWhereInput,
+) (*PaymentEventConnection, error) {
+	opts := []PaymentEventPaginateOption{
+		WithPaymentEventOrder(orderBy),
+		WithPaymentEventFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[1][alias]
+	if nodes, err := _m.NamedPaymentEvents(alias); err == nil || hasTotalCount {
+		pager, err := newPaymentEventPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PaymentEventConnection{Edges: []*PaymentEventEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPaymentEvents().Paginate(ctx, after, first, before, last, opts...)
 }
 
 func (_m *Project) Users(

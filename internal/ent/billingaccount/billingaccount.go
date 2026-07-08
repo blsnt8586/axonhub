@@ -40,6 +40,8 @@ const (
 	EdgeLedgerTransactions = "ledger_transactions"
 	// EdgeUsageBillingRecords holds the string denoting the usage_billing_records edge name in mutations.
 	EdgeUsageBillingRecords = "usage_billing_records"
+	// EdgePaymentOrders holds the string denoting the payment_orders edge name in mutations.
+	EdgePaymentOrders = "payment_orders"
 	// Table holds the table name of the billingaccount in the database.
 	Table = "billing_accounts"
 	// BindingsTable is the table that holds the bindings relation/edge.
@@ -63,6 +65,13 @@ const (
 	UsageBillingRecordsInverseTable = "usage_billing_records"
 	// UsageBillingRecordsColumn is the table column denoting the usage_billing_records relation/edge.
 	UsageBillingRecordsColumn = "billing_account_id"
+	// PaymentOrdersTable is the table that holds the payment_orders relation/edge.
+	PaymentOrdersTable = "payment_orders"
+	// PaymentOrdersInverseTable is the table name for the PaymentOrder entity.
+	// It exists in this package in order to avoid circular dependency with the "paymentorder" package.
+	PaymentOrdersInverseTable = "payment_orders"
+	// PaymentOrdersColumn is the table column denoting the payment_orders relation/edge.
+	PaymentOrdersColumn = "billing_account_id"
 )
 
 // Columns holds all SQL columns for billingaccount fields.
@@ -251,6 +260,20 @@ func ByUsageBillingRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpti
 		sqlgraph.OrderByNeighborTerms(s, newUsageBillingRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPaymentOrdersCount orders the results by payment_orders count.
+func ByPaymentOrdersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPaymentOrdersStep(), opts...)
+	}
+}
+
+// ByPaymentOrders orders the results by payment_orders terms.
+func ByPaymentOrders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPaymentOrdersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBindingsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -270,6 +293,13 @@ func newUsageBillingRecordsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsageBillingRecordsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UsageBillingRecordsTable, UsageBillingRecordsColumn),
+	)
+}
+func newPaymentOrdersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PaymentOrdersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PaymentOrdersTable, PaymentOrdersColumn),
 	)
 }
 

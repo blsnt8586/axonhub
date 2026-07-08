@@ -495,6 +495,78 @@ func (f OIDCIdentityMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mu
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.OIDCIdentityMutation", m)
 }
 
+// The PaymentEventQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type PaymentEventQueryRuleFunc func(context.Context, *ent.PaymentEventQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f PaymentEventQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.PaymentEventQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.PaymentEventQuery", q)
+}
+
+// The PaymentEventMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type PaymentEventMutationRuleFunc func(context.Context, *ent.PaymentEventMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f PaymentEventMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.PaymentEventMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.PaymentEventMutation", m)
+}
+
+// The PaymentOrderQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type PaymentOrderQueryRuleFunc func(context.Context, *ent.PaymentOrderQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f PaymentOrderQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.PaymentOrderQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.PaymentOrderQuery", q)
+}
+
+// The PaymentOrderMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type PaymentOrderMutationRuleFunc func(context.Context, *ent.PaymentOrderMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f PaymentOrderMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.PaymentOrderMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.PaymentOrderMutation", m)
+}
+
+// The PaymentProviderInstanceQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type PaymentProviderInstanceQueryRuleFunc func(context.Context, *ent.PaymentProviderInstanceQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f PaymentProviderInstanceQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.PaymentProviderInstanceQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.PaymentProviderInstanceQuery", q)
+}
+
+// The PaymentProviderInstanceMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type PaymentProviderInstanceMutationRuleFunc func(context.Context, *ent.PaymentProviderInstanceMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f PaymentProviderInstanceMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.PaymentProviderInstanceMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.PaymentProviderInstanceMutation", m)
+}
+
 // The ProjectQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type ProjectQueryRuleFunc func(context.Context, *ent.ProjectQuery) error
@@ -922,6 +994,12 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.OIDCIdentityQuery:
 		return q.Filter(), nil
+	case *ent.PaymentEventQuery:
+		return q.Filter(), nil
+	case *ent.PaymentOrderQuery:
+		return q.Filter(), nil
+	case *ent.PaymentProviderInstanceQuery:
+		return q.Filter(), nil
 	case *ent.ProjectQuery:
 		return q.Filter(), nil
 	case *ent.PromptQuery:
@@ -990,6 +1068,12 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.ModelMutation:
 		return m.Filter(), nil
 	case *ent.OIDCIdentityMutation:
+		return m.Filter(), nil
+	case *ent.PaymentEventMutation:
+		return m.Filter(), nil
+	case *ent.PaymentOrderMutation:
+		return m.Filter(), nil
+	case *ent.PaymentProviderInstanceMutation:
 		return m.Filter(), nil
 	case *ent.ProjectMutation:
 		return m.Filter(), nil

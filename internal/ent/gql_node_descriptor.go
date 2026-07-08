@@ -19,6 +19,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
+	"github.com/looplj/axonhub/internal/ent/paymentevent"
+	"github.com/looplj/axonhub/internal/ent/paymentorder"
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -254,7 +257,7 @@ func (_m *BillingAccount) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "BillingAccount",
 		Fields: make([]*Field, 8),
-		Edges:  make([]*Edge, 3),
+		Edges:  make([]*Edge, 4),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -348,6 +351,16 @@ func (_m *BillingAccount) Node(ctx context.Context) (node *Node, err error) {
 	err = _m.QueryUsageBillingRecords().
 		Select(usagebillingrecord.FieldID).
 		Scan(ctx, &node.Edges[2].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[3] = &Edge{
+		Type: "PaymentOrder",
+		Name: "payment_orders",
+	}
+	err = _m.QueryPaymentOrders().
+		Select(paymentorder.FieldID).
+		Scan(ctx, &node.Edges[3].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -1358,7 +1371,7 @@ func (_m *LedgerTransaction) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "LedgerTransaction",
 		Fields: make([]*Field, 14),
-		Edges:  make([]*Edge, 3),
+		Edges:  make([]*Edge, 4),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -1500,6 +1513,16 @@ func (_m *LedgerTransaction) Node(ctx context.Context) (node *Node, err error) {
 	err = _m.QueryUsageBillingRecords().
 		Select(usagebillingrecord.FieldID).
 		Scan(ctx, &node.Edges[2].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[3] = &Edge{
+		Type: "PaymentOrder",
+		Name: "payment_orders",
+	}
+	err = _m.QueryPaymentOrders().
+		Select(paymentorder.FieldID).
+		Scan(ctx, &node.Edges[3].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -1694,6 +1717,378 @@ func (_m *OIDCIdentity) Node(ctx context.Context) (node *Node, err error) {
 	err = _m.QueryUser().
 		Select(user.FieldID).
 		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *PaymentEvent) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "PaymentEvent",
+		Fields: make([]*Field, 10),
+		Edges:  make([]*Edge, 2),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.EventKey); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "event_key",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.PaymentOrderID); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "int",
+		Name:  "payment_order_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProviderInstanceID); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "int",
+		Name:  "provider_instance_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProviderType); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "paymentevent.ProviderType",
+		Name:  "provider_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.EventType); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "string",
+		Name:  "event_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Payload); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "objects.JSONRawMessage",
+		Name:  "payload",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "paymentevent.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Error); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "string",
+		Name:  "error",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "PaymentOrder",
+		Name: "payment_order",
+	}
+	err = _m.QueryPaymentOrder().
+		Select(paymentorder.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "PaymentProviderInstance",
+		Name: "provider_instance",
+	}
+	err = _m.QueryProviderInstance().
+		Select(paymentproviderinstance.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *PaymentOrder) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "PaymentOrder",
+		Fields: make([]*Field, 15),
+		Edges:  make([]*Edge, 4),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.OrderNo); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "order_no",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProjectID); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "int",
+		Name:  "project_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.BillingAccountID); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "int",
+		Name:  "billing_account_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProviderInstanceID); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "int",
+		Name:  "provider_instance_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProviderType); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "paymentorder.ProviderType",
+		Name:  "provider_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Purpose); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "paymentorder.Purpose",
+		Name:  "purpose",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.AmountMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "int64",
+		Name:  "amount_micros",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Currency); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "string",
+		Name:  "currency",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[10] = &Field{
+		Type:  "paymentorder.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ExternalTradeNo); err != nil {
+		return nil, err
+	}
+	node.Fields[11] = &Field{
+		Type:  "string",
+		Name:  "external_trade_no",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.PaidAt); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
+		Type:  "time.Time",
+		Name:  "paid_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LedgerTransactionID); err != nil {
+		return nil, err
+	}
+	node.Fields[13] = &Field{
+		Type:  "int",
+		Name:  "ledger_transaction_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Metadata); err != nil {
+		return nil, err
+	}
+	node.Fields[14] = &Field{
+		Type:  "objects.JSONRawMessage",
+		Name:  "metadata",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "BillingAccount",
+		Name: "billing_account",
+	}
+	err = _m.QueryBillingAccount().
+		Select(billingaccount.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "PaymentProviderInstance",
+		Name: "provider_instance",
+	}
+	err = _m.QueryProviderInstance().
+		Select(paymentproviderinstance.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[2] = &Edge{
+		Type: "LedgerTransaction",
+		Name: "ledger_transaction",
+	}
+	err = _m.QueryLedgerTransaction().
+		Select(ledgertransaction.FieldID).
+		Scan(ctx, &node.Edges[2].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[3] = &Edge{
+		Type: "PaymentEvent",
+		Name: "payment_events",
+	}
+	err = _m.QueryPaymentEvents().
+		Select(paymentevent.FieldID).
+		Scan(ctx, &node.Edges[3].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *PaymentProviderInstance) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "PaymentProviderInstance",
+		Fields: make([]*Field, 7),
+		Edges:  make([]*Edge, 2),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProviderType); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "paymentproviderinstance.ProviderType",
+		Name:  "provider_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "paymentproviderinstance.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Currency); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "string",
+		Name:  "currency",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Config); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "objects.JSONRawMessage",
+		Name:  "config",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "PaymentOrder",
+		Name: "payment_orders",
+	}
+	err = _m.QueryPaymentOrders().
+		Select(paymentorder.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "PaymentEvent",
+		Name: "payment_events",
+	}
+	err = _m.QueryPaymentEvents().
+		Select(paymentevent.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
 	if err != nil {
 		return nil, err
 	}

@@ -30,6 +30,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
+	"github.com/looplj/axonhub/internal/ent/paymentevent"
+	"github.com/looplj/axonhub/internal/ent/paymentorder"
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
@@ -5172,6 +5175,948 @@ func (_m *OIDCIdentity) ToEdge(order *OIDCIdentityOrder) *OIDCIdentityEdge {
 		order = DefaultOIDCIdentityOrder
 	}
 	return &OIDCIdentityEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// PaymentEventEdge is the edge representation of PaymentEvent.
+type PaymentEventEdge struct {
+	Node   *PaymentEvent `json:"node"`
+	Cursor Cursor        `json:"cursor"`
+}
+
+// PaymentEventConnection is the connection containing edges to PaymentEvent.
+type PaymentEventConnection struct {
+	Edges      []*PaymentEventEdge `json:"edges"`
+	PageInfo   PageInfo            `json:"pageInfo"`
+	TotalCount int                 `json:"totalCount"`
+}
+
+func (c *PaymentEventConnection) build(nodes []*PaymentEvent, pager *paymenteventPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *PaymentEvent
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *PaymentEvent {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *PaymentEvent {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*PaymentEventEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &PaymentEventEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// PaymentEventPaginateOption enables pagination customization.
+type PaymentEventPaginateOption func(*paymenteventPager) error
+
+// WithPaymentEventOrder configures pagination ordering.
+func WithPaymentEventOrder(order *PaymentEventOrder) PaymentEventPaginateOption {
+	if order == nil {
+		order = DefaultPaymentEventOrder
+	}
+	o := *order
+	return func(pager *paymenteventPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultPaymentEventOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithPaymentEventFilter configures pagination filter.
+func WithPaymentEventFilter(filter func(*PaymentEventQuery) (*PaymentEventQuery, error)) PaymentEventPaginateOption {
+	return func(pager *paymenteventPager) error {
+		if filter == nil {
+			return errors.New("PaymentEventQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type paymenteventPager struct {
+	reverse bool
+	order   *PaymentEventOrder
+	filter  func(*PaymentEventQuery) (*PaymentEventQuery, error)
+}
+
+func newPaymentEventPager(opts []PaymentEventPaginateOption, reverse bool) (*paymenteventPager, error) {
+	pager := &paymenteventPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultPaymentEventOrder
+	}
+	return pager, nil
+}
+
+func (p *paymenteventPager) applyFilter(query *PaymentEventQuery) (*PaymentEventQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *paymenteventPager) toCursor(_m *PaymentEvent) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *paymenteventPager) applyCursors(query *PaymentEventQuery, after, before *Cursor) (*PaymentEventQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultPaymentEventOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *paymenteventPager) applyOrder(query *PaymentEventQuery) *PaymentEventQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultPaymentEventOrder.Field {
+		query = query.Order(DefaultPaymentEventOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *paymenteventPager) orderExpr(query *PaymentEventQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultPaymentEventOrder.Field {
+			b.Comma().Ident(DefaultPaymentEventOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to PaymentEvent.
+func (_m *PaymentEventQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...PaymentEventPaginateOption,
+) (*PaymentEventConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newPaymentEventPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &PaymentEventConnection{Edges: []*PaymentEventEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// PaymentEventOrderFieldCreatedAt orders PaymentEvent by created_at.
+	PaymentEventOrderFieldCreatedAt = &PaymentEventOrderField{
+		Value: func(_m *PaymentEvent) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: paymentevent.FieldCreatedAt,
+		toTerm: paymentevent.ByCreatedAt,
+		toCursor: func(_m *PaymentEvent) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// PaymentEventOrderFieldUpdatedAt orders PaymentEvent by updated_at.
+	PaymentEventOrderFieldUpdatedAt = &PaymentEventOrderField{
+		Value: func(_m *PaymentEvent) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: paymentevent.FieldUpdatedAt,
+		toTerm: paymentevent.ByUpdatedAt,
+		toCursor: func(_m *PaymentEvent) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f PaymentEventOrderField) String() string {
+	var str string
+	switch f.column {
+	case PaymentEventOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case PaymentEventOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f PaymentEventOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *PaymentEventOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("PaymentEventOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *PaymentEventOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *PaymentEventOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid PaymentEventOrderField", str)
+	}
+	return nil
+}
+
+// PaymentEventOrderField defines the ordering field of PaymentEvent.
+type PaymentEventOrderField struct {
+	// Value extracts the ordering value from the given PaymentEvent.
+	Value    func(*PaymentEvent) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) paymentevent.OrderOption
+	toCursor func(*PaymentEvent) Cursor
+}
+
+// PaymentEventOrder defines the ordering of PaymentEvent.
+type PaymentEventOrder struct {
+	Direction OrderDirection          `json:"direction"`
+	Field     *PaymentEventOrderField `json:"field"`
+}
+
+// DefaultPaymentEventOrder is the default ordering of PaymentEvent.
+var DefaultPaymentEventOrder = &PaymentEventOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &PaymentEventOrderField{
+		Value: func(_m *PaymentEvent) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: paymentevent.FieldID,
+		toTerm: paymentevent.ByID,
+		toCursor: func(_m *PaymentEvent) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts PaymentEvent into PaymentEventEdge.
+func (_m *PaymentEvent) ToEdge(order *PaymentEventOrder) *PaymentEventEdge {
+	if order == nil {
+		order = DefaultPaymentEventOrder
+	}
+	return &PaymentEventEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// PaymentOrderEdge is the edge representation of PaymentOrder.
+type PaymentOrderEdge struct {
+	Node   *PaymentOrder `json:"node"`
+	Cursor Cursor        `json:"cursor"`
+}
+
+// PaymentOrderConnection is the connection containing edges to PaymentOrder.
+type PaymentOrderConnection struct {
+	Edges      []*PaymentOrderEdge `json:"edges"`
+	PageInfo   PageInfo            `json:"pageInfo"`
+	TotalCount int                 `json:"totalCount"`
+}
+
+func (c *PaymentOrderConnection) build(nodes []*PaymentOrder, pager *paymentorderPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *PaymentOrder
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *PaymentOrder {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *PaymentOrder {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*PaymentOrderEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &PaymentOrderEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// PaymentOrderPaginateOption enables pagination customization.
+type PaymentOrderPaginateOption func(*paymentorderPager) error
+
+// WithPaymentOrderOrder configures pagination ordering.
+func WithPaymentOrderOrder(order *PaymentOrderOrder) PaymentOrderPaginateOption {
+	if order == nil {
+		order = DefaultPaymentOrderOrder
+	}
+	o := *order
+	return func(pager *paymentorderPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultPaymentOrderOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithPaymentOrderFilter configures pagination filter.
+func WithPaymentOrderFilter(filter func(*PaymentOrderQuery) (*PaymentOrderQuery, error)) PaymentOrderPaginateOption {
+	return func(pager *paymentorderPager) error {
+		if filter == nil {
+			return errors.New("PaymentOrderQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type paymentorderPager struct {
+	reverse bool
+	order   *PaymentOrderOrder
+	filter  func(*PaymentOrderQuery) (*PaymentOrderQuery, error)
+}
+
+func newPaymentOrderPager(opts []PaymentOrderPaginateOption, reverse bool) (*paymentorderPager, error) {
+	pager := &paymentorderPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultPaymentOrderOrder
+	}
+	return pager, nil
+}
+
+func (p *paymentorderPager) applyFilter(query *PaymentOrderQuery) (*PaymentOrderQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *paymentorderPager) toCursor(_m *PaymentOrder) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *paymentorderPager) applyCursors(query *PaymentOrderQuery, after, before *Cursor) (*PaymentOrderQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultPaymentOrderOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *paymentorderPager) applyOrder(query *PaymentOrderQuery) *PaymentOrderQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultPaymentOrderOrder.Field {
+		query = query.Order(DefaultPaymentOrderOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *paymentorderPager) orderExpr(query *PaymentOrderQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultPaymentOrderOrder.Field {
+			b.Comma().Ident(DefaultPaymentOrderOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to PaymentOrder.
+func (_m *PaymentOrderQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...PaymentOrderPaginateOption,
+) (*PaymentOrderConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newPaymentOrderPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &PaymentOrderConnection{Edges: []*PaymentOrderEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// PaymentOrderOrderFieldCreatedAt orders PaymentOrder by created_at.
+	PaymentOrderOrderFieldCreatedAt = &PaymentOrderOrderField{
+		Value: func(_m *PaymentOrder) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: paymentorder.FieldCreatedAt,
+		toTerm: paymentorder.ByCreatedAt,
+		toCursor: func(_m *PaymentOrder) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// PaymentOrderOrderFieldUpdatedAt orders PaymentOrder by updated_at.
+	PaymentOrderOrderFieldUpdatedAt = &PaymentOrderOrderField{
+		Value: func(_m *PaymentOrder) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: paymentorder.FieldUpdatedAt,
+		toTerm: paymentorder.ByUpdatedAt,
+		toCursor: func(_m *PaymentOrder) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f PaymentOrderOrderField) String() string {
+	var str string
+	switch f.column {
+	case PaymentOrderOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case PaymentOrderOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f PaymentOrderOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *PaymentOrderOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("PaymentOrderOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *PaymentOrderOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *PaymentOrderOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid PaymentOrderOrderField", str)
+	}
+	return nil
+}
+
+// PaymentOrderOrderField defines the ordering field of PaymentOrder.
+type PaymentOrderOrderField struct {
+	// Value extracts the ordering value from the given PaymentOrder.
+	Value    func(*PaymentOrder) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) paymentorder.OrderOption
+	toCursor func(*PaymentOrder) Cursor
+}
+
+// PaymentOrderOrder defines the ordering of PaymentOrder.
+type PaymentOrderOrder struct {
+	Direction OrderDirection          `json:"direction"`
+	Field     *PaymentOrderOrderField `json:"field"`
+}
+
+// DefaultPaymentOrderOrder is the default ordering of PaymentOrder.
+var DefaultPaymentOrderOrder = &PaymentOrderOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &PaymentOrderOrderField{
+		Value: func(_m *PaymentOrder) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: paymentorder.FieldID,
+		toTerm: paymentorder.ByID,
+		toCursor: func(_m *PaymentOrder) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts PaymentOrder into PaymentOrderEdge.
+func (_m *PaymentOrder) ToEdge(order *PaymentOrderOrder) *PaymentOrderEdge {
+	if order == nil {
+		order = DefaultPaymentOrderOrder
+	}
+	return &PaymentOrderEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// PaymentProviderInstanceEdge is the edge representation of PaymentProviderInstance.
+type PaymentProviderInstanceEdge struct {
+	Node   *PaymentProviderInstance `json:"node"`
+	Cursor Cursor                   `json:"cursor"`
+}
+
+// PaymentProviderInstanceConnection is the connection containing edges to PaymentProviderInstance.
+type PaymentProviderInstanceConnection struct {
+	Edges      []*PaymentProviderInstanceEdge `json:"edges"`
+	PageInfo   PageInfo                       `json:"pageInfo"`
+	TotalCount int                            `json:"totalCount"`
+}
+
+func (c *PaymentProviderInstanceConnection) build(nodes []*PaymentProviderInstance, pager *paymentproviderinstancePager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *PaymentProviderInstance
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *PaymentProviderInstance {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *PaymentProviderInstance {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*PaymentProviderInstanceEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &PaymentProviderInstanceEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// PaymentProviderInstancePaginateOption enables pagination customization.
+type PaymentProviderInstancePaginateOption func(*paymentproviderinstancePager) error
+
+// WithPaymentProviderInstanceOrder configures pagination ordering.
+func WithPaymentProviderInstanceOrder(order *PaymentProviderInstanceOrder) PaymentProviderInstancePaginateOption {
+	if order == nil {
+		order = DefaultPaymentProviderInstanceOrder
+	}
+	o := *order
+	return func(pager *paymentproviderinstancePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultPaymentProviderInstanceOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithPaymentProviderInstanceFilter configures pagination filter.
+func WithPaymentProviderInstanceFilter(filter func(*PaymentProviderInstanceQuery) (*PaymentProviderInstanceQuery, error)) PaymentProviderInstancePaginateOption {
+	return func(pager *paymentproviderinstancePager) error {
+		if filter == nil {
+			return errors.New("PaymentProviderInstanceQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type paymentproviderinstancePager struct {
+	reverse bool
+	order   *PaymentProviderInstanceOrder
+	filter  func(*PaymentProviderInstanceQuery) (*PaymentProviderInstanceQuery, error)
+}
+
+func newPaymentProviderInstancePager(opts []PaymentProviderInstancePaginateOption, reverse bool) (*paymentproviderinstancePager, error) {
+	pager := &paymentproviderinstancePager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultPaymentProviderInstanceOrder
+	}
+	return pager, nil
+}
+
+func (p *paymentproviderinstancePager) applyFilter(query *PaymentProviderInstanceQuery) (*PaymentProviderInstanceQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *paymentproviderinstancePager) toCursor(_m *PaymentProviderInstance) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *paymentproviderinstancePager) applyCursors(query *PaymentProviderInstanceQuery, after, before *Cursor) (*PaymentProviderInstanceQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultPaymentProviderInstanceOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *paymentproviderinstancePager) applyOrder(query *PaymentProviderInstanceQuery) *PaymentProviderInstanceQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultPaymentProviderInstanceOrder.Field {
+		query = query.Order(DefaultPaymentProviderInstanceOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *paymentproviderinstancePager) orderExpr(query *PaymentProviderInstanceQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultPaymentProviderInstanceOrder.Field {
+			b.Comma().Ident(DefaultPaymentProviderInstanceOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to PaymentProviderInstance.
+func (_m *PaymentProviderInstanceQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...PaymentProviderInstancePaginateOption,
+) (*PaymentProviderInstanceConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newPaymentProviderInstancePager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &PaymentProviderInstanceConnection{Edges: []*PaymentProviderInstanceEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// PaymentProviderInstanceOrderFieldCreatedAt orders PaymentProviderInstance by created_at.
+	PaymentProviderInstanceOrderFieldCreatedAt = &PaymentProviderInstanceOrderField{
+		Value: func(_m *PaymentProviderInstance) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: paymentproviderinstance.FieldCreatedAt,
+		toTerm: paymentproviderinstance.ByCreatedAt,
+		toCursor: func(_m *PaymentProviderInstance) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// PaymentProviderInstanceOrderFieldUpdatedAt orders PaymentProviderInstance by updated_at.
+	PaymentProviderInstanceOrderFieldUpdatedAt = &PaymentProviderInstanceOrderField{
+		Value: func(_m *PaymentProviderInstance) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: paymentproviderinstance.FieldUpdatedAt,
+		toTerm: paymentproviderinstance.ByUpdatedAt,
+		toCursor: func(_m *PaymentProviderInstance) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f PaymentProviderInstanceOrderField) String() string {
+	var str string
+	switch f.column {
+	case PaymentProviderInstanceOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case PaymentProviderInstanceOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f PaymentProviderInstanceOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *PaymentProviderInstanceOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("PaymentProviderInstanceOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *PaymentProviderInstanceOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *PaymentProviderInstanceOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid PaymentProviderInstanceOrderField", str)
+	}
+	return nil
+}
+
+// PaymentProviderInstanceOrderField defines the ordering field of PaymentProviderInstance.
+type PaymentProviderInstanceOrderField struct {
+	// Value extracts the ordering value from the given PaymentProviderInstance.
+	Value    func(*PaymentProviderInstance) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) paymentproviderinstance.OrderOption
+	toCursor func(*PaymentProviderInstance) Cursor
+}
+
+// PaymentProviderInstanceOrder defines the ordering of PaymentProviderInstance.
+type PaymentProviderInstanceOrder struct {
+	Direction OrderDirection                     `json:"direction"`
+	Field     *PaymentProviderInstanceOrderField `json:"field"`
+}
+
+// DefaultPaymentProviderInstanceOrder is the default ordering of PaymentProviderInstance.
+var DefaultPaymentProviderInstanceOrder = &PaymentProviderInstanceOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &PaymentProviderInstanceOrderField{
+		Value: func(_m *PaymentProviderInstance) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: paymentproviderinstance.FieldID,
+		toTerm: paymentproviderinstance.ByID,
+		toCursor: func(_m *PaymentProviderInstance) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts PaymentProviderInstance into PaymentProviderInstanceEdge.
+func (_m *PaymentProviderInstance) ToEdge(order *PaymentProviderInstanceOrder) *PaymentProviderInstanceEdge {
+	if order == nil {
+		order = DefaultPaymentProviderInstanceOrder
+	}
+	return &PaymentProviderInstanceEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

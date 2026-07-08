@@ -60,14 +60,17 @@ type LedgerTransactionEdges struct {
 	Entries []*LedgerEntry `json:"entries,omitempty"`
 	// UsageBillingRecords holds the value of the usage_billing_records edge.
 	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
+	// PaymentOrders holds the value of the payment_orders edge.
+	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 	// totalCount holds the count of the edges above.
-	totalCount [3]map[string]int
+	totalCount [4]map[string]int
 
 	namedEntries             map[string][]*LedgerEntry
 	namedUsageBillingRecords map[string][]*UsageBillingRecord
+	namedPaymentOrders       map[string][]*PaymentOrder
 }
 
 // BillingAccountOrErr returns the BillingAccount value or an error if the edge
@@ -97,6 +100,15 @@ func (e LedgerTransactionEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecor
 		return e.UsageBillingRecords, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_billing_records"}
+}
+
+// PaymentOrdersOrErr returns the PaymentOrders value or an error if the edge
+// was not loaded in eager-loading.
+func (e LedgerTransactionEdges) PaymentOrdersOrErr() ([]*PaymentOrder, error) {
+	if e.loadedTypes[3] {
+		return e.PaymentOrders, nil
+	}
+	return nil, &NotLoadedError{edge: "payment_orders"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -243,6 +255,11 @@ func (_m *LedgerTransaction) QueryUsageBillingRecords() *UsageBillingRecordQuery
 	return NewLedgerTransactionClient(_m.config).QueryUsageBillingRecords(_m)
 }
 
+// QueryPaymentOrders queries the "payment_orders" edge of the LedgerTransaction entity.
+func (_m *LedgerTransaction) QueryPaymentOrders() *PaymentOrderQuery {
+	return NewLedgerTransactionClient(_m.config).QueryPaymentOrders(_m)
+}
+
 // Update returns a builder for updating this LedgerTransaction.
 // Note that you need to call LedgerTransaction.Unwrap() before calling this method if this LedgerTransaction
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -356,6 +373,30 @@ func (_m *LedgerTransaction) appendNamedUsageBillingRecords(name string, edges .
 		_m.Edges.namedUsageBillingRecords[name] = []*UsageBillingRecord{}
 	} else {
 		_m.Edges.namedUsageBillingRecords[name] = append(_m.Edges.namedUsageBillingRecords[name], edges...)
+	}
+}
+
+// NamedPaymentOrders returns the PaymentOrders named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *LedgerTransaction) NamedPaymentOrders(name string) ([]*PaymentOrder, error) {
+	if _m.Edges.namedPaymentOrders == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedPaymentOrders[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *LedgerTransaction) appendNamedPaymentOrders(name string, edges ...*PaymentOrder) {
+	if _m.Edges.namedPaymentOrders == nil {
+		_m.Edges.namedPaymentOrders = make(map[string][]*PaymentOrder)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedPaymentOrders[name] = []*PaymentOrder{}
+	} else {
+		_m.Edges.namedPaymentOrders[name] = append(_m.Edges.namedPaymentOrders[name], edges...)
 	}
 }
 

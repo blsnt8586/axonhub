@@ -23,6 +23,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
+	"github.com/looplj/axonhub/internal/ent/paymentevent"
+	"github.com/looplj/axonhub/internal/ent/paymentorder"
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/prompt"
@@ -932,6 +935,10 @@ type BillingAccountWhereInput struct {
 	// "usage_billing_records" edge predicates.
 	HasUsageBillingRecords     *bool                           `json:"hasUsageBillingRecords,omitempty"`
 	HasUsageBillingRecordsWith []*UsageBillingRecordWhereInput `json:"hasUsageBillingRecordsWith,omitempty"`
+
+	// "payment_orders" edge predicates.
+	HasPaymentOrders     *bool                     `json:"hasPaymentOrders,omitempty"`
+	HasPaymentOrdersWith []*PaymentOrderWhereInput `json:"hasPaymentOrdersWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -1266,6 +1273,24 @@ func (i *BillingAccountWhereInput) P() (predicate.BillingAccount, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, billingaccount.HasUsageBillingRecordsWith(with...))
+	}
+	if i.HasPaymentOrders != nil {
+		p := billingaccount.HasPaymentOrders()
+		if !*i.HasPaymentOrders {
+			p = billingaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentOrdersWith) > 0 {
+		with := make([]predicate.PaymentOrder, 0, len(i.HasPaymentOrdersWith))
+		for _, w := range i.HasPaymentOrdersWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentOrdersWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingaccount.HasPaymentOrdersWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -5751,6 +5776,10 @@ type LedgerTransactionWhereInput struct {
 	// "usage_billing_records" edge predicates.
 	HasUsageBillingRecords     *bool                           `json:"hasUsageBillingRecords,omitempty"`
 	HasUsageBillingRecordsWith []*UsageBillingRecordWhereInput `json:"hasUsageBillingRecordsWith,omitempty"`
+
+	// "payment_orders" edge predicates.
+	HasPaymentOrders     *bool                     `json:"hasPaymentOrders,omitempty"`
+	HasPaymentOrdersWith []*PaymentOrderWhereInput `json:"hasPaymentOrdersWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -6268,6 +6297,24 @@ func (i *LedgerTransactionWhereInput) P() (predicate.LedgerTransaction, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, ledgertransaction.HasUsageBillingRecordsWith(with...))
+	}
+	if i.HasPaymentOrders != nil {
+		p := ledgertransaction.HasPaymentOrders()
+		if !*i.HasPaymentOrders {
+			p = ledgertransaction.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentOrdersWith) > 0 {
+		with := make([]predicate.PaymentOrder, 0, len(i.HasPaymentOrdersWith))
+		for _, w := range i.HasPaymentOrdersWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentOrdersWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, ledgertransaction.HasPaymentOrdersWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -7342,6 +7389,1556 @@ func (i *OIDCIdentityWhereInput) P() (predicate.OIDCIdentity, error) {
 		return predicates[0], nil
 	default:
 		return oidcidentity.And(predicates...), nil
+	}
+}
+
+// PaymentEventWhereInput represents a where input for filtering PaymentEvent queries.
+type PaymentEventWhereInput struct {
+	Predicates []predicate.PaymentEvent  `json:"-"`
+	Not        *PaymentEventWhereInput   `json:"not,omitempty"`
+	Or         []*PaymentEventWhereInput `json:"or,omitempty"`
+	And        []*PaymentEventWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "event_key" field predicates.
+	EventKey             *string  `json:"eventKey,omitempty"`
+	EventKeyNEQ          *string  `json:"eventKeyNEQ,omitempty"`
+	EventKeyIn           []string `json:"eventKeyIn,omitempty"`
+	EventKeyNotIn        []string `json:"eventKeyNotIn,omitempty"`
+	EventKeyGT           *string  `json:"eventKeyGT,omitempty"`
+	EventKeyGTE          *string  `json:"eventKeyGTE,omitempty"`
+	EventKeyLT           *string  `json:"eventKeyLT,omitempty"`
+	EventKeyLTE          *string  `json:"eventKeyLTE,omitempty"`
+	EventKeyContains     *string  `json:"eventKeyContains,omitempty"`
+	EventKeyHasPrefix    *string  `json:"eventKeyHasPrefix,omitempty"`
+	EventKeyHasSuffix    *string  `json:"eventKeyHasSuffix,omitempty"`
+	EventKeyEqualFold    *string  `json:"eventKeyEqualFold,omitempty"`
+	EventKeyContainsFold *string  `json:"eventKeyContainsFold,omitempty"`
+
+	// "payment_order_id" field predicates.
+	PaymentOrderID       *int  `json:"paymentOrderID,omitempty"`
+	PaymentOrderIDNEQ    *int  `json:"paymentOrderIDNEQ,omitempty"`
+	PaymentOrderIDIn     []int `json:"paymentOrderIDIn,omitempty"`
+	PaymentOrderIDNotIn  []int `json:"paymentOrderIDNotIn,omitempty"`
+	PaymentOrderIDIsNil  bool  `json:"paymentOrderIDIsNil,omitempty"`
+	PaymentOrderIDNotNil bool  `json:"paymentOrderIDNotNil,omitempty"`
+
+	// "provider_instance_id" field predicates.
+	ProviderInstanceID       *int  `json:"providerInstanceID,omitempty"`
+	ProviderInstanceIDNEQ    *int  `json:"providerInstanceIDNEQ,omitempty"`
+	ProviderInstanceIDIn     []int `json:"providerInstanceIDIn,omitempty"`
+	ProviderInstanceIDNotIn  []int `json:"providerInstanceIDNotIn,omitempty"`
+	ProviderInstanceIDIsNil  bool  `json:"providerInstanceIDIsNil,omitempty"`
+	ProviderInstanceIDNotNil bool  `json:"providerInstanceIDNotNil,omitempty"`
+
+	// "provider_type" field predicates.
+	ProviderType      *paymentevent.ProviderType  `json:"providerType,omitempty"`
+	ProviderTypeNEQ   *paymentevent.ProviderType  `json:"providerTypeNEQ,omitempty"`
+	ProviderTypeIn    []paymentevent.ProviderType `json:"providerTypeIn,omitempty"`
+	ProviderTypeNotIn []paymentevent.ProviderType `json:"providerTypeNotIn,omitempty"`
+
+	// "event_type" field predicates.
+	EventType             *string  `json:"eventType,omitempty"`
+	EventTypeNEQ          *string  `json:"eventTypeNEQ,omitempty"`
+	EventTypeIn           []string `json:"eventTypeIn,omitempty"`
+	EventTypeNotIn        []string `json:"eventTypeNotIn,omitempty"`
+	EventTypeGT           *string  `json:"eventTypeGT,omitempty"`
+	EventTypeGTE          *string  `json:"eventTypeGTE,omitempty"`
+	EventTypeLT           *string  `json:"eventTypeLT,omitempty"`
+	EventTypeLTE          *string  `json:"eventTypeLTE,omitempty"`
+	EventTypeContains     *string  `json:"eventTypeContains,omitempty"`
+	EventTypeHasPrefix    *string  `json:"eventTypeHasPrefix,omitempty"`
+	EventTypeHasSuffix    *string  `json:"eventTypeHasSuffix,omitempty"`
+	EventTypeEqualFold    *string  `json:"eventTypeEqualFold,omitempty"`
+	EventTypeContainsFold *string  `json:"eventTypeContainsFold,omitempty"`
+
+	// "status" field predicates.
+	Status      *paymentevent.Status  `json:"status,omitempty"`
+	StatusNEQ   *paymentevent.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []paymentevent.Status `json:"statusIn,omitempty"`
+	StatusNotIn []paymentevent.Status `json:"statusNotIn,omitempty"`
+
+	// "error" field predicates.
+	Error             *string  `json:"error,omitempty"`
+	ErrorNEQ          *string  `json:"errorNEQ,omitempty"`
+	ErrorIn           []string `json:"errorIn,omitempty"`
+	ErrorNotIn        []string `json:"errorNotIn,omitempty"`
+	ErrorGT           *string  `json:"errorGT,omitempty"`
+	ErrorGTE          *string  `json:"errorGTE,omitempty"`
+	ErrorLT           *string  `json:"errorLT,omitempty"`
+	ErrorLTE          *string  `json:"errorLTE,omitempty"`
+	ErrorContains     *string  `json:"errorContains,omitempty"`
+	ErrorHasPrefix    *string  `json:"errorHasPrefix,omitempty"`
+	ErrorHasSuffix    *string  `json:"errorHasSuffix,omitempty"`
+	ErrorEqualFold    *string  `json:"errorEqualFold,omitempty"`
+	ErrorContainsFold *string  `json:"errorContainsFold,omitempty"`
+
+	// "payment_order" edge predicates.
+	HasPaymentOrder     *bool                     `json:"hasPaymentOrder,omitempty"`
+	HasPaymentOrderWith []*PaymentOrderWhereInput `json:"hasPaymentOrderWith,omitempty"`
+
+	// "provider_instance" edge predicates.
+	HasProviderInstance     *bool                                `json:"hasProviderInstance,omitempty"`
+	HasProviderInstanceWith []*PaymentProviderInstanceWhereInput `json:"hasProviderInstanceWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *PaymentEventWhereInput) AddPredicates(predicates ...predicate.PaymentEvent) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the PaymentEventWhereInput filter on the PaymentEventQuery builder.
+func (i *PaymentEventWhereInput) Filter(q *PaymentEventQuery) (*PaymentEventQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyPaymentEventWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyPaymentEventWhereInput is returned in case the PaymentEventWhereInput is empty.
+var ErrEmptyPaymentEventWhereInput = errors.New("ent: empty predicate PaymentEventWhereInput")
+
+// P returns a predicate for filtering paymentevents.
+// An error is returned if the input is empty or invalid.
+func (i *PaymentEventWhereInput) P() (predicate.PaymentEvent, error) {
+	var predicates []predicate.PaymentEvent
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, paymentevent.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.PaymentEvent, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, paymentevent.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.PaymentEvent, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, paymentevent.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, paymentevent.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, paymentevent.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, paymentevent.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, paymentevent.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, paymentevent.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, paymentevent.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, paymentevent.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, paymentevent.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, paymentevent.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, paymentevent.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, paymentevent.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, paymentevent.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, paymentevent.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, paymentevent.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, paymentevent.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, paymentevent.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, paymentevent.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, paymentevent.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, paymentevent.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, paymentevent.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, paymentevent.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, paymentevent.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, paymentevent.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, paymentevent.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.EventKey != nil {
+		predicates = append(predicates, paymentevent.EventKeyEQ(*i.EventKey))
+	}
+	if i.EventKeyNEQ != nil {
+		predicates = append(predicates, paymentevent.EventKeyNEQ(*i.EventKeyNEQ))
+	}
+	if len(i.EventKeyIn) > 0 {
+		predicates = append(predicates, paymentevent.EventKeyIn(i.EventKeyIn...))
+	}
+	if len(i.EventKeyNotIn) > 0 {
+		predicates = append(predicates, paymentevent.EventKeyNotIn(i.EventKeyNotIn...))
+	}
+	if i.EventKeyGT != nil {
+		predicates = append(predicates, paymentevent.EventKeyGT(*i.EventKeyGT))
+	}
+	if i.EventKeyGTE != nil {
+		predicates = append(predicates, paymentevent.EventKeyGTE(*i.EventKeyGTE))
+	}
+	if i.EventKeyLT != nil {
+		predicates = append(predicates, paymentevent.EventKeyLT(*i.EventKeyLT))
+	}
+	if i.EventKeyLTE != nil {
+		predicates = append(predicates, paymentevent.EventKeyLTE(*i.EventKeyLTE))
+	}
+	if i.EventKeyContains != nil {
+		predicates = append(predicates, paymentevent.EventKeyContains(*i.EventKeyContains))
+	}
+	if i.EventKeyHasPrefix != nil {
+		predicates = append(predicates, paymentevent.EventKeyHasPrefix(*i.EventKeyHasPrefix))
+	}
+	if i.EventKeyHasSuffix != nil {
+		predicates = append(predicates, paymentevent.EventKeyHasSuffix(*i.EventKeyHasSuffix))
+	}
+	if i.EventKeyEqualFold != nil {
+		predicates = append(predicates, paymentevent.EventKeyEqualFold(*i.EventKeyEqualFold))
+	}
+	if i.EventKeyContainsFold != nil {
+		predicates = append(predicates, paymentevent.EventKeyContainsFold(*i.EventKeyContainsFold))
+	}
+	if i.PaymentOrderID != nil {
+		predicates = append(predicates, paymentevent.PaymentOrderIDEQ(*i.PaymentOrderID))
+	}
+	if i.PaymentOrderIDNEQ != nil {
+		predicates = append(predicates, paymentevent.PaymentOrderIDNEQ(*i.PaymentOrderIDNEQ))
+	}
+	if len(i.PaymentOrderIDIn) > 0 {
+		predicates = append(predicates, paymentevent.PaymentOrderIDIn(i.PaymentOrderIDIn...))
+	}
+	if len(i.PaymentOrderIDNotIn) > 0 {
+		predicates = append(predicates, paymentevent.PaymentOrderIDNotIn(i.PaymentOrderIDNotIn...))
+	}
+	if i.PaymentOrderIDIsNil {
+		predicates = append(predicates, paymentevent.PaymentOrderIDIsNil())
+	}
+	if i.PaymentOrderIDNotNil {
+		predicates = append(predicates, paymentevent.PaymentOrderIDNotNil())
+	}
+	if i.ProviderInstanceID != nil {
+		predicates = append(predicates, paymentevent.ProviderInstanceIDEQ(*i.ProviderInstanceID))
+	}
+	if i.ProviderInstanceIDNEQ != nil {
+		predicates = append(predicates, paymentevent.ProviderInstanceIDNEQ(*i.ProviderInstanceIDNEQ))
+	}
+	if len(i.ProviderInstanceIDIn) > 0 {
+		predicates = append(predicates, paymentevent.ProviderInstanceIDIn(i.ProviderInstanceIDIn...))
+	}
+	if len(i.ProviderInstanceIDNotIn) > 0 {
+		predicates = append(predicates, paymentevent.ProviderInstanceIDNotIn(i.ProviderInstanceIDNotIn...))
+	}
+	if i.ProviderInstanceIDIsNil {
+		predicates = append(predicates, paymentevent.ProviderInstanceIDIsNil())
+	}
+	if i.ProviderInstanceIDNotNil {
+		predicates = append(predicates, paymentevent.ProviderInstanceIDNotNil())
+	}
+	if i.ProviderType != nil {
+		predicates = append(predicates, paymentevent.ProviderTypeEQ(*i.ProviderType))
+	}
+	if i.ProviderTypeNEQ != nil {
+		predicates = append(predicates, paymentevent.ProviderTypeNEQ(*i.ProviderTypeNEQ))
+	}
+	if len(i.ProviderTypeIn) > 0 {
+		predicates = append(predicates, paymentevent.ProviderTypeIn(i.ProviderTypeIn...))
+	}
+	if len(i.ProviderTypeNotIn) > 0 {
+		predicates = append(predicates, paymentevent.ProviderTypeNotIn(i.ProviderTypeNotIn...))
+	}
+	if i.EventType != nil {
+		predicates = append(predicates, paymentevent.EventTypeEQ(*i.EventType))
+	}
+	if i.EventTypeNEQ != nil {
+		predicates = append(predicates, paymentevent.EventTypeNEQ(*i.EventTypeNEQ))
+	}
+	if len(i.EventTypeIn) > 0 {
+		predicates = append(predicates, paymentevent.EventTypeIn(i.EventTypeIn...))
+	}
+	if len(i.EventTypeNotIn) > 0 {
+		predicates = append(predicates, paymentevent.EventTypeNotIn(i.EventTypeNotIn...))
+	}
+	if i.EventTypeGT != nil {
+		predicates = append(predicates, paymentevent.EventTypeGT(*i.EventTypeGT))
+	}
+	if i.EventTypeGTE != nil {
+		predicates = append(predicates, paymentevent.EventTypeGTE(*i.EventTypeGTE))
+	}
+	if i.EventTypeLT != nil {
+		predicates = append(predicates, paymentevent.EventTypeLT(*i.EventTypeLT))
+	}
+	if i.EventTypeLTE != nil {
+		predicates = append(predicates, paymentevent.EventTypeLTE(*i.EventTypeLTE))
+	}
+	if i.EventTypeContains != nil {
+		predicates = append(predicates, paymentevent.EventTypeContains(*i.EventTypeContains))
+	}
+	if i.EventTypeHasPrefix != nil {
+		predicates = append(predicates, paymentevent.EventTypeHasPrefix(*i.EventTypeHasPrefix))
+	}
+	if i.EventTypeHasSuffix != nil {
+		predicates = append(predicates, paymentevent.EventTypeHasSuffix(*i.EventTypeHasSuffix))
+	}
+	if i.EventTypeEqualFold != nil {
+		predicates = append(predicates, paymentevent.EventTypeEqualFold(*i.EventTypeEqualFold))
+	}
+	if i.EventTypeContainsFold != nil {
+		predicates = append(predicates, paymentevent.EventTypeContainsFold(*i.EventTypeContainsFold))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, paymentevent.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, paymentevent.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, paymentevent.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, paymentevent.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.Error != nil {
+		predicates = append(predicates, paymentevent.ErrorEQ(*i.Error))
+	}
+	if i.ErrorNEQ != nil {
+		predicates = append(predicates, paymentevent.ErrorNEQ(*i.ErrorNEQ))
+	}
+	if len(i.ErrorIn) > 0 {
+		predicates = append(predicates, paymentevent.ErrorIn(i.ErrorIn...))
+	}
+	if len(i.ErrorNotIn) > 0 {
+		predicates = append(predicates, paymentevent.ErrorNotIn(i.ErrorNotIn...))
+	}
+	if i.ErrorGT != nil {
+		predicates = append(predicates, paymentevent.ErrorGT(*i.ErrorGT))
+	}
+	if i.ErrorGTE != nil {
+		predicates = append(predicates, paymentevent.ErrorGTE(*i.ErrorGTE))
+	}
+	if i.ErrorLT != nil {
+		predicates = append(predicates, paymentevent.ErrorLT(*i.ErrorLT))
+	}
+	if i.ErrorLTE != nil {
+		predicates = append(predicates, paymentevent.ErrorLTE(*i.ErrorLTE))
+	}
+	if i.ErrorContains != nil {
+		predicates = append(predicates, paymentevent.ErrorContains(*i.ErrorContains))
+	}
+	if i.ErrorHasPrefix != nil {
+		predicates = append(predicates, paymentevent.ErrorHasPrefix(*i.ErrorHasPrefix))
+	}
+	if i.ErrorHasSuffix != nil {
+		predicates = append(predicates, paymentevent.ErrorHasSuffix(*i.ErrorHasSuffix))
+	}
+	if i.ErrorEqualFold != nil {
+		predicates = append(predicates, paymentevent.ErrorEqualFold(*i.ErrorEqualFold))
+	}
+	if i.ErrorContainsFold != nil {
+		predicates = append(predicates, paymentevent.ErrorContainsFold(*i.ErrorContainsFold))
+	}
+
+	if i.HasPaymentOrder != nil {
+		p := paymentevent.HasPaymentOrder()
+		if !*i.HasPaymentOrder {
+			p = paymentevent.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentOrderWith) > 0 {
+		with := make([]predicate.PaymentOrder, 0, len(i.HasPaymentOrderWith))
+		for _, w := range i.HasPaymentOrderWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentOrderWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentevent.HasPaymentOrderWith(with...))
+	}
+	if i.HasProviderInstance != nil {
+		p := paymentevent.HasProviderInstance()
+		if !*i.HasProviderInstance {
+			p = paymentevent.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasProviderInstanceWith) > 0 {
+		with := make([]predicate.PaymentProviderInstance, 0, len(i.HasProviderInstanceWith))
+		for _, w := range i.HasProviderInstanceWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasProviderInstanceWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentevent.HasProviderInstanceWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyPaymentEventWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return paymentevent.And(predicates...), nil
+	}
+}
+
+// PaymentOrderWhereInput represents a where input for filtering PaymentOrder queries.
+type PaymentOrderWhereInput struct {
+	Predicates []predicate.PaymentOrder  `json:"-"`
+	Not        *PaymentOrderWhereInput   `json:"not,omitempty"`
+	Or         []*PaymentOrderWhereInput `json:"or,omitempty"`
+	And        []*PaymentOrderWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "order_no" field predicates.
+	OrderNo             *string  `json:"orderNo,omitempty"`
+	OrderNoNEQ          *string  `json:"orderNoNEQ,omitempty"`
+	OrderNoIn           []string `json:"orderNoIn,omitempty"`
+	OrderNoNotIn        []string `json:"orderNoNotIn,omitempty"`
+	OrderNoGT           *string  `json:"orderNoGT,omitempty"`
+	OrderNoGTE          *string  `json:"orderNoGTE,omitempty"`
+	OrderNoLT           *string  `json:"orderNoLT,omitempty"`
+	OrderNoLTE          *string  `json:"orderNoLTE,omitempty"`
+	OrderNoContains     *string  `json:"orderNoContains,omitempty"`
+	OrderNoHasPrefix    *string  `json:"orderNoHasPrefix,omitempty"`
+	OrderNoHasSuffix    *string  `json:"orderNoHasSuffix,omitempty"`
+	OrderNoEqualFold    *string  `json:"orderNoEqualFold,omitempty"`
+	OrderNoContainsFold *string  `json:"orderNoContainsFold,omitempty"`
+
+	// "project_id" field predicates.
+	ProjectID      *int  `json:"projectID,omitempty"`
+	ProjectIDNEQ   *int  `json:"projectIDNEQ,omitempty"`
+	ProjectIDIn    []int `json:"projectIDIn,omitempty"`
+	ProjectIDNotIn []int `json:"projectIDNotIn,omitempty"`
+	ProjectIDGT    *int  `json:"projectIDGT,omitempty"`
+	ProjectIDGTE   *int  `json:"projectIDGTE,omitempty"`
+	ProjectIDLT    *int  `json:"projectIDLT,omitempty"`
+	ProjectIDLTE   *int  `json:"projectIDLTE,omitempty"`
+
+	// "billing_account_id" field predicates.
+	BillingAccountID      *int  `json:"billingAccountID,omitempty"`
+	BillingAccountIDNEQ   *int  `json:"billingAccountIDNEQ,omitempty"`
+	BillingAccountIDIn    []int `json:"billingAccountIDIn,omitempty"`
+	BillingAccountIDNotIn []int `json:"billingAccountIDNotIn,omitempty"`
+
+	// "provider_instance_id" field predicates.
+	ProviderInstanceID       *int  `json:"providerInstanceID,omitempty"`
+	ProviderInstanceIDNEQ    *int  `json:"providerInstanceIDNEQ,omitempty"`
+	ProviderInstanceIDIn     []int `json:"providerInstanceIDIn,omitempty"`
+	ProviderInstanceIDNotIn  []int `json:"providerInstanceIDNotIn,omitempty"`
+	ProviderInstanceIDIsNil  bool  `json:"providerInstanceIDIsNil,omitempty"`
+	ProviderInstanceIDNotNil bool  `json:"providerInstanceIDNotNil,omitempty"`
+
+	// "provider_type" field predicates.
+	ProviderType      *paymentorder.ProviderType  `json:"providerType,omitempty"`
+	ProviderTypeNEQ   *paymentorder.ProviderType  `json:"providerTypeNEQ,omitempty"`
+	ProviderTypeIn    []paymentorder.ProviderType `json:"providerTypeIn,omitempty"`
+	ProviderTypeNotIn []paymentorder.ProviderType `json:"providerTypeNotIn,omitempty"`
+
+	// "purpose" field predicates.
+	Purpose      *paymentorder.Purpose  `json:"purpose,omitempty"`
+	PurposeNEQ   *paymentorder.Purpose  `json:"purposeNEQ,omitempty"`
+	PurposeIn    []paymentorder.Purpose `json:"purposeIn,omitempty"`
+	PurposeNotIn []paymentorder.Purpose `json:"purposeNotIn,omitempty"`
+
+	// "amount_micros" field predicates.
+	AmountMicros      *int64  `json:"amountMicros,omitempty"`
+	AmountMicrosNEQ   *int64  `json:"amountMicrosNEQ,omitempty"`
+	AmountMicrosIn    []int64 `json:"amountMicrosIn,omitempty"`
+	AmountMicrosNotIn []int64 `json:"amountMicrosNotIn,omitempty"`
+	AmountMicrosGT    *int64  `json:"amountMicrosGT,omitempty"`
+	AmountMicrosGTE   *int64  `json:"amountMicrosGTE,omitempty"`
+	AmountMicrosLT    *int64  `json:"amountMicrosLT,omitempty"`
+	AmountMicrosLTE   *int64  `json:"amountMicrosLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "status" field predicates.
+	Status      *paymentorder.Status  `json:"status,omitempty"`
+	StatusNEQ   *paymentorder.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []paymentorder.Status `json:"statusIn,omitempty"`
+	StatusNotIn []paymentorder.Status `json:"statusNotIn,omitempty"`
+
+	// "external_trade_no" field predicates.
+	ExternalTradeNo             *string  `json:"externalTradeNo,omitempty"`
+	ExternalTradeNoNEQ          *string  `json:"externalTradeNoNEQ,omitempty"`
+	ExternalTradeNoIn           []string `json:"externalTradeNoIn,omitempty"`
+	ExternalTradeNoNotIn        []string `json:"externalTradeNoNotIn,omitempty"`
+	ExternalTradeNoGT           *string  `json:"externalTradeNoGT,omitempty"`
+	ExternalTradeNoGTE          *string  `json:"externalTradeNoGTE,omitempty"`
+	ExternalTradeNoLT           *string  `json:"externalTradeNoLT,omitempty"`
+	ExternalTradeNoLTE          *string  `json:"externalTradeNoLTE,omitempty"`
+	ExternalTradeNoContains     *string  `json:"externalTradeNoContains,omitempty"`
+	ExternalTradeNoHasPrefix    *string  `json:"externalTradeNoHasPrefix,omitempty"`
+	ExternalTradeNoHasSuffix    *string  `json:"externalTradeNoHasSuffix,omitempty"`
+	ExternalTradeNoIsNil        bool     `json:"externalTradeNoIsNil,omitempty"`
+	ExternalTradeNoNotNil       bool     `json:"externalTradeNoNotNil,omitempty"`
+	ExternalTradeNoEqualFold    *string  `json:"externalTradeNoEqualFold,omitempty"`
+	ExternalTradeNoContainsFold *string  `json:"externalTradeNoContainsFold,omitempty"`
+
+	// "paid_at" field predicates.
+	PaidAt       *time.Time  `json:"paidAt,omitempty"`
+	PaidAtNEQ    *time.Time  `json:"paidAtNEQ,omitempty"`
+	PaidAtIn     []time.Time `json:"paidAtIn,omitempty"`
+	PaidAtNotIn  []time.Time `json:"paidAtNotIn,omitempty"`
+	PaidAtGT     *time.Time  `json:"paidAtGT,omitempty"`
+	PaidAtGTE    *time.Time  `json:"paidAtGTE,omitempty"`
+	PaidAtLT     *time.Time  `json:"paidAtLT,omitempty"`
+	PaidAtLTE    *time.Time  `json:"paidAtLTE,omitempty"`
+	PaidAtIsNil  bool        `json:"paidAtIsNil,omitempty"`
+	PaidAtNotNil bool        `json:"paidAtNotNil,omitempty"`
+
+	// "ledger_transaction_id" field predicates.
+	LedgerTransactionID       *int  `json:"ledgerTransactionID,omitempty"`
+	LedgerTransactionIDNEQ    *int  `json:"ledgerTransactionIDNEQ,omitempty"`
+	LedgerTransactionIDIn     []int `json:"ledgerTransactionIDIn,omitempty"`
+	LedgerTransactionIDNotIn  []int `json:"ledgerTransactionIDNotIn,omitempty"`
+	LedgerTransactionIDIsNil  bool  `json:"ledgerTransactionIDIsNil,omitempty"`
+	LedgerTransactionIDNotNil bool  `json:"ledgerTransactionIDNotNil,omitempty"`
+
+	// "billing_account" edge predicates.
+	HasBillingAccount     *bool                       `json:"hasBillingAccount,omitempty"`
+	HasBillingAccountWith []*BillingAccountWhereInput `json:"hasBillingAccountWith,omitempty"`
+
+	// "provider_instance" edge predicates.
+	HasProviderInstance     *bool                                `json:"hasProviderInstance,omitempty"`
+	HasProviderInstanceWith []*PaymentProviderInstanceWhereInput `json:"hasProviderInstanceWith,omitempty"`
+
+	// "ledger_transaction" edge predicates.
+	HasLedgerTransaction     *bool                          `json:"hasLedgerTransaction,omitempty"`
+	HasLedgerTransactionWith []*LedgerTransactionWhereInput `json:"hasLedgerTransactionWith,omitempty"`
+
+	// "payment_events" edge predicates.
+	HasPaymentEvents     *bool                     `json:"hasPaymentEvents,omitempty"`
+	HasPaymentEventsWith []*PaymentEventWhereInput `json:"hasPaymentEventsWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *PaymentOrderWhereInput) AddPredicates(predicates ...predicate.PaymentOrder) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the PaymentOrderWhereInput filter on the PaymentOrderQuery builder.
+func (i *PaymentOrderWhereInput) Filter(q *PaymentOrderQuery) (*PaymentOrderQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyPaymentOrderWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyPaymentOrderWhereInput is returned in case the PaymentOrderWhereInput is empty.
+var ErrEmptyPaymentOrderWhereInput = errors.New("ent: empty predicate PaymentOrderWhereInput")
+
+// P returns a predicate for filtering paymentorders.
+// An error is returned if the input is empty or invalid.
+func (i *PaymentOrderWhereInput) P() (predicate.PaymentOrder, error) {
+	var predicates []predicate.PaymentOrder
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, paymentorder.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.PaymentOrder, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, paymentorder.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.PaymentOrder, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, paymentorder.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, paymentorder.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, paymentorder.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, paymentorder.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, paymentorder.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, paymentorder.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, paymentorder.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, paymentorder.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, paymentorder.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, paymentorder.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, paymentorder.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, paymentorder.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, paymentorder.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, paymentorder.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, paymentorder.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, paymentorder.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, paymentorder.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, paymentorder.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, paymentorder.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, paymentorder.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, paymentorder.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, paymentorder.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, paymentorder.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, paymentorder.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, paymentorder.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.OrderNo != nil {
+		predicates = append(predicates, paymentorder.OrderNoEQ(*i.OrderNo))
+	}
+	if i.OrderNoNEQ != nil {
+		predicates = append(predicates, paymentorder.OrderNoNEQ(*i.OrderNoNEQ))
+	}
+	if len(i.OrderNoIn) > 0 {
+		predicates = append(predicates, paymentorder.OrderNoIn(i.OrderNoIn...))
+	}
+	if len(i.OrderNoNotIn) > 0 {
+		predicates = append(predicates, paymentorder.OrderNoNotIn(i.OrderNoNotIn...))
+	}
+	if i.OrderNoGT != nil {
+		predicates = append(predicates, paymentorder.OrderNoGT(*i.OrderNoGT))
+	}
+	if i.OrderNoGTE != nil {
+		predicates = append(predicates, paymentorder.OrderNoGTE(*i.OrderNoGTE))
+	}
+	if i.OrderNoLT != nil {
+		predicates = append(predicates, paymentorder.OrderNoLT(*i.OrderNoLT))
+	}
+	if i.OrderNoLTE != nil {
+		predicates = append(predicates, paymentorder.OrderNoLTE(*i.OrderNoLTE))
+	}
+	if i.OrderNoContains != nil {
+		predicates = append(predicates, paymentorder.OrderNoContains(*i.OrderNoContains))
+	}
+	if i.OrderNoHasPrefix != nil {
+		predicates = append(predicates, paymentorder.OrderNoHasPrefix(*i.OrderNoHasPrefix))
+	}
+	if i.OrderNoHasSuffix != nil {
+		predicates = append(predicates, paymentorder.OrderNoHasSuffix(*i.OrderNoHasSuffix))
+	}
+	if i.OrderNoEqualFold != nil {
+		predicates = append(predicates, paymentorder.OrderNoEqualFold(*i.OrderNoEqualFold))
+	}
+	if i.OrderNoContainsFold != nil {
+		predicates = append(predicates, paymentorder.OrderNoContainsFold(*i.OrderNoContainsFold))
+	}
+	if i.ProjectID != nil {
+		predicates = append(predicates, paymentorder.ProjectIDEQ(*i.ProjectID))
+	}
+	if i.ProjectIDNEQ != nil {
+		predicates = append(predicates, paymentorder.ProjectIDNEQ(*i.ProjectIDNEQ))
+	}
+	if len(i.ProjectIDIn) > 0 {
+		predicates = append(predicates, paymentorder.ProjectIDIn(i.ProjectIDIn...))
+	}
+	if len(i.ProjectIDNotIn) > 0 {
+		predicates = append(predicates, paymentorder.ProjectIDNotIn(i.ProjectIDNotIn...))
+	}
+	if i.ProjectIDGT != nil {
+		predicates = append(predicates, paymentorder.ProjectIDGT(*i.ProjectIDGT))
+	}
+	if i.ProjectIDGTE != nil {
+		predicates = append(predicates, paymentorder.ProjectIDGTE(*i.ProjectIDGTE))
+	}
+	if i.ProjectIDLT != nil {
+		predicates = append(predicates, paymentorder.ProjectIDLT(*i.ProjectIDLT))
+	}
+	if i.ProjectIDLTE != nil {
+		predicates = append(predicates, paymentorder.ProjectIDLTE(*i.ProjectIDLTE))
+	}
+	if i.BillingAccountID != nil {
+		predicates = append(predicates, paymentorder.BillingAccountIDEQ(*i.BillingAccountID))
+	}
+	if i.BillingAccountIDNEQ != nil {
+		predicates = append(predicates, paymentorder.BillingAccountIDNEQ(*i.BillingAccountIDNEQ))
+	}
+	if len(i.BillingAccountIDIn) > 0 {
+		predicates = append(predicates, paymentorder.BillingAccountIDIn(i.BillingAccountIDIn...))
+	}
+	if len(i.BillingAccountIDNotIn) > 0 {
+		predicates = append(predicates, paymentorder.BillingAccountIDNotIn(i.BillingAccountIDNotIn...))
+	}
+	if i.ProviderInstanceID != nil {
+		predicates = append(predicates, paymentorder.ProviderInstanceIDEQ(*i.ProviderInstanceID))
+	}
+	if i.ProviderInstanceIDNEQ != nil {
+		predicates = append(predicates, paymentorder.ProviderInstanceIDNEQ(*i.ProviderInstanceIDNEQ))
+	}
+	if len(i.ProviderInstanceIDIn) > 0 {
+		predicates = append(predicates, paymentorder.ProviderInstanceIDIn(i.ProviderInstanceIDIn...))
+	}
+	if len(i.ProviderInstanceIDNotIn) > 0 {
+		predicates = append(predicates, paymentorder.ProviderInstanceIDNotIn(i.ProviderInstanceIDNotIn...))
+	}
+	if i.ProviderInstanceIDIsNil {
+		predicates = append(predicates, paymentorder.ProviderInstanceIDIsNil())
+	}
+	if i.ProviderInstanceIDNotNil {
+		predicates = append(predicates, paymentorder.ProviderInstanceIDNotNil())
+	}
+	if i.ProviderType != nil {
+		predicates = append(predicates, paymentorder.ProviderTypeEQ(*i.ProviderType))
+	}
+	if i.ProviderTypeNEQ != nil {
+		predicates = append(predicates, paymentorder.ProviderTypeNEQ(*i.ProviderTypeNEQ))
+	}
+	if len(i.ProviderTypeIn) > 0 {
+		predicates = append(predicates, paymentorder.ProviderTypeIn(i.ProviderTypeIn...))
+	}
+	if len(i.ProviderTypeNotIn) > 0 {
+		predicates = append(predicates, paymentorder.ProviderTypeNotIn(i.ProviderTypeNotIn...))
+	}
+	if i.Purpose != nil {
+		predicates = append(predicates, paymentorder.PurposeEQ(*i.Purpose))
+	}
+	if i.PurposeNEQ != nil {
+		predicates = append(predicates, paymentorder.PurposeNEQ(*i.PurposeNEQ))
+	}
+	if len(i.PurposeIn) > 0 {
+		predicates = append(predicates, paymentorder.PurposeIn(i.PurposeIn...))
+	}
+	if len(i.PurposeNotIn) > 0 {
+		predicates = append(predicates, paymentorder.PurposeNotIn(i.PurposeNotIn...))
+	}
+	if i.AmountMicros != nil {
+		predicates = append(predicates, paymentorder.AmountMicrosEQ(*i.AmountMicros))
+	}
+	if i.AmountMicrosNEQ != nil {
+		predicates = append(predicates, paymentorder.AmountMicrosNEQ(*i.AmountMicrosNEQ))
+	}
+	if len(i.AmountMicrosIn) > 0 {
+		predicates = append(predicates, paymentorder.AmountMicrosIn(i.AmountMicrosIn...))
+	}
+	if len(i.AmountMicrosNotIn) > 0 {
+		predicates = append(predicates, paymentorder.AmountMicrosNotIn(i.AmountMicrosNotIn...))
+	}
+	if i.AmountMicrosGT != nil {
+		predicates = append(predicates, paymentorder.AmountMicrosGT(*i.AmountMicrosGT))
+	}
+	if i.AmountMicrosGTE != nil {
+		predicates = append(predicates, paymentorder.AmountMicrosGTE(*i.AmountMicrosGTE))
+	}
+	if i.AmountMicrosLT != nil {
+		predicates = append(predicates, paymentorder.AmountMicrosLT(*i.AmountMicrosLT))
+	}
+	if i.AmountMicrosLTE != nil {
+		predicates = append(predicates, paymentorder.AmountMicrosLTE(*i.AmountMicrosLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, paymentorder.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, paymentorder.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, paymentorder.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, paymentorder.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, paymentorder.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, paymentorder.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, paymentorder.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, paymentorder.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, paymentorder.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, paymentorder.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, paymentorder.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, paymentorder.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, paymentorder.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, paymentorder.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, paymentorder.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, paymentorder.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, paymentorder.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.ExternalTradeNo != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoEQ(*i.ExternalTradeNo))
+	}
+	if i.ExternalTradeNoNEQ != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoNEQ(*i.ExternalTradeNoNEQ))
+	}
+	if len(i.ExternalTradeNoIn) > 0 {
+		predicates = append(predicates, paymentorder.ExternalTradeNoIn(i.ExternalTradeNoIn...))
+	}
+	if len(i.ExternalTradeNoNotIn) > 0 {
+		predicates = append(predicates, paymentorder.ExternalTradeNoNotIn(i.ExternalTradeNoNotIn...))
+	}
+	if i.ExternalTradeNoGT != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoGT(*i.ExternalTradeNoGT))
+	}
+	if i.ExternalTradeNoGTE != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoGTE(*i.ExternalTradeNoGTE))
+	}
+	if i.ExternalTradeNoLT != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoLT(*i.ExternalTradeNoLT))
+	}
+	if i.ExternalTradeNoLTE != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoLTE(*i.ExternalTradeNoLTE))
+	}
+	if i.ExternalTradeNoContains != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoContains(*i.ExternalTradeNoContains))
+	}
+	if i.ExternalTradeNoHasPrefix != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoHasPrefix(*i.ExternalTradeNoHasPrefix))
+	}
+	if i.ExternalTradeNoHasSuffix != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoHasSuffix(*i.ExternalTradeNoHasSuffix))
+	}
+	if i.ExternalTradeNoIsNil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoIsNil())
+	}
+	if i.ExternalTradeNoNotNil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoNotNil())
+	}
+	if i.ExternalTradeNoEqualFold != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoEqualFold(*i.ExternalTradeNoEqualFold))
+	}
+	if i.ExternalTradeNoContainsFold != nil {
+		predicates = append(predicates, paymentorder.ExternalTradeNoContainsFold(*i.ExternalTradeNoContainsFold))
+	}
+	if i.PaidAt != nil {
+		predicates = append(predicates, paymentorder.PaidAtEQ(*i.PaidAt))
+	}
+	if i.PaidAtNEQ != nil {
+		predicates = append(predicates, paymentorder.PaidAtNEQ(*i.PaidAtNEQ))
+	}
+	if len(i.PaidAtIn) > 0 {
+		predicates = append(predicates, paymentorder.PaidAtIn(i.PaidAtIn...))
+	}
+	if len(i.PaidAtNotIn) > 0 {
+		predicates = append(predicates, paymentorder.PaidAtNotIn(i.PaidAtNotIn...))
+	}
+	if i.PaidAtGT != nil {
+		predicates = append(predicates, paymentorder.PaidAtGT(*i.PaidAtGT))
+	}
+	if i.PaidAtGTE != nil {
+		predicates = append(predicates, paymentorder.PaidAtGTE(*i.PaidAtGTE))
+	}
+	if i.PaidAtLT != nil {
+		predicates = append(predicates, paymentorder.PaidAtLT(*i.PaidAtLT))
+	}
+	if i.PaidAtLTE != nil {
+		predicates = append(predicates, paymentorder.PaidAtLTE(*i.PaidAtLTE))
+	}
+	if i.PaidAtIsNil {
+		predicates = append(predicates, paymentorder.PaidAtIsNil())
+	}
+	if i.PaidAtNotNil {
+		predicates = append(predicates, paymentorder.PaidAtNotNil())
+	}
+	if i.LedgerTransactionID != nil {
+		predicates = append(predicates, paymentorder.LedgerTransactionIDEQ(*i.LedgerTransactionID))
+	}
+	if i.LedgerTransactionIDNEQ != nil {
+		predicates = append(predicates, paymentorder.LedgerTransactionIDNEQ(*i.LedgerTransactionIDNEQ))
+	}
+	if len(i.LedgerTransactionIDIn) > 0 {
+		predicates = append(predicates, paymentorder.LedgerTransactionIDIn(i.LedgerTransactionIDIn...))
+	}
+	if len(i.LedgerTransactionIDNotIn) > 0 {
+		predicates = append(predicates, paymentorder.LedgerTransactionIDNotIn(i.LedgerTransactionIDNotIn...))
+	}
+	if i.LedgerTransactionIDIsNil {
+		predicates = append(predicates, paymentorder.LedgerTransactionIDIsNil())
+	}
+	if i.LedgerTransactionIDNotNil {
+		predicates = append(predicates, paymentorder.LedgerTransactionIDNotNil())
+	}
+
+	if i.HasBillingAccount != nil {
+		p := paymentorder.HasBillingAccount()
+		if !*i.HasBillingAccount {
+			p = paymentorder.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingAccountWith) > 0 {
+		with := make([]predicate.BillingAccount, 0, len(i.HasBillingAccountWith))
+		for _, w := range i.HasBillingAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentorder.HasBillingAccountWith(with...))
+	}
+	if i.HasProviderInstance != nil {
+		p := paymentorder.HasProviderInstance()
+		if !*i.HasProviderInstance {
+			p = paymentorder.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasProviderInstanceWith) > 0 {
+		with := make([]predicate.PaymentProviderInstance, 0, len(i.HasProviderInstanceWith))
+		for _, w := range i.HasProviderInstanceWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasProviderInstanceWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentorder.HasProviderInstanceWith(with...))
+	}
+	if i.HasLedgerTransaction != nil {
+		p := paymentorder.HasLedgerTransaction()
+		if !*i.HasLedgerTransaction {
+			p = paymentorder.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasLedgerTransactionWith) > 0 {
+		with := make([]predicate.LedgerTransaction, 0, len(i.HasLedgerTransactionWith))
+		for _, w := range i.HasLedgerTransactionWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasLedgerTransactionWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentorder.HasLedgerTransactionWith(with...))
+	}
+	if i.HasPaymentEvents != nil {
+		p := paymentorder.HasPaymentEvents()
+		if !*i.HasPaymentEvents {
+			p = paymentorder.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentEventsWith) > 0 {
+		with := make([]predicate.PaymentEvent, 0, len(i.HasPaymentEventsWith))
+		for _, w := range i.HasPaymentEventsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentEventsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentorder.HasPaymentEventsWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyPaymentOrderWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return paymentorder.And(predicates...), nil
+	}
+}
+
+// PaymentProviderInstanceWhereInput represents a where input for filtering PaymentProviderInstance queries.
+type PaymentProviderInstanceWhereInput struct {
+	Predicates []predicate.PaymentProviderInstance  `json:"-"`
+	Not        *PaymentProviderInstanceWhereInput   `json:"not,omitempty"`
+	Or         []*PaymentProviderInstanceWhereInput `json:"or,omitempty"`
+	And        []*PaymentProviderInstanceWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "name" field predicates.
+	Name             *string  `json:"name,omitempty"`
+	NameNEQ          *string  `json:"nameNEQ,omitempty"`
+	NameIn           []string `json:"nameIn,omitempty"`
+	NameNotIn        []string `json:"nameNotIn,omitempty"`
+	NameGT           *string  `json:"nameGT,omitempty"`
+	NameGTE          *string  `json:"nameGTE,omitempty"`
+	NameLT           *string  `json:"nameLT,omitempty"`
+	NameLTE          *string  `json:"nameLTE,omitempty"`
+	NameContains     *string  `json:"nameContains,omitempty"`
+	NameHasPrefix    *string  `json:"nameHasPrefix,omitempty"`
+	NameHasSuffix    *string  `json:"nameHasSuffix,omitempty"`
+	NameEqualFold    *string  `json:"nameEqualFold,omitempty"`
+	NameContainsFold *string  `json:"nameContainsFold,omitempty"`
+
+	// "provider_type" field predicates.
+	ProviderType      *paymentproviderinstance.ProviderType  `json:"providerType,omitempty"`
+	ProviderTypeNEQ   *paymentproviderinstance.ProviderType  `json:"providerTypeNEQ,omitempty"`
+	ProviderTypeIn    []paymentproviderinstance.ProviderType `json:"providerTypeIn,omitempty"`
+	ProviderTypeNotIn []paymentproviderinstance.ProviderType `json:"providerTypeNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *paymentproviderinstance.Status  `json:"status,omitempty"`
+	StatusNEQ   *paymentproviderinstance.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []paymentproviderinstance.Status `json:"statusIn,omitempty"`
+	StatusNotIn []paymentproviderinstance.Status `json:"statusNotIn,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "payment_orders" edge predicates.
+	HasPaymentOrders     *bool                     `json:"hasPaymentOrders,omitempty"`
+	HasPaymentOrdersWith []*PaymentOrderWhereInput `json:"hasPaymentOrdersWith,omitempty"`
+
+	// "payment_events" edge predicates.
+	HasPaymentEvents     *bool                     `json:"hasPaymentEvents,omitempty"`
+	HasPaymentEventsWith []*PaymentEventWhereInput `json:"hasPaymentEventsWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *PaymentProviderInstanceWhereInput) AddPredicates(predicates ...predicate.PaymentProviderInstance) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the PaymentProviderInstanceWhereInput filter on the PaymentProviderInstanceQuery builder.
+func (i *PaymentProviderInstanceWhereInput) Filter(q *PaymentProviderInstanceQuery) (*PaymentProviderInstanceQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyPaymentProviderInstanceWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyPaymentProviderInstanceWhereInput is returned in case the PaymentProviderInstanceWhereInput is empty.
+var ErrEmptyPaymentProviderInstanceWhereInput = errors.New("ent: empty predicate PaymentProviderInstanceWhereInput")
+
+// P returns a predicate for filtering paymentproviderinstances.
+// An error is returned if the input is empty or invalid.
+func (i *PaymentProviderInstanceWhereInput) P() (predicate.PaymentProviderInstance, error) {
+	var predicates []predicate.PaymentProviderInstance
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, paymentproviderinstance.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.PaymentProviderInstance, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, paymentproviderinstance.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.PaymentProviderInstance, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, paymentproviderinstance.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, paymentproviderinstance.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, paymentproviderinstance.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, paymentproviderinstance.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, paymentproviderinstance.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, paymentproviderinstance.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, paymentproviderinstance.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, paymentproviderinstance.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, paymentproviderinstance.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, paymentproviderinstance.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, paymentproviderinstance.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, paymentproviderinstance.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, paymentproviderinstance.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, paymentproviderinstance.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, paymentproviderinstance.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, paymentproviderinstance.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, paymentproviderinstance.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, paymentproviderinstance.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, paymentproviderinstance.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.Name != nil {
+		predicates = append(predicates, paymentproviderinstance.NameEQ(*i.Name))
+	}
+	if i.NameNEQ != nil {
+		predicates = append(predicates, paymentproviderinstance.NameNEQ(*i.NameNEQ))
+	}
+	if len(i.NameIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.NameIn(i.NameIn...))
+	}
+	if len(i.NameNotIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.NameNotIn(i.NameNotIn...))
+	}
+	if i.NameGT != nil {
+		predicates = append(predicates, paymentproviderinstance.NameGT(*i.NameGT))
+	}
+	if i.NameGTE != nil {
+		predicates = append(predicates, paymentproviderinstance.NameGTE(*i.NameGTE))
+	}
+	if i.NameLT != nil {
+		predicates = append(predicates, paymentproviderinstance.NameLT(*i.NameLT))
+	}
+	if i.NameLTE != nil {
+		predicates = append(predicates, paymentproviderinstance.NameLTE(*i.NameLTE))
+	}
+	if i.NameContains != nil {
+		predicates = append(predicates, paymentproviderinstance.NameContains(*i.NameContains))
+	}
+	if i.NameHasPrefix != nil {
+		predicates = append(predicates, paymentproviderinstance.NameHasPrefix(*i.NameHasPrefix))
+	}
+	if i.NameHasSuffix != nil {
+		predicates = append(predicates, paymentproviderinstance.NameHasSuffix(*i.NameHasSuffix))
+	}
+	if i.NameEqualFold != nil {
+		predicates = append(predicates, paymentproviderinstance.NameEqualFold(*i.NameEqualFold))
+	}
+	if i.NameContainsFold != nil {
+		predicates = append(predicates, paymentproviderinstance.NameContainsFold(*i.NameContainsFold))
+	}
+	if i.ProviderType != nil {
+		predicates = append(predicates, paymentproviderinstance.ProviderTypeEQ(*i.ProviderType))
+	}
+	if i.ProviderTypeNEQ != nil {
+		predicates = append(predicates, paymentproviderinstance.ProviderTypeNEQ(*i.ProviderTypeNEQ))
+	}
+	if len(i.ProviderTypeIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.ProviderTypeIn(i.ProviderTypeIn...))
+	}
+	if len(i.ProviderTypeNotIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.ProviderTypeNotIn(i.ProviderTypeNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, paymentproviderinstance.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, paymentproviderinstance.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, paymentproviderinstance.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, paymentproviderinstance.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+
+	if i.HasPaymentOrders != nil {
+		p := paymentproviderinstance.HasPaymentOrders()
+		if !*i.HasPaymentOrders {
+			p = paymentproviderinstance.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentOrdersWith) > 0 {
+		with := make([]predicate.PaymentOrder, 0, len(i.HasPaymentOrdersWith))
+		for _, w := range i.HasPaymentOrdersWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentOrdersWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentproviderinstance.HasPaymentOrdersWith(with...))
+	}
+	if i.HasPaymentEvents != nil {
+		p := paymentproviderinstance.HasPaymentEvents()
+		if !*i.HasPaymentEvents {
+			p = paymentproviderinstance.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentEventsWith) > 0 {
+		with := make([]predicate.PaymentEvent, 0, len(i.HasPaymentEventsWith))
+		for _, w := range i.HasPaymentEventsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentEventsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentproviderinstance.HasPaymentEventsWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyPaymentProviderInstanceWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return paymentproviderinstance.And(predicates...), nil
 	}
 }
 

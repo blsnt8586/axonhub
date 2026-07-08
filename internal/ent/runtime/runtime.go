@@ -21,6 +21,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
+	"github.com/looplj/axonhub/internal/ent/paymentevent"
+	"github.com/looplj/axonhub/internal/ent/paymentorder"
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
@@ -647,6 +650,94 @@ func init() {
 	oidcidentityDescDeletedAt := oidcidentityMixinFields1[0].Descriptor()
 	// oidcidentity.DefaultDeletedAt holds the default value on creation for the deleted_at field.
 	oidcidentity.DefaultDeletedAt = oidcidentityDescDeletedAt.Default.(int)
+	paymenteventMixin := schema.PaymentEvent{}.Mixin()
+	paymentevent.Policy = privacy.NewPolicies(schema.PaymentEvent{})
+	paymentevent.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := paymentevent.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	paymenteventMixinFields0 := paymenteventMixin[0].Fields()
+	_ = paymenteventMixinFields0
+	paymenteventFields := schema.PaymentEvent{}.Fields()
+	_ = paymenteventFields
+	// paymenteventDescCreatedAt is the schema descriptor for created_at field.
+	paymenteventDescCreatedAt := paymenteventMixinFields0[0].Descriptor()
+	// paymentevent.DefaultCreatedAt holds the default value on creation for the created_at field.
+	paymentevent.DefaultCreatedAt = paymenteventDescCreatedAt.Default.(func() time.Time)
+	// paymenteventDescUpdatedAt is the schema descriptor for updated_at field.
+	paymenteventDescUpdatedAt := paymenteventMixinFields0[1].Descriptor()
+	// paymentevent.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	paymentevent.DefaultUpdatedAt = paymenteventDescUpdatedAt.Default.(func() time.Time)
+	// paymentevent.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	paymentevent.UpdateDefaultUpdatedAt = paymenteventDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// paymenteventDescError is the schema descriptor for error field.
+	paymenteventDescError := paymenteventFields[7].Descriptor()
+	// paymentevent.DefaultError holds the default value on creation for the error field.
+	paymentevent.DefaultError = paymenteventDescError.Default.(string)
+	paymentorderMixin := schema.PaymentOrder{}.Mixin()
+	paymentorder.Policy = privacy.NewPolicies(schema.PaymentOrder{})
+	paymentorder.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := paymentorder.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	paymentorderMixinFields0 := paymentorderMixin[0].Fields()
+	_ = paymentorderMixinFields0
+	paymentorderFields := schema.PaymentOrder{}.Fields()
+	_ = paymentorderFields
+	// paymentorderDescCreatedAt is the schema descriptor for created_at field.
+	paymentorderDescCreatedAt := paymentorderMixinFields0[0].Descriptor()
+	// paymentorder.DefaultCreatedAt holds the default value on creation for the created_at field.
+	paymentorder.DefaultCreatedAt = paymentorderDescCreatedAt.Default.(func() time.Time)
+	// paymentorderDescUpdatedAt is the schema descriptor for updated_at field.
+	paymentorderDescUpdatedAt := paymentorderMixinFields0[1].Descriptor()
+	// paymentorder.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	paymentorder.DefaultUpdatedAt = paymentorderDescUpdatedAt.Default.(func() time.Time)
+	// paymentorder.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	paymentorder.UpdateDefaultUpdatedAt = paymentorderDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// paymentorderDescAmountMicros is the schema descriptor for amount_micros field.
+	paymentorderDescAmountMicros := paymentorderFields[6].Descriptor()
+	// paymentorder.AmountMicrosValidator is a validator for the "amount_micros" field. It is called by the builders before save.
+	paymentorder.AmountMicrosValidator = paymentorderDescAmountMicros.Validators[0].(func(int64) error)
+	// paymentorderDescCurrency is the schema descriptor for currency field.
+	paymentorderDescCurrency := paymentorderFields[7].Descriptor()
+	// paymentorder.DefaultCurrency holds the default value on creation for the currency field.
+	paymentorder.DefaultCurrency = paymentorderDescCurrency.Default.(string)
+	paymentproviderinstanceMixin := schema.PaymentProviderInstance{}.Mixin()
+	paymentproviderinstance.Policy = privacy.NewPolicies(schema.PaymentProviderInstance{})
+	paymentproviderinstance.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := paymentproviderinstance.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	paymentproviderinstanceMixinFields0 := paymentproviderinstanceMixin[0].Fields()
+	_ = paymentproviderinstanceMixinFields0
+	paymentproviderinstanceFields := schema.PaymentProviderInstance{}.Fields()
+	_ = paymentproviderinstanceFields
+	// paymentproviderinstanceDescCreatedAt is the schema descriptor for created_at field.
+	paymentproviderinstanceDescCreatedAt := paymentproviderinstanceMixinFields0[0].Descriptor()
+	// paymentproviderinstance.DefaultCreatedAt holds the default value on creation for the created_at field.
+	paymentproviderinstance.DefaultCreatedAt = paymentproviderinstanceDescCreatedAt.Default.(func() time.Time)
+	// paymentproviderinstanceDescUpdatedAt is the schema descriptor for updated_at field.
+	paymentproviderinstanceDescUpdatedAt := paymentproviderinstanceMixinFields0[1].Descriptor()
+	// paymentproviderinstance.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	paymentproviderinstance.DefaultUpdatedAt = paymentproviderinstanceDescUpdatedAt.Default.(func() time.Time)
+	// paymentproviderinstance.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	paymentproviderinstance.UpdateDefaultUpdatedAt = paymentproviderinstanceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// paymentproviderinstanceDescCurrency is the schema descriptor for currency field.
+	paymentproviderinstanceDescCurrency := paymentproviderinstanceFields[3].Descriptor()
+	// paymentproviderinstance.DefaultCurrency holds the default value on creation for the currency field.
+	paymentproviderinstance.DefaultCurrency = paymentproviderinstanceDescCurrency.Default.(string)
 	projectMixin := schema.Project{}.Mixin()
 	project.Policy = privacy.NewPolicies(schema.Project{})
 	project.Hooks[0] = func(next ent.Mutator) ent.Mutator {

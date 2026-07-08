@@ -277,6 +277,46 @@ func (r *oIDCIdentityResolver) UserID(ctx context.Context, obj *ent.OIDCIdentity
 }
 
 // ID is the resolver for the id field.
+func (r *paymentEventResolver) ID(ctx context.Context, obj *ent.PaymentEvent) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// PaymentOrderID is the resolver for the paymentOrderID field.
+func (r *paymentEventResolver) PaymentOrderID(ctx context.Context, obj *ent.PaymentEvent) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: PaymentOrderID - paymentOrderID"))
+}
+
+// ProviderInstanceID is the resolver for the providerInstanceID field.
+func (r *paymentEventResolver) ProviderInstanceID(ctx context.Context, obj *ent.PaymentEvent) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ProviderInstanceID - providerInstanceID"))
+}
+
+// ID is the resolver for the id field.
+func (r *paymentOrderResolver) ID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// BillingAccountID is the resolver for the billingAccountID field.
+func (r *paymentOrderResolver) BillingAccountID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+}
+
+// ProviderInstanceID is the resolver for the providerInstanceID field.
+func (r *paymentOrderResolver) ProviderInstanceID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ProviderInstanceID - providerInstanceID"))
+}
+
+// LedgerTransactionID is the resolver for the ledgerTransactionID field.
+func (r *paymentOrderResolver) LedgerTransactionID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: LedgerTransactionID - ledgerTransactionID"))
+}
+
+// ID is the resolver for the id field.
+func (r *paymentProviderInstanceResolver) ID(ctx context.Context, obj *ent.PaymentProviderInstance) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ID is the resolver for the id field.
 func (r *projectResolver) ID(ctx context.Context, obj *ent.Project) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeProject,
@@ -463,6 +503,21 @@ func (r *queryResolver) OidcIdentities(ctx context.Context, after *entgql.Cursor
 		ent.WithOIDCIdentityOrder(orderBy),
 		ent.WithOIDCIdentityFilter(where.Filter),
 	)
+}
+
+// PaymentEvents is the resolver for the paymentEvents field.
+func (r *queryResolver) PaymentEvents(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder, where *ent.PaymentEventWhereInput) (*ent.PaymentEventConnection, error) {
+	panic(fmt.Errorf("not implemented: PaymentEvents - paymentEvents"))
+}
+
+// PaymentOrders is the resolver for the paymentOrders field.
+func (r *queryResolver) PaymentOrders(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) (*ent.PaymentOrderConnection, error) {
+	panic(fmt.Errorf("not implemented: PaymentOrders - paymentOrders"))
+}
+
+// PaymentProviderInstances is the resolver for the paymentProviderInstances field.
+func (r *queryResolver) PaymentProviderInstances(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentProviderInstanceOrder, where *ent.PaymentProviderInstanceWhereInput) (*ent.PaymentProviderInstanceConnection, error) {
+	panic(fmt.Errorf("not implemented: PaymentProviderInstances - paymentProviderInstances"))
 }
 
 // Projects is the resolver for the projects field.
@@ -1064,6 +1119,17 @@ func (r *Resolver) Model() ModelResolver { return &modelResolver{r} }
 // OIDCIdentity returns OIDCIdentityResolver implementation.
 func (r *Resolver) OIDCIdentity() OIDCIdentityResolver { return &oIDCIdentityResolver{r} }
 
+// PaymentEvent returns PaymentEventResolver implementation.
+func (r *Resolver) PaymentEvent() PaymentEventResolver { return &paymentEventResolver{r} }
+
+// PaymentOrder returns PaymentOrderResolver implementation.
+func (r *Resolver) PaymentOrder() PaymentOrderResolver { return &paymentOrderResolver{r} }
+
+// PaymentProviderInstance returns PaymentProviderInstanceResolver implementation.
+func (r *Resolver) PaymentProviderInstance() PaymentProviderInstanceResolver {
+	return &paymentProviderInstanceResolver{r}
+}
+
 // Project returns ProjectResolver implementation.
 func (r *Resolver) Project() ProjectResolver { return &projectResolver{r} }
 
@@ -1134,6 +1200,9 @@ type ledgerEntryResolver struct{ *Resolver }
 type ledgerTransactionResolver struct{ *Resolver }
 type modelResolver struct{ *Resolver }
 type oIDCIdentityResolver struct{ *Resolver }
+type paymentEventResolver struct{ *Resolver }
+type paymentOrderResolver struct{ *Resolver }
+type paymentProviderInstanceResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
 type promptResolver struct{ *Resolver }
 type promptProtectionRuleResolver struct{ *Resolver }

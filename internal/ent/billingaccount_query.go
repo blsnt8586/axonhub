@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
+	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 )
@@ -30,11 +31,13 @@ type BillingAccountQuery struct {
 	withBindings                 *BillingAccountBindingQuery
 	withLedgerTransactions       *LedgerTransactionQuery
 	withUsageBillingRecords      *UsageBillingRecordQuery
+	withPaymentOrders            *PaymentOrderQuery
 	loadTotal                    []func(context.Context, []*BillingAccount) error
 	modifiers                    []func(*sql.Selector)
 	withNamedBindings            map[string]*BillingAccountBindingQuery
 	withNamedLedgerTransactions  map[string]*LedgerTransactionQuery
 	withNamedUsageBillingRecords map[string]*UsageBillingRecordQuery
+	withNamedPaymentOrders       map[string]*PaymentOrderQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -130,6 +133,28 @@ func (_q *BillingAccountQuery) QueryUsageBillingRecords() *UsageBillingRecordQue
 			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, selector),
 			sqlgraph.To(usagebillingrecord.Table, usagebillingrecord.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.UsageBillingRecordsTable, billingaccount.UsageBillingRecordsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPaymentOrders chains the current query on the "payment_orders" edge.
+func (_q *BillingAccountQuery) QueryPaymentOrders() *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, selector),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.PaymentOrdersTable, billingaccount.PaymentOrdersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -332,6 +357,7 @@ func (_q *BillingAccountQuery) Clone() *BillingAccountQuery {
 		withBindings:            _q.withBindings.Clone(),
 		withLedgerTransactions:  _q.withLedgerTransactions.Clone(),
 		withUsageBillingRecords: _q.withUsageBillingRecords.Clone(),
+		withPaymentOrders:       _q.withPaymentOrders.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -369,6 +395,17 @@ func (_q *BillingAccountQuery) WithUsageBillingRecords(opts ...func(*UsageBillin
 		opt(query)
 	}
 	_q.withUsageBillingRecords = query
+	return _q
+}
+
+// WithPaymentOrders tells the query-builder to eager-load the nodes that are connected to
+// the "payment_orders" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *BillingAccountQuery) WithPaymentOrders(opts ...func(*PaymentOrderQuery)) *BillingAccountQuery {
+	query := (&PaymentOrderClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPaymentOrders = query
 	return _q
 }
 
@@ -456,10 +493,11 @@ func (_q *BillingAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	var (
 		nodes       = []*BillingAccount{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withBindings != nil,
 			_q.withLedgerTransactions != nil,
 			_q.withUsageBillingRecords != nil,
+			_q.withPaymentOrders != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -508,6 +546,13 @@ func (_q *BillingAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 			return nil, err
 		}
 	}
+	if query := _q.withPaymentOrders; query != nil {
+		if err := _q.loadPaymentOrders(ctx, query, nodes,
+			func(n *BillingAccount) { n.Edges.PaymentOrders = []*PaymentOrder{} },
+			func(n *BillingAccount, e *PaymentOrder) { n.Edges.PaymentOrders = append(n.Edges.PaymentOrders, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedBindings {
 		if err := _q.loadBindings(ctx, query, nodes,
 			func(n *BillingAccount) { n.appendNamedBindings(name) },
@@ -526,6 +571,13 @@ func (_q *BillingAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		if err := _q.loadUsageBillingRecords(ctx, query, nodes,
 			func(n *BillingAccount) { n.appendNamedUsageBillingRecords(name) },
 			func(n *BillingAccount, e *UsageBillingRecord) { n.appendNamedUsageBillingRecords(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedPaymentOrders {
+		if err := _q.loadPaymentOrders(ctx, query, nodes,
+			func(n *BillingAccount) { n.appendNamedPaymentOrders(name) },
+			func(n *BillingAccount, e *PaymentOrder) { n.appendNamedPaymentOrders(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -612,6 +664,36 @@ func (_q *BillingAccountQuery) loadUsageBillingRecords(ctx context.Context, quer
 	}
 	query.Where(predicate.UsageBillingRecord(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(billingaccount.UsageBillingRecordsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.BillingAccountID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "billing_account_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *BillingAccountQuery) loadPaymentOrders(ctx context.Context, query *PaymentOrderQuery, nodes []*BillingAccount, init func(*BillingAccount), assign func(*BillingAccount, *PaymentOrder)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*BillingAccount)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(paymentorder.FieldBillingAccountID)
+	}
+	query.Where(predicate.PaymentOrder(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(billingaccount.PaymentOrdersColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -760,6 +842,20 @@ func (_q *BillingAccountQuery) WithNamedUsageBillingRecords(name string, opts ..
 		_q.withNamedUsageBillingRecords = make(map[string]*UsageBillingRecordQuery)
 	}
 	_q.withNamedUsageBillingRecords[name] = query
+	return _q
+}
+
+// WithNamedPaymentOrders tells the query-builder to eager-load the nodes that are connected to the "payment_orders"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *BillingAccountQuery) WithNamedPaymentOrders(name string, opts ...func(*PaymentOrderQuery)) *BillingAccountQuery {
+	query := (&PaymentOrderClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedPaymentOrders == nil {
+		_q.withNamedPaymentOrders = make(map[string]*PaymentOrderQuery)
+	}
+	_q.withNamedPaymentOrders[name] = query
 	return _q
 }
 
