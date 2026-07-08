@@ -14,6 +14,7 @@ import {
   IconNote,
   IconChartBar,
   IconWallet,
+  IconCreditCard,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -104,6 +105,11 @@ export function useSidebarData(): SidebarData {
           title: t('sidebar.items.roles'),
           url: '/roles',
           icon: IconShield,
+        } as NavLink,
+        {
+          title: t('sidebar.items.adminBilling'),
+          url: '/admin/billing',
+          icon: IconCreditCard,
         } as NavLink,
         // {
         //   title: 'Permission Demo',

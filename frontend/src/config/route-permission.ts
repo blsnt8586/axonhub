@@ -43,6 +43,11 @@ export const routeConfigs: RouteGroup[] = [
         mode: 'hidden',
       },
       {
+        path: '/admin/billing',
+        requiredScopes: ['read_billing'],
+        mode: 'hidden',
+      },
+      {
         path: '/channels',
         requiredScopes: ['read_channels'],
         mode: 'hidden',
