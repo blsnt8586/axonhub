@@ -8,11 +8,15 @@ import (
 
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
+	"github.com/looplj/axonhub/internal/ent/ledgerentry"
+	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/project"
@@ -130,6 +134,70 @@ func init() {
 	apikeyprofiletemplateDescProfile := apikeyprofiletemplateFields[3].Descriptor()
 	// apikeyprofiletemplate.DefaultProfile holds the default value on creation for the profile field.
 	apikeyprofiletemplate.DefaultProfile = apikeyprofiletemplateDescProfile.Default.(*objects.APIKeyProfile)
+	billingaccountMixin := schema.BillingAccount{}.Mixin()
+	billingaccount.Policy = privacy.NewPolicies(schema.BillingAccount{})
+	billingaccount.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := billingaccount.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	billingaccountMixinFields0 := billingaccountMixin[0].Fields()
+	_ = billingaccountMixinFields0
+	billingaccountFields := schema.BillingAccount{}.Fields()
+	_ = billingaccountFields
+	// billingaccountDescCreatedAt is the schema descriptor for created_at field.
+	billingaccountDescCreatedAt := billingaccountMixinFields0[0].Descriptor()
+	// billingaccount.DefaultCreatedAt holds the default value on creation for the created_at field.
+	billingaccount.DefaultCreatedAt = billingaccountDescCreatedAt.Default.(func() time.Time)
+	// billingaccountDescUpdatedAt is the schema descriptor for updated_at field.
+	billingaccountDescUpdatedAt := billingaccountMixinFields0[1].Descriptor()
+	// billingaccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	billingaccount.DefaultUpdatedAt = billingaccountDescUpdatedAt.Default.(func() time.Time)
+	// billingaccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	billingaccount.UpdateDefaultUpdatedAt = billingaccountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// billingaccountDescCurrency is the schema descriptor for currency field.
+	billingaccountDescCurrency := billingaccountFields[2].Descriptor()
+	// billingaccount.DefaultCurrency holds the default value on creation for the currency field.
+	billingaccount.DefaultCurrency = billingaccountDescCurrency.Default.(string)
+	// billingaccountDescBalanceMicros is the schema descriptor for balance_micros field.
+	billingaccountDescBalanceMicros := billingaccountFields[3].Descriptor()
+	// billingaccount.DefaultBalanceMicros holds the default value on creation for the balance_micros field.
+	billingaccount.DefaultBalanceMicros = billingaccountDescBalanceMicros.Default.(int64)
+	// billingaccountDescCreditLimitMicros is the schema descriptor for credit_limit_micros field.
+	billingaccountDescCreditLimitMicros := billingaccountFields[4].Descriptor()
+	// billingaccount.DefaultCreditLimitMicros holds the default value on creation for the credit_limit_micros field.
+	billingaccount.DefaultCreditLimitMicros = billingaccountDescCreditLimitMicros.Default.(int64)
+	billingaccountbindingMixin := schema.BillingAccountBinding{}.Mixin()
+	billingaccountbinding.Policy = privacy.NewPolicies(schema.BillingAccountBinding{})
+	billingaccountbinding.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := billingaccountbinding.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	billingaccountbindingMixinFields0 := billingaccountbindingMixin[0].Fields()
+	_ = billingaccountbindingMixinFields0
+	billingaccountbindingFields := schema.BillingAccountBinding{}.Fields()
+	_ = billingaccountbindingFields
+	// billingaccountbindingDescCreatedAt is the schema descriptor for created_at field.
+	billingaccountbindingDescCreatedAt := billingaccountbindingMixinFields0[0].Descriptor()
+	// billingaccountbinding.DefaultCreatedAt holds the default value on creation for the created_at field.
+	billingaccountbinding.DefaultCreatedAt = billingaccountbindingDescCreatedAt.Default.(func() time.Time)
+	// billingaccountbindingDescUpdatedAt is the schema descriptor for updated_at field.
+	billingaccountbindingDescUpdatedAt := billingaccountbindingMixinFields0[1].Descriptor()
+	// billingaccountbinding.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	billingaccountbinding.DefaultUpdatedAt = billingaccountbindingDescUpdatedAt.Default.(func() time.Time)
+	// billingaccountbinding.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	billingaccountbinding.UpdateDefaultUpdatedAt = billingaccountbindingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// billingaccountbindingDescRelation is the schema descriptor for relation field.
+	billingaccountbindingDescRelation := billingaccountbindingFields[3].Descriptor()
+	// billingaccountbinding.DefaultRelation holds the default value on creation for the relation field.
+	billingaccountbinding.DefaultRelation = billingaccountbindingDescRelation.Default.(string)
 	channelMixin := schema.Channel{}.Mixin()
 	channel.Policy = privacy.NewPolicies(schema.Channel{})
 	channel.Hooks[0] = func(next ent.Mutator) ent.Mutator {
@@ -354,6 +422,86 @@ func init() {
 	datastorageDescPrimary := datastorageFields[2].Descriptor()
 	// datastorage.DefaultPrimary holds the default value on creation for the primary field.
 	datastorage.DefaultPrimary = datastorageDescPrimary.Default.(bool)
+	ledgerentryMixin := schema.LedgerEntry{}.Mixin()
+	ledgerentry.Policy = privacy.NewPolicies(schema.LedgerEntry{})
+	ledgerentry.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := ledgerentry.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	ledgerentryMixinFields0 := ledgerentryMixin[0].Fields()
+	_ = ledgerentryMixinFields0
+	ledgerentryFields := schema.LedgerEntry{}.Fields()
+	_ = ledgerentryFields
+	// ledgerentryDescCreatedAt is the schema descriptor for created_at field.
+	ledgerentryDescCreatedAt := ledgerentryMixinFields0[0].Descriptor()
+	// ledgerentry.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ledgerentry.DefaultCreatedAt = ledgerentryDescCreatedAt.Default.(func() time.Time)
+	// ledgerentryDescUpdatedAt is the schema descriptor for updated_at field.
+	ledgerentryDescUpdatedAt := ledgerentryMixinFields0[1].Descriptor()
+	// ledgerentry.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ledgerentry.DefaultUpdatedAt = ledgerentryDescUpdatedAt.Default.(func() time.Time)
+	// ledgerentry.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ledgerentry.UpdateDefaultUpdatedAt = ledgerentryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// ledgerentryDescAmountMicros is the schema descriptor for amount_micros field.
+	ledgerentryDescAmountMicros := ledgerentryFields[3].Descriptor()
+	// ledgerentry.AmountMicrosValidator is a validator for the "amount_micros" field. It is called by the builders before save.
+	ledgerentry.AmountMicrosValidator = ledgerentryDescAmountMicros.Validators[0].(func(int64) error)
+	// ledgerentryDescCurrency is the schema descriptor for currency field.
+	ledgerentryDescCurrency := ledgerentryFields[4].Descriptor()
+	// ledgerentry.DefaultCurrency holds the default value on creation for the currency field.
+	ledgerentry.DefaultCurrency = ledgerentryDescCurrency.Default.(string)
+	ledgertransactionMixin := schema.LedgerTransaction{}.Mixin()
+	ledgertransaction.Policy = privacy.NewPolicies(schema.LedgerTransaction{})
+	ledgertransaction.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := ledgertransaction.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	ledgertransactionMixinFields0 := ledgertransactionMixin[0].Fields()
+	_ = ledgertransactionMixinFields0
+	ledgertransactionFields := schema.LedgerTransaction{}.Fields()
+	_ = ledgertransactionFields
+	// ledgertransactionDescCreatedAt is the schema descriptor for created_at field.
+	ledgertransactionDescCreatedAt := ledgertransactionMixinFields0[0].Descriptor()
+	// ledgertransaction.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ledgertransaction.DefaultCreatedAt = ledgertransactionDescCreatedAt.Default.(func() time.Time)
+	// ledgertransactionDescUpdatedAt is the schema descriptor for updated_at field.
+	ledgertransactionDescUpdatedAt := ledgertransactionMixinFields0[1].Descriptor()
+	// ledgertransaction.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ledgertransaction.DefaultUpdatedAt = ledgertransactionDescUpdatedAt.Default.(func() time.Time)
+	// ledgertransaction.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ledgertransaction.UpdateDefaultUpdatedAt = ledgertransactionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// ledgertransactionDescAmountMicros is the schema descriptor for amount_micros field.
+	ledgertransactionDescAmountMicros := ledgertransactionFields[2].Descriptor()
+	// ledgertransaction.AmountMicrosValidator is a validator for the "amount_micros" field. It is called by the builders before save.
+	ledgertransaction.AmountMicrosValidator = ledgertransactionDescAmountMicros.Validators[0].(func(int64) error)
+	// ledgertransactionDescCurrency is the schema descriptor for currency field.
+	ledgertransactionDescCurrency := ledgertransactionFields[3].Descriptor()
+	// ledgertransaction.DefaultCurrency holds the default value on creation for the currency field.
+	ledgertransaction.DefaultCurrency = ledgertransactionDescCurrency.Default.(string)
+	// ledgertransactionDescReferenceType is the schema descriptor for reference_type field.
+	ledgertransactionDescReferenceType := ledgertransactionFields[7].Descriptor()
+	// ledgertransaction.DefaultReferenceType holds the default value on creation for the reference_type field.
+	ledgertransaction.DefaultReferenceType = ledgertransactionDescReferenceType.Default.(string)
+	// ledgertransactionDescReferenceID is the schema descriptor for reference_id field.
+	ledgertransactionDescReferenceID := ledgertransactionFields[8].Descriptor()
+	// ledgertransaction.DefaultReferenceID holds the default value on creation for the reference_id field.
+	ledgertransaction.DefaultReferenceID = ledgertransactionDescReferenceID.Default.(string)
+	// ledgertransactionDescMemo is the schema descriptor for memo field.
+	ledgertransactionDescMemo := ledgertransactionFields[9].Descriptor()
+	// ledgertransaction.DefaultMemo holds the default value on creation for the memo field.
+	ledgertransaction.DefaultMemo = ledgertransactionDescMemo.Default.(string)
+	// ledgertransactionDescCreatedByID is the schema descriptor for created_by_id field.
+	ledgertransactionDescCreatedByID := ledgertransactionFields[11].Descriptor()
+	// ledgertransaction.DefaultCreatedByID holds the default value on creation for the created_by_id field.
+	ledgertransaction.DefaultCreatedByID = ledgertransactionDescCreatedByID.Default.(string)
 	modelMixin := schema.Model{}.Mixin()
 	model.Policy = privacy.NewPolicies(schema.Model{})
 	model.Hooks[0] = func(next ent.Mutator) ent.Mutator {

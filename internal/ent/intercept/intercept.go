@@ -10,12 +10,16 @@ import (
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
+	"github.com/looplj/axonhub/internal/ent/ledgerentry"
+	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/predicate"
@@ -143,6 +147,60 @@ func (f TraverseAPIKeyProfileTemplate) Traverse(ctx context.Context, q ent.Query
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.APIKeyProfileTemplateQuery", q)
+}
+
+// The BillingAccountFunc type is an adapter to allow the use of ordinary function as a Querier.
+type BillingAccountFunc func(context.Context, *ent.BillingAccountQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f BillingAccountFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.BillingAccountQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.BillingAccountQuery", q)
+}
+
+// The TraverseBillingAccount type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseBillingAccount func(context.Context, *ent.BillingAccountQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseBillingAccount) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseBillingAccount) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingAccountQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.BillingAccountQuery", q)
+}
+
+// The BillingAccountBindingFunc type is an adapter to allow the use of ordinary function as a Querier.
+type BillingAccountBindingFunc func(context.Context, *ent.BillingAccountBindingQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f BillingAccountBindingFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.BillingAccountBindingQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.BillingAccountBindingQuery", q)
+}
+
+// The TraverseBillingAccountBinding type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseBillingAccountBinding func(context.Context, *ent.BillingAccountBindingQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseBillingAccountBinding) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseBillingAccountBinding) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingAccountBindingQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.BillingAccountBindingQuery", q)
 }
 
 // The ChannelFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -305,6 +363,60 @@ func (f TraverseDataStorage) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.DataStorageQuery", q)
+}
+
+// The LedgerEntryFunc type is an adapter to allow the use of ordinary function as a Querier.
+type LedgerEntryFunc func(context.Context, *ent.LedgerEntryQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f LedgerEntryFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.LedgerEntryQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.LedgerEntryQuery", q)
+}
+
+// The TraverseLedgerEntry type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseLedgerEntry func(context.Context, *ent.LedgerEntryQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseLedgerEntry) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseLedgerEntry) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.LedgerEntryQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.LedgerEntryQuery", q)
+}
+
+// The LedgerTransactionFunc type is an adapter to allow the use of ordinary function as a Querier.
+type LedgerTransactionFunc func(context.Context, *ent.LedgerTransactionQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f LedgerTransactionFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.LedgerTransactionQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.LedgerTransactionQuery", q)
+}
+
+// The TraverseLedgerTransaction type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseLedgerTransaction func(context.Context, *ent.LedgerTransactionQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseLedgerTransaction) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseLedgerTransaction) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.LedgerTransactionQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.LedgerTransactionQuery", q)
 }
 
 // The ModelFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -746,6 +858,10 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.APIKeyQuery, predicate.APIKey, apikey.OrderOption]{typ: ent.TypeAPIKey, tq: q}, nil
 	case *ent.APIKeyProfileTemplateQuery:
 		return &query[*ent.APIKeyProfileTemplateQuery, predicate.APIKeyProfileTemplate, apikeyprofiletemplate.OrderOption]{typ: ent.TypeAPIKeyProfileTemplate, tq: q}, nil
+	case *ent.BillingAccountQuery:
+		return &query[*ent.BillingAccountQuery, predicate.BillingAccount, billingaccount.OrderOption]{typ: ent.TypeBillingAccount, tq: q}, nil
+	case *ent.BillingAccountBindingQuery:
+		return &query[*ent.BillingAccountBindingQuery, predicate.BillingAccountBinding, billingaccountbinding.OrderOption]{typ: ent.TypeBillingAccountBinding, tq: q}, nil
 	case *ent.ChannelQuery:
 		return &query[*ent.ChannelQuery, predicate.Channel, channel.OrderOption]{typ: ent.TypeChannel, tq: q}, nil
 	case *ent.ChannelModelPriceQuery:
@@ -758,6 +874,10 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.ChannelProbeQuery, predicate.ChannelProbe, channelprobe.OrderOption]{typ: ent.TypeChannelProbe, tq: q}, nil
 	case *ent.DataStorageQuery:
 		return &query[*ent.DataStorageQuery, predicate.DataStorage, datastorage.OrderOption]{typ: ent.TypeDataStorage, tq: q}, nil
+	case *ent.LedgerEntryQuery:
+		return &query[*ent.LedgerEntryQuery, predicate.LedgerEntry, ledgerentry.OrderOption]{typ: ent.TypeLedgerEntry, tq: q}, nil
+	case *ent.LedgerTransactionQuery:
+		return &query[*ent.LedgerTransactionQuery, predicate.LedgerTransaction, ledgertransaction.OrderOption]{typ: ent.TypeLedgerTransaction, tq: q}, nil
 	case *ent.ModelQuery:
 		return &query[*ent.ModelQuery, predicate.Model, model.OrderOption]{typ: ent.TypeModel, tq: q}, nil
 	case *ent.OIDCIdentityQuery:

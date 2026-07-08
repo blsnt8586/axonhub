@@ -20,4 +20,8 @@ var (
 	ErrSystemNotInitialized   = errors.New("system not initialized")
 	ErrOIDCLoginRequired      = errors.New("OIDC user without password, please login via OIDC or set a password")
 	ErrProjectNotFound        = errors.New("project not found")
+	ErrBillingAccountNotFound = errors.New("billing account not found")
+	ErrBillingAccountFrozen   = errors.New("billing account is frozen")
+	ErrBillingAccountClosed   = errors.New("billing account is closed")
+	ErrInsufficientBalance    = errors.New("insufficient billing balance")
 )

@@ -16,12 +16,16 @@ import (
 	"github.com/99designs/gqlgen/graphql/errcode"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
+	"github.com/looplj/axonhub/internal/ent/ledgerentry"
+	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/project"
@@ -744,6 +748,634 @@ func (_m *APIKeyProfileTemplate) ToEdge(order *APIKeyProfileTemplateOrder) *APIK
 		order = DefaultAPIKeyProfileTemplateOrder
 	}
 	return &APIKeyProfileTemplateEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// BillingAccountEdge is the edge representation of BillingAccount.
+type BillingAccountEdge struct {
+	Node   *BillingAccount `json:"node"`
+	Cursor Cursor          `json:"cursor"`
+}
+
+// BillingAccountConnection is the connection containing edges to BillingAccount.
+type BillingAccountConnection struct {
+	Edges      []*BillingAccountEdge `json:"edges"`
+	PageInfo   PageInfo              `json:"pageInfo"`
+	TotalCount int                   `json:"totalCount"`
+}
+
+func (c *BillingAccountConnection) build(nodes []*BillingAccount, pager *billingaccountPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *BillingAccount
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *BillingAccount {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *BillingAccount {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*BillingAccountEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &BillingAccountEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// BillingAccountPaginateOption enables pagination customization.
+type BillingAccountPaginateOption func(*billingaccountPager) error
+
+// WithBillingAccountOrder configures pagination ordering.
+func WithBillingAccountOrder(order *BillingAccountOrder) BillingAccountPaginateOption {
+	if order == nil {
+		order = DefaultBillingAccountOrder
+	}
+	o := *order
+	return func(pager *billingaccountPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultBillingAccountOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithBillingAccountFilter configures pagination filter.
+func WithBillingAccountFilter(filter func(*BillingAccountQuery) (*BillingAccountQuery, error)) BillingAccountPaginateOption {
+	return func(pager *billingaccountPager) error {
+		if filter == nil {
+			return errors.New("BillingAccountQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type billingaccountPager struct {
+	reverse bool
+	order   *BillingAccountOrder
+	filter  func(*BillingAccountQuery) (*BillingAccountQuery, error)
+}
+
+func newBillingAccountPager(opts []BillingAccountPaginateOption, reverse bool) (*billingaccountPager, error) {
+	pager := &billingaccountPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultBillingAccountOrder
+	}
+	return pager, nil
+}
+
+func (p *billingaccountPager) applyFilter(query *BillingAccountQuery) (*BillingAccountQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *billingaccountPager) toCursor(_m *BillingAccount) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *billingaccountPager) applyCursors(query *BillingAccountQuery, after, before *Cursor) (*BillingAccountQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultBillingAccountOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *billingaccountPager) applyOrder(query *BillingAccountQuery) *BillingAccountQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultBillingAccountOrder.Field {
+		query = query.Order(DefaultBillingAccountOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *billingaccountPager) orderExpr(query *BillingAccountQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultBillingAccountOrder.Field {
+			b.Comma().Ident(DefaultBillingAccountOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to BillingAccount.
+func (_m *BillingAccountQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...BillingAccountPaginateOption,
+) (*BillingAccountConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newBillingAccountPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &BillingAccountConnection{Edges: []*BillingAccountEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// BillingAccountOrderFieldCreatedAt orders BillingAccount by created_at.
+	BillingAccountOrderFieldCreatedAt = &BillingAccountOrderField{
+		Value: func(_m *BillingAccount) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: billingaccount.FieldCreatedAt,
+		toTerm: billingaccount.ByCreatedAt,
+		toCursor: func(_m *BillingAccount) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// BillingAccountOrderFieldUpdatedAt orders BillingAccount by updated_at.
+	BillingAccountOrderFieldUpdatedAt = &BillingAccountOrderField{
+		Value: func(_m *BillingAccount) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: billingaccount.FieldUpdatedAt,
+		toTerm: billingaccount.ByUpdatedAt,
+		toCursor: func(_m *BillingAccount) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f BillingAccountOrderField) String() string {
+	var str string
+	switch f.column {
+	case BillingAccountOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case BillingAccountOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f BillingAccountOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *BillingAccountOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("BillingAccountOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *BillingAccountOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *BillingAccountOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid BillingAccountOrderField", str)
+	}
+	return nil
+}
+
+// BillingAccountOrderField defines the ordering field of BillingAccount.
+type BillingAccountOrderField struct {
+	// Value extracts the ordering value from the given BillingAccount.
+	Value    func(*BillingAccount) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) billingaccount.OrderOption
+	toCursor func(*BillingAccount) Cursor
+}
+
+// BillingAccountOrder defines the ordering of BillingAccount.
+type BillingAccountOrder struct {
+	Direction OrderDirection            `json:"direction"`
+	Field     *BillingAccountOrderField `json:"field"`
+}
+
+// DefaultBillingAccountOrder is the default ordering of BillingAccount.
+var DefaultBillingAccountOrder = &BillingAccountOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &BillingAccountOrderField{
+		Value: func(_m *BillingAccount) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: billingaccount.FieldID,
+		toTerm: billingaccount.ByID,
+		toCursor: func(_m *BillingAccount) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts BillingAccount into BillingAccountEdge.
+func (_m *BillingAccount) ToEdge(order *BillingAccountOrder) *BillingAccountEdge {
+	if order == nil {
+		order = DefaultBillingAccountOrder
+	}
+	return &BillingAccountEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// BillingAccountBindingEdge is the edge representation of BillingAccountBinding.
+type BillingAccountBindingEdge struct {
+	Node   *BillingAccountBinding `json:"node"`
+	Cursor Cursor                 `json:"cursor"`
+}
+
+// BillingAccountBindingConnection is the connection containing edges to BillingAccountBinding.
+type BillingAccountBindingConnection struct {
+	Edges      []*BillingAccountBindingEdge `json:"edges"`
+	PageInfo   PageInfo                     `json:"pageInfo"`
+	TotalCount int                          `json:"totalCount"`
+}
+
+func (c *BillingAccountBindingConnection) build(nodes []*BillingAccountBinding, pager *billingaccountbindingPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *BillingAccountBinding
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *BillingAccountBinding {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *BillingAccountBinding {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*BillingAccountBindingEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &BillingAccountBindingEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// BillingAccountBindingPaginateOption enables pagination customization.
+type BillingAccountBindingPaginateOption func(*billingaccountbindingPager) error
+
+// WithBillingAccountBindingOrder configures pagination ordering.
+func WithBillingAccountBindingOrder(order *BillingAccountBindingOrder) BillingAccountBindingPaginateOption {
+	if order == nil {
+		order = DefaultBillingAccountBindingOrder
+	}
+	o := *order
+	return func(pager *billingaccountbindingPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultBillingAccountBindingOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithBillingAccountBindingFilter configures pagination filter.
+func WithBillingAccountBindingFilter(filter func(*BillingAccountBindingQuery) (*BillingAccountBindingQuery, error)) BillingAccountBindingPaginateOption {
+	return func(pager *billingaccountbindingPager) error {
+		if filter == nil {
+			return errors.New("BillingAccountBindingQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type billingaccountbindingPager struct {
+	reverse bool
+	order   *BillingAccountBindingOrder
+	filter  func(*BillingAccountBindingQuery) (*BillingAccountBindingQuery, error)
+}
+
+func newBillingAccountBindingPager(opts []BillingAccountBindingPaginateOption, reverse bool) (*billingaccountbindingPager, error) {
+	pager := &billingaccountbindingPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultBillingAccountBindingOrder
+	}
+	return pager, nil
+}
+
+func (p *billingaccountbindingPager) applyFilter(query *BillingAccountBindingQuery) (*BillingAccountBindingQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *billingaccountbindingPager) toCursor(_m *BillingAccountBinding) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *billingaccountbindingPager) applyCursors(query *BillingAccountBindingQuery, after, before *Cursor) (*BillingAccountBindingQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultBillingAccountBindingOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *billingaccountbindingPager) applyOrder(query *BillingAccountBindingQuery) *BillingAccountBindingQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultBillingAccountBindingOrder.Field {
+		query = query.Order(DefaultBillingAccountBindingOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *billingaccountbindingPager) orderExpr(query *BillingAccountBindingQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultBillingAccountBindingOrder.Field {
+			b.Comma().Ident(DefaultBillingAccountBindingOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to BillingAccountBinding.
+func (_m *BillingAccountBindingQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...BillingAccountBindingPaginateOption,
+) (*BillingAccountBindingConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newBillingAccountBindingPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &BillingAccountBindingConnection{Edges: []*BillingAccountBindingEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// BillingAccountBindingOrderFieldCreatedAt orders BillingAccountBinding by created_at.
+	BillingAccountBindingOrderFieldCreatedAt = &BillingAccountBindingOrderField{
+		Value: func(_m *BillingAccountBinding) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: billingaccountbinding.FieldCreatedAt,
+		toTerm: billingaccountbinding.ByCreatedAt,
+		toCursor: func(_m *BillingAccountBinding) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// BillingAccountBindingOrderFieldUpdatedAt orders BillingAccountBinding by updated_at.
+	BillingAccountBindingOrderFieldUpdatedAt = &BillingAccountBindingOrderField{
+		Value: func(_m *BillingAccountBinding) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: billingaccountbinding.FieldUpdatedAt,
+		toTerm: billingaccountbinding.ByUpdatedAt,
+		toCursor: func(_m *BillingAccountBinding) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f BillingAccountBindingOrderField) String() string {
+	var str string
+	switch f.column {
+	case BillingAccountBindingOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case BillingAccountBindingOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f BillingAccountBindingOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *BillingAccountBindingOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("BillingAccountBindingOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *BillingAccountBindingOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *BillingAccountBindingOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid BillingAccountBindingOrderField", str)
+	}
+	return nil
+}
+
+// BillingAccountBindingOrderField defines the ordering field of BillingAccountBinding.
+type BillingAccountBindingOrderField struct {
+	// Value extracts the ordering value from the given BillingAccountBinding.
+	Value    func(*BillingAccountBinding) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) billingaccountbinding.OrderOption
+	toCursor func(*BillingAccountBinding) Cursor
+}
+
+// BillingAccountBindingOrder defines the ordering of BillingAccountBinding.
+type BillingAccountBindingOrder struct {
+	Direction OrderDirection                   `json:"direction"`
+	Field     *BillingAccountBindingOrderField `json:"field"`
+}
+
+// DefaultBillingAccountBindingOrder is the default ordering of BillingAccountBinding.
+var DefaultBillingAccountBindingOrder = &BillingAccountBindingOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &BillingAccountBindingOrderField{
+		Value: func(_m *BillingAccountBinding) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: billingaccountbinding.FieldID,
+		toTerm: billingaccountbinding.ByID,
+		toCursor: func(_m *BillingAccountBinding) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts BillingAccountBinding into BillingAccountBindingEdge.
+func (_m *BillingAccountBinding) ToEdge(order *BillingAccountBindingOrder) *BillingAccountBindingEdge {
+	if order == nil {
+		order = DefaultBillingAccountBindingOrder
+	}
+	return &BillingAccountBindingEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}
@@ -2635,6 +3267,634 @@ func (_m *DataStorage) ToEdge(order *DataStorageOrder) *DataStorageEdge {
 		order = DefaultDataStorageOrder
 	}
 	return &DataStorageEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// LedgerEntryEdge is the edge representation of LedgerEntry.
+type LedgerEntryEdge struct {
+	Node   *LedgerEntry `json:"node"`
+	Cursor Cursor       `json:"cursor"`
+}
+
+// LedgerEntryConnection is the connection containing edges to LedgerEntry.
+type LedgerEntryConnection struct {
+	Edges      []*LedgerEntryEdge `json:"edges"`
+	PageInfo   PageInfo           `json:"pageInfo"`
+	TotalCount int                `json:"totalCount"`
+}
+
+func (c *LedgerEntryConnection) build(nodes []*LedgerEntry, pager *ledgerentryPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *LedgerEntry
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *LedgerEntry {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *LedgerEntry {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*LedgerEntryEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &LedgerEntryEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// LedgerEntryPaginateOption enables pagination customization.
+type LedgerEntryPaginateOption func(*ledgerentryPager) error
+
+// WithLedgerEntryOrder configures pagination ordering.
+func WithLedgerEntryOrder(order *LedgerEntryOrder) LedgerEntryPaginateOption {
+	if order == nil {
+		order = DefaultLedgerEntryOrder
+	}
+	o := *order
+	return func(pager *ledgerentryPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultLedgerEntryOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithLedgerEntryFilter configures pagination filter.
+func WithLedgerEntryFilter(filter func(*LedgerEntryQuery) (*LedgerEntryQuery, error)) LedgerEntryPaginateOption {
+	return func(pager *ledgerentryPager) error {
+		if filter == nil {
+			return errors.New("LedgerEntryQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type ledgerentryPager struct {
+	reverse bool
+	order   *LedgerEntryOrder
+	filter  func(*LedgerEntryQuery) (*LedgerEntryQuery, error)
+}
+
+func newLedgerEntryPager(opts []LedgerEntryPaginateOption, reverse bool) (*ledgerentryPager, error) {
+	pager := &ledgerentryPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultLedgerEntryOrder
+	}
+	return pager, nil
+}
+
+func (p *ledgerentryPager) applyFilter(query *LedgerEntryQuery) (*LedgerEntryQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *ledgerentryPager) toCursor(_m *LedgerEntry) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *ledgerentryPager) applyCursors(query *LedgerEntryQuery, after, before *Cursor) (*LedgerEntryQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultLedgerEntryOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *ledgerentryPager) applyOrder(query *LedgerEntryQuery) *LedgerEntryQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultLedgerEntryOrder.Field {
+		query = query.Order(DefaultLedgerEntryOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *ledgerentryPager) orderExpr(query *LedgerEntryQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultLedgerEntryOrder.Field {
+			b.Comma().Ident(DefaultLedgerEntryOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to LedgerEntry.
+func (_m *LedgerEntryQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...LedgerEntryPaginateOption,
+) (*LedgerEntryConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newLedgerEntryPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &LedgerEntryConnection{Edges: []*LedgerEntryEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// LedgerEntryOrderFieldCreatedAt orders LedgerEntry by created_at.
+	LedgerEntryOrderFieldCreatedAt = &LedgerEntryOrderField{
+		Value: func(_m *LedgerEntry) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: ledgerentry.FieldCreatedAt,
+		toTerm: ledgerentry.ByCreatedAt,
+		toCursor: func(_m *LedgerEntry) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// LedgerEntryOrderFieldUpdatedAt orders LedgerEntry by updated_at.
+	LedgerEntryOrderFieldUpdatedAt = &LedgerEntryOrderField{
+		Value: func(_m *LedgerEntry) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: ledgerentry.FieldUpdatedAt,
+		toTerm: ledgerentry.ByUpdatedAt,
+		toCursor: func(_m *LedgerEntry) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f LedgerEntryOrderField) String() string {
+	var str string
+	switch f.column {
+	case LedgerEntryOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case LedgerEntryOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f LedgerEntryOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *LedgerEntryOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("LedgerEntryOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *LedgerEntryOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *LedgerEntryOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid LedgerEntryOrderField", str)
+	}
+	return nil
+}
+
+// LedgerEntryOrderField defines the ordering field of LedgerEntry.
+type LedgerEntryOrderField struct {
+	// Value extracts the ordering value from the given LedgerEntry.
+	Value    func(*LedgerEntry) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) ledgerentry.OrderOption
+	toCursor func(*LedgerEntry) Cursor
+}
+
+// LedgerEntryOrder defines the ordering of LedgerEntry.
+type LedgerEntryOrder struct {
+	Direction OrderDirection         `json:"direction"`
+	Field     *LedgerEntryOrderField `json:"field"`
+}
+
+// DefaultLedgerEntryOrder is the default ordering of LedgerEntry.
+var DefaultLedgerEntryOrder = &LedgerEntryOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &LedgerEntryOrderField{
+		Value: func(_m *LedgerEntry) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: ledgerentry.FieldID,
+		toTerm: ledgerentry.ByID,
+		toCursor: func(_m *LedgerEntry) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts LedgerEntry into LedgerEntryEdge.
+func (_m *LedgerEntry) ToEdge(order *LedgerEntryOrder) *LedgerEntryEdge {
+	if order == nil {
+		order = DefaultLedgerEntryOrder
+	}
+	return &LedgerEntryEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// LedgerTransactionEdge is the edge representation of LedgerTransaction.
+type LedgerTransactionEdge struct {
+	Node   *LedgerTransaction `json:"node"`
+	Cursor Cursor             `json:"cursor"`
+}
+
+// LedgerTransactionConnection is the connection containing edges to LedgerTransaction.
+type LedgerTransactionConnection struct {
+	Edges      []*LedgerTransactionEdge `json:"edges"`
+	PageInfo   PageInfo                 `json:"pageInfo"`
+	TotalCount int                      `json:"totalCount"`
+}
+
+func (c *LedgerTransactionConnection) build(nodes []*LedgerTransaction, pager *ledgertransactionPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *LedgerTransaction
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *LedgerTransaction {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *LedgerTransaction {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*LedgerTransactionEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &LedgerTransactionEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// LedgerTransactionPaginateOption enables pagination customization.
+type LedgerTransactionPaginateOption func(*ledgertransactionPager) error
+
+// WithLedgerTransactionOrder configures pagination ordering.
+func WithLedgerTransactionOrder(order *LedgerTransactionOrder) LedgerTransactionPaginateOption {
+	if order == nil {
+		order = DefaultLedgerTransactionOrder
+	}
+	o := *order
+	return func(pager *ledgertransactionPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultLedgerTransactionOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithLedgerTransactionFilter configures pagination filter.
+func WithLedgerTransactionFilter(filter func(*LedgerTransactionQuery) (*LedgerTransactionQuery, error)) LedgerTransactionPaginateOption {
+	return func(pager *ledgertransactionPager) error {
+		if filter == nil {
+			return errors.New("LedgerTransactionQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type ledgertransactionPager struct {
+	reverse bool
+	order   *LedgerTransactionOrder
+	filter  func(*LedgerTransactionQuery) (*LedgerTransactionQuery, error)
+}
+
+func newLedgerTransactionPager(opts []LedgerTransactionPaginateOption, reverse bool) (*ledgertransactionPager, error) {
+	pager := &ledgertransactionPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultLedgerTransactionOrder
+	}
+	return pager, nil
+}
+
+func (p *ledgertransactionPager) applyFilter(query *LedgerTransactionQuery) (*LedgerTransactionQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *ledgertransactionPager) toCursor(_m *LedgerTransaction) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *ledgertransactionPager) applyCursors(query *LedgerTransactionQuery, after, before *Cursor) (*LedgerTransactionQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultLedgerTransactionOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *ledgertransactionPager) applyOrder(query *LedgerTransactionQuery) *LedgerTransactionQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultLedgerTransactionOrder.Field {
+		query = query.Order(DefaultLedgerTransactionOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *ledgertransactionPager) orderExpr(query *LedgerTransactionQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultLedgerTransactionOrder.Field {
+			b.Comma().Ident(DefaultLedgerTransactionOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to LedgerTransaction.
+func (_m *LedgerTransactionQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...LedgerTransactionPaginateOption,
+) (*LedgerTransactionConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newLedgerTransactionPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &LedgerTransactionConnection{Edges: []*LedgerTransactionEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// LedgerTransactionOrderFieldCreatedAt orders LedgerTransaction by created_at.
+	LedgerTransactionOrderFieldCreatedAt = &LedgerTransactionOrderField{
+		Value: func(_m *LedgerTransaction) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: ledgertransaction.FieldCreatedAt,
+		toTerm: ledgertransaction.ByCreatedAt,
+		toCursor: func(_m *LedgerTransaction) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// LedgerTransactionOrderFieldUpdatedAt orders LedgerTransaction by updated_at.
+	LedgerTransactionOrderFieldUpdatedAt = &LedgerTransactionOrderField{
+		Value: func(_m *LedgerTransaction) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: ledgertransaction.FieldUpdatedAt,
+		toTerm: ledgertransaction.ByUpdatedAt,
+		toCursor: func(_m *LedgerTransaction) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f LedgerTransactionOrderField) String() string {
+	var str string
+	switch f.column {
+	case LedgerTransactionOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case LedgerTransactionOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f LedgerTransactionOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *LedgerTransactionOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("LedgerTransactionOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *LedgerTransactionOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *LedgerTransactionOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid LedgerTransactionOrderField", str)
+	}
+	return nil
+}
+
+// LedgerTransactionOrderField defines the ordering field of LedgerTransaction.
+type LedgerTransactionOrderField struct {
+	// Value extracts the ordering value from the given LedgerTransaction.
+	Value    func(*LedgerTransaction) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) ledgertransaction.OrderOption
+	toCursor func(*LedgerTransaction) Cursor
+}
+
+// LedgerTransactionOrder defines the ordering of LedgerTransaction.
+type LedgerTransactionOrder struct {
+	Direction OrderDirection               `json:"direction"`
+	Field     *LedgerTransactionOrderField `json:"field"`
+}
+
+// DefaultLedgerTransactionOrder is the default ordering of LedgerTransaction.
+var DefaultLedgerTransactionOrder = &LedgerTransactionOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &LedgerTransactionOrderField{
+		Value: func(_m *LedgerTransaction) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: ledgertransaction.FieldID,
+		toTerm: ledgertransaction.ByID,
+		toCursor: func(_m *LedgerTransaction) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts LedgerTransaction into LedgerTransactionEdge.
+func (_m *LedgerTransaction) ToEdge(order *LedgerTransactionOrder) *LedgerTransactionEdge {
+	if order == nil {
+		order = DefaultLedgerTransactionOrder
+	}
+	return &LedgerTransactionEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

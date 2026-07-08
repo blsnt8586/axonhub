@@ -12,6 +12,12 @@ type APIKey func(*sql.Selector)
 // APIKeyProfileTemplate is the predicate function for apikeyprofiletemplate builders.
 type APIKeyProfileTemplate func(*sql.Selector)
 
+// BillingAccount is the predicate function for billingaccount builders.
+type BillingAccount func(*sql.Selector)
+
+// BillingAccountBinding is the predicate function for billingaccountbinding builders.
+type BillingAccountBinding func(*sql.Selector)
+
 // Channel is the predicate function for channel builders.
 type Channel func(*sql.Selector)
 
@@ -29,6 +35,12 @@ type ChannelProbe func(*sql.Selector)
 
 // DataStorage is the predicate function for datastorage builders.
 type DataStorage func(*sql.Selector)
+
+// LedgerEntry is the predicate function for ledgerentry builders.
+type LedgerEntry func(*sql.Selector)
+
+// LedgerTransaction is the predicate function for ledgertransaction builders.
+type LedgerTransaction func(*sql.Selector)
 
 // Model is the predicate function for model builders.
 type Model func(*sql.Selector)

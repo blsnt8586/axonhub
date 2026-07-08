@@ -63,6 +63,21 @@ func (r *aPIKeyProfileTemplateResolver) ProjectID(ctx context.Context, obj *ent.
 }
 
 // ID is the resolver for the id field.
+func (r *billingAccountResolver) ID(ctx context.Context, obj *ent.BillingAccount) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ID is the resolver for the id field.
+func (r *billingAccountBindingResolver) ID(ctx context.Context, obj *ent.BillingAccountBinding) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// BillingAccountID is the resolver for the billingAccountID field.
+func (r *billingAccountBindingResolver) BillingAccountID(ctx context.Context, obj *ent.BillingAccountBinding) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+}
+
+// ID is the resolver for the id field.
 func (r *channelResolver) ID(ctx context.Context, obj *ent.Channel) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeChannel,
@@ -208,6 +223,26 @@ func (r *dataStorageResolver) ID(ctx context.Context, obj *ent.DataStorage) (*ob
 }
 
 // ID is the resolver for the id field.
+func (r *ledgerEntryResolver) ID(ctx context.Context, obj *ent.LedgerEntry) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// LedgerTransactionID is the resolver for the ledgerTransactionID field.
+func (r *ledgerEntryResolver) LedgerTransactionID(ctx context.Context, obj *ent.LedgerEntry) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: LedgerTransactionID - ledgerTransactionID"))
+}
+
+// ID is the resolver for the id field.
+func (r *ledgerTransactionResolver) ID(ctx context.Context, obj *ent.LedgerTransaction) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// BillingAccountID is the resolver for the billingAccountID field.
+func (r *ledgerTransactionResolver) BillingAccountID(ctx context.Context, obj *ent.LedgerTransaction) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+}
+
+// ID is the resolver for the id field.
 func (r *modelResolver) ID(ctx context.Context, obj *ent.Model) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeModel,
@@ -323,6 +358,16 @@ func (r *queryResolver) APIKeyProfileTemplates(ctx context.Context, after *entgq
 	)
 }
 
+// BillingAccounts is the resolver for the billingAccounts field.
+func (r *queryResolver) BillingAccounts(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountOrder, where *ent.BillingAccountWhereInput) (*ent.BillingAccountConnection, error) {
+	panic(fmt.Errorf("not implemented: BillingAccounts - billingAccounts"))
+}
+
+// BillingAccountBindings is the resolver for the billingAccountBindings field.
+func (r *queryResolver) BillingAccountBindings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) (*ent.BillingAccountBindingConnection, error) {
+	panic(fmt.Errorf("not implemented: BillingAccountBindings - billingAccountBindings"))
+}
+
 // Channels is the resolver for the channels field.
 func (r *queryResolver) Channels(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOrder, where *ent.ChannelWhereInput) (*ent.ChannelConnection, error) {
 	if orderBy != nil && orderBy.Field.String() == "CREATED_AT" {
@@ -365,6 +410,16 @@ func (r *queryResolver) DataStorages(ctx context.Context, after *entgql.Cursor[i
 		ent.WithDataStorageOrder(orderBy),
 		ent.WithDataStorageFilter(where.Filter),
 	)
+}
+
+// LedgerEntries is the resolver for the ledgerEntries field.
+func (r *queryResolver) LedgerEntries(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerEntryOrder, where *ent.LedgerEntryWhereInput) (*ent.LedgerEntryConnection, error) {
+	panic(fmt.Errorf("not implemented: LedgerEntries - ledgerEntries"))
+}
+
+// LedgerTransactions is the resolver for the ledgerTransactions field.
+func (r *queryResolver) LedgerTransactions(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder, where *ent.LedgerTransactionWhereInput) (*ent.LedgerTransactionConnection, error) {
+	panic(fmt.Errorf("not implemented: LedgerTransactions - ledgerTransactions"))
 }
 
 // Models is the resolver for the models field.
@@ -912,6 +967,14 @@ func (r *Resolver) APIKeyProfileTemplate() APIKeyProfileTemplateResolver {
 	return &aPIKeyProfileTemplateResolver{r}
 }
 
+// BillingAccount returns BillingAccountResolver implementation.
+func (r *Resolver) BillingAccount() BillingAccountResolver { return &billingAccountResolver{r} }
+
+// BillingAccountBinding returns BillingAccountBindingResolver implementation.
+func (r *Resolver) BillingAccountBinding() BillingAccountBindingResolver {
+	return &billingAccountBindingResolver{r}
+}
+
 // Channel returns ChannelResolver implementation.
 func (r *Resolver) Channel() ChannelResolver { return &channelResolver{r} }
 
@@ -935,6 +998,14 @@ func (r *Resolver) ChannelProbe() ChannelProbeResolver { return &channelProbeRes
 
 // DataStorage returns DataStorageResolver implementation.
 func (r *Resolver) DataStorage() DataStorageResolver { return &dataStorageResolver{r} }
+
+// LedgerEntry returns LedgerEntryResolver implementation.
+func (r *Resolver) LedgerEntry() LedgerEntryResolver { return &ledgerEntryResolver{r} }
+
+// LedgerTransaction returns LedgerTransactionResolver implementation.
+func (r *Resolver) LedgerTransaction() LedgerTransactionResolver {
+	return &ledgerTransactionResolver{r}
+}
 
 // Model returns ModelResolver implementation.
 func (r *Resolver) Model() ModelResolver { return &modelResolver{r} }
@@ -993,12 +1064,16 @@ func (r *Resolver) UserRole() UserRoleResolver { return &userRoleResolver{r} }
 
 type aPIKeyResolver struct{ *Resolver }
 type aPIKeyProfileTemplateResolver struct{ *Resolver }
+type billingAccountResolver struct{ *Resolver }
+type billingAccountBindingResolver struct{ *Resolver }
 type channelResolver struct{ *Resolver }
 type channelModelPriceResolver struct{ *Resolver }
 type channelModelPriceVersionResolver struct{ *Resolver }
 type channelOverrideTemplateResolver struct{ *Resolver }
 type channelProbeResolver struct{ *Resolver }
 type dataStorageResolver struct{ *Resolver }
+type ledgerEntryResolver struct{ *Resolver }
+type ledgerTransactionResolver struct{ *Resolver }
 type modelResolver struct{ *Resolver }
 type oIDCIdentityResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }

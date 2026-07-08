@@ -14,12 +14,16 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
+	"github.com/looplj/axonhub/internal/ent/ledgerentry"
+	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/project"
@@ -98,12 +102,16 @@ func checkColumn(t, c string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			apikey.Table:                   apikey.ValidColumn,
 			apikeyprofiletemplate.Table:    apikeyprofiletemplate.ValidColumn,
+			billingaccount.Table:           billingaccount.ValidColumn,
+			billingaccountbinding.Table:    billingaccountbinding.ValidColumn,
 			channel.Table:                  channel.ValidColumn,
 			channelmodelprice.Table:        channelmodelprice.ValidColumn,
 			channelmodelpriceversion.Table: channelmodelpriceversion.ValidColumn,
 			channeloverridetemplate.Table:  channeloverridetemplate.ValidColumn,
 			channelprobe.Table:             channelprobe.ValidColumn,
 			datastorage.Table:              datastorage.ValidColumn,
+			ledgerentry.Table:              ledgerentry.ValidColumn,
+			ledgertransaction.Table:        ledgertransaction.ValidColumn,
 			model.Table:                    model.ValidColumn,
 			oidcidentity.Table:             oidcidentity.ValidColumn,
 			project.Table:                  project.ValidColumn,

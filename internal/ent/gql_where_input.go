@@ -9,12 +9,16 @@ import (
 
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
+	"github.com/looplj/axonhub/internal/ent/ledgerentry"
+	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/predicate"
@@ -817,6 +821,772 @@ func (i *APIKeyProfileTemplateWhereInput) P() (predicate.APIKeyProfileTemplate, 
 		return predicates[0], nil
 	default:
 		return apikeyprofiletemplate.And(predicates...), nil
+	}
+}
+
+// BillingAccountWhereInput represents a where input for filtering BillingAccount queries.
+type BillingAccountWhereInput struct {
+	Predicates []predicate.BillingAccount  `json:"-"`
+	Not        *BillingAccountWhereInput   `json:"not,omitempty"`
+	Or         []*BillingAccountWhereInput `json:"or,omitempty"`
+	And        []*BillingAccountWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "owner_type" field predicates.
+	OwnerType      *billingaccount.OwnerType  `json:"ownerType,omitempty"`
+	OwnerTypeNEQ   *billingaccount.OwnerType  `json:"ownerTypeNEQ,omitempty"`
+	OwnerTypeIn    []billingaccount.OwnerType `json:"ownerTypeIn,omitempty"`
+	OwnerTypeNotIn []billingaccount.OwnerType `json:"ownerTypeNotIn,omitempty"`
+
+	// "owner_id" field predicates.
+	OwnerID      *int  `json:"ownerID,omitempty"`
+	OwnerIDNEQ   *int  `json:"ownerIDNEQ,omitempty"`
+	OwnerIDIn    []int `json:"ownerIDIn,omitempty"`
+	OwnerIDNotIn []int `json:"ownerIDNotIn,omitempty"`
+	OwnerIDGT    *int  `json:"ownerIDGT,omitempty"`
+	OwnerIDGTE   *int  `json:"ownerIDGTE,omitempty"`
+	OwnerIDLT    *int  `json:"ownerIDLT,omitempty"`
+	OwnerIDLTE   *int  `json:"ownerIDLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "balance_micros" field predicates.
+	BalanceMicros      *int64  `json:"balanceMicros,omitempty"`
+	BalanceMicrosNEQ   *int64  `json:"balanceMicrosNEQ,omitempty"`
+	BalanceMicrosIn    []int64 `json:"balanceMicrosIn,omitempty"`
+	BalanceMicrosNotIn []int64 `json:"balanceMicrosNotIn,omitempty"`
+	BalanceMicrosGT    *int64  `json:"balanceMicrosGT,omitempty"`
+	BalanceMicrosGTE   *int64  `json:"balanceMicrosGTE,omitempty"`
+	BalanceMicrosLT    *int64  `json:"balanceMicrosLT,omitempty"`
+	BalanceMicrosLTE   *int64  `json:"balanceMicrosLTE,omitempty"`
+
+	// "credit_limit_micros" field predicates.
+	CreditLimitMicros      *int64  `json:"creditLimitMicros,omitempty"`
+	CreditLimitMicrosNEQ   *int64  `json:"creditLimitMicrosNEQ,omitempty"`
+	CreditLimitMicrosIn    []int64 `json:"creditLimitMicrosIn,omitempty"`
+	CreditLimitMicrosNotIn []int64 `json:"creditLimitMicrosNotIn,omitempty"`
+	CreditLimitMicrosGT    *int64  `json:"creditLimitMicrosGT,omitempty"`
+	CreditLimitMicrosGTE   *int64  `json:"creditLimitMicrosGTE,omitempty"`
+	CreditLimitMicrosLT    *int64  `json:"creditLimitMicrosLT,omitempty"`
+	CreditLimitMicrosLTE   *int64  `json:"creditLimitMicrosLTE,omitempty"`
+
+	// "status" field predicates.
+	Status      *billingaccount.Status  `json:"status,omitempty"`
+	StatusNEQ   *billingaccount.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []billingaccount.Status `json:"statusIn,omitempty"`
+	StatusNotIn []billingaccount.Status `json:"statusNotIn,omitempty"`
+
+	// "bindings" edge predicates.
+	HasBindings     *bool                              `json:"hasBindings,omitempty"`
+	HasBindingsWith []*BillingAccountBindingWhereInput `json:"hasBindingsWith,omitempty"`
+
+	// "ledger_transactions" edge predicates.
+	HasLedgerTransactions     *bool                          `json:"hasLedgerTransactions,omitempty"`
+	HasLedgerTransactionsWith []*LedgerTransactionWhereInput `json:"hasLedgerTransactionsWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *BillingAccountWhereInput) AddPredicates(predicates ...predicate.BillingAccount) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the BillingAccountWhereInput filter on the BillingAccountQuery builder.
+func (i *BillingAccountWhereInput) Filter(q *BillingAccountQuery) (*BillingAccountQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyBillingAccountWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyBillingAccountWhereInput is returned in case the BillingAccountWhereInput is empty.
+var ErrEmptyBillingAccountWhereInput = errors.New("ent: empty predicate BillingAccountWhereInput")
+
+// P returns a predicate for filtering billingaccounts.
+// An error is returned if the input is empty or invalid.
+func (i *BillingAccountWhereInput) P() (predicate.BillingAccount, error) {
+	var predicates []predicate.BillingAccount
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, billingaccount.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.BillingAccount, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, billingaccount.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.BillingAccount, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, billingaccount.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, billingaccount.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, billingaccount.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, billingaccount.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, billingaccount.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, billingaccount.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, billingaccount.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, billingaccount.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, billingaccount.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, billingaccount.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, billingaccount.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, billingaccount.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, billingaccount.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, billingaccount.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, billingaccount.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, billingaccount.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, billingaccount.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, billingaccount.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, billingaccount.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, billingaccount.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, billingaccount.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, billingaccount.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, billingaccount.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, billingaccount.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, billingaccount.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.OwnerType != nil {
+		predicates = append(predicates, billingaccount.OwnerTypeEQ(*i.OwnerType))
+	}
+	if i.OwnerTypeNEQ != nil {
+		predicates = append(predicates, billingaccount.OwnerTypeNEQ(*i.OwnerTypeNEQ))
+	}
+	if len(i.OwnerTypeIn) > 0 {
+		predicates = append(predicates, billingaccount.OwnerTypeIn(i.OwnerTypeIn...))
+	}
+	if len(i.OwnerTypeNotIn) > 0 {
+		predicates = append(predicates, billingaccount.OwnerTypeNotIn(i.OwnerTypeNotIn...))
+	}
+	if i.OwnerID != nil {
+		predicates = append(predicates, billingaccount.OwnerIDEQ(*i.OwnerID))
+	}
+	if i.OwnerIDNEQ != nil {
+		predicates = append(predicates, billingaccount.OwnerIDNEQ(*i.OwnerIDNEQ))
+	}
+	if len(i.OwnerIDIn) > 0 {
+		predicates = append(predicates, billingaccount.OwnerIDIn(i.OwnerIDIn...))
+	}
+	if len(i.OwnerIDNotIn) > 0 {
+		predicates = append(predicates, billingaccount.OwnerIDNotIn(i.OwnerIDNotIn...))
+	}
+	if i.OwnerIDGT != nil {
+		predicates = append(predicates, billingaccount.OwnerIDGT(*i.OwnerIDGT))
+	}
+	if i.OwnerIDGTE != nil {
+		predicates = append(predicates, billingaccount.OwnerIDGTE(*i.OwnerIDGTE))
+	}
+	if i.OwnerIDLT != nil {
+		predicates = append(predicates, billingaccount.OwnerIDLT(*i.OwnerIDLT))
+	}
+	if i.OwnerIDLTE != nil {
+		predicates = append(predicates, billingaccount.OwnerIDLTE(*i.OwnerIDLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, billingaccount.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, billingaccount.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, billingaccount.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, billingaccount.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, billingaccount.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, billingaccount.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, billingaccount.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, billingaccount.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, billingaccount.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, billingaccount.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, billingaccount.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, billingaccount.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, billingaccount.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.BalanceMicros != nil {
+		predicates = append(predicates, billingaccount.BalanceMicrosEQ(*i.BalanceMicros))
+	}
+	if i.BalanceMicrosNEQ != nil {
+		predicates = append(predicates, billingaccount.BalanceMicrosNEQ(*i.BalanceMicrosNEQ))
+	}
+	if len(i.BalanceMicrosIn) > 0 {
+		predicates = append(predicates, billingaccount.BalanceMicrosIn(i.BalanceMicrosIn...))
+	}
+	if len(i.BalanceMicrosNotIn) > 0 {
+		predicates = append(predicates, billingaccount.BalanceMicrosNotIn(i.BalanceMicrosNotIn...))
+	}
+	if i.BalanceMicrosGT != nil {
+		predicates = append(predicates, billingaccount.BalanceMicrosGT(*i.BalanceMicrosGT))
+	}
+	if i.BalanceMicrosGTE != nil {
+		predicates = append(predicates, billingaccount.BalanceMicrosGTE(*i.BalanceMicrosGTE))
+	}
+	if i.BalanceMicrosLT != nil {
+		predicates = append(predicates, billingaccount.BalanceMicrosLT(*i.BalanceMicrosLT))
+	}
+	if i.BalanceMicrosLTE != nil {
+		predicates = append(predicates, billingaccount.BalanceMicrosLTE(*i.BalanceMicrosLTE))
+	}
+	if i.CreditLimitMicros != nil {
+		predicates = append(predicates, billingaccount.CreditLimitMicrosEQ(*i.CreditLimitMicros))
+	}
+	if i.CreditLimitMicrosNEQ != nil {
+		predicates = append(predicates, billingaccount.CreditLimitMicrosNEQ(*i.CreditLimitMicrosNEQ))
+	}
+	if len(i.CreditLimitMicrosIn) > 0 {
+		predicates = append(predicates, billingaccount.CreditLimitMicrosIn(i.CreditLimitMicrosIn...))
+	}
+	if len(i.CreditLimitMicrosNotIn) > 0 {
+		predicates = append(predicates, billingaccount.CreditLimitMicrosNotIn(i.CreditLimitMicrosNotIn...))
+	}
+	if i.CreditLimitMicrosGT != nil {
+		predicates = append(predicates, billingaccount.CreditLimitMicrosGT(*i.CreditLimitMicrosGT))
+	}
+	if i.CreditLimitMicrosGTE != nil {
+		predicates = append(predicates, billingaccount.CreditLimitMicrosGTE(*i.CreditLimitMicrosGTE))
+	}
+	if i.CreditLimitMicrosLT != nil {
+		predicates = append(predicates, billingaccount.CreditLimitMicrosLT(*i.CreditLimitMicrosLT))
+	}
+	if i.CreditLimitMicrosLTE != nil {
+		predicates = append(predicates, billingaccount.CreditLimitMicrosLTE(*i.CreditLimitMicrosLTE))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, billingaccount.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, billingaccount.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, billingaccount.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, billingaccount.StatusNotIn(i.StatusNotIn...))
+	}
+
+	if i.HasBindings != nil {
+		p := billingaccount.HasBindings()
+		if !*i.HasBindings {
+			p = billingaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBindingsWith) > 0 {
+		with := make([]predicate.BillingAccountBinding, 0, len(i.HasBindingsWith))
+		for _, w := range i.HasBindingsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBindingsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingaccount.HasBindingsWith(with...))
+	}
+	if i.HasLedgerTransactions != nil {
+		p := billingaccount.HasLedgerTransactions()
+		if !*i.HasLedgerTransactions {
+			p = billingaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasLedgerTransactionsWith) > 0 {
+		with := make([]predicate.LedgerTransaction, 0, len(i.HasLedgerTransactionsWith))
+		for _, w := range i.HasLedgerTransactionsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasLedgerTransactionsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingaccount.HasLedgerTransactionsWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyBillingAccountWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return billingaccount.And(predicates...), nil
+	}
+}
+
+// BillingAccountBindingWhereInput represents a where input for filtering BillingAccountBinding queries.
+type BillingAccountBindingWhereInput struct {
+	Predicates []predicate.BillingAccountBinding  `json:"-"`
+	Not        *BillingAccountBindingWhereInput   `json:"not,omitempty"`
+	Or         []*BillingAccountBindingWhereInput `json:"or,omitempty"`
+	And        []*BillingAccountBindingWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "billing_account_id" field predicates.
+	BillingAccountID      *int  `json:"billingAccountID,omitempty"`
+	BillingAccountIDNEQ   *int  `json:"billingAccountIDNEQ,omitempty"`
+	BillingAccountIDIn    []int `json:"billingAccountIDIn,omitempty"`
+	BillingAccountIDNotIn []int `json:"billingAccountIDNotIn,omitempty"`
+
+	// "owner_type" field predicates.
+	OwnerType      *billingaccountbinding.OwnerType  `json:"ownerType,omitempty"`
+	OwnerTypeNEQ   *billingaccountbinding.OwnerType  `json:"ownerTypeNEQ,omitempty"`
+	OwnerTypeIn    []billingaccountbinding.OwnerType `json:"ownerTypeIn,omitempty"`
+	OwnerTypeNotIn []billingaccountbinding.OwnerType `json:"ownerTypeNotIn,omitempty"`
+
+	// "owner_id" field predicates.
+	OwnerID      *int  `json:"ownerID,omitempty"`
+	OwnerIDNEQ   *int  `json:"ownerIDNEQ,omitempty"`
+	OwnerIDIn    []int `json:"ownerIDIn,omitempty"`
+	OwnerIDNotIn []int `json:"ownerIDNotIn,omitempty"`
+	OwnerIDGT    *int  `json:"ownerIDGT,omitempty"`
+	OwnerIDGTE   *int  `json:"ownerIDGTE,omitempty"`
+	OwnerIDLT    *int  `json:"ownerIDLT,omitempty"`
+	OwnerIDLTE   *int  `json:"ownerIDLTE,omitempty"`
+
+	// "relation" field predicates.
+	Relation             *string  `json:"relation,omitempty"`
+	RelationNEQ          *string  `json:"relationNEQ,omitempty"`
+	RelationIn           []string `json:"relationIn,omitempty"`
+	RelationNotIn        []string `json:"relationNotIn,omitempty"`
+	RelationGT           *string  `json:"relationGT,omitempty"`
+	RelationGTE          *string  `json:"relationGTE,omitempty"`
+	RelationLT           *string  `json:"relationLT,omitempty"`
+	RelationLTE          *string  `json:"relationLTE,omitempty"`
+	RelationContains     *string  `json:"relationContains,omitempty"`
+	RelationHasPrefix    *string  `json:"relationHasPrefix,omitempty"`
+	RelationHasSuffix    *string  `json:"relationHasSuffix,omitempty"`
+	RelationEqualFold    *string  `json:"relationEqualFold,omitempty"`
+	RelationContainsFold *string  `json:"relationContainsFold,omitempty"`
+
+	// "billing_account" edge predicates.
+	HasBillingAccount     *bool                       `json:"hasBillingAccount,omitempty"`
+	HasBillingAccountWith []*BillingAccountWhereInput `json:"hasBillingAccountWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *BillingAccountBindingWhereInput) AddPredicates(predicates ...predicate.BillingAccountBinding) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the BillingAccountBindingWhereInput filter on the BillingAccountBindingQuery builder.
+func (i *BillingAccountBindingWhereInput) Filter(q *BillingAccountBindingQuery) (*BillingAccountBindingQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyBillingAccountBindingWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyBillingAccountBindingWhereInput is returned in case the BillingAccountBindingWhereInput is empty.
+var ErrEmptyBillingAccountBindingWhereInput = errors.New("ent: empty predicate BillingAccountBindingWhereInput")
+
+// P returns a predicate for filtering billingaccountbindings.
+// An error is returned if the input is empty or invalid.
+func (i *BillingAccountBindingWhereInput) P() (predicate.BillingAccountBinding, error) {
+	var predicates []predicate.BillingAccountBinding
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, billingaccountbinding.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.BillingAccountBinding, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, billingaccountbinding.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.BillingAccountBinding, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, billingaccountbinding.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, billingaccountbinding.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, billingaccountbinding.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, billingaccountbinding.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, billingaccountbinding.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, billingaccountbinding.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, billingaccountbinding.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, billingaccountbinding.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, billingaccountbinding.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, billingaccountbinding.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, billingaccountbinding.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, billingaccountbinding.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, billingaccountbinding.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, billingaccountbinding.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, billingaccountbinding.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, billingaccountbinding.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, billingaccountbinding.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, billingaccountbinding.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, billingaccountbinding.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.BillingAccountID != nil {
+		predicates = append(predicates, billingaccountbinding.BillingAccountIDEQ(*i.BillingAccountID))
+	}
+	if i.BillingAccountIDNEQ != nil {
+		predicates = append(predicates, billingaccountbinding.BillingAccountIDNEQ(*i.BillingAccountIDNEQ))
+	}
+	if len(i.BillingAccountIDIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.BillingAccountIDIn(i.BillingAccountIDIn...))
+	}
+	if len(i.BillingAccountIDNotIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.BillingAccountIDNotIn(i.BillingAccountIDNotIn...))
+	}
+	if i.OwnerType != nil {
+		predicates = append(predicates, billingaccountbinding.OwnerTypeEQ(*i.OwnerType))
+	}
+	if i.OwnerTypeNEQ != nil {
+		predicates = append(predicates, billingaccountbinding.OwnerTypeNEQ(*i.OwnerTypeNEQ))
+	}
+	if len(i.OwnerTypeIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.OwnerTypeIn(i.OwnerTypeIn...))
+	}
+	if len(i.OwnerTypeNotIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.OwnerTypeNotIn(i.OwnerTypeNotIn...))
+	}
+	if i.OwnerID != nil {
+		predicates = append(predicates, billingaccountbinding.OwnerIDEQ(*i.OwnerID))
+	}
+	if i.OwnerIDNEQ != nil {
+		predicates = append(predicates, billingaccountbinding.OwnerIDNEQ(*i.OwnerIDNEQ))
+	}
+	if len(i.OwnerIDIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.OwnerIDIn(i.OwnerIDIn...))
+	}
+	if len(i.OwnerIDNotIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.OwnerIDNotIn(i.OwnerIDNotIn...))
+	}
+	if i.OwnerIDGT != nil {
+		predicates = append(predicates, billingaccountbinding.OwnerIDGT(*i.OwnerIDGT))
+	}
+	if i.OwnerIDGTE != nil {
+		predicates = append(predicates, billingaccountbinding.OwnerIDGTE(*i.OwnerIDGTE))
+	}
+	if i.OwnerIDLT != nil {
+		predicates = append(predicates, billingaccountbinding.OwnerIDLT(*i.OwnerIDLT))
+	}
+	if i.OwnerIDLTE != nil {
+		predicates = append(predicates, billingaccountbinding.OwnerIDLTE(*i.OwnerIDLTE))
+	}
+	if i.Relation != nil {
+		predicates = append(predicates, billingaccountbinding.RelationEQ(*i.Relation))
+	}
+	if i.RelationNEQ != nil {
+		predicates = append(predicates, billingaccountbinding.RelationNEQ(*i.RelationNEQ))
+	}
+	if len(i.RelationIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.RelationIn(i.RelationIn...))
+	}
+	if len(i.RelationNotIn) > 0 {
+		predicates = append(predicates, billingaccountbinding.RelationNotIn(i.RelationNotIn...))
+	}
+	if i.RelationGT != nil {
+		predicates = append(predicates, billingaccountbinding.RelationGT(*i.RelationGT))
+	}
+	if i.RelationGTE != nil {
+		predicates = append(predicates, billingaccountbinding.RelationGTE(*i.RelationGTE))
+	}
+	if i.RelationLT != nil {
+		predicates = append(predicates, billingaccountbinding.RelationLT(*i.RelationLT))
+	}
+	if i.RelationLTE != nil {
+		predicates = append(predicates, billingaccountbinding.RelationLTE(*i.RelationLTE))
+	}
+	if i.RelationContains != nil {
+		predicates = append(predicates, billingaccountbinding.RelationContains(*i.RelationContains))
+	}
+	if i.RelationHasPrefix != nil {
+		predicates = append(predicates, billingaccountbinding.RelationHasPrefix(*i.RelationHasPrefix))
+	}
+	if i.RelationHasSuffix != nil {
+		predicates = append(predicates, billingaccountbinding.RelationHasSuffix(*i.RelationHasSuffix))
+	}
+	if i.RelationEqualFold != nil {
+		predicates = append(predicates, billingaccountbinding.RelationEqualFold(*i.RelationEqualFold))
+	}
+	if i.RelationContainsFold != nil {
+		predicates = append(predicates, billingaccountbinding.RelationContainsFold(*i.RelationContainsFold))
+	}
+
+	if i.HasBillingAccount != nil {
+		p := billingaccountbinding.HasBillingAccount()
+		if !*i.HasBillingAccount {
+			p = billingaccountbinding.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingAccountWith) > 0 {
+		with := make([]predicate.BillingAccount, 0, len(i.HasBillingAccountWith))
+		for _, w := range i.HasBillingAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingaccountbinding.HasBillingAccountWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyBillingAccountBindingWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return billingaccountbinding.And(predicates...), nil
 	}
 }
 
@@ -3557,6 +4327,1046 @@ func (i *DataStorageWhereInput) P() (predicate.DataStorage, error) {
 		return predicates[0], nil
 	default:
 		return datastorage.And(predicates...), nil
+	}
+}
+
+// LedgerEntryWhereInput represents a where input for filtering LedgerEntry queries.
+type LedgerEntryWhereInput struct {
+	Predicates []predicate.LedgerEntry  `json:"-"`
+	Not        *LedgerEntryWhereInput   `json:"not,omitempty"`
+	Or         []*LedgerEntryWhereInput `json:"or,omitempty"`
+	And        []*LedgerEntryWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "ledger_transaction_id" field predicates.
+	LedgerTransactionID      *int  `json:"ledgerTransactionID,omitempty"`
+	LedgerTransactionIDNEQ   *int  `json:"ledgerTransactionIDNEQ,omitempty"`
+	LedgerTransactionIDIn    []int `json:"ledgerTransactionIDIn,omitempty"`
+	LedgerTransactionIDNotIn []int `json:"ledgerTransactionIDNotIn,omitempty"`
+
+	// "account_side" field predicates.
+	AccountSide      *ledgerentry.AccountSide  `json:"accountSide,omitempty"`
+	AccountSideNEQ   *ledgerentry.AccountSide  `json:"accountSideNEQ,omitempty"`
+	AccountSideIn    []ledgerentry.AccountSide `json:"accountSideIn,omitempty"`
+	AccountSideNotIn []ledgerentry.AccountSide `json:"accountSideNotIn,omitempty"`
+
+	// "direction" field predicates.
+	Direction      *ledgerentry.Direction  `json:"direction,omitempty"`
+	DirectionNEQ   *ledgerentry.Direction  `json:"directionNEQ,omitempty"`
+	DirectionIn    []ledgerentry.Direction `json:"directionIn,omitempty"`
+	DirectionNotIn []ledgerentry.Direction `json:"directionNotIn,omitempty"`
+
+	// "amount_micros" field predicates.
+	AmountMicros      *int64  `json:"amountMicros,omitempty"`
+	AmountMicrosNEQ   *int64  `json:"amountMicrosNEQ,omitempty"`
+	AmountMicrosIn    []int64 `json:"amountMicrosIn,omitempty"`
+	AmountMicrosNotIn []int64 `json:"amountMicrosNotIn,omitempty"`
+	AmountMicrosGT    *int64  `json:"amountMicrosGT,omitempty"`
+	AmountMicrosGTE   *int64  `json:"amountMicrosGTE,omitempty"`
+	AmountMicrosLT    *int64  `json:"amountMicrosLT,omitempty"`
+	AmountMicrosLTE   *int64  `json:"amountMicrosLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "ledger_transaction" edge predicates.
+	HasLedgerTransaction     *bool                          `json:"hasLedgerTransaction,omitempty"`
+	HasLedgerTransactionWith []*LedgerTransactionWhereInput `json:"hasLedgerTransactionWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *LedgerEntryWhereInput) AddPredicates(predicates ...predicate.LedgerEntry) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the LedgerEntryWhereInput filter on the LedgerEntryQuery builder.
+func (i *LedgerEntryWhereInput) Filter(q *LedgerEntryQuery) (*LedgerEntryQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyLedgerEntryWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyLedgerEntryWhereInput is returned in case the LedgerEntryWhereInput is empty.
+var ErrEmptyLedgerEntryWhereInput = errors.New("ent: empty predicate LedgerEntryWhereInput")
+
+// P returns a predicate for filtering ledgerentries.
+// An error is returned if the input is empty or invalid.
+func (i *LedgerEntryWhereInput) P() (predicate.LedgerEntry, error) {
+	var predicates []predicate.LedgerEntry
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, ledgerentry.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.LedgerEntry, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, ledgerentry.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.LedgerEntry, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, ledgerentry.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, ledgerentry.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, ledgerentry.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, ledgerentry.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, ledgerentry.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, ledgerentry.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, ledgerentry.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, ledgerentry.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, ledgerentry.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, ledgerentry.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, ledgerentry.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, ledgerentry.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, ledgerentry.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, ledgerentry.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, ledgerentry.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, ledgerentry.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, ledgerentry.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, ledgerentry.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, ledgerentry.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, ledgerentry.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, ledgerentry.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, ledgerentry.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, ledgerentry.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, ledgerentry.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, ledgerentry.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.LedgerTransactionID != nil {
+		predicates = append(predicates, ledgerentry.LedgerTransactionIDEQ(*i.LedgerTransactionID))
+	}
+	if i.LedgerTransactionIDNEQ != nil {
+		predicates = append(predicates, ledgerentry.LedgerTransactionIDNEQ(*i.LedgerTransactionIDNEQ))
+	}
+	if len(i.LedgerTransactionIDIn) > 0 {
+		predicates = append(predicates, ledgerentry.LedgerTransactionIDIn(i.LedgerTransactionIDIn...))
+	}
+	if len(i.LedgerTransactionIDNotIn) > 0 {
+		predicates = append(predicates, ledgerentry.LedgerTransactionIDNotIn(i.LedgerTransactionIDNotIn...))
+	}
+	if i.AccountSide != nil {
+		predicates = append(predicates, ledgerentry.AccountSideEQ(*i.AccountSide))
+	}
+	if i.AccountSideNEQ != nil {
+		predicates = append(predicates, ledgerentry.AccountSideNEQ(*i.AccountSideNEQ))
+	}
+	if len(i.AccountSideIn) > 0 {
+		predicates = append(predicates, ledgerentry.AccountSideIn(i.AccountSideIn...))
+	}
+	if len(i.AccountSideNotIn) > 0 {
+		predicates = append(predicates, ledgerentry.AccountSideNotIn(i.AccountSideNotIn...))
+	}
+	if i.Direction != nil {
+		predicates = append(predicates, ledgerentry.DirectionEQ(*i.Direction))
+	}
+	if i.DirectionNEQ != nil {
+		predicates = append(predicates, ledgerentry.DirectionNEQ(*i.DirectionNEQ))
+	}
+	if len(i.DirectionIn) > 0 {
+		predicates = append(predicates, ledgerentry.DirectionIn(i.DirectionIn...))
+	}
+	if len(i.DirectionNotIn) > 0 {
+		predicates = append(predicates, ledgerentry.DirectionNotIn(i.DirectionNotIn...))
+	}
+	if i.AmountMicros != nil {
+		predicates = append(predicates, ledgerentry.AmountMicrosEQ(*i.AmountMicros))
+	}
+	if i.AmountMicrosNEQ != nil {
+		predicates = append(predicates, ledgerentry.AmountMicrosNEQ(*i.AmountMicrosNEQ))
+	}
+	if len(i.AmountMicrosIn) > 0 {
+		predicates = append(predicates, ledgerentry.AmountMicrosIn(i.AmountMicrosIn...))
+	}
+	if len(i.AmountMicrosNotIn) > 0 {
+		predicates = append(predicates, ledgerentry.AmountMicrosNotIn(i.AmountMicrosNotIn...))
+	}
+	if i.AmountMicrosGT != nil {
+		predicates = append(predicates, ledgerentry.AmountMicrosGT(*i.AmountMicrosGT))
+	}
+	if i.AmountMicrosGTE != nil {
+		predicates = append(predicates, ledgerentry.AmountMicrosGTE(*i.AmountMicrosGTE))
+	}
+	if i.AmountMicrosLT != nil {
+		predicates = append(predicates, ledgerentry.AmountMicrosLT(*i.AmountMicrosLT))
+	}
+	if i.AmountMicrosLTE != nil {
+		predicates = append(predicates, ledgerentry.AmountMicrosLTE(*i.AmountMicrosLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, ledgerentry.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, ledgerentry.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, ledgerentry.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, ledgerentry.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, ledgerentry.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, ledgerentry.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, ledgerentry.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, ledgerentry.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, ledgerentry.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, ledgerentry.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, ledgerentry.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, ledgerentry.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, ledgerentry.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+
+	if i.HasLedgerTransaction != nil {
+		p := ledgerentry.HasLedgerTransaction()
+		if !*i.HasLedgerTransaction {
+			p = ledgerentry.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasLedgerTransactionWith) > 0 {
+		with := make([]predicate.LedgerTransaction, 0, len(i.HasLedgerTransactionWith))
+		for _, w := range i.HasLedgerTransactionWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasLedgerTransactionWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, ledgerentry.HasLedgerTransactionWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyLedgerEntryWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return ledgerentry.And(predicates...), nil
+	}
+}
+
+// LedgerTransactionWhereInput represents a where input for filtering LedgerTransaction queries.
+type LedgerTransactionWhereInput struct {
+	Predicates []predicate.LedgerTransaction  `json:"-"`
+	Not        *LedgerTransactionWhereInput   `json:"not,omitempty"`
+	Or         []*LedgerTransactionWhereInput `json:"or,omitempty"`
+	And        []*LedgerTransactionWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "billing_account_id" field predicates.
+	BillingAccountID      *int  `json:"billingAccountID,omitempty"`
+	BillingAccountIDNEQ   *int  `json:"billingAccountIDNEQ,omitempty"`
+	BillingAccountIDIn    []int `json:"billingAccountIDIn,omitempty"`
+	BillingAccountIDNotIn []int `json:"billingAccountIDNotIn,omitempty"`
+
+	// "direction" field predicates.
+	Direction      *ledgertransaction.Direction  `json:"direction,omitempty"`
+	DirectionNEQ   *ledgertransaction.Direction  `json:"directionNEQ,omitempty"`
+	DirectionIn    []ledgertransaction.Direction `json:"directionIn,omitempty"`
+	DirectionNotIn []ledgertransaction.Direction `json:"directionNotIn,omitempty"`
+
+	// "amount_micros" field predicates.
+	AmountMicros      *int64  `json:"amountMicros,omitempty"`
+	AmountMicrosNEQ   *int64  `json:"amountMicrosNEQ,omitempty"`
+	AmountMicrosIn    []int64 `json:"amountMicrosIn,omitempty"`
+	AmountMicrosNotIn []int64 `json:"amountMicrosNotIn,omitempty"`
+	AmountMicrosGT    *int64  `json:"amountMicrosGT,omitempty"`
+	AmountMicrosGTE   *int64  `json:"amountMicrosGTE,omitempty"`
+	AmountMicrosLT    *int64  `json:"amountMicrosLT,omitempty"`
+	AmountMicrosLTE   *int64  `json:"amountMicrosLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "type" field predicates.
+	Type      *ledgertransaction.Type  `json:"type,omitempty"`
+	TypeNEQ   *ledgertransaction.Type  `json:"typeNEQ,omitempty"`
+	TypeIn    []ledgertransaction.Type `json:"typeIn,omitempty"`
+	TypeNotIn []ledgertransaction.Type `json:"typeNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *ledgertransaction.Status  `json:"status,omitempty"`
+	StatusNEQ   *ledgertransaction.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []ledgertransaction.Status `json:"statusIn,omitempty"`
+	StatusNotIn []ledgertransaction.Status `json:"statusNotIn,omitempty"`
+
+	// "idempotency_key" field predicates.
+	IdempotencyKey             *string  `json:"idempotencyKey,omitempty"`
+	IdempotencyKeyNEQ          *string  `json:"idempotencyKeyNEQ,omitempty"`
+	IdempotencyKeyIn           []string `json:"idempotencyKeyIn,omitempty"`
+	IdempotencyKeyNotIn        []string `json:"idempotencyKeyNotIn,omitempty"`
+	IdempotencyKeyGT           *string  `json:"idempotencyKeyGT,omitempty"`
+	IdempotencyKeyGTE          *string  `json:"idempotencyKeyGTE,omitempty"`
+	IdempotencyKeyLT           *string  `json:"idempotencyKeyLT,omitempty"`
+	IdempotencyKeyLTE          *string  `json:"idempotencyKeyLTE,omitempty"`
+	IdempotencyKeyContains     *string  `json:"idempotencyKeyContains,omitempty"`
+	IdempotencyKeyHasPrefix    *string  `json:"idempotencyKeyHasPrefix,omitempty"`
+	IdempotencyKeyHasSuffix    *string  `json:"idempotencyKeyHasSuffix,omitempty"`
+	IdempotencyKeyEqualFold    *string  `json:"idempotencyKeyEqualFold,omitempty"`
+	IdempotencyKeyContainsFold *string  `json:"idempotencyKeyContainsFold,omitempty"`
+
+	// "reference_type" field predicates.
+	ReferenceType             *string  `json:"referenceType,omitempty"`
+	ReferenceTypeNEQ          *string  `json:"referenceTypeNEQ,omitempty"`
+	ReferenceTypeIn           []string `json:"referenceTypeIn,omitempty"`
+	ReferenceTypeNotIn        []string `json:"referenceTypeNotIn,omitempty"`
+	ReferenceTypeGT           *string  `json:"referenceTypeGT,omitempty"`
+	ReferenceTypeGTE          *string  `json:"referenceTypeGTE,omitempty"`
+	ReferenceTypeLT           *string  `json:"referenceTypeLT,omitempty"`
+	ReferenceTypeLTE          *string  `json:"referenceTypeLTE,omitempty"`
+	ReferenceTypeContains     *string  `json:"referenceTypeContains,omitempty"`
+	ReferenceTypeHasPrefix    *string  `json:"referenceTypeHasPrefix,omitempty"`
+	ReferenceTypeHasSuffix    *string  `json:"referenceTypeHasSuffix,omitempty"`
+	ReferenceTypeEqualFold    *string  `json:"referenceTypeEqualFold,omitempty"`
+	ReferenceTypeContainsFold *string  `json:"referenceTypeContainsFold,omitempty"`
+
+	// "reference_id" field predicates.
+	ReferenceID             *string  `json:"referenceID,omitempty"`
+	ReferenceIDNEQ          *string  `json:"referenceIDNEQ,omitempty"`
+	ReferenceIDIn           []string `json:"referenceIDIn,omitempty"`
+	ReferenceIDNotIn        []string `json:"referenceIDNotIn,omitempty"`
+	ReferenceIDGT           *string  `json:"referenceIDGT,omitempty"`
+	ReferenceIDGTE          *string  `json:"referenceIDGTE,omitempty"`
+	ReferenceIDLT           *string  `json:"referenceIDLT,omitempty"`
+	ReferenceIDLTE          *string  `json:"referenceIDLTE,omitempty"`
+	ReferenceIDContains     *string  `json:"referenceIDContains,omitempty"`
+	ReferenceIDHasPrefix    *string  `json:"referenceIDHasPrefix,omitempty"`
+	ReferenceIDHasSuffix    *string  `json:"referenceIDHasSuffix,omitempty"`
+	ReferenceIDEqualFold    *string  `json:"referenceIDEqualFold,omitempty"`
+	ReferenceIDContainsFold *string  `json:"referenceIDContainsFold,omitempty"`
+
+	// "memo" field predicates.
+	Memo             *string  `json:"memo,omitempty"`
+	MemoNEQ          *string  `json:"memoNEQ,omitempty"`
+	MemoIn           []string `json:"memoIn,omitempty"`
+	MemoNotIn        []string `json:"memoNotIn,omitempty"`
+	MemoGT           *string  `json:"memoGT,omitempty"`
+	MemoGTE          *string  `json:"memoGTE,omitempty"`
+	MemoLT           *string  `json:"memoLT,omitempty"`
+	MemoLTE          *string  `json:"memoLTE,omitempty"`
+	MemoContains     *string  `json:"memoContains,omitempty"`
+	MemoHasPrefix    *string  `json:"memoHasPrefix,omitempty"`
+	MemoHasSuffix    *string  `json:"memoHasSuffix,omitempty"`
+	MemoEqualFold    *string  `json:"memoEqualFold,omitempty"`
+	MemoContainsFold *string  `json:"memoContainsFold,omitempty"`
+
+	// "created_by_type" field predicates.
+	CreatedByType      *ledgertransaction.CreatedByType  `json:"createdByType,omitempty"`
+	CreatedByTypeNEQ   *ledgertransaction.CreatedByType  `json:"createdByTypeNEQ,omitempty"`
+	CreatedByTypeIn    []ledgertransaction.CreatedByType `json:"createdByTypeIn,omitempty"`
+	CreatedByTypeNotIn []ledgertransaction.CreatedByType `json:"createdByTypeNotIn,omitempty"`
+
+	// "created_by_id" field predicates.
+	CreatedByID             *string  `json:"createdByID,omitempty"`
+	CreatedByIDNEQ          *string  `json:"createdByIDNEQ,omitempty"`
+	CreatedByIDIn           []string `json:"createdByIDIn,omitempty"`
+	CreatedByIDNotIn        []string `json:"createdByIDNotIn,omitempty"`
+	CreatedByIDGT           *string  `json:"createdByIDGT,omitempty"`
+	CreatedByIDGTE          *string  `json:"createdByIDGTE,omitempty"`
+	CreatedByIDLT           *string  `json:"createdByIDLT,omitempty"`
+	CreatedByIDLTE          *string  `json:"createdByIDLTE,omitempty"`
+	CreatedByIDContains     *string  `json:"createdByIDContains,omitempty"`
+	CreatedByIDHasPrefix    *string  `json:"createdByIDHasPrefix,omitempty"`
+	CreatedByIDHasSuffix    *string  `json:"createdByIDHasSuffix,omitempty"`
+	CreatedByIDEqualFold    *string  `json:"createdByIDEqualFold,omitempty"`
+	CreatedByIDContainsFold *string  `json:"createdByIDContainsFold,omitempty"`
+
+	// "billing_account" edge predicates.
+	HasBillingAccount     *bool                       `json:"hasBillingAccount,omitempty"`
+	HasBillingAccountWith []*BillingAccountWhereInput `json:"hasBillingAccountWith,omitempty"`
+
+	// "entries" edge predicates.
+	HasEntries     *bool                    `json:"hasEntries,omitempty"`
+	HasEntriesWith []*LedgerEntryWhereInput `json:"hasEntriesWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *LedgerTransactionWhereInput) AddPredicates(predicates ...predicate.LedgerTransaction) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the LedgerTransactionWhereInput filter on the LedgerTransactionQuery builder.
+func (i *LedgerTransactionWhereInput) Filter(q *LedgerTransactionQuery) (*LedgerTransactionQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyLedgerTransactionWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyLedgerTransactionWhereInput is returned in case the LedgerTransactionWhereInput is empty.
+var ErrEmptyLedgerTransactionWhereInput = errors.New("ent: empty predicate LedgerTransactionWhereInput")
+
+// P returns a predicate for filtering ledgertransactions.
+// An error is returned if the input is empty or invalid.
+func (i *LedgerTransactionWhereInput) P() (predicate.LedgerTransaction, error) {
+	var predicates []predicate.LedgerTransaction
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, ledgertransaction.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.LedgerTransaction, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, ledgertransaction.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.LedgerTransaction, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, ledgertransaction.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, ledgertransaction.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, ledgertransaction.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, ledgertransaction.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, ledgertransaction.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, ledgertransaction.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, ledgertransaction.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, ledgertransaction.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, ledgertransaction.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, ledgertransaction.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, ledgertransaction.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, ledgertransaction.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, ledgertransaction.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, ledgertransaction.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, ledgertransaction.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, ledgertransaction.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, ledgertransaction.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, ledgertransaction.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, ledgertransaction.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, ledgertransaction.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, ledgertransaction.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, ledgertransaction.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.BillingAccountID != nil {
+		predicates = append(predicates, ledgertransaction.BillingAccountIDEQ(*i.BillingAccountID))
+	}
+	if i.BillingAccountIDNEQ != nil {
+		predicates = append(predicates, ledgertransaction.BillingAccountIDNEQ(*i.BillingAccountIDNEQ))
+	}
+	if len(i.BillingAccountIDIn) > 0 {
+		predicates = append(predicates, ledgertransaction.BillingAccountIDIn(i.BillingAccountIDIn...))
+	}
+	if len(i.BillingAccountIDNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.BillingAccountIDNotIn(i.BillingAccountIDNotIn...))
+	}
+	if i.Direction != nil {
+		predicates = append(predicates, ledgertransaction.DirectionEQ(*i.Direction))
+	}
+	if i.DirectionNEQ != nil {
+		predicates = append(predicates, ledgertransaction.DirectionNEQ(*i.DirectionNEQ))
+	}
+	if len(i.DirectionIn) > 0 {
+		predicates = append(predicates, ledgertransaction.DirectionIn(i.DirectionIn...))
+	}
+	if len(i.DirectionNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.DirectionNotIn(i.DirectionNotIn...))
+	}
+	if i.AmountMicros != nil {
+		predicates = append(predicates, ledgertransaction.AmountMicrosEQ(*i.AmountMicros))
+	}
+	if i.AmountMicrosNEQ != nil {
+		predicates = append(predicates, ledgertransaction.AmountMicrosNEQ(*i.AmountMicrosNEQ))
+	}
+	if len(i.AmountMicrosIn) > 0 {
+		predicates = append(predicates, ledgertransaction.AmountMicrosIn(i.AmountMicrosIn...))
+	}
+	if len(i.AmountMicrosNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.AmountMicrosNotIn(i.AmountMicrosNotIn...))
+	}
+	if i.AmountMicrosGT != nil {
+		predicates = append(predicates, ledgertransaction.AmountMicrosGT(*i.AmountMicrosGT))
+	}
+	if i.AmountMicrosGTE != nil {
+		predicates = append(predicates, ledgertransaction.AmountMicrosGTE(*i.AmountMicrosGTE))
+	}
+	if i.AmountMicrosLT != nil {
+		predicates = append(predicates, ledgertransaction.AmountMicrosLT(*i.AmountMicrosLT))
+	}
+	if i.AmountMicrosLTE != nil {
+		predicates = append(predicates, ledgertransaction.AmountMicrosLTE(*i.AmountMicrosLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, ledgertransaction.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, ledgertransaction.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.Type != nil {
+		predicates = append(predicates, ledgertransaction.TypeEQ(*i.Type))
+	}
+	if i.TypeNEQ != nil {
+		predicates = append(predicates, ledgertransaction.TypeNEQ(*i.TypeNEQ))
+	}
+	if len(i.TypeIn) > 0 {
+		predicates = append(predicates, ledgertransaction.TypeIn(i.TypeIn...))
+	}
+	if len(i.TypeNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.TypeNotIn(i.TypeNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, ledgertransaction.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, ledgertransaction.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, ledgertransaction.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.IdempotencyKey != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyEQ(*i.IdempotencyKey))
+	}
+	if i.IdempotencyKeyNEQ != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyNEQ(*i.IdempotencyKeyNEQ))
+	}
+	if len(i.IdempotencyKeyIn) > 0 {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyIn(i.IdempotencyKeyIn...))
+	}
+	if len(i.IdempotencyKeyNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyNotIn(i.IdempotencyKeyNotIn...))
+	}
+	if i.IdempotencyKeyGT != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyGT(*i.IdempotencyKeyGT))
+	}
+	if i.IdempotencyKeyGTE != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyGTE(*i.IdempotencyKeyGTE))
+	}
+	if i.IdempotencyKeyLT != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyLT(*i.IdempotencyKeyLT))
+	}
+	if i.IdempotencyKeyLTE != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyLTE(*i.IdempotencyKeyLTE))
+	}
+	if i.IdempotencyKeyContains != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyContains(*i.IdempotencyKeyContains))
+	}
+	if i.IdempotencyKeyHasPrefix != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyHasPrefix(*i.IdempotencyKeyHasPrefix))
+	}
+	if i.IdempotencyKeyHasSuffix != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyHasSuffix(*i.IdempotencyKeyHasSuffix))
+	}
+	if i.IdempotencyKeyEqualFold != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyEqualFold(*i.IdempotencyKeyEqualFold))
+	}
+	if i.IdempotencyKeyContainsFold != nil {
+		predicates = append(predicates, ledgertransaction.IdempotencyKeyContainsFold(*i.IdempotencyKeyContainsFold))
+	}
+	if i.ReferenceType != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeEQ(*i.ReferenceType))
+	}
+	if i.ReferenceTypeNEQ != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeNEQ(*i.ReferenceTypeNEQ))
+	}
+	if len(i.ReferenceTypeIn) > 0 {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeIn(i.ReferenceTypeIn...))
+	}
+	if len(i.ReferenceTypeNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeNotIn(i.ReferenceTypeNotIn...))
+	}
+	if i.ReferenceTypeGT != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeGT(*i.ReferenceTypeGT))
+	}
+	if i.ReferenceTypeGTE != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeGTE(*i.ReferenceTypeGTE))
+	}
+	if i.ReferenceTypeLT != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeLT(*i.ReferenceTypeLT))
+	}
+	if i.ReferenceTypeLTE != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeLTE(*i.ReferenceTypeLTE))
+	}
+	if i.ReferenceTypeContains != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeContains(*i.ReferenceTypeContains))
+	}
+	if i.ReferenceTypeHasPrefix != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeHasPrefix(*i.ReferenceTypeHasPrefix))
+	}
+	if i.ReferenceTypeHasSuffix != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeHasSuffix(*i.ReferenceTypeHasSuffix))
+	}
+	if i.ReferenceTypeEqualFold != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeEqualFold(*i.ReferenceTypeEqualFold))
+	}
+	if i.ReferenceTypeContainsFold != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceTypeContainsFold(*i.ReferenceTypeContainsFold))
+	}
+	if i.ReferenceID != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDEQ(*i.ReferenceID))
+	}
+	if i.ReferenceIDNEQ != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDNEQ(*i.ReferenceIDNEQ))
+	}
+	if len(i.ReferenceIDIn) > 0 {
+		predicates = append(predicates, ledgertransaction.ReferenceIDIn(i.ReferenceIDIn...))
+	}
+	if len(i.ReferenceIDNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.ReferenceIDNotIn(i.ReferenceIDNotIn...))
+	}
+	if i.ReferenceIDGT != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDGT(*i.ReferenceIDGT))
+	}
+	if i.ReferenceIDGTE != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDGTE(*i.ReferenceIDGTE))
+	}
+	if i.ReferenceIDLT != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDLT(*i.ReferenceIDLT))
+	}
+	if i.ReferenceIDLTE != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDLTE(*i.ReferenceIDLTE))
+	}
+	if i.ReferenceIDContains != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDContains(*i.ReferenceIDContains))
+	}
+	if i.ReferenceIDHasPrefix != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDHasPrefix(*i.ReferenceIDHasPrefix))
+	}
+	if i.ReferenceIDHasSuffix != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDHasSuffix(*i.ReferenceIDHasSuffix))
+	}
+	if i.ReferenceIDEqualFold != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDEqualFold(*i.ReferenceIDEqualFold))
+	}
+	if i.ReferenceIDContainsFold != nil {
+		predicates = append(predicates, ledgertransaction.ReferenceIDContainsFold(*i.ReferenceIDContainsFold))
+	}
+	if i.Memo != nil {
+		predicates = append(predicates, ledgertransaction.MemoEQ(*i.Memo))
+	}
+	if i.MemoNEQ != nil {
+		predicates = append(predicates, ledgertransaction.MemoNEQ(*i.MemoNEQ))
+	}
+	if len(i.MemoIn) > 0 {
+		predicates = append(predicates, ledgertransaction.MemoIn(i.MemoIn...))
+	}
+	if len(i.MemoNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.MemoNotIn(i.MemoNotIn...))
+	}
+	if i.MemoGT != nil {
+		predicates = append(predicates, ledgertransaction.MemoGT(*i.MemoGT))
+	}
+	if i.MemoGTE != nil {
+		predicates = append(predicates, ledgertransaction.MemoGTE(*i.MemoGTE))
+	}
+	if i.MemoLT != nil {
+		predicates = append(predicates, ledgertransaction.MemoLT(*i.MemoLT))
+	}
+	if i.MemoLTE != nil {
+		predicates = append(predicates, ledgertransaction.MemoLTE(*i.MemoLTE))
+	}
+	if i.MemoContains != nil {
+		predicates = append(predicates, ledgertransaction.MemoContains(*i.MemoContains))
+	}
+	if i.MemoHasPrefix != nil {
+		predicates = append(predicates, ledgertransaction.MemoHasPrefix(*i.MemoHasPrefix))
+	}
+	if i.MemoHasSuffix != nil {
+		predicates = append(predicates, ledgertransaction.MemoHasSuffix(*i.MemoHasSuffix))
+	}
+	if i.MemoEqualFold != nil {
+		predicates = append(predicates, ledgertransaction.MemoEqualFold(*i.MemoEqualFold))
+	}
+	if i.MemoContainsFold != nil {
+		predicates = append(predicates, ledgertransaction.MemoContainsFold(*i.MemoContainsFold))
+	}
+	if i.CreatedByType != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByTypeEQ(*i.CreatedByType))
+	}
+	if i.CreatedByTypeNEQ != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByTypeNEQ(*i.CreatedByTypeNEQ))
+	}
+	if len(i.CreatedByTypeIn) > 0 {
+		predicates = append(predicates, ledgertransaction.CreatedByTypeIn(i.CreatedByTypeIn...))
+	}
+	if len(i.CreatedByTypeNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.CreatedByTypeNotIn(i.CreatedByTypeNotIn...))
+	}
+	if i.CreatedByID != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDEQ(*i.CreatedByID))
+	}
+	if i.CreatedByIDNEQ != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDNEQ(*i.CreatedByIDNEQ))
+	}
+	if len(i.CreatedByIDIn) > 0 {
+		predicates = append(predicates, ledgertransaction.CreatedByIDIn(i.CreatedByIDIn...))
+	}
+	if len(i.CreatedByIDNotIn) > 0 {
+		predicates = append(predicates, ledgertransaction.CreatedByIDNotIn(i.CreatedByIDNotIn...))
+	}
+	if i.CreatedByIDGT != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDGT(*i.CreatedByIDGT))
+	}
+	if i.CreatedByIDGTE != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDGTE(*i.CreatedByIDGTE))
+	}
+	if i.CreatedByIDLT != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDLT(*i.CreatedByIDLT))
+	}
+	if i.CreatedByIDLTE != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDLTE(*i.CreatedByIDLTE))
+	}
+	if i.CreatedByIDContains != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDContains(*i.CreatedByIDContains))
+	}
+	if i.CreatedByIDHasPrefix != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDHasPrefix(*i.CreatedByIDHasPrefix))
+	}
+	if i.CreatedByIDHasSuffix != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDHasSuffix(*i.CreatedByIDHasSuffix))
+	}
+	if i.CreatedByIDEqualFold != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDEqualFold(*i.CreatedByIDEqualFold))
+	}
+	if i.CreatedByIDContainsFold != nil {
+		predicates = append(predicates, ledgertransaction.CreatedByIDContainsFold(*i.CreatedByIDContainsFold))
+	}
+
+	if i.HasBillingAccount != nil {
+		p := ledgertransaction.HasBillingAccount()
+		if !*i.HasBillingAccount {
+			p = ledgertransaction.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingAccountWith) > 0 {
+		with := make([]predicate.BillingAccount, 0, len(i.HasBillingAccountWith))
+		for _, w := range i.HasBillingAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, ledgertransaction.HasBillingAccountWith(with...))
+	}
+	if i.HasEntries != nil {
+		p := ledgertransaction.HasEntries()
+		if !*i.HasEntries {
+			p = ledgertransaction.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasEntriesWith) > 0 {
+		with := make([]predicate.LedgerEntry, 0, len(i.HasEntriesWith))
+		for _, w := range i.HasEntriesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasEntriesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, ledgertransaction.HasEntriesWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyLedgerTransactionWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return ledgertransaction.And(predicates...), nil
 	}
 }
 

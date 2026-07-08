@@ -52,6 +52,11 @@ const (
 	// ScopeWriteRequests manage the requests of the project.
 	ScopeWriteRequests ScopeSlug = "write_requests"
 
+	// ScopeReadBilling read billing accounts, ledger transactions, prices, and payments.
+	ScopeReadBilling ScopeSlug = "read_billing"
+	// ScopeWriteBilling manage billing accounts, ledger transactions, prices, and payments.
+	ScopeWriteBilling ScopeSlug = "write_billing"
+
 	// ScopeReadPrompts read the prompts of the project.
 	ScopeReadPrompts ScopeSlug = "read_prompts"
 	// ScopeWritePrompts manage the prompts of the project.
@@ -161,6 +166,16 @@ var scopeConfigs = []Scope{
 	{
 		Slug:        ScopeWriteRequests,
 		Description: "Manage request records",
+		Levels:      []ScopeLevel{ScopeLevelSystem, ScopeLevelProject},
+	},
+	{
+		Slug:        ScopeReadBilling,
+		Description: "View billing accounts, ledger transactions, prices, and payments",
+		Levels:      []ScopeLevel{ScopeLevelSystem, ScopeLevelProject},
+	},
+	{
+		Slug:        ScopeWriteBilling,
+		Description: "Manage billing accounts, ledger transactions, prices, and payments",
 		Levels:      []ScopeLevel{ScopeLevelSystem, ScopeLevelProject},
 	},
 	{

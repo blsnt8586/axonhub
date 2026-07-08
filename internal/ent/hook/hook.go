@@ -33,6 +33,30 @@ func (f APIKeyProfileTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.APIKeyProfileTemplateMutation", m)
 }
 
+// The BillingAccountFunc type is an adapter to allow the use of ordinary
+// function as BillingAccount mutator.
+type BillingAccountFunc func(context.Context, *ent.BillingAccountMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BillingAccountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BillingAccountMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingAccountMutation", m)
+}
+
+// The BillingAccountBindingFunc type is an adapter to allow the use of ordinary
+// function as BillingAccountBinding mutator.
+type BillingAccountBindingFunc func(context.Context, *ent.BillingAccountBindingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BillingAccountBindingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BillingAccountBindingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingAccountBindingMutation", m)
+}
+
 // The ChannelFunc type is an adapter to allow the use of ordinary
 // function as Channel mutator.
 type ChannelFunc func(context.Context, *ent.ChannelMutation) (ent.Value, error)
@@ -103,6 +127,30 @@ func (f DataStorageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DataStorageMutation", m)
+}
+
+// The LedgerEntryFunc type is an adapter to allow the use of ordinary
+// function as LedgerEntry mutator.
+type LedgerEntryFunc func(context.Context, *ent.LedgerEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LedgerEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LedgerEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LedgerEntryMutation", m)
+}
+
+// The LedgerTransactionFunc type is an adapter to allow the use of ordinary
+// function as LedgerTransaction mutator.
+type LedgerTransactionFunc func(context.Context, *ent.LedgerTransactionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LedgerTransactionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LedgerTransactionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LedgerTransactionMutation", m)
 }
 
 // The ModelFunc type is an adapter to allow the use of ordinary

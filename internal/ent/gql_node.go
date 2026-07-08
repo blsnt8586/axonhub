@@ -16,12 +16,16 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
+	"github.com/looplj/axonhub/internal/ent/ledgerentry"
+	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/project"
@@ -57,6 +61,16 @@ var apikeyprofiletemplateImplementors = []string{"APIKeyProfileTemplate", "Node"
 // IsNode implements the Node interface check for GQLGen.
 func (*APIKeyProfileTemplate) IsNode() {}
 
+var billingaccountImplementors = []string{"BillingAccount", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*BillingAccount) IsNode() {}
+
+var billingaccountbindingImplementors = []string{"BillingAccountBinding", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*BillingAccountBinding) IsNode() {}
+
 var channelImplementors = []string{"Channel", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
@@ -86,6 +100,16 @@ var datastorageImplementors = []string{"DataStorage", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*DataStorage) IsNode() {}
+
+var ledgerentryImplementors = []string{"LedgerEntry", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*LedgerEntry) IsNode() {}
+
+var ledgertransactionImplementors = []string{"LedgerTransaction", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*LedgerTransaction) IsNode() {}
 
 var modelImplementors = []string{"Model", "Node"}
 
@@ -243,6 +267,24 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			}
 		}
 		return query.Only(ctx)
+	case billingaccount.Table:
+		query := c.BillingAccount.Query().
+			Where(billingaccount.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, billingaccountImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case billingaccountbinding.Table:
+		query := c.BillingAccountBinding.Query().
+			Where(billingaccountbinding.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, billingaccountbindingImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
 	case channel.Table:
 		query := c.Channel.Query().
 			Where(channel.ID(id))
@@ -293,6 +335,24 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(datastorage.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, datastorageImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case ledgerentry.Table:
+		query := c.LedgerEntry.Query().
+			Where(ledgerentry.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, ledgerentryImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case ledgertransaction.Table:
+		query := c.LedgerTransaction.Query().
+			Where(ledgertransaction.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, ledgertransactionImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -546,6 +606,38 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 				*noder = node
 			}
 		}
+	case billingaccount.Table:
+		query := c.BillingAccount.Query().
+			Where(billingaccount.IDIn(ids...))
+		query, err := query.CollectFields(ctx, billingaccountImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case billingaccountbinding.Table:
+		query := c.BillingAccountBinding.Query().
+			Where(billingaccountbinding.IDIn(ids...))
+		query, err := query.CollectFields(ctx, billingaccountbindingImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
 	case channel.Table:
 		query := c.Channel.Query().
 			Where(channel.IDIn(ids...))
@@ -630,6 +722,38 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.DataStorage.Query().
 			Where(datastorage.IDIn(ids...))
 		query, err := query.CollectFields(ctx, datastorageImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case ledgerentry.Table:
+		query := c.LedgerEntry.Query().
+			Where(ledgerentry.IDIn(ids...))
+		query, err := query.CollectFields(ctx, ledgerentryImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case ledgertransaction.Table:
+		query := c.LedgerTransaction.Query().
+			Where(ledgertransaction.IDIn(ids...))
+		query, err := query.CollectFields(ctx, ledgertransactionImplementors...)
 		if err != nil {
 			return nil, err
 		}

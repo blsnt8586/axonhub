@@ -17,12 +17,16 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
+	"github.com/looplj/axonhub/internal/ent/ledgerentry"
+	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/project"
@@ -50,6 +54,10 @@ type Client struct {
 	APIKey *APIKeyClient
 	// APIKeyProfileTemplate is the client for interacting with the APIKeyProfileTemplate builders.
 	APIKeyProfileTemplate *APIKeyProfileTemplateClient
+	// BillingAccount is the client for interacting with the BillingAccount builders.
+	BillingAccount *BillingAccountClient
+	// BillingAccountBinding is the client for interacting with the BillingAccountBinding builders.
+	BillingAccountBinding *BillingAccountBindingClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
 	// ChannelModelPrice is the client for interacting with the ChannelModelPrice builders.
@@ -62,6 +70,10 @@ type Client struct {
 	ChannelProbe *ChannelProbeClient
 	// DataStorage is the client for interacting with the DataStorage builders.
 	DataStorage *DataStorageClient
+	// LedgerEntry is the client for interacting with the LedgerEntry builders.
+	LedgerEntry *LedgerEntryClient
+	// LedgerTransaction is the client for interacting with the LedgerTransaction builders.
+	LedgerTransaction *LedgerTransactionClient
 	// Model is the client for interacting with the Model builders.
 	Model *ModelClient
 	// OIDCIdentity is the client for interacting with the OIDCIdentity builders.
@@ -109,12 +121,16 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.APIKey = NewAPIKeyClient(c.config)
 	c.APIKeyProfileTemplate = NewAPIKeyProfileTemplateClient(c.config)
+	c.BillingAccount = NewBillingAccountClient(c.config)
+	c.BillingAccountBinding = NewBillingAccountBindingClient(c.config)
 	c.Channel = NewChannelClient(c.config)
 	c.ChannelModelPrice = NewChannelModelPriceClient(c.config)
 	c.ChannelModelPriceVersion = NewChannelModelPriceVersionClient(c.config)
 	c.ChannelOverrideTemplate = NewChannelOverrideTemplateClient(c.config)
 	c.ChannelProbe = NewChannelProbeClient(c.config)
 	c.DataStorage = NewDataStorageClient(c.config)
+	c.LedgerEntry = NewLedgerEntryClient(c.config)
+	c.LedgerTransaction = NewLedgerTransactionClient(c.config)
 	c.Model = NewModelClient(c.config)
 	c.OIDCIdentity = NewOIDCIdentityClient(c.config)
 	c.Project = NewProjectClient(c.config)
@@ -225,12 +241,16 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:                   cfg,
 		APIKey:                   NewAPIKeyClient(cfg),
 		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
+		BillingAccount:           NewBillingAccountClient(cfg),
+		BillingAccountBinding:    NewBillingAccountBindingClient(cfg),
 		Channel:                  NewChannelClient(cfg),
 		ChannelModelPrice:        NewChannelModelPriceClient(cfg),
 		ChannelModelPriceVersion: NewChannelModelPriceVersionClient(cfg),
 		ChannelOverrideTemplate:  NewChannelOverrideTemplateClient(cfg),
 		ChannelProbe:             NewChannelProbeClient(cfg),
 		DataStorage:              NewDataStorageClient(cfg),
+		LedgerEntry:              NewLedgerEntryClient(cfg),
+		LedgerTransaction:        NewLedgerTransactionClient(cfg),
 		Model:                    NewModelClient(cfg),
 		OIDCIdentity:             NewOIDCIdentityClient(cfg),
 		Project:                  NewProjectClient(cfg),
@@ -268,12 +288,16 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:                   cfg,
 		APIKey:                   NewAPIKeyClient(cfg),
 		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
+		BillingAccount:           NewBillingAccountClient(cfg),
+		BillingAccountBinding:    NewBillingAccountBindingClient(cfg),
 		Channel:                  NewChannelClient(cfg),
 		ChannelModelPrice:        NewChannelModelPriceClient(cfg),
 		ChannelModelPriceVersion: NewChannelModelPriceVersionClient(cfg),
 		ChannelOverrideTemplate:  NewChannelOverrideTemplateClient(cfg),
 		ChannelProbe:             NewChannelProbeClient(cfg),
 		DataStorage:              NewDataStorageClient(cfg),
+		LedgerEntry:              NewLedgerEntryClient(cfg),
+		LedgerTransaction:        NewLedgerTransactionClient(cfg),
 		Model:                    NewModelClient(cfg),
 		OIDCIdentity:             NewOIDCIdentityClient(cfg),
 		Project:                  NewProjectClient(cfg),
@@ -319,9 +343,10 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
-		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.DataStorage, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
+		c.APIKey, c.APIKeyProfileTemplate, c.BillingAccount, c.BillingAccountBinding,
+		c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
+		c.ChannelOverrideTemplate, c.ChannelProbe, c.DataStorage, c.LedgerEntry,
+		c.LedgerTransaction, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request, c.RequestExecution,
 		c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User, c.UserProject,
 		c.UserRole,
@@ -334,9 +359,10 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
-		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.DataStorage, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
+		c.APIKey, c.APIKeyProfileTemplate, c.BillingAccount, c.BillingAccountBinding,
+		c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
+		c.ChannelOverrideTemplate, c.ChannelProbe, c.DataStorage, c.LedgerEntry,
+		c.LedgerTransaction, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request, c.RequestExecution,
 		c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User, c.UserProject,
 		c.UserRole,
@@ -352,6 +378,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.APIKey.mutate(ctx, m)
 	case *APIKeyProfileTemplateMutation:
 		return c.APIKeyProfileTemplate.mutate(ctx, m)
+	case *BillingAccountMutation:
+		return c.BillingAccount.mutate(ctx, m)
+	case *BillingAccountBindingMutation:
+		return c.BillingAccountBinding.mutate(ctx, m)
 	case *ChannelMutation:
 		return c.Channel.mutate(ctx, m)
 	case *ChannelModelPriceMutation:
@@ -364,6 +394,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ChannelProbe.mutate(ctx, m)
 	case *DataStorageMutation:
 		return c.DataStorage.mutate(ctx, m)
+	case *LedgerEntryMutation:
+		return c.LedgerEntry.mutate(ctx, m)
+	case *LedgerTransactionMutation:
+		return c.LedgerTransaction.mutate(ctx, m)
 	case *ModelMutation:
 		return c.Model.mutate(ctx, m)
 	case *OIDCIdentityMutation:
@@ -732,6 +766,322 @@ func (c *APIKeyProfileTemplateClient) mutate(ctx context.Context, m *APIKeyProfi
 		return (&APIKeyProfileTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown APIKeyProfileTemplate mutation op: %q", m.Op())
+	}
+}
+
+// BillingAccountClient is a client for the BillingAccount schema.
+type BillingAccountClient struct {
+	config
+}
+
+// NewBillingAccountClient returns a client for the BillingAccount from the given config.
+func NewBillingAccountClient(c config) *BillingAccountClient {
+	return &BillingAccountClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `billingaccount.Hooks(f(g(h())))`.
+func (c *BillingAccountClient) Use(hooks ...Hook) {
+	c.hooks.BillingAccount = append(c.hooks.BillingAccount, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `billingaccount.Intercept(f(g(h())))`.
+func (c *BillingAccountClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BillingAccount = append(c.inters.BillingAccount, interceptors...)
+}
+
+// Create returns a builder for creating a BillingAccount entity.
+func (c *BillingAccountClient) Create() *BillingAccountCreate {
+	mutation := newBillingAccountMutation(c.config, OpCreate)
+	return &BillingAccountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BillingAccount entities.
+func (c *BillingAccountClient) CreateBulk(builders ...*BillingAccountCreate) *BillingAccountCreateBulk {
+	return &BillingAccountCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BillingAccountClient) MapCreateBulk(slice any, setFunc func(*BillingAccountCreate, int)) *BillingAccountCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BillingAccountCreateBulk{err: fmt.Errorf("calling to BillingAccountClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BillingAccountCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BillingAccountCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BillingAccount.
+func (c *BillingAccountClient) Update() *BillingAccountUpdate {
+	mutation := newBillingAccountMutation(c.config, OpUpdate)
+	return &BillingAccountUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BillingAccountClient) UpdateOne(_m *BillingAccount) *BillingAccountUpdateOne {
+	mutation := newBillingAccountMutation(c.config, OpUpdateOne, withBillingAccount(_m))
+	return &BillingAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BillingAccountClient) UpdateOneID(id int) *BillingAccountUpdateOne {
+	mutation := newBillingAccountMutation(c.config, OpUpdateOne, withBillingAccountID(id))
+	return &BillingAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BillingAccount.
+func (c *BillingAccountClient) Delete() *BillingAccountDelete {
+	mutation := newBillingAccountMutation(c.config, OpDelete)
+	return &BillingAccountDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BillingAccountClient) DeleteOne(_m *BillingAccount) *BillingAccountDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BillingAccountClient) DeleteOneID(id int) *BillingAccountDeleteOne {
+	builder := c.Delete().Where(billingaccount.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BillingAccountDeleteOne{builder}
+}
+
+// Query returns a query builder for BillingAccount.
+func (c *BillingAccountClient) Query() *BillingAccountQuery {
+	return &BillingAccountQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBillingAccount},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BillingAccount entity by its id.
+func (c *BillingAccountClient) Get(ctx context.Context, id int) (*BillingAccount, error) {
+	return c.Query().Where(billingaccount.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BillingAccountClient) GetX(ctx context.Context, id int) *BillingAccount {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBindings queries the bindings edge of a BillingAccount.
+func (c *BillingAccountClient) QueryBindings(_m *BillingAccount) *BillingAccountBindingQuery {
+	query := (&BillingAccountBindingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, id),
+			sqlgraph.To(billingaccountbinding.Table, billingaccountbinding.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.BindingsTable, billingaccount.BindingsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryLedgerTransactions queries the ledger_transactions edge of a BillingAccount.
+func (c *BillingAccountClient) QueryLedgerTransactions(_m *BillingAccount) *LedgerTransactionQuery {
+	query := (&LedgerTransactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, id),
+			sqlgraph.To(ledgertransaction.Table, ledgertransaction.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.LedgerTransactionsTable, billingaccount.LedgerTransactionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *BillingAccountClient) Hooks() []Hook {
+	hooks := c.hooks.BillingAccount
+	return append(hooks[:len(hooks):len(hooks)], billingaccount.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BillingAccountClient) Interceptors() []Interceptor {
+	return c.inters.BillingAccount
+}
+
+func (c *BillingAccountClient) mutate(ctx context.Context, m *BillingAccountMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BillingAccountCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BillingAccountUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BillingAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BillingAccountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BillingAccount mutation op: %q", m.Op())
+	}
+}
+
+// BillingAccountBindingClient is a client for the BillingAccountBinding schema.
+type BillingAccountBindingClient struct {
+	config
+}
+
+// NewBillingAccountBindingClient returns a client for the BillingAccountBinding from the given config.
+func NewBillingAccountBindingClient(c config) *BillingAccountBindingClient {
+	return &BillingAccountBindingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `billingaccountbinding.Hooks(f(g(h())))`.
+func (c *BillingAccountBindingClient) Use(hooks ...Hook) {
+	c.hooks.BillingAccountBinding = append(c.hooks.BillingAccountBinding, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `billingaccountbinding.Intercept(f(g(h())))`.
+func (c *BillingAccountBindingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BillingAccountBinding = append(c.inters.BillingAccountBinding, interceptors...)
+}
+
+// Create returns a builder for creating a BillingAccountBinding entity.
+func (c *BillingAccountBindingClient) Create() *BillingAccountBindingCreate {
+	mutation := newBillingAccountBindingMutation(c.config, OpCreate)
+	return &BillingAccountBindingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BillingAccountBinding entities.
+func (c *BillingAccountBindingClient) CreateBulk(builders ...*BillingAccountBindingCreate) *BillingAccountBindingCreateBulk {
+	return &BillingAccountBindingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BillingAccountBindingClient) MapCreateBulk(slice any, setFunc func(*BillingAccountBindingCreate, int)) *BillingAccountBindingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BillingAccountBindingCreateBulk{err: fmt.Errorf("calling to BillingAccountBindingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BillingAccountBindingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BillingAccountBindingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BillingAccountBinding.
+func (c *BillingAccountBindingClient) Update() *BillingAccountBindingUpdate {
+	mutation := newBillingAccountBindingMutation(c.config, OpUpdate)
+	return &BillingAccountBindingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BillingAccountBindingClient) UpdateOne(_m *BillingAccountBinding) *BillingAccountBindingUpdateOne {
+	mutation := newBillingAccountBindingMutation(c.config, OpUpdateOne, withBillingAccountBinding(_m))
+	return &BillingAccountBindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BillingAccountBindingClient) UpdateOneID(id int) *BillingAccountBindingUpdateOne {
+	mutation := newBillingAccountBindingMutation(c.config, OpUpdateOne, withBillingAccountBindingID(id))
+	return &BillingAccountBindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BillingAccountBinding.
+func (c *BillingAccountBindingClient) Delete() *BillingAccountBindingDelete {
+	mutation := newBillingAccountBindingMutation(c.config, OpDelete)
+	return &BillingAccountBindingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BillingAccountBindingClient) DeleteOne(_m *BillingAccountBinding) *BillingAccountBindingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BillingAccountBindingClient) DeleteOneID(id int) *BillingAccountBindingDeleteOne {
+	builder := c.Delete().Where(billingaccountbinding.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BillingAccountBindingDeleteOne{builder}
+}
+
+// Query returns a query builder for BillingAccountBinding.
+func (c *BillingAccountBindingClient) Query() *BillingAccountBindingQuery {
+	return &BillingAccountBindingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBillingAccountBinding},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BillingAccountBinding entity by its id.
+func (c *BillingAccountBindingClient) Get(ctx context.Context, id int) (*BillingAccountBinding, error) {
+	return c.Query().Where(billingaccountbinding.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BillingAccountBindingClient) GetX(ctx context.Context, id int) *BillingAccountBinding {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBillingAccount queries the billing_account edge of a BillingAccountBinding.
+func (c *BillingAccountBindingClient) QueryBillingAccount(_m *BillingAccountBinding) *BillingAccountQuery {
+	query := (&BillingAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingaccountbinding.Table, billingaccountbinding.FieldID, id),
+			sqlgraph.To(billingaccount.Table, billingaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billingaccountbinding.BillingAccountTable, billingaccountbinding.BillingAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *BillingAccountBindingClient) Hooks() []Hook {
+	hooks := c.hooks.BillingAccountBinding
+	return append(hooks[:len(hooks):len(hooks)], billingaccountbinding.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BillingAccountBindingClient) Interceptors() []Interceptor {
+	return c.inters.BillingAccountBinding
+}
+
+func (c *BillingAccountBindingClient) mutate(ctx context.Context, m *BillingAccountBindingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BillingAccountBindingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BillingAccountBindingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BillingAccountBindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BillingAccountBindingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BillingAccountBinding mutation op: %q", m.Op())
 	}
 }
 
@@ -1747,6 +2097,322 @@ func (c *DataStorageClient) mutate(ctx context.Context, m *DataStorageMutation) 
 		return (&DataStorageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown DataStorage mutation op: %q", m.Op())
+	}
+}
+
+// LedgerEntryClient is a client for the LedgerEntry schema.
+type LedgerEntryClient struct {
+	config
+}
+
+// NewLedgerEntryClient returns a client for the LedgerEntry from the given config.
+func NewLedgerEntryClient(c config) *LedgerEntryClient {
+	return &LedgerEntryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ledgerentry.Hooks(f(g(h())))`.
+func (c *LedgerEntryClient) Use(hooks ...Hook) {
+	c.hooks.LedgerEntry = append(c.hooks.LedgerEntry, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ledgerentry.Intercept(f(g(h())))`.
+func (c *LedgerEntryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LedgerEntry = append(c.inters.LedgerEntry, interceptors...)
+}
+
+// Create returns a builder for creating a LedgerEntry entity.
+func (c *LedgerEntryClient) Create() *LedgerEntryCreate {
+	mutation := newLedgerEntryMutation(c.config, OpCreate)
+	return &LedgerEntryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LedgerEntry entities.
+func (c *LedgerEntryClient) CreateBulk(builders ...*LedgerEntryCreate) *LedgerEntryCreateBulk {
+	return &LedgerEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LedgerEntryClient) MapCreateBulk(slice any, setFunc func(*LedgerEntryCreate, int)) *LedgerEntryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LedgerEntryCreateBulk{err: fmt.Errorf("calling to LedgerEntryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LedgerEntryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LedgerEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LedgerEntry.
+func (c *LedgerEntryClient) Update() *LedgerEntryUpdate {
+	mutation := newLedgerEntryMutation(c.config, OpUpdate)
+	return &LedgerEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LedgerEntryClient) UpdateOne(_m *LedgerEntry) *LedgerEntryUpdateOne {
+	mutation := newLedgerEntryMutation(c.config, OpUpdateOne, withLedgerEntry(_m))
+	return &LedgerEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LedgerEntryClient) UpdateOneID(id int) *LedgerEntryUpdateOne {
+	mutation := newLedgerEntryMutation(c.config, OpUpdateOne, withLedgerEntryID(id))
+	return &LedgerEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LedgerEntry.
+func (c *LedgerEntryClient) Delete() *LedgerEntryDelete {
+	mutation := newLedgerEntryMutation(c.config, OpDelete)
+	return &LedgerEntryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LedgerEntryClient) DeleteOne(_m *LedgerEntry) *LedgerEntryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LedgerEntryClient) DeleteOneID(id int) *LedgerEntryDeleteOne {
+	builder := c.Delete().Where(ledgerentry.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LedgerEntryDeleteOne{builder}
+}
+
+// Query returns a query builder for LedgerEntry.
+func (c *LedgerEntryClient) Query() *LedgerEntryQuery {
+	return &LedgerEntryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLedgerEntry},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LedgerEntry entity by its id.
+func (c *LedgerEntryClient) Get(ctx context.Context, id int) (*LedgerEntry, error) {
+	return c.Query().Where(ledgerentry.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LedgerEntryClient) GetX(ctx context.Context, id int) *LedgerEntry {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryLedgerTransaction queries the ledger_transaction edge of a LedgerEntry.
+func (c *LedgerEntryClient) QueryLedgerTransaction(_m *LedgerEntry) *LedgerTransactionQuery {
+	query := (&LedgerTransactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgerentry.Table, ledgerentry.FieldID, id),
+			sqlgraph.To(ledgertransaction.Table, ledgertransaction.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ledgerentry.LedgerTransactionTable, ledgerentry.LedgerTransactionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *LedgerEntryClient) Hooks() []Hook {
+	hooks := c.hooks.LedgerEntry
+	return append(hooks[:len(hooks):len(hooks)], ledgerentry.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *LedgerEntryClient) Interceptors() []Interceptor {
+	return c.inters.LedgerEntry
+}
+
+func (c *LedgerEntryClient) mutate(ctx context.Context, m *LedgerEntryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LedgerEntryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LedgerEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LedgerEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LedgerEntryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LedgerEntry mutation op: %q", m.Op())
+	}
+}
+
+// LedgerTransactionClient is a client for the LedgerTransaction schema.
+type LedgerTransactionClient struct {
+	config
+}
+
+// NewLedgerTransactionClient returns a client for the LedgerTransaction from the given config.
+func NewLedgerTransactionClient(c config) *LedgerTransactionClient {
+	return &LedgerTransactionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ledgertransaction.Hooks(f(g(h())))`.
+func (c *LedgerTransactionClient) Use(hooks ...Hook) {
+	c.hooks.LedgerTransaction = append(c.hooks.LedgerTransaction, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ledgertransaction.Intercept(f(g(h())))`.
+func (c *LedgerTransactionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LedgerTransaction = append(c.inters.LedgerTransaction, interceptors...)
+}
+
+// Create returns a builder for creating a LedgerTransaction entity.
+func (c *LedgerTransactionClient) Create() *LedgerTransactionCreate {
+	mutation := newLedgerTransactionMutation(c.config, OpCreate)
+	return &LedgerTransactionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LedgerTransaction entities.
+func (c *LedgerTransactionClient) CreateBulk(builders ...*LedgerTransactionCreate) *LedgerTransactionCreateBulk {
+	return &LedgerTransactionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LedgerTransactionClient) MapCreateBulk(slice any, setFunc func(*LedgerTransactionCreate, int)) *LedgerTransactionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LedgerTransactionCreateBulk{err: fmt.Errorf("calling to LedgerTransactionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LedgerTransactionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LedgerTransactionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LedgerTransaction.
+func (c *LedgerTransactionClient) Update() *LedgerTransactionUpdate {
+	mutation := newLedgerTransactionMutation(c.config, OpUpdate)
+	return &LedgerTransactionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LedgerTransactionClient) UpdateOne(_m *LedgerTransaction) *LedgerTransactionUpdateOne {
+	mutation := newLedgerTransactionMutation(c.config, OpUpdateOne, withLedgerTransaction(_m))
+	return &LedgerTransactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LedgerTransactionClient) UpdateOneID(id int) *LedgerTransactionUpdateOne {
+	mutation := newLedgerTransactionMutation(c.config, OpUpdateOne, withLedgerTransactionID(id))
+	return &LedgerTransactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LedgerTransaction.
+func (c *LedgerTransactionClient) Delete() *LedgerTransactionDelete {
+	mutation := newLedgerTransactionMutation(c.config, OpDelete)
+	return &LedgerTransactionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LedgerTransactionClient) DeleteOne(_m *LedgerTransaction) *LedgerTransactionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LedgerTransactionClient) DeleteOneID(id int) *LedgerTransactionDeleteOne {
+	builder := c.Delete().Where(ledgertransaction.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LedgerTransactionDeleteOne{builder}
+}
+
+// Query returns a query builder for LedgerTransaction.
+func (c *LedgerTransactionClient) Query() *LedgerTransactionQuery {
+	return &LedgerTransactionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLedgerTransaction},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LedgerTransaction entity by its id.
+func (c *LedgerTransactionClient) Get(ctx context.Context, id int) (*LedgerTransaction, error) {
+	return c.Query().Where(ledgertransaction.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LedgerTransactionClient) GetX(ctx context.Context, id int) *LedgerTransaction {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBillingAccount queries the billing_account edge of a LedgerTransaction.
+func (c *LedgerTransactionClient) QueryBillingAccount(_m *LedgerTransaction) *BillingAccountQuery {
+	query := (&BillingAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, id),
+			sqlgraph.To(billingaccount.Table, billingaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ledgertransaction.BillingAccountTable, ledgertransaction.BillingAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEntries queries the entries edge of a LedgerTransaction.
+func (c *LedgerTransactionClient) QueryEntries(_m *LedgerTransaction) *LedgerEntryQuery {
+	query := (&LedgerEntryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, id),
+			sqlgraph.To(ledgerentry.Table, ledgerentry.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.EntriesTable, ledgertransaction.EntriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *LedgerTransactionClient) Hooks() []Hook {
+	hooks := c.hooks.LedgerTransaction
+	return append(hooks[:len(hooks):len(hooks)], ledgertransaction.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *LedgerTransactionClient) Interceptors() []Interceptor {
+	return c.inters.LedgerTransaction
+}
+
+func (c *LedgerTransactionClient) mutate(ctx context.Context, m *LedgerTransactionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LedgerTransactionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LedgerTransactionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LedgerTransactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LedgerTransactionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LedgerTransaction mutation op: %q", m.Op())
 	}
 }
 
@@ -4624,17 +5290,19 @@ func (c *UserRoleClient) mutate(ctx context.Context, m *UserRoleMutation) (Value
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
-		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
-		Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, Request, RequestExecution, Role, System, Thread, Trace,
-		UsageLog, User, UserProject, UserRole []ent.Hook
+		APIKey, APIKeyProfileTemplate, BillingAccount, BillingAccountBinding, Channel,
+		ChannelModelPrice, ChannelModelPriceVersion, ChannelOverrideTemplate,
+		ChannelProbe, DataStorage, LedgerEntry, LedgerTransaction, Model, OIDCIdentity,
+		Project, Prompt, PromptProtectionRule, ProviderQuotaStatus, Request,
+		RequestExecution, Role, System, Thread, Trace, UsageLog, User, UserProject,
+		UserRole []ent.Hook
 	}
 	inters struct {
-		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
-		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
-		Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, Request, RequestExecution, Role, System, Thread, Trace,
-		UsageLog, User, UserProject, UserRole []ent.Interceptor
+		APIKey, APIKeyProfileTemplate, BillingAccount, BillingAccountBinding, Channel,
+		ChannelModelPrice, ChannelModelPriceVersion, ChannelOverrideTemplate,
+		ChannelProbe, DataStorage, LedgerEntry, LedgerTransaction, Model, OIDCIdentity,
+		Project, Prompt, PromptProtectionRule, ProviderQuotaStatus, Request,
+		RequestExecution, Role, System, Thread, Trace, UsageLog, User, UserProject,
+		UserRole []ent.Interceptor
 	}
 )

@@ -53,6 +53,56 @@ func (_m *APIKeyProfileTemplate) Project(ctx context.Context) (*Project, error) 
 	return result, err
 }
 
+func (_m *BillingAccount) Bindings(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingAccountBindingOrder, where *BillingAccountBindingWhereInput,
+) (*BillingAccountBindingConnection, error) {
+	opts := []BillingAccountBindingPaginateOption{
+		WithBillingAccountBindingOrder(orderBy),
+		WithBillingAccountBindingFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[0][alias]
+	if nodes, err := _m.NamedBindings(alias); err == nil || hasTotalCount {
+		pager, err := newBillingAccountBindingPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingAccountBindingConnection{Edges: []*BillingAccountBindingEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBindings().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *BillingAccount) LedgerTransactions(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *LedgerTransactionOrder, where *LedgerTransactionWhereInput,
+) (*LedgerTransactionConnection, error) {
+	opts := []LedgerTransactionPaginateOption{
+		WithLedgerTransactionOrder(orderBy),
+		WithLedgerTransactionFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[1][alias]
+	if nodes, err := _m.NamedLedgerTransactions(alias); err == nil || hasTotalCount {
+		pager, err := newLedgerTransactionPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &LedgerTransactionConnection{Edges: []*LedgerTransactionEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryLedgerTransactions().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *BillingAccountBinding) BillingAccount(ctx context.Context) (*BillingAccount, error) {
+	result, err := _m.Edges.BillingAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryBillingAccount().Only(ctx)
+	}
+	return result, err
+}
+
 func (_m *Channel) Requests(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *RequestOrder, where *RequestWhereInput,
 ) (*RequestConnection, error) {
@@ -232,6 +282,43 @@ func (_m *DataStorage) Executions(
 		return conn, nil
 	}
 	return _m.QueryExecutions().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *LedgerEntry) LedgerTransaction(ctx context.Context) (*LedgerTransaction, error) {
+	result, err := _m.Edges.LedgerTransactionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryLedgerTransaction().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *LedgerTransaction) BillingAccount(ctx context.Context) (*BillingAccount, error) {
+	result, err := _m.Edges.BillingAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryBillingAccount().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *LedgerTransaction) Entries(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *LedgerEntryOrder, where *LedgerEntryWhereInput,
+) (*LedgerEntryConnection, error) {
+	opts := []LedgerEntryPaginateOption{
+		WithLedgerEntryOrder(orderBy),
+		WithLedgerEntryFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[1][alias]
+	if nodes, err := _m.NamedEntries(alias); err == nil || hasTotalCount {
+		pager, err := newLedgerEntryPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &LedgerEntryConnection{Edges: []*LedgerEntryEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryEntries().Paginate(ctx, after, first, before, last, opts...)
 }
 
 func (_m *OIDCIdentity) User(ctx context.Context) (*User, error) {

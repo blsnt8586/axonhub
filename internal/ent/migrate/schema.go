@@ -92,6 +92,62 @@ var (
 			},
 		},
 	}
+	// BillingAccountsColumns holds the columns for the "billing_accounts" table.
+	BillingAccountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "owner_type", Type: field.TypeEnum, Enums: []string{"project"}, Default: "project"},
+		{Name: "owner_id", Type: field.TypeInt},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "balance_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "credit_limit_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "frozen", "closed"}, Default: "active"},
+	}
+	// BillingAccountsTable holds the schema information for the "billing_accounts" table.
+	BillingAccountsTable = &schema.Table{
+		Name:       "billing_accounts",
+		Columns:    BillingAccountsColumns,
+		PrimaryKey: []*schema.Column{BillingAccountsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "billing_accounts_by_owner",
+				Unique:  true,
+				Columns: []*schema.Column{BillingAccountsColumns[3], BillingAccountsColumns[4]},
+			},
+		},
+	}
+	// BillingAccountBindingsColumns holds the columns for the "billing_account_bindings" table.
+	BillingAccountBindingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "owner_type", Type: field.TypeEnum, Enums: []string{"project"}, Default: "project"},
+		{Name: "owner_id", Type: field.TypeInt},
+		{Name: "relation", Type: field.TypeString, Default: "primary"},
+		{Name: "billing_account_id", Type: field.TypeInt},
+	}
+	// BillingAccountBindingsTable holds the schema information for the "billing_account_bindings" table.
+	BillingAccountBindingsTable = &schema.Table{
+		Name:       "billing_account_bindings",
+		Columns:    BillingAccountBindingsColumns,
+		PrimaryKey: []*schema.Column{BillingAccountBindingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "billing_account_bindings_billing_accounts_bindings",
+				Columns:    []*schema.Column{BillingAccountBindingsColumns[6]},
+				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "billing_account_bindings_by_owner",
+				Unique:  true,
+				Columns: []*schema.Column{BillingAccountBindingsColumns[3], BillingAccountBindingsColumns[4]},
+			},
+		},
+	}
 	// ChannelsColumns holds the columns for the "channels" table.
 	ChannelsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -279,6 +335,87 @@ var (
 				Name:    "data_sources_by_name",
 				Unique:  true,
 				Columns: []*schema.Column{DataStoragesColumns[4]},
+			},
+		},
+	}
+	// LedgerEntriesColumns holds the columns for the "ledger_entries" table.
+	LedgerEntriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "account_side", Type: field.TypeEnum, Enums: []string{"customer_balance", "platform_revenue", "payment_clearing", "adjustment"}},
+		{Name: "direction", Type: field.TypeEnum, Enums: []string{"credit", "debit"}},
+		{Name: "amount_micros", Type: field.TypeInt64},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "ledger_transaction_id", Type: field.TypeInt},
+	}
+	// LedgerEntriesTable holds the schema information for the "ledger_entries" table.
+	LedgerEntriesTable = &schema.Table{
+		Name:       "ledger_entries",
+		Columns:    LedgerEntriesColumns,
+		PrimaryKey: []*schema.Column{LedgerEntriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ledger_entries_ledger_transactions_entries",
+				Columns:    []*schema.Column{LedgerEntriesColumns[7]},
+				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ledger_entries_by_transaction_id",
+				Unique:  false,
+				Columns: []*schema.Column{LedgerEntriesColumns[7]},
+			},
+		},
+	}
+	// LedgerTransactionsColumns holds the columns for the "ledger_transactions" table.
+	LedgerTransactionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "direction", Type: field.TypeEnum, Enums: []string{"credit", "debit"}},
+		{Name: "amount_micros", Type: field.TypeInt64},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"payment_recharge", "usage_charge", "admin_adjustment", "refund", "chargeback", "subscription_grant", "subscription_deduct"}},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"posted", "voided"}, Default: "posted"},
+		{Name: "idempotency_key", Type: field.TypeString},
+		{Name: "reference_type", Type: field.TypeString, Default: ""},
+		{Name: "reference_id", Type: field.TypeString, Default: ""},
+		{Name: "memo", Type: field.TypeString, Default: ""},
+		{Name: "created_by_type", Type: field.TypeEnum, Enums: []string{"system", "admin", "provider"}, Default: "system"},
+		{Name: "created_by_id", Type: field.TypeString, Default: ""},
+		{Name: "billing_account_id", Type: field.TypeInt},
+	}
+	// LedgerTransactionsTable holds the schema information for the "ledger_transactions" table.
+	LedgerTransactionsTable = &schema.Table{
+		Name:       "ledger_transactions",
+		Columns:    LedgerTransactionsColumns,
+		PrimaryKey: []*schema.Column{LedgerTransactionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ledger_transactions_billing_accounts_ledger_transactions",
+				Columns:    []*schema.Column{LedgerTransactionsColumns[14]},
+				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ledger_transactions_by_billing_account_id",
+				Unique:  false,
+				Columns: []*schema.Column{LedgerTransactionsColumns[14]},
+			},
+			{
+				Name:    "ledger_transactions_by_idempotency_key",
+				Unique:  true,
+				Columns: []*schema.Column{LedgerTransactionsColumns[8]},
+			},
+			{
+				Name:    "ledger_transactions_by_reference",
+				Unique:  false,
+				Columns: []*schema.Column{LedgerTransactionsColumns[9], LedgerTransactionsColumns[10]},
 			},
 		},
 	}
@@ -1000,12 +1137,16 @@ var (
 	Tables = []*schema.Table{
 		APIKeysTable,
 		APIKeyProfileTemplatesTable,
+		BillingAccountsTable,
+		BillingAccountBindingsTable,
 		ChannelsTable,
 		ChannelModelPricesTable,
 		ChannelModelPriceVersionsTable,
 		ChannelOverrideTemplatesTable,
 		ChannelProbesTable,
 		DataStoragesTable,
+		LedgerEntriesTable,
+		LedgerTransactionsTable,
 		ModelsTable,
 		OidcIdentitiesTable,
 		ProjectsTable,
@@ -1030,10 +1171,13 @@ func init() {
 	APIKeysTable.ForeignKeys[0].RefTable = ProjectsTable
 	APIKeysTable.ForeignKeys[1].RefTable = UsersTable
 	APIKeyProfileTemplatesTable.ForeignKeys[0].RefTable = ProjectsTable
+	BillingAccountBindingsTable.ForeignKeys[0].RefTable = BillingAccountsTable
 	ChannelModelPricesTable.ForeignKeys[0].RefTable = ChannelsTable
 	ChannelModelPriceVersionsTable.ForeignKeys[0].RefTable = ChannelModelPricesTable
 	ChannelOverrideTemplatesTable.ForeignKeys[0].RefTable = UsersTable
 	ChannelProbesTable.ForeignKeys[0].RefTable = ChannelsTable
+	LedgerEntriesTable.ForeignKeys[0].RefTable = LedgerTransactionsTable
+	LedgerTransactionsTable.ForeignKeys[0].RefTable = BillingAccountsTable
 	OidcIdentitiesTable.ForeignKeys[0].RefTable = UsersTable
 	ProviderQuotaStatusTable.ForeignKeys[0].RefTable = ChannelsTable
 	RequestsTable.ForeignKeys[0].RefTable = APIKeysTable

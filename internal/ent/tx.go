@@ -16,6 +16,10 @@ type Tx struct {
 	APIKey *APIKeyClient
 	// APIKeyProfileTemplate is the client for interacting with the APIKeyProfileTemplate builders.
 	APIKeyProfileTemplate *APIKeyProfileTemplateClient
+	// BillingAccount is the client for interacting with the BillingAccount builders.
+	BillingAccount *BillingAccountClient
+	// BillingAccountBinding is the client for interacting with the BillingAccountBinding builders.
+	BillingAccountBinding *BillingAccountBindingClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
 	// ChannelModelPrice is the client for interacting with the ChannelModelPrice builders.
@@ -28,6 +32,10 @@ type Tx struct {
 	ChannelProbe *ChannelProbeClient
 	// DataStorage is the client for interacting with the DataStorage builders.
 	DataStorage *DataStorageClient
+	// LedgerEntry is the client for interacting with the LedgerEntry builders.
+	LedgerEntry *LedgerEntryClient
+	// LedgerTransaction is the client for interacting with the LedgerTransaction builders.
+	LedgerTransaction *LedgerTransactionClient
 	// Model is the client for interacting with the Model builders.
 	Model *ModelClient
 	// OIDCIdentity is the client for interacting with the OIDCIdentity builders.
@@ -193,12 +201,16 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.APIKey = NewAPIKeyClient(tx.config)
 	tx.APIKeyProfileTemplate = NewAPIKeyProfileTemplateClient(tx.config)
+	tx.BillingAccount = NewBillingAccountClient(tx.config)
+	tx.BillingAccountBinding = NewBillingAccountBindingClient(tx.config)
 	tx.Channel = NewChannelClient(tx.config)
 	tx.ChannelModelPrice = NewChannelModelPriceClient(tx.config)
 	tx.ChannelModelPriceVersion = NewChannelModelPriceVersionClient(tx.config)
 	tx.ChannelOverrideTemplate = NewChannelOverrideTemplateClient(tx.config)
 	tx.ChannelProbe = NewChannelProbeClient(tx.config)
 	tx.DataStorage = NewDataStorageClient(tx.config)
+	tx.LedgerEntry = NewLedgerEntryClient(tx.config)
+	tx.LedgerTransaction = NewLedgerTransactionClient(tx.config)
 	tx.Model = NewModelClient(tx.config)
 	tx.OIDCIdentity = NewOIDCIdentityClient(tx.config)
 	tx.Project = NewProjectClient(tx.config)
