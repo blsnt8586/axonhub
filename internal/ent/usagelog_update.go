@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
@@ -424,6 +425,21 @@ func (_u *UsageLogUpdate) AddUsageBillingRecords(v ...*UsageBillingRecord) *Usag
 	return _u.AddUsageBillingRecordIDs(ids...)
 }
 
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by IDs.
+func (_u *UsageLogUpdate) AddBillingHoldIDs(ids ...int) *UsageLogUpdate {
+	_u.mutation.AddBillingHoldIDs(ids...)
+	return _u
+}
+
+// AddBillingHolds adds the "billing_holds" edges to the BillingHold entity.
+func (_u *UsageLogUpdate) AddBillingHolds(v ...*BillingHold) *UsageLogUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingHoldIDs(ids...)
+}
+
 // Mutation returns the UsageLogMutation object of the builder.
 func (_u *UsageLogUpdate) Mutation() *UsageLogMutation {
 	return _u.mutation
@@ -448,6 +464,27 @@ func (_u *UsageLogUpdate) RemoveUsageBillingRecords(v ...*UsageBillingRecord) *U
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageBillingRecordIDs(ids...)
+}
+
+// ClearBillingHolds clears all "billing_holds" edges to the BillingHold entity.
+func (_u *UsageLogUpdate) ClearBillingHolds() *UsageLogUpdate {
+	_u.mutation.ClearBillingHolds()
+	return _u
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to BillingHold entities by IDs.
+func (_u *UsageLogUpdate) RemoveBillingHoldIDs(ids ...int) *UsageLogUpdate {
+	_u.mutation.RemoveBillingHoldIDs(ids...)
+	return _u
+}
+
+// RemoveBillingHolds removes "billing_holds" edges to BillingHold entities.
+func (_u *UsageLogUpdate) RemoveBillingHolds(v ...*BillingHold) *UsageLogUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingHoldIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -690,6 +727,51 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.BillingHoldsTable,
+			Columns: []string{usagelog.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingHoldsIDs(); len(nodes) > 0 && !_u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.BillingHoldsTable,
+			Columns: []string{usagelog.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingHoldsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.BillingHoldsTable,
+			Columns: []string{usagelog.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1111,6 +1193,21 @@ func (_u *UsageLogUpdateOne) AddUsageBillingRecords(v ...*UsageBillingRecord) *U
 	return _u.AddUsageBillingRecordIDs(ids...)
 }
 
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by IDs.
+func (_u *UsageLogUpdateOne) AddBillingHoldIDs(ids ...int) *UsageLogUpdateOne {
+	_u.mutation.AddBillingHoldIDs(ids...)
+	return _u
+}
+
+// AddBillingHolds adds the "billing_holds" edges to the BillingHold entity.
+func (_u *UsageLogUpdateOne) AddBillingHolds(v ...*BillingHold) *UsageLogUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingHoldIDs(ids...)
+}
+
 // Mutation returns the UsageLogMutation object of the builder.
 func (_u *UsageLogUpdateOne) Mutation() *UsageLogMutation {
 	return _u.mutation
@@ -1135,6 +1232,27 @@ func (_u *UsageLogUpdateOne) RemoveUsageBillingRecords(v ...*UsageBillingRecord)
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageBillingRecordIDs(ids...)
+}
+
+// ClearBillingHolds clears all "billing_holds" edges to the BillingHold entity.
+func (_u *UsageLogUpdateOne) ClearBillingHolds() *UsageLogUpdateOne {
+	_u.mutation.ClearBillingHolds()
+	return _u
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to BillingHold entities by IDs.
+func (_u *UsageLogUpdateOne) RemoveBillingHoldIDs(ids ...int) *UsageLogUpdateOne {
+	_u.mutation.RemoveBillingHoldIDs(ids...)
+	return _u
+}
+
+// RemoveBillingHolds removes "billing_holds" edges to BillingHold entities.
+func (_u *UsageLogUpdateOne) RemoveBillingHolds(v ...*BillingHold) *UsageLogUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingHoldIDs(ids...)
 }
 
 // Where appends a list predicates to the UsageLogUpdate builder.
@@ -1407,6 +1525,51 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.BillingHoldsTable,
+			Columns: []string{usagelog.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingHoldsIDs(); len(nodes) > 0 && !_u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.BillingHoldsTable,
+			Columns: []string{usagelog.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingHoldsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.BillingHoldsTable,
+			Columns: []string{usagelog.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

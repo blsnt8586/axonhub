@@ -92,6 +92,22 @@ func TestLedgerServiceAllowsDebitWithinCreditLimit(t *testing.T) {
 	require.Equal(t, int64(-1_500_000), reloaded.BalanceMicros)
 }
 
+func TestLedgerServiceRejectsDebitAgainstHeldBalance(t *testing.T) {
+	t.Parallel()
+
+	client := enttest.NewEntClient(t, "sqlite3", "file:ledger_held_balance?mode=memory&_fk=1")
+	ctx := authz.WithTestBypass(context.Background())
+	account := createBillingAccountForLedgerTest(t, client, 44)
+	svc := NewLedgerService(LedgerServiceParams{Ent: client})
+	_, err := svc.Credit(ctx, account.ID, decimal.RequireFromString("2"), ledgertransaction.TypePaymentRecharge, "credit-held-balance")
+	require.NoError(t, err)
+	_, err = client.BillingAccount.UpdateOneID(account.ID).SetHeldBalanceMicros(1_500_000).Save(ctx)
+	require.NoError(t, err)
+
+	_, err = svc.Debit(ctx, account.ID, decimal.RequireFromString("1"), ledgertransaction.TypeUsageCharge, "debit-held-balance")
+	require.ErrorIs(t, err, ErrInsufficientBalance)
+}
+
 func TestLedgerServiceRejectsFrozenAccount(t *testing.T) {
 	t.Parallel()
 

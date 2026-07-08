@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
@@ -82,6 +83,21 @@ func (_u *LedgerTransactionUpdate) AddUsageBillingRecords(v ...*UsageBillingReco
 	return _u.AddUsageBillingRecordIDs(ids...)
 }
 
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by IDs.
+func (_u *LedgerTransactionUpdate) AddBillingHoldIDs(ids ...int) *LedgerTransactionUpdate {
+	_u.mutation.AddBillingHoldIDs(ids...)
+	return _u
+}
+
+// AddBillingHolds adds the "billing_holds" edges to the BillingHold entity.
+func (_u *LedgerTransactionUpdate) AddBillingHolds(v ...*BillingHold) *LedgerTransactionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingHoldIDs(ids...)
+}
+
 // AddPaymentOrderIDs adds the "payment_orders" edge to the PaymentOrder entity by IDs.
 func (_u *LedgerTransactionUpdate) AddPaymentOrderIDs(ids ...int) *LedgerTransactionUpdate {
 	_u.mutation.AddPaymentOrderIDs(ids...)
@@ -142,6 +158,27 @@ func (_u *LedgerTransactionUpdate) RemoveUsageBillingRecords(v ...*UsageBillingR
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageBillingRecordIDs(ids...)
+}
+
+// ClearBillingHolds clears all "billing_holds" edges to the BillingHold entity.
+func (_u *LedgerTransactionUpdate) ClearBillingHolds() *LedgerTransactionUpdate {
+	_u.mutation.ClearBillingHolds()
+	return _u
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to BillingHold entities by IDs.
+func (_u *LedgerTransactionUpdate) RemoveBillingHoldIDs(ids ...int) *LedgerTransactionUpdate {
+	_u.mutation.RemoveBillingHoldIDs(ids...)
+	return _u
+}
+
+// RemoveBillingHolds removes "billing_holds" edges to BillingHold entities.
+func (_u *LedgerTransactionUpdate) RemoveBillingHolds(v ...*BillingHold) *LedgerTransactionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingHoldIDs(ids...)
 }
 
 // ClearPaymentOrders clears all "payment_orders" edges to the PaymentOrder entity.
@@ -334,6 +371,51 @@ func (_u *LedgerTransactionUpdate) sqlSave(ctx context.Context) (_node int, err 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.BillingHoldsTable,
+			Columns: []string{ledgertransaction.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingHoldsIDs(); len(nodes) > 0 && !_u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.BillingHoldsTable,
+			Columns: []string{ledgertransaction.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingHoldsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.BillingHoldsTable,
+			Columns: []string{ledgertransaction.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.PaymentOrdersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -451,6 +533,21 @@ func (_u *LedgerTransactionUpdateOne) AddUsageBillingRecords(v ...*UsageBillingR
 	return _u.AddUsageBillingRecordIDs(ids...)
 }
 
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by IDs.
+func (_u *LedgerTransactionUpdateOne) AddBillingHoldIDs(ids ...int) *LedgerTransactionUpdateOne {
+	_u.mutation.AddBillingHoldIDs(ids...)
+	return _u
+}
+
+// AddBillingHolds adds the "billing_holds" edges to the BillingHold entity.
+func (_u *LedgerTransactionUpdateOne) AddBillingHolds(v ...*BillingHold) *LedgerTransactionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingHoldIDs(ids...)
+}
+
 // AddPaymentOrderIDs adds the "payment_orders" edge to the PaymentOrder entity by IDs.
 func (_u *LedgerTransactionUpdateOne) AddPaymentOrderIDs(ids ...int) *LedgerTransactionUpdateOne {
 	_u.mutation.AddPaymentOrderIDs(ids...)
@@ -511,6 +608,27 @@ func (_u *LedgerTransactionUpdateOne) RemoveUsageBillingRecords(v ...*UsageBilli
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageBillingRecordIDs(ids...)
+}
+
+// ClearBillingHolds clears all "billing_holds" edges to the BillingHold entity.
+func (_u *LedgerTransactionUpdateOne) ClearBillingHolds() *LedgerTransactionUpdateOne {
+	_u.mutation.ClearBillingHolds()
+	return _u
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to BillingHold entities by IDs.
+func (_u *LedgerTransactionUpdateOne) RemoveBillingHoldIDs(ids ...int) *LedgerTransactionUpdateOne {
+	_u.mutation.RemoveBillingHoldIDs(ids...)
+	return _u
+}
+
+// RemoveBillingHolds removes "billing_holds" edges to BillingHold entities.
+func (_u *LedgerTransactionUpdateOne) RemoveBillingHolds(v ...*BillingHold) *LedgerTransactionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingHoldIDs(ids...)
 }
 
 // ClearPaymentOrders clears all "payment_orders" edges to the PaymentOrder entity.
@@ -726,6 +844,51 @@ func (_u *LedgerTransactionUpdateOne) sqlSave(ctx context.Context) (_node *Ledge
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.BillingHoldsTable,
+			Columns: []string{ledgertransaction.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingHoldsIDs(); len(nodes) > 0 && !_u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.BillingHoldsTable,
+			Columns: []string{ledgertransaction.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingHoldsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.BillingHoldsTable,
+			Columns: []string{ledgertransaction.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -20,6 +20,8 @@ type Tx struct {
 	BillingAccount *BillingAccountClient
 	// BillingAccountBinding is the client for interacting with the BillingAccountBinding builders.
 	BillingAccountBinding *BillingAccountBindingClient
+	// BillingHold is the client for interacting with the BillingHold builders.
+	BillingHold *BillingHoldClient
 	// BillingOutbox is the client for interacting with the BillingOutbox builders.
 	BillingOutbox *BillingOutboxClient
 	// BillingPriceRule is the client for interacting with the BillingPriceRule builders.
@@ -215,6 +217,7 @@ func (tx *Tx) init() {
 	tx.APIKeyProfileTemplate = NewAPIKeyProfileTemplateClient(tx.config)
 	tx.BillingAccount = NewBillingAccountClient(tx.config)
 	tx.BillingAccountBinding = NewBillingAccountBindingClient(tx.config)
+	tx.BillingHold = NewBillingHoldClient(tx.config)
 	tx.BillingOutbox = NewBillingOutboxClient(tx.config)
 	tx.BillingPriceRule = NewBillingPriceRuleClient(tx.config)
 	tx.Channel = NewChannelClient(tx.config)

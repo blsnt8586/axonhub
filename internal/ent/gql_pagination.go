@@ -18,6 +18,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -1382,6 +1383,320 @@ func (_m *BillingAccountBinding) ToEdge(order *BillingAccountBindingOrder) *Bill
 		order = DefaultBillingAccountBindingOrder
 	}
 	return &BillingAccountBindingEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// BillingHoldEdge is the edge representation of BillingHold.
+type BillingHoldEdge struct {
+	Node   *BillingHold `json:"node"`
+	Cursor Cursor       `json:"cursor"`
+}
+
+// BillingHoldConnection is the connection containing edges to BillingHold.
+type BillingHoldConnection struct {
+	Edges      []*BillingHoldEdge `json:"edges"`
+	PageInfo   PageInfo           `json:"pageInfo"`
+	TotalCount int                `json:"totalCount"`
+}
+
+func (c *BillingHoldConnection) build(nodes []*BillingHold, pager *billingholdPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *BillingHold
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *BillingHold {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *BillingHold {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*BillingHoldEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &BillingHoldEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// BillingHoldPaginateOption enables pagination customization.
+type BillingHoldPaginateOption func(*billingholdPager) error
+
+// WithBillingHoldOrder configures pagination ordering.
+func WithBillingHoldOrder(order *BillingHoldOrder) BillingHoldPaginateOption {
+	if order == nil {
+		order = DefaultBillingHoldOrder
+	}
+	o := *order
+	return func(pager *billingholdPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultBillingHoldOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithBillingHoldFilter configures pagination filter.
+func WithBillingHoldFilter(filter func(*BillingHoldQuery) (*BillingHoldQuery, error)) BillingHoldPaginateOption {
+	return func(pager *billingholdPager) error {
+		if filter == nil {
+			return errors.New("BillingHoldQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type billingholdPager struct {
+	reverse bool
+	order   *BillingHoldOrder
+	filter  func(*BillingHoldQuery) (*BillingHoldQuery, error)
+}
+
+func newBillingHoldPager(opts []BillingHoldPaginateOption, reverse bool) (*billingholdPager, error) {
+	pager := &billingholdPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultBillingHoldOrder
+	}
+	return pager, nil
+}
+
+func (p *billingholdPager) applyFilter(query *BillingHoldQuery) (*BillingHoldQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *billingholdPager) toCursor(_m *BillingHold) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *billingholdPager) applyCursors(query *BillingHoldQuery, after, before *Cursor) (*BillingHoldQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultBillingHoldOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *billingholdPager) applyOrder(query *BillingHoldQuery) *BillingHoldQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultBillingHoldOrder.Field {
+		query = query.Order(DefaultBillingHoldOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *billingholdPager) orderExpr(query *BillingHoldQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultBillingHoldOrder.Field {
+			b.Comma().Ident(DefaultBillingHoldOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to BillingHold.
+func (_m *BillingHoldQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...BillingHoldPaginateOption,
+) (*BillingHoldConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newBillingHoldPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &BillingHoldConnection{Edges: []*BillingHoldEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// BillingHoldOrderFieldCreatedAt orders BillingHold by created_at.
+	BillingHoldOrderFieldCreatedAt = &BillingHoldOrderField{
+		Value: func(_m *BillingHold) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: billinghold.FieldCreatedAt,
+		toTerm: billinghold.ByCreatedAt,
+		toCursor: func(_m *BillingHold) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// BillingHoldOrderFieldUpdatedAt orders BillingHold by updated_at.
+	BillingHoldOrderFieldUpdatedAt = &BillingHoldOrderField{
+		Value: func(_m *BillingHold) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: billinghold.FieldUpdatedAt,
+		toTerm: billinghold.ByUpdatedAt,
+		toCursor: func(_m *BillingHold) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f BillingHoldOrderField) String() string {
+	var str string
+	switch f.column {
+	case BillingHoldOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case BillingHoldOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f BillingHoldOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *BillingHoldOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("BillingHoldOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *BillingHoldOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *BillingHoldOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid BillingHoldOrderField", str)
+	}
+	return nil
+}
+
+// BillingHoldOrderField defines the ordering field of BillingHold.
+type BillingHoldOrderField struct {
+	// Value extracts the ordering value from the given BillingHold.
+	Value    func(*BillingHold) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) billinghold.OrderOption
+	toCursor func(*BillingHold) Cursor
+}
+
+// BillingHoldOrder defines the ordering of BillingHold.
+type BillingHoldOrder struct {
+	Direction OrderDirection         `json:"direction"`
+	Field     *BillingHoldOrderField `json:"field"`
+}
+
+// DefaultBillingHoldOrder is the default ordering of BillingHold.
+var DefaultBillingHoldOrder = &BillingHoldOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &BillingHoldOrderField{
+		Value: func(_m *BillingHold) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: billinghold.FieldID,
+		toTerm: billinghold.ByID,
+		toCursor: func(_m *BillingHold) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts BillingHold into BillingHoldEdge.
+func (_m *BillingHold) ToEdge(order *BillingHoldOrder) *BillingHoldEdge {
+	if order == nil {
+		order = DefaultBillingHoldOrder
+	}
+	return &BillingHoldEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

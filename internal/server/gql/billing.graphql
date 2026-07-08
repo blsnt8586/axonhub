@@ -93,6 +93,18 @@ input AdminUsageBillingRecordsFilter {
   to: Time
 }
 
+input AdminBillingHoldsFilter {
+  userId: Int
+  projectId: Int
+  apiKeyId: Int
+  billingAccountId: Int
+  modelId: String
+  status: BillingHoldStatus
+  from: Time
+  to: Time
+  expiresBefore: Time
+}
+
 input AdminPaymentOrdersFilter {
   userId: Int
   projectId: Int
@@ -134,6 +146,7 @@ extend type Mutation {
   createMyEPayRechargeCheckout(input: CreateMyEPayRechargeCheckoutInput!): PaymentCheckout!
   adjustUserBalance(input: AdjustUserBalanceInput!): LedgerTransaction!
   updateUserBillingAccount(input: UpdateUserBillingAccountInput!): BillingAccount!
+  releaseBillingHold(id: ID!, reason: String!): BillingHold!
   saveBillingPriceRule(input: SaveBillingPriceRuleForm!): BillingPriceRule!
   deleteBillingPriceRule(id: ID!): Boolean!
 }
@@ -150,6 +163,7 @@ extend type Query {
   userLedgerTransactions(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   adminLedgerTransactions(filter: AdminLedgerTransactionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   adminUsageBillingRecords(filter: AdminUsageBillingRecordsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UsageBillingRecordOrder): UsageBillingRecordConnection!
+  adminBillingHolds(filter: AdminBillingHoldsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: BillingHoldOrder): BillingHoldConnection!
   adminPaymentOrders(filter: AdminPaymentOrdersFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentOrderOrder): PaymentOrderConnection!
   adminPaymentEvents(filter: AdminPaymentEventsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentEventOrder): PaymentEventConnection!
 }

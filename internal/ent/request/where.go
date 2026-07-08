@@ -1296,6 +1296,29 @@ func HasUsageLogsWith(preds ...predicate.UsageLog) predicate.Request {
 	})
 }
 
+// HasBillingHolds applies the HasEdge predicate on the "billing_holds" edge.
+func HasBillingHolds() predicate.Request {
+	return predicate.Request(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BillingHoldsTable, BillingHoldsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBillingHoldsWith applies the HasEdge predicate on the "billing_holds" edge with a given conditions (other predicates).
+func HasBillingHoldsWith(preds ...predicate.BillingHold) predicate.Request {
+	return predicate.Request(func(s *sql.Selector) {
+		step := newBillingHoldsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Request) predicate.Request {
 	return predicate.Request(sql.AndPredicates(predicates...))

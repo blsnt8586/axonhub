@@ -56,32 +56,32 @@ Verification:
 
 ## Stage 1: Wallet Holds And Pre-Authorization
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: prevent concurrent calls from overspending a wallet by reserving estimated cost before upstream execution and settling after usage is known.
 
 Backend scope:
 
-- [ ] Add `BillingHold` or `BillingAuthorization` entity.
-- [ ] Hold fields include billing account, usage log/request reference, amount, currency, status, expires_at, idempotency key, and captured ledger transaction.
-- [ ] Request admission creates a hold for estimated cost.
-- [ ] Successful request captures actual usage cost and releases any remainder.
-- [ ] Failed request releases the hold.
-- [ ] Timeout cleanup releases or marks stale holds according to deterministic rules.
-- [ ] Capture/release operations are idempotent.
+- [x] Add `BillingHold` or `BillingAuthorization` entity.
+- [x] Hold fields include billing account, usage log/request reference, amount, currency, status, expires_at, idempotency key, and captured ledger transaction.
+- [x] Request admission creates a hold for estimated cost.
+- [x] Successful request captures actual usage cost and releases any remainder.
+- [x] Failed request releases the hold.
+- [x] Timeout cleanup releases or marks stale holds according to deterministic rules.
+- [x] Capture/release operations are idempotent.
 
 Frontend scope:
 
-- [ ] User wallet page shows balance, held amount, credit limit, and available amount.
-- [ ] Admin billing page shows hold list and hold status.
-- [ ] Admin can manually release abnormal holds with an audit reason.
+- [x] User wallet page shows balance, held amount, credit limit, and available amount.
+- [x] Admin billing page shows hold list and hold status.
+- [x] Admin can manually release abnormal holds with an audit reason.
 
 Verification:
 
-- [ ] Concurrent request tests prove wallet cannot overspend.
-- [ ] Failure path releases hold.
-- [ ] Duplicate capture/release is safe.
-- [ ] Cleanup job is repeatable.
+- [x] Concurrent request tests prove wallet cannot overspend.
+- [x] Failure path releases hold.
+- [x] Duplicate capture/release is safe.
+- [x] Cleanup job is repeatable.
 - [ ] Commit completed stage.
 
 ## Stage 2: Production Payment Order Lifecycle
@@ -345,7 +345,7 @@ Verification:
 ## Suggested Stage Order
 
 - [x] Stage 0: Harden Existing Commercial Modules
-- [ ] Stage 1: Wallet Holds And Pre-Authorization
+- [x] Stage 1: Wallet Holds And Pre-Authorization
 - [ ] Stage 2: Production Payment Order Lifecycle
 - [ ] Stage 3: Commercial Reports And Audit Console
 - [ ] Stage 4: API Key Budgets And Commercial Limits
@@ -364,3 +364,4 @@ Append one line per completed stage.
 | --- | --- | --- | --- |
 | Baseline | `4ad0913d` and earlier billing commits | 2026-07-08 | Wallet, ledger, ePay, sell price rules, user/admin billing pages, and user wallet controls are in place. |
 | Stage 0 | `f96625b4` | 2026-07-08 | Hardened admission codes, usage retry safety, owner-only billing operation queries, admin billing tabs, filters, and failure reason display. |
+| Stage 1 | `pending commit` | 2026-07-08 | Added wallet holds, request pre-authorization, hold capture/release/expiry, admin hold operations, and held/available wallet UI. |

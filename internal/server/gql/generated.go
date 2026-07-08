@@ -21,6 +21,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -77,6 +78,7 @@ type ResolverRoot interface {
 	APIKeyProfileTemplate() APIKeyProfileTemplateResolver
 	BillingAccount() BillingAccountResolver
 	BillingAccountBinding() BillingAccountBindingResolver
+	BillingHold() BillingHoldResolver
 	BillingOutbox() BillingOutboxResolver
 	BillingPriceRule() BillingPriceRuleResolver
 	Channel() ChannelResolver
@@ -288,10 +290,12 @@ type ComplexityRoot struct {
 
 	BillingAccount struct {
 		BalanceMicros       func(childComplexity int) int
+		BillingHolds        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) int
 		Bindings            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) int
 		CreatedAt           func(childComplexity int) int
 		CreditLimitMicros   func(childComplexity int) int
 		Currency            func(childComplexity int) int
+		HeldBalanceMicros   func(childComplexity int) int
 		ID                  func(childComplexity int) int
 		LedgerTransactions  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder, where *ent.LedgerTransactionWhereInput) int
 		OwnerID             func(childComplexity int) int
@@ -331,6 +335,48 @@ type ComplexityRoot struct {
 	}
 
 	BillingAccountEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	BillingHold struct {
+		APIKeyID                    func(childComplexity int) int
+		AmountMicros                func(childComplexity int) int
+		BillingAccount              func(childComplexity int) int
+		BillingAccountID            func(childComplexity int) int
+		CapturedAmountMicros        func(childComplexity int) int
+		CapturedAt                  func(childComplexity int) int
+		CapturedLedgerTransaction   func(childComplexity int) int
+		CapturedLedgerTransactionID func(childComplexity int) int
+		CreatedAt                   func(childComplexity int) int
+		Currency                    func(childComplexity int) int
+		ExpiresAt                   func(childComplexity int) int
+		ID                          func(childComplexity int) int
+		IdempotencyKey              func(childComplexity int) int
+		ModelID                     func(childComplexity int) int
+		ProjectID                   func(childComplexity int) int
+		ReferenceID                 func(childComplexity int) int
+		ReferenceType               func(childComplexity int) int
+		ReleaseReason               func(childComplexity int) int
+		ReleasedAt                  func(childComplexity int) int
+		ReleasedByID                func(childComplexity int) int
+		ReleasedByType              func(childComplexity int) int
+		Request                     func(childComplexity int) int
+		RequestID                   func(childComplexity int) int
+		Status                      func(childComplexity int) int
+		UpdatedAt                   func(childComplexity int) int
+		UsageLog                    func(childComplexity int) int
+		UsageLogID                  func(childComplexity int) int
+		UserID                      func(childComplexity int) int
+	}
+
+	BillingHoldConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	BillingHoldEdge struct {
 		Cursor func(childComplexity int) int
 		Node   func(childComplexity int) int
 	}
@@ -875,6 +921,7 @@ type ComplexityRoot struct {
 		AmountMicros        func(childComplexity int) int
 		BillingAccount      func(childComplexity int) int
 		BillingAccountID    func(childComplexity int) int
+		BillingHolds        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) int
 		CreatedAt           func(childComplexity int) int
 		CreatedByID         func(childComplexity int) int
 		CreatedByType       func(childComplexity int) int
@@ -1109,6 +1156,7 @@ type ComplexityRoot struct {
 		EnableSelectedChannelAPIKeys         func(childComplexity int, channelID objects.GUID, keys []string) int
 		LoadAPIKeyProfileTemplate            func(childComplexity int, input LoadAPIKeyProfileTemplateInput) int
 		PreviewPromptProtectionRule          func(childComplexity int, input PromptProtectionRulePreviewInput) int
+		ReleaseBillingHold                   func(childComplexity int, id objects.GUID, reason string) int
 		RemoveUserFromProject                func(childComplexity int, input RemoveUserFromProjectInput) int
 		ResetChannelQuotaNow                 func(childComplexity int, channelID objects.GUID) int
 		Restore                              func(childComplexity int, file graphql.Upload, input backup.RestoreOptions) int
@@ -1512,6 +1560,7 @@ type ComplexityRoot struct {
 		APIKeyQuotaUsages            func(childComplexity int, apiKeyID objects.GUID) int
 		APIKeyTokenUsageStats        func(childComplexity int, input *APIKeyTokenUsageStatsInput) int
 		APIKeys                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyOrder, where *ent.APIKeyWhereInput) int
+		AdminBillingHolds            func(childComplexity int, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) int
 		AdminLedgerTransactions      func(childComplexity int, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
 		AdminPaymentEvents           func(childComplexity int, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) int
 		AdminPaymentOrders           func(childComplexity int, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
@@ -1522,6 +1571,7 @@ type ComplexityRoot struct {
 		AutoBackupSettings           func(childComplexity int) int
 		BillingAccountBindings       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) int
 		BillingAccounts              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountOrder, where *ent.BillingAccountWhereInput) int
+		BillingHolds                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) int
 		BillingOutboxes              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingOutboxOrder, where *ent.BillingOutboxWhereInput) int
 		BillingPriceRules            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingPriceRuleOrder, where *ent.BillingPriceRuleWhereInput) int
 		BrandSettings                func(childComplexity int) int
@@ -1620,6 +1670,7 @@ type ComplexityRoot struct {
 	Request struct {
 		APIKey                     func(childComplexity int) int
 		APIKeyID                   func(childComplexity int) int
+		BillingHolds               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) int
 		Channel                    func(childComplexity int) int
 		ChannelID                  func(childComplexity int) int
 		ClientIP                   func(childComplexity int) int
@@ -2144,6 +2195,7 @@ type ComplexityRoot struct {
 
 	UsageLog struct {
 		APIKeyID                           func(childComplexity int) int
+		BillingHolds                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) int
 		Channel                            func(childComplexity int) int
 		ChannelID                          func(childComplexity int) int
 		CompletionAcceptedPredictionTokens func(childComplexity int) int
@@ -2346,6 +2398,15 @@ type BillingAccountBindingResolver interface {
 
 	BillingAccountID(ctx context.Context, obj *ent.BillingAccountBinding) (*objects.GUID, error)
 }
+type BillingHoldResolver interface {
+	ID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error)
+
+	BillingAccountID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error)
+	RequestID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error)
+	UsageLogID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error)
+
+	CapturedLedgerTransactionID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error)
+}
 type BillingOutboxResolver interface {
 	ID(ctx context.Context, obj *ent.BillingOutbox) (*objects.GUID, error)
 }
@@ -2532,6 +2593,7 @@ type MutationResolver interface {
 	CreateMyEPayRechargeCheckout(ctx context.Context, input CreateMyEPayRechargeCheckoutInput) (*PaymentCheckout, error)
 	AdjustUserBalance(ctx context.Context, input biz.AdjustUserBalanceInput) (*ent.LedgerTransaction, error)
 	UpdateUserBillingAccount(ctx context.Context, input biz.UpdateUserBillingAccountInput) (*ent.BillingAccount, error)
+	ReleaseBillingHold(ctx context.Context, id objects.GUID, reason string) (*ent.BillingHold, error)
 	SaveBillingPriceRule(ctx context.Context, input SaveBillingPriceRuleForm) (*ent.BillingPriceRule, error)
 	DeleteBillingPriceRule(ctx context.Context, id objects.GUID) (bool, error)
 }
@@ -2580,6 +2642,7 @@ type QueryResolver interface {
 	APIKeyProfileTemplates(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyProfileTemplateOrder, where *ent.APIKeyProfileTemplateWhereInput) (*ent.APIKeyProfileTemplateConnection, error)
 	BillingAccounts(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountOrder, where *ent.BillingAccountWhereInput) (*ent.BillingAccountConnection, error)
 	BillingAccountBindings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) (*ent.BillingAccountBindingConnection, error)
+	BillingHolds(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) (*ent.BillingHoldConnection, error)
 	BillingOutboxes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingOutboxOrder, where *ent.BillingOutboxWhereInput) (*ent.BillingOutboxConnection, error)
 	BillingPriceRules(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingPriceRuleOrder, where *ent.BillingPriceRuleWhereInput) (*ent.BillingPriceRuleConnection, error)
 	Channels(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOrder, where *ent.ChannelWhereInput) (*ent.ChannelConnection, error)
@@ -2669,6 +2732,7 @@ type QueryResolver interface {
 	UserLedgerTransactions(ctx context.Context, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error)
 	AdminLedgerTransactions(ctx context.Context, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error)
 	AdminUsageBillingRecords(ctx context.Context, filter *AdminUsageBillingRecordsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) (*ent.UsageBillingRecordConnection, error)
+	AdminBillingHolds(ctx context.Context, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) (*ent.BillingHoldConnection, error)
 	AdminPaymentOrders(ctx context.Context, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) (*ent.PaymentOrderConnection, error)
 	AdminPaymentEvents(ctx context.Context, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) (*ent.PaymentEventConnection, error)
 }
@@ -3398,6 +3462,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.BillingAccount.BalanceMicros(childComplexity), true
+	case "BillingAccount.billingHolds":
+		if e.complexity.BillingAccount.BillingHolds == nil {
+			break
+		}
+
+		args, err := ec.field_BillingAccount_billingHolds_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.BillingAccount.BillingHolds(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder), args["where"].(*ent.BillingHoldWhereInput)), true
 	case "BillingAccount.bindings":
 		if e.complexity.BillingAccount.Bindings == nil {
 			break
@@ -3427,6 +3502,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.BillingAccount.Currency(childComplexity), true
+	case "BillingAccount.heldBalanceMicros":
+		if e.complexity.BillingAccount.HeldBalanceMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingAccount.HeldBalanceMicros(childComplexity), true
 	case "BillingAccount.id":
 		if e.complexity.BillingAccount.ID == nil {
 			break
@@ -3603,6 +3684,207 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.BillingAccountEdge.Node(childComplexity), true
+
+	case "BillingHold.apiKeyID":
+		if e.complexity.BillingHold.APIKeyID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.APIKeyID(childComplexity), true
+	case "BillingHold.amountMicros":
+		if e.complexity.BillingHold.AmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.AmountMicros(childComplexity), true
+	case "BillingHold.billingAccount":
+		if e.complexity.BillingHold.BillingAccount == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.BillingAccount(childComplexity), true
+	case "BillingHold.billingAccountID":
+		if e.complexity.BillingHold.BillingAccountID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.BillingAccountID(childComplexity), true
+	case "BillingHold.capturedAmountMicros":
+		if e.complexity.BillingHold.CapturedAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.CapturedAmountMicros(childComplexity), true
+	case "BillingHold.capturedAt":
+		if e.complexity.BillingHold.CapturedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.CapturedAt(childComplexity), true
+	case "BillingHold.capturedLedgerTransaction":
+		if e.complexity.BillingHold.CapturedLedgerTransaction == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.CapturedLedgerTransaction(childComplexity), true
+	case "BillingHold.capturedLedgerTransactionID":
+		if e.complexity.BillingHold.CapturedLedgerTransactionID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.CapturedLedgerTransactionID(childComplexity), true
+	case "BillingHold.createdAt":
+		if e.complexity.BillingHold.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.CreatedAt(childComplexity), true
+	case "BillingHold.currency":
+		if e.complexity.BillingHold.Currency == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.Currency(childComplexity), true
+	case "BillingHold.expiresAt":
+		if e.complexity.BillingHold.ExpiresAt == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ExpiresAt(childComplexity), true
+	case "BillingHold.id":
+		if e.complexity.BillingHold.ID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ID(childComplexity), true
+	case "BillingHold.idempotencyKey":
+		if e.complexity.BillingHold.IdempotencyKey == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.IdempotencyKey(childComplexity), true
+	case "BillingHold.modelID":
+		if e.complexity.BillingHold.ModelID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ModelID(childComplexity), true
+	case "BillingHold.projectID":
+		if e.complexity.BillingHold.ProjectID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ProjectID(childComplexity), true
+	case "BillingHold.referenceID":
+		if e.complexity.BillingHold.ReferenceID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ReferenceID(childComplexity), true
+	case "BillingHold.referenceType":
+		if e.complexity.BillingHold.ReferenceType == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ReferenceType(childComplexity), true
+	case "BillingHold.releaseReason":
+		if e.complexity.BillingHold.ReleaseReason == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ReleaseReason(childComplexity), true
+	case "BillingHold.releasedAt":
+		if e.complexity.BillingHold.ReleasedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ReleasedAt(childComplexity), true
+	case "BillingHold.releasedByID":
+		if e.complexity.BillingHold.ReleasedByID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ReleasedByID(childComplexity), true
+	case "BillingHold.releasedByType":
+		if e.complexity.BillingHold.ReleasedByType == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.ReleasedByType(childComplexity), true
+	case "BillingHold.request":
+		if e.complexity.BillingHold.Request == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.Request(childComplexity), true
+	case "BillingHold.requestID":
+		if e.complexity.BillingHold.RequestID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.RequestID(childComplexity), true
+	case "BillingHold.status":
+		if e.complexity.BillingHold.Status == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.Status(childComplexity), true
+	case "BillingHold.updatedAt":
+		if e.complexity.BillingHold.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.UpdatedAt(childComplexity), true
+	case "BillingHold.usageLog":
+		if e.complexity.BillingHold.UsageLog == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.UsageLog(childComplexity), true
+	case "BillingHold.usageLogID":
+		if e.complexity.BillingHold.UsageLogID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.UsageLogID(childComplexity), true
+	case "BillingHold.userID":
+		if e.complexity.BillingHold.UserID == nil {
+			break
+		}
+
+		return e.complexity.BillingHold.UserID(childComplexity), true
+
+	case "BillingHoldConnection.edges":
+		if e.complexity.BillingHoldConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.BillingHoldConnection.Edges(childComplexity), true
+	case "BillingHoldConnection.pageInfo":
+		if e.complexity.BillingHoldConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.BillingHoldConnection.PageInfo(childComplexity), true
+	case "BillingHoldConnection.totalCount":
+		if e.complexity.BillingHoldConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.BillingHoldConnection.TotalCount(childComplexity), true
+
+	case "BillingHoldEdge.cursor":
+		if e.complexity.BillingHoldEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.BillingHoldEdge.Cursor(childComplexity), true
+	case "BillingHoldEdge.node":
+		if e.complexity.BillingHoldEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.BillingHoldEdge.Node(childComplexity), true
 
 	case "BillingOutbox.attempts":
 		if e.complexity.BillingOutbox.Attempts == nil {
@@ -5639,6 +5921,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.LedgerTransaction.BillingAccountID(childComplexity), true
+	case "LedgerTransaction.billingHolds":
+		if e.complexity.LedgerTransaction.BillingHolds == nil {
+			break
+		}
+
+		args, err := ec.field_LedgerTransaction_billingHolds_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.LedgerTransaction.BillingHolds(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder), args["where"].(*ent.BillingHoldWhereInput)), true
 	case "LedgerTransaction.createdAt":
 		if e.complexity.LedgerTransaction.CreatedAt == nil {
 			break
@@ -6997,6 +7290,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.PreviewPromptProtectionRule(childComplexity, args["input"].(PromptProtectionRulePreviewInput)), true
+	case "Mutation.releaseBillingHold":
+		if e.complexity.Mutation.ReleaseBillingHold == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_releaseBillingHold_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ReleaseBillingHold(childComplexity, args["id"].(objects.GUID), args["reason"].(string)), true
 	case "Mutation.removeUserFromProject":
 		if e.complexity.Mutation.RemoveUserFromProject == nil {
 			break
@@ -9000,6 +9304,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.APIKeys(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.APIKeyOrder), args["where"].(*ent.APIKeyWhereInput)), true
+	case "Query.adminBillingHolds":
+		if e.complexity.Query.AdminBillingHolds == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminBillingHolds_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminBillingHolds(childComplexity, args["filter"].(*AdminBillingHoldsFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder)), true
 	case "Query.adminLedgerTransactions":
 		if e.complexity.Query.AdminLedgerTransactions == nil {
 			break
@@ -9100,6 +9415,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.BillingAccounts(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingAccountOrder), args["where"].(*ent.BillingAccountWhereInput)), true
+	case "Query.billingHolds":
+		if e.complexity.Query.BillingHolds == nil {
+			break
+		}
+
+		args, err := ec.field_Query_billingHolds_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.BillingHolds(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder), args["where"].(*ent.BillingHoldWhereInput)), true
 	case "Query.billingOutboxes":
 		if e.complexity.Query.BillingOutboxes == nil {
 			break
@@ -9907,6 +10233,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Request.APIKeyID(childComplexity), true
+	case "Request.billingHolds":
+		if e.complexity.Request.BillingHolds == nil {
+			break
+		}
+
+		args, err := ec.field_Request_billingHolds_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Request.BillingHolds(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder), args["where"].(*ent.BillingHoldWhereInput)), true
 	case "Request.channel":
 		if e.complexity.Request.Channel == nil {
 			break
@@ -11937,6 +12274,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageLog.APIKeyID(childComplexity), true
+	case "UsageLog.billingHolds":
+		if e.complexity.UsageLog.BillingHolds == nil {
+			break
+		}
+
+		args, err := ec.field_UsageLog_billingHolds_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.UsageLog.BillingHolds(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder), args["where"].(*ent.BillingHoldWhereInput)), true
 	case "UsageLog.channel":
 		if e.complexity.UsageLog.Channel == nil {
 			break
@@ -12750,6 +13098,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAPIKeyWhereInput,
 		ec.unmarshalInputAddUserToProjectInput,
 		ec.unmarshalInputAdjustUserBalanceInput,
+		ec.unmarshalInputAdminBillingHoldsFilter,
 		ec.unmarshalInputAdminLedgerTransactionsFilter,
 		ec.unmarshalInputAdminPaymentEventsFilter,
 		ec.unmarshalInputAdminPaymentOrdersFilter,
@@ -12762,6 +13111,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputBillingAccountBindingWhereInput,
 		ec.unmarshalInputBillingAccountOrder,
 		ec.unmarshalInputBillingAccountWhereInput,
+		ec.unmarshalInputBillingHoldOrder,
+		ec.unmarshalInputBillingHoldWhereInput,
 		ec.unmarshalInputBillingOutboxOrder,
 		ec.unmarshalInputBillingOutboxWhereInput,
 		ec.unmarshalInputBillingPriceRuleOrder,
@@ -13133,6 +13484,42 @@ func (ec *executionContext) field_APIKey_requests_args(ctx context.Context, rawA
 	return args, nil
 }
 
+func (ec *executionContext) field_BillingAccount_billingHolds_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingHoldOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_BillingAccount_bindings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -13450,6 +13837,42 @@ func (ec *executionContext) field_DataStorage_requests_args(ctx context.Context,
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalORequestWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRequestWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_LedgerTransaction_billingHolds_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingHoldOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -14318,6 +14741,22 @@ func (ec *executionContext) field_Mutation_previewPromptProtectionRule_args(ctx 
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_releaseBillingHold_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "reason", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["reason"] = arg1
 	return args, nil
 }
 
@@ -15518,6 +15957,42 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_adminBillingHolds_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOAdminBillingHoldsFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminBillingHoldsFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingHoldOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_adminLedgerTransactions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -15843,6 +16318,42 @@ func (ec *executionContext) field_Query_billingAccounts_args(ctx context.Context
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingAccountWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccountWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_billingHolds_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingHoldOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -17159,6 +17670,42 @@ func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
+func (ec *executionContext) field_Request_billingHolds_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingHoldOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_Request_executions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -17332,6 +17879,42 @@ func (ec *executionContext) field_Trace_requests_args(ctx context.Context, rawAr
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalORequestWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRequestWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_UsageLog_billingHolds_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingHoldOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -20961,6 +21544,35 @@ func (ec *executionContext) fieldContext_BillingAccount_balanceMicros(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _BillingAccount_heldBalanceMicros(ctx context.Context, field graphql.CollectedField, obj *ent.BillingAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingAccount_heldBalanceMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.HeldBalanceMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingAccount_heldBalanceMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _BillingAccount_creditLimitMicros(ctx context.Context, field graphql.CollectedField, obj *ent.BillingAccount) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -21111,6 +21723,55 @@ func (ec *executionContext) fieldContext_BillingAccount_ledgerTransactions(ctx c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_BillingAccount_ledgerTransactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingAccount_billingHolds(ctx context.Context, field graphql.CollectedField, obj *ent.BillingAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingAccount_billingHolds,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingHolds(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingHoldOrder), fc.Args["where"].(*ent.BillingHoldWhereInput))
+		},
+		nil,
+		ec.marshalNBillingHoldConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingAccount_billingHolds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingHoldConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingHoldConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingHoldConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingHoldConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_BillingAccount_billingHolds_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -21456,6 +22117,8 @@ func (ec *executionContext) fieldContext_BillingAccountBinding_billingAccount(_ 
 				return ec.fieldContext_BillingAccount_currency(ctx, field)
 			case "balanceMicros":
 				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
 			case "creditLimitMicros":
 				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
 			case "status":
@@ -21464,6 +22127,8 @@ func (ec *executionContext) fieldContext_BillingAccountBinding_billingAccount(_ 
 				return ec.fieldContext_BillingAccount_bindings(ctx, field)
 			case "ledgerTransactions":
 				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
@@ -21795,6 +22460,8 @@ func (ec *executionContext) fieldContext_BillingAccountEdge_node(_ context.Conte
 				return ec.fieldContext_BillingAccount_currency(ctx, field)
 			case "balanceMicros":
 				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
 			case "creditLimitMicros":
 				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
 			case "status":
@@ -21803,6 +22470,8 @@ func (ec *executionContext) fieldContext_BillingAccountEdge_node(_ context.Conte
 				return ec.fieldContext_BillingAccount_bindings(ctx, field)
 			case "ledgerTransactions":
 				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
@@ -21833,6 +22502,1245 @@ func (ec *executionContext) _BillingAccountEdge_cursor(ctx context.Context, fiel
 func (ec *executionContext) fieldContext_BillingAccountEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BillingAccountEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_id(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingHold().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_billingAccountID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_billingAccountID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingHold().BillingAccountID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_billingAccountID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_requestID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_requestID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingHold().RequestID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_requestID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_usageLogID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_usageLogID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingHold().UsageLogID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_usageLogID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_projectID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_projectID,
+		func(ctx context.Context) (any, error) {
+			return obj.ProjectID, nil
+		},
+		nil,
+		ec.marshalOInt2int,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_projectID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_userID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_userID,
+		func(ctx context.Context) (any, error) {
+			return obj.UserID, nil
+		},
+		nil,
+		ec.marshalOInt2int,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_apiKeyID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_apiKeyID,
+		func(ctx context.Context) (any, error) {
+			return obj.APIKeyID, nil
+		},
+		nil,
+		ec.marshalOInt2int,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_apiKeyID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_modelID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_modelID,
+		func(ctx context.Context) (any, error) {
+			return obj.ModelID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_modelID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_amountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_amountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.AmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_amountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_capturedAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_capturedAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.CapturedAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_capturedAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_currency(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_status(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNBillingHoldStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type BillingHoldStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_idempotencyKey(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_idempotencyKey,
+		func(ctx context.Context) (any, error) {
+			return obj.IdempotencyKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_idempotencyKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_referenceType(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_referenceType,
+		func(ctx context.Context) (any, error) {
+			return obj.ReferenceType, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_referenceType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_referenceID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_referenceID,
+		func(ctx context.Context) (any, error) {
+			return obj.ReferenceID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_referenceID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_capturedLedgerTransactionID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_capturedLedgerTransactionID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingHold().CapturedLedgerTransactionID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_capturedLedgerTransactionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_releaseReason(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_releaseReason,
+		func(ctx context.Context) (any, error) {
+			return obj.ReleaseReason, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_releaseReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_releasedByType(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_releasedByType,
+		func(ctx context.Context) (any, error) {
+			return obj.ReleasedByType, nil
+		},
+		nil,
+		ec.marshalNBillingHoldReleasedByType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_releasedByType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type BillingHoldReleasedByType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_releasedByID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_releasedByID,
+		func(ctx context.Context) (any, error) {
+			return obj.ReleasedByID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_releasedByID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_expiresAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_expiresAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ExpiresAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_expiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_capturedAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_capturedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CapturedAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_capturedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_releasedAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_releasedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ReleasedAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_releasedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_billingAccount(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_billingAccount,
+		func(ctx context.Context) (any, error) {
+			return obj.BillingAccount(ctx)
+		},
+		nil,
+		ec.marshalNBillingAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_billingAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingAccount_updatedAt(ctx, field)
+			case "ownerType":
+				return ec.fieldContext_BillingAccount_ownerType(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_BillingAccount_ownerID(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingAccount_currency(ctx, field)
+			case "balanceMicros":
+				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
+			case "creditLimitMicros":
+				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
+			case "status":
+				return ec.fieldContext_BillingAccount_status(ctx, field)
+			case "bindings":
+				return ec.fieldContext_BillingAccount_bindings(ctx, field)
+			case "ledgerTransactions":
+				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_request(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_request,
+		func(ctx context.Context) (any, error) {
+			return obj.Request(ctx)
+		},
+		nil,
+		ec.marshalORequest2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRequest,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_request(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Request_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Request_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Request_updatedAt(ctx, field)
+			case "apiKeyID":
+				return ec.fieldContext_Request_apiKeyID(ctx, field)
+			case "projectID":
+				return ec.fieldContext_Request_projectID(ctx, field)
+			case "traceID":
+				return ec.fieldContext_Request_traceID(ctx, field)
+			case "dataStorageID":
+				return ec.fieldContext_Request_dataStorageID(ctx, field)
+			case "source":
+				return ec.fieldContext_Request_source(ctx, field)
+			case "modelID":
+				return ec.fieldContext_Request_modelID(ctx, field)
+			case "reasoningEffort":
+				return ec.fieldContext_Request_reasoningEffort(ctx, field)
+			case "format":
+				return ec.fieldContext_Request_format(ctx, field)
+			case "requestHeaders":
+				return ec.fieldContext_Request_requestHeaders(ctx, field)
+			case "requestBody":
+				return ec.fieldContext_Request_requestBody(ctx, field)
+			case "responseBody":
+				return ec.fieldContext_Request_responseBody(ctx, field)
+			case "responseChunks":
+				return ec.fieldContext_Request_responseChunks(ctx, field)
+			case "channelID":
+				return ec.fieldContext_Request_channelID(ctx, field)
+			case "externalID":
+				return ec.fieldContext_Request_externalID(ctx, field)
+			case "status":
+				return ec.fieldContext_Request_status(ctx, field)
+			case "stream":
+				return ec.fieldContext_Request_stream(ctx, field)
+			case "clientIP":
+				return ec.fieldContext_Request_clientIP(ctx, field)
+			case "metricsLatencyMs":
+				return ec.fieldContext_Request_metricsLatencyMs(ctx, field)
+			case "metricsFirstTokenLatencyMs":
+				return ec.fieldContext_Request_metricsFirstTokenLatencyMs(ctx, field)
+			case "metricsReasoningDurationMs":
+				return ec.fieldContext_Request_metricsReasoningDurationMs(ctx, field)
+			case "contentSaved":
+				return ec.fieldContext_Request_contentSaved(ctx, field)
+			case "contentStorageID":
+				return ec.fieldContext_Request_contentStorageID(ctx, field)
+			case "contentStorageKey":
+				return ec.fieldContext_Request_contentStorageKey(ctx, field)
+			case "contentSavedAt":
+				return ec.fieldContext_Request_contentSavedAt(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_Request_apiKey(ctx, field)
+			case "project":
+				return ec.fieldContext_Request_project(ctx, field)
+			case "trace":
+				return ec.fieldContext_Request_trace(ctx, field)
+			case "dataStorage":
+				return ec.fieldContext_Request_dataStorage(ctx, field)
+			case "executions":
+				return ec.fieldContext_Request_executions(ctx, field)
+			case "channel":
+				return ec.fieldContext_Request_channel(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Request_usageLogs(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_Request_billingHolds(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Request", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_usageLog(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_usageLog,
+		func(ctx context.Context) (any, error) {
+			return obj.UsageLog(ctx)
+		},
+		nil,
+		ec.marshalOUsageLog2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUsageLog,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_usageLog(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UsageLog_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UsageLog_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UsageLog_updatedAt(ctx, field)
+			case "requestID":
+				return ec.fieldContext_UsageLog_requestID(ctx, field)
+			case "apiKeyID":
+				return ec.fieldContext_UsageLog_apiKeyID(ctx, field)
+			case "projectID":
+				return ec.fieldContext_UsageLog_projectID(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UsageLog_channelID(ctx, field)
+			case "modelID":
+				return ec.fieldContext_UsageLog_modelID(ctx, field)
+			case "promptTokens":
+				return ec.fieldContext_UsageLog_promptTokens(ctx, field)
+			case "completionTokens":
+				return ec.fieldContext_UsageLog_completionTokens(ctx, field)
+			case "totalTokens":
+				return ec.fieldContext_UsageLog_totalTokens(ctx, field)
+			case "promptAudioTokens":
+				return ec.fieldContext_UsageLog_promptAudioTokens(ctx, field)
+			case "promptCachedTokens":
+				return ec.fieldContext_UsageLog_promptCachedTokens(ctx, field)
+			case "promptWriteCachedTokens":
+				return ec.fieldContext_UsageLog_promptWriteCachedTokens(ctx, field)
+			case "promptWriteCachedTokens5m":
+				return ec.fieldContext_UsageLog_promptWriteCachedTokens5m(ctx, field)
+			case "promptWriteCachedTokens1h":
+				return ec.fieldContext_UsageLog_promptWriteCachedTokens1h(ctx, field)
+			case "completionAudioTokens":
+				return ec.fieldContext_UsageLog_completionAudioTokens(ctx, field)
+			case "completionReasoningTokens":
+				return ec.fieldContext_UsageLog_completionReasoningTokens(ctx, field)
+			case "completionAcceptedPredictionTokens":
+				return ec.fieldContext_UsageLog_completionAcceptedPredictionTokens(ctx, field)
+			case "completionRejectedPredictionTokens":
+				return ec.fieldContext_UsageLog_completionRejectedPredictionTokens(ctx, field)
+			case "source":
+				return ec.fieldContext_UsageLog_source(ctx, field)
+			case "format":
+				return ec.fieldContext_UsageLog_format(ctx, field)
+			case "totalCost":
+				return ec.fieldContext_UsageLog_totalCost(ctx, field)
+			case "costItems":
+				return ec.fieldContext_UsageLog_costItems(ctx, field)
+			case "costPriceReferenceID":
+				return ec.fieldContext_UsageLog_costPriceReferenceID(ctx, field)
+			case "request":
+				return ec.fieldContext_UsageLog_request(ctx, field)
+			case "project":
+				return ec.fieldContext_UsageLog_project(ctx, field)
+			case "channel":
+				return ec.fieldContext_UsageLog_channel(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_UsageLog_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_UsageLog_billingHolds(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UsageLog", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHold_capturedLedgerTransaction(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHold_capturedLedgerTransaction,
+		func(ctx context.Context) (any, error) {
+			return obj.CapturedLedgerTransaction(ctx)
+		},
+		nil,
+		ec.marshalOLedgerTransaction2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐLedgerTransaction,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHold_capturedLedgerTransaction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHold",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LedgerTransaction_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_LedgerTransaction_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LedgerTransaction_updatedAt(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_LedgerTransaction_billingAccountID(ctx, field)
+			case "direction":
+				return ec.fieldContext_LedgerTransaction_direction(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_LedgerTransaction_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_LedgerTransaction_currency(ctx, field)
+			case "type":
+				return ec.fieldContext_LedgerTransaction_type(ctx, field)
+			case "status":
+				return ec.fieldContext_LedgerTransaction_status(ctx, field)
+			case "idempotencyKey":
+				return ec.fieldContext_LedgerTransaction_idempotencyKey(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_LedgerTransaction_referenceType(ctx, field)
+			case "referenceID":
+				return ec.fieldContext_LedgerTransaction_referenceID(ctx, field)
+			case "memo":
+				return ec.fieldContext_LedgerTransaction_memo(ctx, field)
+			case "createdByType":
+				return ec.fieldContext_LedgerTransaction_createdByType(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_LedgerTransaction_createdByID(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_LedgerTransaction_billingAccount(ctx, field)
+			case "entries":
+				return ec.fieldContext_LedgerTransaction_entries(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_LedgerTransaction_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHoldConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHoldConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHoldConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOBillingHoldEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHoldConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHoldConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_BillingHoldEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_BillingHoldEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingHoldEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHoldConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHoldConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHoldConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHoldConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHoldConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHoldConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHoldConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHoldConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHoldConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHoldConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHoldEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHoldEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHoldEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOBillingHold2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHold,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHoldEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHoldEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingHold_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingHold_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingHold_updatedAt(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_BillingHold_billingAccountID(ctx, field)
+			case "requestID":
+				return ec.fieldContext_BillingHold_requestID(ctx, field)
+			case "usageLogID":
+				return ec.fieldContext_BillingHold_usageLogID(ctx, field)
+			case "projectID":
+				return ec.fieldContext_BillingHold_projectID(ctx, field)
+			case "userID":
+				return ec.fieldContext_BillingHold_userID(ctx, field)
+			case "apiKeyID":
+				return ec.fieldContext_BillingHold_apiKeyID(ctx, field)
+			case "modelID":
+				return ec.fieldContext_BillingHold_modelID(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_BillingHold_amountMicros(ctx, field)
+			case "capturedAmountMicros":
+				return ec.fieldContext_BillingHold_capturedAmountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingHold_currency(ctx, field)
+			case "status":
+				return ec.fieldContext_BillingHold_status(ctx, field)
+			case "idempotencyKey":
+				return ec.fieldContext_BillingHold_idempotencyKey(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_BillingHold_referenceType(ctx, field)
+			case "referenceID":
+				return ec.fieldContext_BillingHold_referenceID(ctx, field)
+			case "capturedLedgerTransactionID":
+				return ec.fieldContext_BillingHold_capturedLedgerTransactionID(ctx, field)
+			case "releaseReason":
+				return ec.fieldContext_BillingHold_releaseReason(ctx, field)
+			case "releasedByType":
+				return ec.fieldContext_BillingHold_releasedByType(ctx, field)
+			case "releasedByID":
+				return ec.fieldContext_BillingHold_releasedByID(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_BillingHold_expiresAt(ctx, field)
+			case "capturedAt":
+				return ec.fieldContext_BillingHold_capturedAt(ctx, field)
+			case "releasedAt":
+				return ec.fieldContext_BillingHold_releasedAt(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_BillingHold_billingAccount(ctx, field)
+			case "request":
+				return ec.fieldContext_BillingHold_request(ctx, field)
+			case "usageLog":
+				return ec.fieldContext_BillingHold_usageLog(ctx, field)
+			case "capturedLedgerTransaction":
+				return ec.fieldContext_BillingHold_capturedLedgerTransaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingHold", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingHoldEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHoldEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingHoldEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingHoldEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingHoldEdge",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -32293,6 +34201,8 @@ func (ec *executionContext) fieldContext_LedgerEntry_ledgerTransaction(_ context
 				return ec.fieldContext_LedgerTransaction_entries(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_LedgerTransaction_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
 			}
@@ -32956,6 +34866,8 @@ func (ec *executionContext) fieldContext_LedgerTransaction_billingAccount(_ cont
 				return ec.fieldContext_BillingAccount_currency(ctx, field)
 			case "balanceMicros":
 				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
 			case "creditLimitMicros":
 				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
 			case "status":
@@ -32964,6 +34876,8 @@ func (ec *executionContext) fieldContext_LedgerTransaction_billingAccount(_ cont
 				return ec.fieldContext_BillingAccount_bindings(ctx, field)
 			case "ledgerTransactions":
 				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
@@ -33067,6 +34981,55 @@ func (ec *executionContext) fieldContext_LedgerTransaction_usageBillingRecords(c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_LedgerTransaction_usageBillingRecords_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LedgerTransaction_billingHolds(ctx context.Context, field graphql.CollectedField, obj *ent.LedgerTransaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LedgerTransaction_billingHolds,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingHolds(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingHoldOrder), fc.Args["where"].(*ent.BillingHoldWhereInput))
+		},
+		nil,
+		ec.marshalNBillingHoldConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LedgerTransaction_billingHolds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LedgerTransaction",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingHoldConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingHoldConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingHoldConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingHoldConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_LedgerTransaction_billingHolds_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -33285,6 +35248,8 @@ func (ec *executionContext) fieldContext_LedgerTransactionEdge_node(_ context.Co
 				return ec.fieldContext_LedgerTransaction_entries(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_LedgerTransaction_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
 			}
@@ -42204,6 +44169,8 @@ func (ec *executionContext) fieldContext_Mutation_adjustUserBalance(ctx context.
 				return ec.fieldContext_LedgerTransaction_entries(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_LedgerTransaction_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
 			}
@@ -42263,6 +44230,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUserBillingAccount(ctx c
 				return ec.fieldContext_BillingAccount_currency(ctx, field)
 			case "balanceMicros":
 				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
 			case "creditLimitMicros":
 				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
 			case "status":
@@ -42271,6 +44240,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUserBillingAccount(ctx c
 				return ec.fieldContext_BillingAccount_bindings(ctx, field)
 			case "ledgerTransactions":
 				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
@@ -42287,6 +44258,105 @@ func (ec *executionContext) fieldContext_Mutation_updateUserBillingAccount(ctx c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateUserBillingAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_releaseBillingHold(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_releaseBillingHold,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ReleaseBillingHold(ctx, fc.Args["id"].(objects.GUID), fc.Args["reason"].(string))
+		},
+		nil,
+		ec.marshalNBillingHold2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHold,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_releaseBillingHold(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingHold_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingHold_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingHold_updatedAt(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_BillingHold_billingAccountID(ctx, field)
+			case "requestID":
+				return ec.fieldContext_BillingHold_requestID(ctx, field)
+			case "usageLogID":
+				return ec.fieldContext_BillingHold_usageLogID(ctx, field)
+			case "projectID":
+				return ec.fieldContext_BillingHold_projectID(ctx, field)
+			case "userID":
+				return ec.fieldContext_BillingHold_userID(ctx, field)
+			case "apiKeyID":
+				return ec.fieldContext_BillingHold_apiKeyID(ctx, field)
+			case "modelID":
+				return ec.fieldContext_BillingHold_modelID(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_BillingHold_amountMicros(ctx, field)
+			case "capturedAmountMicros":
+				return ec.fieldContext_BillingHold_capturedAmountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingHold_currency(ctx, field)
+			case "status":
+				return ec.fieldContext_BillingHold_status(ctx, field)
+			case "idempotencyKey":
+				return ec.fieldContext_BillingHold_idempotencyKey(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_BillingHold_referenceType(ctx, field)
+			case "referenceID":
+				return ec.fieldContext_BillingHold_referenceID(ctx, field)
+			case "capturedLedgerTransactionID":
+				return ec.fieldContext_BillingHold_capturedLedgerTransactionID(ctx, field)
+			case "releaseReason":
+				return ec.fieldContext_BillingHold_releaseReason(ctx, field)
+			case "releasedByType":
+				return ec.fieldContext_BillingHold_releasedByType(ctx, field)
+			case "releasedByID":
+				return ec.fieldContext_BillingHold_releasedByID(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_BillingHold_expiresAt(ctx, field)
+			case "capturedAt":
+				return ec.fieldContext_BillingHold_capturedAt(ctx, field)
+			case "releasedAt":
+				return ec.fieldContext_BillingHold_releasedAt(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_BillingHold_billingAccount(ctx, field)
+			case "request":
+				return ec.fieldContext_BillingHold_request(ctx, field)
+			case "usageLog":
+				return ec.fieldContext_BillingHold_usageLog(ctx, field)
+			case "capturedLedgerTransaction":
+				return ec.fieldContext_BillingHold_capturedLedgerTransaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingHold", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_releaseBillingHold_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -45218,6 +47288,8 @@ func (ec *executionContext) fieldContext_PaymentOrder_billingAccount(_ context.C
 				return ec.fieldContext_BillingAccount_currency(ctx, field)
 			case "balanceMicros":
 				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
 			case "creditLimitMicros":
 				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
 			case "status":
@@ -45226,6 +47298,8 @@ func (ec *executionContext) fieldContext_PaymentOrder_billingAccount(_ context.C
 				return ec.fieldContext_BillingAccount_bindings(ctx, field)
 			case "ledgerTransactions":
 				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
@@ -45346,6 +47420,8 @@ func (ec *executionContext) fieldContext_PaymentOrder_ledgerTransaction(_ contex
 				return ec.fieldContext_LedgerTransaction_entries(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_LedgerTransaction_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
 			}
@@ -49681,6 +51757,55 @@ func (ec *executionContext) fieldContext_Query_billingAccountBindings(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_billingHolds(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_billingHolds,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().BillingHolds(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingHoldOrder), fc.Args["where"].(*ent.BillingHoldWhereInput))
+		},
+		nil,
+		ec.marshalNBillingHoldConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_billingHolds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingHoldConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingHoldConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingHoldConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingHoldConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_billingHolds_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_billingOutboxes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -53384,6 +55509,8 @@ func (ec *executionContext) fieldContext_Query_projectBillingAccount(ctx context
 				return ec.fieldContext_BillingAccount_currency(ctx, field)
 			case "balanceMicros":
 				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
 			case "creditLimitMicros":
 				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
 			case "status":
@@ -53392,6 +55519,8 @@ func (ec *executionContext) fieldContext_Query_projectBillingAccount(ctx context
 				return ec.fieldContext_BillingAccount_bindings(ctx, field)
 			case "ledgerTransactions":
 				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
@@ -53452,6 +55581,8 @@ func (ec *executionContext) fieldContext_Query_myBillingAccount(_ context.Contex
 				return ec.fieldContext_BillingAccount_currency(ctx, field)
 			case "balanceMicros":
 				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
 			case "creditLimitMicros":
 				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
 			case "status":
@@ -53460,6 +55591,8 @@ func (ec *executionContext) fieldContext_Query_myBillingAccount(_ context.Contex
 				return ec.fieldContext_BillingAccount_bindings(ctx, field)
 			case "ledgerTransactions":
 				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
@@ -53510,6 +55643,8 @@ func (ec *executionContext) fieldContext_Query_userBillingAccount(ctx context.Co
 				return ec.fieldContext_BillingAccount_currency(ctx, field)
 			case "balanceMicros":
 				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
 			case "creditLimitMicros":
 				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
 			case "status":
@@ -53518,6 +55653,8 @@ func (ec *executionContext) fieldContext_Query_userBillingAccount(ctx context.Co
 				return ec.fieldContext_BillingAccount_bindings(ctx, field)
 			case "ledgerTransactions":
 				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
@@ -53926,6 +56063,55 @@ func (ec *executionContext) fieldContext_Query_adminUsageBillingRecords(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_adminUsageBillingRecords_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminBillingHolds(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminBillingHolds,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AdminBillingHolds(ctx, fc.Args["filter"].(*AdminBillingHoldsFilter), fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingHoldOrder))
+		},
+		nil,
+		ec.marshalNBillingHoldConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminBillingHolds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingHoldConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingHoldConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingHoldConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingHoldConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminBillingHolds_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -55470,6 +57656,55 @@ func (ec *executionContext) fieldContext_Request_usageLogs(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Request_billingHolds(ctx context.Context, field graphql.CollectedField, obj *ent.Request) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Request_billingHolds,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingHolds(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingHoldOrder), fc.Args["where"].(*ent.BillingHoldWhereInput))
+		},
+		nil,
+		ec.marshalNBillingHoldConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Request_billingHolds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Request",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingHoldConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingHoldConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingHoldConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingHoldConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Request_billingHolds_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _RequestConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.RequestConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -55665,6 +57900,8 @@ func (ec *executionContext) fieldContext_RequestEdge_node(_ context.Context, fie
 				return ec.fieldContext_Request_channel(ctx, field)
 			case "usageLogs":
 				return ec.fieldContext_Request_usageLogs(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_Request_billingHolds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Request", field.Name)
 		},
@@ -56460,6 +58697,8 @@ func (ec *executionContext) fieldContext_RequestExecution_request(_ context.Cont
 				return ec.fieldContext_Request_channel(ctx, field)
 			case "usageLogs":
 				return ec.fieldContext_Request_usageLogs(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_Request_billingHolds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Request", field.Name)
 		},
@@ -64728,6 +66967,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_usageLog(_ context.C
 				return ec.fieldContext_UsageLog_channel(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UsageLog_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_UsageLog_billingHolds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageLog", field.Name)
 		},
@@ -64773,6 +67014,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_billingAccount(_ con
 				return ec.fieldContext_BillingAccount_currency(ctx, field)
 			case "balanceMicros":
 				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
 			case "creditLimitMicros":
 				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
 			case "status":
@@ -64781,6 +67024,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_billingAccount(_ con
 				return ec.fieldContext_BillingAccount_bindings(ctx, field)
 			case "ledgerTransactions":
 				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
@@ -64852,6 +67097,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_ledgerTransaction(_ 
 				return ec.fieldContext_LedgerTransaction_entries(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_LedgerTransaction_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
 			}
@@ -65899,6 +68146,8 @@ func (ec *executionContext) fieldContext_UsageLog_request(_ context.Context, fie
 				return ec.fieldContext_Request_channel(ctx, field)
 			case "usageLogs":
 				return ec.fieldContext_Request_usageLogs(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_Request_billingHolds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Request", field.Name)
 		},
@@ -66111,6 +68360,55 @@ func (ec *executionContext) fieldContext_UsageLog_usageBillingRecords(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _UsageLog_billingHolds(ctx context.Context, field graphql.CollectedField, obj *ent.UsageLog) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageLog_billingHolds,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingHolds(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingHoldOrder), fc.Args["where"].(*ent.BillingHoldWhereInput))
+		},
+		nil,
+		ec.marshalNBillingHoldConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageLog_billingHolds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageLog",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingHoldConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingHoldConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingHoldConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingHoldConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_UsageLog_billingHolds_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UsageLogConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.UsageLogConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -66296,6 +68594,8 @@ func (ec *executionContext) fieldContext_UsageLogEdge_node(_ context.Context, fi
 				return ec.fieldContext_UsageLog_channel(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UsageLog_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_UsageLog_billingHolds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageLog", field.Name)
 		},
@@ -72377,6 +74677,89 @@ func (ec *executionContext) unmarshalInputAdjustUserBalanceInput(ctx context.Con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAdminBillingHoldsFilter(ctx context.Context, obj any) (AdminBillingHoldsFilter, error) {
+	var it AdminBillingHoldsFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userId", "projectId", "apiKeyId", "billingAccountId", "modelId", "status", "from", "to", "expiresBefore"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "projectId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectID = data
+		case "apiKeyId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyID = data
+		case "billingAccountId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingAccountID = data
+		case "modelId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelID = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOBillingHoldStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "from":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.From = data
+		case "to":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.To = data
+		case "expiresBefore":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresBefore"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresBefore = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAdminLedgerTransactionsFilter(ctx context.Context, obj any) (AdminLedgerTransactionsFilter, error) {
 	var it AdminLedgerTransactionsFilter
 	asMap := map[string]any{}
@@ -73426,7 +75809,7 @@ func (ec *executionContext) unmarshalInputBillingAccountWhereInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "ownerType", "ownerTypeNEQ", "ownerTypeIn", "ownerTypeNotIn", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDGT", "ownerIDGTE", "ownerIDLT", "ownerIDLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "balanceMicros", "balanceMicrosNEQ", "balanceMicrosIn", "balanceMicrosNotIn", "balanceMicrosGT", "balanceMicrosGTE", "balanceMicrosLT", "balanceMicrosLTE", "creditLimitMicros", "creditLimitMicrosNEQ", "creditLimitMicrosIn", "creditLimitMicrosNotIn", "creditLimitMicrosGT", "creditLimitMicrosGTE", "creditLimitMicrosLT", "creditLimitMicrosLTE", "status", "statusNEQ", "statusIn", "statusNotIn", "hasBindings", "hasBindingsWith", "hasLedgerTransactions", "hasLedgerTransactionsWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasPaymentOrders", "hasPaymentOrdersWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "ownerType", "ownerTypeNEQ", "ownerTypeIn", "ownerTypeNotIn", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDGT", "ownerIDGTE", "ownerIDLT", "ownerIDLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "balanceMicros", "balanceMicrosNEQ", "balanceMicrosIn", "balanceMicrosNotIn", "balanceMicrosGT", "balanceMicrosGTE", "balanceMicrosLT", "balanceMicrosLTE", "heldBalanceMicros", "heldBalanceMicrosNEQ", "heldBalanceMicrosIn", "heldBalanceMicrosNotIn", "heldBalanceMicrosGT", "heldBalanceMicrosGTE", "heldBalanceMicrosLT", "heldBalanceMicrosLTE", "creditLimitMicros", "creditLimitMicrosNEQ", "creditLimitMicrosIn", "creditLimitMicrosNotIn", "creditLimitMicrosGT", "creditLimitMicrosGTE", "creditLimitMicrosLT", "creditLimitMicrosLTE", "status", "statusNEQ", "statusIn", "statusNotIn", "hasBindings", "hasBindingsWith", "hasLedgerTransactions", "hasLedgerTransactionsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasPaymentOrders", "hasPaymentOrdersWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -73885,6 +76268,62 @@ func (ec *executionContext) unmarshalInputBillingAccountWhereInput(ctx context.C
 				return it, err
 			}
 			it.BalanceMicrosLTE = data
+		case "heldBalanceMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("heldBalanceMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeldBalanceMicros = data
+		case "heldBalanceMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("heldBalanceMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeldBalanceMicrosNEQ = data
+		case "heldBalanceMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("heldBalanceMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeldBalanceMicrosIn = data
+		case "heldBalanceMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("heldBalanceMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeldBalanceMicrosNotIn = data
+		case "heldBalanceMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("heldBalanceMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeldBalanceMicrosGT = data
+		case "heldBalanceMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("heldBalanceMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeldBalanceMicrosGTE = data
+		case "heldBalanceMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("heldBalanceMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeldBalanceMicrosLT = data
+		case "heldBalanceMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("heldBalanceMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeldBalanceMicrosLTE = data
 		case "creditLimitMicros":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("creditLimitMicros"))
 			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
@@ -73997,6 +76436,20 @@ func (ec *executionContext) unmarshalInputBillingAccountWhereInput(ctx context.C
 				return it, err
 			}
 			it.HasLedgerTransactionsWith = data
+		case "hasBillingHolds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingHolds"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingHolds = data
+		case "hasBillingHoldsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingHoldsWith"))
+			data, err := ec.unmarshalOBillingHoldWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingHoldsWith = data
 		case "hasUsageBillingRecords":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsageBillingRecords"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -74025,6 +76478,1770 @@ func (ec *executionContext) unmarshalInputBillingAccountWhereInput(ctx context.C
 				return it, err
 			}
 			it.HasPaymentOrdersWith = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBillingHoldOrder(ctx context.Context, obj any) (ent.BillingHoldOrder, error) {
+	var it ent.BillingHoldOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNBillingHoldOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBillingHoldWhereInput(ctx context.Context, obj any) (ent.BillingHoldWhereInput, error) {
+	var it ent.BillingHoldWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "requestID", "requestIDNEQ", "requestIDIn", "requestIDNotIn", "requestIDIsNil", "requestIDNotNil", "usageLogID", "usageLogIDNEQ", "usageLogIDIn", "usageLogIDNotIn", "usageLogIDIsNil", "usageLogIDNotNil", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "projectIDIsNil", "projectIDNotNil", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "userIDGT", "userIDGTE", "userIDLT", "userIDLTE", "userIDIsNil", "userIDNotNil", "apiKeyID", "apiKeyIDNEQ", "apiKeyIDIn", "apiKeyIDNotIn", "apiKeyIDGT", "apiKeyIDGTE", "apiKeyIDLT", "apiKeyIDLTE", "apiKeyIDIsNil", "apiKeyIDNotNil", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "capturedAmountMicros", "capturedAmountMicrosNEQ", "capturedAmountMicrosIn", "capturedAmountMicrosNotIn", "capturedAmountMicrosGT", "capturedAmountMicrosGTE", "capturedAmountMicrosLT", "capturedAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "referenceType", "referenceTypeNEQ", "referenceTypeIn", "referenceTypeNotIn", "referenceTypeGT", "referenceTypeGTE", "referenceTypeLT", "referenceTypeLTE", "referenceTypeContains", "referenceTypeHasPrefix", "referenceTypeHasSuffix", "referenceTypeEqualFold", "referenceTypeContainsFold", "referenceID", "referenceIDNEQ", "referenceIDIn", "referenceIDNotIn", "referenceIDGT", "referenceIDGTE", "referenceIDLT", "referenceIDLTE", "referenceIDContains", "referenceIDHasPrefix", "referenceIDHasSuffix", "referenceIDEqualFold", "referenceIDContainsFold", "capturedLedgerTransactionID", "capturedLedgerTransactionIDNEQ", "capturedLedgerTransactionIDIn", "capturedLedgerTransactionIDNotIn", "capturedLedgerTransactionIDIsNil", "capturedLedgerTransactionIDNotNil", "releaseReason", "releaseReasonNEQ", "releaseReasonIn", "releaseReasonNotIn", "releaseReasonGT", "releaseReasonGTE", "releaseReasonLT", "releaseReasonLTE", "releaseReasonContains", "releaseReasonHasPrefix", "releaseReasonHasSuffix", "releaseReasonEqualFold", "releaseReasonContainsFold", "releasedByType", "releasedByTypeNEQ", "releasedByTypeIn", "releasedByTypeNotIn", "releasedByID", "releasedByIDNEQ", "releasedByIDIn", "releasedByIDNotIn", "releasedByIDGT", "releasedByIDGTE", "releasedByIDLT", "releasedByIDLTE", "releasedByIDContains", "releasedByIDHasPrefix", "releasedByIDHasSuffix", "releasedByIDEqualFold", "releasedByIDContainsFold", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "capturedAt", "capturedAtNEQ", "capturedAtIn", "capturedAtNotIn", "capturedAtGT", "capturedAtGTE", "capturedAtLT", "capturedAtLTE", "capturedAtIsNil", "capturedAtNotNil", "releasedAt", "releasedAtNEQ", "releasedAtIn", "releasedAtNotIn", "releasedAtGT", "releasedAtGTE", "releasedAtLT", "releasedAtLTE", "releasedAtIsNil", "releasedAtNotNil", "hasBillingAccount", "hasBillingAccountWith", "hasRequest", "hasRequestWith", "hasUsageLog", "hasUsageLogWith", "hasCapturedLedgerTransaction", "hasCapturedLedgerTransactionWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOBillingHoldWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOBillingHoldWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "billingAccountID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountID = converted
+		case "billingAccountIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountIDNEQ = converted
+		case "billingAccountIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountIDIn = converted
+		case "billingAccountIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountIDNotIn = converted
+		case "requestID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.RequestID = converted
+		case "requestIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.RequestIDNEQ = converted
+		case "requestIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.RequestIDIn = converted
+		case "requestIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.RequestIDNotIn = converted
+		case "requestIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestIDIsNil = data
+		case "requestIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestIDNotNil = data
+		case "usageLogID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageLogID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageLogID = converted
+		case "usageLogIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageLogIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageLogIDNEQ = converted
+		case "usageLogIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageLogIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageLogIDIn = converted
+		case "usageLogIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageLogIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageLogIDNotIn = converted
+		case "usageLogIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageLogIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsageLogIDIsNil = data
+		case "usageLogIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageLogIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsageLogIDNotNil = data
+		case "projectID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectID"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectID = data
+		case "projectIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDNEQ = data
+		case "projectIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDIn = data
+		case "projectIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDNotIn = data
+		case "projectIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDGT = data
+		case "projectIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDGTE = data
+		case "projectIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDLT = data
+		case "projectIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDLTE = data
+		case "projectIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDIsNil = data
+		case "projectIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDNotNil = data
+		case "userID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "userIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDNEQ = data
+		case "userIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDIn = data
+		case "userIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDNotIn = data
+		case "userIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDGT = data
+		case "userIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDGTE = data
+		case "userIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDLT = data
+		case "userIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDLTE = data
+		case "userIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDIsNil = data
+		case "userIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDNotNil = data
+		case "apiKeyID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyID"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyID = data
+		case "apiKeyIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyIDNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyIDNEQ = data
+		case "apiKeyIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyIDIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyIDIn = data
+		case "apiKeyIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyIDNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyIDNotIn = data
+		case "apiKeyIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyIDGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyIDGT = data
+		case "apiKeyIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyIDGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyIDGTE = data
+		case "apiKeyIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyIDLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyIDLT = data
+		case "apiKeyIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyIDLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyIDLTE = data
+		case "apiKeyIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyIDIsNil = data
+		case "apiKeyIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyIDNotNil = data
+		case "modelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelID"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelID = data
+		case "modelIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDNEQ = data
+		case "modelIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDIn = data
+		case "modelIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDNotIn = data
+		case "modelIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDGT = data
+		case "modelIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDGTE = data
+		case "modelIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDLT = data
+		case "modelIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDLTE = data
+		case "modelIDContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDContains = data
+		case "modelIDHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDHasPrefix = data
+		case "modelIDHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDHasSuffix = data
+		case "modelIDEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDEqualFold = data
+		case "modelIDContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelIDContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelIDContainsFold = data
+		case "amountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicros = data
+		case "amountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosNEQ = data
+		case "amountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosIn = data
+		case "amountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosNotIn = data
+		case "amountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosGT = data
+		case "amountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosGTE = data
+		case "amountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosLT = data
+		case "amountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosLTE = data
+		case "capturedAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAmountMicros = data
+		case "capturedAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAmountMicrosNEQ = data
+		case "capturedAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAmountMicrosIn = data
+		case "capturedAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAmountMicrosNotIn = data
+		case "capturedAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAmountMicrosGT = data
+		case "capturedAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAmountMicrosGTE = data
+		case "capturedAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAmountMicrosLT = data
+		case "capturedAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAmountMicrosLTE = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "currencyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNEQ = data
+		case "currencyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyIn = data
+		case "currencyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNotIn = data
+		case "currencyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGT = data
+		case "currencyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGTE = data
+		case "currencyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLT = data
+		case "currencyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLTE = data
+		case "currencyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContains = data
+		case "currencyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasPrefix = data
+		case "currencyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasSuffix = data
+		case "currencyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyEqualFold = data
+		case "currencyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContainsFold = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOBillingHoldStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOBillingHoldStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOBillingHoldStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOBillingHoldStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "idempotencyKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKey = data
+		case "idempotencyKeyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyNEQ = data
+		case "idempotencyKeyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyIn = data
+		case "idempotencyKeyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyNotIn = data
+		case "idempotencyKeyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyGT = data
+		case "idempotencyKeyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyGTE = data
+		case "idempotencyKeyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyLT = data
+		case "idempotencyKeyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyLTE = data
+		case "idempotencyKeyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyContains = data
+		case "idempotencyKeyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyHasPrefix = data
+		case "idempotencyKeyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyHasSuffix = data
+		case "idempotencyKeyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyEqualFold = data
+		case "idempotencyKeyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyContainsFold = data
+		case "referenceType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceType"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceType = data
+		case "referenceTypeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeNEQ = data
+		case "referenceTypeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeIn = data
+		case "referenceTypeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeNotIn = data
+		case "referenceTypeGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeGT = data
+		case "referenceTypeGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeGTE = data
+		case "referenceTypeLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeLT = data
+		case "referenceTypeLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeLTE = data
+		case "referenceTypeContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeContains = data
+		case "referenceTypeHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeHasPrefix = data
+		case "referenceTypeHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeHasSuffix = data
+		case "referenceTypeEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeEqualFold = data
+		case "referenceTypeContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceTypeContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceTypeContainsFold = data
+		case "referenceID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceID"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceID = data
+		case "referenceIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDNEQ = data
+		case "referenceIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDIn = data
+		case "referenceIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDNotIn = data
+		case "referenceIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDGT = data
+		case "referenceIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDGTE = data
+		case "referenceIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDLT = data
+		case "referenceIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDLTE = data
+		case "referenceIDContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDContains = data
+		case "referenceIDHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDHasPrefix = data
+		case "referenceIDHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDHasSuffix = data
+		case "referenceIDEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDEqualFold = data
+		case "referenceIDContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIDContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIDContainsFold = data
+		case "capturedLedgerTransactionID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedLedgerTransactionID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CapturedLedgerTransactionID = converted
+		case "capturedLedgerTransactionIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedLedgerTransactionIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CapturedLedgerTransactionIDNEQ = converted
+		case "capturedLedgerTransactionIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedLedgerTransactionIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CapturedLedgerTransactionIDIn = converted
+		case "capturedLedgerTransactionIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedLedgerTransactionIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CapturedLedgerTransactionIDNotIn = converted
+		case "capturedLedgerTransactionIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedLedgerTransactionIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedLedgerTransactionIDIsNil = data
+		case "capturedLedgerTransactionIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedLedgerTransactionIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedLedgerTransactionIDNotNil = data
+		case "releaseReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReason = data
+		case "releaseReasonNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonNEQ = data
+		case "releaseReasonIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonIn = data
+		case "releaseReasonNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonNotIn = data
+		case "releaseReasonGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonGT = data
+		case "releaseReasonGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonGTE = data
+		case "releaseReasonLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonLT = data
+		case "releaseReasonLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonLTE = data
+		case "releaseReasonContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonContains = data
+		case "releaseReasonHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonHasPrefix = data
+		case "releaseReasonHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonHasSuffix = data
+		case "releaseReasonEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonEqualFold = data
+		case "releaseReasonContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseReasonContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleaseReasonContainsFold = data
+		case "releasedByType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByType"))
+			data, err := ec.unmarshalOBillingHoldReleasedByType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByType = data
+		case "releasedByTypeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByTypeNEQ"))
+			data, err := ec.unmarshalOBillingHoldReleasedByType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByTypeNEQ = data
+		case "releasedByTypeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByTypeIn"))
+			data, err := ec.unmarshalOBillingHoldReleasedByType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByTypeIn = data
+		case "releasedByTypeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByTypeNotIn"))
+			data, err := ec.unmarshalOBillingHoldReleasedByType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByTypeNotIn = data
+		case "releasedByID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByID"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByID = data
+		case "releasedByIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDNEQ = data
+		case "releasedByIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDIn = data
+		case "releasedByIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDNotIn = data
+		case "releasedByIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDGT = data
+		case "releasedByIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDGTE = data
+		case "releasedByIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDLT = data
+		case "releasedByIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDLTE = data
+		case "releasedByIDContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDContains = data
+		case "releasedByIDHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDHasPrefix = data
+		case "releasedByIDHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDHasSuffix = data
+		case "releasedByIDEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDEqualFold = data
+		case "releasedByIDContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedByIDContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedByIDContainsFold = data
+		case "expiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAt = data
+		case "expiresAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNEQ = data
+		case "expiresAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtIn = data
+		case "expiresAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNotIn = data
+		case "expiresAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtGT = data
+		case "expiresAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtGTE = data
+		case "expiresAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtLT = data
+		case "expiresAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtLTE = data
+		case "capturedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAt = data
+		case "capturedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAtNEQ = data
+		case "capturedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAtIn = data
+		case "capturedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAtNotIn = data
+		case "capturedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAtGT = data
+		case "capturedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAtGTE = data
+		case "capturedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAtLT = data
+		case "capturedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAtLTE = data
+		case "capturedAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAtIsNil = data
+		case "capturedAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capturedAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapturedAtNotNil = data
+		case "releasedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAt = data
+		case "releasedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAtNEQ = data
+		case "releasedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAtIn = data
+		case "releasedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAtNotIn = data
+		case "releasedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAtGT = data
+		case "releasedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAtGTE = data
+		case "releasedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAtLT = data
+		case "releasedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAtLTE = data
+		case "releasedAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAtIsNil = data
+		case "releasedAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releasedAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReleasedAtNotNil = data
+		case "hasBillingAccount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingAccount"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingAccount = data
+		case "hasBillingAccountWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingAccountWith"))
+			data, err := ec.unmarshalOBillingAccountWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccountWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingAccountWith = data
+		case "hasRequest":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasRequest"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasRequest = data
+		case "hasRequestWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasRequestWith"))
+			data, err := ec.unmarshalORequestWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRequestWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasRequestWith = data
+		case "hasUsageLog":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsageLog"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsageLog = data
+		case "hasUsageLogWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsageLogWith"))
+			data, err := ec.unmarshalOUsageLogWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUsageLogWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsageLogWith = data
+		case "hasCapturedLedgerTransaction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasCapturedLedgerTransaction"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasCapturedLedgerTransaction = data
+		case "hasCapturedLedgerTransactionWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasCapturedLedgerTransactionWith"))
+			data, err := ec.unmarshalOLedgerTransactionWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐLedgerTransactionWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasCapturedLedgerTransactionWith = data
 		}
 	}
 
@@ -83053,7 +87270,7 @@ func (ec *executionContext) unmarshalInputLedgerTransactionWhereInput(ctx contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "direction", "directionNEQ", "directionIn", "directionNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "referenceType", "referenceTypeNEQ", "referenceTypeIn", "referenceTypeNotIn", "referenceTypeGT", "referenceTypeGTE", "referenceTypeLT", "referenceTypeLTE", "referenceTypeContains", "referenceTypeHasPrefix", "referenceTypeHasSuffix", "referenceTypeEqualFold", "referenceTypeContainsFold", "referenceID", "referenceIDNEQ", "referenceIDIn", "referenceIDNotIn", "referenceIDGT", "referenceIDGTE", "referenceIDLT", "referenceIDLTE", "referenceIDContains", "referenceIDHasPrefix", "referenceIDHasSuffix", "referenceIDEqualFold", "referenceIDContainsFold", "memo", "memoNEQ", "memoIn", "memoNotIn", "memoGT", "memoGTE", "memoLT", "memoLTE", "memoContains", "memoHasPrefix", "memoHasSuffix", "memoEqualFold", "memoContainsFold", "createdByType", "createdByTypeNEQ", "createdByTypeIn", "createdByTypeNotIn", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDGT", "createdByIDGTE", "createdByIDLT", "createdByIDLTE", "createdByIDContains", "createdByIDHasPrefix", "createdByIDHasSuffix", "createdByIDEqualFold", "createdByIDContainsFold", "hasBillingAccount", "hasBillingAccountWith", "hasEntries", "hasEntriesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasPaymentOrders", "hasPaymentOrdersWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "direction", "directionNEQ", "directionIn", "directionNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "referenceType", "referenceTypeNEQ", "referenceTypeIn", "referenceTypeNotIn", "referenceTypeGT", "referenceTypeGTE", "referenceTypeLT", "referenceTypeLTE", "referenceTypeContains", "referenceTypeHasPrefix", "referenceTypeHasSuffix", "referenceTypeEqualFold", "referenceTypeContainsFold", "referenceID", "referenceIDNEQ", "referenceIDIn", "referenceIDNotIn", "referenceIDGT", "referenceIDGTE", "referenceIDLT", "referenceIDLTE", "referenceIDContains", "referenceIDHasPrefix", "referenceIDHasSuffix", "referenceIDEqualFold", "referenceIDContainsFold", "memo", "memoNEQ", "memoIn", "memoNotIn", "memoGT", "memoGTE", "memoLT", "memoLTE", "memoContains", "memoHasPrefix", "memoHasSuffix", "memoEqualFold", "memoContainsFold", "createdByType", "createdByTypeNEQ", "createdByTypeIn", "createdByTypeNotIn", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDGT", "createdByIDGTE", "createdByIDLT", "createdByIDLTE", "createdByIDContains", "createdByIDHasPrefix", "createdByIDHasSuffix", "createdByIDEqualFold", "createdByIDContainsFold", "hasBillingAccount", "hasBillingAccountWith", "hasEntries", "hasEntriesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasPaymentOrders", "hasPaymentOrdersWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -84081,6 +88298,20 @@ func (ec *executionContext) unmarshalInputLedgerTransactionWhereInput(ctx contex
 				return it, err
 			}
 			it.HasUsageBillingRecordsWith = data
+		case "hasBillingHolds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingHolds"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingHolds = data
+		case "hasBillingHoldsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingHoldsWith"))
+			data, err := ec.unmarshalOBillingHoldWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingHoldsWith = data
 		case "hasPaymentOrders":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentOrders"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -93497,7 +97728,7 @@ func (ec *executionContext) unmarshalInputRequestWhereInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "apiKeyID", "apiKeyIDNEQ", "apiKeyIDIn", "apiKeyIDNotIn", "apiKeyIDIsNil", "apiKeyIDNotNil", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "traceID", "traceIDNEQ", "traceIDIn", "traceIDNotIn", "traceIDIsNil", "traceIDNotNil", "dataStorageID", "dataStorageIDNEQ", "dataStorageIDIn", "dataStorageIDNotIn", "dataStorageIDIsNil", "dataStorageIDNotNil", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "reasoningEffort", "reasoningEffortNEQ", "reasoningEffortIn", "reasoningEffortNotIn", "reasoningEffortGT", "reasoningEffortGTE", "reasoningEffortLT", "reasoningEffortLTE", "reasoningEffortContains", "reasoningEffortHasPrefix", "reasoningEffortHasSuffix", "reasoningEffortIsNil", "reasoningEffortNotNil", "reasoningEffortEqualFold", "reasoningEffortContainsFold", "format", "formatNEQ", "formatIn", "formatNotIn", "formatGT", "formatGTE", "formatLT", "formatLTE", "formatContains", "formatHasPrefix", "formatHasSuffix", "formatEqualFold", "formatContainsFold", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "externalID", "externalIDNEQ", "externalIDIn", "externalIDNotIn", "externalIDGT", "externalIDGTE", "externalIDLT", "externalIDLTE", "externalIDContains", "externalIDHasPrefix", "externalIDHasSuffix", "externalIDIsNil", "externalIDNotNil", "externalIDEqualFold", "externalIDContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "stream", "streamNEQ", "clientIP", "clientIPNEQ", "clientIPIn", "clientIPNotIn", "clientIPGT", "clientIPGTE", "clientIPLT", "clientIPLTE", "clientIPContains", "clientIPHasPrefix", "clientIPHasSuffix", "clientIPEqualFold", "clientIPContainsFold", "metricsLatencyMs", "metricsLatencyMsNEQ", "metricsLatencyMsIn", "metricsLatencyMsNotIn", "metricsLatencyMsGT", "metricsLatencyMsGTE", "metricsLatencyMsLT", "metricsLatencyMsLTE", "metricsLatencyMsIsNil", "metricsLatencyMsNotNil", "metricsFirstTokenLatencyMs", "metricsFirstTokenLatencyMsNEQ", "metricsFirstTokenLatencyMsIn", "metricsFirstTokenLatencyMsNotIn", "metricsFirstTokenLatencyMsGT", "metricsFirstTokenLatencyMsGTE", "metricsFirstTokenLatencyMsLT", "metricsFirstTokenLatencyMsLTE", "metricsFirstTokenLatencyMsIsNil", "metricsFirstTokenLatencyMsNotNil", "metricsReasoningDurationMs", "metricsReasoningDurationMsNEQ", "metricsReasoningDurationMsIn", "metricsReasoningDurationMsNotIn", "metricsReasoningDurationMsGT", "metricsReasoningDurationMsGTE", "metricsReasoningDurationMsLT", "metricsReasoningDurationMsLTE", "metricsReasoningDurationMsIsNil", "metricsReasoningDurationMsNotNil", "contentSaved", "contentSavedNEQ", "contentStorageID", "contentStorageIDNEQ", "contentStorageIDIn", "contentStorageIDNotIn", "contentStorageIDGT", "contentStorageIDGTE", "contentStorageIDLT", "contentStorageIDLTE", "contentStorageIDIsNil", "contentStorageIDNotNil", "contentStorageKey", "contentStorageKeyNEQ", "contentStorageKeyIn", "contentStorageKeyNotIn", "contentStorageKeyGT", "contentStorageKeyGTE", "contentStorageKeyLT", "contentStorageKeyLTE", "contentStorageKeyContains", "contentStorageKeyHasPrefix", "contentStorageKeyHasSuffix", "contentStorageKeyIsNil", "contentStorageKeyNotNil", "contentStorageKeyEqualFold", "contentStorageKeyContainsFold", "contentSavedAt", "contentSavedAtNEQ", "contentSavedAtIn", "contentSavedAtNotIn", "contentSavedAtGT", "contentSavedAtGTE", "contentSavedAtLT", "contentSavedAtLTE", "contentSavedAtIsNil", "contentSavedAtNotNil", "hasAPIKey", "hasAPIKeyWith", "hasProject", "hasProjectWith", "hasTrace", "hasTraceWith", "hasDataStorage", "hasDataStorageWith", "hasExecutions", "hasExecutionsWith", "hasChannel", "hasChannelWith", "hasUsageLogs", "hasUsageLogsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "apiKeyID", "apiKeyIDNEQ", "apiKeyIDIn", "apiKeyIDNotIn", "apiKeyIDIsNil", "apiKeyIDNotNil", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "traceID", "traceIDNEQ", "traceIDIn", "traceIDNotIn", "traceIDIsNil", "traceIDNotNil", "dataStorageID", "dataStorageIDNEQ", "dataStorageIDIn", "dataStorageIDNotIn", "dataStorageIDIsNil", "dataStorageIDNotNil", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "reasoningEffort", "reasoningEffortNEQ", "reasoningEffortIn", "reasoningEffortNotIn", "reasoningEffortGT", "reasoningEffortGTE", "reasoningEffortLT", "reasoningEffortLTE", "reasoningEffortContains", "reasoningEffortHasPrefix", "reasoningEffortHasSuffix", "reasoningEffortIsNil", "reasoningEffortNotNil", "reasoningEffortEqualFold", "reasoningEffortContainsFold", "format", "formatNEQ", "formatIn", "formatNotIn", "formatGT", "formatGTE", "formatLT", "formatLTE", "formatContains", "formatHasPrefix", "formatHasSuffix", "formatEqualFold", "formatContainsFold", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "externalID", "externalIDNEQ", "externalIDIn", "externalIDNotIn", "externalIDGT", "externalIDGTE", "externalIDLT", "externalIDLTE", "externalIDContains", "externalIDHasPrefix", "externalIDHasSuffix", "externalIDIsNil", "externalIDNotNil", "externalIDEqualFold", "externalIDContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "stream", "streamNEQ", "clientIP", "clientIPNEQ", "clientIPIn", "clientIPNotIn", "clientIPGT", "clientIPGTE", "clientIPLT", "clientIPLTE", "clientIPContains", "clientIPHasPrefix", "clientIPHasSuffix", "clientIPEqualFold", "clientIPContainsFold", "metricsLatencyMs", "metricsLatencyMsNEQ", "metricsLatencyMsIn", "metricsLatencyMsNotIn", "metricsLatencyMsGT", "metricsLatencyMsGTE", "metricsLatencyMsLT", "metricsLatencyMsLTE", "metricsLatencyMsIsNil", "metricsLatencyMsNotNil", "metricsFirstTokenLatencyMs", "metricsFirstTokenLatencyMsNEQ", "metricsFirstTokenLatencyMsIn", "metricsFirstTokenLatencyMsNotIn", "metricsFirstTokenLatencyMsGT", "metricsFirstTokenLatencyMsGTE", "metricsFirstTokenLatencyMsLT", "metricsFirstTokenLatencyMsLTE", "metricsFirstTokenLatencyMsIsNil", "metricsFirstTokenLatencyMsNotNil", "metricsReasoningDurationMs", "metricsReasoningDurationMsNEQ", "metricsReasoningDurationMsIn", "metricsReasoningDurationMsNotIn", "metricsReasoningDurationMsGT", "metricsReasoningDurationMsGTE", "metricsReasoningDurationMsLT", "metricsReasoningDurationMsLTE", "metricsReasoningDurationMsIsNil", "metricsReasoningDurationMsNotNil", "contentSaved", "contentSavedNEQ", "contentStorageID", "contentStorageIDNEQ", "contentStorageIDIn", "contentStorageIDNotIn", "contentStorageIDGT", "contentStorageIDGTE", "contentStorageIDLT", "contentStorageIDLTE", "contentStorageIDIsNil", "contentStorageIDNotNil", "contentStorageKey", "contentStorageKeyNEQ", "contentStorageKeyIn", "contentStorageKeyNotIn", "contentStorageKeyGT", "contentStorageKeyGTE", "contentStorageKeyLT", "contentStorageKeyLTE", "contentStorageKeyContains", "contentStorageKeyHasPrefix", "contentStorageKeyHasSuffix", "contentStorageKeyIsNil", "contentStorageKeyNotNil", "contentStorageKeyEqualFold", "contentStorageKeyContainsFold", "contentSavedAt", "contentSavedAtNEQ", "contentSavedAtIn", "contentSavedAtNotIn", "contentSavedAtGT", "contentSavedAtGTE", "contentSavedAtLT", "contentSavedAtLTE", "contentSavedAtIsNil", "contentSavedAtNotNil", "hasAPIKey", "hasAPIKeyWith", "hasProject", "hasProjectWith", "hasTrace", "hasTraceWith", "hasDataStorage", "hasDataStorageWith", "hasExecutions", "hasExecutionsWith", "hasChannel", "hasChannelWith", "hasUsageLogs", "hasUsageLogsWith", "hasBillingHolds", "hasBillingHoldsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95121,6 +99352,20 @@ func (ec *executionContext) unmarshalInputRequestWhereInput(ctx context.Context,
 				return it, err
 			}
 			it.HasUsageLogsWith = data
+		case "hasBillingHolds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingHolds"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingHolds = data
+		case "hasBillingHoldsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingHoldsWith"))
+			data, err := ec.unmarshalOBillingHoldWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingHoldsWith = data
 		}
 	}
 
@@ -101671,7 +105916,7 @@ func (ec *executionContext) unmarshalInputUsageLogWhereInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "requestID", "requestIDNEQ", "requestIDIn", "requestIDNotIn", "apiKeyID", "apiKeyIDNEQ", "apiKeyIDIn", "apiKeyIDNotIn", "apiKeyIDGT", "apiKeyIDGTE", "apiKeyIDLT", "apiKeyIDLTE", "apiKeyIDIsNil", "apiKeyIDNotNil", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "promptTokens", "promptTokensNEQ", "promptTokensIn", "promptTokensNotIn", "promptTokensGT", "promptTokensGTE", "promptTokensLT", "promptTokensLTE", "completionTokens", "completionTokensNEQ", "completionTokensIn", "completionTokensNotIn", "completionTokensGT", "completionTokensGTE", "completionTokensLT", "completionTokensLTE", "totalTokens", "totalTokensNEQ", "totalTokensIn", "totalTokensNotIn", "totalTokensGT", "totalTokensGTE", "totalTokensLT", "totalTokensLTE", "promptAudioTokens", "promptAudioTokensNEQ", "promptAudioTokensIn", "promptAudioTokensNotIn", "promptAudioTokensGT", "promptAudioTokensGTE", "promptAudioTokensLT", "promptAudioTokensLTE", "promptAudioTokensIsNil", "promptAudioTokensNotNil", "promptCachedTokens", "promptCachedTokensNEQ", "promptCachedTokensIn", "promptCachedTokensNotIn", "promptCachedTokensGT", "promptCachedTokensGTE", "promptCachedTokensLT", "promptCachedTokensLTE", "promptCachedTokensIsNil", "promptCachedTokensNotNil", "promptWriteCachedTokens", "promptWriteCachedTokensNEQ", "promptWriteCachedTokensIn", "promptWriteCachedTokensNotIn", "promptWriteCachedTokensGT", "promptWriteCachedTokensGTE", "promptWriteCachedTokensLT", "promptWriteCachedTokensLTE", "promptWriteCachedTokensIsNil", "promptWriteCachedTokensNotNil", "promptWriteCachedTokens5m", "promptWriteCachedTokens5mNEQ", "promptWriteCachedTokens5mIn", "promptWriteCachedTokens5mNotIn", "promptWriteCachedTokens5mGT", "promptWriteCachedTokens5mGTE", "promptWriteCachedTokens5mLT", "promptWriteCachedTokens5mLTE", "promptWriteCachedTokens5mIsNil", "promptWriteCachedTokens5mNotNil", "promptWriteCachedTokens1h", "promptWriteCachedTokens1hNEQ", "promptWriteCachedTokens1hIn", "promptWriteCachedTokens1hNotIn", "promptWriteCachedTokens1hGT", "promptWriteCachedTokens1hGTE", "promptWriteCachedTokens1hLT", "promptWriteCachedTokens1hLTE", "promptWriteCachedTokens1hIsNil", "promptWriteCachedTokens1hNotNil", "completionAudioTokens", "completionAudioTokensNEQ", "completionAudioTokensIn", "completionAudioTokensNotIn", "completionAudioTokensGT", "completionAudioTokensGTE", "completionAudioTokensLT", "completionAudioTokensLTE", "completionAudioTokensIsNil", "completionAudioTokensNotNil", "completionReasoningTokens", "completionReasoningTokensNEQ", "completionReasoningTokensIn", "completionReasoningTokensNotIn", "completionReasoningTokensGT", "completionReasoningTokensGTE", "completionReasoningTokensLT", "completionReasoningTokensLTE", "completionReasoningTokensIsNil", "completionReasoningTokensNotNil", "completionAcceptedPredictionTokens", "completionAcceptedPredictionTokensNEQ", "completionAcceptedPredictionTokensIn", "completionAcceptedPredictionTokensNotIn", "completionAcceptedPredictionTokensGT", "completionAcceptedPredictionTokensGTE", "completionAcceptedPredictionTokensLT", "completionAcceptedPredictionTokensLTE", "completionAcceptedPredictionTokensIsNil", "completionAcceptedPredictionTokensNotNil", "completionRejectedPredictionTokens", "completionRejectedPredictionTokensNEQ", "completionRejectedPredictionTokensIn", "completionRejectedPredictionTokensNotIn", "completionRejectedPredictionTokensGT", "completionRejectedPredictionTokensGTE", "completionRejectedPredictionTokensLT", "completionRejectedPredictionTokensLTE", "completionRejectedPredictionTokensIsNil", "completionRejectedPredictionTokensNotNil", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "format", "formatNEQ", "formatIn", "formatNotIn", "formatGT", "formatGTE", "formatLT", "formatLTE", "formatContains", "formatHasPrefix", "formatHasSuffix", "formatEqualFold", "formatContainsFold", "totalCost", "totalCostNEQ", "totalCostIn", "totalCostNotIn", "totalCostGT", "totalCostGTE", "totalCostLT", "totalCostLTE", "totalCostIsNil", "totalCostNotNil", "costPriceReferenceID", "costPriceReferenceIDNEQ", "costPriceReferenceIDIn", "costPriceReferenceIDNotIn", "costPriceReferenceIDGT", "costPriceReferenceIDGTE", "costPriceReferenceIDLT", "costPriceReferenceIDLTE", "costPriceReferenceIDContains", "costPriceReferenceIDHasPrefix", "costPriceReferenceIDHasSuffix", "costPriceReferenceIDIsNil", "costPriceReferenceIDNotNil", "costPriceReferenceIDEqualFold", "costPriceReferenceIDContainsFold", "hasRequest", "hasRequestWith", "hasProject", "hasProjectWith", "hasChannel", "hasChannelWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "requestID", "requestIDNEQ", "requestIDIn", "requestIDNotIn", "apiKeyID", "apiKeyIDNEQ", "apiKeyIDIn", "apiKeyIDNotIn", "apiKeyIDGT", "apiKeyIDGTE", "apiKeyIDLT", "apiKeyIDLTE", "apiKeyIDIsNil", "apiKeyIDNotNil", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "promptTokens", "promptTokensNEQ", "promptTokensIn", "promptTokensNotIn", "promptTokensGT", "promptTokensGTE", "promptTokensLT", "promptTokensLTE", "completionTokens", "completionTokensNEQ", "completionTokensIn", "completionTokensNotIn", "completionTokensGT", "completionTokensGTE", "completionTokensLT", "completionTokensLTE", "totalTokens", "totalTokensNEQ", "totalTokensIn", "totalTokensNotIn", "totalTokensGT", "totalTokensGTE", "totalTokensLT", "totalTokensLTE", "promptAudioTokens", "promptAudioTokensNEQ", "promptAudioTokensIn", "promptAudioTokensNotIn", "promptAudioTokensGT", "promptAudioTokensGTE", "promptAudioTokensLT", "promptAudioTokensLTE", "promptAudioTokensIsNil", "promptAudioTokensNotNil", "promptCachedTokens", "promptCachedTokensNEQ", "promptCachedTokensIn", "promptCachedTokensNotIn", "promptCachedTokensGT", "promptCachedTokensGTE", "promptCachedTokensLT", "promptCachedTokensLTE", "promptCachedTokensIsNil", "promptCachedTokensNotNil", "promptWriteCachedTokens", "promptWriteCachedTokensNEQ", "promptWriteCachedTokensIn", "promptWriteCachedTokensNotIn", "promptWriteCachedTokensGT", "promptWriteCachedTokensGTE", "promptWriteCachedTokensLT", "promptWriteCachedTokensLTE", "promptWriteCachedTokensIsNil", "promptWriteCachedTokensNotNil", "promptWriteCachedTokens5m", "promptWriteCachedTokens5mNEQ", "promptWriteCachedTokens5mIn", "promptWriteCachedTokens5mNotIn", "promptWriteCachedTokens5mGT", "promptWriteCachedTokens5mGTE", "promptWriteCachedTokens5mLT", "promptWriteCachedTokens5mLTE", "promptWriteCachedTokens5mIsNil", "promptWriteCachedTokens5mNotNil", "promptWriteCachedTokens1h", "promptWriteCachedTokens1hNEQ", "promptWriteCachedTokens1hIn", "promptWriteCachedTokens1hNotIn", "promptWriteCachedTokens1hGT", "promptWriteCachedTokens1hGTE", "promptWriteCachedTokens1hLT", "promptWriteCachedTokens1hLTE", "promptWriteCachedTokens1hIsNil", "promptWriteCachedTokens1hNotNil", "completionAudioTokens", "completionAudioTokensNEQ", "completionAudioTokensIn", "completionAudioTokensNotIn", "completionAudioTokensGT", "completionAudioTokensGTE", "completionAudioTokensLT", "completionAudioTokensLTE", "completionAudioTokensIsNil", "completionAudioTokensNotNil", "completionReasoningTokens", "completionReasoningTokensNEQ", "completionReasoningTokensIn", "completionReasoningTokensNotIn", "completionReasoningTokensGT", "completionReasoningTokensGTE", "completionReasoningTokensLT", "completionReasoningTokensLTE", "completionReasoningTokensIsNil", "completionReasoningTokensNotNil", "completionAcceptedPredictionTokens", "completionAcceptedPredictionTokensNEQ", "completionAcceptedPredictionTokensIn", "completionAcceptedPredictionTokensNotIn", "completionAcceptedPredictionTokensGT", "completionAcceptedPredictionTokensGTE", "completionAcceptedPredictionTokensLT", "completionAcceptedPredictionTokensLTE", "completionAcceptedPredictionTokensIsNil", "completionAcceptedPredictionTokensNotNil", "completionRejectedPredictionTokens", "completionRejectedPredictionTokensNEQ", "completionRejectedPredictionTokensIn", "completionRejectedPredictionTokensNotIn", "completionRejectedPredictionTokensGT", "completionRejectedPredictionTokensGTE", "completionRejectedPredictionTokensLT", "completionRejectedPredictionTokensLTE", "completionRejectedPredictionTokensIsNil", "completionRejectedPredictionTokensNotNil", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "format", "formatNEQ", "formatIn", "formatNotIn", "formatGT", "formatGTE", "formatLT", "formatLTE", "formatContains", "formatHasPrefix", "formatHasSuffix", "formatEqualFold", "formatContainsFold", "totalCost", "totalCostNEQ", "totalCostIn", "totalCostNotIn", "totalCostGT", "totalCostGTE", "totalCostLT", "totalCostLTE", "totalCostIsNil", "totalCostNotNil", "costPriceReferenceID", "costPriceReferenceIDNEQ", "costPriceReferenceIDIn", "costPriceReferenceIDNotIn", "costPriceReferenceIDGT", "costPriceReferenceIDGTE", "costPriceReferenceIDLT", "costPriceReferenceIDLTE", "costPriceReferenceIDContains", "costPriceReferenceIDHasPrefix", "costPriceReferenceIDHasSuffix", "costPriceReferenceIDIsNil", "costPriceReferenceIDNotNil", "costPriceReferenceIDEqualFold", "costPriceReferenceIDContainsFold", "hasRequest", "hasRequestWith", "hasProject", "hasProjectWith", "hasChannel", "hasChannelWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasBillingHolds", "hasBillingHoldsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -103354,6 +107599,20 @@ func (ec *executionContext) unmarshalInputUsageLogWhereInput(ctx context.Context
 				return it, err
 			}
 			it.HasUsageBillingRecordsWith = data
+		case "hasBillingHolds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingHolds"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingHolds = data
+		case "hasBillingHoldsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingHoldsWith"))
+			data, err := ec.unmarshalOBillingHoldWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingHoldsWith = data
 		}
 	}
 
@@ -105198,6 +109457,11 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._BillingOutbox(ctx, sel, obj)
+	case *ent.BillingHold:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BillingHold(ctx, sel, obj)
 	case *ent.BillingAccountBinding:
 		if obj == nil {
 			return graphql.Null
@@ -106787,6 +111051,11 @@ func (ec *executionContext) _BillingAccount(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "heldBalanceMicros":
+			out.Values[i] = ec._BillingAccount_heldBalanceMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "creditLimitMicros":
 			out.Values[i] = ec._BillingAccount_creditLimitMicros(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -106843,6 +111112,42 @@ func (ec *executionContext) _BillingAccount(ctx context.Context, sel ast.Selecti
 					}
 				}()
 				res = ec._BillingAccount_ledgerTransactions(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingHolds":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingAccount_billingHolds(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -107279,6 +111584,513 @@ func (ec *executionContext) _BillingAccountEdge(ctx context.Context, sel ast.Sel
 			out.Values[i] = ec._BillingAccountEdge_node(ctx, field, obj)
 		case "cursor":
 			out.Values[i] = ec._BillingAccountEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingHoldImplementors = []string{"BillingHold", "Node"}
+
+func (ec *executionContext) _BillingHold(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingHold) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingHoldImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingHold")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingHold_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._BillingHold_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._BillingHold_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "billingAccountID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingHold_billingAccountID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "requestID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingHold_requestID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usageLogID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingHold_usageLogID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "projectID":
+			out.Values[i] = ec._BillingHold_projectID(ctx, field, obj)
+		case "userID":
+			out.Values[i] = ec._BillingHold_userID(ctx, field, obj)
+		case "apiKeyID":
+			out.Values[i] = ec._BillingHold_apiKeyID(ctx, field, obj)
+		case "modelID":
+			out.Values[i] = ec._BillingHold_modelID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "amountMicros":
+			out.Values[i] = ec._BillingHold_amountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "capturedAmountMicros":
+			out.Values[i] = ec._BillingHold_capturedAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "currency":
+			out.Values[i] = ec._BillingHold_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._BillingHold_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "idempotencyKey":
+			out.Values[i] = ec._BillingHold_idempotencyKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "referenceType":
+			out.Values[i] = ec._BillingHold_referenceType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "referenceID":
+			out.Values[i] = ec._BillingHold_referenceID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "capturedLedgerTransactionID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingHold_capturedLedgerTransactionID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "releaseReason":
+			out.Values[i] = ec._BillingHold_releaseReason(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "releasedByType":
+			out.Values[i] = ec._BillingHold_releasedByType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "releasedByID":
+			out.Values[i] = ec._BillingHold_releasedByID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "expiresAt":
+			out.Values[i] = ec._BillingHold_expiresAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "capturedAt":
+			out.Values[i] = ec._BillingHold_capturedAt(ctx, field, obj)
+		case "releasedAt":
+			out.Values[i] = ec._BillingHold_releasedAt(ctx, field, obj)
+		case "billingAccount":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingHold_billingAccount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "request":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingHold_request(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usageLog":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingHold_usageLog(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "capturedLedgerTransaction":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingHold_capturedLedgerTransaction(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingHoldConnectionImplementors = []string{"BillingHoldConnection"}
+
+func (ec *executionContext) _BillingHoldConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingHoldConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingHoldConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingHoldConnection")
+		case "edges":
+			out.Values[i] = ec._BillingHoldConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._BillingHoldConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._BillingHoldConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingHoldEdgeImplementors = []string{"BillingHoldEdge"}
+
+func (ec *executionContext) _BillingHoldEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingHoldEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingHoldEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingHoldEdge")
+		case "node":
+			out.Values[i] = ec._BillingHoldEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._BillingHoldEdge_cursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -112524,6 +117336,42 @@ func (ec *executionContext) _LedgerTransaction(ctx context.Context, sel ast.Sele
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingHolds":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LedgerTransaction_billingHolds(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "paymentOrders":
 			field := field
 
@@ -114588,6 +119436,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateUserBillingAccount":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateUserBillingAccount(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "releaseBillingHold":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_releaseBillingHold(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -118214,6 +123069,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "billingHolds":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_billingHolds(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "billingOutboxes":
 			field := field
 
@@ -120166,6 +125043,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminBillingHolds":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminBillingHolds(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "adminPaymentOrders":
 			field := field
 
@@ -120920,6 +125819,42 @@ func (ec *executionContext) _Request(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Request_usageLogs(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingHolds":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Request_billingHolds(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -126072,6 +131007,42 @@ func (ec *executionContext) _UsageLog(ctx context.Context, sel ast.SelectionSet,
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingHolds":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UsageLog_billingHolds(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -128713,6 +133684,75 @@ func (ec *executionContext) marshalNBillingAccountStatus2githubᚗcomᚋlooplj�
 
 func (ec *executionContext) unmarshalNBillingAccountWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccountWhereInput(ctx context.Context, v any) (*ent.BillingAccountWhereInput, error) {
 	res, err := ec.unmarshalInputBillingAccountWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingHold2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHold(ctx context.Context, sel ast.SelectionSet, v ent.BillingHold) graphql.Marshaler {
+	return ec._BillingHold(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingHold2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHold(ctx context.Context, sel ast.SelectionSet, v *ent.BillingHold) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingHold(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBillingHoldConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldConnection(ctx context.Context, sel ast.SelectionSet, v ent.BillingHoldConnection) graphql.Marshaler {
+	return ec._BillingHoldConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingHoldConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldConnection(ctx context.Context, sel ast.SelectionSet, v *ent.BillingHoldConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingHoldConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNBillingHoldOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrderField(ctx context.Context, v any) (*ent.BillingHoldOrderField, error) {
+	var res = new(ent.BillingHoldOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingHoldOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.BillingHoldOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNBillingHoldReleasedByType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByType(ctx context.Context, v any) (billinghold.ReleasedByType, error) {
+	var res billinghold.ReleasedByType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingHoldReleasedByType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByType(ctx context.Context, sel ast.SelectionSet, v billinghold.ReleasedByType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNBillingHoldStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus(ctx context.Context, v any) (billinghold.Status, error) {
+	var res billinghold.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingHoldStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus(ctx context.Context, sel ast.SelectionSet, v billinghold.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput(ctx context.Context, v any) (*ent.BillingHoldWhereInput, error) {
+	res, err := ec.unmarshalInputBillingHoldWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -135470,6 +140510,14 @@ func (ec *executionContext) unmarshalOAPIKeyWhereInput2ᚖgithubᚗcomᚋlooplj�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOAdminBillingHoldsFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminBillingHoldsFilter(ctx context.Context, v any) (*AdminBillingHoldsFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAdminBillingHoldsFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOAdminLedgerTransactionsFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminLedgerTransactionsFilter(ctx context.Context, v any) (*AdminLedgerTransactionsFilter, error) {
 	if v == nil {
 		return nil, nil
@@ -135987,6 +141035,257 @@ func (ec *executionContext) unmarshalOBillingAccountWhereInput2ᚖgithubᚗcom�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputBillingAccountWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingHold2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHold(ctx context.Context, sel ast.SelectionSet, v *ent.BillingHold) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BillingHold(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOBillingHoldEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.BillingHoldEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOBillingHoldEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOBillingHoldEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldEdge(ctx context.Context, sel ast.SelectionSet, v *ent.BillingHoldEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BillingHoldEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOBillingHoldOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldOrder(ctx context.Context, v any) (*ent.BillingHoldOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBillingHoldOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOBillingHoldReleasedByType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByTypeᚄ(ctx context.Context, v any) ([]billinghold.ReleasedByType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]billinghold.ReleasedByType, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingHoldReleasedByType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOBillingHoldReleasedByType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []billinghold.ReleasedByType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingHoldReleasedByType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOBillingHoldReleasedByType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByType(ctx context.Context, v any) (*billinghold.ReleasedByType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(billinghold.ReleasedByType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingHoldReleasedByType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐReleasedByType(ctx context.Context, sel ast.SelectionSet, v *billinghold.ReleasedByType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOBillingHoldStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatusᚄ(ctx context.Context, v any) ([]billinghold.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]billinghold.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingHoldStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOBillingHoldStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []billinghold.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingHoldStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOBillingHoldStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus(ctx context.Context, v any) (*billinghold.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(billinghold.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingHoldStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingholdᚐStatus(ctx context.Context, sel ast.SelectionSet, v *billinghold.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOBillingHoldWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInputᚄ(ctx context.Context, v any) ([]*ent.BillingHoldWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.BillingHoldWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput(ctx context.Context, v any) (*ent.BillingHoldWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBillingHoldWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

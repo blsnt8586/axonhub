@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -110,6 +111,7 @@ func checkColumn(t, c string) error {
 			apikeyprofiletemplate.Table:    apikeyprofiletemplate.ValidColumn,
 			billingaccount.Table:           billingaccount.ValidColumn,
 			billingaccountbinding.Table:    billingaccountbinding.ValidColumn,
+			billinghold.Table:              billinghold.ValidColumn,
 			billingoutbox.Table:            billingoutbox.ValidColumn,
 			billingpricerule.Table:         billingpricerule.ValidColumn,
 			channel.Table:                  channel.ValidColumn,

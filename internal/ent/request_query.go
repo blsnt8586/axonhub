@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/apikey"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/predicate"
@@ -27,21 +28,23 @@ import (
 // RequestQuery is the builder for querying Request entities.
 type RequestQuery struct {
 	config
-	ctx                 *QueryContext
-	order               []request.OrderOption
-	inters              []Interceptor
-	predicates          []predicate.Request
-	withAPIKey          *APIKeyQuery
-	withProject         *ProjectQuery
-	withTrace           *TraceQuery
-	withDataStorage     *DataStorageQuery
-	withExecutions      *RequestExecutionQuery
-	withChannel         *ChannelQuery
-	withUsageLogs       *UsageLogQuery
-	loadTotal           []func(context.Context, []*Request) error
-	modifiers           []func(*sql.Selector)
-	withNamedExecutions map[string]*RequestExecutionQuery
-	withNamedUsageLogs  map[string]*UsageLogQuery
+	ctx                   *QueryContext
+	order                 []request.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.Request
+	withAPIKey            *APIKeyQuery
+	withProject           *ProjectQuery
+	withTrace             *TraceQuery
+	withDataStorage       *DataStorageQuery
+	withExecutions        *RequestExecutionQuery
+	withChannel           *ChannelQuery
+	withUsageLogs         *UsageLogQuery
+	withBillingHolds      *BillingHoldQuery
+	loadTotal             []func(context.Context, []*Request) error
+	modifiers             []func(*sql.Selector)
+	withNamedExecutions   map[string]*RequestExecutionQuery
+	withNamedUsageLogs    map[string]*UsageLogQuery
+	withNamedBillingHolds map[string]*BillingHoldQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -225,6 +228,28 @@ func (_q *RequestQuery) QueryUsageLogs() *UsageLogQuery {
 			sqlgraph.From(request.Table, request.FieldID, selector),
 			sqlgraph.To(usagelog.Table, usagelog.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, request.UsageLogsTable, request.UsageLogsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBillingHolds chains the current query on the "billing_holds" edge.
+func (_q *RequestQuery) QueryBillingHolds() *BillingHoldQuery {
+	query := (&BillingHoldClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(request.Table, request.FieldID, selector),
+			sqlgraph.To(billinghold.Table, billinghold.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, request.BillingHoldsTable, request.BillingHoldsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -419,18 +444,19 @@ func (_q *RequestQuery) Clone() *RequestQuery {
 		return nil
 	}
 	return &RequestQuery{
-		config:          _q.config,
-		ctx:             _q.ctx.Clone(),
-		order:           append([]request.OrderOption{}, _q.order...),
-		inters:          append([]Interceptor{}, _q.inters...),
-		predicates:      append([]predicate.Request{}, _q.predicates...),
-		withAPIKey:      _q.withAPIKey.Clone(),
-		withProject:     _q.withProject.Clone(),
-		withTrace:       _q.withTrace.Clone(),
-		withDataStorage: _q.withDataStorage.Clone(),
-		withExecutions:  _q.withExecutions.Clone(),
-		withChannel:     _q.withChannel.Clone(),
-		withUsageLogs:   _q.withUsageLogs.Clone(),
+		config:           _q.config,
+		ctx:              _q.ctx.Clone(),
+		order:            append([]request.OrderOption{}, _q.order...),
+		inters:           append([]Interceptor{}, _q.inters...),
+		predicates:       append([]predicate.Request{}, _q.predicates...),
+		withAPIKey:       _q.withAPIKey.Clone(),
+		withProject:      _q.withProject.Clone(),
+		withTrace:        _q.withTrace.Clone(),
+		withDataStorage:  _q.withDataStorage.Clone(),
+		withExecutions:   _q.withExecutions.Clone(),
+		withChannel:      _q.withChannel.Clone(),
+		withUsageLogs:    _q.withUsageLogs.Clone(),
+		withBillingHolds: _q.withBillingHolds.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -512,6 +538,17 @@ func (_q *RequestQuery) WithUsageLogs(opts ...func(*UsageLogQuery)) *RequestQuer
 		opt(query)
 	}
 	_q.withUsageLogs = query
+	return _q
+}
+
+// WithBillingHolds tells the query-builder to eager-load the nodes that are connected to
+// the "billing_holds" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RequestQuery) WithBillingHolds(opts ...func(*BillingHoldQuery)) *RequestQuery {
+	query := (&BillingHoldClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withBillingHolds = query
 	return _q
 }
 
@@ -599,7 +636,7 @@ func (_q *RequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Requ
 	var (
 		nodes       = []*Request{}
 		_spec       = _q.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [8]bool{
 			_q.withAPIKey != nil,
 			_q.withProject != nil,
 			_q.withTrace != nil,
@@ -607,6 +644,7 @@ func (_q *RequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Requ
 			_q.withExecutions != nil,
 			_q.withChannel != nil,
 			_q.withUsageLogs != nil,
+			_q.withBillingHolds != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -674,6 +712,13 @@ func (_q *RequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Requ
 			return nil, err
 		}
 	}
+	if query := _q.withBillingHolds; query != nil {
+		if err := _q.loadBillingHolds(ctx, query, nodes,
+			func(n *Request) { n.Edges.BillingHolds = []*BillingHold{} },
+			func(n *Request, e *BillingHold) { n.Edges.BillingHolds = append(n.Edges.BillingHolds, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedExecutions {
 		if err := _q.loadExecutions(ctx, query, nodes,
 			func(n *Request) { n.appendNamedExecutions(name) },
@@ -685,6 +730,13 @@ func (_q *RequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Requ
 		if err := _q.loadUsageLogs(ctx, query, nodes,
 			func(n *Request) { n.appendNamedUsageLogs(name) },
 			func(n *Request, e *UsageLog) { n.appendNamedUsageLogs(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedBillingHolds {
+		if err := _q.loadBillingHolds(ctx, query, nodes,
+			func(n *Request) { n.appendNamedBillingHolds(name) },
+			func(n *Request, e *BillingHold) { n.appendNamedBillingHolds(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -901,6 +953,36 @@ func (_q *RequestQuery) loadUsageLogs(ctx context.Context, query *UsageLogQuery,
 	}
 	return nil
 }
+func (_q *RequestQuery) loadBillingHolds(ctx context.Context, query *BillingHoldQuery, nodes []*Request, init func(*Request), assign func(*Request, *BillingHold)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Request)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(billinghold.FieldRequestID)
+	}
+	query.Where(predicate.BillingHold(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(request.BillingHoldsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RequestID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "request_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *RequestQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1035,6 +1117,20 @@ func (_q *RequestQuery) WithNamedUsageLogs(name string, opts ...func(*UsageLogQu
 		_q.withNamedUsageLogs = make(map[string]*UsageLogQuery)
 	}
 	_q.withNamedUsageLogs[name] = query
+	return _q
+}
+
+// WithNamedBillingHolds tells the query-builder to eager-load the nodes that are connected to the "billing_holds"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *RequestQuery) WithNamedBillingHolds(name string, opts ...func(*BillingHoldQuery)) *RequestQuery {
+	query := (&BillingHoldClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedBillingHolds == nil {
+		_q.withNamedBillingHolds = make(map[string]*BillingHoldQuery)
+	}
+	_q.withNamedBillingHolds[name] = query
 	return _q
 }
 

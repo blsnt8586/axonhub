@@ -30,6 +30,8 @@ const (
 	FieldCurrency = "currency"
 	// FieldBalanceMicros holds the string denoting the balance_micros field in the database.
 	FieldBalanceMicros = "balance_micros"
+	// FieldHeldBalanceMicros holds the string denoting the held_balance_micros field in the database.
+	FieldHeldBalanceMicros = "held_balance_micros"
 	// FieldCreditLimitMicros holds the string denoting the credit_limit_micros field in the database.
 	FieldCreditLimitMicros = "credit_limit_micros"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -38,6 +40,8 @@ const (
 	EdgeBindings = "bindings"
 	// EdgeLedgerTransactions holds the string denoting the ledger_transactions edge name in mutations.
 	EdgeLedgerTransactions = "ledger_transactions"
+	// EdgeBillingHolds holds the string denoting the billing_holds edge name in mutations.
+	EdgeBillingHolds = "billing_holds"
 	// EdgeUsageBillingRecords holds the string denoting the usage_billing_records edge name in mutations.
 	EdgeUsageBillingRecords = "usage_billing_records"
 	// EdgePaymentOrders holds the string denoting the payment_orders edge name in mutations.
@@ -58,6 +62,13 @@ const (
 	LedgerTransactionsInverseTable = "ledger_transactions"
 	// LedgerTransactionsColumn is the table column denoting the ledger_transactions relation/edge.
 	LedgerTransactionsColumn = "billing_account_id"
+	// BillingHoldsTable is the table that holds the billing_holds relation/edge.
+	BillingHoldsTable = "billing_holds"
+	// BillingHoldsInverseTable is the table name for the BillingHold entity.
+	// It exists in this package in order to avoid circular dependency with the "billinghold" package.
+	BillingHoldsInverseTable = "billing_holds"
+	// BillingHoldsColumn is the table column denoting the billing_holds relation/edge.
+	BillingHoldsColumn = "billing_account_id"
 	// UsageBillingRecordsTable is the table that holds the usage_billing_records relation/edge.
 	UsageBillingRecordsTable = "usage_billing_records"
 	// UsageBillingRecordsInverseTable is the table name for the UsageBillingRecord entity.
@@ -83,6 +94,7 @@ var Columns = []string{
 	FieldOwnerID,
 	FieldCurrency,
 	FieldBalanceMicros,
+	FieldHeldBalanceMicros,
 	FieldCreditLimitMicros,
 	FieldStatus,
 }
@@ -115,6 +127,8 @@ var (
 	DefaultCurrency string
 	// DefaultBalanceMicros holds the default value on creation for the "balance_micros" field.
 	DefaultBalanceMicros int64
+	// DefaultHeldBalanceMicros holds the default value on creation for the "held_balance_micros" field.
+	DefaultHeldBalanceMicros int64
 	// DefaultCreditLimitMicros holds the default value on creation for the "credit_limit_micros" field.
 	DefaultCreditLimitMicros int64
 )
@@ -210,6 +224,11 @@ func ByBalanceMicros(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBalanceMicros, opts...).ToFunc()
 }
 
+// ByHeldBalanceMicros orders the results by the held_balance_micros field.
+func ByHeldBalanceMicros(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldHeldBalanceMicros, opts...).ToFunc()
+}
+
 // ByCreditLimitMicros orders the results by the credit_limit_micros field.
 func ByCreditLimitMicros(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreditLimitMicros, opts...).ToFunc()
@@ -245,6 +264,20 @@ func ByLedgerTransactionsCount(opts ...sql.OrderTermOption) OrderOption {
 func ByLedgerTransactions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newLedgerTransactionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByBillingHoldsCount orders the results by billing_holds count.
+func ByBillingHoldsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBillingHoldsStep(), opts...)
+	}
+}
+
+// ByBillingHolds orders the results by billing_holds terms.
+func ByBillingHolds(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBillingHoldsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -287,6 +320,13 @@ func newLedgerTransactionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LedgerTransactionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, LedgerTransactionsTable, LedgerTransactionsColumn),
+	)
+}
+func newBillingHoldsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BillingHoldsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BillingHoldsTable, BillingHoldsColumn),
 	)
 }
 func newUsageBillingRecordsStep() *sqlgraph.Step {

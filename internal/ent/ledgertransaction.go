@@ -60,16 +60,19 @@ type LedgerTransactionEdges struct {
 	Entries []*LedgerEntry `json:"entries,omitempty"`
 	// UsageBillingRecords holds the value of the usage_billing_records edge.
 	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
+	// BillingHolds holds the value of the billing_holds edge.
+	BillingHolds []*BillingHold `json:"billing_holds,omitempty"`
 	// PaymentOrders holds the value of the payment_orders edge.
 	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 	// totalCount holds the count of the edges above.
-	totalCount [4]map[string]int
+	totalCount [5]map[string]int
 
 	namedEntries             map[string][]*LedgerEntry
 	namedUsageBillingRecords map[string][]*UsageBillingRecord
+	namedBillingHolds        map[string][]*BillingHold
 	namedPaymentOrders       map[string][]*PaymentOrder
 }
 
@@ -102,10 +105,19 @@ func (e LedgerTransactionEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecor
 	return nil, &NotLoadedError{edge: "usage_billing_records"}
 }
 
+// BillingHoldsOrErr returns the BillingHolds value or an error if the edge
+// was not loaded in eager-loading.
+func (e LedgerTransactionEdges) BillingHoldsOrErr() ([]*BillingHold, error) {
+	if e.loadedTypes[3] {
+		return e.BillingHolds, nil
+	}
+	return nil, &NotLoadedError{edge: "billing_holds"}
+}
+
 // PaymentOrdersOrErr returns the PaymentOrders value or an error if the edge
 // was not loaded in eager-loading.
 func (e LedgerTransactionEdges) PaymentOrdersOrErr() ([]*PaymentOrder, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.PaymentOrders, nil
 	}
 	return nil, &NotLoadedError{edge: "payment_orders"}
@@ -255,6 +267,11 @@ func (_m *LedgerTransaction) QueryUsageBillingRecords() *UsageBillingRecordQuery
 	return NewLedgerTransactionClient(_m.config).QueryUsageBillingRecords(_m)
 }
 
+// QueryBillingHolds queries the "billing_holds" edge of the LedgerTransaction entity.
+func (_m *LedgerTransaction) QueryBillingHolds() *BillingHoldQuery {
+	return NewLedgerTransactionClient(_m.config).QueryBillingHolds(_m)
+}
+
 // QueryPaymentOrders queries the "payment_orders" edge of the LedgerTransaction entity.
 func (_m *LedgerTransaction) QueryPaymentOrders() *PaymentOrderQuery {
 	return NewLedgerTransactionClient(_m.config).QueryPaymentOrders(_m)
@@ -373,6 +390,30 @@ func (_m *LedgerTransaction) appendNamedUsageBillingRecords(name string, edges .
 		_m.Edges.namedUsageBillingRecords[name] = []*UsageBillingRecord{}
 	} else {
 		_m.Edges.namedUsageBillingRecords[name] = append(_m.Edges.namedUsageBillingRecords[name], edges...)
+	}
+}
+
+// NamedBillingHolds returns the BillingHolds named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *LedgerTransaction) NamedBillingHolds(name string) ([]*BillingHold, error) {
+	if _m.Edges.namedBillingHolds == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedBillingHolds[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *LedgerTransaction) appendNamedBillingHolds(name string, edges ...*BillingHold) {
+	if _m.Edges.namedBillingHolds == nil {
+		_m.Edges.namedBillingHolds = make(map[string][]*BillingHold)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedBillingHolds[name] = []*BillingHold{}
+	} else {
+		_m.Edges.namedBillingHolds[name] = append(_m.Edges.namedBillingHolds[name], edges...)
 	}
 }
 

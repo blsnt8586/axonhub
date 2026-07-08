@@ -87,6 +87,31 @@ func (r *billingAccountBindingResolver) BillingAccountID(ctx context.Context, ob
 }
 
 // ID is the resolver for the id field.
+func (r *billingHoldResolver) ID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// BillingAccountID is the resolver for the billingAccountID field.
+func (r *billingHoldResolver) BillingAccountID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+}
+
+// RequestID is the resolver for the requestID field.
+func (r *billingHoldResolver) RequestID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: RequestID - requestID"))
+}
+
+// UsageLogID is the resolver for the usageLogID field.
+func (r *billingHoldResolver) UsageLogID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: UsageLogID - usageLogID"))
+}
+
+// CapturedLedgerTransactionID is the resolver for the capturedLedgerTransactionID field.
+func (r *billingHoldResolver) CapturedLedgerTransactionID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: CapturedLedgerTransactionID - capturedLedgerTransactionID"))
+}
+
+// ID is the resolver for the id field.
 func (r *billingOutboxResolver) ID(ctx context.Context, obj *ent.BillingOutbox) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeBillingOutbox,
@@ -497,6 +522,11 @@ func (r *queryResolver) BillingAccountBindings(ctx context.Context, after *entgq
 		ent.WithBillingAccountBindingOrder(orderBy),
 		ent.WithBillingAccountBindingFilter(where.Filter),
 	)
+}
+
+// BillingHolds is the resolver for the billingHolds field.
+func (r *queryResolver) BillingHolds(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) (*ent.BillingHoldConnection, error) {
+	panic(fmt.Errorf("not implemented: BillingHolds - billingHolds"))
 }
 
 // BillingOutboxes is the resolver for the billingOutboxes field.
@@ -1228,6 +1258,9 @@ func (r *Resolver) BillingAccountBinding() BillingAccountBindingResolver {
 	return &billingAccountBindingResolver{r}
 }
 
+// BillingHold returns BillingHoldResolver implementation.
+func (r *Resolver) BillingHold() BillingHoldResolver { return &billingHoldResolver{r} }
+
 // BillingOutbox returns BillingOutboxResolver implementation.
 func (r *Resolver) BillingOutbox() BillingOutboxResolver { return &billingOutboxResolver{r} }
 
@@ -1341,6 +1374,7 @@ type aPIKeyResolver struct{ *Resolver }
 type aPIKeyProfileTemplateResolver struct{ *Resolver }
 type billingAccountResolver struct{ *Resolver }
 type billingAccountBindingResolver struct{ *Resolver }
+type billingHoldResolver struct{ *Resolver }
 type billingOutboxResolver struct{ *Resolver }
 type billingPriceRuleResolver struct{ *Resolver }
 type channelResolver struct{ *Resolver }

@@ -17,6 +17,7 @@ type PersistenceState struct {
 	RequestService        *biz.RequestService
 	UsageLogService       *biz.UsageLogService
 	UsageBillingProcessor *biz.UsageBillingProcessor
+	BillingHoldService    *biz.BillingHoldService
 	ChannelService        *biz.ChannelService
 	PromptProvider        PromptProvider
 	PromptProtecter       PromptProtecter
@@ -42,6 +43,7 @@ type PersistenceState struct {
 	// Persistence state
 	Request     *ent.Request
 	RequestExec *ent.RequestExecution
+	BillingHold *ent.BillingHold
 
 	// ChannelModelsCandidates is the primary state for channel selection
 	ChannelModelsCandidates []*ChannelModelsCandidate

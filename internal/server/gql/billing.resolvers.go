@@ -8,11 +8,13 @@ package gql
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"entgo.io/contrib/entgql"
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
@@ -144,6 +146,29 @@ func (r *mutationResolver) UpdateUserBillingAccount(ctx context.Context, input b
 
 	return authz.RunWithSystemBypass(ctx, "billing-update-user-account", func(ctx context.Context) (*ent.BillingAccount, error) {
 		return r.paymentService.UpdateUserBillingAccount(ctx, input)
+	})
+}
+
+// ReleaseBillingHold is the resolver for the releaseBillingHold field.
+func (r *mutationResolver) ReleaseBillingHold(ctx context.Context, id objects.GUID, reason string) (*ent.BillingHold, error) {
+	actor, err := requireOwnerUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if id.Type != ent.TypeBillingHold {
+		return nil, fmt.Errorf("id must be a BillingHold ID")
+	}
+	if strings.TrimSpace(reason) == "" {
+		return nil, fmt.Errorf("reason is required")
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-release-hold", func(ctx context.Context) (*ent.BillingHold, error) {
+		return r.billingHoldService.ReleaseHold(ctx, biz.ReleaseBillingHoldInput{
+			HoldID:         id.ID,
+			Reason:         reason,
+			ReleasedByType: billinghold.ReleasedByTypeAdmin,
+			ReleasedByID:   fmt.Sprint(actor.ID),
+		})
 	})
 }
 
@@ -289,6 +314,15 @@ func (r *queryResolver) AdminUsageBillingRecords(ctx context.Context, filter *Ad
 	}
 
 	return r.adminUsageBillingRecords(ctx, filter, after, first, before, last, orderBy)
+}
+
+// AdminBillingHolds is the resolver for the adminBillingHolds field.
+func (r *queryResolver) AdminBillingHolds(ctx context.Context, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) (*ent.BillingHoldConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.adminBillingHolds(ctx, filter, after, first, before, last, orderBy)
 }
 
 // AdminPaymentOrders is the resolver for the adminPaymentOrders field.

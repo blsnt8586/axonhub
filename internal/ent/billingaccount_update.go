@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/predicate"
@@ -71,6 +72,27 @@ func (_u *BillingAccountUpdate) SetNillableBalanceMicros(v *int64) *BillingAccou
 // AddBalanceMicros adds value to the "balance_micros" field.
 func (_u *BillingAccountUpdate) AddBalanceMicros(v int64) *BillingAccountUpdate {
 	_u.mutation.AddBalanceMicros(v)
+	return _u
+}
+
+// SetHeldBalanceMicros sets the "held_balance_micros" field.
+func (_u *BillingAccountUpdate) SetHeldBalanceMicros(v int64) *BillingAccountUpdate {
+	_u.mutation.ResetHeldBalanceMicros()
+	_u.mutation.SetHeldBalanceMicros(v)
+	return _u
+}
+
+// SetNillableHeldBalanceMicros sets the "held_balance_micros" field if the given value is not nil.
+func (_u *BillingAccountUpdate) SetNillableHeldBalanceMicros(v *int64) *BillingAccountUpdate {
+	if v != nil {
+		_u.SetHeldBalanceMicros(*v)
+	}
+	return _u
+}
+
+// AddHeldBalanceMicros adds value to the "held_balance_micros" field.
+func (_u *BillingAccountUpdate) AddHeldBalanceMicros(v int64) *BillingAccountUpdate {
+	_u.mutation.AddHeldBalanceMicros(v)
 	return _u
 }
 
@@ -137,6 +159,21 @@ func (_u *BillingAccountUpdate) AddLedgerTransactions(v ...*LedgerTransaction) *
 		ids[i] = v[i].ID
 	}
 	return _u.AddLedgerTransactionIDs(ids...)
+}
+
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by IDs.
+func (_u *BillingAccountUpdate) AddBillingHoldIDs(ids ...int) *BillingAccountUpdate {
+	_u.mutation.AddBillingHoldIDs(ids...)
+	return _u
+}
+
+// AddBillingHolds adds the "billing_holds" edges to the BillingHold entity.
+func (_u *BillingAccountUpdate) AddBillingHolds(v ...*BillingHold) *BillingAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingHoldIDs(ids...)
 }
 
 // AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
@@ -214,6 +251,27 @@ func (_u *BillingAccountUpdate) RemoveLedgerTransactions(v ...*LedgerTransaction
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveLedgerTransactionIDs(ids...)
+}
+
+// ClearBillingHolds clears all "billing_holds" edges to the BillingHold entity.
+func (_u *BillingAccountUpdate) ClearBillingHolds() *BillingAccountUpdate {
+	_u.mutation.ClearBillingHolds()
+	return _u
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to BillingHold entities by IDs.
+func (_u *BillingAccountUpdate) RemoveBillingHoldIDs(ids ...int) *BillingAccountUpdate {
+	_u.mutation.RemoveBillingHoldIDs(ids...)
+	return _u
+}
+
+// RemoveBillingHolds removes "billing_holds" edges to BillingHold entities.
+func (_u *BillingAccountUpdate) RemoveBillingHolds(v ...*BillingHold) *BillingAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingHoldIDs(ids...)
 }
 
 // ClearUsageBillingRecords clears all "usage_billing_records" edges to the UsageBillingRecord entity.
@@ -340,6 +398,12 @@ func (_u *BillingAccountUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if value, ok := _u.mutation.AddedBalanceMicros(); ok {
 		_spec.AddField(billingaccount.FieldBalanceMicros, field.TypeInt64, value)
 	}
+	if value, ok := _u.mutation.HeldBalanceMicros(); ok {
+		_spec.SetField(billingaccount.FieldHeldBalanceMicros, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedHeldBalanceMicros(); ok {
+		_spec.AddField(billingaccount.FieldHeldBalanceMicros, field.TypeInt64, value)
+	}
 	if value, ok := _u.mutation.CreditLimitMicros(); ok {
 		_spec.SetField(billingaccount.FieldCreditLimitMicros, field.TypeInt64, value)
 	}
@@ -432,6 +496,51 @@ func (_u *BillingAccountUpdate) sqlSave(ctx context.Context) (_node int, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgertransaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingHoldsTable,
+			Columns: []string{billingaccount.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingHoldsIDs(); len(nodes) > 0 && !_u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingHoldsTable,
+			Columns: []string{billingaccount.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingHoldsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingHoldsTable,
+			Columns: []string{billingaccount.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -592,6 +701,27 @@ func (_u *BillingAccountUpdateOne) AddBalanceMicros(v int64) *BillingAccountUpda
 	return _u
 }
 
+// SetHeldBalanceMicros sets the "held_balance_micros" field.
+func (_u *BillingAccountUpdateOne) SetHeldBalanceMicros(v int64) *BillingAccountUpdateOne {
+	_u.mutation.ResetHeldBalanceMicros()
+	_u.mutation.SetHeldBalanceMicros(v)
+	return _u
+}
+
+// SetNillableHeldBalanceMicros sets the "held_balance_micros" field if the given value is not nil.
+func (_u *BillingAccountUpdateOne) SetNillableHeldBalanceMicros(v *int64) *BillingAccountUpdateOne {
+	if v != nil {
+		_u.SetHeldBalanceMicros(*v)
+	}
+	return _u
+}
+
+// AddHeldBalanceMicros adds value to the "held_balance_micros" field.
+func (_u *BillingAccountUpdateOne) AddHeldBalanceMicros(v int64) *BillingAccountUpdateOne {
+	_u.mutation.AddHeldBalanceMicros(v)
+	return _u
+}
+
 // SetCreditLimitMicros sets the "credit_limit_micros" field.
 func (_u *BillingAccountUpdateOne) SetCreditLimitMicros(v int64) *BillingAccountUpdateOne {
 	_u.mutation.ResetCreditLimitMicros()
@@ -655,6 +785,21 @@ func (_u *BillingAccountUpdateOne) AddLedgerTransactions(v ...*LedgerTransaction
 		ids[i] = v[i].ID
 	}
 	return _u.AddLedgerTransactionIDs(ids...)
+}
+
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by IDs.
+func (_u *BillingAccountUpdateOne) AddBillingHoldIDs(ids ...int) *BillingAccountUpdateOne {
+	_u.mutation.AddBillingHoldIDs(ids...)
+	return _u
+}
+
+// AddBillingHolds adds the "billing_holds" edges to the BillingHold entity.
+func (_u *BillingAccountUpdateOne) AddBillingHolds(v ...*BillingHold) *BillingAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingHoldIDs(ids...)
 }
 
 // AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
@@ -732,6 +877,27 @@ func (_u *BillingAccountUpdateOne) RemoveLedgerTransactions(v ...*LedgerTransact
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveLedgerTransactionIDs(ids...)
+}
+
+// ClearBillingHolds clears all "billing_holds" edges to the BillingHold entity.
+func (_u *BillingAccountUpdateOne) ClearBillingHolds() *BillingAccountUpdateOne {
+	_u.mutation.ClearBillingHolds()
+	return _u
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to BillingHold entities by IDs.
+func (_u *BillingAccountUpdateOne) RemoveBillingHoldIDs(ids ...int) *BillingAccountUpdateOne {
+	_u.mutation.RemoveBillingHoldIDs(ids...)
+	return _u
+}
+
+// RemoveBillingHolds removes "billing_holds" edges to BillingHold entities.
+func (_u *BillingAccountUpdateOne) RemoveBillingHolds(v ...*BillingHold) *BillingAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingHoldIDs(ids...)
 }
 
 // ClearUsageBillingRecords clears all "usage_billing_records" edges to the UsageBillingRecord entity.
@@ -888,6 +1054,12 @@ func (_u *BillingAccountUpdateOne) sqlSave(ctx context.Context) (_node *BillingA
 	if value, ok := _u.mutation.AddedBalanceMicros(); ok {
 		_spec.AddField(billingaccount.FieldBalanceMicros, field.TypeInt64, value)
 	}
+	if value, ok := _u.mutation.HeldBalanceMicros(); ok {
+		_spec.SetField(billingaccount.FieldHeldBalanceMicros, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedHeldBalanceMicros(); ok {
+		_spec.AddField(billingaccount.FieldHeldBalanceMicros, field.TypeInt64, value)
+	}
 	if value, ok := _u.mutation.CreditLimitMicros(); ok {
 		_spec.SetField(billingaccount.FieldCreditLimitMicros, field.TypeInt64, value)
 	}
@@ -980,6 +1152,51 @@ func (_u *BillingAccountUpdateOne) sqlSave(ctx context.Context) (_node *BillingA
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgertransaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingHoldsTable,
+			Columns: []string{billingaccount.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingHoldsIDs(); len(nodes) > 0 && !_u.mutation.BillingHoldsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingHoldsTable,
+			Columns: []string{billingaccount.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingHoldsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingHoldsTable,
+			Columns: []string{billingaccount.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

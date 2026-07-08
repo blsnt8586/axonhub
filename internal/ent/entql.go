@@ -7,6 +7,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -47,7 +48,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 34)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 35)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -109,6 +110,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billingaccount.FieldOwnerID:           {Type: field.TypeInt, Column: billingaccount.FieldOwnerID},
 			billingaccount.FieldCurrency:          {Type: field.TypeString, Column: billingaccount.FieldCurrency},
 			billingaccount.FieldBalanceMicros:     {Type: field.TypeInt64, Column: billingaccount.FieldBalanceMicros},
+			billingaccount.FieldHeldBalanceMicros: {Type: field.TypeInt64, Column: billingaccount.FieldHeldBalanceMicros},
 			billingaccount.FieldCreditLimitMicros: {Type: field.TypeInt64, Column: billingaccount.FieldCreditLimitMicros},
 			billingaccount.FieldStatus:            {Type: field.TypeEnum, Column: billingaccount.FieldStatus},
 		},
@@ -134,6 +136,42 @@ var schemaGraph = func() *sqlgraph.Schema {
 	}
 	graph.Nodes[4] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
+			Table:   billinghold.Table,
+			Columns: billinghold.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: billinghold.FieldID,
+			},
+		},
+		Type: "BillingHold",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			billinghold.FieldCreatedAt:                   {Type: field.TypeTime, Column: billinghold.FieldCreatedAt},
+			billinghold.FieldUpdatedAt:                   {Type: field.TypeTime, Column: billinghold.FieldUpdatedAt},
+			billinghold.FieldBillingAccountID:            {Type: field.TypeInt, Column: billinghold.FieldBillingAccountID},
+			billinghold.FieldRequestID:                   {Type: field.TypeInt, Column: billinghold.FieldRequestID},
+			billinghold.FieldUsageLogID:                  {Type: field.TypeInt, Column: billinghold.FieldUsageLogID},
+			billinghold.FieldProjectID:                   {Type: field.TypeInt, Column: billinghold.FieldProjectID},
+			billinghold.FieldUserID:                      {Type: field.TypeInt, Column: billinghold.FieldUserID},
+			billinghold.FieldAPIKeyID:                    {Type: field.TypeInt, Column: billinghold.FieldAPIKeyID},
+			billinghold.FieldModelID:                     {Type: field.TypeString, Column: billinghold.FieldModelID},
+			billinghold.FieldAmountMicros:                {Type: field.TypeInt64, Column: billinghold.FieldAmountMicros},
+			billinghold.FieldCapturedAmountMicros:        {Type: field.TypeInt64, Column: billinghold.FieldCapturedAmountMicros},
+			billinghold.FieldCurrency:                    {Type: field.TypeString, Column: billinghold.FieldCurrency},
+			billinghold.FieldStatus:                      {Type: field.TypeEnum, Column: billinghold.FieldStatus},
+			billinghold.FieldIdempotencyKey:              {Type: field.TypeString, Column: billinghold.FieldIdempotencyKey},
+			billinghold.FieldReferenceType:               {Type: field.TypeString, Column: billinghold.FieldReferenceType},
+			billinghold.FieldReferenceID:                 {Type: field.TypeString, Column: billinghold.FieldReferenceID},
+			billinghold.FieldCapturedLedgerTransactionID: {Type: field.TypeInt, Column: billinghold.FieldCapturedLedgerTransactionID},
+			billinghold.FieldReleaseReason:               {Type: field.TypeString, Column: billinghold.FieldReleaseReason},
+			billinghold.FieldReleasedByType:              {Type: field.TypeEnum, Column: billinghold.FieldReleasedByType},
+			billinghold.FieldReleasedByID:                {Type: field.TypeString, Column: billinghold.FieldReleasedByID},
+			billinghold.FieldExpiresAt:                   {Type: field.TypeTime, Column: billinghold.FieldExpiresAt},
+			billinghold.FieldCapturedAt:                  {Type: field.TypeTime, Column: billinghold.FieldCapturedAt},
+			billinghold.FieldReleasedAt:                  {Type: field.TypeTime, Column: billinghold.FieldReleasedAt},
+		},
+	}
+	graph.Nodes[5] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
 			Table:   billingoutbox.Table,
 			Columns: billingoutbox.Columns,
 			ID: &sqlgraph.FieldSpec{
@@ -154,7 +192,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billingoutbox.FieldLastError:     {Type: field.TypeString, Column: billingoutbox.FieldLastError},
 		},
 	}
-	graph.Nodes[5] = &sqlgraph.Node{
+	graph.Nodes[6] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   billingpricerule.Table,
 			Columns: billingpricerule.Columns,
@@ -177,7 +215,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billingpricerule.FieldReferenceID:  {Type: field.TypeString, Column: billingpricerule.FieldReferenceID},
 		},
 	}
-	graph.Nodes[6] = &sqlgraph.Node{
+	graph.Nodes[7] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channel.Table,
 			Columns: channel.Columns,
@@ -211,7 +249,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channel.FieldEndpoints:               {Type: field.TypeJSON, Column: channel.FieldEndpoints},
 		},
 	}
-	graph.Nodes[7] = &sqlgraph.Node{
+	graph.Nodes[8] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channelmodelprice.Table,
 			Columns: channelmodelprice.Columns,
@@ -231,7 +269,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channelmodelprice.FieldReferenceID: {Type: field.TypeString, Column: channelmodelprice.FieldReferenceID},
 		},
 	}
-	graph.Nodes[8] = &sqlgraph.Node{
+	graph.Nodes[9] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channelmodelpriceversion.Table,
 			Columns: channelmodelpriceversion.Columns,
@@ -254,7 +292,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channelmodelpriceversion.FieldReferenceID:         {Type: field.TypeString, Column: channelmodelpriceversion.FieldReferenceID},
 		},
 	}
-	graph.Nodes[9] = &sqlgraph.Node{
+	graph.Nodes[10] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channeloverridetemplate.Table,
 			Columns: channeloverridetemplate.Columns,
@@ -277,7 +315,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channeloverridetemplate.FieldBodyOverrideOperations:   {Type: field.TypeJSON, Column: channeloverridetemplate.FieldBodyOverrideOperations},
 		},
 	}
-	graph.Nodes[10] = &sqlgraph.Node{
+	graph.Nodes[11] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channelprobe.Table,
 			Columns: channelprobe.Columns,
@@ -296,7 +334,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channelprobe.FieldTimestamp:             {Type: field.TypeInt64, Column: channelprobe.FieldTimestamp},
 		},
 	}
-	graph.Nodes[11] = &sqlgraph.Node{
+	graph.Nodes[12] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   datastorage.Table,
 			Columns: datastorage.Columns,
@@ -318,7 +356,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			datastorage.FieldStatus:      {Type: field.TypeEnum, Column: datastorage.FieldStatus},
 		},
 	}
-	graph.Nodes[12] = &sqlgraph.Node{
+	graph.Nodes[13] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   ledgerentry.Table,
 			Columns: ledgerentry.Columns,
@@ -338,7 +376,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			ledgerentry.FieldCurrency:            {Type: field.TypeString, Column: ledgerentry.FieldCurrency},
 		},
 	}
-	graph.Nodes[13] = &sqlgraph.Node{
+	graph.Nodes[14] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   ledgertransaction.Table,
 			Columns: ledgertransaction.Columns,
@@ -365,7 +403,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			ledgertransaction.FieldCreatedByID:      {Type: field.TypeString, Column: ledgertransaction.FieldCreatedByID},
 		},
 	}
-	graph.Nodes[14] = &sqlgraph.Node{
+	graph.Nodes[15] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   model.Table,
 			Columns: model.Columns,
@@ -391,7 +429,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			model.FieldRemark:    {Type: field.TypeString, Column: model.FieldRemark},
 		},
 	}
-	graph.Nodes[15] = &sqlgraph.Node{
+	graph.Nodes[16] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   oidcidentity.Table,
 			Columns: oidcidentity.Columns,
@@ -413,7 +451,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			oidcidentity.FieldUserID:      {Type: field.TypeInt, Column: oidcidentity.FieldUserID},
 		},
 	}
-	graph.Nodes[16] = &sqlgraph.Node{
+	graph.Nodes[17] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   paymentevent.Table,
 			Columns: paymentevent.Columns,
@@ -436,7 +474,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentevent.FieldError:              {Type: field.TypeString, Column: paymentevent.FieldError},
 		},
 	}
-	graph.Nodes[17] = &sqlgraph.Node{
+	graph.Nodes[18] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   paymentorder.Table,
 			Columns: paymentorder.Columns,
@@ -464,7 +502,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentorder.FieldMetadata:            {Type: field.TypeJSON, Column: paymentorder.FieldMetadata},
 		},
 	}
-	graph.Nodes[18] = &sqlgraph.Node{
+	graph.Nodes[19] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   paymentproviderinstance.Table,
 			Columns: paymentproviderinstance.Columns,
@@ -484,7 +522,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentproviderinstance.FieldConfig:       {Type: field.TypeJSON, Column: paymentproviderinstance.FieldConfig},
 		},
 	}
-	graph.Nodes[19] = &sqlgraph.Node{
+	graph.Nodes[20] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   project.Table,
 			Columns: project.Columns,
@@ -504,7 +542,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			project.FieldProfiles:    {Type: field.TypeJSON, Column: project.FieldProfiles},
 		},
 	}
-	graph.Nodes[20] = &sqlgraph.Node{
+	graph.Nodes[21] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   prompt.Table,
 			Columns: prompt.Columns,
@@ -528,7 +566,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			prompt.FieldSettings:    {Type: field.TypeJSON, Column: prompt.FieldSettings},
 		},
 	}
-	graph.Nodes[21] = &sqlgraph.Node{
+	graph.Nodes[22] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   promptprotectionrule.Table,
 			Columns: promptprotectionrule.Columns,
@@ -549,7 +587,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			promptprotectionrule.FieldSettings:    {Type: field.TypeJSON, Column: promptprotectionrule.FieldSettings},
 		},
 	}
-	graph.Nodes[22] = &sqlgraph.Node{
+	graph.Nodes[23] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   providerquotastatus.Table,
 			Columns: providerquotastatus.Columns,
@@ -572,7 +610,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			providerquotastatus.FieldNextCheckAt:  {Type: field.TypeTime, Column: providerquotastatus.FieldNextCheckAt},
 		},
 	}
-	graph.Nodes[23] = &sqlgraph.Node{
+	graph.Nodes[24] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   request.Table,
 			Columns: request.Columns,
@@ -611,7 +649,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			request.FieldContentSavedAt:             {Type: field.TypeTime, Column: request.FieldContentSavedAt},
 		},
 	}
-	graph.Nodes[24] = &sqlgraph.Node{
+	graph.Nodes[25] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   requestexecution.Table,
 			Columns: requestexecution.Columns,
@@ -646,7 +684,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			requestexecution.FieldPassThroughApplied:         {Type: field.TypeBool, Column: requestexecution.FieldPassThroughApplied},
 		},
 	}
-	graph.Nodes[25] = &sqlgraph.Node{
+	graph.Nodes[26] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   role.Table,
 			Columns: role.Columns,
@@ -666,7 +704,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			role.FieldScopes:    {Type: field.TypeJSON, Column: role.FieldScopes},
 		},
 	}
-	graph.Nodes[26] = &sqlgraph.Node{
+	graph.Nodes[27] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   system.Table,
 			Columns: system.Columns,
@@ -684,7 +722,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			system.FieldValue:     {Type: field.TypeString, Column: system.FieldValue},
 		},
 	}
-	graph.Nodes[27] = &sqlgraph.Node{
+	graph.Nodes[28] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   thread.Table,
 			Columns: thread.Columns,
@@ -701,7 +739,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			thread.FieldThreadID:  {Type: field.TypeString, Column: thread.FieldThreadID},
 		},
 	}
-	graph.Nodes[28] = &sqlgraph.Node{
+	graph.Nodes[29] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   trace.Table,
 			Columns: trace.Columns,
@@ -719,7 +757,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			trace.FieldThreadID:  {Type: field.TypeInt, Column: trace.FieldThreadID},
 		},
 	}
-	graph.Nodes[29] = &sqlgraph.Node{
+	graph.Nodes[30] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagebillingrecord.Table,
 			Columns: usagebillingrecord.Columns,
@@ -752,7 +790,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagebillingrecord.FieldError:               {Type: field.TypeString, Column: usagebillingrecord.FieldError},
 		},
 	}
-	graph.Nodes[30] = &sqlgraph.Node{
+	graph.Nodes[31] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagelog.Table,
 			Columns: usagelog.Columns,
@@ -789,7 +827,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagelog.FieldCostPriceReferenceID:               {Type: field.TypeString, Column: usagelog.FieldCostPriceReferenceID},
 		},
 	}
-	graph.Nodes[31] = &sqlgraph.Node{
+	graph.Nodes[32] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -814,7 +852,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldScopes:         {Type: field.TypeJSON, Column: user.FieldScopes},
 		},
 	}
-	graph.Nodes[32] = &sqlgraph.Node{
+	graph.Nodes[33] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userproject.Table,
 			Columns: userproject.Columns,
@@ -833,7 +871,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userproject.FieldScopes:    {Type: field.TypeJSON, Column: userproject.FieldScopes},
 		},
 	}
-	graph.Nodes[33] = &sqlgraph.Node{
+	graph.Nodes[34] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userrole.Table,
 			Columns: userrole.Columns,
@@ -923,6 +961,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"LedgerTransaction",
 	)
 	graph.MustAddE(
+		"billing_holds",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingHoldsTable,
+			Columns: []string{billingaccount.BillingHoldsColumn},
+			Bidi:    false,
+		},
+		"BillingAccount",
+		"BillingHold",
+	)
+	graph.MustAddE(
 		"usage_billing_records",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -957,6 +1007,54 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"BillingAccountBinding",
 		"BillingAccount",
+	)
+	graph.MustAddE(
+		"billing_account",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billinghold.BillingAccountTable,
+			Columns: []string{billinghold.BillingAccountColumn},
+			Bidi:    false,
+		},
+		"BillingHold",
+		"BillingAccount",
+	)
+	graph.MustAddE(
+		"request",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billinghold.RequestTable,
+			Columns: []string{billinghold.RequestColumn},
+			Bidi:    false,
+		},
+		"BillingHold",
+		"Request",
+	)
+	graph.MustAddE(
+		"usage_log",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billinghold.UsageLogTable,
+			Columns: []string{billinghold.UsageLogColumn},
+			Bidi:    false,
+		},
+		"BillingHold",
+		"UsageLog",
+	)
+	graph.MustAddE(
+		"captured_ledger_transaction",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billinghold.CapturedLedgerTransactionTable,
+			Columns: []string{billinghold.CapturedLedgerTransactionColumn},
+			Bidi:    false,
+		},
+		"BillingHold",
+		"LedgerTransaction",
 	)
 	graph.MustAddE(
 		"requests",
@@ -1161,6 +1259,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"LedgerTransaction",
 		"UsageBillingRecord",
+	)
+	graph.MustAddE(
+		"billing_holds",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.BillingHoldsTable,
+			Columns: []string{ledgertransaction.BillingHoldsColumn},
+			Bidi:    false,
+		},
+		"LedgerTransaction",
+		"BillingHold",
 	)
 	graph.MustAddE(
 		"payment_orders",
@@ -1511,6 +1621,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"UsageLog",
 	)
 	graph.MustAddE(
+		"billing_holds",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   request.BillingHoldsTable,
+			Columns: []string{request.BillingHoldsColumn},
+			Bidi:    false,
+		},
+		"Request",
+		"BillingHold",
+	)
+	graph.MustAddE(
 		"request",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -1725,6 +1847,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"UsageLog",
 		"UsageBillingRecord",
+	)
+	graph.MustAddE(
+		"billing_holds",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.BillingHoldsTable,
+			Columns: []string{usagelog.BillingHoldsColumn},
+			Bidi:    false,
+		},
+		"UsageLog",
+		"BillingHold",
 	)
 	graph.MustAddE(
 		"projects",
@@ -2163,6 +2297,11 @@ func (f *BillingAccountFilter) WhereBalanceMicros(p entql.Int64P) {
 	f.Where(p.Field(billingaccount.FieldBalanceMicros))
 }
 
+// WhereHeldBalanceMicros applies the entql int64 predicate on the held_balance_micros field.
+func (f *BillingAccountFilter) WhereHeldBalanceMicros(p entql.Int64P) {
+	f.Where(p.Field(billingaccount.FieldHeldBalanceMicros))
+}
+
 // WhereCreditLimitMicros applies the entql int64 predicate on the credit_limit_micros field.
 func (f *BillingAccountFilter) WhereCreditLimitMicros(p entql.Int64P) {
 	f.Where(p.Field(billingaccount.FieldCreditLimitMicros))
@@ -2195,6 +2334,20 @@ func (f *BillingAccountFilter) WhereHasLedgerTransactions() {
 // WhereHasLedgerTransactionsWith applies a predicate to check if query has an edge ledger_transactions with a given conditions (other predicates).
 func (f *BillingAccountFilter) WhereHasLedgerTransactionsWith(preds ...predicate.LedgerTransaction) {
 	f.Where(entql.HasEdgeWith("ledger_transactions", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasBillingHolds applies a predicate to check if query has an edge billing_holds.
+func (f *BillingAccountFilter) WhereHasBillingHolds() {
+	f.Where(entql.HasEdge("billing_holds"))
+}
+
+// WhereHasBillingHoldsWith applies a predicate to check if query has an edge billing_holds with a given conditions (other predicates).
+func (f *BillingAccountFilter) WhereHasBillingHoldsWith(preds ...predicate.BillingHold) {
+	f.Where(entql.HasEdgeWith("billing_holds", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -2314,6 +2467,217 @@ func (f *BillingAccountBindingFilter) WhereHasBillingAccountWith(preds ...predic
 }
 
 // addPredicate implements the predicateAdder interface.
+func (_q *BillingHoldQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the BillingHoldQuery builder.
+func (_q *BillingHoldQuery) Filter() *BillingHoldFilter {
+	return &BillingHoldFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *BillingHoldMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the BillingHoldMutation builder.
+func (m *BillingHoldMutation) Filter() *BillingHoldFilter {
+	return &BillingHoldFilter{config: m.config, predicateAdder: m}
+}
+
+// BillingHoldFilter provides a generic filtering capability at runtime for BillingHoldQuery.
+type BillingHoldFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *BillingHoldFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[4].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *BillingHoldFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(billinghold.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *BillingHoldFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(billinghold.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *BillingHoldFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(billinghold.FieldUpdatedAt))
+}
+
+// WhereBillingAccountID applies the entql int predicate on the billing_account_id field.
+func (f *BillingHoldFilter) WhereBillingAccountID(p entql.IntP) {
+	f.Where(p.Field(billinghold.FieldBillingAccountID))
+}
+
+// WhereRequestID applies the entql int predicate on the request_id field.
+func (f *BillingHoldFilter) WhereRequestID(p entql.IntP) {
+	f.Where(p.Field(billinghold.FieldRequestID))
+}
+
+// WhereUsageLogID applies the entql int predicate on the usage_log_id field.
+func (f *BillingHoldFilter) WhereUsageLogID(p entql.IntP) {
+	f.Where(p.Field(billinghold.FieldUsageLogID))
+}
+
+// WhereProjectID applies the entql int predicate on the project_id field.
+func (f *BillingHoldFilter) WhereProjectID(p entql.IntP) {
+	f.Where(p.Field(billinghold.FieldProjectID))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *BillingHoldFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(billinghold.FieldUserID))
+}
+
+// WhereAPIKeyID applies the entql int predicate on the api_key_id field.
+func (f *BillingHoldFilter) WhereAPIKeyID(p entql.IntP) {
+	f.Where(p.Field(billinghold.FieldAPIKeyID))
+}
+
+// WhereModelID applies the entql string predicate on the model_id field.
+func (f *BillingHoldFilter) WhereModelID(p entql.StringP) {
+	f.Where(p.Field(billinghold.FieldModelID))
+}
+
+// WhereAmountMicros applies the entql int64 predicate on the amount_micros field.
+func (f *BillingHoldFilter) WhereAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(billinghold.FieldAmountMicros))
+}
+
+// WhereCapturedAmountMicros applies the entql int64 predicate on the captured_amount_micros field.
+func (f *BillingHoldFilter) WhereCapturedAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(billinghold.FieldCapturedAmountMicros))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *BillingHoldFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(billinghold.FieldCurrency))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *BillingHoldFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(billinghold.FieldStatus))
+}
+
+// WhereIdempotencyKey applies the entql string predicate on the idempotency_key field.
+func (f *BillingHoldFilter) WhereIdempotencyKey(p entql.StringP) {
+	f.Where(p.Field(billinghold.FieldIdempotencyKey))
+}
+
+// WhereReferenceType applies the entql string predicate on the reference_type field.
+func (f *BillingHoldFilter) WhereReferenceType(p entql.StringP) {
+	f.Where(p.Field(billinghold.FieldReferenceType))
+}
+
+// WhereReferenceID applies the entql string predicate on the reference_id field.
+func (f *BillingHoldFilter) WhereReferenceID(p entql.StringP) {
+	f.Where(p.Field(billinghold.FieldReferenceID))
+}
+
+// WhereCapturedLedgerTransactionID applies the entql int predicate on the captured_ledger_transaction_id field.
+func (f *BillingHoldFilter) WhereCapturedLedgerTransactionID(p entql.IntP) {
+	f.Where(p.Field(billinghold.FieldCapturedLedgerTransactionID))
+}
+
+// WhereReleaseReason applies the entql string predicate on the release_reason field.
+func (f *BillingHoldFilter) WhereReleaseReason(p entql.StringP) {
+	f.Where(p.Field(billinghold.FieldReleaseReason))
+}
+
+// WhereReleasedByType applies the entql string predicate on the released_by_type field.
+func (f *BillingHoldFilter) WhereReleasedByType(p entql.StringP) {
+	f.Where(p.Field(billinghold.FieldReleasedByType))
+}
+
+// WhereReleasedByID applies the entql string predicate on the released_by_id field.
+func (f *BillingHoldFilter) WhereReleasedByID(p entql.StringP) {
+	f.Where(p.Field(billinghold.FieldReleasedByID))
+}
+
+// WhereExpiresAt applies the entql time.Time predicate on the expires_at field.
+func (f *BillingHoldFilter) WhereExpiresAt(p entql.TimeP) {
+	f.Where(p.Field(billinghold.FieldExpiresAt))
+}
+
+// WhereCapturedAt applies the entql time.Time predicate on the captured_at field.
+func (f *BillingHoldFilter) WhereCapturedAt(p entql.TimeP) {
+	f.Where(p.Field(billinghold.FieldCapturedAt))
+}
+
+// WhereReleasedAt applies the entql time.Time predicate on the released_at field.
+func (f *BillingHoldFilter) WhereReleasedAt(p entql.TimeP) {
+	f.Where(p.Field(billinghold.FieldReleasedAt))
+}
+
+// WhereHasBillingAccount applies a predicate to check if query has an edge billing_account.
+func (f *BillingHoldFilter) WhereHasBillingAccount() {
+	f.Where(entql.HasEdge("billing_account"))
+}
+
+// WhereHasBillingAccountWith applies a predicate to check if query has an edge billing_account with a given conditions (other predicates).
+func (f *BillingHoldFilter) WhereHasBillingAccountWith(preds ...predicate.BillingAccount) {
+	f.Where(entql.HasEdgeWith("billing_account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasRequest applies a predicate to check if query has an edge request.
+func (f *BillingHoldFilter) WhereHasRequest() {
+	f.Where(entql.HasEdge("request"))
+}
+
+// WhereHasRequestWith applies a predicate to check if query has an edge request with a given conditions (other predicates).
+func (f *BillingHoldFilter) WhereHasRequestWith(preds ...predicate.Request) {
+	f.Where(entql.HasEdgeWith("request", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUsageLog applies a predicate to check if query has an edge usage_log.
+func (f *BillingHoldFilter) WhereHasUsageLog() {
+	f.Where(entql.HasEdge("usage_log"))
+}
+
+// WhereHasUsageLogWith applies a predicate to check if query has an edge usage_log with a given conditions (other predicates).
+func (f *BillingHoldFilter) WhereHasUsageLogWith(preds ...predicate.UsageLog) {
+	f.Where(entql.HasEdgeWith("usage_log", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasCapturedLedgerTransaction applies a predicate to check if query has an edge captured_ledger_transaction.
+func (f *BillingHoldFilter) WhereHasCapturedLedgerTransaction() {
+	f.Where(entql.HasEdge("captured_ledger_transaction"))
+}
+
+// WhereHasCapturedLedgerTransactionWith applies a predicate to check if query has an edge captured_ledger_transaction with a given conditions (other predicates).
+func (f *BillingHoldFilter) WhereHasCapturedLedgerTransactionWith(preds ...predicate.LedgerTransaction) {
+	f.Where(entql.HasEdgeWith("captured_ledger_transaction", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (_q *BillingOutboxQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
 }
@@ -2342,7 +2706,7 @@ type BillingOutboxFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *BillingOutboxFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[4].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[5].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -2427,7 +2791,7 @@ type BillingPriceRuleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *BillingPriceRuleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[5].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[6].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -2517,7 +2881,7 @@ type ChannelFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[6].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[7].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -2746,7 +3110,7 @@ type ChannelModelPriceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelModelPriceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[7].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[8].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -2849,7 +3213,7 @@ type ChannelModelPriceVersionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelModelPriceVersionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[8].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[9].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -2953,7 +3317,7 @@ type ChannelOverrideTemplateFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelOverrideTemplateFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[9].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[10].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3057,7 +3421,7 @@ type ChannelProbeFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelProbeFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[10].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[11].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3141,7 +3505,7 @@ type DataStorageFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *DataStorageFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[11].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[12].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3254,7 +3618,7 @@ type LedgerEntryFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *LedgerEntryFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[12].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[13].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3343,7 +3707,7 @@ type LedgerTransactionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *LedgerTransactionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[13].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[14].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3466,6 +3830,20 @@ func (f *LedgerTransactionFilter) WhereHasUsageBillingRecordsWith(preds ...predi
 	})))
 }
 
+// WhereHasBillingHolds applies a predicate to check if query has an edge billing_holds.
+func (f *LedgerTransactionFilter) WhereHasBillingHolds() {
+	f.Where(entql.HasEdge("billing_holds"))
+}
+
+// WhereHasBillingHoldsWith applies a predicate to check if query has an edge billing_holds with a given conditions (other predicates).
+func (f *LedgerTransactionFilter) WhereHasBillingHoldsWith(preds ...predicate.BillingHold) {
+	f.Where(entql.HasEdgeWith("billing_holds", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasPaymentOrders applies a predicate to check if query has an edge payment_orders.
 func (f *LedgerTransactionFilter) WhereHasPaymentOrders() {
 	f.Where(entql.HasEdge("payment_orders"))
@@ -3509,7 +3887,7 @@ type ModelFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ModelFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[14].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[15].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3614,7 +3992,7 @@ type OIDCIdentityFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *OIDCIdentityFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[15].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[16].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3713,7 +4091,7 @@ type PaymentEventFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PaymentEventFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[16].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[17].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3831,7 +4209,7 @@ type PaymentOrderFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PaymentOrderFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[17].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[18].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4002,7 +4380,7 @@ type PaymentProviderInstanceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PaymentProviderInstanceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[18].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[19].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4105,7 +4483,7 @@ type ProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[19].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[20].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4320,7 +4698,7 @@ type PromptFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromptFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[20].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[21].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4429,7 +4807,7 @@ type PromptProtectionRuleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromptProtectionRuleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[21].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[22].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4509,7 +4887,7 @@ type ProviderQuotaStatusFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ProviderQuotaStatusFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[22].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4613,7 +4991,7 @@ type RequestFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4852,6 +5230,20 @@ func (f *RequestFilter) WhereHasUsageLogsWith(preds ...predicate.UsageLog) {
 	})))
 }
 
+// WhereHasBillingHolds applies a predicate to check if query has an edge billing_holds.
+func (f *RequestFilter) WhereHasBillingHolds() {
+	f.Where(entql.HasEdge("billing_holds"))
+}
+
+// WhereHasBillingHoldsWith applies a predicate to check if query has an edge billing_holds with a given conditions (other predicates).
+func (f *RequestFilter) WhereHasBillingHoldsWith(preds ...predicate.BillingHold) {
+	f.Where(entql.HasEdgeWith("billing_holds", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *RequestExecutionQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -4881,7 +5273,7 @@ type RequestExecutionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestExecutionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5073,7 +5465,7 @@ type RoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5190,7 +5582,7 @@ type SystemFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SystemFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5255,7 +5647,7 @@ type ThreadFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ThreadFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5343,7 +5735,7 @@ type TraceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *TraceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5450,7 +5842,7 @@ type UsageBillingRecordFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageBillingRecordFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5632,7 +6024,7 @@ type UsageLogFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageLogFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5819,6 +6211,20 @@ func (f *UsageLogFilter) WhereHasUsageBillingRecordsWith(preds ...predicate.Usag
 	})))
 }
 
+// WhereHasBillingHolds applies a predicate to check if query has an edge billing_holds.
+func (f *UsageLogFilter) WhereHasBillingHolds() {
+	f.Where(entql.HasEdge("billing_holds"))
+}
+
+// WhereHasBillingHoldsWith applies a predicate to check if query has an edge billing_holds with a given conditions (other predicates).
+func (f *UsageLogFilter) WhereHasBillingHoldsWith(preds ...predicate.BillingHold) {
+	f.Where(entql.HasEdgeWith("billing_holds", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *UserQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -5848,7 +6254,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6046,7 +6452,7 @@ type UserProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6144,7 +6550,7 @@ type UserRoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserRoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[34].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})

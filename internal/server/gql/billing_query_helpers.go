@@ -11,6 +11,7 @@ import (
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
@@ -172,6 +173,47 @@ func (r *queryResolver) adminUsageBillingRecords(ctx context.Context, filter *Ad
 		}
 
 		return query.Paginate(ctx, after, first, before, last, ent.WithUsageBillingRecordOrder(orderBy))
+	})
+}
+
+func (r *queryResolver) adminBillingHolds(ctx context.Context, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) (*ent.BillingHoldConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-holds", func(ctx context.Context) (*ent.BillingHoldConnection, error) {
+		query := r.client.BillingHold.Query()
+		if filter != nil {
+			if filter.UserID != nil {
+				query.Where(billinghold.UserIDEQ(*filter.UserID))
+			}
+			if filter.ProjectID != nil {
+				query.Where(billinghold.ProjectIDEQ(*filter.ProjectID))
+			}
+			if filter.APIKeyID != nil {
+				query.Where(billinghold.APIKeyIDEQ(*filter.APIKeyID))
+			}
+			if filter.BillingAccountID != nil {
+				query.Where(billinghold.BillingAccountIDEQ(*filter.BillingAccountID))
+			}
+			if value := strings.TrimSpace(stringValue(filter.ModelID)); value != "" {
+				query.Where(billinghold.ModelIDContainsFold(value))
+			}
+			if filter.Status != nil {
+				query.Where(billinghold.StatusEQ(*filter.Status))
+			}
+			if filter.From != nil {
+				query.Where(billinghold.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(billinghold.CreatedAtLTE(*filter.To))
+			}
+			if filter.ExpiresBefore != nil {
+				query.Where(billinghold.ExpiresAtLTE(*filter.ExpiresBefore))
+			}
+		}
+
+		return query.Paginate(ctx, after, first, before, last, ent.WithBillingHoldOrder(orderBy))
 	})
 }
 

@@ -19,6 +19,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -64,6 +65,8 @@ type Client struct {
 	BillingAccount *BillingAccountClient
 	// BillingAccountBinding is the client for interacting with the BillingAccountBinding builders.
 	BillingAccountBinding *BillingAccountBindingClient
+	// BillingHold is the client for interacting with the BillingHold builders.
+	BillingHold *BillingHoldClient
 	// BillingOutbox is the client for interacting with the BillingOutbox builders.
 	BillingOutbox *BillingOutboxClient
 	// BillingPriceRule is the client for interacting with the BillingPriceRule builders.
@@ -141,6 +144,7 @@ func (c *Client) init() {
 	c.APIKeyProfileTemplate = NewAPIKeyProfileTemplateClient(c.config)
 	c.BillingAccount = NewBillingAccountClient(c.config)
 	c.BillingAccountBinding = NewBillingAccountBindingClient(c.config)
+	c.BillingHold = NewBillingHoldClient(c.config)
 	c.BillingOutbox = NewBillingOutboxClient(c.config)
 	c.BillingPriceRule = NewBillingPriceRuleClient(c.config)
 	c.Channel = NewChannelClient(c.config)
@@ -267,6 +271,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
 		BillingAccount:           NewBillingAccountClient(cfg),
 		BillingAccountBinding:    NewBillingAccountBindingClient(cfg),
+		BillingHold:              NewBillingHoldClient(cfg),
 		BillingOutbox:            NewBillingOutboxClient(cfg),
 		BillingPriceRule:         NewBillingPriceRuleClient(cfg),
 		Channel:                  NewChannelClient(cfg),
@@ -320,6 +325,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
 		BillingAccount:           NewBillingAccountClient(cfg),
 		BillingAccountBinding:    NewBillingAccountBindingClient(cfg),
+		BillingHold:              NewBillingHoldClient(cfg),
 		BillingOutbox:            NewBillingOutboxClient(cfg),
 		BillingPriceRule:         NewBillingPriceRuleClient(cfg),
 		Channel:                  NewChannelClient(cfg),
@@ -380,13 +386,13 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.BillingAccount, c.BillingAccountBinding,
-		c.BillingOutbox, c.BillingPriceRule, c.Channel, c.ChannelModelPrice,
-		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model, c.OIDCIdentity,
-		c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance, c.Project, c.Prompt,
-		c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request, c.RequestExecution,
-		c.Role, c.System, c.Thread, c.Trace, c.UsageBillingRecord, c.UsageLog, c.User,
-		c.UserProject, c.UserRole,
+		c.BillingHold, c.BillingOutbox, c.BillingPriceRule, c.Channel,
+		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
+		c.ChannelProbe, c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model,
+		c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance,
+		c.Project, c.Prompt, c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request,
+		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageBillingRecord,
+		c.UsageLog, c.User, c.UserProject, c.UserRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -397,13 +403,13 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.BillingAccount, c.BillingAccountBinding,
-		c.BillingOutbox, c.BillingPriceRule, c.Channel, c.ChannelModelPrice,
-		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model, c.OIDCIdentity,
-		c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance, c.Project, c.Prompt,
-		c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request, c.RequestExecution,
-		c.Role, c.System, c.Thread, c.Trace, c.UsageBillingRecord, c.UsageLog, c.User,
-		c.UserProject, c.UserRole,
+		c.BillingHold, c.BillingOutbox, c.BillingPriceRule, c.Channel,
+		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
+		c.ChannelProbe, c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model,
+		c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance,
+		c.Project, c.Prompt, c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request,
+		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageBillingRecord,
+		c.UsageLog, c.User, c.UserProject, c.UserRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -420,6 +426,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.BillingAccount.mutate(ctx, m)
 	case *BillingAccountBindingMutation:
 		return c.BillingAccountBinding.mutate(ctx, m)
+	case *BillingHoldMutation:
+		return c.BillingHold.mutate(ctx, m)
 	case *BillingOutboxMutation:
 		return c.BillingOutbox.mutate(ctx, m)
 	case *BillingPriceRuleMutation:
@@ -959,6 +967,22 @@ func (c *BillingAccountClient) QueryLedgerTransactions(_m *BillingAccount) *Ledg
 	return query
 }
 
+// QueryBillingHolds queries the billing_holds edge of a BillingAccount.
+func (c *BillingAccountClient) QueryBillingHolds(_m *BillingAccount) *BillingHoldQuery {
+	query := (&BillingHoldClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, id),
+			sqlgraph.To(billinghold.Table, billinghold.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.BillingHoldsTable, billingaccount.BillingHoldsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUsageBillingRecords queries the usage_billing_records edge of a BillingAccount.
 func (c *BillingAccountClient) QueryUsageBillingRecords(_m *BillingAccount) *UsageBillingRecordQuery {
 	query := (&UsageBillingRecordClient{config: c.config}).Query()
@@ -1164,6 +1188,204 @@ func (c *BillingAccountBindingClient) mutate(ctx context.Context, m *BillingAcco
 		return (&BillingAccountBindingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown BillingAccountBinding mutation op: %q", m.Op())
+	}
+}
+
+// BillingHoldClient is a client for the BillingHold schema.
+type BillingHoldClient struct {
+	config
+}
+
+// NewBillingHoldClient returns a client for the BillingHold from the given config.
+func NewBillingHoldClient(c config) *BillingHoldClient {
+	return &BillingHoldClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `billinghold.Hooks(f(g(h())))`.
+func (c *BillingHoldClient) Use(hooks ...Hook) {
+	c.hooks.BillingHold = append(c.hooks.BillingHold, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `billinghold.Intercept(f(g(h())))`.
+func (c *BillingHoldClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BillingHold = append(c.inters.BillingHold, interceptors...)
+}
+
+// Create returns a builder for creating a BillingHold entity.
+func (c *BillingHoldClient) Create() *BillingHoldCreate {
+	mutation := newBillingHoldMutation(c.config, OpCreate)
+	return &BillingHoldCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BillingHold entities.
+func (c *BillingHoldClient) CreateBulk(builders ...*BillingHoldCreate) *BillingHoldCreateBulk {
+	return &BillingHoldCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BillingHoldClient) MapCreateBulk(slice any, setFunc func(*BillingHoldCreate, int)) *BillingHoldCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BillingHoldCreateBulk{err: fmt.Errorf("calling to BillingHoldClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BillingHoldCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BillingHoldCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BillingHold.
+func (c *BillingHoldClient) Update() *BillingHoldUpdate {
+	mutation := newBillingHoldMutation(c.config, OpUpdate)
+	return &BillingHoldUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BillingHoldClient) UpdateOne(_m *BillingHold) *BillingHoldUpdateOne {
+	mutation := newBillingHoldMutation(c.config, OpUpdateOne, withBillingHold(_m))
+	return &BillingHoldUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BillingHoldClient) UpdateOneID(id int) *BillingHoldUpdateOne {
+	mutation := newBillingHoldMutation(c.config, OpUpdateOne, withBillingHoldID(id))
+	return &BillingHoldUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BillingHold.
+func (c *BillingHoldClient) Delete() *BillingHoldDelete {
+	mutation := newBillingHoldMutation(c.config, OpDelete)
+	return &BillingHoldDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BillingHoldClient) DeleteOne(_m *BillingHold) *BillingHoldDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BillingHoldClient) DeleteOneID(id int) *BillingHoldDeleteOne {
+	builder := c.Delete().Where(billinghold.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BillingHoldDeleteOne{builder}
+}
+
+// Query returns a query builder for BillingHold.
+func (c *BillingHoldClient) Query() *BillingHoldQuery {
+	return &BillingHoldQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBillingHold},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BillingHold entity by its id.
+func (c *BillingHoldClient) Get(ctx context.Context, id int) (*BillingHold, error) {
+	return c.Query().Where(billinghold.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BillingHoldClient) GetX(ctx context.Context, id int) *BillingHold {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryBillingAccount queries the billing_account edge of a BillingHold.
+func (c *BillingHoldClient) QueryBillingAccount(_m *BillingHold) *BillingAccountQuery {
+	query := (&BillingAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billinghold.Table, billinghold.FieldID, id),
+			sqlgraph.To(billingaccount.Table, billingaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billinghold.BillingAccountTable, billinghold.BillingAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRequest queries the request edge of a BillingHold.
+func (c *BillingHoldClient) QueryRequest(_m *BillingHold) *RequestQuery {
+	query := (&RequestClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billinghold.Table, billinghold.FieldID, id),
+			sqlgraph.To(request.Table, request.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billinghold.RequestTable, billinghold.RequestColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsageLog queries the usage_log edge of a BillingHold.
+func (c *BillingHoldClient) QueryUsageLog(_m *BillingHold) *UsageLogQuery {
+	query := (&UsageLogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billinghold.Table, billinghold.FieldID, id),
+			sqlgraph.To(usagelog.Table, usagelog.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billinghold.UsageLogTable, billinghold.UsageLogColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCapturedLedgerTransaction queries the captured_ledger_transaction edge of a BillingHold.
+func (c *BillingHoldClient) QueryCapturedLedgerTransaction(_m *BillingHold) *LedgerTransactionQuery {
+	query := (&LedgerTransactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billinghold.Table, billinghold.FieldID, id),
+			sqlgraph.To(ledgertransaction.Table, ledgertransaction.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billinghold.CapturedLedgerTransactionTable, billinghold.CapturedLedgerTransactionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *BillingHoldClient) Hooks() []Hook {
+	hooks := c.hooks.BillingHold
+	return append(hooks[:len(hooks):len(hooks)], billinghold.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BillingHoldClient) Interceptors() []Interceptor {
+	return c.inters.BillingHold
+}
+
+func (c *BillingHoldClient) mutate(ctx context.Context, m *BillingHoldMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BillingHoldCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BillingHoldUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BillingHoldUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BillingHoldDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BillingHold mutation op: %q", m.Op())
 	}
 }
 
@@ -2749,6 +2971,22 @@ func (c *LedgerTransactionClient) QueryUsageBillingRecords(_m *LedgerTransaction
 			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, id),
 			sqlgraph.To(usagebillingrecord.Table, usagebillingrecord.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.UsageBillingRecordsTable, ledgertransaction.UsageBillingRecordsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBillingHolds queries the billing_holds edge of a LedgerTransaction.
+func (c *LedgerTransactionClient) QueryBillingHolds(_m *LedgerTransaction) *BillingHoldQuery {
+	query := (&BillingHoldClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, id),
+			sqlgraph.To(billinghold.Table, billinghold.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.BillingHoldsTable, ledgertransaction.BillingHoldsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -4566,6 +4804,22 @@ func (c *RequestClient) QueryUsageLogs(_m *Request) *UsageLogQuery {
 	return query
 }
 
+// QueryBillingHolds queries the billing_holds edge of a Request.
+func (c *RequestClient) QueryBillingHolds(_m *Request) *BillingHoldQuery {
+	query := (&BillingHoldClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(request.Table, request.FieldID, id),
+			sqlgraph.To(billinghold.Table, billinghold.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, request.BillingHoldsTable, request.BillingHoldsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *RequestClient) Hooks() []Hook {
 	hooks := c.hooks.Request
@@ -5793,6 +6047,22 @@ func (c *UsageLogClient) QueryUsageBillingRecords(_m *UsageLog) *UsageBillingRec
 	return query
 }
 
+// QueryBillingHolds queries the billing_holds edge of a UsageLog.
+func (c *UsageLogClient) QueryBillingHolds(_m *UsageLog) *BillingHoldQuery {
+	query := (&BillingHoldClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagelog.Table, usagelog.FieldID, id),
+			sqlgraph.To(billinghold.Table, billinghold.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usagelog.BillingHoldsTable, usagelog.BillingHoldsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UsageLogClient) Hooks() []Hook {
 	hooks := c.hooks.UsageLog
@@ -6401,7 +6671,7 @@ func (c *UserRoleClient) mutate(ctx context.Context, m *UserRoleMutation) (Value
 type (
 	hooks struct {
 		APIKey, APIKeyProfileTemplate, BillingAccount, BillingAccountBinding,
-		BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
+		BillingHold, BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
 		PaymentOrder, PaymentProviderInstance, Project, Prompt, PromptProtectionRule,
@@ -6410,7 +6680,7 @@ type (
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, BillingAccount, BillingAccountBinding,
-		BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
+		BillingHold, BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
 		PaymentOrder, PaymentProviderInstance, Project, Prompt, PromptProtectionRule,

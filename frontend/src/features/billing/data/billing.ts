@@ -12,6 +12,7 @@ export interface BillingAccount {
   ownerID: number;
   currency: string;
   balanceMicros: number;
+  heldBalanceMicros: number;
   creditLimitMicros: number;
   status: BillingAccountStatus;
 }
@@ -75,6 +76,7 @@ const BILLING_OVERVIEW_QUERY = `
       ownerID
       currency
       balanceMicros
+      heldBalanceMicros
       creditLimitMicros
       status
     }

@@ -74,7 +74,11 @@ func (m *persistRequestMiddleware) OnOutboundLlmResponse(ctx context.Context, ll
 		log.Warn(persistCtx, "Failed to create usage log from request", log.Cause(err))
 	}
 	if err == nil && usageLog != nil && state.UsageBillingProcessor != nil {
-		if _, err := state.UsageBillingProcessor.RequestUsageBilling(persistCtx, usageLog.ID); err != nil {
+		var holdIDs []int
+		if state.BillingHold != nil {
+			holdIDs = append(holdIDs, state.BillingHold.ID)
+		}
+		if _, err := state.UsageBillingProcessor.RequestUsageBilling(persistCtx, usageLog.ID, holdIDs...); err != nil {
 			log.Warn(persistCtx, "Failed to bill usage log", log.Int("usage_log_id", usageLog.ID), log.Cause(err))
 		}
 	}

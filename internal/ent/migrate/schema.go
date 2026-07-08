@@ -101,6 +101,7 @@ var (
 		{Name: "owner_id", Type: field.TypeInt},
 		{Name: "currency", Type: field.TypeString, Default: "CNY"},
 		{Name: "balance_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "held_balance_micros", Type: field.TypeInt64, Default: 0},
 		{Name: "credit_limit_micros", Type: field.TypeInt64, Default: 0},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "frozen", "closed"}, Default: "active"},
 	}
@@ -145,6 +146,87 @@ var (
 				Name:    "billing_account_bindings_by_owner",
 				Unique:  true,
 				Columns: []*schema.Column{BillingAccountBindingsColumns[3], BillingAccountBindingsColumns[4]},
+			},
+		},
+	}
+	// BillingHoldsColumns holds the columns for the "billing_holds" table.
+	BillingHoldsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "project_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "api_key_id", Type: field.TypeInt, Nullable: true},
+		{Name: "model_id", Type: field.TypeString, Default: ""},
+		{Name: "amount_micros", Type: field.TypeInt64},
+		{Name: "captured_amount_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"held", "captured", "released", "expired"}, Default: "held"},
+		{Name: "idempotency_key", Type: field.TypeString},
+		{Name: "reference_type", Type: field.TypeString, Default: ""},
+		{Name: "reference_id", Type: field.TypeString, Default: ""},
+		{Name: "release_reason", Type: field.TypeString, Default: ""},
+		{Name: "released_by_type", Type: field.TypeEnum, Enums: []string{"system", "admin"}, Default: "system"},
+		{Name: "released_by_id", Type: field.TypeString, Default: ""},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "captured_at", Type: field.TypeTime, Nullable: true},
+		{Name: "released_at", Type: field.TypeTime, Nullable: true},
+		{Name: "billing_account_id", Type: field.TypeInt},
+		{Name: "captured_ledger_transaction_id", Type: field.TypeInt, Nullable: true},
+		{Name: "request_id", Type: field.TypeInt, Nullable: true},
+		{Name: "usage_log_id", Type: field.TypeInt, Nullable: true},
+	}
+	// BillingHoldsTable holds the schema information for the "billing_holds" table.
+	BillingHoldsTable = &schema.Table{
+		Name:       "billing_holds",
+		Columns:    BillingHoldsColumns,
+		PrimaryKey: []*schema.Column{BillingHoldsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "billing_holds_billing_accounts_billing_holds",
+				Columns:    []*schema.Column{BillingHoldsColumns[20]},
+				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "billing_holds_ledger_transactions_billing_holds",
+				Columns:    []*schema.Column{BillingHoldsColumns[21]},
+				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "billing_holds_requests_billing_holds",
+				Columns:    []*schema.Column{BillingHoldsColumns[22]},
+				RefColumns: []*schema.Column{RequestsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "billing_holds_usage_logs_billing_holds",
+				Columns:    []*schema.Column{BillingHoldsColumns[23]},
+				RefColumns: []*schema.Column{UsageLogsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "billing_holds_by_account_status_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{BillingHoldsColumns[20], BillingHoldsColumns[10], BillingHoldsColumns[17]},
+			},
+			{
+				Name:    "billing_holds_by_idempotency_key",
+				Unique:  true,
+				Columns: []*schema.Column{BillingHoldsColumns[11]},
+			},
+			{
+				Name:    "billing_holds_by_request_id",
+				Unique:  false,
+				Columns: []*schema.Column{BillingHoldsColumns[22]},
+			},
+			{
+				Name:    "billing_holds_by_usage_log_id",
+				Unique:  false,
+				Columns: []*schema.Column{BillingHoldsColumns[23]},
 			},
 		},
 	}
@@ -1416,6 +1498,7 @@ var (
 		APIKeyProfileTemplatesTable,
 		BillingAccountsTable,
 		BillingAccountBindingsTable,
+		BillingHoldsTable,
 		BillingOutboxesTable,
 		BillingPriceRulesTable,
 		ChannelsTable,
@@ -1455,6 +1538,10 @@ func init() {
 	APIKeysTable.ForeignKeys[1].RefTable = UsersTable
 	APIKeyProfileTemplatesTable.ForeignKeys[0].RefTable = ProjectsTable
 	BillingAccountBindingsTable.ForeignKeys[0].RefTable = BillingAccountsTable
+	BillingHoldsTable.ForeignKeys[0].RefTable = BillingAccountsTable
+	BillingHoldsTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
+	BillingHoldsTable.ForeignKeys[2].RefTable = RequestsTable
+	BillingHoldsTable.ForeignKeys[3].RefTable = UsageLogsTable
 	ChannelModelPricesTable.ForeignKeys[0].RefTable = ChannelsTable
 	ChannelModelPriceVersionsTable.ForeignKeys[0].RefTable = ChannelModelPricesTable
 	ChannelOverrideTemplatesTable.ForeignKeys[0].RefTable = UsersTable

@@ -26,6 +26,7 @@ type UsageBillingProcessorParams struct {
 	PricingService        *PricingService
 	BillingAccountService *BillingAccountService
 	LedgerService         *LedgerService
+	BillingHoldService    *BillingHoldService
 }
 
 type UsageBillingProcessor struct {
@@ -35,6 +36,7 @@ type UsageBillingProcessor struct {
 	pricingService        *PricingService
 	billingAccountService *BillingAccountService
 	ledgerService         *LedgerService
+	billingHoldService    *BillingHoldService
 }
 
 func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingProcessor {
@@ -44,10 +46,11 @@ func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingP
 		pricingService:        params.PricingService,
 		billingAccountService: params.BillingAccountService,
 		ledgerService:         params.LedgerService,
+		billingHoldService:    params.BillingHoldService,
 	}
 }
 
-func (p *UsageBillingProcessor) RequestUsageBilling(ctx context.Context, usageLogID int) (*ent.UsageBillingRecord, error) {
+func (p *UsageBillingProcessor) RequestUsageBilling(ctx context.Context, usageLogID int, holdIDs ...int) (*ent.UsageBillingRecord, error) {
 	if !p.requestBillingEnabled() {
 		return nil, nil
 	}
@@ -57,7 +60,7 @@ func (p *UsageBillingProcessor) RequestUsageBilling(ctx context.Context, usageLo
 		return nil, err
 	}
 
-	record, err := p.BillUsage(ctx, usageLogID)
+	record, err := p.BillUsage(ctx, usageLogID, holdIDs...)
 	if err != nil {
 		_, updateErr := p.entFromContext(ctx).BillingOutbox.UpdateOneID(outbox.ID).
 			SetStatus(billingoutbox.StatusFailed).
@@ -113,7 +116,12 @@ func (p *UsageBillingProcessor) createUsageBillingOutbox(ctx context.Context, us
 	return outbox, nil
 }
 
-func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (*ent.UsageBillingRecord, error) {
+func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, holdIDs ...int) (*ent.UsageBillingRecord, error) {
+	holdID := 0
+	if len(holdIDs) > 0 {
+		holdID = holdIDs[0]
+	}
+
 	existing, err := p.entFromContext(ctx).UsageBillingRecord.Query().
 		Where(usagebillingrecord.UsageLogIDEQ(usageLogID)).
 		Only(ctx)
@@ -134,6 +142,15 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (
 	usageLog, err := p.entFromContext(ctx).UsageLog.Get(ctx, usageLogID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get usage log: %w", err)
+	}
+	if holdID == 0 && p.billingHoldService != nil {
+		hold, err := p.billingHoldService.FindHeldHoldForUsageLog(ctx, usageLog)
+		if err != nil {
+			return nil, err
+		}
+		if hold != nil {
+			holdID = hold.ID
+		}
 	}
 
 	subject, subjectUserID, ok, err := p.billingSubjectForUsageLog(ctx, usageLog)
@@ -168,35 +185,11 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (
 	costMicros := usageLogCostMicros(usageLog)
 	idempotencyKey := usageBillingIdempotencyKey(usageLogID)
 
-	if chargeMicros == 0 {
-		record, err := p.entFromContext(ctx).UsageBillingRecord.Create().
-			SetUsageLogID(usageLog.ID).
-			SetBillingAccountID(account.ID).
-			SetProjectID(usageLog.ProjectID).
-			SetNillableUserID(subjectUserID).
-			SetNillableAPIKeyID(usageLogAPIKeyIDPtr(usageLog)).
-			SetModelID(usageLog.ModelID).
-			SetUsageSnapshot(objects.JSONRawMessage(usageSnapshot)).
-			SetPriceSnapshot(priceRule.Price).
-			SetPriceReferenceID(priceRule.ReferenceID).
-			SetChargeItems(chargeItems).
-			SetCostAmountMicros(costMicros).
-			SetChargeAmountMicros(0).
-			SetCurrency(priceRule.Currency).
-			SetStatus(usagebillingrecord.StatusSkipped).
-			SetIdempotencyKey(idempotencyKey).
-			Save(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create skipped usage billing record: %w", err)
-		}
-		return record, nil
-	}
-
 	var record *ent.UsageBillingRecord
 	err = p.RunInTransaction(ctx, func(ctx context.Context) error {
 		client := p.entFromContext(ctx)
 
-		pending, err := client.UsageBillingRecord.Create().
+		create := client.UsageBillingRecord.Create().
 			SetUsageLogID(usageLog.ID).
 			SetBillingAccountID(account.ID).
 			SetProjectID(usageLog.ProjectID).
@@ -210,33 +203,65 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (
 			SetCostAmountMicros(costMicros).
 			SetChargeAmountMicros(chargeMicros).
 			SetCurrency(priceRule.Currency).
-			SetStatus(usagebillingrecord.StatusPending).
-			SetIdempotencyKey(idempotencyKey).
-			Save(ctx)
+			SetIdempotencyKey(idempotencyKey)
+		if chargeMicros == 0 {
+			create.SetStatus(usagebillingrecord.StatusSkipped)
+		} else {
+			create.SetStatus(usagebillingrecord.StatusPending)
+		}
+
+		pending, err := create.Save(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to create usage billing record: %w", err)
 		}
 
-		ledgerTx, err := p.ledgerService.Post(ctx, LedgerPostInput{
-			BillingAccountID: account.ID,
-			Direction:        ledgertransaction.DirectionDebit,
-			Amount:           chargeTotal,
-			Currency:         priceRule.Currency,
-			Type:             ledgertransaction.TypeUsageCharge,
-			IdempotencyKey:   idempotencyKey,
-			ReferenceType:    "usage_billing_record",
-			ReferenceID:      fmt.Sprint(pending.ID),
-			Memo:             fmt.Sprintf("usage log %d model %s", usageLog.ID, usageLog.ModelID),
-			CreatedByType:    ledgertransaction.CreatedByTypeSystem,
-		})
-		if err != nil {
-			return err
+		var ledgerTransactionID int
+		if holdID > 0 {
+			if p.billingHoldService == nil {
+				return fmt.Errorf("billing hold service is required to capture hold %d", holdID)
+			}
+			hold, err := p.billingHoldService.CaptureHold(ctx, CaptureBillingHoldInput{
+				HoldID:        holdID,
+				Amount:        chargeTotal,
+				Currency:      priceRule.Currency,
+				UsageLogID:    &usageLog.ID,
+				ReferenceType: "usage_billing_record",
+				ReferenceID:   fmt.Sprint(pending.ID),
+				Memo:          fmt.Sprintf("usage log %d model %s", usageLog.ID, usageLog.ModelID),
+				CreatedByType: ledgertransaction.CreatedByTypeSystem,
+				CapturedAt:    time.Now().UTC(),
+			})
+			if err != nil {
+				return err
+			}
+			ledgerTransactionID = hold.CapturedLedgerTransactionID
+		} else if chargeMicros > 0 {
+			ledgerTx, err := p.ledgerService.Post(ctx, LedgerPostInput{
+				BillingAccountID: account.ID,
+				Direction:        ledgertransaction.DirectionDebit,
+				Amount:           chargeTotal,
+				Currency:         priceRule.Currency,
+				Type:             ledgertransaction.TypeUsageCharge,
+				IdempotencyKey:   idempotencyKey,
+				ReferenceType:    "usage_billing_record",
+				ReferenceID:      fmt.Sprint(pending.ID),
+				Memo:             fmt.Sprintf("usage log %d model %s", usageLog.ID, usageLog.ModelID),
+				CreatedByType:    ledgertransaction.CreatedByTypeSystem,
+			})
+			if err != nil {
+				return err
+			}
+			ledgerTransactionID = ledgerTx.ID
 		}
 
-		charged, err := client.UsageBillingRecord.UpdateOneID(pending.ID).
-			SetStatus(usagebillingrecord.StatusCharged).
-			SetLedgerTransactionID(ledgerTx.ID).
-			Save(ctx)
+		update := client.UsageBillingRecord.UpdateOneID(pending.ID)
+		if chargeMicros > 0 {
+			update.SetStatus(usagebillingrecord.StatusCharged)
+		}
+		if ledgerTransactionID > 0 {
+			update.SetLedgerTransactionID(ledgerTransactionID)
+		}
+		charged, err := update.Save(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to mark usage billing record charged: %w", err)
 		}

@@ -18,6 +18,9 @@ type BillingAccount func(*sql.Selector)
 // BillingAccountBinding is the predicate function for billingaccountbinding builders.
 type BillingAccountBinding func(*sql.Selector)
 
+// BillingHold is the predicate function for billinghold builders.
+type BillingHold func(*sql.Selector)
+
 // BillingOutbox is the predicate function for billingoutbox builders.
 type BillingOutbox func(*sql.Selector)
 

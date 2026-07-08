@@ -13,6 +13,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/enttest"
@@ -176,6 +177,55 @@ func TestUsageBillingProcessorChargesUsageOnce(t *testing.T) {
 
 	reloaded, err := client.BillingAccount.Get(ctx, account.ID)
 	require.NoError(t, err)
+	require.Equal(t, int64(8_500_000), reloaded.BalanceMicros)
+}
+
+func TestUsageBillingProcessorCapturesBillingHold(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, processor, account := newUsageBillingTestProcessor(t, "usage_billing_capture_hold")
+	_, err := client.BillingPriceRule.Create().
+		SetScopeType(billingpricerule.ScopeTypeGlobal).
+		SetScopeID(0).
+		SetModelPattern("gpt-test").
+		SetPrice(testModelPrice("1")).
+		SetReferenceID("sell-v1").
+		Save(ctx)
+	require.NoError(t, err)
+	ledgerSvc := NewLedgerService(LedgerServiceParams{Ent: client})
+	_, err = ledgerSvc.Credit(ctx, account.ID, decimal.RequireFromString("10"), ledgertransaction.TypePaymentRecharge, "initial-credit")
+	require.NoError(t, err)
+	holdSvc := NewBillingHoldService(BillingHoldServiceParams{Ent: client, LedgerService: ledgerSvc})
+	processor.billingHoldService = holdSvc
+	hold, err := holdSvc.CreateHold(ctx, CreateBillingHoldInput{
+		BillingAccountID: account.ID,
+		Amount:           decimal.RequireFromString("2"),
+		Currency:         "CNY",
+		IdempotencyKey:   "usage-hold",
+	})
+	require.NoError(t, err)
+
+	usageLog := createUsageLogForBillingTest(t, client, ctx, account.OwnerID, "gpt-test", 1_000_000, 500_000)
+	record, err := processor.BillUsage(ctx, usageLog.ID, hold.ID)
+	require.NoError(t, err)
+	require.Equal(t, usagebillingrecord.StatusCharged, record.Status)
+	require.Equal(t, int64(1_500_000), record.ChargeAmountMicros)
+	require.NotZero(t, record.LedgerTransactionID)
+
+	captured, err := client.BillingHold.Get(ctx, hold.ID)
+	require.NoError(t, err)
+	require.Equal(t, billinghold.StatusCaptured, captured.Status)
+	require.Equal(t, int64(1_500_000), captured.CapturedAmountMicros)
+	require.Equal(t, record.LedgerTransactionID, captured.CapturedLedgerTransactionID)
+	require.Equal(t, usageLog.ID, captured.UsageLogID)
+
+	same, err := processor.BillUsage(ctx, usageLog.ID, hold.ID)
+	require.NoError(t, err)
+	require.Equal(t, record.ID, same.ID)
+
+	reloaded, err := client.BillingAccount.Get(ctx, account.ID)
+	require.NoError(t, err)
+	require.Zero(t, reloaded.HeldBalanceMicros)
 	require.Equal(t, int64(8_500_000), reloaded.BalanceMicros)
 }
 

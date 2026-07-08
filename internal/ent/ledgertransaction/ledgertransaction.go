@@ -52,6 +52,8 @@ const (
 	EdgeEntries = "entries"
 	// EdgeUsageBillingRecords holds the string denoting the usage_billing_records edge name in mutations.
 	EdgeUsageBillingRecords = "usage_billing_records"
+	// EdgeBillingHolds holds the string denoting the billing_holds edge name in mutations.
+	EdgeBillingHolds = "billing_holds"
 	// EdgePaymentOrders holds the string denoting the payment_orders edge name in mutations.
 	EdgePaymentOrders = "payment_orders"
 	// Table holds the table name of the ledgertransaction in the database.
@@ -77,6 +79,13 @@ const (
 	UsageBillingRecordsInverseTable = "usage_billing_records"
 	// UsageBillingRecordsColumn is the table column denoting the usage_billing_records relation/edge.
 	UsageBillingRecordsColumn = "ledger_transaction_id"
+	// BillingHoldsTable is the table that holds the billing_holds relation/edge.
+	BillingHoldsTable = "billing_holds"
+	// BillingHoldsInverseTable is the table name for the BillingHold entity.
+	// It exists in this package in order to avoid circular dependency with the "billinghold" package.
+	BillingHoldsInverseTable = "billing_holds"
+	// BillingHoldsColumn is the table column denoting the billing_holds relation/edge.
+	BillingHoldsColumn = "captured_ledger_transaction_id"
 	// PaymentOrdersTable is the table that holds the payment_orders relation/edge.
 	PaymentOrdersTable = "payment_orders"
 	// PaymentOrdersInverseTable is the table name for the PaymentOrder entity.
@@ -360,6 +369,20 @@ func ByUsageBillingRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpti
 	}
 }
 
+// ByBillingHoldsCount orders the results by billing_holds count.
+func ByBillingHoldsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBillingHoldsStep(), opts...)
+	}
+}
+
+// ByBillingHolds orders the results by billing_holds terms.
+func ByBillingHolds(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBillingHoldsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByPaymentOrdersCount orders the results by payment_orders count.
 func ByPaymentOrdersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -392,6 +415,13 @@ func newUsageBillingRecordsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsageBillingRecordsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UsageBillingRecordsTable, UsageBillingRecordsColumn),
+	)
+}
+func newBillingHoldsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BillingHoldsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BillingHoldsTable, BillingHoldsColumn),
 	)
 }
 func newPaymentOrdersStep() *sqlgraph.Step {

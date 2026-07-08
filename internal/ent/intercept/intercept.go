@@ -12,6 +12,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -207,6 +208,33 @@ func (f TraverseBillingAccountBinding) Traverse(ctx context.Context, q ent.Query
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.BillingAccountBindingQuery", q)
+}
+
+// The BillingHoldFunc type is an adapter to allow the use of ordinary function as a Querier.
+type BillingHoldFunc func(context.Context, *ent.BillingHoldQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f BillingHoldFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.BillingHoldQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.BillingHoldQuery", q)
+}
+
+// The TraverseBillingHold type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseBillingHold func(context.Context, *ent.BillingHoldQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseBillingHold) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseBillingHold) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingHoldQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.BillingHoldQuery", q)
 }
 
 // The BillingOutboxFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -1030,6 +1058,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.BillingAccountQuery, predicate.BillingAccount, billingaccount.OrderOption]{typ: ent.TypeBillingAccount, tq: q}, nil
 	case *ent.BillingAccountBindingQuery:
 		return &query[*ent.BillingAccountBindingQuery, predicate.BillingAccountBinding, billingaccountbinding.OrderOption]{typ: ent.TypeBillingAccountBinding, tq: q}, nil
+	case *ent.BillingHoldQuery:
+		return &query[*ent.BillingHoldQuery, predicate.BillingHold, billinghold.OrderOption]{typ: ent.TypeBillingHold, tq: q}, nil
 	case *ent.BillingOutboxQuery:
 		return &query[*ent.BillingOutboxQuery, predicate.BillingOutbox, billingoutbox.OrderOption]{typ: ent.TypeBillingOutbox, tq: q}, nil
 	case *ent.BillingPriceRuleQuery:

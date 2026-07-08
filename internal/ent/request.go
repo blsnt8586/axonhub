@@ -98,14 +98,17 @@ type RequestEdges struct {
 	Channel *Channel `json:"channel,omitempty"`
 	// UsageLogs holds the value of the usage_logs edge.
 	UsageLogs []*UsageLog `json:"usage_logs,omitempty"`
+	// BillingHolds holds the value of the billing_holds edge.
+	BillingHolds []*BillingHold `json:"billing_holds,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 	// totalCount holds the count of the edges above.
-	totalCount [7]map[string]int
+	totalCount [8]map[string]int
 
-	namedExecutions map[string][]*RequestExecution
-	namedUsageLogs  map[string][]*UsageLog
+	namedExecutions   map[string][]*RequestExecution
+	namedUsageLogs    map[string][]*UsageLog
+	namedBillingHolds map[string][]*BillingHold
 }
 
 // APIKeyOrErr returns the APIKey value or an error if the edge
@@ -179,6 +182,15 @@ func (e RequestEdges) UsageLogsOrErr() ([]*UsageLog, error) {
 		return e.UsageLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_logs"}
+}
+
+// BillingHoldsOrErr returns the BillingHolds value or an error if the edge
+// was not loaded in eager-loading.
+func (e RequestEdges) BillingHoldsOrErr() ([]*BillingHold, error) {
+	if e.loadedTypes[7] {
+		return e.BillingHolds, nil
+	}
+	return nil, &NotLoadedError{edge: "billing_holds"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -435,6 +447,11 @@ func (_m *Request) QueryUsageLogs() *UsageLogQuery {
 	return NewRequestClient(_m.config).QueryUsageLogs(_m)
 }
 
+// QueryBillingHolds queries the "billing_holds" edge of the Request entity.
+func (_m *Request) QueryBillingHolds() *BillingHoldQuery {
+	return NewRequestClient(_m.config).QueryBillingHolds(_m)
+}
+
 // Update returns a builder for updating this Request.
 // Note that you need to call Request.Unwrap() before calling this method if this Request
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -596,6 +613,30 @@ func (_m *Request) appendNamedUsageLogs(name string, edges ...*UsageLog) {
 		_m.Edges.namedUsageLogs[name] = []*UsageLog{}
 	} else {
 		_m.Edges.namedUsageLogs[name] = append(_m.Edges.namedUsageLogs[name], edges...)
+	}
+}
+
+// NamedBillingHolds returns the BillingHolds named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Request) NamedBillingHolds(name string) ([]*BillingHold, error) {
+	if _m.Edges.namedBillingHolds == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedBillingHolds[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Request) appendNamedBillingHolds(name string, edges ...*BillingHold) {
+	if _m.Edges.namedBillingHolds == nil {
+		_m.Edges.namedBillingHolds = make(map[string][]*BillingHold)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedBillingHolds[name] = []*BillingHold{}
+	} else {
+		_m.Edges.namedBillingHolds[name] = append(_m.Edges.namedBillingHolds[name], edges...)
 	}
 }
 

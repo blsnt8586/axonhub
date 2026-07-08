@@ -62,8 +62,9 @@ export default function BillingPage() {
   );
 
   const balance = data ? microsToAmount(data.account.balanceMicros) : 0;
+  const held = data ? microsToAmount(data.account.heldBalanceMicros) : 0;
   const creditLimit = data ? microsToAmount(data.account.creditLimitMicros) : 0;
-  const available = balance + creditLimit;
+  const available = balance + creditLimit - held;
 
   async function handleRecharge(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -114,7 +115,7 @@ export default function BillingPage() {
           </Alert>
         )}
 
-        <div className='grid gap-4 md:grid-cols-3'>
+        <div className='grid gap-4 md:grid-cols-5'>
           <Card className='rounded-lg'>
             <CardHeader className='pb-2'>
               <CardTitle className='text-muted-foreground flex items-center gap-2 text-sm font-medium'>
@@ -135,6 +136,26 @@ export default function BillingPage() {
             <CardContent>
               <div className='font-mono text-2xl font-semibold'>{isLoading ? '-' : formatCurrency.format(available)}</div>
               <p className='text-muted-foreground mt-1 text-xs'>{t('billing.cards.availableHint')}</p>
+            </CardContent>
+          </Card>
+
+          <Card className='rounded-lg'>
+            <CardHeader className='pb-2'>
+              <CardTitle className='text-muted-foreground text-sm font-medium'>{t('billing.cards.held')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='font-mono text-2xl font-semibold'>{isLoading ? '-' : formatCurrency.format(held)}</div>
+              <p className='text-muted-foreground mt-1 text-xs'>{t('billing.cards.heldHint')}</p>
+            </CardContent>
+          </Card>
+
+          <Card className='rounded-lg'>
+            <CardHeader className='pb-2'>
+              <CardTitle className='text-muted-foreground text-sm font-medium'>{t('billing.cards.credit')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='font-mono text-2xl font-semibold'>{isLoading ? '-' : formatCurrency.format(creditLimit)}</div>
+              <p className='text-muted-foreground mt-1 text-xs'>{t('billing.cards.creditHint')}</p>
             </CardContent>
           </Card>
 

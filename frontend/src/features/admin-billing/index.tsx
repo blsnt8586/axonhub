@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Loader2, RefreshCw, Save, WalletCards } from 'lucide-react';
+import { AlertCircle, Loader2, RefreshCw, Save, Unlock, WalletCards } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { extractNumberIDAsNumber } from '@/lib/utils';
@@ -18,9 +18,11 @@ import { Main } from '@/components/layout/main';
 import { useUsers } from '@/features/users/data/users';
 import {
   type AdminLedgerTransactionsFilter,
+  type AdminBillingHoldsFilter,
   type AdminPaymentEventsFilter,
   type AdminPaymentOrdersFilter,
   type AdminUsageBillingRecordsFilter,
+  type BillingHoldStatus,
   type BillingAccountStatus,
   type BillingPriceRule,
   type LedgerTransactionDirection,
@@ -31,11 +33,13 @@ import {
   type UsageBillingRecordStatus,
   useAdjustUserBalance,
   useAdminBillingOverview,
+  useAdminBillingHolds,
   useAdminLedgerTransactions,
   useAdminPaymentEvents,
   useAdminPaymentOrders,
   useAdminUsageBillingRecords,
   useAdminUserBillingDetail,
+  useReleaseBillingHold,
   useSaveBillingPriceRule,
   useUpdateUserBillingAccount,
   useUpsertEPayPaymentProvider,
@@ -73,6 +77,18 @@ type UsageFilterForm = {
   status: 'all' | UsageBillingRecordStatus;
   from: string;
   to: string;
+};
+
+type HoldFilterForm = {
+  userId: string;
+  projectId: string;
+  apiKeyId: string;
+  billingAccountId: string;
+  modelId: string;
+  status: 'all' | BillingHoldStatus;
+  from: string;
+  to: string;
+  expiresBefore: string;
 };
 
 type OrderFilterForm = {
@@ -219,6 +235,20 @@ function defaultUsageFilter(): UsageFilterForm {
   return { userId: '', projectId: '', apiKeyId: '', billingAccountId: '', modelId: '', status: 'all', from: '', to: '' };
 }
 
+function defaultHoldFilter(): HoldFilterForm {
+  return {
+    userId: '',
+    projectId: '',
+    apiKeyId: '',
+    billingAccountId: '',
+    modelId: '',
+    status: 'all',
+    from: '',
+    to: '',
+    expiresBefore: '',
+  };
+}
+
 function defaultOrderFilter(): OrderFilterForm {
   return {
     userId: '',
@@ -263,6 +293,20 @@ function buildUsageFilter(form: UsageFilterForm): AdminUsageBillingRecordsFilter
   };
 }
 
+function buildHoldFilter(form: HoldFilterForm): AdminBillingHoldsFilter {
+  return {
+    userId: optionalInt(form.userId),
+    projectId: optionalInt(form.projectId),
+    apiKeyId: optionalInt(form.apiKeyId),
+    billingAccountId: optionalInt(form.billingAccountId),
+    modelId: optionalText(form.modelId),
+    status: form.status === 'all' ? undefined : form.status,
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+    expiresBefore: optionalTime(form.expiresBefore),
+  };
+}
+
 function buildOrderFilter(form: OrderFilterForm): AdminPaymentOrdersFilter {
   return {
     userId: optionalInt(form.userId),
@@ -303,12 +347,15 @@ export default function AdminBillingPage() {
   const [priceForm, setPriceForm] = useState<PriceForm>(() => defaultPriceForm());
   const [ledgerFilter, setLedgerFilter] = useState<LedgerFilterForm>(() => defaultLedgerFilter());
   const [usageFilter, setUsageFilter] = useState<UsageFilterForm>(() => defaultUsageFilter());
+  const [holdFilter, setHoldFilter] = useState<HoldFilterForm>(() => defaultHoldFilter());
   const [orderFilter, setOrderFilter] = useState<OrderFilterForm>(() => defaultOrderFilter());
   const [eventFilter, setEventFilter] = useState<EventFilterForm>(() => defaultEventFilter());
   const [appliedLedgerFilter, setAppliedLedgerFilter] = useState<AdminLedgerTransactionsFilter>({});
   const [appliedUsageFilter, setAppliedUsageFilter] = useState<AdminUsageBillingRecordsFilter>({});
+  const [appliedHoldFilter, setAppliedHoldFilter] = useState<AdminBillingHoldsFilter>({});
   const [appliedOrderFilter, setAppliedOrderFilter] = useState<AdminPaymentOrdersFilter>({});
   const [appliedEventFilter, setAppliedEventFilter] = useState<AdminPaymentEventsFilter>({});
+  const [holdReleaseReasons, setHoldReleaseReasons] = useState<Record<string, string>>({});
   const [providerForm, setProviderForm] = useState<EPayProviderForm>({
     name: 'Default ePay',
     status: 'enabled' as 'enabled' | 'disabled',
@@ -328,10 +375,12 @@ export default function AdminBillingPage() {
   const selectedUserBilling = useAdminUserBillingDetail(selectedUserID || undefined, 10);
   const adminLedger = useAdminLedgerTransactions(appliedLedgerFilter, 50);
   const adminUsage = useAdminUsageBillingRecords(appliedUsageFilter, 50);
+  const adminHolds = useAdminBillingHolds(appliedHoldFilter, 50);
   const adminOrders = useAdminPaymentOrders(appliedOrderFilter, 50);
   const adminEvents = useAdminPaymentEvents(appliedEventFilter, 50);
   const adjustBalance = useAdjustUserBalance();
   const updateAccount = useUpdateUserBillingAccount();
+  const releaseHold = useReleaseBillingHold();
   const savePriceRule = useSaveBillingPriceRule();
   const upsertEPay = useUpsertEPayPaymentProvider();
 
@@ -364,10 +413,27 @@ export default function AdminBillingPage() {
       refetch(),
       adminLedger.refetch(),
       adminUsage.refetch(),
+      adminHolds.refetch(),
       adminOrders.refetch(),
       adminEvents.refetch(),
       selectedUserBilling.refetch(),
     ]);
+  }
+
+  async function handleReleaseHold(holdId: string) {
+    const reason = (holdReleaseReasons[holdId] || t('adminBilling.holds.defaultReleaseReason')).trim();
+    if (!reason) {
+      toast.error(t('adminBilling.holds.reasonRequired'));
+      return;
+    }
+
+    try {
+      await releaseHold.mutateAsync({ id: holdId, reason });
+      toast.success(t('adminBilling.holds.releaseSuccess'));
+      setHoldReleaseReasons((prev) => ({ ...prev, [holdId]: '' }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
   }
 
   async function handleAdjustBalance(event: FormEvent<HTMLFormElement>) {
@@ -480,9 +546,16 @@ export default function AdminBillingPage() {
             variant='outline'
             size='sm'
             onClick={() => void refreshAll()}
-            disabled={isFetching || adminLedger.isFetching || adminUsage.isFetching || adminOrders.isFetching || adminEvents.isFetching}
+            disabled={
+              isFetching ||
+              adminLedger.isFetching ||
+              adminUsage.isFetching ||
+              adminHolds.isFetching ||
+              adminOrders.isFetching ||
+              adminEvents.isFetching
+            }
           >
-            {isFetching || adminLedger.isFetching || adminUsage.isFetching || adminOrders.isFetching || adminEvents.isFetching ? (
+            {isFetching || adminLedger.isFetching || adminUsage.isFetching || adminHolds.isFetching || adminOrders.isFetching || adminEvents.isFetching ? (
               <Loader2 className='size-4 animate-spin' />
             ) : (
               <RefreshCw className='size-4' />
@@ -493,9 +566,9 @@ export default function AdminBillingPage() {
       </Header>
 
       <Main fixed className='flex flex-col gap-4 overflow-auto'>
-        <ErrorAlert error={error || adminLedger.error || adminUsage.error || adminOrders.error || adminEvents.error} />
+        <ErrorAlert error={error || adminLedger.error || adminUsage.error || adminHolds.error || adminOrders.error || adminEvents.error} />
 
-        <div className='grid gap-4 md:grid-cols-5'>
+        <div className='grid gap-4 md:grid-cols-6'>
           <MetricCard title={t('adminBilling.metrics.accounts')} value={String(data?.accounts.length ?? 0)} loading={isLoading} />
           <MetricCard
             title={t('adminBilling.metrics.ledger')}
@@ -503,6 +576,7 @@ export default function AdminBillingPage() {
             loading={adminLedger.isLoading}
           />
           <MetricCard title={t('adminBilling.metrics.usage')} value={String(adminUsage.data?.length ?? 0)} loading={adminUsage.isLoading} />
+          <MetricCard title={t('adminBilling.metrics.holds')} value={String(adminHolds.data?.length ?? 0)} loading={adminHolds.isLoading} />
           <MetricCard
             title={t('adminBilling.metrics.orders')}
             value={String(adminOrders.data?.length ?? 0)}
@@ -520,6 +594,7 @@ export default function AdminBillingPage() {
             <TabsTrigger value='wallets'>{t('adminBilling.tabs.wallets')}</TabsTrigger>
             <TabsTrigger value='ledger'>{t('adminBilling.tabs.ledger')}</TabsTrigger>
             <TabsTrigger value='usage'>{t('adminBilling.tabs.usage')}</TabsTrigger>
+            <TabsTrigger value='holds'>{t('adminBilling.tabs.holds')}</TabsTrigger>
             <TabsTrigger value='orders'>{t('adminBilling.tabs.orders')}</TabsTrigger>
             <TabsTrigger value='events'>{t('adminBilling.tabs.events')}</TabsTrigger>
             <TabsTrigger value='pricing'>{t('adminBilling.tabs.pricing')}</TabsTrigger>
@@ -540,11 +615,13 @@ export default function AdminBillingPage() {
                         <TableHead>{t('adminBilling.columns.owner')}</TableHead>
                         <TableHead>{t('adminBilling.columns.status')}</TableHead>
                         <TableHead>{t('adminBilling.columns.credit')}</TableHead>
+                        <TableHead>{t('adminBilling.columns.held')}</TableHead>
+                        <TableHead>{t('adminBilling.columns.available')}</TableHead>
                         <TableHead className='text-right'>{t('adminBilling.columns.balance')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <DataStateRow colSpan={4} isLoading={isLoading} isEmpty={(data?.accounts ?? []).length === 0} />
+                      <DataStateRow colSpan={6} isLoading={isLoading} isEmpty={(data?.accounts ?? []).length === 0} />
                       {data?.accounts.map((account) => (
                         <TableRow key={account.id}>
                           <TableCell>
@@ -557,6 +634,10 @@ export default function AdminBillingPage() {
                             <StatusBadge value={account.status} positive={account.status === 'active'} />
                           </TableCell>
                           <TableCell className='font-mono'>{formatMicros(account.creditLimitMicros, account.currency)}</TableCell>
+                          <TableCell className='font-mono'>{formatMicros(account.heldBalanceMicros, account.currency)}</TableCell>
+                          <TableCell className='font-mono'>
+                            {formatMicros(account.balanceMicros + account.creditLimitMicros - account.heldBalanceMicros, account.currency)}
+                          </TableCell>
                           <TableCell className='text-right font-mono'>{formatMicros(account.balanceMicros, account.currency)}</TableCell>
                         </TableRow>
                       ))}
@@ -591,6 +672,10 @@ export default function AdminBillingPage() {
                       <div className='text-muted-foreground mt-1 text-xs'>
                         {t('adminBilling.account.creditLimit')}:{' '}
                         {formatMicros(selectedUserBilling.data.account.creditLimitMicros, selectedUserBilling.data.account.currency)}
+                      </div>
+                      <div className='text-muted-foreground mt-1 text-xs'>
+                        {t('adminBilling.account.held')}:{' '}
+                        {formatMicros(selectedUserBilling.data.account.heldBalanceMicros, selectedUserBilling.data.account.currency)}
                       </div>
                     </div>
                   )}
@@ -916,6 +1001,145 @@ export default function AdminBillingPage() {
                         </TableCell>
                         <TableCell className='max-w-[280px] truncate text-xs'>{record.error || '-'}</TableCell>
                         <TableCell className='text-right font-mono'>{formatMicros(record.chargeAmountMicros, record.currency)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value='holds' className='mt-0'>
+            <Card className='rounded-lg'>
+              <CardHeader>
+                <CardTitle className='text-base'>{t('adminBilling.holds.title')}</CardTitle>
+                <CardDescription>{t('adminBilling.holds.description')}</CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-4 overflow-auto'>
+                <form
+                  className='grid gap-3 md:grid-cols-4 xl:grid-cols-9'
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    setAppliedHoldFilter(buildHoldFilter(holdFilter));
+                  }}
+                >
+                  <FilterInput
+                    label={t('adminBilling.filters.userId')}
+                    value={holdFilter.userId}
+                    onChange={(value) => setHoldFilter((prev) => ({ ...prev, userId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.projectId')}
+                    value={holdFilter.projectId}
+                    onChange={(value) => setHoldFilter((prev) => ({ ...prev, projectId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.apiKeyId')}
+                    value={holdFilter.apiKeyId}
+                    onChange={(value) => setHoldFilter((prev) => ({ ...prev, apiKeyId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.accountId')}
+                    value={holdFilter.billingAccountId}
+                    onChange={(value) => setHoldFilter((prev) => ({ ...prev, billingAccountId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.columns.model')}
+                    value={holdFilter.modelId}
+                    onChange={(value) => setHoldFilter((prev) => ({ ...prev, modelId: value }))}
+                  />
+                  <FilterSelect
+                    label={t('adminBilling.columns.status')}
+                    value={holdFilter.status}
+                    onChange={(value) => setHoldFilter((prev) => ({ ...prev, status: value as HoldFilterForm['status'] }))}
+                    options={['all', 'held', 'captured', 'released', 'expired']}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.from')}
+                    type='datetime-local'
+                    value={holdFilter.from}
+                    onChange={(value) => setHoldFilter((prev) => ({ ...prev, from: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.to')}
+                    type='datetime-local'
+                    value={holdFilter.to}
+                    onChange={(value) => setHoldFilter((prev) => ({ ...prev, to: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.expiresBefore')}
+                    type='datetime-local'
+                    value={holdFilter.expiresBefore}
+                    onChange={(value) => setHoldFilter((prev) => ({ ...prev, expiresBefore: value }))}
+                  />
+                  <FilterActions
+                    onReset={() => {
+                      const next = defaultHoldFilter();
+                      setHoldFilter(next);
+                      setAppliedHoldFilter({});
+                    }}
+                  />
+                </form>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                      <TableHead>{t('adminBilling.filters.accountId')}</TableHead>
+                      <TableHead>{t('adminBilling.filters.userId')}</TableHead>
+                      <TableHead>{t('adminBilling.filters.projectId')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.model')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.expiresAt')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.reference')}</TableHead>
+                      <TableHead className='text-right'>{t('adminBilling.columns.held')}</TableHead>
+                      <TableHead className='text-right'>{t('adminBilling.columns.captured')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.action')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <DataStateRow colSpan={11} isLoading={adminHolds.isLoading} isEmpty={(adminHolds.data ?? []).length === 0} />
+                    {adminHolds.data?.map((hold) => (
+                      <TableRow key={hold.id}>
+                        <TableCell>{formatDate(hold.createdAt)}</TableCell>
+                        <TableCell className='font-mono text-xs'>{hold.billingAccountID}</TableCell>
+                        <TableCell>{hold.userID ?? '-'}</TableCell>
+                        <TableCell>{hold.projectID ?? '-'}</TableCell>
+                        <TableCell className='max-w-[180px] truncate font-mono text-xs'>{hold.modelID || '-'}</TableCell>
+                        <TableCell>
+                          <StatusBadge value={hold.status} positive={hold.status === 'captured'} />
+                        </TableCell>
+                        <TableCell>{formatDate(hold.expiresAt)}</TableCell>
+                        <TableCell className='max-w-[220px] truncate text-xs'>
+                          {hold.releaseReason || `${hold.referenceType || '-'} ${hold.referenceID || ''}`}
+                        </TableCell>
+                        <TableCell className='text-right font-mono'>{formatMicros(hold.amountMicros, hold.currency)}</TableCell>
+                        <TableCell className='text-right font-mono'>{formatMicros(hold.capturedAmountMicros, hold.currency)}</TableCell>
+                        <TableCell className='min-w-[260px]'>
+                          {hold.status === 'held' ? (
+                            <div className='flex items-center gap-2'>
+                              <Input
+                                className='h-8 min-w-[160px]'
+                                value={holdReleaseReasons[hold.id] ?? ''}
+                                placeholder={t('adminBilling.holds.releaseReasonPlaceholder')}
+                                onChange={(event) => setHoldReleaseReasons((prev) => ({ ...prev, [hold.id]: event.target.value }))}
+                              />
+                              <Button
+                                type='button'
+                                size='sm'
+                                variant='outline'
+                                disabled={releaseHold.isPending}
+                                onClick={() => void handleReleaseHold(hold.id)}
+                              >
+                                {releaseHold.isPending ? <Loader2 className='size-4 animate-spin' /> : <Unlock className='size-4' />}
+                                {t('adminBilling.holds.release')}
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className='text-muted-foreground text-xs'>
+                              {hold.releasedAt ? `${formatDate(hold.releasedAt)} ${hold.releasedByID || ''}` : '-'}
+                            </span>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
@@ -102,6 +103,20 @@ func (_c *BillingAccountCreate) SetNillableBalanceMicros(v *int64) *BillingAccou
 	return _c
 }
 
+// SetHeldBalanceMicros sets the "held_balance_micros" field.
+func (_c *BillingAccountCreate) SetHeldBalanceMicros(v int64) *BillingAccountCreate {
+	_c.mutation.SetHeldBalanceMicros(v)
+	return _c
+}
+
+// SetNillableHeldBalanceMicros sets the "held_balance_micros" field if the given value is not nil.
+func (_c *BillingAccountCreate) SetNillableHeldBalanceMicros(v *int64) *BillingAccountCreate {
+	if v != nil {
+		_c.SetHeldBalanceMicros(*v)
+	}
+	return _c
+}
+
 // SetCreditLimitMicros sets the "credit_limit_micros" field.
 func (_c *BillingAccountCreate) SetCreditLimitMicros(v int64) *BillingAccountCreate {
 	_c.mutation.SetCreditLimitMicros(v)
@@ -158,6 +173,21 @@ func (_c *BillingAccountCreate) AddLedgerTransactions(v ...*LedgerTransaction) *
 		ids[i] = v[i].ID
 	}
 	return _c.AddLedgerTransactionIDs(ids...)
+}
+
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by IDs.
+func (_c *BillingAccountCreate) AddBillingHoldIDs(ids ...int) *BillingAccountCreate {
+	_c.mutation.AddBillingHoldIDs(ids...)
+	return _c
+}
+
+// AddBillingHolds adds the "billing_holds" edges to the BillingHold entity.
+func (_c *BillingAccountCreate) AddBillingHolds(v ...*BillingHold) *BillingAccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBillingHoldIDs(ids...)
 }
 
 // AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
@@ -253,6 +283,10 @@ func (_c *BillingAccountCreate) defaults() error {
 		v := billingaccount.DefaultBalanceMicros
 		_c.mutation.SetBalanceMicros(v)
 	}
+	if _, ok := _c.mutation.HeldBalanceMicros(); !ok {
+		v := billingaccount.DefaultHeldBalanceMicros
+		_c.mutation.SetHeldBalanceMicros(v)
+	}
 	if _, ok := _c.mutation.CreditLimitMicros(); !ok {
 		v := billingaccount.DefaultCreditLimitMicros
 		_c.mutation.SetCreditLimitMicros(v)
@@ -282,6 +316,9 @@ func (_c *BillingAccountCreate) check() error {
 	}
 	if _, ok := _c.mutation.BalanceMicros(); !ok {
 		return &ValidationError{Name: "balance_micros", err: errors.New(`ent: missing required field "BillingAccount.balance_micros"`)}
+	}
+	if _, ok := _c.mutation.HeldBalanceMicros(); !ok {
+		return &ValidationError{Name: "held_balance_micros", err: errors.New(`ent: missing required field "BillingAccount.held_balance_micros"`)}
 	}
 	if _, ok := _c.mutation.CreditLimitMicros(); !ok {
 		return &ValidationError{Name: "credit_limit_micros", err: errors.New(`ent: missing required field "BillingAccount.credit_limit_micros"`)}
@@ -345,6 +382,10 @@ func (_c *BillingAccountCreate) createSpec() (*BillingAccount, *sqlgraph.CreateS
 		_spec.SetField(billingaccount.FieldBalanceMicros, field.TypeInt64, value)
 		_node.BalanceMicros = value
 	}
+	if value, ok := _c.mutation.HeldBalanceMicros(); ok {
+		_spec.SetField(billingaccount.FieldHeldBalanceMicros, field.TypeInt64, value)
+		_node.HeldBalanceMicros = value
+	}
 	if value, ok := _c.mutation.CreditLimitMicros(); ok {
 		_spec.SetField(billingaccount.FieldCreditLimitMicros, field.TypeInt64, value)
 		_node.CreditLimitMicros = value
@@ -378,6 +419,22 @@ func (_c *BillingAccountCreate) createSpec() (*BillingAccount, *sqlgraph.CreateS
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgertransaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BillingHoldsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingHoldsTable,
+			Columns: []string{billingaccount.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -511,6 +568,24 @@ func (u *BillingAccountUpsert) AddBalanceMicros(v int64) *BillingAccountUpsert {
 	return u
 }
 
+// SetHeldBalanceMicros sets the "held_balance_micros" field.
+func (u *BillingAccountUpsert) SetHeldBalanceMicros(v int64) *BillingAccountUpsert {
+	u.Set(billingaccount.FieldHeldBalanceMicros, v)
+	return u
+}
+
+// UpdateHeldBalanceMicros sets the "held_balance_micros" field to the value that was provided on create.
+func (u *BillingAccountUpsert) UpdateHeldBalanceMicros() *BillingAccountUpsert {
+	u.SetExcluded(billingaccount.FieldHeldBalanceMicros)
+	return u
+}
+
+// AddHeldBalanceMicros adds v to the "held_balance_micros" field.
+func (u *BillingAccountUpsert) AddHeldBalanceMicros(v int64) *BillingAccountUpsert {
+	u.Add(billingaccount.FieldHeldBalanceMicros, v)
+	return u
+}
+
 // SetCreditLimitMicros sets the "credit_limit_micros" field.
 func (u *BillingAccountUpsert) SetCreditLimitMicros(v int64) *BillingAccountUpsert {
 	u.Set(billingaccount.FieldCreditLimitMicros, v)
@@ -638,6 +713,27 @@ func (u *BillingAccountUpsertOne) AddBalanceMicros(v int64) *BillingAccountUpser
 func (u *BillingAccountUpsertOne) UpdateBalanceMicros() *BillingAccountUpsertOne {
 	return u.Update(func(s *BillingAccountUpsert) {
 		s.UpdateBalanceMicros()
+	})
+}
+
+// SetHeldBalanceMicros sets the "held_balance_micros" field.
+func (u *BillingAccountUpsertOne) SetHeldBalanceMicros(v int64) *BillingAccountUpsertOne {
+	return u.Update(func(s *BillingAccountUpsert) {
+		s.SetHeldBalanceMicros(v)
+	})
+}
+
+// AddHeldBalanceMicros adds v to the "held_balance_micros" field.
+func (u *BillingAccountUpsertOne) AddHeldBalanceMicros(v int64) *BillingAccountUpsertOne {
+	return u.Update(func(s *BillingAccountUpsert) {
+		s.AddHeldBalanceMicros(v)
+	})
+}
+
+// UpdateHeldBalanceMicros sets the "held_balance_micros" field to the value that was provided on create.
+func (u *BillingAccountUpsertOne) UpdateHeldBalanceMicros() *BillingAccountUpsertOne {
+	return u.Update(func(s *BillingAccountUpsert) {
+		s.UpdateHeldBalanceMicros()
 	})
 }
 
@@ -939,6 +1035,27 @@ func (u *BillingAccountUpsertBulk) AddBalanceMicros(v int64) *BillingAccountUpse
 func (u *BillingAccountUpsertBulk) UpdateBalanceMicros() *BillingAccountUpsertBulk {
 	return u.Update(func(s *BillingAccountUpsert) {
 		s.UpdateBalanceMicros()
+	})
+}
+
+// SetHeldBalanceMicros sets the "held_balance_micros" field.
+func (u *BillingAccountUpsertBulk) SetHeldBalanceMicros(v int64) *BillingAccountUpsertBulk {
+	return u.Update(func(s *BillingAccountUpsert) {
+		s.SetHeldBalanceMicros(v)
+	})
+}
+
+// AddHeldBalanceMicros adds v to the "held_balance_micros" field.
+func (u *BillingAccountUpsertBulk) AddHeldBalanceMicros(v int64) *BillingAccountUpsertBulk {
+	return u.Update(func(s *BillingAccountUpsert) {
+		s.AddHeldBalanceMicros(v)
+	})
+}
+
+// UpdateHeldBalanceMicros sets the "held_balance_micros" field to the value that was provided on create.
+func (u *BillingAccountUpsertBulk) UpdateHeldBalanceMicros() *BillingAccountUpsertBulk {
+	return u.Update(func(s *BillingAccountUpsert) {
+		s.UpdateHeldBalanceMicros()
 	})
 }
 

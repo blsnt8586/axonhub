@@ -16,6 +16,7 @@ export type UsageBillingRecordStatus = 'pending' | 'charged' | 'skipped' | 'fail
 export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
 export type PaymentProviderType = 'manual' | 'epay' | 'stripe' | 'custom';
 export type PaymentEventStatus = 'received' | 'processed' | 'failed' | 'ignored';
+export type BillingHoldStatus = 'held' | 'captured' | 'released' | 'expired';
 
 export interface BillingAccount {
   id: string;
@@ -23,6 +24,7 @@ export interface BillingAccount {
   ownerID: number;
   currency: string;
   balanceMicros: number;
+  heldBalanceMicros: number;
   creditLimitMicros: number;
   status: BillingAccountStatus;
 }
@@ -107,6 +109,31 @@ export interface UsageBillingRecord {
   error: string;
 }
 
+export interface BillingHold {
+  id: string;
+  createdAt: string;
+  billingAccountID: string;
+  requestID?: string | null;
+  usageLogID?: string | null;
+  projectID?: number | null;
+  userID?: number | null;
+  apiKeyID?: number | null;
+  modelID: string;
+  amountMicros: number;
+  capturedAmountMicros: number;
+  currency: string;
+  status: BillingHoldStatus;
+  idempotencyKey: string;
+  referenceType: string;
+  referenceID: string;
+  releaseReason: string;
+  releasedByType: string;
+  releasedByID: string;
+  expiresAt: string;
+  capturedAt?: string | null;
+  releasedAt?: string | null;
+}
+
 export interface PaymentEvent {
   id: string;
   createdAt: string;
@@ -139,6 +166,18 @@ export interface AdminUsageBillingRecordsFilter {
   status?: UsageBillingRecordStatus;
   from?: string;
   to?: string;
+}
+
+export interface AdminBillingHoldsFilter {
+  userId?: number;
+  projectId?: number;
+  apiKeyId?: number;
+  billingAccountId?: number;
+  modelId?: string;
+  status?: BillingHoldStatus;
+  from?: string;
+  to?: string;
+  expiresBefore?: string;
 }
 
 export interface AdminPaymentOrdersFilter {
@@ -182,6 +221,7 @@ const ADMIN_BILLING_OVERVIEW_QUERY = `
           ownerID
           currency
           balanceMicros
+          heldBalanceMicros
           creditLimitMicros
           status
         }
@@ -238,6 +278,7 @@ const USER_BILLING_DETAIL_QUERY = `
       currency
       balanceMicros
       creditLimitMicros
+      heldBalanceMicros
       status
     }
     userLedgerTransactions(userId: $userId, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
@@ -344,6 +385,39 @@ const ADMIN_USAGE_BILLING_RECORDS_QUERY = `
   }
 `;
 
+const ADMIN_BILLING_HOLDS_QUERY = `
+  query AdminBillingHolds($filter: AdminBillingHoldsFilter, $first: Int!) {
+    adminBillingHolds(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          billingAccountID
+          requestID
+          usageLogID
+          projectID
+          userID
+          apiKeyID
+          modelID
+          amountMicros
+          capturedAmountMicros
+          currency
+          status
+          idempotencyKey
+          referenceType
+          referenceID
+          releaseReason
+          releasedByType
+          releasedByID
+          expiresAt
+          capturedAt
+          releasedAt
+        }
+      }
+    }
+  }
+`;
+
 const ADMIN_PAYMENT_ORDERS_QUERY = `
   query AdminPaymentOrders($filter: AdminPaymentOrdersFilter, $first: Int!) {
     adminPaymentOrders(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
@@ -409,8 +483,22 @@ const UPDATE_USER_BILLING_ACCOUNT_MUTATION = `
       ownerID
       currency
       balanceMicros
+      heldBalanceMicros
       creditLimitMicros
       status
+    }
+  }
+`;
+
+const RELEASE_BILLING_HOLD_MUTATION = `
+  mutation ReleaseBillingHold($id: ID!, $reason: String!) {
+    releaseBillingHold(id: $id, reason: $reason) {
+      id
+      status
+      releaseReason
+      releasedAt
+      releasedByType
+      releasedByID
     }
   }
 `;
@@ -520,6 +608,16 @@ export function useAdminUsageBillingRecords(filter: AdminUsageBillingRecordsFilt
   });
 }
 
+export function useAdminBillingHolds(filter: AdminBillingHoldsFilter = {}, first = 20) {
+  return useQuery({
+    queryKey: ['admin-billing', 'billing-holds', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminBillingHolds: Connection<BillingHold> }>(ADMIN_BILLING_HOLDS_QUERY, { filter, first });
+      return nodes(data.adminBillingHolds);
+    },
+  });
+}
+
 export function useAdminPaymentOrders(filter: AdminPaymentOrdersFilter = {}, first = 20) {
   return useQuery({
     queryKey: ['admin-billing', 'payment-orders', filter, first],
@@ -572,6 +670,21 @@ export function useUpdateUserBillingAccount() {
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'user-detail', variables.userId] });
+    },
+  });
+}
+
+export function useReleaseBillingHold() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { id: string; reason: string }) => {
+      const data = await graphqlRequest<{ releaseBillingHold: BillingHold }>(RELEASE_BILLING_HOLD_MUTATION, input);
+      return data.releaseBillingHold;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
     },
   });
 }

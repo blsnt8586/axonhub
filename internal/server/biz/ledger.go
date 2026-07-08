@@ -97,7 +97,7 @@ func (s *LedgerService) Post(ctx context.Context, input LedgerPostInput) (*ent.L
 		deltaMicros := amountMicros
 		if input.Direction == ledgertransaction.DirectionDebit {
 			deltaMicros = -amountMicros
-			if account.BalanceMicros+account.CreditLimitMicros < amountMicros {
+			if account.BalanceMicros+account.CreditLimitMicros-account.HeldBalanceMicros < amountMicros {
 				return ErrInsufficientBalance
 			}
 		}

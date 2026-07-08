@@ -80,6 +80,11 @@ func BalanceMicros(v int64) predicate.BillingAccount {
 	return predicate.BillingAccount(sql.FieldEQ(FieldBalanceMicros, v))
 }
 
+// HeldBalanceMicros applies equality check predicate on the "held_balance_micros" field. It's identical to HeldBalanceMicrosEQ.
+func HeldBalanceMicros(v int64) predicate.BillingAccount {
+	return predicate.BillingAccount(sql.FieldEQ(FieldHeldBalanceMicros, v))
+}
+
 // CreditLimitMicros applies equality check predicate on the "credit_limit_micros" field. It's identical to CreditLimitMicrosEQ.
 func CreditLimitMicros(v int64) predicate.BillingAccount {
 	return predicate.BillingAccount(sql.FieldEQ(FieldCreditLimitMicros, v))
@@ -330,6 +335,46 @@ func BalanceMicrosLTE(v int64) predicate.BillingAccount {
 	return predicate.BillingAccount(sql.FieldLTE(FieldBalanceMicros, v))
 }
 
+// HeldBalanceMicrosEQ applies the EQ predicate on the "held_balance_micros" field.
+func HeldBalanceMicrosEQ(v int64) predicate.BillingAccount {
+	return predicate.BillingAccount(sql.FieldEQ(FieldHeldBalanceMicros, v))
+}
+
+// HeldBalanceMicrosNEQ applies the NEQ predicate on the "held_balance_micros" field.
+func HeldBalanceMicrosNEQ(v int64) predicate.BillingAccount {
+	return predicate.BillingAccount(sql.FieldNEQ(FieldHeldBalanceMicros, v))
+}
+
+// HeldBalanceMicrosIn applies the In predicate on the "held_balance_micros" field.
+func HeldBalanceMicrosIn(vs ...int64) predicate.BillingAccount {
+	return predicate.BillingAccount(sql.FieldIn(FieldHeldBalanceMicros, vs...))
+}
+
+// HeldBalanceMicrosNotIn applies the NotIn predicate on the "held_balance_micros" field.
+func HeldBalanceMicrosNotIn(vs ...int64) predicate.BillingAccount {
+	return predicate.BillingAccount(sql.FieldNotIn(FieldHeldBalanceMicros, vs...))
+}
+
+// HeldBalanceMicrosGT applies the GT predicate on the "held_balance_micros" field.
+func HeldBalanceMicrosGT(v int64) predicate.BillingAccount {
+	return predicate.BillingAccount(sql.FieldGT(FieldHeldBalanceMicros, v))
+}
+
+// HeldBalanceMicrosGTE applies the GTE predicate on the "held_balance_micros" field.
+func HeldBalanceMicrosGTE(v int64) predicate.BillingAccount {
+	return predicate.BillingAccount(sql.FieldGTE(FieldHeldBalanceMicros, v))
+}
+
+// HeldBalanceMicrosLT applies the LT predicate on the "held_balance_micros" field.
+func HeldBalanceMicrosLT(v int64) predicate.BillingAccount {
+	return predicate.BillingAccount(sql.FieldLT(FieldHeldBalanceMicros, v))
+}
+
+// HeldBalanceMicrosLTE applies the LTE predicate on the "held_balance_micros" field.
+func HeldBalanceMicrosLTE(v int64) predicate.BillingAccount {
+	return predicate.BillingAccount(sql.FieldLTE(FieldHeldBalanceMicros, v))
+}
+
 // CreditLimitMicrosEQ applies the EQ predicate on the "credit_limit_micros" field.
 func CreditLimitMicrosEQ(v int64) predicate.BillingAccount {
 	return predicate.BillingAccount(sql.FieldEQ(FieldCreditLimitMicros, v))
@@ -428,6 +473,29 @@ func HasLedgerTransactions() predicate.BillingAccount {
 func HasLedgerTransactionsWith(preds ...predicate.LedgerTransaction) predicate.BillingAccount {
 	return predicate.BillingAccount(func(s *sql.Selector) {
 		step := newLedgerTransactionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasBillingHolds applies the HasEdge predicate on the "billing_holds" edge.
+func HasBillingHolds() predicate.BillingAccount {
+	return predicate.BillingAccount(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BillingHoldsTable, BillingHoldsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBillingHoldsWith applies the HasEdge predicate on the "billing_holds" edge with a given conditions (other predicates).
+func HasBillingHoldsWith(preds ...predicate.BillingHold) predicate.BillingAccount {
+	return predicate.BillingAccount(func(s *sql.Selector) {
+		step := newBillingHoldsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -30,6 +30,7 @@ type AiSdkHandlersParams struct {
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
 	AdmissionService            *biz.AdmissionService
 	UsageBillingProcessor       *biz.UsageBillingProcessor
+	BillingHoldService          *biz.BillingHoldService
 }
 
 type AiSDKHandlers struct {
@@ -53,7 +54,7 @@ func NewAiSDKHandlers(params AiSdkHandlersParams) *AiSDKHandlers {
 				params.LiveStreamRegistry,
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
-				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor),
+				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
 			),
 			StreamWriter: WriteJSONStream,
 		},

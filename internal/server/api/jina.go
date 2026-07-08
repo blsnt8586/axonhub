@@ -28,6 +28,7 @@ type JinaHandlersParams struct {
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
 	AdmissionService            *biz.AdmissionService
 	UsageBillingProcessor       *biz.UsageBillingProcessor
+	BillingHoldService          *biz.BillingHoldService
 }
 
 func NewJinaHandlers(params JinaHandlersParams) *JinaHandlers {
@@ -47,7 +48,7 @@ func NewJinaHandlers(params JinaHandlersParams) *JinaHandlers {
 				params.LiveStreamRegistry,
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
-				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor),
+				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
 			),
 		},
 		EmbeddingHandlers: &ChatCompletionHandlers{
@@ -65,7 +66,7 @@ func NewJinaHandlers(params JinaHandlersParams) *JinaHandlers {
 				params.LiveStreamRegistry,
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
-				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor),
+				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
 			),
 		},
 	}

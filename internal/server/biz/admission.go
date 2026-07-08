@@ -40,6 +40,8 @@ type BillingConfig struct {
 	MinBalance                  decimal.Decimal `conf:"min_balance" yaml:"min_balance" json:"min_balance"`
 	AllowNegative               bool            `conf:"allow_negative" yaml:"allow_negative" json:"allow_negative"`
 	CreditLimitDefault          decimal.Decimal `conf:"credit_limit_default" yaml:"credit_limit_default" json:"credit_limit_default"`
+	HoldDefaultAmount           decimal.Decimal `conf:"hold_default_amount" yaml:"hold_default_amount" json:"hold_default_amount"`
+	HoldTTLSeconds              int             `conf:"hold_ttl_seconds" yaml:"hold_ttl_seconds" json:"hold_ttl_seconds"`
 	BlockWhenNoPriceRule        bool            `conf:"block_when_no_price_rule" yaml:"block_when_no_price_rule" json:"block_when_no_price_rule"`
 	OutboxWorkerIntervalSeconds int             `conf:"outbox_worker_interval_seconds" yaml:"outbox_worker_interval_seconds" json:"outbox_worker_interval_seconds"`
 	OutboxBatchSize             int             `conf:"outbox_batch_size" yaml:"outbox_batch_size" json:"outbox_batch_size"`
@@ -59,6 +61,12 @@ func (c BillingConfig) normalized() BillingConfig {
 	}
 	if c.OutboxWorkerIntervalSeconds <= 0 {
 		c.OutboxWorkerIntervalSeconds = 60
+	}
+	if c.HoldDefaultAmount.IsZero() {
+		c.HoldDefaultAmount = decimal.RequireFromString("0.000001")
+	}
+	if c.HoldTTLSeconds <= 0 {
+		c.HoldTTLSeconds = int(defaultHoldTTL.Seconds())
 	}
 	if c.OutboxBatchSize <= 0 {
 		c.OutboxBatchSize = 100
@@ -181,7 +189,7 @@ func (s *AdmissionService) checkBillingAccount(ctx context.Context, cfg BillingC
 	if cfg.AllowNegative {
 		return AdmissionCodeAllowed, "allowed", nil
 	}
-	if account.BalanceMicros+account.CreditLimitMicros <= minBalanceMicros {
+	if account.BalanceMicros+account.CreditLimitMicros-account.HeldBalanceMicros <= minBalanceMicros {
 		return AdmissionCodeInsufficientBalance, "insufficient billing balance", ErrInsufficientBalance
 	}
 

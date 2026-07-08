@@ -106,6 +106,23 @@ func TestAdmissionEnforceAllowsCreditLimit(t *testing.T) {
 	require.Equal(t, AdmissionCodeAllowed, decision.Code)
 }
 
+func TestAdmissionEnforceSubtractsHeldBalance(t *testing.T) {
+	t.Parallel()
+
+	svc, accountSvc, ledgerSvc, ctx := newAdmissionTestServices(t, "admission_held_balance", BillingConfig{Mode: AdmissionModeEnforce})
+	account, err := accountSvc.GetOrCreateForSubject(ctx, ProjectBillingSubject(1))
+	require.NoError(t, err)
+	_, err = ledgerSvc.Credit(ctx, account.ID, decimal.RequireFromString("1"), ledgertransaction.TypePaymentRecharge, "recharge-held")
+	require.NoError(t, err)
+	_, err = accountSvc.entFromContext(ctx).BillingAccount.UpdateOneID(account.ID).SetHeldBalanceMicros(1_000_000).Save(ctx)
+	require.NoError(t, err)
+
+	decision, err := svc.Check(ctx, AdmissionCheckInput{Subject: ProjectBillingSubject(1)})
+	require.ErrorIs(t, err, ErrInsufficientBalance)
+	require.False(t, decision.Allowed)
+	require.Equal(t, AdmissionCodeInsufficientBalance, decision.Code)
+}
+
 func TestAdmissionRejectsFrozenAccount(t *testing.T) {
 	t.Parallel()
 

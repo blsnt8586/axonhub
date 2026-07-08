@@ -84,6 +84,8 @@ const (
 	EdgeChannel = "channel"
 	// EdgeUsageLogs holds the string denoting the usage_logs edge name in mutations.
 	EdgeUsageLogs = "usage_logs"
+	// EdgeBillingHolds holds the string denoting the billing_holds edge name in mutations.
+	EdgeBillingHolds = "billing_holds"
 	// Table holds the table name of the request in the database.
 	Table = "requests"
 	// APIKeyTable is the table that holds the api_key relation/edge.
@@ -135,6 +137,13 @@ const (
 	UsageLogsInverseTable = "usage_logs"
 	// UsageLogsColumn is the table column denoting the usage_logs relation/edge.
 	UsageLogsColumn = "request_id"
+	// BillingHoldsTable is the table that holds the billing_holds relation/edge.
+	BillingHoldsTable = "billing_holds"
+	// BillingHoldsInverseTable is the table name for the BillingHold entity.
+	// It exists in this package in order to avoid circular dependency with the "billinghold" package.
+	BillingHoldsInverseTable = "billing_holds"
+	// BillingHoldsColumn is the table column denoting the billing_holds relation/edge.
+	BillingHoldsColumn = "request_id"
 )
 
 // Columns holds all SQL columns for request fields.
@@ -439,6 +448,20 @@ func ByUsageLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUsageLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByBillingHoldsCount orders the results by billing_holds count.
+func ByBillingHoldsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBillingHoldsStep(), opts...)
+	}
+}
+
+// ByBillingHolds orders the results by billing_holds terms.
+func ByBillingHolds(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBillingHoldsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newAPIKeyStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -486,6 +509,13 @@ func newUsageLogsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsageLogsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UsageLogsTable, UsageLogsColumn),
+	)
+}
+func newBillingHoldsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BillingHoldsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BillingHoldsTable, BillingHoldsColumn),
 	)
 }
 

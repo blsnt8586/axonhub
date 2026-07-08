@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -628,6 +629,95 @@ func (_q *BillingAccountQuery) collectField(ctx context.Context, oneNode bool, o
 				*wq = *query
 			})
 
+		case "billingHolds":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingHoldClient{config: _q.config}).Query()
+			)
+			args := newBillingHoldPaginateArgs(fieldArgs(ctx, new(BillingHoldWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingHoldPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*BillingAccount) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"billing_account_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(billingaccount.BillingHoldsColumn), ids...))
+						})
+						if err := query.GroupBy(billingaccount.BillingHoldsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[2] == nil {
+								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[2][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*BillingAccount) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingHolds)
+							if nodes[i].Edges.totalCount[2] == nil {
+								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[2][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingholdImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(billingaccount.BillingHoldsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingHolds(alias, func(wq *BillingHoldQuery) {
+				*wq = *query
+			})
+
 		case "usageBillingRecords":
 			var (
 				alias = field.Alias
@@ -671,10 +761,10 @@ func (_q *BillingAccountQuery) collectField(ctx context.Context, oneNode bool, o
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[2] == nil {
-								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							if nodes[i].Edges.totalCount[3] == nil {
+								nodes[i].Edges.totalCount[3] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[2][alias] = n
+							nodes[i].Edges.totalCount[3][alias] = n
 						}
 						return nil
 					})
@@ -682,10 +772,10 @@ func (_q *BillingAccountQuery) collectField(ctx context.Context, oneNode bool, o
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*BillingAccount) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UsageBillingRecords)
-							if nodes[i].Edges.totalCount[2] == nil {
-								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							if nodes[i].Edges.totalCount[3] == nil {
+								nodes[i].Edges.totalCount[3] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[2][alias] = n
+							nodes[i].Edges.totalCount[3][alias] = n
 						}
 						return nil
 					})
@@ -760,10 +850,10 @@ func (_q *BillingAccountQuery) collectField(ctx context.Context, oneNode bool, o
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[3] == nil {
-								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[3][alias] = n
+							nodes[i].Edges.totalCount[4][alias] = n
 						}
 						return nil
 					})
@@ -771,10 +861,10 @@ func (_q *BillingAccountQuery) collectField(ctx context.Context, oneNode bool, o
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*BillingAccount) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.PaymentOrders)
-							if nodes[i].Edges.totalCount[3] == nil {
-								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[3][alias] = n
+							nodes[i].Edges.totalCount[4][alias] = n
 						}
 						return nil
 					})
@@ -834,6 +924,11 @@ func (_q *BillingAccountQuery) collectField(ctx context.Context, oneNode bool, o
 			if _, ok := fieldSeen[billingaccount.FieldBalanceMicros]; !ok {
 				selectedFields = append(selectedFields, billingaccount.FieldBalanceMicros)
 				fieldSeen[billingaccount.FieldBalanceMicros] = struct{}{}
+			}
+		case "heldBalanceMicros":
+			if _, ok := fieldSeen[billingaccount.FieldHeldBalanceMicros]; !ok {
+				selectedFields = append(selectedFields, billingaccount.FieldHeldBalanceMicros)
+				fieldSeen[billingaccount.FieldHeldBalanceMicros] = struct{}{}
 			}
 		case "creditLimitMicros":
 			if _, ok := fieldSeen[billingaccount.FieldCreditLimitMicros]; !ok {
@@ -1033,6 +1128,265 @@ func newBillingAccountBindingPaginateArgs(rv map[string]any) *billingaccountbind
 	}
 	if v, ok := rv[whereField].(*BillingAccountBindingWhereInput); ok {
 		args.opts = append(args.opts, WithBillingAccountBindingFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *BillingHoldQuery) CollectFields(ctx context.Context, satisfies ...string) (*BillingHoldQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *BillingHoldQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(billinghold.Columns))
+		selectedFields = []string{billinghold.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "billingAccount":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, billingaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.withBillingAccount = query
+			if _, ok := fieldSeen[billinghold.FieldBillingAccountID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldBillingAccountID)
+				fieldSeen[billinghold.FieldBillingAccountID] = struct{}{}
+			}
+
+		case "request":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&RequestClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, requestImplementors)...); err != nil {
+				return err
+			}
+			_q.withRequest = query
+			if _, ok := fieldSeen[billinghold.FieldRequestID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldRequestID)
+				fieldSeen[billinghold.FieldRequestID] = struct{}{}
+			}
+
+		case "usageLog":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UsageLogClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, usagelogImplementors)...); err != nil {
+				return err
+			}
+			_q.withUsageLog = query
+			if _, ok := fieldSeen[billinghold.FieldUsageLogID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldUsageLogID)
+				fieldSeen[billinghold.FieldUsageLogID] = struct{}{}
+			}
+
+		case "capturedLedgerTransaction":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&LedgerTransactionClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, ledgertransactionImplementors)...); err != nil {
+				return err
+			}
+			_q.withCapturedLedgerTransaction = query
+			if _, ok := fieldSeen[billinghold.FieldCapturedLedgerTransactionID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldCapturedLedgerTransactionID)
+				fieldSeen[billinghold.FieldCapturedLedgerTransactionID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[billinghold.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldCreatedAt)
+				fieldSeen[billinghold.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[billinghold.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldUpdatedAt)
+				fieldSeen[billinghold.FieldUpdatedAt] = struct{}{}
+			}
+		case "billingAccountID":
+			if _, ok := fieldSeen[billinghold.FieldBillingAccountID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldBillingAccountID)
+				fieldSeen[billinghold.FieldBillingAccountID] = struct{}{}
+			}
+		case "requestID":
+			if _, ok := fieldSeen[billinghold.FieldRequestID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldRequestID)
+				fieldSeen[billinghold.FieldRequestID] = struct{}{}
+			}
+		case "usageLogID":
+			if _, ok := fieldSeen[billinghold.FieldUsageLogID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldUsageLogID)
+				fieldSeen[billinghold.FieldUsageLogID] = struct{}{}
+			}
+		case "projectID":
+			if _, ok := fieldSeen[billinghold.FieldProjectID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldProjectID)
+				fieldSeen[billinghold.FieldProjectID] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[billinghold.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldUserID)
+				fieldSeen[billinghold.FieldUserID] = struct{}{}
+			}
+		case "apiKeyID":
+			if _, ok := fieldSeen[billinghold.FieldAPIKeyID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldAPIKeyID)
+				fieldSeen[billinghold.FieldAPIKeyID] = struct{}{}
+			}
+		case "modelID":
+			if _, ok := fieldSeen[billinghold.FieldModelID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldModelID)
+				fieldSeen[billinghold.FieldModelID] = struct{}{}
+			}
+		case "amountMicros":
+			if _, ok := fieldSeen[billinghold.FieldAmountMicros]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldAmountMicros)
+				fieldSeen[billinghold.FieldAmountMicros] = struct{}{}
+			}
+		case "capturedAmountMicros":
+			if _, ok := fieldSeen[billinghold.FieldCapturedAmountMicros]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldCapturedAmountMicros)
+				fieldSeen[billinghold.FieldCapturedAmountMicros] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[billinghold.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldCurrency)
+				fieldSeen[billinghold.FieldCurrency] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[billinghold.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldStatus)
+				fieldSeen[billinghold.FieldStatus] = struct{}{}
+			}
+		case "idempotencyKey":
+			if _, ok := fieldSeen[billinghold.FieldIdempotencyKey]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldIdempotencyKey)
+				fieldSeen[billinghold.FieldIdempotencyKey] = struct{}{}
+			}
+		case "referenceType":
+			if _, ok := fieldSeen[billinghold.FieldReferenceType]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldReferenceType)
+				fieldSeen[billinghold.FieldReferenceType] = struct{}{}
+			}
+		case "referenceID":
+			if _, ok := fieldSeen[billinghold.FieldReferenceID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldReferenceID)
+				fieldSeen[billinghold.FieldReferenceID] = struct{}{}
+			}
+		case "capturedLedgerTransactionID":
+			if _, ok := fieldSeen[billinghold.FieldCapturedLedgerTransactionID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldCapturedLedgerTransactionID)
+				fieldSeen[billinghold.FieldCapturedLedgerTransactionID] = struct{}{}
+			}
+		case "releaseReason":
+			if _, ok := fieldSeen[billinghold.FieldReleaseReason]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldReleaseReason)
+				fieldSeen[billinghold.FieldReleaseReason] = struct{}{}
+			}
+		case "releasedByType":
+			if _, ok := fieldSeen[billinghold.FieldReleasedByType]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldReleasedByType)
+				fieldSeen[billinghold.FieldReleasedByType] = struct{}{}
+			}
+		case "releasedByID":
+			if _, ok := fieldSeen[billinghold.FieldReleasedByID]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldReleasedByID)
+				fieldSeen[billinghold.FieldReleasedByID] = struct{}{}
+			}
+		case "expiresAt":
+			if _, ok := fieldSeen[billinghold.FieldExpiresAt]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldExpiresAt)
+				fieldSeen[billinghold.FieldExpiresAt] = struct{}{}
+			}
+		case "capturedAt":
+			if _, ok := fieldSeen[billinghold.FieldCapturedAt]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldCapturedAt)
+				fieldSeen[billinghold.FieldCapturedAt] = struct{}{}
+			}
+		case "releasedAt":
+			if _, ok := fieldSeen[billinghold.FieldReleasedAt]; !ok {
+				selectedFields = append(selectedFields, billinghold.FieldReleasedAt)
+				fieldSeen[billinghold.FieldReleasedAt] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type billingholdPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []BillingHoldPaginateOption
+}
+
+func newBillingHoldPaginateArgs(rv map[string]any) *billingholdPaginateArgs {
+	args := &billingholdPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &BillingHoldOrder{Field: &BillingHoldOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithBillingHoldOrder(order))
+			}
+		case *BillingHoldOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithBillingHoldOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*BillingHoldWhereInput); ok {
+		args.opts = append(args.opts, WithBillingHoldFilter(v.Filter))
 	}
 	return args
 }
@@ -2971,6 +3325,95 @@ func (_q *LedgerTransactionQuery) collectField(ctx context.Context, oneNode bool
 				*wq = *query
 			})
 
+		case "billingHolds":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingHoldClient{config: _q.config}).Query()
+			)
+			args := newBillingHoldPaginateArgs(fieldArgs(ctx, new(BillingHoldWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingHoldPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*LedgerTransaction) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"captured_ledger_transaction_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(ledgertransaction.BillingHoldsColumn), ids...))
+						})
+						if err := query.GroupBy(ledgertransaction.BillingHoldsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[3] == nil {
+								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[3][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*LedgerTransaction) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingHolds)
+							if nodes[i].Edges.totalCount[3] == nil {
+								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[3][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingholdImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(ledgertransaction.BillingHoldsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingHolds(alias, func(wq *BillingHoldQuery) {
+				*wq = *query
+			})
+
 		case "paymentOrders":
 			var (
 				alias = field.Alias
@@ -3014,10 +3457,10 @@ func (_q *LedgerTransactionQuery) collectField(ctx context.Context, oneNode bool
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[3] == nil {
-								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[3][alias] = n
+							nodes[i].Edges.totalCount[4][alias] = n
 						}
 						return nil
 					})
@@ -3025,10 +3468,10 @@ func (_q *LedgerTransactionQuery) collectField(ctx context.Context, oneNode bool
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*LedgerTransaction) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.PaymentOrders)
-							if nodes[i].Edges.totalCount[3] == nil {
-								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[3][alias] = n
+							nodes[i].Edges.totalCount[4][alias] = n
 						}
 						return nil
 					})
@@ -6000,6 +6443,95 @@ func (_q *RequestQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 			_q.WithNamedUsageLogs(alias, func(wq *UsageLogQuery) {
 				*wq = *query
 			})
+
+		case "billingHolds":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingHoldClient{config: _q.config}).Query()
+			)
+			args := newBillingHoldPaginateArgs(fieldArgs(ctx, new(BillingHoldWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingHoldPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*Request) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"request_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(request.BillingHoldsColumn), ids...))
+						})
+						if err := query.GroupBy(request.BillingHoldsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*Request) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingHolds)
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingholdImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(request.BillingHoldsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingHolds(alias, func(wq *BillingHoldQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[request.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, request.FieldCreatedAt)
@@ -7665,6 +8197,95 @@ func (_q *UsageLogQuery) collectField(ctx context.Context, oneNode bool, opCtx *
 				query = pager.applyOrder(query)
 			}
 			_q.WithNamedUsageBillingRecords(alias, func(wq *UsageBillingRecordQuery) {
+				*wq = *query
+			})
+
+		case "billingHolds":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingHoldClient{config: _q.config}).Query()
+			)
+			args := newBillingHoldPaginateArgs(fieldArgs(ctx, new(BillingHoldWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingHoldPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UsageLog) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"usage_log_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(usagelog.BillingHoldsColumn), ids...))
+						})
+						if err := query.GroupBy(usagelog.BillingHoldsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UsageLog) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingHolds)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingholdImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(usagelog.BillingHoldsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingHolds(alias, func(wq *BillingHoldQuery) {
 				*wq = *query
 			})
 		case "createdAt":

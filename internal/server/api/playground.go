@@ -47,6 +47,7 @@ type PlaygroundHandlersParams struct {
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
 	AdmissionService            *biz.AdmissionService
 	UsageBillingProcessor       *biz.UsageBillingProcessor
+	BillingHoldService          *biz.BillingHoldService
 }
 
 type PlaygroundHandlers struct {
@@ -71,7 +72,7 @@ func NewPlaygroundHandlers(params PlaygroundHandlersParams) *PlaygroundHandlers 
 			params.LiveStreamRegistry,
 			params.ChannelLimiterManager,
 			params.ProviderQuotaStatusProvider,
-			orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor),
+			orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
 		),
 	}
 }

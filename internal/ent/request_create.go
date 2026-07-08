@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/apikey"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/project"
@@ -401,6 +402,21 @@ func (_c *RequestCreate) AddUsageLogs(v ...*UsageLog) *RequestCreate {
 	return _c.AddUsageLogIDs(ids...)
 }
 
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by IDs.
+func (_c *RequestCreate) AddBillingHoldIDs(ids ...int) *RequestCreate {
+	_c.mutation.AddBillingHoldIDs(ids...)
+	return _c
+}
+
+// AddBillingHolds adds the "billing_holds" edges to the BillingHold entity.
+func (_c *RequestCreate) AddBillingHolds(v ...*BillingHold) *RequestCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBillingHoldIDs(ids...)
+}
+
 // Mutation returns the RequestMutation object of the builder.
 func (_c *RequestCreate) Mutation() *RequestMutation {
 	return _c.mutation
@@ -747,6 +763,22 @@ func (_c *RequestCreate) createSpec() (*Request, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagelog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BillingHoldsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   request.BillingHoldsTable,
+			Columns: []string{request.BillingHoldsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billinghold.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

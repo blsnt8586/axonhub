@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -62,6 +63,18 @@ type AddUserToProjectInput struct {
 	IsOwner   *bool           `json:"isOwner,omitempty"`
 	Scopes    []string        `json:"scopes,omitempty"`
 	RoleIDs   []*objects.GUID `json:"roleIDs,omitempty"`
+}
+
+type AdminBillingHoldsFilter struct {
+	UserID           *int                `json:"userId,omitempty"`
+	ProjectID        *int                `json:"projectId,omitempty"`
+	APIKeyID         *int                `json:"apiKeyId,omitempty"`
+	BillingAccountID *int                `json:"billingAccountId,omitempty"`
+	ModelID          *string             `json:"modelId,omitempty"`
+	Status           *billinghold.Status `json:"status,omitempty"`
+	From             *time.Time          `json:"from,omitempty"`
+	To               *time.Time          `json:"to,omitempty"`
+	ExpiresBefore    *time.Time          `json:"expiresBefore,omitempty"`
 }
 
 type AdminLedgerTransactionsFilter struct {

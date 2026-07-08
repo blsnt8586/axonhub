@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -62,6 +63,7 @@ const (
 	TypeAPIKeyProfileTemplate    = "APIKeyProfileTemplate"
 	TypeBillingAccount           = "BillingAccount"
 	TypeBillingAccountBinding    = "BillingAccountBinding"
+	TypeBillingHold              = "BillingHold"
 	TypeBillingOutbox            = "BillingOutbox"
 	TypeBillingPriceRule         = "BillingPriceRule"
 	TypeChannel                  = "Channel"
@@ -2034,6 +2036,8 @@ type BillingAccountMutation struct {
 	currency                     *string
 	balance_micros               *int64
 	addbalance_micros            *int64
+	held_balance_micros          *int64
+	addheld_balance_micros       *int64
 	credit_limit_micros          *int64
 	addcredit_limit_micros       *int64
 	status                       *billingaccount.Status
@@ -2044,6 +2048,9 @@ type BillingAccountMutation struct {
 	ledger_transactions          map[int]struct{}
 	removedledger_transactions   map[int]struct{}
 	clearedledger_transactions   bool
+	billing_holds                map[int]struct{}
+	removedbilling_holds         map[int]struct{}
+	clearedbilling_holds         bool
 	usage_billing_records        map[int]struct{}
 	removedusage_billing_records map[int]struct{}
 	clearedusage_billing_records bool
@@ -2409,6 +2416,62 @@ func (m *BillingAccountMutation) ResetBalanceMicros() {
 	m.addbalance_micros = nil
 }
 
+// SetHeldBalanceMicros sets the "held_balance_micros" field.
+func (m *BillingAccountMutation) SetHeldBalanceMicros(i int64) {
+	m.held_balance_micros = &i
+	m.addheld_balance_micros = nil
+}
+
+// HeldBalanceMicros returns the value of the "held_balance_micros" field in the mutation.
+func (m *BillingAccountMutation) HeldBalanceMicros() (r int64, exists bool) {
+	v := m.held_balance_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHeldBalanceMicros returns the old "held_balance_micros" field's value of the BillingAccount entity.
+// If the BillingAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAccountMutation) OldHeldBalanceMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHeldBalanceMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHeldBalanceMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHeldBalanceMicros: %w", err)
+	}
+	return oldValue.HeldBalanceMicros, nil
+}
+
+// AddHeldBalanceMicros adds i to the "held_balance_micros" field.
+func (m *BillingAccountMutation) AddHeldBalanceMicros(i int64) {
+	if m.addheld_balance_micros != nil {
+		*m.addheld_balance_micros += i
+	} else {
+		m.addheld_balance_micros = &i
+	}
+}
+
+// AddedHeldBalanceMicros returns the value that was added to the "held_balance_micros" field in this mutation.
+func (m *BillingAccountMutation) AddedHeldBalanceMicros() (r int64, exists bool) {
+	v := m.addheld_balance_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetHeldBalanceMicros resets all changes to the "held_balance_micros" field.
+func (m *BillingAccountMutation) ResetHeldBalanceMicros() {
+	m.held_balance_micros = nil
+	m.addheld_balance_micros = nil
+}
+
 // SetCreditLimitMicros sets the "credit_limit_micros" field.
 func (m *BillingAccountMutation) SetCreditLimitMicros(i int64) {
 	m.credit_limit_micros = &i
@@ -2609,6 +2672,60 @@ func (m *BillingAccountMutation) ResetLedgerTransactions() {
 	m.removedledger_transactions = nil
 }
 
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by ids.
+func (m *BillingAccountMutation) AddBillingHoldIDs(ids ...int) {
+	if m.billing_holds == nil {
+		m.billing_holds = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.billing_holds[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBillingHolds clears the "billing_holds" edge to the BillingHold entity.
+func (m *BillingAccountMutation) ClearBillingHolds() {
+	m.clearedbilling_holds = true
+}
+
+// BillingHoldsCleared reports if the "billing_holds" edge to the BillingHold entity was cleared.
+func (m *BillingAccountMutation) BillingHoldsCleared() bool {
+	return m.clearedbilling_holds
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to the BillingHold entity by IDs.
+func (m *BillingAccountMutation) RemoveBillingHoldIDs(ids ...int) {
+	if m.removedbilling_holds == nil {
+		m.removedbilling_holds = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.billing_holds, ids[i])
+		m.removedbilling_holds[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBillingHolds returns the removed IDs of the "billing_holds" edge to the BillingHold entity.
+func (m *BillingAccountMutation) RemovedBillingHoldsIDs() (ids []int) {
+	for id := range m.removedbilling_holds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BillingHoldsIDs returns the "billing_holds" edge IDs in the mutation.
+func (m *BillingAccountMutation) BillingHoldsIDs() (ids []int) {
+	for id := range m.billing_holds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBillingHolds resets all changes to the "billing_holds" edge.
+func (m *BillingAccountMutation) ResetBillingHolds() {
+	m.billing_holds = nil
+	m.clearedbilling_holds = false
+	m.removedbilling_holds = nil
+}
+
 // AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by ids.
 func (m *BillingAccountMutation) AddUsageBillingRecordIDs(ids ...int) {
 	if m.usage_billing_records == nil {
@@ -2751,7 +2868,7 @@ func (m *BillingAccountMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BillingAccountMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.created_at != nil {
 		fields = append(fields, billingaccount.FieldCreatedAt)
 	}
@@ -2769,6 +2886,9 @@ func (m *BillingAccountMutation) Fields() []string {
 	}
 	if m.balance_micros != nil {
 		fields = append(fields, billingaccount.FieldBalanceMicros)
+	}
+	if m.held_balance_micros != nil {
+		fields = append(fields, billingaccount.FieldHeldBalanceMicros)
 	}
 	if m.credit_limit_micros != nil {
 		fields = append(fields, billingaccount.FieldCreditLimitMicros)
@@ -2796,6 +2916,8 @@ func (m *BillingAccountMutation) Field(name string) (ent.Value, bool) {
 		return m.Currency()
 	case billingaccount.FieldBalanceMicros:
 		return m.BalanceMicros()
+	case billingaccount.FieldHeldBalanceMicros:
+		return m.HeldBalanceMicros()
 	case billingaccount.FieldCreditLimitMicros:
 		return m.CreditLimitMicros()
 	case billingaccount.FieldStatus:
@@ -2821,6 +2943,8 @@ func (m *BillingAccountMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldCurrency(ctx)
 	case billingaccount.FieldBalanceMicros:
 		return m.OldBalanceMicros(ctx)
+	case billingaccount.FieldHeldBalanceMicros:
+		return m.OldHeldBalanceMicros(ctx)
 	case billingaccount.FieldCreditLimitMicros:
 		return m.OldCreditLimitMicros(ctx)
 	case billingaccount.FieldStatus:
@@ -2876,6 +3000,13 @@ func (m *BillingAccountMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetBalanceMicros(v)
 		return nil
+	case billingaccount.FieldHeldBalanceMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHeldBalanceMicros(v)
+		return nil
 	case billingaccount.FieldCreditLimitMicros:
 		v, ok := value.(int64)
 		if !ok {
@@ -2904,6 +3035,9 @@ func (m *BillingAccountMutation) AddedFields() []string {
 	if m.addbalance_micros != nil {
 		fields = append(fields, billingaccount.FieldBalanceMicros)
 	}
+	if m.addheld_balance_micros != nil {
+		fields = append(fields, billingaccount.FieldHeldBalanceMicros)
+	}
 	if m.addcredit_limit_micros != nil {
 		fields = append(fields, billingaccount.FieldCreditLimitMicros)
 	}
@@ -2919,6 +3053,8 @@ func (m *BillingAccountMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedOwnerID()
 	case billingaccount.FieldBalanceMicros:
 		return m.AddedBalanceMicros()
+	case billingaccount.FieldHeldBalanceMicros:
+		return m.AddedHeldBalanceMicros()
 	case billingaccount.FieldCreditLimitMicros:
 		return m.AddedCreditLimitMicros()
 	}
@@ -2943,6 +3079,13 @@ func (m *BillingAccountMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddBalanceMicros(v)
+		return nil
+	case billingaccount.FieldHeldBalanceMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHeldBalanceMicros(v)
 		return nil
 	case billingaccount.FieldCreditLimitMicros:
 		v, ok := value.(int64)
@@ -2996,6 +3139,9 @@ func (m *BillingAccountMutation) ResetField(name string) error {
 	case billingaccount.FieldBalanceMicros:
 		m.ResetBalanceMicros()
 		return nil
+	case billingaccount.FieldHeldBalanceMicros:
+		m.ResetHeldBalanceMicros()
+		return nil
 	case billingaccount.FieldCreditLimitMicros:
 		m.ResetCreditLimitMicros()
 		return nil
@@ -3008,12 +3154,15 @@ func (m *BillingAccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BillingAccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.bindings != nil {
 		edges = append(edges, billingaccount.EdgeBindings)
 	}
 	if m.ledger_transactions != nil {
 		edges = append(edges, billingaccount.EdgeLedgerTransactions)
+	}
+	if m.billing_holds != nil {
+		edges = append(edges, billingaccount.EdgeBillingHolds)
 	}
 	if m.usage_billing_records != nil {
 		edges = append(edges, billingaccount.EdgeUsageBillingRecords)
@@ -3040,6 +3189,12 @@ func (m *BillingAccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case billingaccount.EdgeBillingHolds:
+		ids := make([]ent.Value, 0, len(m.billing_holds))
+		for id := range m.billing_holds {
+			ids = append(ids, id)
+		}
+		return ids
 	case billingaccount.EdgeUsageBillingRecords:
 		ids := make([]ent.Value, 0, len(m.usage_billing_records))
 		for id := range m.usage_billing_records {
@@ -3058,12 +3213,15 @@ func (m *BillingAccountMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BillingAccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedbindings != nil {
 		edges = append(edges, billingaccount.EdgeBindings)
 	}
 	if m.removedledger_transactions != nil {
 		edges = append(edges, billingaccount.EdgeLedgerTransactions)
+	}
+	if m.removedbilling_holds != nil {
+		edges = append(edges, billingaccount.EdgeBillingHolds)
 	}
 	if m.removedusage_billing_records != nil {
 		edges = append(edges, billingaccount.EdgeUsageBillingRecords)
@@ -3090,6 +3248,12 @@ func (m *BillingAccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case billingaccount.EdgeBillingHolds:
+		ids := make([]ent.Value, 0, len(m.removedbilling_holds))
+		for id := range m.removedbilling_holds {
+			ids = append(ids, id)
+		}
+		return ids
 	case billingaccount.EdgeUsageBillingRecords:
 		ids := make([]ent.Value, 0, len(m.removedusage_billing_records))
 		for id := range m.removedusage_billing_records {
@@ -3108,12 +3272,15 @@ func (m *BillingAccountMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BillingAccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedbindings {
 		edges = append(edges, billingaccount.EdgeBindings)
 	}
 	if m.clearedledger_transactions {
 		edges = append(edges, billingaccount.EdgeLedgerTransactions)
+	}
+	if m.clearedbilling_holds {
+		edges = append(edges, billingaccount.EdgeBillingHolds)
 	}
 	if m.clearedusage_billing_records {
 		edges = append(edges, billingaccount.EdgeUsageBillingRecords)
@@ -3132,6 +3299,8 @@ func (m *BillingAccountMutation) EdgeCleared(name string) bool {
 		return m.clearedbindings
 	case billingaccount.EdgeLedgerTransactions:
 		return m.clearedledger_transactions
+	case billingaccount.EdgeBillingHolds:
+		return m.clearedbilling_holds
 	case billingaccount.EdgeUsageBillingRecords:
 		return m.clearedusage_billing_records
 	case billingaccount.EdgePaymentOrders:
@@ -3157,6 +3326,9 @@ func (m *BillingAccountMutation) ResetEdge(name string) error {
 		return nil
 	case billingaccount.EdgeLedgerTransactions:
 		m.ResetLedgerTransactions()
+		return nil
+	case billingaccount.EdgeBillingHolds:
+		m.ResetBillingHolds()
 		return nil
 	case billingaccount.EdgeUsageBillingRecords:
 		m.ResetUsageBillingRecords()
@@ -3852,6 +4024,2038 @@ func (m *BillingAccountBindingMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown BillingAccountBinding edge %s", name)
+}
+
+// BillingHoldMutation represents an operation that mutates the BillingHold nodes in the graph.
+type BillingHoldMutation struct {
+	config
+	op                                 Op
+	typ                                string
+	id                                 *int
+	created_at                         *time.Time
+	updated_at                         *time.Time
+	project_id                         *int
+	addproject_id                      *int
+	user_id                            *int
+	adduser_id                         *int
+	api_key_id                         *int
+	addapi_key_id                      *int
+	model_id                           *string
+	amount_micros                      *int64
+	addamount_micros                   *int64
+	captured_amount_micros             *int64
+	addcaptured_amount_micros          *int64
+	currency                           *string
+	status                             *billinghold.Status
+	idempotency_key                    *string
+	reference_type                     *string
+	reference_id                       *string
+	release_reason                     *string
+	released_by_type                   *billinghold.ReleasedByType
+	released_by_id                     *string
+	expires_at                         *time.Time
+	captured_at                        *time.Time
+	released_at                        *time.Time
+	clearedFields                      map[string]struct{}
+	billing_account                    *int
+	clearedbilling_account             bool
+	request                            *int
+	clearedrequest                     bool
+	usage_log                          *int
+	clearedusage_log                   bool
+	captured_ledger_transaction        *int
+	clearedcaptured_ledger_transaction bool
+	done                               bool
+	oldValue                           func(context.Context) (*BillingHold, error)
+	predicates                         []predicate.BillingHold
+}
+
+var _ ent.Mutation = (*BillingHoldMutation)(nil)
+
+// billingholdOption allows management of the mutation configuration using functional options.
+type billingholdOption func(*BillingHoldMutation)
+
+// newBillingHoldMutation creates new mutation for the BillingHold entity.
+func newBillingHoldMutation(c config, op Op, opts ...billingholdOption) *BillingHoldMutation {
+	m := &BillingHoldMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBillingHold,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBillingHoldID sets the ID field of the mutation.
+func withBillingHoldID(id int) billingholdOption {
+	return func(m *BillingHoldMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BillingHold
+		)
+		m.oldValue = func(ctx context.Context) (*BillingHold, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BillingHold.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBillingHold sets the old BillingHold of the mutation.
+func withBillingHold(node *BillingHold) billingholdOption {
+	return func(m *BillingHoldMutation) {
+		m.oldValue = func(context.Context) (*BillingHold, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BillingHoldMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BillingHoldMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BillingHoldMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BillingHoldMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BillingHold.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BillingHoldMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BillingHoldMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BillingHoldMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BillingHoldMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BillingHoldMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BillingHoldMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetBillingAccountID sets the "billing_account_id" field.
+func (m *BillingHoldMutation) SetBillingAccountID(i int) {
+	m.billing_account = &i
+}
+
+// BillingAccountID returns the value of the "billing_account_id" field in the mutation.
+func (m *BillingHoldMutation) BillingAccountID() (r int, exists bool) {
+	v := m.billing_account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBillingAccountID returns the old "billing_account_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldBillingAccountID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBillingAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBillingAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBillingAccountID: %w", err)
+	}
+	return oldValue.BillingAccountID, nil
+}
+
+// ResetBillingAccountID resets all changes to the "billing_account_id" field.
+func (m *BillingHoldMutation) ResetBillingAccountID() {
+	m.billing_account = nil
+}
+
+// SetRequestID sets the "request_id" field.
+func (m *BillingHoldMutation) SetRequestID(i int) {
+	m.request = &i
+}
+
+// RequestID returns the value of the "request_id" field in the mutation.
+func (m *BillingHoldMutation) RequestID() (r int, exists bool) {
+	v := m.request
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestID returns the old "request_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldRequestID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestID: %w", err)
+	}
+	return oldValue.RequestID, nil
+}
+
+// ClearRequestID clears the value of the "request_id" field.
+func (m *BillingHoldMutation) ClearRequestID() {
+	m.request = nil
+	m.clearedFields[billinghold.FieldRequestID] = struct{}{}
+}
+
+// RequestIDCleared returns if the "request_id" field was cleared in this mutation.
+func (m *BillingHoldMutation) RequestIDCleared() bool {
+	_, ok := m.clearedFields[billinghold.FieldRequestID]
+	return ok
+}
+
+// ResetRequestID resets all changes to the "request_id" field.
+func (m *BillingHoldMutation) ResetRequestID() {
+	m.request = nil
+	delete(m.clearedFields, billinghold.FieldRequestID)
+}
+
+// SetUsageLogID sets the "usage_log_id" field.
+func (m *BillingHoldMutation) SetUsageLogID(i int) {
+	m.usage_log = &i
+}
+
+// UsageLogID returns the value of the "usage_log_id" field in the mutation.
+func (m *BillingHoldMutation) UsageLogID() (r int, exists bool) {
+	v := m.usage_log
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUsageLogID returns the old "usage_log_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldUsageLogID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUsageLogID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUsageLogID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUsageLogID: %w", err)
+	}
+	return oldValue.UsageLogID, nil
+}
+
+// ClearUsageLogID clears the value of the "usage_log_id" field.
+func (m *BillingHoldMutation) ClearUsageLogID() {
+	m.usage_log = nil
+	m.clearedFields[billinghold.FieldUsageLogID] = struct{}{}
+}
+
+// UsageLogIDCleared returns if the "usage_log_id" field was cleared in this mutation.
+func (m *BillingHoldMutation) UsageLogIDCleared() bool {
+	_, ok := m.clearedFields[billinghold.FieldUsageLogID]
+	return ok
+}
+
+// ResetUsageLogID resets all changes to the "usage_log_id" field.
+func (m *BillingHoldMutation) ResetUsageLogID() {
+	m.usage_log = nil
+	delete(m.clearedFields, billinghold.FieldUsageLogID)
+}
+
+// SetProjectID sets the "project_id" field.
+func (m *BillingHoldMutation) SetProjectID(i int) {
+	m.project_id = &i
+	m.addproject_id = nil
+}
+
+// ProjectID returns the value of the "project_id" field in the mutation.
+func (m *BillingHoldMutation) ProjectID() (r int, exists bool) {
+	v := m.project_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectID returns the old "project_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldProjectID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectID: %w", err)
+	}
+	return oldValue.ProjectID, nil
+}
+
+// AddProjectID adds i to the "project_id" field.
+func (m *BillingHoldMutation) AddProjectID(i int) {
+	if m.addproject_id != nil {
+		*m.addproject_id += i
+	} else {
+		m.addproject_id = &i
+	}
+}
+
+// AddedProjectID returns the value that was added to the "project_id" field in this mutation.
+func (m *BillingHoldMutation) AddedProjectID() (r int, exists bool) {
+	v := m.addproject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearProjectID clears the value of the "project_id" field.
+func (m *BillingHoldMutation) ClearProjectID() {
+	m.project_id = nil
+	m.addproject_id = nil
+	m.clearedFields[billinghold.FieldProjectID] = struct{}{}
+}
+
+// ProjectIDCleared returns if the "project_id" field was cleared in this mutation.
+func (m *BillingHoldMutation) ProjectIDCleared() bool {
+	_, ok := m.clearedFields[billinghold.FieldProjectID]
+	return ok
+}
+
+// ResetProjectID resets all changes to the "project_id" field.
+func (m *BillingHoldMutation) ResetProjectID() {
+	m.project_id = nil
+	m.addproject_id = nil
+	delete(m.clearedFields, billinghold.FieldProjectID)
+}
+
+// SetUserID sets the "user_id" field.
+func (m *BillingHoldMutation) SetUserID(i int) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *BillingHoldMutation) UserID() (r int, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *BillingHoldMutation) AddUserID(i int) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *BillingHoldMutation) AddedUserID() (r int, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (m *BillingHoldMutation) ClearUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+	m.clearedFields[billinghold.FieldUserID] = struct{}{}
+}
+
+// UserIDCleared returns if the "user_id" field was cleared in this mutation.
+func (m *BillingHoldMutation) UserIDCleared() bool {
+	_, ok := m.clearedFields[billinghold.FieldUserID]
+	return ok
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *BillingHoldMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+	delete(m.clearedFields, billinghold.FieldUserID)
+}
+
+// SetAPIKeyID sets the "api_key_id" field.
+func (m *BillingHoldMutation) SetAPIKeyID(i int) {
+	m.api_key_id = &i
+	m.addapi_key_id = nil
+}
+
+// APIKeyID returns the value of the "api_key_id" field in the mutation.
+func (m *BillingHoldMutation) APIKeyID() (r int, exists bool) {
+	v := m.api_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIKeyID returns the old "api_key_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldAPIKeyID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIKeyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIKeyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIKeyID: %w", err)
+	}
+	return oldValue.APIKeyID, nil
+}
+
+// AddAPIKeyID adds i to the "api_key_id" field.
+func (m *BillingHoldMutation) AddAPIKeyID(i int) {
+	if m.addapi_key_id != nil {
+		*m.addapi_key_id += i
+	} else {
+		m.addapi_key_id = &i
+	}
+}
+
+// AddedAPIKeyID returns the value that was added to the "api_key_id" field in this mutation.
+func (m *BillingHoldMutation) AddedAPIKeyID() (r int, exists bool) {
+	v := m.addapi_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAPIKeyID clears the value of the "api_key_id" field.
+func (m *BillingHoldMutation) ClearAPIKeyID() {
+	m.api_key_id = nil
+	m.addapi_key_id = nil
+	m.clearedFields[billinghold.FieldAPIKeyID] = struct{}{}
+}
+
+// APIKeyIDCleared returns if the "api_key_id" field was cleared in this mutation.
+func (m *BillingHoldMutation) APIKeyIDCleared() bool {
+	_, ok := m.clearedFields[billinghold.FieldAPIKeyID]
+	return ok
+}
+
+// ResetAPIKeyID resets all changes to the "api_key_id" field.
+func (m *BillingHoldMutation) ResetAPIKeyID() {
+	m.api_key_id = nil
+	m.addapi_key_id = nil
+	delete(m.clearedFields, billinghold.FieldAPIKeyID)
+}
+
+// SetModelID sets the "model_id" field.
+func (m *BillingHoldMutation) SetModelID(s string) {
+	m.model_id = &s
+}
+
+// ModelID returns the value of the "model_id" field in the mutation.
+func (m *BillingHoldMutation) ModelID() (r string, exists bool) {
+	v := m.model_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModelID returns the old "model_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldModelID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModelID: %w", err)
+	}
+	return oldValue.ModelID, nil
+}
+
+// ResetModelID resets all changes to the "model_id" field.
+func (m *BillingHoldMutation) ResetModelID() {
+	m.model_id = nil
+}
+
+// SetAmountMicros sets the "amount_micros" field.
+func (m *BillingHoldMutation) SetAmountMicros(i int64) {
+	m.amount_micros = &i
+	m.addamount_micros = nil
+}
+
+// AmountMicros returns the value of the "amount_micros" field in the mutation.
+func (m *BillingHoldMutation) AmountMicros() (r int64, exists bool) {
+	v := m.amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAmountMicros returns the old "amount_micros" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAmountMicros: %w", err)
+	}
+	return oldValue.AmountMicros, nil
+}
+
+// AddAmountMicros adds i to the "amount_micros" field.
+func (m *BillingHoldMutation) AddAmountMicros(i int64) {
+	if m.addamount_micros != nil {
+		*m.addamount_micros += i
+	} else {
+		m.addamount_micros = &i
+	}
+}
+
+// AddedAmountMicros returns the value that was added to the "amount_micros" field in this mutation.
+func (m *BillingHoldMutation) AddedAmountMicros() (r int64, exists bool) {
+	v := m.addamount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAmountMicros resets all changes to the "amount_micros" field.
+func (m *BillingHoldMutation) ResetAmountMicros() {
+	m.amount_micros = nil
+	m.addamount_micros = nil
+}
+
+// SetCapturedAmountMicros sets the "captured_amount_micros" field.
+func (m *BillingHoldMutation) SetCapturedAmountMicros(i int64) {
+	m.captured_amount_micros = &i
+	m.addcaptured_amount_micros = nil
+}
+
+// CapturedAmountMicros returns the value of the "captured_amount_micros" field in the mutation.
+func (m *BillingHoldMutation) CapturedAmountMicros() (r int64, exists bool) {
+	v := m.captured_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCapturedAmountMicros returns the old "captured_amount_micros" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldCapturedAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCapturedAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCapturedAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCapturedAmountMicros: %w", err)
+	}
+	return oldValue.CapturedAmountMicros, nil
+}
+
+// AddCapturedAmountMicros adds i to the "captured_amount_micros" field.
+func (m *BillingHoldMutation) AddCapturedAmountMicros(i int64) {
+	if m.addcaptured_amount_micros != nil {
+		*m.addcaptured_amount_micros += i
+	} else {
+		m.addcaptured_amount_micros = &i
+	}
+}
+
+// AddedCapturedAmountMicros returns the value that was added to the "captured_amount_micros" field in this mutation.
+func (m *BillingHoldMutation) AddedCapturedAmountMicros() (r int64, exists bool) {
+	v := m.addcaptured_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCapturedAmountMicros resets all changes to the "captured_amount_micros" field.
+func (m *BillingHoldMutation) ResetCapturedAmountMicros() {
+	m.captured_amount_micros = nil
+	m.addcaptured_amount_micros = nil
+}
+
+// SetCurrency sets the "currency" field.
+func (m *BillingHoldMutation) SetCurrency(s string) {
+	m.currency = &s
+}
+
+// Currency returns the value of the "currency" field in the mutation.
+func (m *BillingHoldMutation) Currency() (r string, exists bool) {
+	v := m.currency
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrency returns the old "currency" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldCurrency(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrency is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrency requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrency: %w", err)
+	}
+	return oldValue.Currency, nil
+}
+
+// ResetCurrency resets all changes to the "currency" field.
+func (m *BillingHoldMutation) ResetCurrency() {
+	m.currency = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *BillingHoldMutation) SetStatus(b billinghold.Status) {
+	m.status = &b
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *BillingHoldMutation) Status() (r billinghold.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldStatus(ctx context.Context) (v billinghold.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *BillingHoldMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetIdempotencyKey sets the "idempotency_key" field.
+func (m *BillingHoldMutation) SetIdempotencyKey(s string) {
+	m.idempotency_key = &s
+}
+
+// IdempotencyKey returns the value of the "idempotency_key" field in the mutation.
+func (m *BillingHoldMutation) IdempotencyKey() (r string, exists bool) {
+	v := m.idempotency_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdempotencyKey returns the old "idempotency_key" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldIdempotencyKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdempotencyKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdempotencyKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdempotencyKey: %w", err)
+	}
+	return oldValue.IdempotencyKey, nil
+}
+
+// ResetIdempotencyKey resets all changes to the "idempotency_key" field.
+func (m *BillingHoldMutation) ResetIdempotencyKey() {
+	m.idempotency_key = nil
+}
+
+// SetReferenceType sets the "reference_type" field.
+func (m *BillingHoldMutation) SetReferenceType(s string) {
+	m.reference_type = &s
+}
+
+// ReferenceType returns the value of the "reference_type" field in the mutation.
+func (m *BillingHoldMutation) ReferenceType() (r string, exists bool) {
+	v := m.reference_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReferenceType returns the old "reference_type" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldReferenceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReferenceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReferenceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReferenceType: %w", err)
+	}
+	return oldValue.ReferenceType, nil
+}
+
+// ResetReferenceType resets all changes to the "reference_type" field.
+func (m *BillingHoldMutation) ResetReferenceType() {
+	m.reference_type = nil
+}
+
+// SetReferenceID sets the "reference_id" field.
+func (m *BillingHoldMutation) SetReferenceID(s string) {
+	m.reference_id = &s
+}
+
+// ReferenceID returns the value of the "reference_id" field in the mutation.
+func (m *BillingHoldMutation) ReferenceID() (r string, exists bool) {
+	v := m.reference_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReferenceID returns the old "reference_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldReferenceID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReferenceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReferenceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReferenceID: %w", err)
+	}
+	return oldValue.ReferenceID, nil
+}
+
+// ResetReferenceID resets all changes to the "reference_id" field.
+func (m *BillingHoldMutation) ResetReferenceID() {
+	m.reference_id = nil
+}
+
+// SetCapturedLedgerTransactionID sets the "captured_ledger_transaction_id" field.
+func (m *BillingHoldMutation) SetCapturedLedgerTransactionID(i int) {
+	m.captured_ledger_transaction = &i
+}
+
+// CapturedLedgerTransactionID returns the value of the "captured_ledger_transaction_id" field in the mutation.
+func (m *BillingHoldMutation) CapturedLedgerTransactionID() (r int, exists bool) {
+	v := m.captured_ledger_transaction
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCapturedLedgerTransactionID returns the old "captured_ledger_transaction_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldCapturedLedgerTransactionID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCapturedLedgerTransactionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCapturedLedgerTransactionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCapturedLedgerTransactionID: %w", err)
+	}
+	return oldValue.CapturedLedgerTransactionID, nil
+}
+
+// ClearCapturedLedgerTransactionID clears the value of the "captured_ledger_transaction_id" field.
+func (m *BillingHoldMutation) ClearCapturedLedgerTransactionID() {
+	m.captured_ledger_transaction = nil
+	m.clearedFields[billinghold.FieldCapturedLedgerTransactionID] = struct{}{}
+}
+
+// CapturedLedgerTransactionIDCleared returns if the "captured_ledger_transaction_id" field was cleared in this mutation.
+func (m *BillingHoldMutation) CapturedLedgerTransactionIDCleared() bool {
+	_, ok := m.clearedFields[billinghold.FieldCapturedLedgerTransactionID]
+	return ok
+}
+
+// ResetCapturedLedgerTransactionID resets all changes to the "captured_ledger_transaction_id" field.
+func (m *BillingHoldMutation) ResetCapturedLedgerTransactionID() {
+	m.captured_ledger_transaction = nil
+	delete(m.clearedFields, billinghold.FieldCapturedLedgerTransactionID)
+}
+
+// SetReleaseReason sets the "release_reason" field.
+func (m *BillingHoldMutation) SetReleaseReason(s string) {
+	m.release_reason = &s
+}
+
+// ReleaseReason returns the value of the "release_reason" field in the mutation.
+func (m *BillingHoldMutation) ReleaseReason() (r string, exists bool) {
+	v := m.release_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReleaseReason returns the old "release_reason" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldReleaseReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReleaseReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReleaseReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReleaseReason: %w", err)
+	}
+	return oldValue.ReleaseReason, nil
+}
+
+// ResetReleaseReason resets all changes to the "release_reason" field.
+func (m *BillingHoldMutation) ResetReleaseReason() {
+	m.release_reason = nil
+}
+
+// SetReleasedByType sets the "released_by_type" field.
+func (m *BillingHoldMutation) SetReleasedByType(bbt billinghold.ReleasedByType) {
+	m.released_by_type = &bbt
+}
+
+// ReleasedByType returns the value of the "released_by_type" field in the mutation.
+func (m *BillingHoldMutation) ReleasedByType() (r billinghold.ReleasedByType, exists bool) {
+	v := m.released_by_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReleasedByType returns the old "released_by_type" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldReleasedByType(ctx context.Context) (v billinghold.ReleasedByType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReleasedByType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReleasedByType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReleasedByType: %w", err)
+	}
+	return oldValue.ReleasedByType, nil
+}
+
+// ResetReleasedByType resets all changes to the "released_by_type" field.
+func (m *BillingHoldMutation) ResetReleasedByType() {
+	m.released_by_type = nil
+}
+
+// SetReleasedByID sets the "released_by_id" field.
+func (m *BillingHoldMutation) SetReleasedByID(s string) {
+	m.released_by_id = &s
+}
+
+// ReleasedByID returns the value of the "released_by_id" field in the mutation.
+func (m *BillingHoldMutation) ReleasedByID() (r string, exists bool) {
+	v := m.released_by_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReleasedByID returns the old "released_by_id" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldReleasedByID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReleasedByID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReleasedByID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReleasedByID: %w", err)
+	}
+	return oldValue.ReleasedByID, nil
+}
+
+// ResetReleasedByID resets all changes to the "released_by_id" field.
+func (m *BillingHoldMutation) ResetReleasedByID() {
+	m.released_by_id = nil
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *BillingHoldMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *BillingHoldMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldExpiresAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *BillingHoldMutation) ResetExpiresAt() {
+	m.expires_at = nil
+}
+
+// SetCapturedAt sets the "captured_at" field.
+func (m *BillingHoldMutation) SetCapturedAt(t time.Time) {
+	m.captured_at = &t
+}
+
+// CapturedAt returns the value of the "captured_at" field in the mutation.
+func (m *BillingHoldMutation) CapturedAt() (r time.Time, exists bool) {
+	v := m.captured_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCapturedAt returns the old "captured_at" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldCapturedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCapturedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCapturedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCapturedAt: %w", err)
+	}
+	return oldValue.CapturedAt, nil
+}
+
+// ClearCapturedAt clears the value of the "captured_at" field.
+func (m *BillingHoldMutation) ClearCapturedAt() {
+	m.captured_at = nil
+	m.clearedFields[billinghold.FieldCapturedAt] = struct{}{}
+}
+
+// CapturedAtCleared returns if the "captured_at" field was cleared in this mutation.
+func (m *BillingHoldMutation) CapturedAtCleared() bool {
+	_, ok := m.clearedFields[billinghold.FieldCapturedAt]
+	return ok
+}
+
+// ResetCapturedAt resets all changes to the "captured_at" field.
+func (m *BillingHoldMutation) ResetCapturedAt() {
+	m.captured_at = nil
+	delete(m.clearedFields, billinghold.FieldCapturedAt)
+}
+
+// SetReleasedAt sets the "released_at" field.
+func (m *BillingHoldMutation) SetReleasedAt(t time.Time) {
+	m.released_at = &t
+}
+
+// ReleasedAt returns the value of the "released_at" field in the mutation.
+func (m *BillingHoldMutation) ReleasedAt() (r time.Time, exists bool) {
+	v := m.released_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReleasedAt returns the old "released_at" field's value of the BillingHold entity.
+// If the BillingHold object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingHoldMutation) OldReleasedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReleasedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReleasedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReleasedAt: %w", err)
+	}
+	return oldValue.ReleasedAt, nil
+}
+
+// ClearReleasedAt clears the value of the "released_at" field.
+func (m *BillingHoldMutation) ClearReleasedAt() {
+	m.released_at = nil
+	m.clearedFields[billinghold.FieldReleasedAt] = struct{}{}
+}
+
+// ReleasedAtCleared returns if the "released_at" field was cleared in this mutation.
+func (m *BillingHoldMutation) ReleasedAtCleared() bool {
+	_, ok := m.clearedFields[billinghold.FieldReleasedAt]
+	return ok
+}
+
+// ResetReleasedAt resets all changes to the "released_at" field.
+func (m *BillingHoldMutation) ResetReleasedAt() {
+	m.released_at = nil
+	delete(m.clearedFields, billinghold.FieldReleasedAt)
+}
+
+// ClearBillingAccount clears the "billing_account" edge to the BillingAccount entity.
+func (m *BillingHoldMutation) ClearBillingAccount() {
+	m.clearedbilling_account = true
+	m.clearedFields[billinghold.FieldBillingAccountID] = struct{}{}
+}
+
+// BillingAccountCleared reports if the "billing_account" edge to the BillingAccount entity was cleared.
+func (m *BillingHoldMutation) BillingAccountCleared() bool {
+	return m.clearedbilling_account
+}
+
+// BillingAccountIDs returns the "billing_account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// BillingAccountID instead. It exists only for internal usage by the builders.
+func (m *BillingHoldMutation) BillingAccountIDs() (ids []int) {
+	if id := m.billing_account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetBillingAccount resets all changes to the "billing_account" edge.
+func (m *BillingHoldMutation) ResetBillingAccount() {
+	m.billing_account = nil
+	m.clearedbilling_account = false
+}
+
+// ClearRequest clears the "request" edge to the Request entity.
+func (m *BillingHoldMutation) ClearRequest() {
+	m.clearedrequest = true
+	m.clearedFields[billinghold.FieldRequestID] = struct{}{}
+}
+
+// RequestCleared reports if the "request" edge to the Request entity was cleared.
+func (m *BillingHoldMutation) RequestCleared() bool {
+	return m.RequestIDCleared() || m.clearedrequest
+}
+
+// RequestIDs returns the "request" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RequestID instead. It exists only for internal usage by the builders.
+func (m *BillingHoldMutation) RequestIDs() (ids []int) {
+	if id := m.request; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRequest resets all changes to the "request" edge.
+func (m *BillingHoldMutation) ResetRequest() {
+	m.request = nil
+	m.clearedrequest = false
+}
+
+// ClearUsageLog clears the "usage_log" edge to the UsageLog entity.
+func (m *BillingHoldMutation) ClearUsageLog() {
+	m.clearedusage_log = true
+	m.clearedFields[billinghold.FieldUsageLogID] = struct{}{}
+}
+
+// UsageLogCleared reports if the "usage_log" edge to the UsageLog entity was cleared.
+func (m *BillingHoldMutation) UsageLogCleared() bool {
+	return m.UsageLogIDCleared() || m.clearedusage_log
+}
+
+// UsageLogIDs returns the "usage_log" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UsageLogID instead. It exists only for internal usage by the builders.
+func (m *BillingHoldMutation) UsageLogIDs() (ids []int) {
+	if id := m.usage_log; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUsageLog resets all changes to the "usage_log" edge.
+func (m *BillingHoldMutation) ResetUsageLog() {
+	m.usage_log = nil
+	m.clearedusage_log = false
+}
+
+// ClearCapturedLedgerTransaction clears the "captured_ledger_transaction" edge to the LedgerTransaction entity.
+func (m *BillingHoldMutation) ClearCapturedLedgerTransaction() {
+	m.clearedcaptured_ledger_transaction = true
+	m.clearedFields[billinghold.FieldCapturedLedgerTransactionID] = struct{}{}
+}
+
+// CapturedLedgerTransactionCleared reports if the "captured_ledger_transaction" edge to the LedgerTransaction entity was cleared.
+func (m *BillingHoldMutation) CapturedLedgerTransactionCleared() bool {
+	return m.CapturedLedgerTransactionIDCleared() || m.clearedcaptured_ledger_transaction
+}
+
+// CapturedLedgerTransactionIDs returns the "captured_ledger_transaction" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CapturedLedgerTransactionID instead. It exists only for internal usage by the builders.
+func (m *BillingHoldMutation) CapturedLedgerTransactionIDs() (ids []int) {
+	if id := m.captured_ledger_transaction; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCapturedLedgerTransaction resets all changes to the "captured_ledger_transaction" edge.
+func (m *BillingHoldMutation) ResetCapturedLedgerTransaction() {
+	m.captured_ledger_transaction = nil
+	m.clearedcaptured_ledger_transaction = false
+}
+
+// Where appends a list predicates to the BillingHoldMutation builder.
+func (m *BillingHoldMutation) Where(ps ...predicate.BillingHold) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BillingHoldMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BillingHoldMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BillingHold, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BillingHoldMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BillingHoldMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BillingHold).
+func (m *BillingHoldMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BillingHoldMutation) Fields() []string {
+	fields := make([]string, 0, 23)
+	if m.created_at != nil {
+		fields = append(fields, billinghold.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, billinghold.FieldUpdatedAt)
+	}
+	if m.billing_account != nil {
+		fields = append(fields, billinghold.FieldBillingAccountID)
+	}
+	if m.request != nil {
+		fields = append(fields, billinghold.FieldRequestID)
+	}
+	if m.usage_log != nil {
+		fields = append(fields, billinghold.FieldUsageLogID)
+	}
+	if m.project_id != nil {
+		fields = append(fields, billinghold.FieldProjectID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, billinghold.FieldUserID)
+	}
+	if m.api_key_id != nil {
+		fields = append(fields, billinghold.FieldAPIKeyID)
+	}
+	if m.model_id != nil {
+		fields = append(fields, billinghold.FieldModelID)
+	}
+	if m.amount_micros != nil {
+		fields = append(fields, billinghold.FieldAmountMicros)
+	}
+	if m.captured_amount_micros != nil {
+		fields = append(fields, billinghold.FieldCapturedAmountMicros)
+	}
+	if m.currency != nil {
+		fields = append(fields, billinghold.FieldCurrency)
+	}
+	if m.status != nil {
+		fields = append(fields, billinghold.FieldStatus)
+	}
+	if m.idempotency_key != nil {
+		fields = append(fields, billinghold.FieldIdempotencyKey)
+	}
+	if m.reference_type != nil {
+		fields = append(fields, billinghold.FieldReferenceType)
+	}
+	if m.reference_id != nil {
+		fields = append(fields, billinghold.FieldReferenceID)
+	}
+	if m.captured_ledger_transaction != nil {
+		fields = append(fields, billinghold.FieldCapturedLedgerTransactionID)
+	}
+	if m.release_reason != nil {
+		fields = append(fields, billinghold.FieldReleaseReason)
+	}
+	if m.released_by_type != nil {
+		fields = append(fields, billinghold.FieldReleasedByType)
+	}
+	if m.released_by_id != nil {
+		fields = append(fields, billinghold.FieldReleasedByID)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, billinghold.FieldExpiresAt)
+	}
+	if m.captured_at != nil {
+		fields = append(fields, billinghold.FieldCapturedAt)
+	}
+	if m.released_at != nil {
+		fields = append(fields, billinghold.FieldReleasedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BillingHoldMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case billinghold.FieldCreatedAt:
+		return m.CreatedAt()
+	case billinghold.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case billinghold.FieldBillingAccountID:
+		return m.BillingAccountID()
+	case billinghold.FieldRequestID:
+		return m.RequestID()
+	case billinghold.FieldUsageLogID:
+		return m.UsageLogID()
+	case billinghold.FieldProjectID:
+		return m.ProjectID()
+	case billinghold.FieldUserID:
+		return m.UserID()
+	case billinghold.FieldAPIKeyID:
+		return m.APIKeyID()
+	case billinghold.FieldModelID:
+		return m.ModelID()
+	case billinghold.FieldAmountMicros:
+		return m.AmountMicros()
+	case billinghold.FieldCapturedAmountMicros:
+		return m.CapturedAmountMicros()
+	case billinghold.FieldCurrency:
+		return m.Currency()
+	case billinghold.FieldStatus:
+		return m.Status()
+	case billinghold.FieldIdempotencyKey:
+		return m.IdempotencyKey()
+	case billinghold.FieldReferenceType:
+		return m.ReferenceType()
+	case billinghold.FieldReferenceID:
+		return m.ReferenceID()
+	case billinghold.FieldCapturedLedgerTransactionID:
+		return m.CapturedLedgerTransactionID()
+	case billinghold.FieldReleaseReason:
+		return m.ReleaseReason()
+	case billinghold.FieldReleasedByType:
+		return m.ReleasedByType()
+	case billinghold.FieldReleasedByID:
+		return m.ReleasedByID()
+	case billinghold.FieldExpiresAt:
+		return m.ExpiresAt()
+	case billinghold.FieldCapturedAt:
+		return m.CapturedAt()
+	case billinghold.FieldReleasedAt:
+		return m.ReleasedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BillingHoldMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case billinghold.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case billinghold.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case billinghold.FieldBillingAccountID:
+		return m.OldBillingAccountID(ctx)
+	case billinghold.FieldRequestID:
+		return m.OldRequestID(ctx)
+	case billinghold.FieldUsageLogID:
+		return m.OldUsageLogID(ctx)
+	case billinghold.FieldProjectID:
+		return m.OldProjectID(ctx)
+	case billinghold.FieldUserID:
+		return m.OldUserID(ctx)
+	case billinghold.FieldAPIKeyID:
+		return m.OldAPIKeyID(ctx)
+	case billinghold.FieldModelID:
+		return m.OldModelID(ctx)
+	case billinghold.FieldAmountMicros:
+		return m.OldAmountMicros(ctx)
+	case billinghold.FieldCapturedAmountMicros:
+		return m.OldCapturedAmountMicros(ctx)
+	case billinghold.FieldCurrency:
+		return m.OldCurrency(ctx)
+	case billinghold.FieldStatus:
+		return m.OldStatus(ctx)
+	case billinghold.FieldIdempotencyKey:
+		return m.OldIdempotencyKey(ctx)
+	case billinghold.FieldReferenceType:
+		return m.OldReferenceType(ctx)
+	case billinghold.FieldReferenceID:
+		return m.OldReferenceID(ctx)
+	case billinghold.FieldCapturedLedgerTransactionID:
+		return m.OldCapturedLedgerTransactionID(ctx)
+	case billinghold.FieldReleaseReason:
+		return m.OldReleaseReason(ctx)
+	case billinghold.FieldReleasedByType:
+		return m.OldReleasedByType(ctx)
+	case billinghold.FieldReleasedByID:
+		return m.OldReleasedByID(ctx)
+	case billinghold.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	case billinghold.FieldCapturedAt:
+		return m.OldCapturedAt(ctx)
+	case billinghold.FieldReleasedAt:
+		return m.OldReleasedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown BillingHold field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BillingHoldMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case billinghold.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case billinghold.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case billinghold.FieldBillingAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBillingAccountID(v)
+		return nil
+	case billinghold.FieldRequestID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestID(v)
+		return nil
+	case billinghold.FieldUsageLogID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUsageLogID(v)
+		return nil
+	case billinghold.FieldProjectID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectID(v)
+		return nil
+	case billinghold.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case billinghold.FieldAPIKeyID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIKeyID(v)
+		return nil
+	case billinghold.FieldModelID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModelID(v)
+		return nil
+	case billinghold.FieldAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAmountMicros(v)
+		return nil
+	case billinghold.FieldCapturedAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCapturedAmountMicros(v)
+		return nil
+	case billinghold.FieldCurrency:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrency(v)
+		return nil
+	case billinghold.FieldStatus:
+		v, ok := value.(billinghold.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case billinghold.FieldIdempotencyKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdempotencyKey(v)
+		return nil
+	case billinghold.FieldReferenceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReferenceType(v)
+		return nil
+	case billinghold.FieldReferenceID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReferenceID(v)
+		return nil
+	case billinghold.FieldCapturedLedgerTransactionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCapturedLedgerTransactionID(v)
+		return nil
+	case billinghold.FieldReleaseReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReleaseReason(v)
+		return nil
+	case billinghold.FieldReleasedByType:
+		v, ok := value.(billinghold.ReleasedByType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReleasedByType(v)
+		return nil
+	case billinghold.FieldReleasedByID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReleasedByID(v)
+		return nil
+	case billinghold.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	case billinghold.FieldCapturedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCapturedAt(v)
+		return nil
+	case billinghold.FieldReleasedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReleasedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BillingHold field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BillingHoldMutation) AddedFields() []string {
+	var fields []string
+	if m.addproject_id != nil {
+		fields = append(fields, billinghold.FieldProjectID)
+	}
+	if m.adduser_id != nil {
+		fields = append(fields, billinghold.FieldUserID)
+	}
+	if m.addapi_key_id != nil {
+		fields = append(fields, billinghold.FieldAPIKeyID)
+	}
+	if m.addamount_micros != nil {
+		fields = append(fields, billinghold.FieldAmountMicros)
+	}
+	if m.addcaptured_amount_micros != nil {
+		fields = append(fields, billinghold.FieldCapturedAmountMicros)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BillingHoldMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case billinghold.FieldProjectID:
+		return m.AddedProjectID()
+	case billinghold.FieldUserID:
+		return m.AddedUserID()
+	case billinghold.FieldAPIKeyID:
+		return m.AddedAPIKeyID()
+	case billinghold.FieldAmountMicros:
+		return m.AddedAmountMicros()
+	case billinghold.FieldCapturedAmountMicros:
+		return m.AddedCapturedAmountMicros()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BillingHoldMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case billinghold.FieldProjectID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddProjectID(v)
+		return nil
+	case billinghold.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	case billinghold.FieldAPIKeyID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAPIKeyID(v)
+		return nil
+	case billinghold.FieldAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAmountMicros(v)
+		return nil
+	case billinghold.FieldCapturedAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCapturedAmountMicros(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BillingHold numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BillingHoldMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(billinghold.FieldRequestID) {
+		fields = append(fields, billinghold.FieldRequestID)
+	}
+	if m.FieldCleared(billinghold.FieldUsageLogID) {
+		fields = append(fields, billinghold.FieldUsageLogID)
+	}
+	if m.FieldCleared(billinghold.FieldProjectID) {
+		fields = append(fields, billinghold.FieldProjectID)
+	}
+	if m.FieldCleared(billinghold.FieldUserID) {
+		fields = append(fields, billinghold.FieldUserID)
+	}
+	if m.FieldCleared(billinghold.FieldAPIKeyID) {
+		fields = append(fields, billinghold.FieldAPIKeyID)
+	}
+	if m.FieldCleared(billinghold.FieldCapturedLedgerTransactionID) {
+		fields = append(fields, billinghold.FieldCapturedLedgerTransactionID)
+	}
+	if m.FieldCleared(billinghold.FieldCapturedAt) {
+		fields = append(fields, billinghold.FieldCapturedAt)
+	}
+	if m.FieldCleared(billinghold.FieldReleasedAt) {
+		fields = append(fields, billinghold.FieldReleasedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BillingHoldMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BillingHoldMutation) ClearField(name string) error {
+	switch name {
+	case billinghold.FieldRequestID:
+		m.ClearRequestID()
+		return nil
+	case billinghold.FieldUsageLogID:
+		m.ClearUsageLogID()
+		return nil
+	case billinghold.FieldProjectID:
+		m.ClearProjectID()
+		return nil
+	case billinghold.FieldUserID:
+		m.ClearUserID()
+		return nil
+	case billinghold.FieldAPIKeyID:
+		m.ClearAPIKeyID()
+		return nil
+	case billinghold.FieldCapturedLedgerTransactionID:
+		m.ClearCapturedLedgerTransactionID()
+		return nil
+	case billinghold.FieldCapturedAt:
+		m.ClearCapturedAt()
+		return nil
+	case billinghold.FieldReleasedAt:
+		m.ClearReleasedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown BillingHold nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BillingHoldMutation) ResetField(name string) error {
+	switch name {
+	case billinghold.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case billinghold.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case billinghold.FieldBillingAccountID:
+		m.ResetBillingAccountID()
+		return nil
+	case billinghold.FieldRequestID:
+		m.ResetRequestID()
+		return nil
+	case billinghold.FieldUsageLogID:
+		m.ResetUsageLogID()
+		return nil
+	case billinghold.FieldProjectID:
+		m.ResetProjectID()
+		return nil
+	case billinghold.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case billinghold.FieldAPIKeyID:
+		m.ResetAPIKeyID()
+		return nil
+	case billinghold.FieldModelID:
+		m.ResetModelID()
+		return nil
+	case billinghold.FieldAmountMicros:
+		m.ResetAmountMicros()
+		return nil
+	case billinghold.FieldCapturedAmountMicros:
+		m.ResetCapturedAmountMicros()
+		return nil
+	case billinghold.FieldCurrency:
+		m.ResetCurrency()
+		return nil
+	case billinghold.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case billinghold.FieldIdempotencyKey:
+		m.ResetIdempotencyKey()
+		return nil
+	case billinghold.FieldReferenceType:
+		m.ResetReferenceType()
+		return nil
+	case billinghold.FieldReferenceID:
+		m.ResetReferenceID()
+		return nil
+	case billinghold.FieldCapturedLedgerTransactionID:
+		m.ResetCapturedLedgerTransactionID()
+		return nil
+	case billinghold.FieldReleaseReason:
+		m.ResetReleaseReason()
+		return nil
+	case billinghold.FieldReleasedByType:
+		m.ResetReleasedByType()
+		return nil
+	case billinghold.FieldReleasedByID:
+		m.ResetReleasedByID()
+		return nil
+	case billinghold.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	case billinghold.FieldCapturedAt:
+		m.ResetCapturedAt()
+		return nil
+	case billinghold.FieldReleasedAt:
+		m.ResetReleasedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown BillingHold field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BillingHoldMutation) AddedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.billing_account != nil {
+		edges = append(edges, billinghold.EdgeBillingAccount)
+	}
+	if m.request != nil {
+		edges = append(edges, billinghold.EdgeRequest)
+	}
+	if m.usage_log != nil {
+		edges = append(edges, billinghold.EdgeUsageLog)
+	}
+	if m.captured_ledger_transaction != nil {
+		edges = append(edges, billinghold.EdgeCapturedLedgerTransaction)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BillingHoldMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case billinghold.EdgeBillingAccount:
+		if id := m.billing_account; id != nil {
+			return []ent.Value{*id}
+		}
+	case billinghold.EdgeRequest:
+		if id := m.request; id != nil {
+			return []ent.Value{*id}
+		}
+	case billinghold.EdgeUsageLog:
+		if id := m.usage_log; id != nil {
+			return []ent.Value{*id}
+		}
+	case billinghold.EdgeCapturedLedgerTransaction:
+		if id := m.captured_ledger_transaction; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BillingHoldMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 4)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BillingHoldMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BillingHoldMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.clearedbilling_account {
+		edges = append(edges, billinghold.EdgeBillingAccount)
+	}
+	if m.clearedrequest {
+		edges = append(edges, billinghold.EdgeRequest)
+	}
+	if m.clearedusage_log {
+		edges = append(edges, billinghold.EdgeUsageLog)
+	}
+	if m.clearedcaptured_ledger_transaction {
+		edges = append(edges, billinghold.EdgeCapturedLedgerTransaction)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BillingHoldMutation) EdgeCleared(name string) bool {
+	switch name {
+	case billinghold.EdgeBillingAccount:
+		return m.clearedbilling_account
+	case billinghold.EdgeRequest:
+		return m.clearedrequest
+	case billinghold.EdgeUsageLog:
+		return m.clearedusage_log
+	case billinghold.EdgeCapturedLedgerTransaction:
+		return m.clearedcaptured_ledger_transaction
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BillingHoldMutation) ClearEdge(name string) error {
+	switch name {
+	case billinghold.EdgeBillingAccount:
+		m.ClearBillingAccount()
+		return nil
+	case billinghold.EdgeRequest:
+		m.ClearRequest()
+		return nil
+	case billinghold.EdgeUsageLog:
+		m.ClearUsageLog()
+		return nil
+	case billinghold.EdgeCapturedLedgerTransaction:
+		m.ClearCapturedLedgerTransaction()
+		return nil
+	}
+	return fmt.Errorf("unknown BillingHold unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BillingHoldMutation) ResetEdge(name string) error {
+	switch name {
+	case billinghold.EdgeBillingAccount:
+		m.ResetBillingAccount()
+		return nil
+	case billinghold.EdgeRequest:
+		m.ResetRequest()
+		return nil
+	case billinghold.EdgeUsageLog:
+		m.ResetUsageLog()
+		return nil
+	case billinghold.EdgeCapturedLedgerTransaction:
+		m.ResetCapturedLedgerTransaction()
+		return nil
+	}
+	return fmt.Errorf("unknown BillingHold edge %s", name)
 }
 
 // BillingOutboxMutation represents an operation that mutates the BillingOutbox nodes in the graph.
@@ -13203,6 +15407,9 @@ type LedgerTransactionMutation struct {
 	usage_billing_records        map[int]struct{}
 	removedusage_billing_records map[int]struct{}
 	clearedusage_billing_records bool
+	billing_holds                map[int]struct{}
+	removedbilling_holds         map[int]struct{}
+	clearedbilling_holds         bool
 	payment_orders               map[int]struct{}
 	removedpayment_orders        map[int]struct{}
 	clearedpayment_orders        bool
@@ -13968,6 +16175,60 @@ func (m *LedgerTransactionMutation) ResetUsageBillingRecords() {
 	m.removedusage_billing_records = nil
 }
 
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by ids.
+func (m *LedgerTransactionMutation) AddBillingHoldIDs(ids ...int) {
+	if m.billing_holds == nil {
+		m.billing_holds = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.billing_holds[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBillingHolds clears the "billing_holds" edge to the BillingHold entity.
+func (m *LedgerTransactionMutation) ClearBillingHolds() {
+	m.clearedbilling_holds = true
+}
+
+// BillingHoldsCleared reports if the "billing_holds" edge to the BillingHold entity was cleared.
+func (m *LedgerTransactionMutation) BillingHoldsCleared() bool {
+	return m.clearedbilling_holds
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to the BillingHold entity by IDs.
+func (m *LedgerTransactionMutation) RemoveBillingHoldIDs(ids ...int) {
+	if m.removedbilling_holds == nil {
+		m.removedbilling_holds = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.billing_holds, ids[i])
+		m.removedbilling_holds[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBillingHolds returns the removed IDs of the "billing_holds" edge to the BillingHold entity.
+func (m *LedgerTransactionMutation) RemovedBillingHoldsIDs() (ids []int) {
+	for id := range m.removedbilling_holds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BillingHoldsIDs returns the "billing_holds" edge IDs in the mutation.
+func (m *LedgerTransactionMutation) BillingHoldsIDs() (ids []int) {
+	for id := range m.billing_holds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBillingHolds resets all changes to the "billing_holds" edge.
+func (m *LedgerTransactionMutation) ResetBillingHolds() {
+	m.billing_holds = nil
+	m.clearedbilling_holds = false
+	m.removedbilling_holds = nil
+}
+
 // AddPaymentOrderIDs adds the "payment_orders" edge to the PaymentOrder entity by ids.
 func (m *LedgerTransactionMutation) AddPaymentOrderIDs(ids ...int) {
 	if m.payment_orders == nil {
@@ -14391,7 +16652,7 @@ func (m *LedgerTransactionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *LedgerTransactionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.billing_account != nil {
 		edges = append(edges, ledgertransaction.EdgeBillingAccount)
 	}
@@ -14400,6 +16661,9 @@ func (m *LedgerTransactionMutation) AddedEdges() []string {
 	}
 	if m.usage_billing_records != nil {
 		edges = append(edges, ledgertransaction.EdgeUsageBillingRecords)
+	}
+	if m.billing_holds != nil {
+		edges = append(edges, ledgertransaction.EdgeBillingHolds)
 	}
 	if m.payment_orders != nil {
 		edges = append(edges, ledgertransaction.EdgePaymentOrders)
@@ -14427,6 +16691,12 @@ func (m *LedgerTransactionMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ledgertransaction.EdgeBillingHolds:
+		ids := make([]ent.Value, 0, len(m.billing_holds))
+		for id := range m.billing_holds {
+			ids = append(ids, id)
+		}
+		return ids
 	case ledgertransaction.EdgePaymentOrders:
 		ids := make([]ent.Value, 0, len(m.payment_orders))
 		for id := range m.payment_orders {
@@ -14439,12 +16709,15 @@ func (m *LedgerTransactionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *LedgerTransactionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedentries != nil {
 		edges = append(edges, ledgertransaction.EdgeEntries)
 	}
 	if m.removedusage_billing_records != nil {
 		edges = append(edges, ledgertransaction.EdgeUsageBillingRecords)
+	}
+	if m.removedbilling_holds != nil {
+		edges = append(edges, ledgertransaction.EdgeBillingHolds)
 	}
 	if m.removedpayment_orders != nil {
 		edges = append(edges, ledgertransaction.EdgePaymentOrders)
@@ -14468,6 +16741,12 @@ func (m *LedgerTransactionMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ledgertransaction.EdgeBillingHolds:
+		ids := make([]ent.Value, 0, len(m.removedbilling_holds))
+		for id := range m.removedbilling_holds {
+			ids = append(ids, id)
+		}
+		return ids
 	case ledgertransaction.EdgePaymentOrders:
 		ids := make([]ent.Value, 0, len(m.removedpayment_orders))
 		for id := range m.removedpayment_orders {
@@ -14480,7 +16759,7 @@ func (m *LedgerTransactionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *LedgerTransactionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedbilling_account {
 		edges = append(edges, ledgertransaction.EdgeBillingAccount)
 	}
@@ -14489,6 +16768,9 @@ func (m *LedgerTransactionMutation) ClearedEdges() []string {
 	}
 	if m.clearedusage_billing_records {
 		edges = append(edges, ledgertransaction.EdgeUsageBillingRecords)
+	}
+	if m.clearedbilling_holds {
+		edges = append(edges, ledgertransaction.EdgeBillingHolds)
 	}
 	if m.clearedpayment_orders {
 		edges = append(edges, ledgertransaction.EdgePaymentOrders)
@@ -14506,6 +16788,8 @@ func (m *LedgerTransactionMutation) EdgeCleared(name string) bool {
 		return m.clearedentries
 	case ledgertransaction.EdgeUsageBillingRecords:
 		return m.clearedusage_billing_records
+	case ledgertransaction.EdgeBillingHolds:
+		return m.clearedbilling_holds
 	case ledgertransaction.EdgePaymentOrders:
 		return m.clearedpayment_orders
 	}
@@ -14535,6 +16819,9 @@ func (m *LedgerTransactionMutation) ResetEdge(name string) error {
 		return nil
 	case ledgertransaction.EdgeUsageBillingRecords:
 		m.ResetUsageBillingRecords()
+		return nil
+	case ledgertransaction.EdgeBillingHolds:
+		m.ResetBillingHolds()
 		return nil
 	case ledgertransaction.EdgePaymentOrders:
 		m.ResetPaymentOrders()
@@ -24162,6 +26449,9 @@ type RequestMutation struct {
 	usage_logs                        map[int]struct{}
 	removedusage_logs                 map[int]struct{}
 	clearedusage_logs                 bool
+	billing_holds                     map[int]struct{}
+	removedbilling_holds              map[int]struct{}
+	clearedbilling_holds              bool
 	done                              bool
 	oldValue                          func(context.Context) (*Request, error)
 	predicates                        []predicate.Request
@@ -25786,6 +28076,60 @@ func (m *RequestMutation) ResetUsageLogs() {
 	m.removedusage_logs = nil
 }
 
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by ids.
+func (m *RequestMutation) AddBillingHoldIDs(ids ...int) {
+	if m.billing_holds == nil {
+		m.billing_holds = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.billing_holds[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBillingHolds clears the "billing_holds" edge to the BillingHold entity.
+func (m *RequestMutation) ClearBillingHolds() {
+	m.clearedbilling_holds = true
+}
+
+// BillingHoldsCleared reports if the "billing_holds" edge to the BillingHold entity was cleared.
+func (m *RequestMutation) BillingHoldsCleared() bool {
+	return m.clearedbilling_holds
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to the BillingHold entity by IDs.
+func (m *RequestMutation) RemoveBillingHoldIDs(ids ...int) {
+	if m.removedbilling_holds == nil {
+		m.removedbilling_holds = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.billing_holds, ids[i])
+		m.removedbilling_holds[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBillingHolds returns the removed IDs of the "billing_holds" edge to the BillingHold entity.
+func (m *RequestMutation) RemovedBillingHoldsIDs() (ids []int) {
+	for id := range m.removedbilling_holds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BillingHoldsIDs returns the "billing_holds" edge IDs in the mutation.
+func (m *RequestMutation) BillingHoldsIDs() (ids []int) {
+	for id := range m.billing_holds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBillingHolds resets all changes to the "billing_holds" edge.
+func (m *RequestMutation) ResetBillingHolds() {
+	m.billing_holds = nil
+	m.clearedbilling_holds = false
+	m.removedbilling_holds = nil
+}
+
 // Where appends a list predicates to the RequestMutation builder.
 func (m *RequestMutation) Where(ps ...predicate.Request) {
 	m.predicates = append(m.predicates, ps...)
@@ -26488,7 +28832,7 @@ func (m *RequestMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RequestMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.api_key != nil {
 		edges = append(edges, request.EdgeAPIKey)
 	}
@@ -26509,6 +28853,9 @@ func (m *RequestMutation) AddedEdges() []string {
 	}
 	if m.usage_logs != nil {
 		edges = append(edges, request.EdgeUsageLogs)
+	}
+	if m.billing_holds != nil {
+		edges = append(edges, request.EdgeBillingHolds)
 	}
 	return edges
 }
@@ -26549,18 +28896,27 @@ func (m *RequestMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case request.EdgeBillingHolds:
+		ids := make([]ent.Value, 0, len(m.billing_holds))
+		for id := range m.billing_holds {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RequestMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.removedexecutions != nil {
 		edges = append(edges, request.EdgeExecutions)
 	}
 	if m.removedusage_logs != nil {
 		edges = append(edges, request.EdgeUsageLogs)
+	}
+	if m.removedbilling_holds != nil {
+		edges = append(edges, request.EdgeBillingHolds)
 	}
 	return edges
 }
@@ -26581,13 +28937,19 @@ func (m *RequestMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case request.EdgeBillingHolds:
+		ids := make([]ent.Value, 0, len(m.removedbilling_holds))
+		for id := range m.removedbilling_holds {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RequestMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.clearedapi_key {
 		edges = append(edges, request.EdgeAPIKey)
 	}
@@ -26608,6 +28970,9 @@ func (m *RequestMutation) ClearedEdges() []string {
 	}
 	if m.clearedusage_logs {
 		edges = append(edges, request.EdgeUsageLogs)
+	}
+	if m.clearedbilling_holds {
+		edges = append(edges, request.EdgeBillingHolds)
 	}
 	return edges
 }
@@ -26630,6 +28995,8 @@ func (m *RequestMutation) EdgeCleared(name string) bool {
 		return m.clearedchannel
 	case request.EdgeUsageLogs:
 		return m.clearedusage_logs
+	case request.EdgeBillingHolds:
+		return m.clearedbilling_holds
 	}
 	return false
 }
@@ -26681,6 +29048,9 @@ func (m *RequestMutation) ResetEdge(name string) error {
 		return nil
 	case request.EdgeUsageLogs:
 		m.ResetUsageLogs()
+		return nil
+	case request.EdgeBillingHolds:
+		m.ResetBillingHolds()
 		return nil
 	}
 	return fmt.Errorf("unknown Request edge %s", name)
@@ -33520,6 +35890,9 @@ type UsageLogMutation struct {
 	usage_billing_records                    map[int]struct{}
 	removedusage_billing_records             map[int]struct{}
 	clearedusage_billing_records             bool
+	billing_holds                            map[int]struct{}
+	removedbilling_holds                     map[int]struct{}
+	clearedbilling_holds                     bool
 	done                                     bool
 	oldValue                                 func(context.Context) (*UsageLog, error)
 	predicates                               []predicate.UsageLog
@@ -35111,6 +37484,60 @@ func (m *UsageLogMutation) ResetUsageBillingRecords() {
 	m.removedusage_billing_records = nil
 }
 
+// AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by ids.
+func (m *UsageLogMutation) AddBillingHoldIDs(ids ...int) {
+	if m.billing_holds == nil {
+		m.billing_holds = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.billing_holds[ids[i]] = struct{}{}
+	}
+}
+
+// ClearBillingHolds clears the "billing_holds" edge to the BillingHold entity.
+func (m *UsageLogMutation) ClearBillingHolds() {
+	m.clearedbilling_holds = true
+}
+
+// BillingHoldsCleared reports if the "billing_holds" edge to the BillingHold entity was cleared.
+func (m *UsageLogMutation) BillingHoldsCleared() bool {
+	return m.clearedbilling_holds
+}
+
+// RemoveBillingHoldIDs removes the "billing_holds" edge to the BillingHold entity by IDs.
+func (m *UsageLogMutation) RemoveBillingHoldIDs(ids ...int) {
+	if m.removedbilling_holds == nil {
+		m.removedbilling_holds = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.billing_holds, ids[i])
+		m.removedbilling_holds[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedBillingHolds returns the removed IDs of the "billing_holds" edge to the BillingHold entity.
+func (m *UsageLogMutation) RemovedBillingHoldsIDs() (ids []int) {
+	for id := range m.removedbilling_holds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// BillingHoldsIDs returns the "billing_holds" edge IDs in the mutation.
+func (m *UsageLogMutation) BillingHoldsIDs() (ids []int) {
+	for id := range m.billing_holds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetBillingHolds resets all changes to the "billing_holds" edge.
+func (m *UsageLogMutation) ResetBillingHolds() {
+	m.billing_holds = nil
+	m.clearedbilling_holds = false
+	m.removedbilling_holds = nil
+}
+
 // Where appends a list predicates to the UsageLogMutation builder.
 func (m *UsageLogMutation) Where(ps ...predicate.UsageLog) {
 	m.predicates = append(m.predicates, ps...)
@@ -35893,7 +38320,7 @@ func (m *UsageLogMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UsageLogMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.request != nil {
 		edges = append(edges, usagelog.EdgeRequest)
 	}
@@ -35905,6 +38332,9 @@ func (m *UsageLogMutation) AddedEdges() []string {
 	}
 	if m.usage_billing_records != nil {
 		edges = append(edges, usagelog.EdgeUsageBillingRecords)
+	}
+	if m.billing_holds != nil {
+		edges = append(edges, usagelog.EdgeBillingHolds)
 	}
 	return edges
 }
@@ -35931,15 +38361,24 @@ func (m *UsageLogMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case usagelog.EdgeBillingHolds:
+		ids := make([]ent.Value, 0, len(m.billing_holds))
+		for id := range m.billing_holds {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UsageLogMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedusage_billing_records != nil {
 		edges = append(edges, usagelog.EdgeUsageBillingRecords)
+	}
+	if m.removedbilling_holds != nil {
+		edges = append(edges, usagelog.EdgeBillingHolds)
 	}
 	return edges
 }
@@ -35954,13 +38393,19 @@ func (m *UsageLogMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case usagelog.EdgeBillingHolds:
+		ids := make([]ent.Value, 0, len(m.removedbilling_holds))
+		for id := range m.removedbilling_holds {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UsageLogMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedrequest {
 		edges = append(edges, usagelog.EdgeRequest)
 	}
@@ -35972,6 +38417,9 @@ func (m *UsageLogMutation) ClearedEdges() []string {
 	}
 	if m.clearedusage_billing_records {
 		edges = append(edges, usagelog.EdgeUsageBillingRecords)
+	}
+	if m.clearedbilling_holds {
+		edges = append(edges, usagelog.EdgeBillingHolds)
 	}
 	return edges
 }
@@ -35988,6 +38436,8 @@ func (m *UsageLogMutation) EdgeCleared(name string) bool {
 		return m.clearedchannel
 	case usagelog.EdgeUsageBillingRecords:
 		return m.clearedusage_billing_records
+	case usagelog.EdgeBillingHolds:
+		return m.clearedbilling_holds
 	}
 	return false
 }
@@ -36024,6 +38474,9 @@ func (m *UsageLogMutation) ResetEdge(name string) error {
 		return nil
 	case usagelog.EdgeUsageBillingRecords:
 		m.ResetUsageBillingRecords()
+		return nil
+	case usagelog.EdgeBillingHolds:
+		m.ResetBillingHolds()
 		return nil
 	}
 	return fmt.Errorf("unknown UsageLog edge %s", name)

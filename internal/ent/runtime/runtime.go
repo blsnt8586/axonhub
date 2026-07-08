@@ -10,6 +10,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -172,8 +173,12 @@ func init() {
 	billingaccountDescBalanceMicros := billingaccountFields[3].Descriptor()
 	// billingaccount.DefaultBalanceMicros holds the default value on creation for the balance_micros field.
 	billingaccount.DefaultBalanceMicros = billingaccountDescBalanceMicros.Default.(int64)
+	// billingaccountDescHeldBalanceMicros is the schema descriptor for held_balance_micros field.
+	billingaccountDescHeldBalanceMicros := billingaccountFields[4].Descriptor()
+	// billingaccount.DefaultHeldBalanceMicros holds the default value on creation for the held_balance_micros field.
+	billingaccount.DefaultHeldBalanceMicros = billingaccountDescHeldBalanceMicros.Default.(int64)
 	// billingaccountDescCreditLimitMicros is the schema descriptor for credit_limit_micros field.
-	billingaccountDescCreditLimitMicros := billingaccountFields[4].Descriptor()
+	billingaccountDescCreditLimitMicros := billingaccountFields[5].Descriptor()
 	// billingaccount.DefaultCreditLimitMicros holds the default value on creation for the credit_limit_micros field.
 	billingaccount.DefaultCreditLimitMicros = billingaccountDescCreditLimitMicros.Default.(int64)
 	billingaccountbindingMixin := schema.BillingAccountBinding{}.Mixin()
@@ -204,6 +209,62 @@ func init() {
 	billingaccountbindingDescRelation := billingaccountbindingFields[3].Descriptor()
 	// billingaccountbinding.DefaultRelation holds the default value on creation for the relation field.
 	billingaccountbinding.DefaultRelation = billingaccountbindingDescRelation.Default.(string)
+	billingholdMixin := schema.BillingHold{}.Mixin()
+	billinghold.Policy = privacy.NewPolicies(schema.BillingHold{})
+	billinghold.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := billinghold.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	billingholdMixinFields0 := billingholdMixin[0].Fields()
+	_ = billingholdMixinFields0
+	billingholdFields := schema.BillingHold{}.Fields()
+	_ = billingholdFields
+	// billingholdDescCreatedAt is the schema descriptor for created_at field.
+	billingholdDescCreatedAt := billingholdMixinFields0[0].Descriptor()
+	// billinghold.DefaultCreatedAt holds the default value on creation for the created_at field.
+	billinghold.DefaultCreatedAt = billingholdDescCreatedAt.Default.(func() time.Time)
+	// billingholdDescUpdatedAt is the schema descriptor for updated_at field.
+	billingholdDescUpdatedAt := billingholdMixinFields0[1].Descriptor()
+	// billinghold.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	billinghold.DefaultUpdatedAt = billingholdDescUpdatedAt.Default.(func() time.Time)
+	// billinghold.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	billinghold.UpdateDefaultUpdatedAt = billingholdDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// billingholdDescModelID is the schema descriptor for model_id field.
+	billingholdDescModelID := billingholdFields[6].Descriptor()
+	// billinghold.DefaultModelID holds the default value on creation for the model_id field.
+	billinghold.DefaultModelID = billingholdDescModelID.Default.(string)
+	// billingholdDescAmountMicros is the schema descriptor for amount_micros field.
+	billingholdDescAmountMicros := billingholdFields[7].Descriptor()
+	// billinghold.AmountMicrosValidator is a validator for the "amount_micros" field. It is called by the builders before save.
+	billinghold.AmountMicrosValidator = billingholdDescAmountMicros.Validators[0].(func(int64) error)
+	// billingholdDescCapturedAmountMicros is the schema descriptor for captured_amount_micros field.
+	billingholdDescCapturedAmountMicros := billingholdFields[8].Descriptor()
+	// billinghold.DefaultCapturedAmountMicros holds the default value on creation for the captured_amount_micros field.
+	billinghold.DefaultCapturedAmountMicros = billingholdDescCapturedAmountMicros.Default.(int64)
+	// billingholdDescCurrency is the schema descriptor for currency field.
+	billingholdDescCurrency := billingholdFields[9].Descriptor()
+	// billinghold.DefaultCurrency holds the default value on creation for the currency field.
+	billinghold.DefaultCurrency = billingholdDescCurrency.Default.(string)
+	// billingholdDescReferenceType is the schema descriptor for reference_type field.
+	billingholdDescReferenceType := billingholdFields[12].Descriptor()
+	// billinghold.DefaultReferenceType holds the default value on creation for the reference_type field.
+	billinghold.DefaultReferenceType = billingholdDescReferenceType.Default.(string)
+	// billingholdDescReferenceID is the schema descriptor for reference_id field.
+	billingholdDescReferenceID := billingholdFields[13].Descriptor()
+	// billinghold.DefaultReferenceID holds the default value on creation for the reference_id field.
+	billinghold.DefaultReferenceID = billingholdDescReferenceID.Default.(string)
+	// billingholdDescReleaseReason is the schema descriptor for release_reason field.
+	billingholdDescReleaseReason := billingholdFields[15].Descriptor()
+	// billinghold.DefaultReleaseReason holds the default value on creation for the release_reason field.
+	billinghold.DefaultReleaseReason = billingholdDescReleaseReason.Default.(string)
+	// billingholdDescReleasedByID is the schema descriptor for released_by_id field.
+	billingholdDescReleasedByID := billingholdFields[17].Descriptor()
+	// billinghold.DefaultReleasedByID holds the default value on creation for the released_by_id field.
+	billinghold.DefaultReleasedByID = billingholdDescReleasedByID.Default.(string)
 	billingoutboxMixin := schema.BillingOutbox{}.Mixin()
 	billingoutbox.Policy = privacy.NewPolicies(schema.BillingOutbox{})
 	billingoutbox.Hooks[0] = func(next ent.Mutator) ent.Mutator {

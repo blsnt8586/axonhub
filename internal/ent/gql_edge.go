@@ -95,6 +95,27 @@ func (_m *BillingAccount) LedgerTransactions(
 	return _m.QueryLedgerTransactions().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *BillingAccount) BillingHolds(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingHoldOrder, where *BillingHoldWhereInput,
+) (*BillingHoldConnection, error) {
+	opts := []BillingHoldPaginateOption{
+		WithBillingHoldOrder(orderBy),
+		WithBillingHoldFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[2][alias]
+	if nodes, err := _m.NamedBillingHolds(alias); err == nil || hasTotalCount {
+		pager, err := newBillingHoldPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingHoldConnection{Edges: []*BillingHoldEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingHolds().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *BillingAccount) UsageBillingRecords(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UsageBillingRecordOrder, where *UsageBillingRecordWhereInput,
 ) (*UsageBillingRecordConnection, error) {
@@ -103,7 +124,7 @@ func (_m *BillingAccount) UsageBillingRecords(
 		WithUsageBillingRecordFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[2][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
 	if nodes, err := _m.NamedUsageBillingRecords(alias); err == nil || hasTotalCount {
 		pager, err := newUsageBillingRecordPager(opts, last != nil)
 		if err != nil {
@@ -124,7 +145,7 @@ func (_m *BillingAccount) PaymentOrders(
 		WithPaymentOrderFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
 	if nodes, err := _m.NamedPaymentOrders(alias); err == nil || hasTotalCount {
 		pager, err := newPaymentOrderPager(opts, last != nil)
 		if err != nil {
@@ -143,6 +164,38 @@ func (_m *BillingAccountBinding) BillingAccount(ctx context.Context) (*BillingAc
 		result, err = _m.QueryBillingAccount().Only(ctx)
 	}
 	return result, err
+}
+
+func (_m *BillingHold) BillingAccount(ctx context.Context) (*BillingAccount, error) {
+	result, err := _m.Edges.BillingAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryBillingAccount().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *BillingHold) Request(ctx context.Context) (*Request, error) {
+	result, err := _m.Edges.RequestOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryRequest().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *BillingHold) UsageLog(ctx context.Context) (*UsageLog, error) {
+	result, err := _m.Edges.UsageLogOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUsageLog().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *BillingHold) CapturedLedgerTransaction(ctx context.Context) (*LedgerTransaction, error) {
+	result, err := _m.Edges.CapturedLedgerTransactionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryCapturedLedgerTransaction().Only(ctx)
+	}
+	return result, MaskNotFound(err)
 }
 
 func (_m *Channel) Requests(
@@ -384,6 +437,27 @@ func (_m *LedgerTransaction) UsageBillingRecords(
 	return _m.QueryUsageBillingRecords().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *LedgerTransaction) BillingHolds(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingHoldOrder, where *BillingHoldWhereInput,
+) (*BillingHoldConnection, error) {
+	opts := []BillingHoldPaginateOption{
+		WithBillingHoldOrder(orderBy),
+		WithBillingHoldFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	if nodes, err := _m.NamedBillingHolds(alias); err == nil || hasTotalCount {
+		pager, err := newBillingHoldPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingHoldConnection{Edges: []*BillingHoldEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingHolds().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *LedgerTransaction) PaymentOrders(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PaymentOrderOrder, where *PaymentOrderWhereInput,
 ) (*PaymentOrderConnection, error) {
@@ -392,7 +466,7 @@ func (_m *LedgerTransaction) PaymentOrders(
 		WithPaymentOrderFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
 	if nodes, err := _m.NamedPaymentOrders(alias); err == nil || hasTotalCount {
 		pager, err := newPaymentOrderPager(opts, last != nil)
 		if err != nil {
@@ -837,6 +911,27 @@ func (_m *Request) UsageLogs(
 	return _m.QueryUsageLogs().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *Request) BillingHolds(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingHoldOrder, where *BillingHoldWhereInput,
+) (*BillingHoldConnection, error) {
+	opts := []BillingHoldPaginateOption{
+		WithBillingHoldOrder(orderBy),
+		WithBillingHoldFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
+	if nodes, err := _m.NamedBillingHolds(alias); err == nil || hasTotalCount {
+		pager, err := newBillingHoldPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingHoldConnection{Edges: []*BillingHoldEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingHolds().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *RequestExecution) Request(ctx context.Context) (*Request, error) {
 	result, err := _m.Edges.RequestOrErr()
 	if IsNotLoaded(err) {
@@ -1044,6 +1139,27 @@ func (_m *UsageLog) UsageBillingRecords(
 		return conn, nil
 	}
 	return _m.QueryUsageBillingRecords().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *UsageLog) BillingHolds(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingHoldOrder, where *BillingHoldWhereInput,
+) (*BillingHoldConnection, error) {
+	opts := []BillingHoldPaginateOption{
+		WithBillingHoldOrder(orderBy),
+		WithBillingHoldFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	if nodes, err := _m.NamedBillingHolds(alias); err == nil || hasTotalCount {
+		pager, err := newBillingHoldPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingHoldConnection{Edges: []*BillingHoldEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingHolds().Paginate(ctx, after, first, before, last, opts...)
 }
 
 func (_m *User) Projects(

@@ -110,10 +110,13 @@ func NewChatCompletionOrchestrator(
 
 type ChatCompletionOrchestratorOption func(*ChatCompletionOrchestrator)
 
-func WithCommercialBilling(admissionService *biz.AdmissionService, usageBillingProcessor *biz.UsageBillingProcessor) ChatCompletionOrchestratorOption {
+func WithCommercialBilling(admissionService *biz.AdmissionService, usageBillingProcessor *biz.UsageBillingProcessor, billingHoldServices ...*biz.BillingHoldService) ChatCompletionOrchestratorOption {
 	return func(processor *ChatCompletionOrchestrator) {
 		processor.AdmissionService = admissionService
 		processor.UsageBillingProcessor = usageBillingProcessor
+		if len(billingHoldServices) > 0 {
+			processor.BillingHoldService = billingHoldServices[0]
+		}
 	}
 }
 
@@ -124,6 +127,7 @@ type ChatCompletionOrchestrator struct {
 	SystemService         *biz.SystemService
 	UsageLogService       *biz.UsageLogService
 	UsageBillingProcessor *biz.UsageBillingProcessor
+	BillingHoldService    *biz.BillingHoldService
 	QuotaService          *biz.QuotaService
 	LiveStreamRegistry    *biz.LiveStreamRegistry
 	PromptProvider        PromptProvider
@@ -226,6 +230,7 @@ func (processor *ChatCompletionOrchestrator) Process(ctx context.Context, reques
 		RequestService:        processor.RequestService,
 		UsageLogService:       processor.UsageLogService,
 		UsageBillingProcessor: processor.UsageBillingProcessor,
+		BillingHoldService:    processor.BillingHoldService,
 		ChannelService:        processor.ChannelService,
 		PromptProvider:        processor.PromptProvider,
 		PromptProtecter:       processor.PromptProtecter,
@@ -353,6 +358,15 @@ func (processor *ChatCompletionOrchestrator) Process(ctx context.Context, reques
 				err,
 			); updateErr != nil {
 				log.Warn(persistCtx, "Failed to update request status from error", log.Cause(updateErr))
+			}
+		}
+
+		if state.BillingHold != nil && processor.BillingHoldService != nil {
+			if _, releaseErr := processor.BillingHoldService.ReleaseHold(persistCtx, biz.ReleaseBillingHoldInput{
+				HoldID: state.BillingHold.ID,
+				Reason: "request failed before usage billing",
+			}); releaseErr != nil {
+				log.Warn(persistCtx, "Failed to release billing hold after request failure", log.Int("billing_hold_id", state.BillingHold.ID), log.Cause(releaseErr))
 			}
 		}
 

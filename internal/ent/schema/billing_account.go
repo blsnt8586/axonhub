@@ -45,6 +45,9 @@ func (BillingAccount) Fields() []ent.Field {
 		field.Int64("balance_micros").
 			Default(0).
 			Comment("Materialized balance in micro currency units. Ledger transactions are the source of truth."),
+		field.Int64("held_balance_micros").
+			Default(0).
+			Comment("Materialized amount currently reserved by active billing holds in micro currency units."),
 		field.Int64("credit_limit_micros").
 			Default(0).
 			Comment("Allowed overdraft in micro currency units."),
@@ -63,6 +66,11 @@ func (BillingAccount) Edges() []ent.Edge {
 				entgql.RelayConnection(),
 			),
 		edge.To("ledger_transactions", LedgerTransaction.Type).
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+				entgql.RelayConnection(),
+			),
+		edge.To("billing_holds", BillingHold.Type).
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
 				entgql.RelayConnection(),

@@ -29,6 +29,8 @@ type BillingAccount struct {
 	Currency string `json:"currency,omitempty"`
 	// Materialized balance in micro currency units. Ledger transactions are the source of truth.
 	BalanceMicros int64 `json:"balance_micros,omitempty"`
+	// Materialized amount currently reserved by active billing holds in micro currency units.
+	HeldBalanceMicros int64 `json:"held_balance_micros,omitempty"`
 	// Allowed overdraft in micro currency units.
 	CreditLimitMicros int64 `json:"credit_limit_micros,omitempty"`
 	// Billing account lifecycle status.
@@ -45,18 +47,21 @@ type BillingAccountEdges struct {
 	Bindings []*BillingAccountBinding `json:"bindings,omitempty"`
 	// LedgerTransactions holds the value of the ledger_transactions edge.
 	LedgerTransactions []*LedgerTransaction `json:"ledger_transactions,omitempty"`
+	// BillingHolds holds the value of the billing_holds edge.
+	BillingHolds []*BillingHold `json:"billing_holds,omitempty"`
 	// UsageBillingRecords holds the value of the usage_billing_records edge.
 	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
 	// PaymentOrders holds the value of the payment_orders edge.
 	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 	// totalCount holds the count of the edges above.
-	totalCount [4]map[string]int
+	totalCount [5]map[string]int
 
 	namedBindings            map[string][]*BillingAccountBinding
 	namedLedgerTransactions  map[string][]*LedgerTransaction
+	namedBillingHolds        map[string][]*BillingHold
 	namedUsageBillingRecords map[string][]*UsageBillingRecord
 	namedPaymentOrders       map[string][]*PaymentOrder
 }
@@ -79,10 +84,19 @@ func (e BillingAccountEdges) LedgerTransactionsOrErr() ([]*LedgerTransaction, er
 	return nil, &NotLoadedError{edge: "ledger_transactions"}
 }
 
+// BillingHoldsOrErr returns the BillingHolds value or an error if the edge
+// was not loaded in eager-loading.
+func (e BillingAccountEdges) BillingHoldsOrErr() ([]*BillingHold, error) {
+	if e.loadedTypes[2] {
+		return e.BillingHolds, nil
+	}
+	return nil, &NotLoadedError{edge: "billing_holds"}
+}
+
 // UsageBillingRecordsOrErr returns the UsageBillingRecords value or an error if the edge
 // was not loaded in eager-loading.
 func (e BillingAccountEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecord, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.UsageBillingRecords, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_billing_records"}
@@ -91,7 +105,7 @@ func (e BillingAccountEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecord, 
 // PaymentOrdersOrErr returns the PaymentOrders value or an error if the edge
 // was not loaded in eager-loading.
 func (e BillingAccountEdges) PaymentOrdersOrErr() ([]*PaymentOrder, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.PaymentOrders, nil
 	}
 	return nil, &NotLoadedError{edge: "payment_orders"}
@@ -102,7 +116,7 @@ func (*BillingAccount) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case billingaccount.FieldID, billingaccount.FieldOwnerID, billingaccount.FieldBalanceMicros, billingaccount.FieldCreditLimitMicros:
+		case billingaccount.FieldID, billingaccount.FieldOwnerID, billingaccount.FieldBalanceMicros, billingaccount.FieldHeldBalanceMicros, billingaccount.FieldCreditLimitMicros:
 			values[i] = new(sql.NullInt64)
 		case billingaccount.FieldOwnerType, billingaccount.FieldCurrency, billingaccount.FieldStatus:
 			values[i] = new(sql.NullString)
@@ -165,6 +179,12 @@ func (_m *BillingAccount) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.BalanceMicros = value.Int64
 			}
+		case billingaccount.FieldHeldBalanceMicros:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field held_balance_micros", values[i])
+			} else if value.Valid {
+				_m.HeldBalanceMicros = value.Int64
+			}
 		case billingaccount.FieldCreditLimitMicros:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field credit_limit_micros", values[i])
@@ -198,6 +218,11 @@ func (_m *BillingAccount) QueryBindings() *BillingAccountBindingQuery {
 // QueryLedgerTransactions queries the "ledger_transactions" edge of the BillingAccount entity.
 func (_m *BillingAccount) QueryLedgerTransactions() *LedgerTransactionQuery {
 	return NewBillingAccountClient(_m.config).QueryLedgerTransactions(_m)
+}
+
+// QueryBillingHolds queries the "billing_holds" edge of the BillingAccount entity.
+func (_m *BillingAccount) QueryBillingHolds() *BillingHoldQuery {
+	return NewBillingAccountClient(_m.config).QueryBillingHolds(_m)
 }
 
 // QueryUsageBillingRecords queries the "usage_billing_records" edge of the BillingAccount entity.
@@ -250,6 +275,9 @@ func (_m *BillingAccount) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("balance_micros=")
 	builder.WriteString(fmt.Sprintf("%v", _m.BalanceMicros))
+	builder.WriteString(", ")
+	builder.WriteString("held_balance_micros=")
+	builder.WriteString(fmt.Sprintf("%v", _m.HeldBalanceMicros))
 	builder.WriteString(", ")
 	builder.WriteString("credit_limit_micros=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CreditLimitMicros))
@@ -305,6 +333,30 @@ func (_m *BillingAccount) appendNamedLedgerTransactions(name string, edges ...*L
 		_m.Edges.namedLedgerTransactions[name] = []*LedgerTransaction{}
 	} else {
 		_m.Edges.namedLedgerTransactions[name] = append(_m.Edges.namedLedgerTransactions[name], edges...)
+	}
+}
+
+// NamedBillingHolds returns the BillingHolds named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *BillingAccount) NamedBillingHolds(name string) ([]*BillingHold, error) {
+	if _m.Edges.namedBillingHolds == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedBillingHolds[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *BillingAccount) appendNamedBillingHolds(name string, edges ...*BillingHold) {
+	if _m.Edges.namedBillingHolds == nil {
+		_m.Edges.namedBillingHolds = make(map[string][]*BillingHold)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedBillingHolds[name] = []*BillingHold{}
+	} else {
+		_m.Edges.namedBillingHolds[name] = append(_m.Edges.namedBillingHolds[name], edges...)
 	}
 }
 
