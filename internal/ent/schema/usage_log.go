@@ -107,6 +107,11 @@ func (UsageLog) Edges() []ent.Edge {
 				entgql.Directives(forceResolver()),
 			).
 			Unique(),
+		edge.To("usage_billing_records", UsageBillingRecord.Type).
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+				entgql.RelayConnection(),
+			),
 	}
 }
 

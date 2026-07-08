@@ -78,6 +78,16 @@ func (r *billingAccountBindingResolver) BillingAccountID(ctx context.Context, ob
 }
 
 // ID is the resolver for the id field.
+func (r *billingOutboxResolver) ID(ctx context.Context, obj *ent.BillingOutbox) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ID is the resolver for the id field.
+func (r *billingPriceRuleResolver) ID(ctx context.Context, obj *ent.BillingPriceRule) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ID is the resolver for the id field.
 func (r *channelResolver) ID(ctx context.Context, obj *ent.Channel) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeChannel,
@@ -368,6 +378,16 @@ func (r *queryResolver) BillingAccountBindings(ctx context.Context, after *entgq
 	panic(fmt.Errorf("not implemented: BillingAccountBindings - billingAccountBindings"))
 }
 
+// BillingOutboxes is the resolver for the billingOutboxes field.
+func (r *queryResolver) BillingOutboxes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingOutboxOrder, where *ent.BillingOutboxWhereInput) (*ent.BillingOutboxConnection, error) {
+	panic(fmt.Errorf("not implemented: BillingOutboxes - billingOutboxes"))
+}
+
+// BillingPriceRules is the resolver for the billingPriceRules field.
+func (r *queryResolver) BillingPriceRules(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingPriceRuleOrder, where *ent.BillingPriceRuleWhereInput) (*ent.BillingPriceRuleConnection, error) {
+	panic(fmt.Errorf("not implemented: BillingPriceRules - billingPriceRules"))
+}
+
 // Channels is the resolver for the channels field.
 func (r *queryResolver) Channels(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOrder, where *ent.ChannelWhereInput) (*ent.ChannelConnection, error) {
 	if orderBy != nil && orderBy.Field.String() == "CREATED_AT" {
@@ -567,6 +587,11 @@ func (r *queryResolver) Traces(ctx context.Context, after *entgql.Cursor[int], f
 		ent.WithTraceOrder(orderBy),
 		ent.WithTraceFilter(where.Filter),
 	)
+}
+
+// UsageBillingRecords is the resolver for the usageBillingRecords field.
+func (r *queryResolver) UsageBillingRecords(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder, where *ent.UsageBillingRecordWhereInput) (*ent.UsageBillingRecordConnection, error) {
+	panic(fmt.Errorf("not implemented: UsageBillingRecords - usageBillingRecords"))
 }
 
 // UsageLogs is the resolver for the usageLogs field.
@@ -857,6 +882,26 @@ func (r *traceResolver) ThreadID(ctx context.Context, obj *ent.Trace) (*objects.
 }
 
 // ID is the resolver for the id field.
+func (r *usageBillingRecordResolver) ID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// UsageLogID is the resolver for the usageLogID field.
+func (r *usageBillingRecordResolver) UsageLogID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: UsageLogID - usageLogID"))
+}
+
+// BillingAccountID is the resolver for the billingAccountID field.
+func (r *usageBillingRecordResolver) BillingAccountID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+}
+
+// LedgerTransactionID is the resolver for the ledgerTransactionID field.
+func (r *usageBillingRecordResolver) LedgerTransactionID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: LedgerTransactionID - ledgerTransactionID"))
+}
+
+// ID is the resolver for the id field.
 func (r *usageLogResolver) ID(ctx context.Context, obj *ent.UsageLog) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeUsageLog,
@@ -975,6 +1020,12 @@ func (r *Resolver) BillingAccountBinding() BillingAccountBindingResolver {
 	return &billingAccountBindingResolver{r}
 }
 
+// BillingOutbox returns BillingOutboxResolver implementation.
+func (r *Resolver) BillingOutbox() BillingOutboxResolver { return &billingOutboxResolver{r} }
+
+// BillingPriceRule returns BillingPriceRuleResolver implementation.
+func (r *Resolver) BillingPriceRule() BillingPriceRuleResolver { return &billingPriceRuleResolver{r} }
+
 // Channel returns ChannelResolver implementation.
 func (r *Resolver) Channel() ChannelResolver { return &channelResolver{r} }
 
@@ -1050,6 +1101,11 @@ func (r *Resolver) Thread() ThreadResolver { return &threadResolver{r} }
 // Trace returns TraceResolver implementation.
 func (r *Resolver) Trace() TraceResolver { return &traceResolver{r} }
 
+// UsageBillingRecord returns UsageBillingRecordResolver implementation.
+func (r *Resolver) UsageBillingRecord() UsageBillingRecordResolver {
+	return &usageBillingRecordResolver{r}
+}
+
 // UsageLog returns UsageLogResolver implementation.
 func (r *Resolver) UsageLog() UsageLogResolver { return &usageLogResolver{r} }
 
@@ -1066,6 +1122,8 @@ type aPIKeyResolver struct{ *Resolver }
 type aPIKeyProfileTemplateResolver struct{ *Resolver }
 type billingAccountResolver struct{ *Resolver }
 type billingAccountBindingResolver struct{ *Resolver }
+type billingOutboxResolver struct{ *Resolver }
+type billingPriceRuleResolver struct{ *Resolver }
 type channelResolver struct{ *Resolver }
 type channelModelPriceResolver struct{ *Resolver }
 type channelModelPriceVersionResolver struct{ *Resolver }
@@ -1087,6 +1145,7 @@ type roleResolver struct{ *Resolver }
 type systemResolver struct{ *Resolver }
 type threadResolver struct{ *Resolver }
 type traceResolver struct{ *Resolver }
+type usageBillingRecordResolver struct{ *Resolver }
 type usageLogResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
 type userProjectResolver struct{ *Resolver }

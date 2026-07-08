@@ -18,6 +18,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingoutbox"
+	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
@@ -38,6 +40,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -70,6 +73,16 @@ var billingaccountbindingImplementors = []string{"BillingAccountBinding", "Node"
 
 // IsNode implements the Node interface check for GQLGen.
 func (*BillingAccountBinding) IsNode() {}
+
+var billingoutboxImplementors = []string{"BillingOutbox", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*BillingOutbox) IsNode() {}
+
+var billingpriceruleImplementors = []string{"BillingPriceRule", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*BillingPriceRule) IsNode() {}
 
 var channelImplementors = []string{"Channel", "Node"}
 
@@ -170,6 +183,11 @@ var traceImplementors = []string{"Trace", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*Trace) IsNode() {}
+
+var usagebillingrecordImplementors = []string{"UsageBillingRecord", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*UsageBillingRecord) IsNode() {}
 
 var usagelogImplementors = []string{"UsageLog", "Node"}
 
@@ -281,6 +299,24 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(billingaccountbinding.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, billingaccountbindingImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case billingoutbox.Table:
+		query := c.BillingOutbox.Query().
+			Where(billingoutbox.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, billingoutboxImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case billingpricerule.Table:
+		query := c.BillingPriceRule.Query().
+			Where(billingpricerule.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, billingpriceruleImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -465,6 +501,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			}
 		}
 		return query.Only(ctx)
+	case usagebillingrecord.Table:
+		query := c.UsageBillingRecord.Query().
+			Where(usagebillingrecord.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, usagebillingrecordImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
 	case usagelog.Table:
 		query := c.UsageLog.Query().
 			Where(usagelog.ID(id))
@@ -626,6 +671,38 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.BillingAccountBinding.Query().
 			Where(billingaccountbinding.IDIn(ids...))
 		query, err := query.CollectFields(ctx, billingaccountbindingImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case billingoutbox.Table:
+		query := c.BillingOutbox.Query().
+			Where(billingoutbox.IDIn(ids...))
+		query, err := query.CollectFields(ctx, billingoutboxImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case billingpricerule.Table:
+		query := c.BillingPriceRule.Query().
+			Where(billingpricerule.IDIn(ids...))
+		query, err := query.CollectFields(ctx, billingpriceruleImplementors...)
 		if err != nil {
 			return nil, err
 		}
@@ -946,6 +1023,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.Trace.Query().
 			Where(trace.IDIn(ids...))
 		query, err := query.CollectFields(ctx, traceImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case usagebillingrecord.Table:
+		query := c.UsageBillingRecord.Query().
+			Where(usagebillingrecord.IDIn(ids...))
+		query, err := query.CollectFields(ctx, usagebillingrecordImplementors...)
 		if err != nil {
 			return nil, err
 		}

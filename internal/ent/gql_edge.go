@@ -95,6 +95,27 @@ func (_m *BillingAccount) LedgerTransactions(
 	return _m.QueryLedgerTransactions().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *BillingAccount) UsageBillingRecords(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UsageBillingRecordOrder, where *UsageBillingRecordWhereInput,
+) (*UsageBillingRecordConnection, error) {
+	opts := []UsageBillingRecordPaginateOption{
+		WithUsageBillingRecordOrder(orderBy),
+		WithUsageBillingRecordFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[2][alias]
+	if nodes, err := _m.NamedUsageBillingRecords(alias); err == nil || hasTotalCount {
+		pager, err := newUsageBillingRecordPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UsageBillingRecordConnection{Edges: []*UsageBillingRecordEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUsageBillingRecords().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *BillingAccountBinding) BillingAccount(ctx context.Context) (*BillingAccount, error) {
 	result, err := _m.Edges.BillingAccountOrErr()
 	if IsNotLoaded(err) {
@@ -319,6 +340,27 @@ func (_m *LedgerTransaction) Entries(
 		return conn, nil
 	}
 	return _m.QueryEntries().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *LedgerTransaction) UsageBillingRecords(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UsageBillingRecordOrder, where *UsageBillingRecordWhereInput,
+) (*UsageBillingRecordConnection, error) {
+	opts := []UsageBillingRecordPaginateOption{
+		WithUsageBillingRecordOrder(orderBy),
+		WithUsageBillingRecordFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[2][alias]
+	if nodes, err := _m.NamedUsageBillingRecords(alias); err == nil || hasTotalCount {
+		pager, err := newUsageBillingRecordPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UsageBillingRecordConnection{Edges: []*UsageBillingRecordEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUsageBillingRecords().Paginate(ctx, after, first, before, last, opts...)
 }
 
 func (_m *OIDCIdentity) User(ctx context.Context) (*User, error) {
@@ -790,6 +832,30 @@ func (_m *Trace) Requests(
 	return _m.QueryRequests().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *UsageBillingRecord) UsageLog(ctx context.Context) (*UsageLog, error) {
+	result, err := _m.Edges.UsageLogOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUsageLog().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *UsageBillingRecord) BillingAccount(ctx context.Context) (*BillingAccount, error) {
+	result, err := _m.Edges.BillingAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryBillingAccount().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *UsageBillingRecord) LedgerTransaction(ctx context.Context) (*LedgerTransaction, error) {
+	result, err := _m.Edges.LedgerTransactionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryLedgerTransaction().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
 func (_m *UsageLog) Request(ctx context.Context) (*Request, error) {
 	result, err := _m.Edges.RequestOrErr()
 	if IsNotLoaded(err) {
@@ -812,6 +878,27 @@ func (_m *UsageLog) Channel(ctx context.Context) (*Channel, error) {
 		result, err = _m.QueryChannel().Only(ctx)
 	}
 	return result, MaskNotFound(err)
+}
+
+func (_m *UsageLog) UsageBillingRecords(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UsageBillingRecordOrder, where *UsageBillingRecordWhereInput,
+) (*UsageBillingRecordConnection, error) {
+	opts := []UsageBillingRecordPaginateOption{
+		WithUsageBillingRecordOrder(orderBy),
+		WithUsageBillingRecordFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	if nodes, err := _m.NamedUsageBillingRecords(alias); err == nil || hasTotalCount {
+		pager, err := newUsageBillingRecordPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UsageBillingRecordConnection{Edges: []*UsageBillingRecordEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUsageBillingRecords().Paginate(ctx, after, first, before, last, opts...)
 }
 
 func (_m *User) Projects(

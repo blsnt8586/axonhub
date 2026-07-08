@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/objects"
 )
@@ -408,9 +409,45 @@ func (_u *UsageLogUpdate) ClearCostPriceReferenceID() *UsageLogUpdate {
 	return _u
 }
 
+// AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
+func (_u *UsageLogUpdate) AddUsageBillingRecordIDs(ids ...int) *UsageLogUpdate {
+	_u.mutation.AddUsageBillingRecordIDs(ids...)
+	return _u
+}
+
+// AddUsageBillingRecords adds the "usage_billing_records" edges to the UsageBillingRecord entity.
+func (_u *UsageLogUpdate) AddUsageBillingRecords(v ...*UsageBillingRecord) *UsageLogUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUsageBillingRecordIDs(ids...)
+}
+
 // Mutation returns the UsageLogMutation object of the builder.
 func (_u *UsageLogUpdate) Mutation() *UsageLogMutation {
 	return _u.mutation
+}
+
+// ClearUsageBillingRecords clears all "usage_billing_records" edges to the UsageBillingRecord entity.
+func (_u *UsageLogUpdate) ClearUsageBillingRecords() *UsageLogUpdate {
+	_u.mutation.ClearUsageBillingRecords()
+	return _u
+}
+
+// RemoveUsageBillingRecordIDs removes the "usage_billing_records" edge to UsageBillingRecord entities by IDs.
+func (_u *UsageLogUpdate) RemoveUsageBillingRecordIDs(ids ...int) *UsageLogUpdate {
+	_u.mutation.RemoveUsageBillingRecordIDs(ids...)
+	return _u
+}
+
+// RemoveUsageBillingRecords removes "usage_billing_records" edges to UsageBillingRecord entities.
+func (_u *UsageLogUpdate) RemoveUsageBillingRecords(v ...*UsageBillingRecord) *UsageLogUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUsageBillingRecordIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -614,6 +651,51 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.CostPriceReferenceIDCleared() {
 		_spec.ClearField(usagelog.FieldCostPriceReferenceID, field.TypeString)
+	}
+	if _u.mutation.UsageBillingRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.UsageBillingRecordsTable,
+			Columns: []string{usagelog.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUsageBillingRecordsIDs(); len(nodes) > 0 && !_u.mutation.UsageBillingRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.UsageBillingRecordsTable,
+			Columns: []string{usagelog.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UsageBillingRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.UsageBillingRecordsTable,
+			Columns: []string{usagelog.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -1014,9 +1096,45 @@ func (_u *UsageLogUpdateOne) ClearCostPriceReferenceID() *UsageLogUpdateOne {
 	return _u
 }
 
+// AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
+func (_u *UsageLogUpdateOne) AddUsageBillingRecordIDs(ids ...int) *UsageLogUpdateOne {
+	_u.mutation.AddUsageBillingRecordIDs(ids...)
+	return _u
+}
+
+// AddUsageBillingRecords adds the "usage_billing_records" edges to the UsageBillingRecord entity.
+func (_u *UsageLogUpdateOne) AddUsageBillingRecords(v ...*UsageBillingRecord) *UsageLogUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUsageBillingRecordIDs(ids...)
+}
+
 // Mutation returns the UsageLogMutation object of the builder.
 func (_u *UsageLogUpdateOne) Mutation() *UsageLogMutation {
 	return _u.mutation
+}
+
+// ClearUsageBillingRecords clears all "usage_billing_records" edges to the UsageBillingRecord entity.
+func (_u *UsageLogUpdateOne) ClearUsageBillingRecords() *UsageLogUpdateOne {
+	_u.mutation.ClearUsageBillingRecords()
+	return _u
+}
+
+// RemoveUsageBillingRecordIDs removes the "usage_billing_records" edge to UsageBillingRecord entities by IDs.
+func (_u *UsageLogUpdateOne) RemoveUsageBillingRecordIDs(ids ...int) *UsageLogUpdateOne {
+	_u.mutation.RemoveUsageBillingRecordIDs(ids...)
+	return _u
+}
+
+// RemoveUsageBillingRecords removes "usage_billing_records" edges to UsageBillingRecord entities.
+func (_u *UsageLogUpdateOne) RemoveUsageBillingRecords(v ...*UsageBillingRecord) *UsageLogUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUsageBillingRecordIDs(ids...)
 }
 
 // Where appends a list predicates to the UsageLogUpdate builder.
@@ -1250,6 +1368,51 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 	}
 	if _u.mutation.CostPriceReferenceIDCleared() {
 		_spec.ClearField(usagelog.FieldCostPriceReferenceID, field.TypeString)
+	}
+	if _u.mutation.UsageBillingRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.UsageBillingRecordsTable,
+			Columns: []string{usagelog.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUsageBillingRecordsIDs(); len(nodes) > 0 && !_u.mutation.UsageBillingRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.UsageBillingRecordsTable,
+			Columns: []string{usagelog.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UsageBillingRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagelog.UsageBillingRecordsTable,
+			Columns: []string{usagelog.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(_u.modifiers...)
 	_node = &UsageLog{config: _u.config}

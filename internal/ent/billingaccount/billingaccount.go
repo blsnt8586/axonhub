@@ -38,6 +38,8 @@ const (
 	EdgeBindings = "bindings"
 	// EdgeLedgerTransactions holds the string denoting the ledger_transactions edge name in mutations.
 	EdgeLedgerTransactions = "ledger_transactions"
+	// EdgeUsageBillingRecords holds the string denoting the usage_billing_records edge name in mutations.
+	EdgeUsageBillingRecords = "usage_billing_records"
 	// Table holds the table name of the billingaccount in the database.
 	Table = "billing_accounts"
 	// BindingsTable is the table that holds the bindings relation/edge.
@@ -54,6 +56,13 @@ const (
 	LedgerTransactionsInverseTable = "ledger_transactions"
 	// LedgerTransactionsColumn is the table column denoting the ledger_transactions relation/edge.
 	LedgerTransactionsColumn = "billing_account_id"
+	// UsageBillingRecordsTable is the table that holds the usage_billing_records relation/edge.
+	UsageBillingRecordsTable = "usage_billing_records"
+	// UsageBillingRecordsInverseTable is the table name for the UsageBillingRecord entity.
+	// It exists in this package in order to avoid circular dependency with the "usagebillingrecord" package.
+	UsageBillingRecordsInverseTable = "usage_billing_records"
+	// UsageBillingRecordsColumn is the table column denoting the usage_billing_records relation/edge.
+	UsageBillingRecordsColumn = "billing_account_id"
 )
 
 // Columns holds all SQL columns for billingaccount fields.
@@ -228,6 +237,20 @@ func ByLedgerTransactions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOptio
 		sqlgraph.OrderByNeighborTerms(s, newLedgerTransactionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByUsageBillingRecordsCount orders the results by usage_billing_records count.
+func ByUsageBillingRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUsageBillingRecordsStep(), opts...)
+	}
+}
+
+// ByUsageBillingRecords orders the results by usage_billing_records terms.
+func ByUsageBillingRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUsageBillingRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBindingsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -240,6 +263,13 @@ func newLedgerTransactionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LedgerTransactionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, LedgerTransactionsTable, LedgerTransactionsColumn),
+	)
+}
+func newUsageBillingRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UsageBillingRecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UsageBillingRecordsTable, UsageBillingRecordsColumn),
 	)
 }
 

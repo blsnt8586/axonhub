@@ -73,6 +73,8 @@ const (
 	EdgeProject = "project"
 	// EdgeChannel holds the string denoting the channel edge name in mutations.
 	EdgeChannel = "channel"
+	// EdgeUsageBillingRecords holds the string denoting the usage_billing_records edge name in mutations.
+	EdgeUsageBillingRecords = "usage_billing_records"
 	// Table holds the table name of the usagelog in the database.
 	Table = "usage_logs"
 	// RequestTable is the table that holds the request relation/edge.
@@ -96,6 +98,13 @@ const (
 	ChannelInverseTable = "channels"
 	// ChannelColumn is the table column denoting the channel relation/edge.
 	ChannelColumn = "channel_id"
+	// UsageBillingRecordsTable is the table that holds the usage_billing_records relation/edge.
+	UsageBillingRecordsTable = "usage_billing_records"
+	// UsageBillingRecordsInverseTable is the table name for the UsageBillingRecord entity.
+	// It exists in this package in order to avoid circular dependency with the "usagebillingrecord" package.
+	UsageBillingRecordsInverseTable = "usage_billing_records"
+	// UsageBillingRecordsColumn is the table column denoting the usage_billing_records relation/edge.
+	UsageBillingRecordsColumn = "usage_log_id"
 )
 
 // Columns holds all SQL columns for usagelog fields.
@@ -353,6 +362,20 @@ func ByChannelField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newChannelStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByUsageBillingRecordsCount orders the results by usage_billing_records count.
+func ByUsageBillingRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUsageBillingRecordsStep(), opts...)
+	}
+}
+
+// ByUsageBillingRecords orders the results by usage_billing_records terms.
+func ByUsageBillingRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUsageBillingRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRequestStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -372,6 +395,13 @@ func newChannelStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ChannelInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
+	)
+}
+func newUsageBillingRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UsageBillingRecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UsageBillingRecordsTable, UsageBillingRecordsColumn),
 	)
 }
 

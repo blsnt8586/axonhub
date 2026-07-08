@@ -12,6 +12,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingoutbox"
+	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
@@ -33,6 +35,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -201,6 +204,60 @@ func (f TraverseBillingAccountBinding) Traverse(ctx context.Context, q ent.Query
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.BillingAccountBindingQuery", q)
+}
+
+// The BillingOutboxFunc type is an adapter to allow the use of ordinary function as a Querier.
+type BillingOutboxFunc func(context.Context, *ent.BillingOutboxQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f BillingOutboxFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.BillingOutboxQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.BillingOutboxQuery", q)
+}
+
+// The TraverseBillingOutbox type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseBillingOutbox func(context.Context, *ent.BillingOutboxQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseBillingOutbox) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseBillingOutbox) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingOutboxQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.BillingOutboxQuery", q)
+}
+
+// The BillingPriceRuleFunc type is an adapter to allow the use of ordinary function as a Querier.
+type BillingPriceRuleFunc func(context.Context, *ent.BillingPriceRuleQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f BillingPriceRuleFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.BillingPriceRuleQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.BillingPriceRuleQuery", q)
+}
+
+// The TraverseBillingPriceRule type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseBillingPriceRule func(context.Context, *ent.BillingPriceRuleQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseBillingPriceRule) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseBillingPriceRule) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingPriceRuleQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.BillingPriceRuleQuery", q)
 }
 
 // The ChannelFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -743,6 +800,33 @@ func (f TraverseTrace) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.TraceQuery", q)
 }
 
+// The UsageBillingRecordFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UsageBillingRecordFunc func(context.Context, *ent.UsageBillingRecordQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f UsageBillingRecordFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.UsageBillingRecordQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.UsageBillingRecordQuery", q)
+}
+
+// The TraverseUsageBillingRecord type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUsageBillingRecord func(context.Context, *ent.UsageBillingRecordQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUsageBillingRecord) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUsageBillingRecord) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UsageBillingRecordQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.UsageBillingRecordQuery", q)
+}
+
 // The UsageLogFunc type is an adapter to allow the use of ordinary function as a Querier.
 type UsageLogFunc func(context.Context, *ent.UsageLogQuery) (ent.Value, error)
 
@@ -862,6 +946,10 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.BillingAccountQuery, predicate.BillingAccount, billingaccount.OrderOption]{typ: ent.TypeBillingAccount, tq: q}, nil
 	case *ent.BillingAccountBindingQuery:
 		return &query[*ent.BillingAccountBindingQuery, predicate.BillingAccountBinding, billingaccountbinding.OrderOption]{typ: ent.TypeBillingAccountBinding, tq: q}, nil
+	case *ent.BillingOutboxQuery:
+		return &query[*ent.BillingOutboxQuery, predicate.BillingOutbox, billingoutbox.OrderOption]{typ: ent.TypeBillingOutbox, tq: q}, nil
+	case *ent.BillingPriceRuleQuery:
+		return &query[*ent.BillingPriceRuleQuery, predicate.BillingPriceRule, billingpricerule.OrderOption]{typ: ent.TypeBillingPriceRule, tq: q}, nil
 	case *ent.ChannelQuery:
 		return &query[*ent.ChannelQuery, predicate.Channel, channel.OrderOption]{typ: ent.TypeChannel, tq: q}, nil
 	case *ent.ChannelModelPriceQuery:
@@ -902,6 +990,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.ThreadQuery, predicate.Thread, thread.OrderOption]{typ: ent.TypeThread, tq: q}, nil
 	case *ent.TraceQuery:
 		return &query[*ent.TraceQuery, predicate.Trace, trace.OrderOption]{typ: ent.TypeTrace, tq: q}, nil
+	case *ent.UsageBillingRecordQuery:
+		return &query[*ent.UsageBillingRecordQuery, predicate.UsageBillingRecord, usagebillingrecord.OrderOption]{typ: ent.TypeUsageBillingRecord, tq: q}, nil
 	case *ent.UsageLogQuery:
 		return &query[*ent.UsageLogQuery, predicate.UsageLog, usagelog.OrderOption]{typ: ent.TypeUsageLog, tq: q}, nil
 	case *ent.UserQuery:

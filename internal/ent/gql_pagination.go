@@ -18,6 +18,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingoutbox"
+	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
@@ -38,6 +40,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -1376,6 +1379,634 @@ func (_m *BillingAccountBinding) ToEdge(order *BillingAccountBindingOrder) *Bill
 		order = DefaultBillingAccountBindingOrder
 	}
 	return &BillingAccountBindingEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// BillingOutboxEdge is the edge representation of BillingOutbox.
+type BillingOutboxEdge struct {
+	Node   *BillingOutbox `json:"node"`
+	Cursor Cursor         `json:"cursor"`
+}
+
+// BillingOutboxConnection is the connection containing edges to BillingOutbox.
+type BillingOutboxConnection struct {
+	Edges      []*BillingOutboxEdge `json:"edges"`
+	PageInfo   PageInfo             `json:"pageInfo"`
+	TotalCount int                  `json:"totalCount"`
+}
+
+func (c *BillingOutboxConnection) build(nodes []*BillingOutbox, pager *billingoutboxPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *BillingOutbox
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *BillingOutbox {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *BillingOutbox {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*BillingOutboxEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &BillingOutboxEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// BillingOutboxPaginateOption enables pagination customization.
+type BillingOutboxPaginateOption func(*billingoutboxPager) error
+
+// WithBillingOutboxOrder configures pagination ordering.
+func WithBillingOutboxOrder(order *BillingOutboxOrder) BillingOutboxPaginateOption {
+	if order == nil {
+		order = DefaultBillingOutboxOrder
+	}
+	o := *order
+	return func(pager *billingoutboxPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultBillingOutboxOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithBillingOutboxFilter configures pagination filter.
+func WithBillingOutboxFilter(filter func(*BillingOutboxQuery) (*BillingOutboxQuery, error)) BillingOutboxPaginateOption {
+	return func(pager *billingoutboxPager) error {
+		if filter == nil {
+			return errors.New("BillingOutboxQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type billingoutboxPager struct {
+	reverse bool
+	order   *BillingOutboxOrder
+	filter  func(*BillingOutboxQuery) (*BillingOutboxQuery, error)
+}
+
+func newBillingOutboxPager(opts []BillingOutboxPaginateOption, reverse bool) (*billingoutboxPager, error) {
+	pager := &billingoutboxPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultBillingOutboxOrder
+	}
+	return pager, nil
+}
+
+func (p *billingoutboxPager) applyFilter(query *BillingOutboxQuery) (*BillingOutboxQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *billingoutboxPager) toCursor(_m *BillingOutbox) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *billingoutboxPager) applyCursors(query *BillingOutboxQuery, after, before *Cursor) (*BillingOutboxQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultBillingOutboxOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *billingoutboxPager) applyOrder(query *BillingOutboxQuery) *BillingOutboxQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultBillingOutboxOrder.Field {
+		query = query.Order(DefaultBillingOutboxOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *billingoutboxPager) orderExpr(query *BillingOutboxQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultBillingOutboxOrder.Field {
+			b.Comma().Ident(DefaultBillingOutboxOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to BillingOutbox.
+func (_m *BillingOutboxQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...BillingOutboxPaginateOption,
+) (*BillingOutboxConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newBillingOutboxPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &BillingOutboxConnection{Edges: []*BillingOutboxEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// BillingOutboxOrderFieldCreatedAt orders BillingOutbox by created_at.
+	BillingOutboxOrderFieldCreatedAt = &BillingOutboxOrderField{
+		Value: func(_m *BillingOutbox) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: billingoutbox.FieldCreatedAt,
+		toTerm: billingoutbox.ByCreatedAt,
+		toCursor: func(_m *BillingOutbox) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// BillingOutboxOrderFieldUpdatedAt orders BillingOutbox by updated_at.
+	BillingOutboxOrderFieldUpdatedAt = &BillingOutboxOrderField{
+		Value: func(_m *BillingOutbox) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: billingoutbox.FieldUpdatedAt,
+		toTerm: billingoutbox.ByUpdatedAt,
+		toCursor: func(_m *BillingOutbox) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f BillingOutboxOrderField) String() string {
+	var str string
+	switch f.column {
+	case BillingOutboxOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case BillingOutboxOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f BillingOutboxOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *BillingOutboxOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("BillingOutboxOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *BillingOutboxOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *BillingOutboxOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid BillingOutboxOrderField", str)
+	}
+	return nil
+}
+
+// BillingOutboxOrderField defines the ordering field of BillingOutbox.
+type BillingOutboxOrderField struct {
+	// Value extracts the ordering value from the given BillingOutbox.
+	Value    func(*BillingOutbox) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) billingoutbox.OrderOption
+	toCursor func(*BillingOutbox) Cursor
+}
+
+// BillingOutboxOrder defines the ordering of BillingOutbox.
+type BillingOutboxOrder struct {
+	Direction OrderDirection           `json:"direction"`
+	Field     *BillingOutboxOrderField `json:"field"`
+}
+
+// DefaultBillingOutboxOrder is the default ordering of BillingOutbox.
+var DefaultBillingOutboxOrder = &BillingOutboxOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &BillingOutboxOrderField{
+		Value: func(_m *BillingOutbox) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: billingoutbox.FieldID,
+		toTerm: billingoutbox.ByID,
+		toCursor: func(_m *BillingOutbox) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts BillingOutbox into BillingOutboxEdge.
+func (_m *BillingOutbox) ToEdge(order *BillingOutboxOrder) *BillingOutboxEdge {
+	if order == nil {
+		order = DefaultBillingOutboxOrder
+	}
+	return &BillingOutboxEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// BillingPriceRuleEdge is the edge representation of BillingPriceRule.
+type BillingPriceRuleEdge struct {
+	Node   *BillingPriceRule `json:"node"`
+	Cursor Cursor            `json:"cursor"`
+}
+
+// BillingPriceRuleConnection is the connection containing edges to BillingPriceRule.
+type BillingPriceRuleConnection struct {
+	Edges      []*BillingPriceRuleEdge `json:"edges"`
+	PageInfo   PageInfo                `json:"pageInfo"`
+	TotalCount int                     `json:"totalCount"`
+}
+
+func (c *BillingPriceRuleConnection) build(nodes []*BillingPriceRule, pager *billingpricerulePager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *BillingPriceRule
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *BillingPriceRule {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *BillingPriceRule {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*BillingPriceRuleEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &BillingPriceRuleEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// BillingPriceRulePaginateOption enables pagination customization.
+type BillingPriceRulePaginateOption func(*billingpricerulePager) error
+
+// WithBillingPriceRuleOrder configures pagination ordering.
+func WithBillingPriceRuleOrder(order *BillingPriceRuleOrder) BillingPriceRulePaginateOption {
+	if order == nil {
+		order = DefaultBillingPriceRuleOrder
+	}
+	o := *order
+	return func(pager *billingpricerulePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultBillingPriceRuleOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithBillingPriceRuleFilter configures pagination filter.
+func WithBillingPriceRuleFilter(filter func(*BillingPriceRuleQuery) (*BillingPriceRuleQuery, error)) BillingPriceRulePaginateOption {
+	return func(pager *billingpricerulePager) error {
+		if filter == nil {
+			return errors.New("BillingPriceRuleQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type billingpricerulePager struct {
+	reverse bool
+	order   *BillingPriceRuleOrder
+	filter  func(*BillingPriceRuleQuery) (*BillingPriceRuleQuery, error)
+}
+
+func newBillingPriceRulePager(opts []BillingPriceRulePaginateOption, reverse bool) (*billingpricerulePager, error) {
+	pager := &billingpricerulePager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultBillingPriceRuleOrder
+	}
+	return pager, nil
+}
+
+func (p *billingpricerulePager) applyFilter(query *BillingPriceRuleQuery) (*BillingPriceRuleQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *billingpricerulePager) toCursor(_m *BillingPriceRule) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *billingpricerulePager) applyCursors(query *BillingPriceRuleQuery, after, before *Cursor) (*BillingPriceRuleQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultBillingPriceRuleOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *billingpricerulePager) applyOrder(query *BillingPriceRuleQuery) *BillingPriceRuleQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultBillingPriceRuleOrder.Field {
+		query = query.Order(DefaultBillingPriceRuleOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *billingpricerulePager) orderExpr(query *BillingPriceRuleQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultBillingPriceRuleOrder.Field {
+			b.Comma().Ident(DefaultBillingPriceRuleOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to BillingPriceRule.
+func (_m *BillingPriceRuleQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...BillingPriceRulePaginateOption,
+) (*BillingPriceRuleConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newBillingPriceRulePager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &BillingPriceRuleConnection{Edges: []*BillingPriceRuleEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// BillingPriceRuleOrderFieldCreatedAt orders BillingPriceRule by created_at.
+	BillingPriceRuleOrderFieldCreatedAt = &BillingPriceRuleOrderField{
+		Value: func(_m *BillingPriceRule) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: billingpricerule.FieldCreatedAt,
+		toTerm: billingpricerule.ByCreatedAt,
+		toCursor: func(_m *BillingPriceRule) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// BillingPriceRuleOrderFieldUpdatedAt orders BillingPriceRule by updated_at.
+	BillingPriceRuleOrderFieldUpdatedAt = &BillingPriceRuleOrderField{
+		Value: func(_m *BillingPriceRule) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: billingpricerule.FieldUpdatedAt,
+		toTerm: billingpricerule.ByUpdatedAt,
+		toCursor: func(_m *BillingPriceRule) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f BillingPriceRuleOrderField) String() string {
+	var str string
+	switch f.column {
+	case BillingPriceRuleOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case BillingPriceRuleOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f BillingPriceRuleOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *BillingPriceRuleOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("BillingPriceRuleOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *BillingPriceRuleOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *BillingPriceRuleOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid BillingPriceRuleOrderField", str)
+	}
+	return nil
+}
+
+// BillingPriceRuleOrderField defines the ordering field of BillingPriceRule.
+type BillingPriceRuleOrderField struct {
+	// Value extracts the ordering value from the given BillingPriceRule.
+	Value    func(*BillingPriceRule) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) billingpricerule.OrderOption
+	toCursor func(*BillingPriceRule) Cursor
+}
+
+// BillingPriceRuleOrder defines the ordering of BillingPriceRule.
+type BillingPriceRuleOrder struct {
+	Direction OrderDirection              `json:"direction"`
+	Field     *BillingPriceRuleOrderField `json:"field"`
+}
+
+// DefaultBillingPriceRuleOrder is the default ordering of BillingPriceRule.
+var DefaultBillingPriceRuleOrder = &BillingPriceRuleOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &BillingPriceRuleOrderField{
+		Value: func(_m *BillingPriceRule) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: billingpricerule.FieldID,
+		toTerm: billingpricerule.ByID,
+		toCursor: func(_m *BillingPriceRule) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts BillingPriceRule into BillingPriceRuleEdge.
+func (_m *BillingPriceRule) ToEdge(order *BillingPriceRuleOrder) *BillingPriceRuleEdge {
+	if order == nil {
+		order = DefaultBillingPriceRuleOrder
+	}
+	return &BillingPriceRuleEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}
@@ -7717,6 +8348,320 @@ func (_m *Trace) ToEdge(order *TraceOrder) *TraceEdge {
 		order = DefaultTraceOrder
 	}
 	return &TraceEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// UsageBillingRecordEdge is the edge representation of UsageBillingRecord.
+type UsageBillingRecordEdge struct {
+	Node   *UsageBillingRecord `json:"node"`
+	Cursor Cursor              `json:"cursor"`
+}
+
+// UsageBillingRecordConnection is the connection containing edges to UsageBillingRecord.
+type UsageBillingRecordConnection struct {
+	Edges      []*UsageBillingRecordEdge `json:"edges"`
+	PageInfo   PageInfo                  `json:"pageInfo"`
+	TotalCount int                       `json:"totalCount"`
+}
+
+func (c *UsageBillingRecordConnection) build(nodes []*UsageBillingRecord, pager *usagebillingrecordPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *UsageBillingRecord
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *UsageBillingRecord {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *UsageBillingRecord {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*UsageBillingRecordEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &UsageBillingRecordEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// UsageBillingRecordPaginateOption enables pagination customization.
+type UsageBillingRecordPaginateOption func(*usagebillingrecordPager) error
+
+// WithUsageBillingRecordOrder configures pagination ordering.
+func WithUsageBillingRecordOrder(order *UsageBillingRecordOrder) UsageBillingRecordPaginateOption {
+	if order == nil {
+		order = DefaultUsageBillingRecordOrder
+	}
+	o := *order
+	return func(pager *usagebillingrecordPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultUsageBillingRecordOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithUsageBillingRecordFilter configures pagination filter.
+func WithUsageBillingRecordFilter(filter func(*UsageBillingRecordQuery) (*UsageBillingRecordQuery, error)) UsageBillingRecordPaginateOption {
+	return func(pager *usagebillingrecordPager) error {
+		if filter == nil {
+			return errors.New("UsageBillingRecordQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type usagebillingrecordPager struct {
+	reverse bool
+	order   *UsageBillingRecordOrder
+	filter  func(*UsageBillingRecordQuery) (*UsageBillingRecordQuery, error)
+}
+
+func newUsageBillingRecordPager(opts []UsageBillingRecordPaginateOption, reverse bool) (*usagebillingrecordPager, error) {
+	pager := &usagebillingrecordPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultUsageBillingRecordOrder
+	}
+	return pager, nil
+}
+
+func (p *usagebillingrecordPager) applyFilter(query *UsageBillingRecordQuery) (*UsageBillingRecordQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *usagebillingrecordPager) toCursor(_m *UsageBillingRecord) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *usagebillingrecordPager) applyCursors(query *UsageBillingRecordQuery, after, before *Cursor) (*UsageBillingRecordQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultUsageBillingRecordOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *usagebillingrecordPager) applyOrder(query *UsageBillingRecordQuery) *UsageBillingRecordQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultUsageBillingRecordOrder.Field {
+		query = query.Order(DefaultUsageBillingRecordOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *usagebillingrecordPager) orderExpr(query *UsageBillingRecordQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultUsageBillingRecordOrder.Field {
+			b.Comma().Ident(DefaultUsageBillingRecordOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to UsageBillingRecord.
+func (_m *UsageBillingRecordQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...UsageBillingRecordPaginateOption,
+) (*UsageBillingRecordConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newUsageBillingRecordPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &UsageBillingRecordConnection{Edges: []*UsageBillingRecordEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// UsageBillingRecordOrderFieldCreatedAt orders UsageBillingRecord by created_at.
+	UsageBillingRecordOrderFieldCreatedAt = &UsageBillingRecordOrderField{
+		Value: func(_m *UsageBillingRecord) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: usagebillingrecord.FieldCreatedAt,
+		toTerm: usagebillingrecord.ByCreatedAt,
+		toCursor: func(_m *UsageBillingRecord) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// UsageBillingRecordOrderFieldUpdatedAt orders UsageBillingRecord by updated_at.
+	UsageBillingRecordOrderFieldUpdatedAt = &UsageBillingRecordOrderField{
+		Value: func(_m *UsageBillingRecord) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: usagebillingrecord.FieldUpdatedAt,
+		toTerm: usagebillingrecord.ByUpdatedAt,
+		toCursor: func(_m *UsageBillingRecord) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f UsageBillingRecordOrderField) String() string {
+	var str string
+	switch f.column {
+	case UsageBillingRecordOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case UsageBillingRecordOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f UsageBillingRecordOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *UsageBillingRecordOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("UsageBillingRecordOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *UsageBillingRecordOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *UsageBillingRecordOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid UsageBillingRecordOrderField", str)
+	}
+	return nil
+}
+
+// UsageBillingRecordOrderField defines the ordering field of UsageBillingRecord.
+type UsageBillingRecordOrderField struct {
+	// Value extracts the ordering value from the given UsageBillingRecord.
+	Value    func(*UsageBillingRecord) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) usagebillingrecord.OrderOption
+	toCursor func(*UsageBillingRecord) Cursor
+}
+
+// UsageBillingRecordOrder defines the ordering of UsageBillingRecord.
+type UsageBillingRecordOrder struct {
+	Direction OrderDirection                `json:"direction"`
+	Field     *UsageBillingRecordOrderField `json:"field"`
+}
+
+// DefaultUsageBillingRecordOrder is the default ordering of UsageBillingRecord.
+var DefaultUsageBillingRecordOrder = &UsageBillingRecordOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &UsageBillingRecordOrderField{
+		Value: func(_m *UsageBillingRecord) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: usagebillingrecord.FieldID,
+		toTerm: usagebillingrecord.ByID,
+		toCursor: func(_m *UsageBillingRecord) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts UsageBillingRecord into UsageBillingRecordEdge.
+func (_m *UsageBillingRecord) ToEdge(order *UsageBillingRecordOrder) *UsageBillingRecordEdge {
+	if order == nil {
+		order = DefaultUsageBillingRecordOrder
+	}
+	return &UsageBillingRecordEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

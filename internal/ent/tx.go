@@ -20,6 +20,10 @@ type Tx struct {
 	BillingAccount *BillingAccountClient
 	// BillingAccountBinding is the client for interacting with the BillingAccountBinding builders.
 	BillingAccountBinding *BillingAccountBindingClient
+	// BillingOutbox is the client for interacting with the BillingOutbox builders.
+	BillingOutbox *BillingOutboxClient
+	// BillingPriceRule is the client for interacting with the BillingPriceRule builders.
+	BillingPriceRule *BillingPriceRuleClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
 	// ChannelModelPrice is the client for interacting with the ChannelModelPrice builders.
@@ -60,6 +64,8 @@ type Tx struct {
 	Thread *ThreadClient
 	// Trace is the client for interacting with the Trace builders.
 	Trace *TraceClient
+	// UsageBillingRecord is the client for interacting with the UsageBillingRecord builders.
+	UsageBillingRecord *UsageBillingRecordClient
 	// UsageLog is the client for interacting with the UsageLog builders.
 	UsageLog *UsageLogClient
 	// User is the client for interacting with the User builders.
@@ -203,6 +209,8 @@ func (tx *Tx) init() {
 	tx.APIKeyProfileTemplate = NewAPIKeyProfileTemplateClient(tx.config)
 	tx.BillingAccount = NewBillingAccountClient(tx.config)
 	tx.BillingAccountBinding = NewBillingAccountBindingClient(tx.config)
+	tx.BillingOutbox = NewBillingOutboxClient(tx.config)
+	tx.BillingPriceRule = NewBillingPriceRuleClient(tx.config)
 	tx.Channel = NewChannelClient(tx.config)
 	tx.ChannelModelPrice = NewChannelModelPriceClient(tx.config)
 	tx.ChannelModelPriceVersion = NewChannelModelPriceVersionClient(tx.config)
@@ -223,6 +231,7 @@ func (tx *Tx) init() {
 	tx.System = NewSystemClient(tx.config)
 	tx.Thread = NewThreadClient(tx.config)
 	tx.Trace = NewTraceClient(tx.config)
+	tx.UsageBillingRecord = NewUsageBillingRecordClient(tx.config)
 	tx.UsageLog = NewUsageLogClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserProject = NewUserProjectClient(tx.config)

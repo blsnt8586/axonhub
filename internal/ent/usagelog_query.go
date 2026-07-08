@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -16,21 +17,24 @@ import (
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/request"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 )
 
 // UsageLogQuery is the builder for querying UsageLog entities.
 type UsageLogQuery struct {
 	config
-	ctx         *QueryContext
-	order       []usagelog.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.UsageLog
-	withRequest *RequestQuery
-	withProject *ProjectQuery
-	withChannel *ChannelQuery
-	loadTotal   []func(context.Context, []*UsageLog) error
-	modifiers   []func(*sql.Selector)
+	ctx                          *QueryContext
+	order                        []usagelog.OrderOption
+	inters                       []Interceptor
+	predicates                   []predicate.UsageLog
+	withRequest                  *RequestQuery
+	withProject                  *ProjectQuery
+	withChannel                  *ChannelQuery
+	withUsageBillingRecords      *UsageBillingRecordQuery
+	loadTotal                    []func(context.Context, []*UsageLog) error
+	modifiers                    []func(*sql.Selector)
+	withNamedUsageBillingRecords map[string]*UsageBillingRecordQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -126,6 +130,28 @@ func (_q *UsageLogQuery) QueryChannel() *ChannelQuery {
 			sqlgraph.From(usagelog.Table, usagelog.FieldID, selector),
 			sqlgraph.To(channel.Table, channel.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usagelog.ChannelTable, usagelog.ChannelColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUsageBillingRecords chains the current query on the "usage_billing_records" edge.
+func (_q *UsageLogQuery) QueryUsageBillingRecords() *UsageBillingRecordQuery {
+	query := (&UsageBillingRecordClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagelog.Table, usagelog.FieldID, selector),
+			sqlgraph.To(usagebillingrecord.Table, usagebillingrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usagelog.UsageBillingRecordsTable, usagelog.UsageBillingRecordsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -320,14 +346,15 @@ func (_q *UsageLogQuery) Clone() *UsageLogQuery {
 		return nil
 	}
 	return &UsageLogQuery{
-		config:      _q.config,
-		ctx:         _q.ctx.Clone(),
-		order:       append([]usagelog.OrderOption{}, _q.order...),
-		inters:      append([]Interceptor{}, _q.inters...),
-		predicates:  append([]predicate.UsageLog{}, _q.predicates...),
-		withRequest: _q.withRequest.Clone(),
-		withProject: _q.withProject.Clone(),
-		withChannel: _q.withChannel.Clone(),
+		config:                  _q.config,
+		ctx:                     _q.ctx.Clone(),
+		order:                   append([]usagelog.OrderOption{}, _q.order...),
+		inters:                  append([]Interceptor{}, _q.inters...),
+		predicates:              append([]predicate.UsageLog{}, _q.predicates...),
+		withRequest:             _q.withRequest.Clone(),
+		withProject:             _q.withProject.Clone(),
+		withChannel:             _q.withChannel.Clone(),
+		withUsageBillingRecords: _q.withUsageBillingRecords.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -365,6 +392,17 @@ func (_q *UsageLogQuery) WithChannel(opts ...func(*ChannelQuery)) *UsageLogQuery
 		opt(query)
 	}
 	_q.withChannel = query
+	return _q
+}
+
+// WithUsageBillingRecords tells the query-builder to eager-load the nodes that are connected to
+// the "usage_billing_records" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UsageLogQuery) WithUsageBillingRecords(opts ...func(*UsageBillingRecordQuery)) *UsageLogQuery {
+	query := (&UsageBillingRecordClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUsageBillingRecords = query
 	return _q
 }
 
@@ -452,10 +490,11 @@ func (_q *UsageLogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Usa
 	var (
 		nodes       = []*UsageLog{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withRequest != nil,
 			_q.withProject != nil,
 			_q.withChannel != nil,
+			_q.withUsageBillingRecords != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -494,6 +533,22 @@ func (_q *UsageLogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Usa
 	if query := _q.withChannel; query != nil {
 		if err := _q.loadChannel(ctx, query, nodes, nil,
 			func(n *UsageLog, e *Channel) { n.Edges.Channel = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUsageBillingRecords; query != nil {
+		if err := _q.loadUsageBillingRecords(ctx, query, nodes,
+			func(n *UsageLog) { n.Edges.UsageBillingRecords = []*UsageBillingRecord{} },
+			func(n *UsageLog, e *UsageBillingRecord) {
+				n.Edges.UsageBillingRecords = append(n.Edges.UsageBillingRecords, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedUsageBillingRecords {
+		if err := _q.loadUsageBillingRecords(ctx, query, nodes,
+			func(n *UsageLog) { n.appendNamedUsageBillingRecords(name) },
+			func(n *UsageLog, e *UsageBillingRecord) { n.appendNamedUsageBillingRecords(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -589,6 +644,36 @@ func (_q *UsageLogQuery) loadChannel(ctx context.Context, query *ChannelQuery, n
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (_q *UsageLogQuery) loadUsageBillingRecords(ctx context.Context, query *UsageBillingRecordQuery, nodes []*UsageLog, init func(*UsageLog), assign func(*UsageLog, *UsageBillingRecord)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*UsageLog)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usagebillingrecord.FieldUsageLogID)
+	}
+	query.Where(predicate.UsageBillingRecord(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(usagelog.UsageBillingRecordsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UsageLogID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "usage_log_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -693,6 +778,20 @@ func (_q *UsageLogQuery) sqlQuery(ctx context.Context) *sql.Selector {
 func (_q *UsageLogQuery) Modify(modifiers ...func(s *sql.Selector)) *UsageLogSelect {
 	_q.modifiers = append(_q.modifiers, modifiers...)
 	return _q.Select()
+}
+
+// WithNamedUsageBillingRecords tells the query-builder to eager-load the nodes that are connected to the "usage_billing_records"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UsageLogQuery) WithNamedUsageBillingRecords(name string, opts ...func(*UsageBillingRecordQuery)) *UsageLogQuery {
+	query := (&UsageBillingRecordClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedUsageBillingRecords == nil {
+		_q.withNamedUsageBillingRecords = make(map[string]*UsageBillingRecordQuery)
+	}
+	_q.withNamedUsageBillingRecords[name] = query
+	return _q
 }
 
 // UsageLogGroupBy is the group-by builder for UsageLog entities.

@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 )
 
 // BillingAccountUpdate is the builder for updating BillingAccount entities.
@@ -137,6 +138,21 @@ func (_u *BillingAccountUpdate) AddLedgerTransactions(v ...*LedgerTransaction) *
 	return _u.AddLedgerTransactionIDs(ids...)
 }
 
+// AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
+func (_u *BillingAccountUpdate) AddUsageBillingRecordIDs(ids ...int) *BillingAccountUpdate {
+	_u.mutation.AddUsageBillingRecordIDs(ids...)
+	return _u
+}
+
+// AddUsageBillingRecords adds the "usage_billing_records" edges to the UsageBillingRecord entity.
+func (_u *BillingAccountUpdate) AddUsageBillingRecords(v ...*UsageBillingRecord) *BillingAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUsageBillingRecordIDs(ids...)
+}
+
 // Mutation returns the BillingAccountMutation object of the builder.
 func (_u *BillingAccountUpdate) Mutation() *BillingAccountMutation {
 	return _u.mutation
@@ -182,6 +198,27 @@ func (_u *BillingAccountUpdate) RemoveLedgerTransactions(v ...*LedgerTransaction
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveLedgerTransactionIDs(ids...)
+}
+
+// ClearUsageBillingRecords clears all "usage_billing_records" edges to the UsageBillingRecord entity.
+func (_u *BillingAccountUpdate) ClearUsageBillingRecords() *BillingAccountUpdate {
+	_u.mutation.ClearUsageBillingRecords()
+	return _u
+}
+
+// RemoveUsageBillingRecordIDs removes the "usage_billing_records" edge to UsageBillingRecord entities by IDs.
+func (_u *BillingAccountUpdate) RemoveUsageBillingRecordIDs(ids ...int) *BillingAccountUpdate {
+	_u.mutation.RemoveUsageBillingRecordIDs(ids...)
+	return _u
+}
+
+// RemoveUsageBillingRecords removes "usage_billing_records" edges to UsageBillingRecord entities.
+func (_u *BillingAccountUpdate) RemoveUsageBillingRecords(v ...*UsageBillingRecord) *BillingAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUsageBillingRecordIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -365,6 +402,51 @@ func (_u *BillingAccountUpdate) sqlSave(ctx context.Context) (_node int, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.UsageBillingRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.UsageBillingRecordsTable,
+			Columns: []string{billingaccount.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUsageBillingRecordsIDs(); len(nodes) > 0 && !_u.mutation.UsageBillingRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.UsageBillingRecordsTable,
+			Columns: []string{billingaccount.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UsageBillingRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.UsageBillingRecordsTable,
+			Columns: []string{billingaccount.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -493,6 +575,21 @@ func (_u *BillingAccountUpdateOne) AddLedgerTransactions(v ...*LedgerTransaction
 	return _u.AddLedgerTransactionIDs(ids...)
 }
 
+// AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
+func (_u *BillingAccountUpdateOne) AddUsageBillingRecordIDs(ids ...int) *BillingAccountUpdateOne {
+	_u.mutation.AddUsageBillingRecordIDs(ids...)
+	return _u
+}
+
+// AddUsageBillingRecords adds the "usage_billing_records" edges to the UsageBillingRecord entity.
+func (_u *BillingAccountUpdateOne) AddUsageBillingRecords(v ...*UsageBillingRecord) *BillingAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUsageBillingRecordIDs(ids...)
+}
+
 // Mutation returns the BillingAccountMutation object of the builder.
 func (_u *BillingAccountUpdateOne) Mutation() *BillingAccountMutation {
 	return _u.mutation
@@ -538,6 +635,27 @@ func (_u *BillingAccountUpdateOne) RemoveLedgerTransactions(v ...*LedgerTransact
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveLedgerTransactionIDs(ids...)
+}
+
+// ClearUsageBillingRecords clears all "usage_billing_records" edges to the UsageBillingRecord entity.
+func (_u *BillingAccountUpdateOne) ClearUsageBillingRecords() *BillingAccountUpdateOne {
+	_u.mutation.ClearUsageBillingRecords()
+	return _u
+}
+
+// RemoveUsageBillingRecordIDs removes the "usage_billing_records" edge to UsageBillingRecord entities by IDs.
+func (_u *BillingAccountUpdateOne) RemoveUsageBillingRecordIDs(ids ...int) *BillingAccountUpdateOne {
+	_u.mutation.RemoveUsageBillingRecordIDs(ids...)
+	return _u
+}
+
+// RemoveUsageBillingRecords removes "usage_billing_records" edges to UsageBillingRecord entities.
+func (_u *BillingAccountUpdateOne) RemoveUsageBillingRecords(v ...*UsageBillingRecord) *BillingAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUsageBillingRecordIDs(ids...)
 }
 
 // Where appends a list predicates to the BillingAccountUpdate builder.
@@ -744,6 +862,51 @@ func (_u *BillingAccountUpdateOne) sqlSave(ctx context.Context) (_node *BillingA
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgertransaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UsageBillingRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.UsageBillingRecordsTable,
+			Columns: []string{billingaccount.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUsageBillingRecordsIDs(); len(nodes) > 0 && !_u.mutation.UsageBillingRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.UsageBillingRecordsTable,
+			Columns: []string{billingaccount.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UsageBillingRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.UsageBillingRecordsTable,
+			Columns: []string{billingaccount.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

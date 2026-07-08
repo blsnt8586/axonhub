@@ -23,5 +23,6 @@ var (
 	ErrBillingAccountNotFound = errors.New("billing account not found")
 	ErrBillingAccountFrozen   = errors.New("billing account is frozen")
 	ErrBillingAccountClosed   = errors.New("billing account is closed")
+	ErrBillingPriceNotFound   = errors.New("billing price not found")
 	ErrInsufficientBalance    = errors.New("insufficient billing balance")
 )

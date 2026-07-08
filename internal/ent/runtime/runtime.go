@@ -10,6 +10,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingoutbox"
+	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
@@ -30,6 +32,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -198,6 +201,78 @@ func init() {
 	billingaccountbindingDescRelation := billingaccountbindingFields[3].Descriptor()
 	// billingaccountbinding.DefaultRelation holds the default value on creation for the relation field.
 	billingaccountbinding.DefaultRelation = billingaccountbindingDescRelation.Default.(string)
+	billingoutboxMixin := schema.BillingOutbox{}.Mixin()
+	billingoutbox.Policy = privacy.NewPolicies(schema.BillingOutbox{})
+	billingoutbox.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := billingoutbox.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	billingoutboxMixinFields0 := billingoutboxMixin[0].Fields()
+	_ = billingoutboxMixinFields0
+	billingoutboxFields := schema.BillingOutbox{}.Fields()
+	_ = billingoutboxFields
+	// billingoutboxDescCreatedAt is the schema descriptor for created_at field.
+	billingoutboxDescCreatedAt := billingoutboxMixinFields0[0].Descriptor()
+	// billingoutbox.DefaultCreatedAt holds the default value on creation for the created_at field.
+	billingoutbox.DefaultCreatedAt = billingoutboxDescCreatedAt.Default.(func() time.Time)
+	// billingoutboxDescUpdatedAt is the schema descriptor for updated_at field.
+	billingoutboxDescUpdatedAt := billingoutboxMixinFields0[1].Descriptor()
+	// billingoutbox.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	billingoutbox.DefaultUpdatedAt = billingoutboxDescUpdatedAt.Default.(func() time.Time)
+	// billingoutbox.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	billingoutbox.UpdateDefaultUpdatedAt = billingoutboxDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// billingoutboxDescAttempts is the schema descriptor for attempts field.
+	billingoutboxDescAttempts := billingoutboxFields[4].Descriptor()
+	// billingoutbox.DefaultAttempts holds the default value on creation for the attempts field.
+	billingoutbox.DefaultAttempts = billingoutboxDescAttempts.Default.(int)
+	// billingoutboxDescLastError is the schema descriptor for last_error field.
+	billingoutboxDescLastError := billingoutboxFields[6].Descriptor()
+	// billingoutbox.DefaultLastError holds the default value on creation for the last_error field.
+	billingoutbox.DefaultLastError = billingoutboxDescLastError.Default.(string)
+	billingpriceruleMixin := schema.BillingPriceRule{}.Mixin()
+	billingpricerule.Policy = privacy.NewPolicies(schema.BillingPriceRule{})
+	billingpricerule.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := billingpricerule.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	billingpriceruleMixinFields0 := billingpriceruleMixin[0].Fields()
+	_ = billingpriceruleMixinFields0
+	billingpriceruleFields := schema.BillingPriceRule{}.Fields()
+	_ = billingpriceruleFields
+	// billingpriceruleDescCreatedAt is the schema descriptor for created_at field.
+	billingpriceruleDescCreatedAt := billingpriceruleMixinFields0[0].Descriptor()
+	// billingpricerule.DefaultCreatedAt holds the default value on creation for the created_at field.
+	billingpricerule.DefaultCreatedAt = billingpriceruleDescCreatedAt.Default.(func() time.Time)
+	// billingpriceruleDescUpdatedAt is the schema descriptor for updated_at field.
+	billingpriceruleDescUpdatedAt := billingpriceruleMixinFields0[1].Descriptor()
+	// billingpricerule.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	billingpricerule.DefaultUpdatedAt = billingpriceruleDescUpdatedAt.Default.(func() time.Time)
+	// billingpricerule.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	billingpricerule.UpdateDefaultUpdatedAt = billingpriceruleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// billingpriceruleDescScopeID is the schema descriptor for scope_id field.
+	billingpriceruleDescScopeID := billingpriceruleFields[1].Descriptor()
+	// billingpricerule.DefaultScopeID holds the default value on creation for the scope_id field.
+	billingpricerule.DefaultScopeID = billingpriceruleDescScopeID.Default.(int)
+	// billingpriceruleDescCurrency is the schema descriptor for currency field.
+	billingpriceruleDescCurrency := billingpriceruleFields[4].Descriptor()
+	// billingpricerule.DefaultCurrency holds the default value on creation for the currency field.
+	billingpricerule.DefaultCurrency = billingpriceruleDescCurrency.Default.(string)
+	// billingpriceruleDescPriority is the schema descriptor for priority field.
+	billingpriceruleDescPriority := billingpriceruleFields[5].Descriptor()
+	// billingpricerule.DefaultPriority holds the default value on creation for the priority field.
+	billingpricerule.DefaultPriority = billingpriceruleDescPriority.Default.(int)
+	// billingpriceruleDescEnabled is the schema descriptor for enabled field.
+	billingpriceruleDescEnabled := billingpriceruleFields[6].Descriptor()
+	// billingpricerule.DefaultEnabled holds the default value on creation for the enabled field.
+	billingpricerule.DefaultEnabled = billingpriceruleDescEnabled.Default.(bool)
 	channelMixin := schema.Channel{}.Mixin()
 	channel.Policy = privacy.NewPolicies(schema.Channel{})
 	channel.Hooks[0] = func(next ent.Mutator) ent.Mutator {
@@ -931,6 +1006,46 @@ func init() {
 	trace.DefaultUpdatedAt = traceDescUpdatedAt.Default.(func() time.Time)
 	// trace.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	trace.UpdateDefaultUpdatedAt = traceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	usagebillingrecordMixin := schema.UsageBillingRecord{}.Mixin()
+	usagebillingrecord.Policy = privacy.NewPolicies(schema.UsageBillingRecord{})
+	usagebillingrecord.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := usagebillingrecord.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	usagebillingrecordMixinFields0 := usagebillingrecordMixin[0].Fields()
+	_ = usagebillingrecordMixinFields0
+	usagebillingrecordFields := schema.UsageBillingRecord{}.Fields()
+	_ = usagebillingrecordFields
+	// usagebillingrecordDescCreatedAt is the schema descriptor for created_at field.
+	usagebillingrecordDescCreatedAt := usagebillingrecordMixinFields0[0].Descriptor()
+	// usagebillingrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usagebillingrecord.DefaultCreatedAt = usagebillingrecordDescCreatedAt.Default.(func() time.Time)
+	// usagebillingrecordDescUpdatedAt is the schema descriptor for updated_at field.
+	usagebillingrecordDescUpdatedAt := usagebillingrecordMixinFields0[1].Descriptor()
+	// usagebillingrecord.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usagebillingrecord.DefaultUpdatedAt = usagebillingrecordDescUpdatedAt.Default.(func() time.Time)
+	// usagebillingrecord.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usagebillingrecord.UpdateDefaultUpdatedAt = usagebillingrecordDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// usagebillingrecordDescChargeItems is the schema descriptor for charge_items field.
+	usagebillingrecordDescChargeItems := usagebillingrecordFields[9].Descriptor()
+	// usagebillingrecord.DefaultChargeItems holds the default value on creation for the charge_items field.
+	usagebillingrecord.DefaultChargeItems = usagebillingrecordDescChargeItems.Default.([]objects.CostItem)
+	// usagebillingrecordDescCostAmountMicros is the schema descriptor for cost_amount_micros field.
+	usagebillingrecordDescCostAmountMicros := usagebillingrecordFields[10].Descriptor()
+	// usagebillingrecord.DefaultCostAmountMicros holds the default value on creation for the cost_amount_micros field.
+	usagebillingrecord.DefaultCostAmountMicros = usagebillingrecordDescCostAmountMicros.Default.(int64)
+	// usagebillingrecordDescCurrency is the schema descriptor for currency field.
+	usagebillingrecordDescCurrency := usagebillingrecordFields[12].Descriptor()
+	// usagebillingrecord.DefaultCurrency holds the default value on creation for the currency field.
+	usagebillingrecord.DefaultCurrency = usagebillingrecordDescCurrency.Default.(string)
+	// usagebillingrecordDescError is the schema descriptor for error field.
+	usagebillingrecordDescError := usagebillingrecordFields[16].Descriptor()
+	// usagebillingrecord.DefaultError holds the default value on creation for the error field.
+	usagebillingrecord.DefaultError = usagebillingrecordDescError.Default.(string)
 	usagelogMixin := schema.UsageLog{}.Mixin()
 	usagelog.Policy = privacy.NewPolicies(schema.UsageLog{})
 	usagelog.Hooks[0] = func(next ent.Mutator) ent.Mutator {

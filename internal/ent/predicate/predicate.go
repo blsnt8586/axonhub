@@ -18,6 +18,12 @@ type BillingAccount func(*sql.Selector)
 // BillingAccountBinding is the predicate function for billingaccountbinding builders.
 type BillingAccountBinding func(*sql.Selector)
 
+// BillingOutbox is the predicate function for billingoutbox builders.
+type BillingOutbox func(*sql.Selector)
+
+// BillingPriceRule is the predicate function for billingpricerule builders.
+type BillingPriceRule func(*sql.Selector)
+
 // Channel is the predicate function for channel builders.
 type Channel func(*sql.Selector)
 
@@ -77,6 +83,9 @@ type Thread func(*sql.Selector)
 
 // Trace is the predicate function for trace builders.
 type Trace func(*sql.Selector)
+
+// UsageBillingRecord is the predicate function for usagebillingrecord builders.
+type UsageBillingRecord func(*sql.Selector)
 
 // UsageLog is the predicate function for usagelog builders.
 type UsageLog func(*sql.Selector)

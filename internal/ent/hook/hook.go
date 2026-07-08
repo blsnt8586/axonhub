@@ -57,6 +57,30 @@ func (f BillingAccountBindingFunc) Mutate(ctx context.Context, m ent.Mutation) (
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingAccountBindingMutation", m)
 }
 
+// The BillingOutboxFunc type is an adapter to allow the use of ordinary
+// function as BillingOutbox mutator.
+type BillingOutboxFunc func(context.Context, *ent.BillingOutboxMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BillingOutboxFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BillingOutboxMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingOutboxMutation", m)
+}
+
+// The BillingPriceRuleFunc type is an adapter to allow the use of ordinary
+// function as BillingPriceRule mutator.
+type BillingPriceRuleFunc func(context.Context, *ent.BillingPriceRuleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BillingPriceRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BillingPriceRuleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingPriceRuleMutation", m)
+}
+
 // The ChannelFunc type is an adapter to allow the use of ordinary
 // function as Channel mutator.
 type ChannelFunc func(context.Context, *ent.ChannelMutation) (ent.Value, error)
@@ -295,6 +319,18 @@ func (f TraceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TraceMutation", m)
+}
+
+// The UsageBillingRecordFunc type is an adapter to allow the use of ordinary
+// function as UsageBillingRecord mutator.
+type UsageBillingRecordFunc func(context.Context, *ent.UsageBillingRecordMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UsageBillingRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UsageBillingRecordMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UsageBillingRecordMutation", m)
 }
 
 // The UsageLogFunc type is an adapter to allow the use of ordinary

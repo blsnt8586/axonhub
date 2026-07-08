@@ -84,11 +84,15 @@ type UsageLogEdges struct {
 	Project *Project `json:"project,omitempty"`
 	// Channel holds the value of the channel edge.
 	Channel *Channel `json:"channel,omitempty"`
+	// UsageBillingRecords holds the value of the usage_billing_records edge.
+	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 	// totalCount holds the count of the edges above.
-	totalCount [3]map[string]int
+	totalCount [4]map[string]int
+
+	namedUsageBillingRecords map[string][]*UsageBillingRecord
 }
 
 // RequestOrErr returns the Request value or an error if the edge
@@ -122,6 +126,15 @@ func (e UsageLogEdges) ChannelOrErr() (*Channel, error) {
 		return nil, &NotFoundError{label: channel.Label}
 	}
 	return nil, &NotLoadedError{edge: "channel"}
+}
+
+// UsageBillingRecordsOrErr returns the UsageBillingRecords value or an error if the edge
+// was not loaded in eager-loading.
+func (e UsageLogEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecord, error) {
+	if e.loadedTypes[3] {
+		return e.UsageBillingRecords, nil
+	}
+	return nil, &NotLoadedError{edge: "usage_billing_records"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -335,6 +348,11 @@ func (_m *UsageLog) QueryChannel() *ChannelQuery {
 	return NewUsageLogClient(_m.config).QueryChannel(_m)
 }
 
+// QueryUsageBillingRecords queries the "usage_billing_records" edge of the UsageLog entity.
+func (_m *UsageLog) QueryUsageBillingRecords() *UsageBillingRecordQuery {
+	return NewUsageLogClient(_m.config).QueryUsageBillingRecords(_m)
+}
+
 // Update returns a builder for updating this UsageLog.
 // Note that you need to call UsageLog.Unwrap() before calling this method if this UsageLog
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -433,6 +451,30 @@ func (_m *UsageLog) String() string {
 	builder.WriteString(_m.CostPriceReferenceID)
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedUsageBillingRecords returns the UsageBillingRecords named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UsageLog) NamedUsageBillingRecords(name string) ([]*UsageBillingRecord, error) {
+	if _m.Edges.namedUsageBillingRecords == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUsageBillingRecords[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UsageLog) appendNamedUsageBillingRecords(name string, edges ...*UsageBillingRecord) {
+	if _m.Edges.namedUsageBillingRecords == nil {
+		_m.Edges.namedUsageBillingRecords = make(map[string][]*UsageBillingRecord)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUsageBillingRecords[name] = []*UsageBillingRecord{}
+	} else {
+		_m.Edges.namedUsageBillingRecords[name] = append(_m.Edges.namedUsageBillingRecords[name], edges...)
+	}
 }
 
 // UsageLogs is a parsable slice of UsageLog.

@@ -148,6 +148,69 @@ var (
 			},
 		},
 	}
+	// BillingOutboxesColumns holds the columns for the "billing_outboxes" table.
+	BillingOutboxesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "event_key", Type: field.TypeString},
+		{Name: "event_type", Type: field.TypeEnum, Enums: []string{"usage_billing_requested", "payment_reconcile_requested"}},
+		{Name: "payload", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "processing", "done", "failed"}, Default: "pending"},
+		{Name: "attempts", Type: field.TypeInt, Default: 0},
+		{Name: "next_attempt_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_error", Type: field.TypeString, Default: ""},
+	}
+	// BillingOutboxesTable holds the schema information for the "billing_outboxes" table.
+	BillingOutboxesTable = &schema.Table{
+		Name:       "billing_outboxes",
+		Columns:    BillingOutboxesColumns,
+		PrimaryKey: []*schema.Column{BillingOutboxesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "billing_outbox_by_event_key",
+				Unique:  true,
+				Columns: []*schema.Column{BillingOutboxesColumns[3]},
+			},
+			{
+				Name:    "billing_outbox_by_status_next_attempt_at",
+				Unique:  false,
+				Columns: []*schema.Column{BillingOutboxesColumns[6], BillingOutboxesColumns[8]},
+			},
+		},
+	}
+	// BillingPriceRulesColumns holds the columns for the "billing_price_rules" table.
+	BillingPriceRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "scope_type", Type: field.TypeEnum, Enums: []string{"global", "project", "group"}, Default: "global"},
+		{Name: "scope_id", Type: field.TypeInt, Default: 0},
+		{Name: "model_pattern", Type: field.TypeString},
+		{Name: "price", Type: field.TypeJSON},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "priority", Type: field.TypeInt, Default: 0},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "reference_id", Type: field.TypeString},
+	}
+	// BillingPriceRulesTable holds the schema information for the "billing_price_rules" table.
+	BillingPriceRulesTable = &schema.Table{
+		Name:       "billing_price_rules",
+		Columns:    BillingPriceRulesColumns,
+		PrimaryKey: []*schema.Column{BillingPriceRulesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "billing_price_rules_lookup",
+				Unique:  false,
+				Columns: []*schema.Column{BillingPriceRulesColumns[3], BillingPriceRulesColumns[4], BillingPriceRulesColumns[5], BillingPriceRulesColumns[8]},
+			},
+			{
+				Name:    "billing_price_rules_by_reference_id",
+				Unique:  true,
+				Columns: []*schema.Column{BillingPriceRulesColumns[10]},
+			},
+		},
+	}
 	// ChannelsColumns holds the columns for the "channels" table.
 	ChannelsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -911,6 +974,77 @@ var (
 			},
 		},
 	}
+	// UsageBillingRecordsColumns holds the columns for the "usage_billing_records" table.
+	UsageBillingRecordsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "project_id", Type: field.TypeInt},
+		{Name: "api_key_id", Type: field.TypeInt, Nullable: true},
+		{Name: "model_id", Type: field.TypeString},
+		{Name: "request_type", Type: field.TypeEnum, Enums: []string{"chat", "image", "video", "embedding", "audio", "other"}, Default: "chat"},
+		{Name: "usage_snapshot", Type: field.TypeJSON, Nullable: true},
+		{Name: "price_snapshot", Type: field.TypeJSON},
+		{Name: "price_reference_id", Type: field.TypeString},
+		{Name: "charge_items", Type: field.TypeJSON},
+		{Name: "cost_amount_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "charge_amount_micros", Type: field.TypeInt64},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "charged", "skipped", "failed", "refunded"}, Default: "pending"},
+		{Name: "idempotency_key", Type: field.TypeString},
+		{Name: "error", Type: field.TypeString, Default: ""},
+		{Name: "billing_account_id", Type: field.TypeInt},
+		{Name: "ledger_transaction_id", Type: field.TypeInt, Nullable: true},
+		{Name: "usage_log_id", Type: field.TypeInt},
+	}
+	// UsageBillingRecordsTable holds the schema information for the "usage_billing_records" table.
+	UsageBillingRecordsTable = &schema.Table{
+		Name:       "usage_billing_records",
+		Columns:    UsageBillingRecordsColumns,
+		PrimaryKey: []*schema.Column{UsageBillingRecordsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "usage_billing_records_billing_accounts_usage_billing_records",
+				Columns:    []*schema.Column{UsageBillingRecordsColumns[17]},
+				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "usage_billing_records_ledger_transactions_usage_billing_records",
+				Columns:    []*schema.Column{UsageBillingRecordsColumns[18]},
+				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "usage_billing_records_usage_logs_usage_billing_records",
+				Columns:    []*schema.Column{UsageBillingRecordsColumns[19]},
+				RefColumns: []*schema.Column{UsageLogsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usage_billing_records_by_usage_log_id",
+				Unique:  true,
+				Columns: []*schema.Column{UsageBillingRecordsColumns[19]},
+			},
+			{
+				Name:    "usage_billing_records_by_account_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsageBillingRecordsColumns[17], UsageBillingRecordsColumns[1]},
+			},
+			{
+				Name:    "usage_billing_records_by_project_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsageBillingRecordsColumns[3], UsageBillingRecordsColumns[1]},
+			},
+			{
+				Name:    "usage_billing_records_by_idempotency_key",
+				Unique:  true,
+				Columns: []*schema.Column{UsageBillingRecordsColumns[15]},
+			},
+		},
+	}
 	// UsageLogsColumns holds the columns for the "usage_logs" table.
 	UsageLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1139,6 +1273,8 @@ var (
 		APIKeyProfileTemplatesTable,
 		BillingAccountsTable,
 		BillingAccountBindingsTable,
+		BillingOutboxesTable,
+		BillingPriceRulesTable,
 		ChannelsTable,
 		ChannelModelPricesTable,
 		ChannelModelPriceVersionsTable,
@@ -1159,6 +1295,7 @@ var (
 		SystemsTable,
 		ThreadsTable,
 		TracesTable,
+		UsageBillingRecordsTable,
 		UsageLogsTable,
 		UsersTable,
 		UserProjectsTable,
@@ -1192,6 +1329,9 @@ func init() {
 	ThreadsTable.ForeignKeys[0].RefTable = ProjectsTable
 	TracesTable.ForeignKeys[0].RefTable = ProjectsTable
 	TracesTable.ForeignKeys[1].RefTable = ThreadsTable
+	UsageBillingRecordsTable.ForeignKeys[0].RefTable = BillingAccountsTable
+	UsageBillingRecordsTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
+	UsageBillingRecordsTable.ForeignKeys[2].RefTable = UsageLogsTable
 	UsageLogsTable.ForeignKeys[0].RefTable = ChannelsTable
 	UsageLogsTable.ForeignKeys[1].RefTable = ProjectsTable
 	UsageLogsTable.ForeignKeys[2].RefTable = RequestsTable
