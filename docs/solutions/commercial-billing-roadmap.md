@@ -82,39 +82,39 @@ Verification:
 - [x] Failure path releases hold.
 - [x] Duplicate capture/release is safe.
 - [x] Cleanup job is repeatable.
-- [ ] Commit completed stage.
+- [x] Commit completed stage.
 
 ## Stage 2: Production Payment Order Lifecycle
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: make ePay and future payment providers operable in production, with order expiry, make-up operations, event audit, and clear status handling.
 
 Backend scope:
 
-- [ ] Finalize payment statuses: pending, paid, failed, expired, canceled, refunded.
-- [ ] Add order timeout expiry worker.
-- [ ] Record all successful and failed payment notifications.
-- [ ] Keep async notification idempotent.
-- [ ] Reject invalid signature, provider mismatch, amount mismatch, currency mismatch, and expired order without crediting ledger.
-- [ ] Add admin make-up payment operation with reason and audit trail.
-- [ ] Add admin cancel pending order operation.
-- [ ] Prepare refund fields without implementing full refund flow unless required by this stage.
+- [x] Finalize payment statuses: pending, paid, failed, expired, canceled, refunded.
+- [x] Add order timeout expiry worker.
+- [x] Record all successful and failed payment notifications.
+- [x] Keep async notification idempotent.
+- [x] Reject invalid signature, provider mismatch, amount mismatch, currency mismatch, and expired order without crediting ledger.
+- [x] Add admin make-up payment operation with reason and audit trail.
+- [x] Add admin cancel pending order operation.
+- [x] Prepare refund fields without implementing full refund flow unless required by this stage.
 
 Frontend scope:
 
-- [ ] User payment return/status page shows read-only order result and refresh action.
-- [ ] Admin payment order list supports filters and details.
-- [ ] Admin payment event list shows notification payload summary and failure reason.
-- [ ] Admin can make up or cancel eligible orders through guarded actions.
+- [x] User payment return/status page shows read-only order result and refresh action.
+- [x] Admin payment order list supports filters and details.
+- [x] Admin payment event list shows notification payload summary and failure reason.
+- [x] Admin can make up or cancel eligible orders through guarded actions.
 
 Verification:
 
-- [ ] ePay notification credits once only.
-- [ ] ePay return never credits ledger.
-- [ ] Expired/canceled order cannot be credited by late notification.
-- [ ] Manual make-up is idempotent and audited.
-- [ ] Commit completed stage.
+- [x] ePay notification credits once only.
+- [x] ePay return never credits ledger.
+- [x] Expired/canceled order cannot be credited by late notification.
+- [x] Manual make-up is idempotent and audited.
+- [x] Commit completed stage.
 
 ## Stage 3: Commercial Reports And Audit Console
 
@@ -346,7 +346,7 @@ Verification:
 
 - [x] Stage 0: Harden Existing Commercial Modules
 - [x] Stage 1: Wallet Holds And Pre-Authorization
-- [ ] Stage 2: Production Payment Order Lifecycle
+- [x] Stage 2: Production Payment Order Lifecycle
 - [ ] Stage 3: Commercial Reports And Audit Console
 - [ ] Stage 4: API Key Budgets And Commercial Limits
 - [ ] Stage 5: Redeem Codes
@@ -365,3 +365,4 @@ Append one line per completed stage.
 | Baseline | `4ad0913d` and earlier billing commits | 2026-07-08 | Wallet, ledger, ePay, sell price rules, user/admin billing pages, and user wallet controls are in place. |
 | Stage 0 | `f96625b4` | 2026-07-08 | Hardened admission codes, usage retry safety, owner-only billing operation queries, admin billing tabs, filters, and failure reason display. |
 | Stage 1 | `94106a72` | 2026-07-08 | Added wallet holds, request pre-authorization, hold capture/release/expiry, admin hold operations, and held/available wallet UI. |
+| Stage 2 | `bf4368b5` | 2026-07-08 | Hardened payment order lifecycle with expiry, cancel, admin make-up, callback audit, read-only return page, event payload summaries, and refund reserve fields. |
