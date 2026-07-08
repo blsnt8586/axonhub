@@ -13,9 +13,29 @@ input ConfirmManualPaymentInput {
   paidAt: Time
 }
 
+input CreateSimulatedEPayRechargeCheckoutInput {
+  projectId: ID!
+  amount: DecimalInput!
+  currency: String
+  subject: String
+  publicBaseUrl: String
+  metadata: JSONRawMessageInput
+}
+
+type PaymentCheckout {
+  providerType: String!
+  orderNo: String!
+  method: String!
+  url: String
+  params: JSONRawMessage
+  amount: Decimal!
+  currency: String!
+}
+
 extend type Mutation {
   createManualRechargeOrder(input: CreateManualRechargeOrderInput!): PaymentOrder!
   confirmManualPayment(input: ConfirmManualPaymentInput!): PaymentOrder!
+  createSimulatedEPayRechargeCheckout(input: CreateSimulatedEPayRechargeCheckoutInput!): PaymentCheckout!
 }
 
 extend type Query {

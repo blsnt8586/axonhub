@@ -89,3 +89,21 @@ func TestEPayAdapterCreateCheckout(t *testing.T) {
 	require.Contains(t, checkout.URL, cfg.GatewayURL+"?")
 	require.Contains(t, checkout.URL, "out_trade_no=pay_123")
 }
+
+func TestNewSimulatedEPayNotifyFromCheckout(t *testing.T) {
+	checkoutParams := map[string]string{
+		"pid":          "1001",
+		"type":         "alipay",
+		"out_trade_no": "pay_123",
+		"name":         "Recharge",
+		"money":        "12.34",
+	}
+
+	notify := NewSimulatedEPayNotifyFromCheckout(checkoutParams, "secret")
+	require.Equal(t, "1001", notify["pid"])
+	require.Equal(t, "sim_pay_123", notify["trade_no"])
+	require.Equal(t, "pay_123", notify["out_trade_no"])
+	require.Equal(t, "TRADE_SUCCESS", notify["trade_status"])
+	require.Equal(t, "MD5", notify["sign_type"])
+	require.True(t, VerifyEPaySignature(notify, "secret"))
+}

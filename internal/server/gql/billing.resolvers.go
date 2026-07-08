@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
 )
@@ -33,6 +34,33 @@ func (r *mutationResolver) ConfirmManualPayment(ctx context.Context, input biz.C
 	input.ActorID = fmt.Sprint(user.ID)
 
 	return r.paymentService.ConfirmManualPayment(ctx, input)
+}
+
+// CreateSimulatedEPayRechargeCheckout is the resolver for the createSimulatedEPayRechargeCheckout field.
+func (r *mutationResolver) CreateSimulatedEPayRechargeCheckout(ctx context.Context, input CreateSimulatedEPayRechargeCheckoutInput) (*PaymentCheckout, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	provider, err := r.paymentService.GetOrCreateSimulatedEPayProvider(ctx, stringValue(input.PublicBaseURL))
+	if err != nil {
+		return nil, err
+	}
+
+	checkout, err := r.paymentService.CreateRechargeCheckout(ctx, biz.CreateRechargeCheckoutInput{
+		ProjectID:          input.ProjectID.ID,
+		ProviderInstanceID: &provider.ID,
+		ProviderType:       paymentproviderinstance.ProviderTypeEpay,
+		Amount:             input.Amount,
+		Currency:           stringValue(input.Currency),
+		Subject:            stringValue(input.Subject),
+		Metadata:           input.Metadata,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return paymentCheckoutFromBiz(checkout)
 }
 
 // ProjectBillingAccount is the resolver for the projectBillingAccount field.

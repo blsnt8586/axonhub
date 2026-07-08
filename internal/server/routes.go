@@ -36,6 +36,7 @@ type Handlers struct {
 	RequestContent *api.RequestContentHandlers
 	OIDC           *api.OIDCHandlers
 	RequestPreview *api.RequestPreviewHandlers
+	Payment        *api.PaymentHandlers
 }
 
 type Services struct {
@@ -84,6 +85,9 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		publicGroup.GET("/favicon", handlers.System.GetFavicon)
 		// Health check endpoint - no authentication required
 		publicGroup.GET("/health", handlers.System.Health)
+		publicGroup.GET("/payment/notify/epay", handlers.Payment.NotifyEPay)
+		publicGroup.POST("/payment/notify/epay", handlers.Payment.NotifyEPay)
+		publicGroup.GET("/payment/simulate/epay/submit", handlers.Payment.SimulateEPaySubmit)
 	}
 
 	unSecureAdminGroup := server.Group("/admin", middleware.WithTimeout(server.Config.RequestTimeout))

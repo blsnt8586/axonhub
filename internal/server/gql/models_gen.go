@@ -205,6 +205,15 @@ type CountChannelsByTypeInput struct {
 	StatusIn []channel.Status `json:"statusIn,omitempty"`
 }
 
+type CreateSimulatedEPayRechargeCheckoutInput struct {
+	ProjectID     objects.GUID           `json:"projectId"`
+	Amount        decimal.Decimal        `json:"amount"`
+	Currency      *string                `json:"currency,omitempty"`
+	Subject       *string                `json:"subject,omitempty"`
+	PublicBaseURL *string                `json:"publicBaseUrl,omitempty"`
+	Metadata      objects.JSONRawMessage `json:"metadata,omitempty"`
+}
+
 type DailyRequestStats struct {
 	Date   string  `json:"date"`
 	Count  int     `json:"count"`
@@ -319,6 +328,16 @@ type OnboardingInfo struct {
 
 type PassThroughSettings struct {
 	Enabled bool `json:"enabled"`
+}
+
+type PaymentCheckout struct {
+	ProviderType string                 `json:"providerType"`
+	OrderNo      string                 `json:"orderNo"`
+	Method       string                 `json:"method"`
+	URL          *string                `json:"url,omitempty"`
+	Params       objects.JSONRawMessage `json:"params,omitempty"`
+	Amount       decimal.Decimal        `json:"amount"`
+	Currency     string                 `json:"currency"`
 }
 
 type PromptProtectionRulePreviewInput struct {

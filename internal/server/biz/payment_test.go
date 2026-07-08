@@ -2,6 +2,8 @@ package biz
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/shopspring/decimal"
@@ -103,6 +105,74 @@ func TestPaymentServiceRejectsEventKeyReusedByAnotherOrder(t *testing.T) {
 	require.Contains(t, err.Error(), "does not belong to order")
 }
 
+func TestPaymentServiceSimulatedEPayCheckoutAndNotifyCreditsLedgerOnce(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, svc := newPaymentTestService(t, "payment_epay_notify")
+	provider, err := svc.GetOrCreateSimulatedEPayProvider(ctx, "http://axon.local")
+	require.NoError(t, err)
+
+	checkout, err := svc.CreateRechargeCheckout(ctx, CreateRechargeCheckoutInput{
+		ProjectID:          1,
+		ProviderInstanceID: &provider.ID,
+		ProviderType:       provider.ProviderType,
+		Amount:             decimal.RequireFromString("12.34"),
+		Currency:           "CNY",
+		Subject:            "Test recharge",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "redirect", checkout.Method)
+	require.Contains(t, checkout.URL, "/payment/simulate/epay/submit?")
+	require.Equal(t, "12.34", checkout.Params["money"])
+
+	notify := NewSimulatedEPayNotifyFromCheckout(checkout.Params, "axonhub-simulated-epay-secret")
+	paid, err := svc.HandleEPayNotify(ctx, HandleEPayNotifyInput{Params: notify})
+	require.NoError(t, err)
+	require.Equal(t, paymentorder.StatusPaid, paid.Status)
+	require.NotNil(t, paid.LedgerTransactionID)
+	require.NotNil(t, paid.ExternalTradeNo)
+	require.True(t, strings.HasPrefix(*paid.ExternalTradeNo, "sim_"))
+
+	account, err := client.BillingAccount.Get(ctx, paid.BillingAccountID)
+	require.NoError(t, err)
+	require.Equal(t, int64(12_340_000), account.BalanceMicros)
+
+	again, err := svc.HandleEPayNotify(ctx, HandleEPayNotifyInput{Params: notify})
+	require.NoError(t, err)
+	require.Equal(t, paid.ID, again.ID)
+
+	account, err = client.BillingAccount.Get(ctx, paid.BillingAccountID)
+	require.NoError(t, err)
+	require.Equal(t, int64(12_340_000), account.BalanceMicros)
+
+	ledger, err := client.LedgerTransaction.Get(ctx, *paid.LedgerTransactionID)
+	require.NoError(t, err)
+	require.Equal(t, ledgertransaction.CreatedByTypeProvider, ledger.CreatedByType)
+	require.Equal(t, fmt.Sprint(provider.ID), ledger.CreatedByID)
+}
+
+func TestPaymentServiceRejectsEPayNotifyWithInvalidSignature(t *testing.T) {
+	t.Parallel()
+
+	_, ctx, svc := newPaymentTestService(t, "payment_epay_bad_sign")
+	provider, err := svc.GetOrCreateSimulatedEPayProvider(ctx, "http://axon.local")
+	require.NoError(t, err)
+
+	checkout, err := svc.CreateRechargeCheckout(ctx, CreateRechargeCheckoutInput{
+		ProjectID:          1,
+		ProviderInstanceID: &provider.ID,
+		ProviderType:       provider.ProviderType,
+		Amount:             decimal.RequireFromString("1"),
+	})
+	require.NoError(t, err)
+
+	notify := NewSimulatedEPayNotifyFromCheckout(checkout.Params, "axonhub-simulated-epay-secret")
+	notify["money"] = "99.00"
+	_, err = svc.HandleEPayNotify(ctx, HandleEPayNotifyInput{Params: notify})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid epay signature")
+}
+
 func newPaymentTestService(t *testing.T, name string) (*ent.Client, context.Context, *PaymentService) {
 	t.Helper()
 
@@ -120,6 +190,7 @@ func newPaymentTestService(t *testing.T, name string) (*ent.Client, context.Cont
 		Ent:                   client,
 		BillingAccountService: accountSvc,
 		LedgerService:         ledgerSvc,
+		ProviderRegistry:      NewPaymentProviderRegistry(),
 	})
 
 	return client, ctx, svc

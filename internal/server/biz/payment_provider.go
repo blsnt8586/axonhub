@@ -114,6 +114,18 @@ type EPayConfig struct {
 	SiteName   string `json:"site_name"`
 }
 
+type EPayNotify struct {
+	PID         string `json:"pid"`
+	TradeNo     string `json:"trade_no"`
+	OutTradeNo  string `json:"out_trade_no"`
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	Money       string `json:"money"`
+	TradeStatus string `json:"trade_status"`
+	Sign        string `json:"sign"`
+	SignType    string `json:"sign_type"`
+}
+
 type EPayPaymentProviderAdapter struct{}
 
 func (EPayPaymentProviderAdapter) ProviderType() paymentproviderinstance.ProviderType {
@@ -203,6 +215,31 @@ func VerifyEPaySignature(params map[string]string, key string) bool {
 	}
 
 	return sign == SignEPayParams(params, key)
+}
+
+func NewSimulatedEPayNotifyFromCheckout(params map[string]string, key string) map[string]string {
+	notify := map[string]string{
+		"pid":          params["pid"],
+		"trade_no":     "sim_" + params["out_trade_no"],
+		"out_trade_no": params["out_trade_no"],
+		"type":         params["type"],
+		"name":         params["name"],
+		"money":        params["money"],
+		"trade_status": "TRADE_SUCCESS",
+	}
+	notify["sign"] = SignEPayParams(notify, key)
+	notify["sign_type"] = "MD5"
+
+	return notify
+}
+
+func EPayParamsFromValues(values url.Values) map[string]string {
+	params := make(map[string]string, len(values))
+	for key := range values {
+		params[key] = values.Get(key)
+	}
+
+	return params
 }
 
 func buildEPaySignBase(params map[string]string) string {

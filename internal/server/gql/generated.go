@@ -1086,6 +1086,7 @@ type ComplexityRoot struct {
 		CreatePrompt                         func(childComplexity int, input ent.CreatePromptInput) int
 		CreatePromptProtectionRule           func(childComplexity int, input ent.CreatePromptProtectionRuleInput) int
 		CreateRole                           func(childComplexity int, input ent.CreateRoleInput) int
+		CreateSimulatedEPayRechargeCheckout  func(childComplexity int, input CreateSimulatedEPayRechargeCheckoutInput) int
 		CreateUser                           func(childComplexity int, input ent.CreateUserInput) int
 		DeleteAPIKeyProfileTemplate          func(childComplexity int, id objects.GUID) int
 		DeleteChannel                        func(childComplexity int, id objects.GUID) int
@@ -1237,6 +1238,16 @@ type ComplexityRoot struct {
 
 	PassThroughSettings struct {
 		Enabled func(childComplexity int) int
+	}
+
+	PaymentCheckout struct {
+		Amount       func(childComplexity int) int
+		Currency     func(childComplexity int) int
+		Method       func(childComplexity int) int
+		OrderNo      func(childComplexity int) int
+		Params       func(childComplexity int) int
+		ProviderType func(childComplexity int) int
+		URL          func(childComplexity int) int
 	}
 
 	PaymentEvent struct {
@@ -2498,6 +2509,7 @@ type MutationResolver interface {
 	SaveChannelModelPrices(ctx context.Context, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) ([]*ent.ChannelModelPrice, error)
 	CreateManualRechargeOrder(ctx context.Context, input biz.CreateManualRechargeOrderInput) (*ent.PaymentOrder, error)
 	ConfirmManualPayment(ctx context.Context, input biz.ConfirmManualPaymentInput) (*ent.PaymentOrder, error)
+	CreateSimulatedEPayRechargeCheckout(ctx context.Context, input CreateSimulatedEPayRechargeCheckoutInput) (*PaymentCheckout, error)
 }
 type OIDCIdentityResolver interface {
 	ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error)
@@ -6696,6 +6708,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateRole(childComplexity, args["input"].(ent.CreateRoleInput)), true
+	case "Mutation.createSimulatedEPayRechargeCheckout":
+		if e.complexity.Mutation.CreateSimulatedEPayRechargeCheckout == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSimulatedEPayRechargeCheckout_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateSimulatedEPayRechargeCheckout(childComplexity, args["input"].(CreateSimulatedEPayRechargeCheckoutInput)), true
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
 			break
@@ -7760,6 +7783,49 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PassThroughSettings.Enabled(childComplexity), true
+
+	case "PaymentCheckout.amount":
+		if e.complexity.PaymentCheckout.Amount == nil {
+			break
+		}
+
+		return e.complexity.PaymentCheckout.Amount(childComplexity), true
+	case "PaymentCheckout.currency":
+		if e.complexity.PaymentCheckout.Currency == nil {
+			break
+		}
+
+		return e.complexity.PaymentCheckout.Currency(childComplexity), true
+	case "PaymentCheckout.method":
+		if e.complexity.PaymentCheckout.Method == nil {
+			break
+		}
+
+		return e.complexity.PaymentCheckout.Method(childComplexity), true
+	case "PaymentCheckout.orderNo":
+		if e.complexity.PaymentCheckout.OrderNo == nil {
+			break
+		}
+
+		return e.complexity.PaymentCheckout.OrderNo(childComplexity), true
+	case "PaymentCheckout.params":
+		if e.complexity.PaymentCheckout.Params == nil {
+			break
+		}
+
+		return e.complexity.PaymentCheckout.Params(childComplexity), true
+	case "PaymentCheckout.providerType":
+		if e.complexity.PaymentCheckout.ProviderType == nil {
+			break
+		}
+
+		return e.complexity.PaymentCheckout.ProviderType(childComplexity), true
+	case "PaymentCheckout.url":
+		if e.complexity.PaymentCheckout.URL == nil {
+			break
+		}
+
+		return e.complexity.PaymentCheckout.URL(childComplexity), true
 
 	case "PaymentEvent.createdAt":
 		if e.complexity.PaymentEvent.CreatedAt == nil {
@@ -12512,6 +12578,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreatePromptProtectionRuleInput,
 		ec.unmarshalInputCreateRequestInput,
 		ec.unmarshalInputCreateRoleInput,
+		ec.unmarshalInputCreateSimulatedEPayRechargeCheckoutInput,
 		ec.unmarshalInputCreateSystemInput,
 		ec.unmarshalInputCreateThreadInput,
 		ec.unmarshalInputCreateTraceInput,
@@ -13731,6 +13798,17 @@ func (ec *executionContext) field_Mutation_createRole_args(ctx context.Context, 
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateRoleInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐCreateRoleInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createSimulatedEPayRechargeCheckout_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateSimulatedEPayRechargeCheckoutInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateSimulatedEPayRechargeCheckoutInput)
 	if err != nil {
 		return nil, err
 	}
@@ -41230,6 +41308,63 @@ func (ec *executionContext) fieldContext_Mutation_confirmManualPayment(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createSimulatedEPayRechargeCheckout(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createSimulatedEPayRechargeCheckout,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateSimulatedEPayRechargeCheckout(ctx, fc.Args["input"].(CreateSimulatedEPayRechargeCheckoutInput))
+		},
+		nil,
+		ec.marshalNPaymentCheckout2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐPaymentCheckout,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createSimulatedEPayRechargeCheckout(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "providerType":
+				return ec.fieldContext_PaymentCheckout_providerType(ctx, field)
+			case "orderNo":
+				return ec.fieldContext_PaymentCheckout_orderNo(ctx, field)
+			case "method":
+				return ec.fieldContext_PaymentCheckout_method(ctx, field)
+			case "url":
+				return ec.fieldContext_PaymentCheckout_url(ctx, field)
+			case "params":
+				return ec.fieldContext_PaymentCheckout_params(ctx, field)
+			case "amount":
+				return ec.fieldContext_PaymentCheckout_amount(ctx, field)
+			case "currency":
+				return ec.fieldContext_PaymentCheckout_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PaymentCheckout", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createSimulatedEPayRechargeCheckout_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OAuthCredentials_accessToken(ctx context.Context, field graphql.CollectedField, obj *oauth.OAuthCredentials) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -42711,6 +42846,209 @@ func (ec *executionContext) fieldContext_PassThroughSettings_enabled(_ context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentCheckout_providerType(ctx context.Context, field graphql.CollectedField, obj *PaymentCheckout) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentCheckout_providerType,
+		func(ctx context.Context) (any, error) {
+			return obj.ProviderType, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentCheckout_providerType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentCheckout",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentCheckout_orderNo(ctx context.Context, field graphql.CollectedField, obj *PaymentCheckout) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentCheckout_orderNo,
+		func(ctx context.Context) (any, error) {
+			return obj.OrderNo, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentCheckout_orderNo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentCheckout",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentCheckout_method(ctx context.Context, field graphql.CollectedField, obj *PaymentCheckout) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentCheckout_method,
+		func(ctx context.Context) (any, error) {
+			return obj.Method, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentCheckout_method(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentCheckout",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentCheckout_url(ctx context.Context, field graphql.CollectedField, obj *PaymentCheckout) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentCheckout_url,
+		func(ctx context.Context) (any, error) {
+			return obj.URL, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentCheckout_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentCheckout",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentCheckout_params(ctx context.Context, field graphql.CollectedField, obj *PaymentCheckout) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentCheckout_params,
+		func(ctx context.Context) (any, error) {
+			return obj.Params, nil
+		},
+		nil,
+		ec.marshalOJSONRawMessage2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentCheckout_params(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentCheckout",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type JSONRawMessage does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentCheckout_amount(ctx context.Context, field graphql.CollectedField, obj *PaymentCheckout) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentCheckout_amount,
+		func(ctx context.Context) (any, error) {
+			return obj.Amount, nil
+		},
+		nil,
+		ec.marshalNDecimal2githubᚗcomᚋshopspringᚋdecimalᚐDecimal,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentCheckout_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentCheckout",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Decimal does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentCheckout_currency(ctx context.Context, field graphql.CollectedField, obj *PaymentCheckout) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentCheckout_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentCheckout_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentCheckout",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -78508,6 +78846,68 @@ func (ec *executionContext) unmarshalInputCreateRoleInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateSimulatedEPayRechargeCheckoutInput(ctx context.Context, obj any) (CreateSimulatedEPayRechargeCheckoutInput, error) {
+	var it CreateSimulatedEPayRechargeCheckoutInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"projectId", "amount", "currency", "subject", "publicBaseUrl", "metadata"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "projectId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectId"))
+			data, err := ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectID = data
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "subject":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subject"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Subject = data
+		case "publicBaseUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicBaseUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PublicBaseURL = data
+		case "metadata":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metadata"))
+			data, err := ec.unmarshalOJSONRawMessageInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Metadata = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateSystemInput(ctx context.Context, obj any) (ent.CreateSystemInput, error) {
 	var it ent.CreateSystemInput
 	asMap := map[string]any{}
@@ -111784,6 +112184,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createSimulatedEPayRechargeCheckout":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createSimulatedEPayRechargeCheckout(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -112410,6 +112817,69 @@ func (ec *executionContext) _PassThroughSettings(ctx context.Context, sel ast.Se
 			out.Values[i] = graphql.MarshalString("PassThroughSettings")
 		case "enabled":
 			out.Values[i] = ec._PassThroughSettings_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var paymentCheckoutImplementors = []string{"PaymentCheckout"}
+
+func (ec *executionContext) _PaymentCheckout(ctx context.Context, sel ast.SelectionSet, obj *PaymentCheckout) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, paymentCheckoutImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PaymentCheckout")
+		case "providerType":
+			out.Values[i] = ec._PaymentCheckout_providerType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "orderNo":
+			out.Values[i] = ec._PaymentCheckout_orderNo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "method":
+			out.Values[i] = ec._PaymentCheckout_method(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "url":
+			out.Values[i] = ec._PaymentCheckout_url(ctx, field, obj)
+		case "params":
+			out.Values[i] = ec._PaymentCheckout_params(ctx, field, obj)
+		case "amount":
+			out.Values[i] = ec._PaymentCheckout_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currency":
+			out.Values[i] = ec._PaymentCheckout_currency(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -126937,6 +127407,11 @@ func (ec *executionContext) unmarshalNCreateRoleInput2githubᚗcomᚋloopljᚋax
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateSimulatedEPayRechargeCheckoutInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateSimulatedEPayRechargeCheckoutInput(ctx context.Context, v any) (CreateSimulatedEPayRechargeCheckoutInput, error) {
+	res, err := ec.unmarshalInputCreateSimulatedEPayRechargeCheckoutInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateUserInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐCreateUserInput(ctx context.Context, v any) (ent.CreateUserInput, error) {
 	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -128697,6 +129172,20 @@ func (ec *executionContext) marshalNPassThroughSettings2ᚖgithubᚗcomᚋlooplj
 		return graphql.Null
 	}
 	return ec._PassThroughSettings(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPaymentCheckout2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐPaymentCheckout(ctx context.Context, sel ast.SelectionSet, v PaymentCheckout) graphql.Marshaler {
+	return ec._PaymentCheckout(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPaymentCheckout2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐPaymentCheckout(ctx context.Context, sel ast.SelectionSet, v *PaymentCheckout) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PaymentCheckout(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPaymentEventConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentEventConnection(ctx context.Context, sel ast.SelectionSet, v ent.PaymentEventConnection) graphql.Marshaler {
