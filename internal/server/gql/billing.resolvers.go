@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/objects"
@@ -81,6 +82,36 @@ func (r *mutationResolver) UpsertEPayPaymentProvider(ctx context.Context, input 
 		Type:       stringValue(input.Type),
 		SiteName:   stringValue(input.SiteName),
 	})
+}
+
+// CreateProjectEPayRechargeCheckout is the resolver for the createProjectEPayRechargeCheckout field.
+func (r *mutationResolver) CreateProjectEPayRechargeCheckout(ctx context.Context, input CreateProjectEPayRechargeCheckoutInput) (*PaymentCheckout, error) {
+	if input.ProjectID.Type != ent.TypeProject {
+		return nil, fmt.Errorf("projectId must be a Project ID")
+	}
+	if input.ProviderInstanceID != nil && input.ProviderInstanceID.Type != ent.TypePaymentProviderInstance {
+		return nil, fmt.Errorf("providerInstanceId must be a PaymentProviderInstance ID")
+	}
+	if err := r.requireProjectMember(ctx, input.ProjectID.ID); err != nil {
+		return nil, err
+	}
+
+	checkout, err := authz.RunWithSystemBypass(ctx, "billing-create-project-epay-checkout", func(ctx context.Context) (*biz.PaymentProviderCheckout, error) {
+		return r.paymentService.CreateRechargeCheckout(ctx, biz.CreateRechargeCheckoutInput{
+			ProjectID:          input.ProjectID.ID,
+			ProviderInstanceID: paymentProviderInstanceIDValue(input.ProviderInstanceID),
+			ProviderType:       paymentproviderinstance.ProviderTypeEpay,
+			Amount:             input.Amount,
+			Currency:           stringValue(input.Currency),
+			Subject:            stringValue(input.Subject),
+			Metadata:           input.Metadata,
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return paymentCheckoutFromBiz(checkout)
 }
 
 // ProjectBillingAccount is the resolver for the projectBillingAccount field.

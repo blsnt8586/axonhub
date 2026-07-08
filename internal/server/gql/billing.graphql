@@ -35,6 +35,15 @@ input UpsertEPayPaymentProviderInput {
   siteName: String
 }
 
+input CreateProjectEPayRechargeCheckoutInput {
+  projectId: ID!
+  amount: DecimalInput!
+  currency: String
+  subject: String
+  providerInstanceId: ID
+  metadata: JSONRawMessageInput
+}
+
 type PaymentCheckout {
   providerType: String!
   orderNo: String!
@@ -50,6 +59,7 @@ extend type Mutation {
   confirmManualPayment(input: ConfirmManualPaymentInput!): PaymentOrder!
   createSimulatedEPayRechargeCheckout(input: CreateSimulatedEPayRechargeCheckoutInput!): PaymentCheckout!
   upsertEPayPaymentProvider(input: UpsertEPayPaymentProviderInput!): PaymentProviderInstance!
+  createProjectEPayRechargeCheckout(input: CreateProjectEPayRechargeCheckoutInput!): PaymentCheckout!
 }
 
 extend type Query {

@@ -50,3 +50,11 @@ func paymentProviderStatusValue(value *paymentproviderinstance.Status) paymentpr
 
 	return *value
 }
+
+func paymentProviderInstanceIDValue(value *objects.GUID) *int {
+	if value == nil {
+		return nil
+	}
+
+	return &value.ID
+}

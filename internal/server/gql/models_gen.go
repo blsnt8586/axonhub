@@ -206,6 +206,15 @@ type CountChannelsByTypeInput struct {
 	StatusIn []channel.Status `json:"statusIn,omitempty"`
 }
 
+type CreateProjectEPayRechargeCheckoutInput struct {
+	ProjectID          objects.GUID           `json:"projectId"`
+	Amount             decimal.Decimal        `json:"amount"`
+	Currency           *string                `json:"currency,omitempty"`
+	Subject            *string                `json:"subject,omitempty"`
+	ProviderInstanceID *objects.GUID          `json:"providerInstanceId,omitempty"`
+	Metadata           objects.JSONRawMessage `json:"metadata,omitempty"`
+}
+
 type CreateSimulatedEPayRechargeCheckoutInput struct {
 	ProjectID     objects.GUID           `json:"projectId"`
 	Amount        decimal.Decimal        `json:"amount"`
