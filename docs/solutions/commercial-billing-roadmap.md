@@ -52,7 +52,7 @@ Verification:
 - [x] Backend tests cover frozen/closed/insufficient-balance paths.
 - [x] Backend tests cover usage billing retry safety.
 - [x] Frontend TypeScript check passes for changed frontend files. Lint/build were not run because `AGENTS.md` forbids them unless explicitly requested.
-- [ ] Commit completed stage.
+- [x] Commit completed stage.
 
 ## Stage 1: Wallet Holds And Pre-Authorization
 
@@ -364,4 +364,4 @@ Append one line per completed stage.
 | --- | --- | --- | --- |
 | Baseline | `4ad0913d` and earlier billing commits | 2026-07-08 | Wallet, ledger, ePay, sell price rules, user/admin billing pages, and user wallet controls are in place. |
 | Stage 0 | `f96625b4` | 2026-07-08 | Hardened admission codes, usage retry safety, owner-only billing operation queries, admin billing tabs, filters, and failure reason display. |
-| Stage 1 | `pending commit` | 2026-07-08 | Added wallet holds, request pre-authorization, hold capture/release/expiry, admin hold operations, and held/available wallet UI. |
+| Stage 1 | `94106a72` | 2026-07-08 | Added wallet holds, request pre-authorization, hold capture/release/expiry, admin hold operations, and held/available wallet UI. |
