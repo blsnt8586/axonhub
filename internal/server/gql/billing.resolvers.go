@@ -175,6 +175,74 @@ func (r *mutationResolver) UpdateUserBillingAccount(ctx context.Context, input b
 	})
 }
 
+// RedeemCode is the resolver for the redeemCode field.
+func (r *mutationResolver) RedeemCode(ctx context.Context, input biz.RedeemCodeInput) (*ent.RedeemCode, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	input.UserID = user.ID
+
+	return authz.RunWithSystemBypass(ctx, "billing-redeem-code", func(ctx context.Context) (*ent.RedeemCode, error) {
+		return r.redeemCodeService.Redeem(ctx, input)
+	})
+}
+
+// CreateRedeemCodes is the resolver for the createRedeemCodes field.
+func (r *mutationResolver) CreateRedeemCodes(ctx context.Context, input biz.CreateRedeemCodesInput) ([]*ent.RedeemCode, error) {
+	actor, err := requireOwnerUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	input.ActorID = fmt.Sprint(actor.ID)
+
+	return authz.RunWithSystemBypass(ctx, "billing-create-redeem-codes", func(ctx context.Context) ([]*ent.RedeemCode, error) {
+		return r.redeemCodeService.CreateRedeemCodes(ctx, input)
+	})
+}
+
+// AdminCreateAndRedeemCode is the resolver for the adminCreateAndRedeemCode field.
+func (r *mutationResolver) AdminCreateAndRedeemCode(ctx context.Context, input biz.AdminCreateAndRedeemCodeInput) (*ent.RedeemCode, error) {
+	actor, err := requireOwnerUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	input.ActorID = fmt.Sprint(actor.ID)
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-create-and-redeem-code", func(ctx context.Context) (*ent.RedeemCode, error) {
+		return r.redeemCodeService.AdminCreateAndRedeem(ctx, input)
+	})
+}
+
+// UpdateRedeemCodeStatus is the resolver for the updateRedeemCodeStatus field.
+func (r *mutationResolver) UpdateRedeemCodeStatus(ctx context.Context, input biz.UpdateRedeemCodeStatusInput) (*ent.RedeemCode, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-update-redeem-code-status", func(ctx context.Context) (*ent.RedeemCode, error) {
+		return r.redeemCodeService.UpdateStatus(ctx, input)
+	})
+}
+
+// DeleteRedeemCode is the resolver for the deleteRedeemCode field.
+func (r *mutationResolver) DeleteRedeemCode(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := requireOwner(ctx); err != nil {
+		return false, err
+	}
+	if id.Type != ent.TypeRedeemCode {
+		return false, fmt.Errorf("id must be a RedeemCode ID")
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-delete-redeem-code", func(ctx context.Context) (bool, error) {
+		if err := r.redeemCodeService.Delete(ctx, id.ID); err != nil {
+			return false, err
+		}
+
+		return true, nil
+	})
+}
+
 // ReleaseBillingHold is the resolver for the releaseBillingHold field.
 func (r *mutationResolver) ReleaseBillingHold(ctx context.Context, id objects.GUID, reason string) (*ent.BillingHold, error) {
 	actor, err := requireOwnerUser(ctx)
@@ -324,6 +392,16 @@ func (r *queryResolver) UserLedgerTransactions(ctx context.Context, userID objec
 	return r.userLedgerTransactions(ctx, id, after, first, before, last, orderBy)
 }
 
+// MyRedeemCodes is the resolver for the myRedeemCodes field.
+func (r *queryResolver) MyRedeemCodes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) (*ent.RedeemCodeConnection, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userRedeemCodes(ctx, user.ID, after, first, before, last, orderBy)
+}
+
 // AdminLedgerTransactions is the resolver for the adminLedgerTransactions field.
 func (r *queryResolver) AdminLedgerTransactions(ctx context.Context, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error) {
 	if err := requireOwner(ctx); err != nil {
@@ -367,6 +445,15 @@ func (r *queryResolver) AdminPaymentEvents(ctx context.Context, filter *AdminPay
 	}
 
 	return r.adminPaymentEvents(ctx, filter, after, first, before, last, orderBy)
+}
+
+// AdminRedeemCodes is the resolver for the adminRedeemCodes field.
+func (r *queryResolver) AdminRedeemCodes(ctx context.Context, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) (*ent.RedeemCodeConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.adminRedeemCodes(ctx, filter, after, first, before, last, orderBy)
 }
 
 // AdminBillingReport is the resolver for the adminBillingReport field.

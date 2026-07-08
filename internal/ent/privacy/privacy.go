@@ -687,6 +687,30 @@ func (f ProviderQuotaStatusMutationRuleFunc) EvalMutation(ctx context.Context, m
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.ProviderQuotaStatusMutation", m)
 }
 
+// The RedeemCodeQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type RedeemCodeQueryRuleFunc func(context.Context, *ent.RedeemCodeQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f RedeemCodeQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.RedeemCodeQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.RedeemCodeQuery", q)
+}
+
+// The RedeemCodeMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type RedeemCodeMutationRuleFunc func(context.Context, *ent.RedeemCodeMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f RedeemCodeMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.RedeemCodeMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.RedeemCodeMutation", m)
+}
+
 // The RequestQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type RequestQueryRuleFunc func(context.Context, *ent.RequestQuery) error
@@ -1034,6 +1058,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.ProviderQuotaStatusQuery:
 		return q.Filter(), nil
+	case *ent.RedeemCodeQuery:
+		return q.Filter(), nil
 	case *ent.RequestQuery:
 		return q.Filter(), nil
 	case *ent.RequestExecutionQuery:
@@ -1110,6 +1136,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.PromptProtectionRuleMutation:
 		return m.Filter(), nil
 	case *ent.ProviderQuotaStatusMutation:
+		return m.Filter(), nil
+	case *ent.RedeemCodeMutation:
 		return m.Filter(), nil
 	case *ent.RequestMutation:
 		return m.Filter(), nil

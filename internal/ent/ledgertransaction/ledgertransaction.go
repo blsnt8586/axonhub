@@ -56,6 +56,8 @@ const (
 	EdgeBillingHolds = "billing_holds"
 	// EdgePaymentOrders holds the string denoting the payment_orders edge name in mutations.
 	EdgePaymentOrders = "payment_orders"
+	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
+	EdgeRedeemCodes = "redeem_codes"
 	// Table holds the table name of the ledgertransaction in the database.
 	Table = "ledger_transactions"
 	// BillingAccountTable is the table that holds the billing_account relation/edge.
@@ -93,6 +95,13 @@ const (
 	PaymentOrdersInverseTable = "payment_orders"
 	// PaymentOrdersColumn is the table column denoting the payment_orders relation/edge.
 	PaymentOrdersColumn = "ledger_transaction_id"
+	// RedeemCodesTable is the table that holds the redeem_codes relation/edge.
+	RedeemCodesTable = "redeem_codes"
+	// RedeemCodesInverseTable is the table name for the RedeemCode entity.
+	// It exists in this package in order to avoid circular dependency with the "redeemcode" package.
+	RedeemCodesInverseTable = "redeem_codes"
+	// RedeemCodesColumn is the table column denoting the redeem_codes relation/edge.
+	RedeemCodesColumn = "ledger_transaction_id"
 )
 
 // Columns holds all SQL columns for ledgertransaction fields.
@@ -187,6 +196,7 @@ const (
 	TypeChargeback         Type = "chargeback"
 	TypeSubscriptionGrant  Type = "subscription_grant"
 	TypeSubscriptionDeduct Type = "subscription_deduct"
+	TypeRedeemCode         Type = "redeem_code"
 )
 
 func (_type Type) String() string {
@@ -196,7 +206,7 @@ func (_type Type) String() string {
 // TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
 func TypeValidator(_type Type) error {
 	switch _type {
-	case TypePaymentRecharge, TypeUsageCharge, TypeAdminAdjustment, TypeRefund, TypeChargeback, TypeSubscriptionGrant, TypeSubscriptionDeduct:
+	case TypePaymentRecharge, TypeUsageCharge, TypeAdminAdjustment, TypeRefund, TypeChargeback, TypeSubscriptionGrant, TypeSubscriptionDeduct, TypeRedeemCode:
 		return nil
 	default:
 		return fmt.Errorf("ledgertransaction: invalid enum value for type field: %q", _type)
@@ -396,6 +406,20 @@ func ByPaymentOrders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPaymentOrdersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByRedeemCodesCount orders the results by redeem_codes count.
+func ByRedeemCodesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRedeemCodesStep(), opts...)
+	}
+}
+
+// ByRedeemCodes orders the results by redeem_codes terms.
+func ByRedeemCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRedeemCodesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBillingAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -429,6 +453,13 @@ func newPaymentOrdersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PaymentOrdersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PaymentOrdersTable, PaymentOrdersColumn),
+	)
+}
+func newRedeemCodesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RedeemCodesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RedeemCodesTable, RedeemCodesColumn),
 	)
 }
 

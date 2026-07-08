@@ -51,7 +51,7 @@ func (LedgerTransaction) Fields() []ent.Field {
 			Immutable().
 			Comment("Currency for this transaction."),
 		field.Enum("type").
-			Values("payment_recharge", "usage_charge", "admin_adjustment", "refund", "chargeback", "subscription_grant", "subscription_deduct").
+			Values("payment_recharge", "usage_charge", "admin_adjustment", "refund", "chargeback", "subscription_grant", "subscription_deduct", "redeem_code").
 			Immutable().
 			Comment("Business reason for this transaction."),
 		field.Enum("status").
@@ -109,6 +109,11 @@ func (LedgerTransaction) Edges() []ent.Edge {
 				entgql.RelayConnection(),
 			),
 		edge.To("payment_orders", PaymentOrder.Type).
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+				entgql.RelayConnection(),
+			),
+		edge.To("redeem_codes", RedeemCode.Type).
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
 				entgql.RelayConnection(),

@@ -32,6 +32,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
@@ -6943,6 +6944,10 @@ type LedgerTransactionWhereInput struct {
 	// "payment_orders" edge predicates.
 	HasPaymentOrders     *bool                     `json:"hasPaymentOrders,omitempty"`
 	HasPaymentOrdersWith []*PaymentOrderWhereInput `json:"hasPaymentOrdersWith,omitempty"`
+
+	// "redeem_codes" edge predicates.
+	HasRedeemCodes     *bool                   `json:"hasRedeemCodes,omitempty"`
+	HasRedeemCodesWith []*RedeemCodeWhereInput `json:"hasRedeemCodesWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -7496,6 +7501,24 @@ func (i *LedgerTransactionWhereInput) P() (predicate.LedgerTransaction, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, ledgertransaction.HasPaymentOrdersWith(with...))
+	}
+	if i.HasRedeemCodes != nil {
+		p := ledgertransaction.HasRedeemCodes()
+		if !*i.HasRedeemCodes {
+			p = ledgertransaction.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasRedeemCodesWith) > 0 {
+		with := make([]predicate.RedeemCode, 0, len(i.HasRedeemCodesWith))
+		for _, w := range i.HasRedeemCodesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasRedeemCodesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, ledgertransaction.HasRedeemCodesWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -12276,6 +12299,712 @@ func (i *ProviderQuotaStatusWhereInput) P() (predicate.ProviderQuotaStatus, erro
 		return predicates[0], nil
 	default:
 		return providerquotastatus.And(predicates...), nil
+	}
+}
+
+// RedeemCodeWhereInput represents a where input for filtering RedeemCode queries.
+type RedeemCodeWhereInput struct {
+	Predicates []predicate.RedeemCode  `json:"-"`
+	Not        *RedeemCodeWhereInput   `json:"not,omitempty"`
+	Or         []*RedeemCodeWhereInput `json:"or,omitempty"`
+	And        []*RedeemCodeWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "code" field predicates.
+	Code             *string  `json:"code,omitempty"`
+	CodeNEQ          *string  `json:"codeNEQ,omitempty"`
+	CodeIn           []string `json:"codeIn,omitempty"`
+	CodeNotIn        []string `json:"codeNotIn,omitempty"`
+	CodeGT           *string  `json:"codeGT,omitempty"`
+	CodeGTE          *string  `json:"codeGTE,omitempty"`
+	CodeLT           *string  `json:"codeLT,omitempty"`
+	CodeLTE          *string  `json:"codeLTE,omitempty"`
+	CodeContains     *string  `json:"codeContains,omitempty"`
+	CodeHasPrefix    *string  `json:"codeHasPrefix,omitempty"`
+	CodeHasSuffix    *string  `json:"codeHasSuffix,omitempty"`
+	CodeEqualFold    *string  `json:"codeEqualFold,omitempty"`
+	CodeContainsFold *string  `json:"codeContainsFold,omitempty"`
+
+	// "type" field predicates.
+	Type      *redeemcode.Type  `json:"type,omitempty"`
+	TypeNEQ   *redeemcode.Type  `json:"typeNEQ,omitempty"`
+	TypeIn    []redeemcode.Type `json:"typeIn,omitempty"`
+	TypeNotIn []redeemcode.Type `json:"typeNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *redeemcode.Status  `json:"status,omitempty"`
+	StatusNEQ   *redeemcode.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []redeemcode.Status `json:"statusIn,omitempty"`
+	StatusNotIn []redeemcode.Status `json:"statusNotIn,omitempty"`
+
+	// "amount_micros" field predicates.
+	AmountMicros      *int64  `json:"amountMicros,omitempty"`
+	AmountMicrosNEQ   *int64  `json:"amountMicrosNEQ,omitempty"`
+	AmountMicrosIn    []int64 `json:"amountMicrosIn,omitempty"`
+	AmountMicrosNotIn []int64 `json:"amountMicrosNotIn,omitempty"`
+	AmountMicrosGT    *int64  `json:"amountMicrosGT,omitempty"`
+	AmountMicrosGTE   *int64  `json:"amountMicrosGTE,omitempty"`
+	AmountMicrosLT    *int64  `json:"amountMicrosLT,omitempty"`
+	AmountMicrosLTE   *int64  `json:"amountMicrosLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "created_by_id" field predicates.
+	CreatedByID       *int  `json:"createdByID,omitempty"`
+	CreatedByIDNEQ    *int  `json:"createdByIDNEQ,omitempty"`
+	CreatedByIDIn     []int `json:"createdByIDIn,omitempty"`
+	CreatedByIDNotIn  []int `json:"createdByIDNotIn,omitempty"`
+	CreatedByIDIsNil  bool  `json:"createdByIDIsNil,omitempty"`
+	CreatedByIDNotNil bool  `json:"createdByIDNotNil,omitempty"`
+
+	// "used_by_id" field predicates.
+	UsedByID       *int  `json:"usedByID,omitempty"`
+	UsedByIDNEQ    *int  `json:"usedByIDNEQ,omitempty"`
+	UsedByIDIn     []int `json:"usedByIDIn,omitempty"`
+	UsedByIDNotIn  []int `json:"usedByIDNotIn,omitempty"`
+	UsedByIDIsNil  bool  `json:"usedByIDIsNil,omitempty"`
+	UsedByIDNotNil bool  `json:"usedByIDNotNil,omitempty"`
+
+	// "used_at" field predicates.
+	UsedAt       *time.Time  `json:"usedAt,omitempty"`
+	UsedAtNEQ    *time.Time  `json:"usedAtNEQ,omitempty"`
+	UsedAtIn     []time.Time `json:"usedAtIn,omitempty"`
+	UsedAtNotIn  []time.Time `json:"usedAtNotIn,omitempty"`
+	UsedAtGT     *time.Time  `json:"usedAtGT,omitempty"`
+	UsedAtGTE    *time.Time  `json:"usedAtGTE,omitempty"`
+	UsedAtLT     *time.Time  `json:"usedAtLT,omitempty"`
+	UsedAtLTE    *time.Time  `json:"usedAtLTE,omitempty"`
+	UsedAtIsNil  bool        `json:"usedAtIsNil,omitempty"`
+	UsedAtNotNil bool        `json:"usedAtNotNil,omitempty"`
+
+	// "expires_at" field predicates.
+	ExpiresAt       *time.Time  `json:"expiresAt,omitempty"`
+	ExpiresAtNEQ    *time.Time  `json:"expiresAtNEQ,omitempty"`
+	ExpiresAtIn     []time.Time `json:"expiresAtIn,omitempty"`
+	ExpiresAtNotIn  []time.Time `json:"expiresAtNotIn,omitempty"`
+	ExpiresAtGT     *time.Time  `json:"expiresAtGT,omitempty"`
+	ExpiresAtGTE    *time.Time  `json:"expiresAtGTE,omitempty"`
+	ExpiresAtLT     *time.Time  `json:"expiresAtLT,omitempty"`
+	ExpiresAtLTE    *time.Time  `json:"expiresAtLTE,omitempty"`
+	ExpiresAtIsNil  bool        `json:"expiresAtIsNil,omitempty"`
+	ExpiresAtNotNil bool        `json:"expiresAtNotNil,omitempty"`
+
+	// "notes" field predicates.
+	Notes             *string  `json:"notes,omitempty"`
+	NotesNEQ          *string  `json:"notesNEQ,omitempty"`
+	NotesIn           []string `json:"notesIn,omitempty"`
+	NotesNotIn        []string `json:"notesNotIn,omitempty"`
+	NotesGT           *string  `json:"notesGT,omitempty"`
+	NotesGTE          *string  `json:"notesGTE,omitempty"`
+	NotesLT           *string  `json:"notesLT,omitempty"`
+	NotesLTE          *string  `json:"notesLTE,omitempty"`
+	NotesContains     *string  `json:"notesContains,omitempty"`
+	NotesHasPrefix    *string  `json:"notesHasPrefix,omitempty"`
+	NotesHasSuffix    *string  `json:"notesHasSuffix,omitempty"`
+	NotesEqualFold    *string  `json:"notesEqualFold,omitempty"`
+	NotesContainsFold *string  `json:"notesContainsFold,omitempty"`
+
+	// "ledger_transaction_id" field predicates.
+	LedgerTransactionID       *int  `json:"ledgerTransactionID,omitempty"`
+	LedgerTransactionIDNEQ    *int  `json:"ledgerTransactionIDNEQ,omitempty"`
+	LedgerTransactionIDIn     []int `json:"ledgerTransactionIDIn,omitempty"`
+	LedgerTransactionIDNotIn  []int `json:"ledgerTransactionIDNotIn,omitempty"`
+	LedgerTransactionIDIsNil  bool  `json:"ledgerTransactionIDIsNil,omitempty"`
+	LedgerTransactionIDNotNil bool  `json:"ledgerTransactionIDNotNil,omitempty"`
+
+	// "batch_id" field predicates.
+	BatchID             *string  `json:"batchID,omitempty"`
+	BatchIDNEQ          *string  `json:"batchIDNEQ,omitempty"`
+	BatchIDIn           []string `json:"batchIDIn,omitempty"`
+	BatchIDNotIn        []string `json:"batchIDNotIn,omitempty"`
+	BatchIDGT           *string  `json:"batchIDGT,omitempty"`
+	BatchIDGTE          *string  `json:"batchIDGTE,omitempty"`
+	BatchIDLT           *string  `json:"batchIDLT,omitempty"`
+	BatchIDLTE          *string  `json:"batchIDLTE,omitempty"`
+	BatchIDContains     *string  `json:"batchIDContains,omitempty"`
+	BatchIDHasPrefix    *string  `json:"batchIDHasPrefix,omitempty"`
+	BatchIDHasSuffix    *string  `json:"batchIDHasSuffix,omitempty"`
+	BatchIDEqualFold    *string  `json:"batchIDEqualFold,omitempty"`
+	BatchIDContainsFold *string  `json:"batchIDContainsFold,omitempty"`
+
+	// "created_by" edge predicates.
+	HasCreatedBy     *bool             `json:"hasCreatedBy,omitempty"`
+	HasCreatedByWith []*UserWhereInput `json:"hasCreatedByWith,omitempty"`
+
+	// "used_by" edge predicates.
+	HasUsedBy     *bool             `json:"hasUsedBy,omitempty"`
+	HasUsedByWith []*UserWhereInput `json:"hasUsedByWith,omitempty"`
+
+	// "ledger_transaction" edge predicates.
+	HasLedgerTransaction     *bool                          `json:"hasLedgerTransaction,omitempty"`
+	HasLedgerTransactionWith []*LedgerTransactionWhereInput `json:"hasLedgerTransactionWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *RedeemCodeWhereInput) AddPredicates(predicates ...predicate.RedeemCode) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the RedeemCodeWhereInput filter on the RedeemCodeQuery builder.
+func (i *RedeemCodeWhereInput) Filter(q *RedeemCodeQuery) (*RedeemCodeQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyRedeemCodeWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyRedeemCodeWhereInput is returned in case the RedeemCodeWhereInput is empty.
+var ErrEmptyRedeemCodeWhereInput = errors.New("ent: empty predicate RedeemCodeWhereInput")
+
+// P returns a predicate for filtering redeemcodes.
+// An error is returned if the input is empty or invalid.
+func (i *RedeemCodeWhereInput) P() (predicate.RedeemCode, error) {
+	var predicates []predicate.RedeemCode
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, redeemcode.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.RedeemCode, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, redeemcode.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.RedeemCode, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, redeemcode.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, redeemcode.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, redeemcode.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, redeemcode.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, redeemcode.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, redeemcode.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, redeemcode.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, redeemcode.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, redeemcode.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, redeemcode.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, redeemcode.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, redeemcode.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, redeemcode.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, redeemcode.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, redeemcode.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, redeemcode.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, redeemcode.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, redeemcode.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, redeemcode.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, redeemcode.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, redeemcode.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, redeemcode.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, redeemcode.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, redeemcode.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, redeemcode.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.Code != nil {
+		predicates = append(predicates, redeemcode.CodeEQ(*i.Code))
+	}
+	if i.CodeNEQ != nil {
+		predicates = append(predicates, redeemcode.CodeNEQ(*i.CodeNEQ))
+	}
+	if len(i.CodeIn) > 0 {
+		predicates = append(predicates, redeemcode.CodeIn(i.CodeIn...))
+	}
+	if len(i.CodeNotIn) > 0 {
+		predicates = append(predicates, redeemcode.CodeNotIn(i.CodeNotIn...))
+	}
+	if i.CodeGT != nil {
+		predicates = append(predicates, redeemcode.CodeGT(*i.CodeGT))
+	}
+	if i.CodeGTE != nil {
+		predicates = append(predicates, redeemcode.CodeGTE(*i.CodeGTE))
+	}
+	if i.CodeLT != nil {
+		predicates = append(predicates, redeemcode.CodeLT(*i.CodeLT))
+	}
+	if i.CodeLTE != nil {
+		predicates = append(predicates, redeemcode.CodeLTE(*i.CodeLTE))
+	}
+	if i.CodeContains != nil {
+		predicates = append(predicates, redeemcode.CodeContains(*i.CodeContains))
+	}
+	if i.CodeHasPrefix != nil {
+		predicates = append(predicates, redeemcode.CodeHasPrefix(*i.CodeHasPrefix))
+	}
+	if i.CodeHasSuffix != nil {
+		predicates = append(predicates, redeemcode.CodeHasSuffix(*i.CodeHasSuffix))
+	}
+	if i.CodeEqualFold != nil {
+		predicates = append(predicates, redeemcode.CodeEqualFold(*i.CodeEqualFold))
+	}
+	if i.CodeContainsFold != nil {
+		predicates = append(predicates, redeemcode.CodeContainsFold(*i.CodeContainsFold))
+	}
+	if i.Type != nil {
+		predicates = append(predicates, redeemcode.TypeEQ(*i.Type))
+	}
+	if i.TypeNEQ != nil {
+		predicates = append(predicates, redeemcode.TypeNEQ(*i.TypeNEQ))
+	}
+	if len(i.TypeIn) > 0 {
+		predicates = append(predicates, redeemcode.TypeIn(i.TypeIn...))
+	}
+	if len(i.TypeNotIn) > 0 {
+		predicates = append(predicates, redeemcode.TypeNotIn(i.TypeNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, redeemcode.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, redeemcode.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, redeemcode.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, redeemcode.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.AmountMicros != nil {
+		predicates = append(predicates, redeemcode.AmountMicrosEQ(*i.AmountMicros))
+	}
+	if i.AmountMicrosNEQ != nil {
+		predicates = append(predicates, redeemcode.AmountMicrosNEQ(*i.AmountMicrosNEQ))
+	}
+	if len(i.AmountMicrosIn) > 0 {
+		predicates = append(predicates, redeemcode.AmountMicrosIn(i.AmountMicrosIn...))
+	}
+	if len(i.AmountMicrosNotIn) > 0 {
+		predicates = append(predicates, redeemcode.AmountMicrosNotIn(i.AmountMicrosNotIn...))
+	}
+	if i.AmountMicrosGT != nil {
+		predicates = append(predicates, redeemcode.AmountMicrosGT(*i.AmountMicrosGT))
+	}
+	if i.AmountMicrosGTE != nil {
+		predicates = append(predicates, redeemcode.AmountMicrosGTE(*i.AmountMicrosGTE))
+	}
+	if i.AmountMicrosLT != nil {
+		predicates = append(predicates, redeemcode.AmountMicrosLT(*i.AmountMicrosLT))
+	}
+	if i.AmountMicrosLTE != nil {
+		predicates = append(predicates, redeemcode.AmountMicrosLTE(*i.AmountMicrosLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, redeemcode.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, redeemcode.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, redeemcode.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, redeemcode.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, redeemcode.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, redeemcode.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, redeemcode.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, redeemcode.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, redeemcode.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, redeemcode.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, redeemcode.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, redeemcode.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, redeemcode.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.CreatedByID != nil {
+		predicates = append(predicates, redeemcode.CreatedByIDEQ(*i.CreatedByID))
+	}
+	if i.CreatedByIDNEQ != nil {
+		predicates = append(predicates, redeemcode.CreatedByIDNEQ(*i.CreatedByIDNEQ))
+	}
+	if len(i.CreatedByIDIn) > 0 {
+		predicates = append(predicates, redeemcode.CreatedByIDIn(i.CreatedByIDIn...))
+	}
+	if len(i.CreatedByIDNotIn) > 0 {
+		predicates = append(predicates, redeemcode.CreatedByIDNotIn(i.CreatedByIDNotIn...))
+	}
+	if i.CreatedByIDIsNil {
+		predicates = append(predicates, redeemcode.CreatedByIDIsNil())
+	}
+	if i.CreatedByIDNotNil {
+		predicates = append(predicates, redeemcode.CreatedByIDNotNil())
+	}
+	if i.UsedByID != nil {
+		predicates = append(predicates, redeemcode.UsedByIDEQ(*i.UsedByID))
+	}
+	if i.UsedByIDNEQ != nil {
+		predicates = append(predicates, redeemcode.UsedByIDNEQ(*i.UsedByIDNEQ))
+	}
+	if len(i.UsedByIDIn) > 0 {
+		predicates = append(predicates, redeemcode.UsedByIDIn(i.UsedByIDIn...))
+	}
+	if len(i.UsedByIDNotIn) > 0 {
+		predicates = append(predicates, redeemcode.UsedByIDNotIn(i.UsedByIDNotIn...))
+	}
+	if i.UsedByIDIsNil {
+		predicates = append(predicates, redeemcode.UsedByIDIsNil())
+	}
+	if i.UsedByIDNotNil {
+		predicates = append(predicates, redeemcode.UsedByIDNotNil())
+	}
+	if i.UsedAt != nil {
+		predicates = append(predicates, redeemcode.UsedAtEQ(*i.UsedAt))
+	}
+	if i.UsedAtNEQ != nil {
+		predicates = append(predicates, redeemcode.UsedAtNEQ(*i.UsedAtNEQ))
+	}
+	if len(i.UsedAtIn) > 0 {
+		predicates = append(predicates, redeemcode.UsedAtIn(i.UsedAtIn...))
+	}
+	if len(i.UsedAtNotIn) > 0 {
+		predicates = append(predicates, redeemcode.UsedAtNotIn(i.UsedAtNotIn...))
+	}
+	if i.UsedAtGT != nil {
+		predicates = append(predicates, redeemcode.UsedAtGT(*i.UsedAtGT))
+	}
+	if i.UsedAtGTE != nil {
+		predicates = append(predicates, redeemcode.UsedAtGTE(*i.UsedAtGTE))
+	}
+	if i.UsedAtLT != nil {
+		predicates = append(predicates, redeemcode.UsedAtLT(*i.UsedAtLT))
+	}
+	if i.UsedAtLTE != nil {
+		predicates = append(predicates, redeemcode.UsedAtLTE(*i.UsedAtLTE))
+	}
+	if i.UsedAtIsNil {
+		predicates = append(predicates, redeemcode.UsedAtIsNil())
+	}
+	if i.UsedAtNotNil {
+		predicates = append(predicates, redeemcode.UsedAtNotNil())
+	}
+	if i.ExpiresAt != nil {
+		predicates = append(predicates, redeemcode.ExpiresAtEQ(*i.ExpiresAt))
+	}
+	if i.ExpiresAtNEQ != nil {
+		predicates = append(predicates, redeemcode.ExpiresAtNEQ(*i.ExpiresAtNEQ))
+	}
+	if len(i.ExpiresAtIn) > 0 {
+		predicates = append(predicates, redeemcode.ExpiresAtIn(i.ExpiresAtIn...))
+	}
+	if len(i.ExpiresAtNotIn) > 0 {
+		predicates = append(predicates, redeemcode.ExpiresAtNotIn(i.ExpiresAtNotIn...))
+	}
+	if i.ExpiresAtGT != nil {
+		predicates = append(predicates, redeemcode.ExpiresAtGT(*i.ExpiresAtGT))
+	}
+	if i.ExpiresAtGTE != nil {
+		predicates = append(predicates, redeemcode.ExpiresAtGTE(*i.ExpiresAtGTE))
+	}
+	if i.ExpiresAtLT != nil {
+		predicates = append(predicates, redeemcode.ExpiresAtLT(*i.ExpiresAtLT))
+	}
+	if i.ExpiresAtLTE != nil {
+		predicates = append(predicates, redeemcode.ExpiresAtLTE(*i.ExpiresAtLTE))
+	}
+	if i.ExpiresAtIsNil {
+		predicates = append(predicates, redeemcode.ExpiresAtIsNil())
+	}
+	if i.ExpiresAtNotNil {
+		predicates = append(predicates, redeemcode.ExpiresAtNotNil())
+	}
+	if i.Notes != nil {
+		predicates = append(predicates, redeemcode.NotesEQ(*i.Notes))
+	}
+	if i.NotesNEQ != nil {
+		predicates = append(predicates, redeemcode.NotesNEQ(*i.NotesNEQ))
+	}
+	if len(i.NotesIn) > 0 {
+		predicates = append(predicates, redeemcode.NotesIn(i.NotesIn...))
+	}
+	if len(i.NotesNotIn) > 0 {
+		predicates = append(predicates, redeemcode.NotesNotIn(i.NotesNotIn...))
+	}
+	if i.NotesGT != nil {
+		predicates = append(predicates, redeemcode.NotesGT(*i.NotesGT))
+	}
+	if i.NotesGTE != nil {
+		predicates = append(predicates, redeemcode.NotesGTE(*i.NotesGTE))
+	}
+	if i.NotesLT != nil {
+		predicates = append(predicates, redeemcode.NotesLT(*i.NotesLT))
+	}
+	if i.NotesLTE != nil {
+		predicates = append(predicates, redeemcode.NotesLTE(*i.NotesLTE))
+	}
+	if i.NotesContains != nil {
+		predicates = append(predicates, redeemcode.NotesContains(*i.NotesContains))
+	}
+	if i.NotesHasPrefix != nil {
+		predicates = append(predicates, redeemcode.NotesHasPrefix(*i.NotesHasPrefix))
+	}
+	if i.NotesHasSuffix != nil {
+		predicates = append(predicates, redeemcode.NotesHasSuffix(*i.NotesHasSuffix))
+	}
+	if i.NotesEqualFold != nil {
+		predicates = append(predicates, redeemcode.NotesEqualFold(*i.NotesEqualFold))
+	}
+	if i.NotesContainsFold != nil {
+		predicates = append(predicates, redeemcode.NotesContainsFold(*i.NotesContainsFold))
+	}
+	if i.LedgerTransactionID != nil {
+		predicates = append(predicates, redeemcode.LedgerTransactionIDEQ(*i.LedgerTransactionID))
+	}
+	if i.LedgerTransactionIDNEQ != nil {
+		predicates = append(predicates, redeemcode.LedgerTransactionIDNEQ(*i.LedgerTransactionIDNEQ))
+	}
+	if len(i.LedgerTransactionIDIn) > 0 {
+		predicates = append(predicates, redeemcode.LedgerTransactionIDIn(i.LedgerTransactionIDIn...))
+	}
+	if len(i.LedgerTransactionIDNotIn) > 0 {
+		predicates = append(predicates, redeemcode.LedgerTransactionIDNotIn(i.LedgerTransactionIDNotIn...))
+	}
+	if i.LedgerTransactionIDIsNil {
+		predicates = append(predicates, redeemcode.LedgerTransactionIDIsNil())
+	}
+	if i.LedgerTransactionIDNotNil {
+		predicates = append(predicates, redeemcode.LedgerTransactionIDNotNil())
+	}
+	if i.BatchID != nil {
+		predicates = append(predicates, redeemcode.BatchIDEQ(*i.BatchID))
+	}
+	if i.BatchIDNEQ != nil {
+		predicates = append(predicates, redeemcode.BatchIDNEQ(*i.BatchIDNEQ))
+	}
+	if len(i.BatchIDIn) > 0 {
+		predicates = append(predicates, redeemcode.BatchIDIn(i.BatchIDIn...))
+	}
+	if len(i.BatchIDNotIn) > 0 {
+		predicates = append(predicates, redeemcode.BatchIDNotIn(i.BatchIDNotIn...))
+	}
+	if i.BatchIDGT != nil {
+		predicates = append(predicates, redeemcode.BatchIDGT(*i.BatchIDGT))
+	}
+	if i.BatchIDGTE != nil {
+		predicates = append(predicates, redeemcode.BatchIDGTE(*i.BatchIDGTE))
+	}
+	if i.BatchIDLT != nil {
+		predicates = append(predicates, redeemcode.BatchIDLT(*i.BatchIDLT))
+	}
+	if i.BatchIDLTE != nil {
+		predicates = append(predicates, redeemcode.BatchIDLTE(*i.BatchIDLTE))
+	}
+	if i.BatchIDContains != nil {
+		predicates = append(predicates, redeemcode.BatchIDContains(*i.BatchIDContains))
+	}
+	if i.BatchIDHasPrefix != nil {
+		predicates = append(predicates, redeemcode.BatchIDHasPrefix(*i.BatchIDHasPrefix))
+	}
+	if i.BatchIDHasSuffix != nil {
+		predicates = append(predicates, redeemcode.BatchIDHasSuffix(*i.BatchIDHasSuffix))
+	}
+	if i.BatchIDEqualFold != nil {
+		predicates = append(predicates, redeemcode.BatchIDEqualFold(*i.BatchIDEqualFold))
+	}
+	if i.BatchIDContainsFold != nil {
+		predicates = append(predicates, redeemcode.BatchIDContainsFold(*i.BatchIDContainsFold))
+	}
+
+	if i.HasCreatedBy != nil {
+		p := redeemcode.HasCreatedBy()
+		if !*i.HasCreatedBy {
+			p = redeemcode.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasCreatedByWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasCreatedByWith))
+		for _, w := range i.HasCreatedByWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasCreatedByWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, redeemcode.HasCreatedByWith(with...))
+	}
+	if i.HasUsedBy != nil {
+		p := redeemcode.HasUsedBy()
+		if !*i.HasUsedBy {
+			p = redeemcode.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUsedByWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasUsedByWith))
+		for _, w := range i.HasUsedByWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUsedByWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, redeemcode.HasUsedByWith(with...))
+	}
+	if i.HasLedgerTransaction != nil {
+		p := redeemcode.HasLedgerTransaction()
+		if !*i.HasLedgerTransaction {
+			p = redeemcode.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasLedgerTransactionWith) > 0 {
+		with := make([]predicate.LedgerTransaction, 0, len(i.HasLedgerTransactionWith))
+		for _, w := range i.HasLedgerTransactionWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasLedgerTransactionWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, redeemcode.HasLedgerTransactionWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyRedeemCodeWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return redeemcode.And(predicates...), nil
 	}
 }
 
@@ -17652,6 +18381,14 @@ type UserWhereInput struct {
 	HasOidcIdentities     *bool                     `json:"hasOidcIdentities,omitempty"`
 	HasOidcIdentitiesWith []*OIDCIdentityWhereInput `json:"hasOidcIdentitiesWith,omitempty"`
 
+	// "created_redeem_codes" edge predicates.
+	HasCreatedRedeemCodes     *bool                   `json:"hasCreatedRedeemCodes,omitempty"`
+	HasCreatedRedeemCodesWith []*RedeemCodeWhereInput `json:"hasCreatedRedeemCodesWith,omitempty"`
+
+	// "used_redeem_codes" edge predicates.
+	HasUsedRedeemCodes     *bool                   `json:"hasUsedRedeemCodes,omitempty"`
+	HasUsedRedeemCodesWith []*RedeemCodeWhereInput `json:"hasUsedRedeemCodesWith,omitempty"`
+
 	// "project_users" edge predicates.
 	HasProjectUsers     *bool                    `json:"hasProjectUsers,omitempty"`
 	HasProjectUsersWith []*UserProjectWhereInput `json:"hasProjectUsersWith,omitempty"`
@@ -18152,6 +18889,42 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasOidcIdentitiesWith(with...))
+	}
+	if i.HasCreatedRedeemCodes != nil {
+		p := user.HasCreatedRedeemCodes()
+		if !*i.HasCreatedRedeemCodes {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasCreatedRedeemCodesWith) > 0 {
+		with := make([]predicate.RedeemCode, 0, len(i.HasCreatedRedeemCodesWith))
+		for _, w := range i.HasCreatedRedeemCodesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasCreatedRedeemCodesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasCreatedRedeemCodesWith(with...))
+	}
+	if i.HasUsedRedeemCodes != nil {
+		p := user.HasUsedRedeemCodes()
+		if !*i.HasUsedRedeemCodes {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUsedRedeemCodesWith) > 0 {
+		with := make([]predicate.RedeemCode, 0, len(i.HasUsedRedeemCodesWith))
+		for _, w := range i.HasUsedRedeemCodesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUsedRedeemCodesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasUsedRedeemCodesWith(with...))
 	}
 	if i.HasProjectUsers != nil {
 		p := user.HasProjectUsers()

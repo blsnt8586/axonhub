@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
@@ -92,6 +93,18 @@ func (r *queryResolver) userLedgerTransactions(ctx context.Context, userID int, 
 	})
 }
 
+func (r *queryResolver) userRedeemCodes(ctx context.Context, userID int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) (*ent.RedeemCodeConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-user-redeem-codes", func(ctx context.Context) (*ent.RedeemCodeConnection, error) {
+		return r.client.RedeemCode.Query().
+			Where(redeemcode.UsedByIDEQ(userID)).
+			Paginate(ctx, after, first, before, last, ent.WithRedeemCodeOrder(orderBy))
+	})
+}
+
 func (r *queryResolver) adminLedgerTransactions(ctx context.Context, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error) {
 	if err := validatePaginationArgs(first, last); err != nil {
 		return nil, err
@@ -135,6 +148,47 @@ func (r *queryResolver) adminLedgerTransactions(ctx context.Context, filter *Adm
 		}
 
 		return query.Paginate(ctx, after, first, before, last, ent.WithLedgerTransactionOrder(orderBy))
+	})
+}
+
+func (r *queryResolver) adminRedeemCodes(ctx context.Context, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) (*ent.RedeemCodeConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-redeem-codes", func(ctx context.Context) (*ent.RedeemCodeConnection, error) {
+		query := r.client.RedeemCode.Query()
+		if filter != nil {
+			if filter.UserID != nil {
+				query.Where(redeemcode.UsedByIDEQ(*filter.UserID))
+			}
+			if filter.CreatedByID != nil {
+				query.Where(redeemcode.CreatedByIDEQ(*filter.CreatedByID))
+			}
+			if filter.Status != nil {
+				query.Where(redeemcode.StatusEQ(*filter.Status))
+			}
+			if filter.Type != nil {
+				query.Where(redeemcode.TypeEQ(*filter.Type))
+			}
+			if value := strings.TrimSpace(stringValue(filter.Code)); value != "" {
+				query.Where(redeemcode.CodeContainsFold(value))
+			}
+			if value := strings.TrimSpace(stringValue(filter.BatchID)); value != "" {
+				query.Where(redeemcode.BatchIDEQ(value))
+			}
+			if filter.From != nil {
+				query.Where(redeemcode.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(redeemcode.CreatedAtLTE(*filter.To))
+			}
+			if filter.ExpiresBefore != nil {
+				query.Where(redeemcode.ExpiresAtLTE(*filter.ExpiresBefore))
+			}
+		}
+
+		return query.Paginate(ctx, after, first, before, last, ent.WithRedeemCodeOrder(orderBy))
 	})
 }
 

@@ -37,6 +37,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
@@ -102,6 +103,7 @@ type ResolverRoot interface {
 	PromptProtectionRule() PromptProtectionRuleResolver
 	ProviderQuotaStatus() ProviderQuotaStatusResolver
 	Query() QueryResolver
+	RedeemCode() RedeemCodeResolver
 	Request() RequestResolver
 	RequestExecution() RequestExecutionResolver
 	Role() RoleResolver
@@ -1019,6 +1021,7 @@ type ComplexityRoot struct {
 		IdempotencyKey      func(childComplexity int) int
 		Memo                func(childComplexity int) int
 		PaymentOrders       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) int
+		RedeemCodes         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
 		ReferenceID         func(childComplexity int) int
 		ReferenceType       func(childComplexity int) int
 		Status              func(childComplexity int) int
@@ -1178,6 +1181,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddUserToProject                     func(childComplexity int, input AddUserToProjectInput) int
 		AdjustUserBalance                    func(childComplexity int, input biz.AdjustUserBalanceInput) int
+		AdminCreateAndRedeemCode             func(childComplexity int, input biz.AdminCreateAndRedeemCodeInput) int
 		ApplyChannelOverrideTemplate         func(childComplexity int, input ApplyChannelOverrideTemplateInput) int
 		Backup                               func(childComplexity int, input backup.BackupOptions) int
 		BulkArchiveAPIKeys                   func(childComplexity int, ids []*objects.GUID) int
@@ -1222,6 +1226,7 @@ type ComplexityRoot struct {
 		CreateProject                        func(childComplexity int, input ent.CreateProjectInput) int
 		CreatePrompt                         func(childComplexity int, input ent.CreatePromptInput) int
 		CreatePromptProtectionRule           func(childComplexity int, input ent.CreatePromptProtectionRuleInput) int
+		CreateRedeemCodes                    func(childComplexity int, input biz.CreateRedeemCodesInput) int
 		CreateRole                           func(childComplexity int, input ent.CreateRoleInput) int
 		CreateSimulatedEPayRechargeCheckout  func(childComplexity int, input CreateSimulatedEPayRechargeCheckoutInput) int
 		CreateUser                           func(childComplexity int, input ent.CreateUserInput) int
@@ -1235,6 +1240,7 @@ type ComplexityRoot struct {
 		DeletePrompt                         func(childComplexity int, id objects.GUID) int
 		DeletePromptProtectionRule           func(childComplexity int, id objects.GUID) int
 		DeleteProxyPreset                    func(childComplexity int, url string) int
+		DeleteRedeemCode                     func(childComplexity int, id objects.GUID) int
 		DeleteRole                           func(childComplexity int, id objects.GUID) int
 		DeleteUser                           func(childComplexity int, id objects.GUID) int
 		DisableChannelAPIKey                 func(childComplexity int, channelID objects.GUID, key string) int
@@ -1245,6 +1251,7 @@ type ComplexityRoot struct {
 		LoadAPIKeyProfileTemplate            func(childComplexity int, input LoadAPIKeyProfileTemplateInput) int
 		MakeUpPaymentOrder                   func(childComplexity int, input biz.MakeUpPaymentOrderInput) int
 		PreviewPromptProtectionRule          func(childComplexity int, input PromptProtectionRulePreviewInput) int
+		RedeemCode                           func(childComplexity int, input biz.RedeemCodeInput) int
 		ReleaseBillingHold                   func(childComplexity int, id objects.GUID, reason string) int
 		RemoveUserFromProject                func(childComplexity int, input RemoveUserFromProjectInput) int
 		ResetChannelQuotaNow                 func(childComplexity int, channelID objects.GUID) int
@@ -1286,6 +1293,7 @@ type ComplexityRoot struct {
 		UpdatePromptProtectionRuleStatus     func(childComplexity int, id objects.GUID, status promptprotectionrule.Status) int
 		UpdatePromptStatus                   func(childComplexity int, id objects.GUID, status prompt.Status) int
 		UpdateQuotaEnforcementSettings       func(childComplexity int, input UpdateQuotaEnforcementSettingsInput) int
+		UpdateRedeemCodeStatus               func(childComplexity int, input biz.UpdateRedeemCodeStatusInput) int
 		UpdateRetryPolicy                    func(childComplexity int, input biz.RetryPolicy) int
 		UpdateRole                           func(childComplexity int, id objects.GUID, input ent.UpdateRoleInput) int
 		UpdateSecuritySettings               func(childComplexity int, input UpdateSecuritySettingsInput) int
@@ -1663,6 +1671,7 @@ type ComplexityRoot struct {
 		AdminLedgerTransactions      func(childComplexity int, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
 		AdminPaymentEvents           func(childComplexity int, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) int
 		AdminPaymentOrders           func(childComplexity int, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
+		AdminRedeemCodes             func(childComplexity int, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) int
 		AdminUsageBillingRecords     func(childComplexity int, filter *AdminUsageBillingRecordsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
 		AllChannelSummarys           func(childComplexity int, includeArchived *bool) int
 		AllChannelTags               func(childComplexity int) int
@@ -1702,6 +1711,7 @@ type ComplexityRoot struct {
 		MyLedgerTransactions         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
 		MyPaymentOrders              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
 		MyProjects                   func(childComplexity int) int
+		MyRedeemCodes                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) int
 		MyUsageBillingRecords        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
 		Node                         func(childComplexity int, id objects.GUID) int
 		Nodes                        func(childComplexity int, ids []*objects.GUID) int
@@ -1722,6 +1732,7 @@ type ComplexityRoot struct {
 		QueryModels                  func(childComplexity int, input QueryModelsInput) int
 		QueryUnassociatedChannels    func(childComplexity int) int
 		QuotaEnforcementSettings     func(childComplexity int) int
+		RedeemCodes                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
 		RequestStats                 func(childComplexity int) int
 		RequestStatsByAPIKey         func(childComplexity int, timeWindow *string) int
 		RequestStatsByChannel        func(childComplexity int, timeWindow *string) int
@@ -1760,6 +1771,38 @@ type ComplexityRoot struct {
 	QuotaEnforcementSettings struct {
 		Enabled func(childComplexity int) int
 		Mode    func(childComplexity int) int
+	}
+
+	RedeemCode struct {
+		AmountMicros        func(childComplexity int) int
+		BatchID             func(childComplexity int) int
+		Code                func(childComplexity int) int
+		CreatedAt           func(childComplexity int) int
+		CreatedBy           func(childComplexity int) int
+		CreatedByID         func(childComplexity int) int
+		Currency            func(childComplexity int) int
+		ExpiresAt           func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		LedgerTransaction   func(childComplexity int) int
+		LedgerTransactionID func(childComplexity int) int
+		Notes               func(childComplexity int) int
+		Status              func(childComplexity int) int
+		Type                func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
+		UsedAt              func(childComplexity int) int
+		UsedBy              func(childComplexity int) int
+		UsedByID            func(childComplexity int) int
+	}
+
+	RedeemCodeConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	RedeemCodeEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
 	}
 
 	RegexAssociation struct {
@@ -2359,6 +2402,7 @@ type ComplexityRoot struct {
 		Avatar                   func(childComplexity int) int
 		ChannelOverrideTemplates func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOverrideTemplateOrder, where *ent.ChannelOverrideTemplateWhereInput) int
 		CreatedAt                func(childComplexity int) int
+		CreatedRedeemCodes       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
 		Email                    func(childComplexity int) int
 		FirstName                func(childComplexity int) int
 		ID                       func(childComplexity int) int
@@ -2372,6 +2416,7 @@ type ComplexityRoot struct {
 		Scopes                   func(childComplexity int) int
 		Status                   func(childComplexity int) int
 		UpdatedAt                func(childComplexity int) int
+		UsedRedeemCodes          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
 		UserRoles                func(childComplexity int) int
 	}
 
@@ -2695,6 +2740,11 @@ type MutationResolver interface {
 	CreateMyEPayRechargeCheckout(ctx context.Context, input CreateMyEPayRechargeCheckoutInput) (*PaymentCheckout, error)
 	AdjustUserBalance(ctx context.Context, input biz.AdjustUserBalanceInput) (*ent.LedgerTransaction, error)
 	UpdateUserBillingAccount(ctx context.Context, input biz.UpdateUserBillingAccountInput) (*ent.BillingAccount, error)
+	RedeemCode(ctx context.Context, input biz.RedeemCodeInput) (*ent.RedeemCode, error)
+	CreateRedeemCodes(ctx context.Context, input biz.CreateRedeemCodesInput) ([]*ent.RedeemCode, error)
+	AdminCreateAndRedeemCode(ctx context.Context, input biz.AdminCreateAndRedeemCodeInput) (*ent.RedeemCode, error)
+	UpdateRedeemCodeStatus(ctx context.Context, input biz.UpdateRedeemCodeStatusInput) (*ent.RedeemCode, error)
+	DeleteRedeemCode(ctx context.Context, id objects.GUID) (bool, error)
 	ReleaseBillingHold(ctx context.Context, id objects.GUID, reason string) (*ent.BillingHold, error)
 	SaveBillingPriceRule(ctx context.Context, input SaveBillingPriceRuleForm) (*ent.BillingPriceRule, error)
 	DeleteBillingPriceRule(ctx context.Context, id objects.GUID) (bool, error)
@@ -2760,6 +2810,7 @@ type QueryResolver interface {
 	Projects(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) (*ent.ProjectConnection, error)
 	Prompts(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptOrder, where *ent.PromptWhereInput) (*ent.PromptConnection, error)
 	PromptProtectionRules(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptProtectionRuleOrder, where *ent.PromptProtectionRuleWhereInput) (*ent.PromptProtectionRuleConnection, error)
+	RedeemCodes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) (*ent.RedeemCodeConnection, error)
 	Requests(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) (*ent.RequestConnection, error)
 	Roles(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RoleOrder, where *ent.RoleWhereInput) (*ent.RoleConnection, error)
 	Systems(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SystemOrder, where *ent.SystemWhereInput) (*ent.SystemConnection, error)
@@ -2833,13 +2884,23 @@ type QueryResolver interface {
 	UserUsageBillingRecords(ctx context.Context, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) (*ent.UsageBillingRecordConnection, error)
 	MyLedgerTransactions(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error)
 	UserLedgerTransactions(ctx context.Context, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error)
+	MyRedeemCodes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) (*ent.RedeemCodeConnection, error)
 	AdminLedgerTransactions(ctx context.Context, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error)
 	AdminUsageBillingRecords(ctx context.Context, filter *AdminUsageBillingRecordsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) (*ent.UsageBillingRecordConnection, error)
 	AdminBillingHolds(ctx context.Context, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) (*ent.BillingHoldConnection, error)
 	AdminPaymentOrders(ctx context.Context, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) (*ent.PaymentOrderConnection, error)
 	AdminPaymentEvents(ctx context.Context, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) (*ent.PaymentEventConnection, error)
+	AdminRedeemCodes(ctx context.Context, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) (*ent.RedeemCodeConnection, error)
 	AdminBillingReport(ctx context.Context, filter *AdminBillingReportFilter) (*biz.BillingCommercialReport, error)
 	ExportAdminBillingCSV(ctx context.Context, input ExportAdminBillingCSVInput) (*biz.BillingCSVExportPayload, error)
+}
+type RedeemCodeResolver interface {
+	ID(ctx context.Context, obj *ent.RedeemCode) (*objects.GUID, error)
+
+	CreatedByID(ctx context.Context, obj *ent.RedeemCode) (*objects.GUID, error)
+	UsedByID(ctx context.Context, obj *ent.RedeemCode) (*objects.GUID, error)
+
+	LedgerTransactionID(ctx context.Context, obj *ent.RedeemCode) (*objects.GUID, error)
 }
 type RequestResolver interface {
 	ID(ctx context.Context, obj *ent.Request) (*objects.GUID, error)
@@ -6459,6 +6520,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.LedgerTransaction.PaymentOrders(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PaymentOrderOrder), args["where"].(*ent.PaymentOrderWhereInput)), true
+	case "LedgerTransaction.redeemCodes":
+		if e.complexity.LedgerTransaction.RedeemCodes == nil {
+			break
+		}
+
+		args, err := ec.field_LedgerTransaction_redeemCodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.LedgerTransaction.RedeemCodes(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.RedeemCodeOrder), args["where"].(*ent.RedeemCodeWhereInput)), true
 	case "LedgerTransaction.referenceID":
 		if e.complexity.LedgerTransaction.ReferenceID == nil {
 			break
@@ -7037,6 +7109,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.AdjustUserBalance(childComplexity, args["input"].(biz.AdjustUserBalanceInput)), true
+	case "Mutation.adminCreateAndRedeemCode":
+		if e.complexity.Mutation.AdminCreateAndRedeemCode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_adminCreateAndRedeemCode_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminCreateAndRedeemCode(childComplexity, args["input"].(biz.AdminCreateAndRedeemCodeInput)), true
 	case "Mutation.applyChannelOverrideTemplate":
 		if e.complexity.Mutation.ApplyChannelOverrideTemplate == nil {
 			break
@@ -7516,6 +7599,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreatePromptProtectionRule(childComplexity, args["input"].(ent.CreatePromptProtectionRuleInput)), true
+	case "Mutation.createRedeemCodes":
+		if e.complexity.Mutation.CreateRedeemCodes == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createRedeemCodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateRedeemCodes(childComplexity, args["input"].(biz.CreateRedeemCodesInput)), true
 	case "Mutation.createRole":
 		if e.complexity.Mutation.CreateRole == nil {
 			break
@@ -7659,6 +7753,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteProxyPreset(childComplexity, args["url"].(string)), true
+	case "Mutation.deleteRedeemCode":
+		if e.complexity.Mutation.DeleteRedeemCode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteRedeemCode_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteRedeemCode(childComplexity, args["id"].(objects.GUID)), true
 	case "Mutation.deleteRole":
 		if e.complexity.Mutation.DeleteRole == nil {
 			break
@@ -7769,6 +7874,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.PreviewPromptProtectionRule(childComplexity, args["input"].(PromptProtectionRulePreviewInput)), true
+	case "Mutation.redeemCode":
+		if e.complexity.Mutation.RedeemCode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_redeemCode_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RedeemCode(childComplexity, args["input"].(biz.RedeemCodeInput)), true
 	case "Mutation.releaseBillingHold":
 		if e.complexity.Mutation.ReleaseBillingHold == nil {
 			break
@@ -8215,6 +8331,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateQuotaEnforcementSettings(childComplexity, args["input"].(UpdateQuotaEnforcementSettingsInput)), true
+	case "Mutation.updateRedeemCodeStatus":
+		if e.complexity.Mutation.UpdateRedeemCodeStatus == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateRedeemCodeStatus_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateRedeemCodeStatus(childComplexity, args["input"].(biz.UpdateRedeemCodeStatusInput)), true
 	case "Mutation.updateRetryPolicy":
 		if e.complexity.Mutation.UpdateRetryPolicy == nil {
 			break
@@ -9897,6 +10024,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.AdminPaymentOrders(childComplexity, args["filter"].(*AdminPaymentOrdersFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PaymentOrderOrder)), true
+	case "Query.adminRedeemCodes":
+		if e.complexity.Query.AdminRedeemCodes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminRedeemCodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminRedeemCodes(childComplexity, args["filter"].(*AdminRedeemCodesFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.RedeemCodeOrder)), true
 	case "Query.adminUsageBillingRecords":
 		if e.complexity.Query.AdminUsageBillingRecords == nil {
 			break
@@ -10266,6 +10404,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.MyProjects(childComplexity), true
+	case "Query.myRedeemCodes":
+		if e.complexity.Query.MyRedeemCodes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myRedeemCodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyRedeemCodes(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.RedeemCodeOrder)), true
 	case "Query.myUsageBillingRecords":
 		if e.complexity.Query.MyUsageBillingRecords == nil {
 			break
@@ -10461,6 +10610,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.QuotaEnforcementSettings(childComplexity), true
+	case "Query.redeemCodes":
+		if e.complexity.Query.RedeemCodes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_redeemCodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.RedeemCodes(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.RedeemCodeOrder), args["where"].(*ent.RedeemCodeWhereInput)), true
 	case "Query.requestStats":
 		if e.complexity.Query.RequestStats == nil {
 			break
@@ -10767,6 +10927,147 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.QuotaEnforcementSettings.Mode(childComplexity), true
+
+	case "RedeemCode.amountMicros":
+		if e.complexity.RedeemCode.AmountMicros == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.AmountMicros(childComplexity), true
+	case "RedeemCode.batchID":
+		if e.complexity.RedeemCode.BatchID == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.BatchID(childComplexity), true
+	case "RedeemCode.code":
+		if e.complexity.RedeemCode.Code == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.Code(childComplexity), true
+	case "RedeemCode.createdAt":
+		if e.complexity.RedeemCode.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.CreatedAt(childComplexity), true
+	case "RedeemCode.createdBy":
+		if e.complexity.RedeemCode.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.CreatedBy(childComplexity), true
+	case "RedeemCode.createdByID":
+		if e.complexity.RedeemCode.CreatedByID == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.CreatedByID(childComplexity), true
+	case "RedeemCode.currency":
+		if e.complexity.RedeemCode.Currency == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.Currency(childComplexity), true
+	case "RedeemCode.expiresAt":
+		if e.complexity.RedeemCode.ExpiresAt == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.ExpiresAt(childComplexity), true
+	case "RedeemCode.id":
+		if e.complexity.RedeemCode.ID == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.ID(childComplexity), true
+	case "RedeemCode.ledgerTransaction":
+		if e.complexity.RedeemCode.LedgerTransaction == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.LedgerTransaction(childComplexity), true
+	case "RedeemCode.ledgerTransactionID":
+		if e.complexity.RedeemCode.LedgerTransactionID == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.LedgerTransactionID(childComplexity), true
+	case "RedeemCode.notes":
+		if e.complexity.RedeemCode.Notes == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.Notes(childComplexity), true
+	case "RedeemCode.status":
+		if e.complexity.RedeemCode.Status == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.Status(childComplexity), true
+	case "RedeemCode.type":
+		if e.complexity.RedeemCode.Type == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.Type(childComplexity), true
+	case "RedeemCode.updatedAt":
+		if e.complexity.RedeemCode.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.UpdatedAt(childComplexity), true
+	case "RedeemCode.usedAt":
+		if e.complexity.RedeemCode.UsedAt == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.UsedAt(childComplexity), true
+	case "RedeemCode.usedBy":
+		if e.complexity.RedeemCode.UsedBy == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.UsedBy(childComplexity), true
+	case "RedeemCode.usedByID":
+		if e.complexity.RedeemCode.UsedByID == nil {
+			break
+		}
+
+		return e.complexity.RedeemCode.UsedByID(childComplexity), true
+
+	case "RedeemCodeConnection.edges":
+		if e.complexity.RedeemCodeConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.RedeemCodeConnection.Edges(childComplexity), true
+	case "RedeemCodeConnection.pageInfo":
+		if e.complexity.RedeemCodeConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.RedeemCodeConnection.PageInfo(childComplexity), true
+	case "RedeemCodeConnection.totalCount":
+		if e.complexity.RedeemCodeConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.RedeemCodeConnection.TotalCount(childComplexity), true
+
+	case "RedeemCodeEdge.cursor":
+		if e.complexity.RedeemCodeEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.RedeemCodeEdge.Cursor(childComplexity), true
+	case "RedeemCodeEdge.node":
+		if e.complexity.RedeemCodeEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.RedeemCodeEdge.Node(childComplexity), true
 
 	case "RegexAssociation.exclude":
 		if e.complexity.RegexAssociation.Exclude == nil {
@@ -13153,6 +13454,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.CreatedAt(childComplexity), true
+	case "User.createdRedeemCodes":
+		if e.complexity.User.CreatedRedeemCodes == nil {
+			break
+		}
+
+		args, err := ec.field_User_createdRedeemCodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.CreatedRedeemCodes(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.RedeemCodeOrder), args["where"].(*ent.RedeemCodeWhereInput)), true
 	case "User.email":
 		if e.complexity.User.Email == nil {
 			break
@@ -13246,6 +13558,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.UpdatedAt(childComplexity), true
+	case "User.usedRedeemCodes":
+		if e.complexity.User.UsedRedeemCodes == nil {
+			break
+		}
+
+		args, err := ec.field_User_usedRedeemCodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.UsedRedeemCodes(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.RedeemCodeOrder), args["where"].(*ent.RedeemCodeWhereInput)), true
 	case "User.userRoles":
 		if e.complexity.User.UserRoles == nil {
 			break
@@ -13661,9 +13984,11 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAdjustUserBalanceInput,
 		ec.unmarshalInputAdminBillingHoldsFilter,
 		ec.unmarshalInputAdminBillingReportFilter,
+		ec.unmarshalInputAdminCreateAndRedeemCodeInput,
 		ec.unmarshalInputAdminLedgerTransactionsFilter,
 		ec.unmarshalInputAdminPaymentEventsFilter,
 		ec.unmarshalInputAdminPaymentOrdersFilter,
+		ec.unmarshalInputAdminRedeemCodesFilter,
 		ec.unmarshalInputAdminUsageBillingRecordsFilter,
 		ec.unmarshalInputApplyChannelOverrideTemplateInput,
 		ec.unmarshalInputAutoDisableChannelInput,
@@ -13725,6 +14050,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateProjectInput,
 		ec.unmarshalInputCreatePromptInput,
 		ec.unmarshalInputCreatePromptProtectionRuleInput,
+		ec.unmarshalInputCreateRedeemCodesInput,
 		ec.unmarshalInputCreateRequestInput,
 		ec.unmarshalInputCreateRoleInput,
 		ec.unmarshalInputCreateSimulatedEPayRechargeCheckoutInput,
@@ -13801,6 +14127,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputProxyConfigInput,
 		ec.unmarshalInputQueryChannelInput,
 		ec.unmarshalInputQueryModelsInput,
+		ec.unmarshalInputRedeemCodeInput,
+		ec.unmarshalInputRedeemCodeOrder,
+		ec.unmarshalInputRedeemCodeWhereInput,
 		ec.unmarshalInputRegexAssociationInput,
 		ec.unmarshalInputRemoveUserFromProjectInput,
 		ec.unmarshalInputRequestExecutionOrder,
@@ -13851,6 +14180,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdatePromptInput,
 		ec.unmarshalInputUpdatePromptProtectionRuleInput,
 		ec.unmarshalInputUpdateQuotaEnforcementSettingsInput,
+		ec.unmarshalInputUpdateRedeemCodeStatusInput,
 		ec.unmarshalInputUpdateRequestInput,
 		ec.unmarshalInputUpdateRetryPolicyInput,
 		ec.unmarshalInputUpdateRoleInput,
@@ -14517,6 +14847,42 @@ func (ec *executionContext) field_LedgerTransaction_paymentOrders_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_LedgerTransaction_redeemCodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalORedeemCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalORedeemCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_LedgerTransaction_usageBillingRecords_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -14568,6 +14934,17 @@ func (ec *executionContext) field_Mutation_adjustUserBalance_args(ctx context.Co
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNAdjustUserBalanceInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAdjustUserBalanceInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_adminCreateAndRedeemCode_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNAdminCreateAndRedeemCodeInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAdminCreateAndRedeemCodeInput)
 	if err != nil {
 		return nil, err
 	}
@@ -15053,6 +15430,17 @@ func (ec *executionContext) field_Mutation_createPrompt_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createRedeemCodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateRedeemCodesInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐCreateRedeemCodesInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createRole_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -15201,6 +15589,17 @@ func (ec *executionContext) field_Mutation_deleteProxyPreset_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteRedeemCode_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteRole_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -15324,6 +15723,17 @@ func (ec *executionContext) field_Mutation_previewPromptProtectionRule_args(ctx 
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNPromptProtectionRulePreviewInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐPromptProtectionRulePreviewInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_redeemCode_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNRedeemCodeInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐRedeemCodeInput)
 	if err != nil {
 		return nil, err
 	}
@@ -15889,6 +16299,17 @@ func (ec *executionContext) field_Mutation_updateQuotaEnforcementSettings_args(c
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateQuotaEnforcementSettingsInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateQuotaEnforcementSettingsInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateRedeemCodeStatus_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateRedeemCodeStatusInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdateRedeemCodeStatusInput)
 	if err != nil {
 		return nil, err
 	}
@@ -16699,6 +17120,42 @@ func (ec *executionContext) field_Query_adminPaymentOrders_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_adminRedeemCodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOAdminRedeemCodesFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminRedeemCodesFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalORedeemCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_adminUsageBillingRecords_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -17446,6 +17903,37 @@ func (ec *executionContext) field_Query_myPaymentOrders_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_myRedeemCodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalORedeemCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_myUsageBillingRecords_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -17803,6 +18291,42 @@ func (ec *executionContext) field_Query_queryModels_args(ctx context.Context, ra
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_redeemCodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalORedeemCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalORedeemCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
 	return args, nil
 }
 
@@ -18650,6 +19174,42 @@ func (ec *executionContext) field_User_channelOverrideTemplates_args(ctx context
 	return args, nil
 }
 
+func (ec *executionContext) field_User_createdRedeemCodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalORedeemCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalORedeemCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_User_oidcIdentities_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -18751,6 +19311,42 @@ func (ec *executionContext) field_User_roles_args(ctx context.Context, rawArgs m
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalORoleWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRoleWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_User_usedRedeemCodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalORedeemCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalORedeemCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -19236,6 +19832,10 @@ func (ec *executionContext) fieldContext_APIKey_user(_ context.Context, field gr
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -25340,6 +25940,8 @@ func (ec *executionContext) fieldContext_BillingHold_capturedLedgerTransaction(_
 				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			case "redeemCodes":
+				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -30910,6 +31512,10 @@ func (ec *executionContext) fieldContext_ChannelOverrideTemplate_user(_ context.
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -36264,6 +36870,10 @@ func (ec *executionContext) fieldContext_InitializeSystemPayload_user(_ context.
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -36600,6 +37210,8 @@ func (ec *executionContext) fieldContext_LedgerEntry_ledgerTransaction(_ context
 				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			case "redeemCodes":
+				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -37480,6 +38092,55 @@ func (ec *executionContext) fieldContext_LedgerTransaction_paymentOrders(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _LedgerTransaction_redeemCodes(ctx context.Context, field graphql.CollectedField, obj *ent.LedgerTransaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LedgerTransaction_redeemCodes,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.RedeemCodes(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.RedeemCodeOrder), fc.Args["where"].(*ent.RedeemCodeWhereInput))
+		},
+		nil,
+		ec.marshalNRedeemCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LedgerTransaction_redeemCodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LedgerTransaction",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_RedeemCodeConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_RedeemCodeConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_RedeemCodeConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCodeConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_LedgerTransaction_redeemCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LedgerTransactionConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.LedgerTransactionConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -37647,6 +38308,8 @@ func (ec *executionContext) fieldContext_LedgerTransactionEdge_node(_ context.Co
 				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			case "redeemCodes":
+				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -42077,6 +42740,10 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -42156,6 +42823,10 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -42235,6 +42906,10 @@ func (ec *executionContext) fieldContext_Mutation_updateUserStatus(ctx context.C
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -43771,6 +44446,10 @@ func (ec *executionContext) fieldContext_Mutation_updateMe(ctx context.Context, 
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -46810,6 +47489,8 @@ func (ec *executionContext) fieldContext_Mutation_adjustUserBalance(ctx context.
 				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			case "redeemCodes":
+				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -46895,6 +47576,363 @@ func (ec *executionContext) fieldContext_Mutation_updateUserBillingAccount(ctx c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateUserBillingAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_redeemCode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_redeemCode,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().RedeemCode(ctx, fc.Args["input"].(biz.RedeemCodeInput))
+		},
+		nil,
+		ec.marshalNRedeemCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCode,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_redeemCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RedeemCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_RedeemCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_RedeemCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_RedeemCode_code(ctx, field)
+			case "type":
+				return ec.fieldContext_RedeemCode_type(ctx, field)
+			case "status":
+				return ec.fieldContext_RedeemCode_status(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_RedeemCode_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_RedeemCode_currency(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_RedeemCode_createdByID(ctx, field)
+			case "usedByID":
+				return ec.fieldContext_RedeemCode_usedByID(ctx, field)
+			case "usedAt":
+				return ec.fieldContext_RedeemCode_usedAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_RedeemCode_expiresAt(ctx, field)
+			case "notes":
+				return ec.fieldContext_RedeemCode_notes(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_RedeemCode_ledgerTransactionID(ctx, field)
+			case "batchID":
+				return ec.fieldContext_RedeemCode_batchID(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_RedeemCode_createdBy(ctx, field)
+			case "usedBy":
+				return ec.fieldContext_RedeemCode_usedBy(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_RedeemCode_ledgerTransaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCode", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_redeemCode_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createRedeemCodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createRedeemCodes,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateRedeemCodes(ctx, fc.Args["input"].(biz.CreateRedeemCodesInput))
+		},
+		nil,
+		ec.marshalNRedeemCode2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createRedeemCodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RedeemCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_RedeemCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_RedeemCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_RedeemCode_code(ctx, field)
+			case "type":
+				return ec.fieldContext_RedeemCode_type(ctx, field)
+			case "status":
+				return ec.fieldContext_RedeemCode_status(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_RedeemCode_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_RedeemCode_currency(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_RedeemCode_createdByID(ctx, field)
+			case "usedByID":
+				return ec.fieldContext_RedeemCode_usedByID(ctx, field)
+			case "usedAt":
+				return ec.fieldContext_RedeemCode_usedAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_RedeemCode_expiresAt(ctx, field)
+			case "notes":
+				return ec.fieldContext_RedeemCode_notes(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_RedeemCode_ledgerTransactionID(ctx, field)
+			case "batchID":
+				return ec.fieldContext_RedeemCode_batchID(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_RedeemCode_createdBy(ctx, field)
+			case "usedBy":
+				return ec.fieldContext_RedeemCode_usedBy(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_RedeemCode_ledgerTransaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCode", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createRedeemCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_adminCreateAndRedeemCode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_adminCreateAndRedeemCode,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().AdminCreateAndRedeemCode(ctx, fc.Args["input"].(biz.AdminCreateAndRedeemCodeInput))
+		},
+		nil,
+		ec.marshalNRedeemCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCode,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_adminCreateAndRedeemCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RedeemCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_RedeemCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_RedeemCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_RedeemCode_code(ctx, field)
+			case "type":
+				return ec.fieldContext_RedeemCode_type(ctx, field)
+			case "status":
+				return ec.fieldContext_RedeemCode_status(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_RedeemCode_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_RedeemCode_currency(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_RedeemCode_createdByID(ctx, field)
+			case "usedByID":
+				return ec.fieldContext_RedeemCode_usedByID(ctx, field)
+			case "usedAt":
+				return ec.fieldContext_RedeemCode_usedAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_RedeemCode_expiresAt(ctx, field)
+			case "notes":
+				return ec.fieldContext_RedeemCode_notes(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_RedeemCode_ledgerTransactionID(ctx, field)
+			case "batchID":
+				return ec.fieldContext_RedeemCode_batchID(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_RedeemCode_createdBy(ctx, field)
+			case "usedBy":
+				return ec.fieldContext_RedeemCode_usedBy(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_RedeemCode_ledgerTransaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCode", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_adminCreateAndRedeemCode_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateRedeemCodeStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateRedeemCodeStatus,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateRedeemCodeStatus(ctx, fc.Args["input"].(biz.UpdateRedeemCodeStatusInput))
+		},
+		nil,
+		ec.marshalNRedeemCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCode,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateRedeemCodeStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RedeemCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_RedeemCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_RedeemCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_RedeemCode_code(ctx, field)
+			case "type":
+				return ec.fieldContext_RedeemCode_type(ctx, field)
+			case "status":
+				return ec.fieldContext_RedeemCode_status(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_RedeemCode_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_RedeemCode_currency(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_RedeemCode_createdByID(ctx, field)
+			case "usedByID":
+				return ec.fieldContext_RedeemCode_usedByID(ctx, field)
+			case "usedAt":
+				return ec.fieldContext_RedeemCode_usedAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_RedeemCode_expiresAt(ctx, field)
+			case "notes":
+				return ec.fieldContext_RedeemCode_notes(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_RedeemCode_ledgerTransactionID(ctx, field)
+			case "batchID":
+				return ec.fieldContext_RedeemCode_batchID(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_RedeemCode_createdBy(ctx, field)
+			case "usedBy":
+				return ec.fieldContext_RedeemCode_usedBy(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_RedeemCode_ledgerTransaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCode", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateRedeemCodeStatus_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteRedeemCode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteRedeemCode,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeleteRedeemCode(ctx, fc.Args["id"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteRedeemCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteRedeemCode_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -47597,6 +48635,10 @@ func (ec *executionContext) fieldContext_OIDCIdentity_user(_ context.Context, fi
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -50309,6 +51351,8 @@ func (ec *executionContext) fieldContext_PaymentOrder_ledgerTransaction(_ contex
 				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			case "redeemCodes":
+				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -55442,6 +56486,55 @@ func (ec *executionContext) fieldContext_Query_promptProtectionRules(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_redeemCodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_redeemCodes,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().RedeemCodes(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.RedeemCodeOrder), fc.Args["where"].(*ent.RedeemCodeWhereInput))
+		},
+		nil,
+		ec.marshalNRedeemCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_redeemCodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_RedeemCodeConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_RedeemCodeConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_RedeemCodeConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCodeConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_redeemCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_requests(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -58929,6 +60022,55 @@ func (ec *executionContext) fieldContext_Query_userLedgerTransactions(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_myRedeemCodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myRedeemCodes,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyRedeemCodes(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.RedeemCodeOrder))
+		},
+		nil,
+		ec.marshalNRedeemCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myRedeemCodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_RedeemCodeConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_RedeemCodeConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_RedeemCodeConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCodeConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myRedeemCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_adminLedgerTransactions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -59168,6 +60310,55 @@ func (ec *executionContext) fieldContext_Query_adminPaymentEvents(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_adminPaymentEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminRedeemCodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminRedeemCodes,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AdminRedeemCodes(ctx, fc.Args["filter"].(*AdminRedeemCodesFilter), fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.RedeemCodeOrder))
+		},
+		nil,
+		ec.marshalNRedeemCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminRedeemCodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_RedeemCodeConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_RedeemCodeConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_RedeemCodeConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCodeConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminRedeemCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -59443,6 +60634,855 @@ func (ec *executionContext) fieldContext_QuotaEnforcementSettings_mode(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type QuotaEnforcementMode does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_id(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.RedeemCode().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_code(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_code,
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_type(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_type,
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		ec.marshalNRedeemCodeType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type RedeemCodeType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_status(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNRedeemCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type RedeemCodeStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_amountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_amountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.AmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_amountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_currency(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_createdByID(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_createdByID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.RedeemCode().CreatedByID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_createdByID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_usedByID(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_usedByID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.RedeemCode().UsedByID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_usedByID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_usedAt(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_usedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UsedAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_usedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_expiresAt(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_expiresAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ExpiresAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_expiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_notes(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_notes,
+		func(ctx context.Context) (any, error) {
+			return obj.Notes, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_ledgerTransactionID(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_ledgerTransactionID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.RedeemCode().LedgerTransactionID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_ledgerTransactionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_batchID(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_batchID,
+		func(ctx context.Context) (any, error) {
+			return obj.BatchID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_batchID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_createdBy(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_createdBy,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedBy(ctx)
+		},
+		nil,
+		ec.marshalOUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_usedBy(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_usedBy,
+		func(ctx context.Context) (any, error) {
+			return obj.UsedBy(ctx)
+		},
+		nil,
+		ec.marshalOUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_usedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCode_ledgerTransaction(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCode_ledgerTransaction,
+		func(ctx context.Context) (any, error) {
+			return obj.LedgerTransaction(ctx)
+		},
+		nil,
+		ec.marshalOLedgerTransaction2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐLedgerTransaction,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCode_ledgerTransaction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LedgerTransaction_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_LedgerTransaction_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LedgerTransaction_updatedAt(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_LedgerTransaction_billingAccountID(ctx, field)
+			case "direction":
+				return ec.fieldContext_LedgerTransaction_direction(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_LedgerTransaction_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_LedgerTransaction_currency(ctx, field)
+			case "type":
+				return ec.fieldContext_LedgerTransaction_type(ctx, field)
+			case "status":
+				return ec.fieldContext_LedgerTransaction_status(ctx, field)
+			case "idempotencyKey":
+				return ec.fieldContext_LedgerTransaction_idempotencyKey(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_LedgerTransaction_referenceType(ctx, field)
+			case "referenceID":
+				return ec.fieldContext_LedgerTransaction_referenceID(ctx, field)
+			case "memo":
+				return ec.fieldContext_LedgerTransaction_memo(ctx, field)
+			case "createdByType":
+				return ec.fieldContext_LedgerTransaction_createdByType(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_LedgerTransaction_createdByID(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_LedgerTransaction_billingAccount(ctx, field)
+			case "entries":
+				return ec.fieldContext_LedgerTransaction_entries(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_LedgerTransaction_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			case "redeemCodes":
+				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCodeConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCodeConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCodeConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalORedeemCodeEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCodeConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCodeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_RedeemCodeEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_RedeemCodeEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCodeEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCodeConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCodeConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCodeConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCodeConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCodeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCodeConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCodeConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCodeConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCodeConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCodeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCodeEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCodeEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCodeEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalORedeemCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCode,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCodeEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCodeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RedeemCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_RedeemCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_RedeemCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_RedeemCode_code(ctx, field)
+			case "type":
+				return ec.fieldContext_RedeemCode_type(ctx, field)
+			case "status":
+				return ec.fieldContext_RedeemCode_status(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_RedeemCode_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_RedeemCode_currency(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_RedeemCode_createdByID(ctx, field)
+			case "usedByID":
+				return ec.fieldContext_RedeemCode_usedByID(ctx, field)
+			case "usedAt":
+				return ec.fieldContext_RedeemCode_usedAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_RedeemCode_expiresAt(ctx, field)
+			case "notes":
+				return ec.fieldContext_RedeemCode_notes(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_RedeemCode_ledgerTransactionID(ctx, field)
+			case "batchID":
+				return ec.fieldContext_RedeemCode_batchID(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_RedeemCode_createdBy(ctx, field)
+			case "usedBy":
+				return ec.fieldContext_RedeemCode_usedBy(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_RedeemCode_ledgerTransaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCode", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RedeemCodeEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.RedeemCodeEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RedeemCodeEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RedeemCodeEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RedeemCodeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
 		},
 	}
 	return fc, nil
@@ -64254,6 +66294,10 @@ func (ec *executionContext) fieldContext_SignInPayload_user(_ context.Context, f
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -70169,6 +72213,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_ledgerTransaction(_ 
 				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			case "redeemCodes":
+				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -72583,6 +74629,104 @@ func (ec *executionContext) fieldContext_User_oidcIdentities(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _User_createdRedeemCodes(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_createdRedeemCodes,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.CreatedRedeemCodes(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.RedeemCodeOrder), fc.Args["where"].(*ent.RedeemCodeWhereInput))
+		},
+		nil,
+		ec.marshalNRedeemCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_createdRedeemCodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_RedeemCodeConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_RedeemCodeConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_RedeemCodeConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCodeConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_createdRedeemCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_usedRedeemCodes(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_usedRedeemCodes,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.UsedRedeemCodes(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.RedeemCodeOrder), fc.Args["where"].(*ent.RedeemCodeWhereInput))
+		},
+		nil,
+		ec.marshalNRedeemCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_usedRedeemCodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_RedeemCodeConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_RedeemCodeConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_RedeemCodeConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RedeemCodeConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_usedRedeemCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_projectUsers(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -72865,6 +75009,10 @@ func (ec *executionContext) fieldContext_UserEdge_node(_ context.Context, field 
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -73538,6 +75686,10 @@ func (ec *executionContext) fieldContext_UserProject_user(_ context.Context, fie
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -73935,6 +76087,10 @@ func (ec *executionContext) fieldContext_UserRole_user(_ context.Context, field 
 				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
 			case "oidcIdentities":
 				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -77945,6 +80101,65 @@ func (ec *executionContext) unmarshalInputAdminBillingReportFilter(ctx context.C
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAdminCreateAndRedeemCodeInput(ctx context.Context, obj any) (biz.AdminCreateAndRedeemCodeInput, error) {
+	var it biz.AdminCreateAndRedeemCodeInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userId", "amount", "currency", "expiresAt", "notes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserID = converted
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "expiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAt = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAdminLedgerTransactionsFilter(ctx context.Context, obj any) (AdminLedgerTransactionsFilter, error) {
 	var it AdminLedgerTransactionsFilter
 	asMap := map[string]any{}
@@ -78174,6 +80389,89 @@ func (ec *executionContext) unmarshalInputAdminPaymentOrdersFilter(ctx context.C
 				return it, err
 			}
 			it.To = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAdminRedeemCodesFilter(ctx context.Context, obj any) (AdminRedeemCodesFilter, error) {
+	var it AdminRedeemCodesFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userId", "createdById", "status", "type", "code", "batchId", "from", "to", "expiresBefore"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "createdById":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdById"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByID = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalORedeemCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalORedeemCodeType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "batchId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchID = data
+		case "from":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.From = data
+		case "to":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.To = data
+		case "expiresBefore":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresBefore"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresBefore = data
 		}
 	}
 
@@ -88103,6 +90401,75 @@ func (ec *executionContext) unmarshalInputCreatePromptProtectionRuleInput(ctx co
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateRedeemCodesInput(ctx context.Context, obj any) (biz.CreateRedeemCodesInput, error) {
+	var it biz.CreateRedeemCodesInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"count", "type", "amount", "currency", "expiresAt", "notes", "prefix"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "count":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("count"))
+			data, err := ec.unmarshalOInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Count = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalORedeemCodeType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "expiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAt = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "prefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Prefix = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateRequestInput(ctx context.Context, obj any) (ent.CreateRequestInput, error) {
 	var it ent.CreateRequestInput
 	asMap := map[string]any{}
@@ -90551,7 +92918,7 @@ func (ec *executionContext) unmarshalInputLedgerTransactionWhereInput(ctx contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "direction", "directionNEQ", "directionIn", "directionNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "referenceType", "referenceTypeNEQ", "referenceTypeIn", "referenceTypeNotIn", "referenceTypeGT", "referenceTypeGTE", "referenceTypeLT", "referenceTypeLTE", "referenceTypeContains", "referenceTypeHasPrefix", "referenceTypeHasSuffix", "referenceTypeEqualFold", "referenceTypeContainsFold", "referenceID", "referenceIDNEQ", "referenceIDIn", "referenceIDNotIn", "referenceIDGT", "referenceIDGTE", "referenceIDLT", "referenceIDLTE", "referenceIDContains", "referenceIDHasPrefix", "referenceIDHasSuffix", "referenceIDEqualFold", "referenceIDContainsFold", "memo", "memoNEQ", "memoIn", "memoNotIn", "memoGT", "memoGTE", "memoLT", "memoLTE", "memoContains", "memoHasPrefix", "memoHasSuffix", "memoEqualFold", "memoContainsFold", "createdByType", "createdByTypeNEQ", "createdByTypeIn", "createdByTypeNotIn", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDGT", "createdByIDGTE", "createdByIDLT", "createdByIDLTE", "createdByIDContains", "createdByIDHasPrefix", "createdByIDHasSuffix", "createdByIDEqualFold", "createdByIDContainsFold", "hasBillingAccount", "hasBillingAccountWith", "hasEntries", "hasEntriesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasPaymentOrders", "hasPaymentOrdersWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "direction", "directionNEQ", "directionIn", "directionNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "referenceType", "referenceTypeNEQ", "referenceTypeIn", "referenceTypeNotIn", "referenceTypeGT", "referenceTypeGTE", "referenceTypeLT", "referenceTypeLTE", "referenceTypeContains", "referenceTypeHasPrefix", "referenceTypeHasSuffix", "referenceTypeEqualFold", "referenceTypeContainsFold", "referenceID", "referenceIDNEQ", "referenceIDIn", "referenceIDNotIn", "referenceIDGT", "referenceIDGTE", "referenceIDLT", "referenceIDLTE", "referenceIDContains", "referenceIDHasPrefix", "referenceIDHasSuffix", "referenceIDEqualFold", "referenceIDContainsFold", "memo", "memoNEQ", "memoIn", "memoNotIn", "memoGT", "memoGTE", "memoLT", "memoLTE", "memoContains", "memoHasPrefix", "memoHasSuffix", "memoEqualFold", "memoContainsFold", "createdByType", "createdByTypeNEQ", "createdByTypeIn", "createdByTypeNotIn", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDGT", "createdByIDGTE", "createdByIDLT", "createdByIDLTE", "createdByIDContains", "createdByIDHasPrefix", "createdByIDHasSuffix", "createdByIDEqualFold", "createdByIDContainsFold", "hasBillingAccount", "hasBillingAccountWith", "hasEntries", "hasEntriesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasPaymentOrders", "hasPaymentOrdersWith", "hasRedeemCodes", "hasRedeemCodesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -91607,6 +93974,20 @@ func (ec *executionContext) unmarshalInputLedgerTransactionWhereInput(ctx contex
 				return it, err
 			}
 			it.HasPaymentOrdersWith = data
+		case "hasRedeemCodes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasRedeemCodes"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasRedeemCodes = data
+		case "hasRedeemCodesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasRedeemCodesWith"))
+			data, err := ec.unmarshalORedeemCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasRedeemCodesWith = data
 		}
 	}
 
@@ -100197,6 +102578,1144 @@ func (ec *executionContext) unmarshalInputQueryModelsInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputRedeemCodeInput(ctx context.Context, obj any) (biz.RedeemCodeInput, error) {
+	var it biz.RedeemCodeInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"code"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputRedeemCodeOrder(ctx context.Context, obj any) (ent.RedeemCodeOrder, error) {
+	var it ent.RedeemCodeOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNRedeemCodeOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputRedeemCodeWhereInput(ctx context.Context, obj any) (ent.RedeemCodeWhereInput, error) {
+	var it ent.RedeemCodeWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "code", "codeNEQ", "codeIn", "codeNotIn", "codeGT", "codeGTE", "codeLT", "codeLTE", "codeContains", "codeHasPrefix", "codeHasSuffix", "codeEqualFold", "codeContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDIsNil", "createdByIDNotNil", "usedByID", "usedByIDNEQ", "usedByIDIn", "usedByIDNotIn", "usedByIDIsNil", "usedByIDNotNil", "usedAt", "usedAtNEQ", "usedAtIn", "usedAtNotIn", "usedAtGT", "usedAtGTE", "usedAtLT", "usedAtLTE", "usedAtIsNil", "usedAtNotNil", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "expiresAtIsNil", "expiresAtNotNil", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "batchID", "batchIDNEQ", "batchIDIn", "batchIDNotIn", "batchIDGT", "batchIDGTE", "batchIDLT", "batchIDLTE", "batchIDContains", "batchIDHasPrefix", "batchIDHasSuffix", "batchIDEqualFold", "batchIDContainsFold", "hasCreatedBy", "hasCreatedByWith", "hasUsedBy", "hasUsedByWith", "hasLedgerTransaction", "hasLedgerTransactionWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalORedeemCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalORedeemCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalORedeemCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "codeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeNEQ = data
+		case "codeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeIn = data
+		case "codeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeNotIn = data
+		case "codeGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeGT = data
+		case "codeGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeGTE = data
+		case "codeLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeLT = data
+		case "codeLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeLTE = data
+		case "codeContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeContains = data
+		case "codeHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeHasPrefix = data
+		case "codeHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeHasSuffix = data
+		case "codeEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeEqualFold = data
+		case "codeContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeContainsFold = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalORedeemCodeType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "typeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeNEQ"))
+			data, err := ec.unmarshalORedeemCodeType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TypeNEQ = data
+		case "typeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeIn"))
+			data, err := ec.unmarshalORedeemCodeType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TypeIn = data
+		case "typeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeNotIn"))
+			data, err := ec.unmarshalORedeemCodeType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TypeNotIn = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalORedeemCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalORedeemCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalORedeemCodeStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalORedeemCodeStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "amountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicros = data
+		case "amountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosNEQ = data
+		case "amountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosIn = data
+		case "amountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosNotIn = data
+		case "amountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosGT = data
+		case "amountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosGTE = data
+		case "amountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosLT = data
+		case "amountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosLTE = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "currencyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNEQ = data
+		case "currencyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyIn = data
+		case "currencyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNotIn = data
+		case "currencyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGT = data
+		case "currencyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGTE = data
+		case "currencyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLT = data
+		case "currencyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLTE = data
+		case "currencyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContains = data
+		case "currencyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasPrefix = data
+		case "currencyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasSuffix = data
+		case "currencyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyEqualFold = data
+		case "currencyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContainsFold = data
+		case "createdByID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CreatedByID = converted
+		case "createdByIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CreatedByIDNEQ = converted
+		case "createdByIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CreatedByIDIn = converted
+		case "createdByIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CreatedByIDNotIn = converted
+		case "createdByIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDIsNil = data
+		case "createdByIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDNotNil = data
+		case "usedByID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedByID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsedByID = converted
+		case "usedByIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedByIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsedByIDNEQ = converted
+		case "usedByIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedByIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsedByIDIn = converted
+		case "usedByIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedByIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsedByIDNotIn = converted
+		case "usedByIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedByIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedByIDIsNil = data
+		case "usedByIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedByIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedByIDNotNil = data
+		case "usedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAt = data
+		case "usedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAtNEQ = data
+		case "usedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAtIn = data
+		case "usedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAtNotIn = data
+		case "usedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAtGT = data
+		case "usedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAtGTE = data
+		case "usedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAtLT = data
+		case "usedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAtLTE = data
+		case "usedAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAtIsNil = data
+		case "usedAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedAtNotNil = data
+		case "expiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAt = data
+		case "expiresAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNEQ = data
+		case "expiresAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtIn = data
+		case "expiresAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNotIn = data
+		case "expiresAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtGT = data
+		case "expiresAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtGTE = data
+		case "expiresAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtLT = data
+		case "expiresAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtLTE = data
+		case "expiresAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtIsNil = data
+		case "expiresAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNotNil = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "notesNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNEQ = data
+		case "notesIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesIn = data
+		case "notesNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNotIn = data
+		case "notesGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGT = data
+		case "notesGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGTE = data
+		case "notesLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLT = data
+		case "notesLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLTE = data
+		case "notesContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContains = data
+		case "notesHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasPrefix = data
+		case "notesHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasSuffix = data
+		case "notesEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesEqualFold = data
+		case "notesContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContainsFold = data
+		case "ledgerTransactionID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionID = converted
+		case "ledgerTransactionIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionIDNEQ = converted
+		case "ledgerTransactionIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionIDIn = converted
+		case "ledgerTransactionIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionIDNotIn = converted
+		case "ledgerTransactionIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LedgerTransactionIDIsNil = data
+		case "ledgerTransactionIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LedgerTransactionIDNotNil = data
+		case "batchID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchID"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchID = data
+		case "batchIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDNEQ = data
+		case "batchIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDIn = data
+		case "batchIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDNotIn = data
+		case "batchIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDGT = data
+		case "batchIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDGTE = data
+		case "batchIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDLT = data
+		case "batchIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDLTE = data
+		case "batchIDContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDContains = data
+		case "batchIDHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDHasPrefix = data
+		case "batchIDHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDHasSuffix = data
+		case "batchIDEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDEqualFold = data
+		case "batchIDContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("batchIDContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BatchIDContainsFold = data
+		case "hasCreatedBy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasCreatedBy"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasCreatedBy = data
+		case "hasCreatedByWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasCreatedByWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasCreatedByWith = data
+		case "hasUsedBy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsedBy"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsedBy = data
+		case "hasUsedByWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsedByWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsedByWith = data
+		case "hasLedgerTransaction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLedgerTransaction"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasLedgerTransaction = data
+		case "hasLedgerTransactionWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLedgerTransactionWith"))
+			data, err := ec.unmarshalOLedgerTransactionWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐLedgerTransactionWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasLedgerTransactionWith = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRegexAssociationInput(ctx context.Context, obj any) (objects.RegexAssociation, error) {
 	var it objects.RegexAssociation
 	asMap := map[string]any{}
@@ -107224,6 +110743,51 @@ func (ec *executionContext) unmarshalInputUpdateQuotaEnforcementSettingsInput(ct
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateRedeemCodeStatusInput(ctx context.Context, obj any) (biz.UpdateRedeemCodeStatusInput, error) {
+	var it biz.UpdateRedeemCodeStatusInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"codeId", "status", "notes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "codeId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeId"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CodeID = converted
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNRedeemCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateRequestInput(ctx context.Context, obj any) (ent.UpdateRequestInput, error) {
 	var it ent.UpdateRequestInput
 	asMap := map[string]any{}
@@ -112230,7 +115794,7 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "hasProjects", "hasProjectsWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "hasProjects", "hasProjectsWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasCreatedRedeemCodes", "hasCreatedRedeemCodesWith", "hasUsedRedeemCodes", "hasUsedRedeemCodesWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -113039,6 +116603,34 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 				return it, err
 			}
 			it.HasOidcIdentitiesWith = data
+		case "hasCreatedRedeemCodes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasCreatedRedeemCodes"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasCreatedRedeemCodes = data
+		case "hasCreatedRedeemCodesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasCreatedRedeemCodesWith"))
+			data, err := ec.unmarshalORedeemCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasCreatedRedeemCodesWith = data
+		case "hasUsedRedeemCodes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsedRedeemCodes"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsedRedeemCodes = data
+		case "hasUsedRedeemCodesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsedRedeemCodesWith"))
+			data, err := ec.unmarshalORedeemCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsedRedeemCodesWith = data
 		case "hasProjectUsers":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasProjectUsers"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -113328,6 +116920,11 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Request(ctx, sel, obj)
+	case *ent.RedeemCode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._RedeemCode(ctx, sel, obj)
 	case *ent.ProviderQuotaStatus:
 		if obj == nil {
 			return graphql.Null
@@ -121963,6 +125560,42 @@ func (ec *executionContext) _LedgerTransaction(ctx context.Context, sel ast.Sele
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "redeemCodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LedgerTransaction_redeemCodes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -124005,6 +127638,41 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateUserBillingAccount":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateUserBillingAccount(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "redeemCode":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_redeemCode(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createRedeemCodes":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createRedeemCodes(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "adminCreateAndRedeemCode":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_adminCreateAndRedeemCode(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateRedeemCodeStatus":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateRedeemCodeStatus(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteRedeemCode":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteRedeemCode(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -128021,6 +131689,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "redeemCodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_redeemCodes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "requests":
 			field := field
 
@@ -129621,6 +133311,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myRedeemCodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myRedeemCodes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "adminLedgerTransactions":
 			field := field
 
@@ -129731,6 +133443,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminRedeemCodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminRedeemCodes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "adminBillingReport":
 			field := field
 
@@ -129824,6 +133558,410 @@ func (ec *executionContext) _QuotaEnforcementSettings(ctx context.Context, sel a
 			}
 		case "mode":
 			out.Values[i] = ec._QuotaEnforcementSettings_mode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var redeemCodeImplementors = []string{"RedeemCode", "Node"}
+
+func (ec *executionContext) _RedeemCode(ctx context.Context, sel ast.SelectionSet, obj *ent.RedeemCode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, redeemCodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RedeemCode")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RedeemCode_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._RedeemCode_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._RedeemCode_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "code":
+			out.Values[i] = ec._RedeemCode_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "type":
+			out.Values[i] = ec._RedeemCode_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._RedeemCode_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "amountMicros":
+			out.Values[i] = ec._RedeemCode_amountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "currency":
+			out.Values[i] = ec._RedeemCode_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "createdByID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RedeemCode_createdByID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usedByID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RedeemCode_usedByID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usedAt":
+			out.Values[i] = ec._RedeemCode_usedAt(ctx, field, obj)
+		case "expiresAt":
+			out.Values[i] = ec._RedeemCode_expiresAt(ctx, field, obj)
+		case "notes":
+			out.Values[i] = ec._RedeemCode_notes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "ledgerTransactionID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RedeemCode_ledgerTransactionID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "batchID":
+			out.Values[i] = ec._RedeemCode_batchID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "createdBy":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RedeemCode_createdBy(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usedBy":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RedeemCode_usedBy(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "ledgerTransaction":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RedeemCode_ledgerTransaction(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var redeemCodeConnectionImplementors = []string{"RedeemCodeConnection"}
+
+func (ec *executionContext) _RedeemCodeConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.RedeemCodeConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, redeemCodeConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RedeemCodeConnection")
+		case "edges":
+			out.Values[i] = ec._RedeemCodeConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._RedeemCodeConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._RedeemCodeConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var redeemCodeEdgeImplementors = []string{"RedeemCodeEdge"}
+
+func (ec *executionContext) _RedeemCodeEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.RedeemCodeEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, redeemCodeEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RedeemCodeEdge")
+		case "node":
+			out.Values[i] = ec._RedeemCodeEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._RedeemCodeEdge_cursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -136213,6 +140351,78 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdRedeemCodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_createdRedeemCodes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usedRedeemCodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_usedRedeemCodes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "projectUsers":
 			field := field
 
@@ -138053,6 +142263,11 @@ func (ec *executionContext) unmarshalNAddUserToProjectInput2githubᚗcomᚋloopl
 
 func (ec *executionContext) unmarshalNAdjustUserBalanceInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAdjustUserBalanceInput(ctx context.Context, v any) (biz.AdjustUserBalanceInput, error) {
 	res, err := ec.unmarshalInputAdjustUserBalanceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAdminCreateAndRedeemCodeInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAdminCreateAndRedeemCodeInput(ctx context.Context, v any) (biz.AdminCreateAndRedeemCodeInput, error) {
+	res, err := ec.unmarshalInputAdminCreateAndRedeemCodeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -140061,6 +144276,11 @@ func (ec *executionContext) unmarshalNCreatePromptInput2githubᚗcomᚋloopljᚋ
 
 func (ec *executionContext) unmarshalNCreatePromptProtectionRuleInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐCreatePromptProtectionRuleInput(ctx context.Context, v any) (ent.CreatePromptProtectionRuleInput, error) {
 	res, err := ec.unmarshalInputCreatePromptProtectionRuleInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateRedeemCodesInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐCreateRedeemCodesInput(ctx context.Context, v any) (biz.CreateRedeemCodesInput, error) {
+	res, err := ec.unmarshalInputCreateRedeemCodesInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -142808,6 +147028,124 @@ func (ec *executionContext) marshalNQuotaEnforcementSettings2ᚖgithubᚗcomᚋl
 	return ec._QuotaEnforcementSettings(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNRedeemCode2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCode(ctx context.Context, sel ast.SelectionSet, v ent.RedeemCode) graphql.Marshaler {
+	return ec._RedeemCode(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRedeemCode2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.RedeemCode) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRedeemCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCode(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNRedeemCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCode(ctx context.Context, sel ast.SelectionSet, v *ent.RedeemCode) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RedeemCode(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRedeemCodeConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeConnection(ctx context.Context, sel ast.SelectionSet, v ent.RedeemCodeConnection) graphql.Marshaler {
+	return ec._RedeemCodeConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRedeemCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeConnection(ctx context.Context, sel ast.SelectionSet, v *ent.RedeemCodeConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RedeemCodeConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNRedeemCodeInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐRedeemCodeInput(ctx context.Context, v any) (biz.RedeemCodeInput, error) {
+	res, err := ec.unmarshalInputRedeemCodeInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNRedeemCodeOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrderField(ctx context.Context, v any) (*ent.RedeemCodeOrderField, error) {
+	var res = new(ent.RedeemCodeOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNRedeemCodeOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.RedeemCodeOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNRedeemCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx context.Context, v any) (redeemcode.Status, error) {
+	var res redeemcode.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNRedeemCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx context.Context, sel ast.SelectionSet, v redeemcode.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNRedeemCodeType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx context.Context, v any) (redeemcode.Type, error) {
+	var res redeemcode.Type
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNRedeemCodeType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx context.Context, sel ast.SelectionSet, v redeemcode.Type) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNRedeemCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInput(ctx context.Context, v any) (*ent.RedeemCodeWhereInput, error) {
+	res, err := ec.unmarshalInputRedeemCodeWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNRemoveUserFromProjectInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐRemoveUserFromProjectInput(ctx context.Context, v any) (RemoveUserFromProjectInput, error) {
 	res, err := ec.unmarshalInputRemoveUserFromProjectInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -144121,6 +148459,11 @@ func (ec *executionContext) unmarshalNUpdatePromptProtectionRuleInput2githubᚗc
 
 func (ec *executionContext) unmarshalNUpdateQuotaEnforcementSettingsInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateQuotaEnforcementSettingsInput(ctx context.Context, v any) (UpdateQuotaEnforcementSettingsInput, error) {
 	res, err := ec.unmarshalInputUpdateQuotaEnforcementSettingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateRedeemCodeStatusInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdateRedeemCodeStatusInput(ctx context.Context, v any) (biz.UpdateRedeemCodeStatusInput, error) {
+	res, err := ec.unmarshalInputUpdateRedeemCodeStatusInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -145507,6 +149850,14 @@ func (ec *executionContext) unmarshalOAdminPaymentOrdersFilter2ᚖgithubᚗcom�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputAdminPaymentOrdersFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAdminRedeemCodesFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminRedeemCodesFilter(ctx context.Context, v any) (*AdminRedeemCodesFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAdminRedeemCodesFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -151979,6 +156330,267 @@ func (ec *executionContext) marshalOQuotaEnforcementMode2ᚖgithubᚗcomᚋloopl
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalORedeemCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCode(ctx context.Context, sel ast.SelectionSet, v *ent.RedeemCode) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._RedeemCode(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalORedeemCodeEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.RedeemCodeEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalORedeemCodeEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalORedeemCodeEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeEdge(ctx context.Context, sel ast.SelectionSet, v *ent.RedeemCodeEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._RedeemCodeEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalORedeemCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeOrder(ctx context.Context, v any) (*ent.RedeemCodeOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputRedeemCodeOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalORedeemCodeStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatusᚄ(ctx context.Context, v any) ([]redeemcode.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]redeemcode.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNRedeemCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalORedeemCodeStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []redeemcode.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRedeemCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalORedeemCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx context.Context, v any) (*redeemcode.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(redeemcode.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalORedeemCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐStatus(ctx context.Context, sel ast.SelectionSet, v *redeemcode.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalORedeemCodeType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx context.Context, v any) (redeemcode.Type, error) {
+	var res redeemcode.Type
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalORedeemCodeType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx context.Context, sel ast.SelectionSet, v redeemcode.Type) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalORedeemCodeType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐTypeᚄ(ctx context.Context, v any) ([]redeemcode.Type, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]redeemcode.Type, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNRedeemCodeType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalORedeemCodeType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []redeemcode.Type) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRedeemCodeType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalORedeemCodeType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx context.Context, v any) (*redeemcode.Type, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(redeemcode.Type)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalORedeemCodeType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋredeemcodeᚐType(ctx context.Context, sel ast.SelectionSet, v *redeemcode.Type) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalORedeemCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInputᚄ(ctx context.Context, v any) ([]*ent.RedeemCodeWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.RedeemCodeWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNRedeemCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalORedeemCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCodeWhereInput(ctx context.Context, v any) (*ent.RedeemCodeWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputRedeemCodeWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalORegexAssociation2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐRegexAssociation(ctx context.Context, sel ast.SelectionSet, v *objects.RegexAssociation) graphql.Marshaler {

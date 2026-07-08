@@ -38,6 +38,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
@@ -7724,6 +7725,320 @@ func (_m *ProviderQuotaStatus) ToEdge(order *ProviderQuotaStatusOrder) *Provider
 		order = DefaultProviderQuotaStatusOrder
 	}
 	return &ProviderQuotaStatusEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// RedeemCodeEdge is the edge representation of RedeemCode.
+type RedeemCodeEdge struct {
+	Node   *RedeemCode `json:"node"`
+	Cursor Cursor      `json:"cursor"`
+}
+
+// RedeemCodeConnection is the connection containing edges to RedeemCode.
+type RedeemCodeConnection struct {
+	Edges      []*RedeemCodeEdge `json:"edges"`
+	PageInfo   PageInfo          `json:"pageInfo"`
+	TotalCount int               `json:"totalCount"`
+}
+
+func (c *RedeemCodeConnection) build(nodes []*RedeemCode, pager *redeemcodePager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *RedeemCode
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *RedeemCode {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *RedeemCode {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*RedeemCodeEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &RedeemCodeEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// RedeemCodePaginateOption enables pagination customization.
+type RedeemCodePaginateOption func(*redeemcodePager) error
+
+// WithRedeemCodeOrder configures pagination ordering.
+func WithRedeemCodeOrder(order *RedeemCodeOrder) RedeemCodePaginateOption {
+	if order == nil {
+		order = DefaultRedeemCodeOrder
+	}
+	o := *order
+	return func(pager *redeemcodePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultRedeemCodeOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithRedeemCodeFilter configures pagination filter.
+func WithRedeemCodeFilter(filter func(*RedeemCodeQuery) (*RedeemCodeQuery, error)) RedeemCodePaginateOption {
+	return func(pager *redeemcodePager) error {
+		if filter == nil {
+			return errors.New("RedeemCodeQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type redeemcodePager struct {
+	reverse bool
+	order   *RedeemCodeOrder
+	filter  func(*RedeemCodeQuery) (*RedeemCodeQuery, error)
+}
+
+func newRedeemCodePager(opts []RedeemCodePaginateOption, reverse bool) (*redeemcodePager, error) {
+	pager := &redeemcodePager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultRedeemCodeOrder
+	}
+	return pager, nil
+}
+
+func (p *redeemcodePager) applyFilter(query *RedeemCodeQuery) (*RedeemCodeQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *redeemcodePager) toCursor(_m *RedeemCode) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *redeemcodePager) applyCursors(query *RedeemCodeQuery, after, before *Cursor) (*RedeemCodeQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultRedeemCodeOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *redeemcodePager) applyOrder(query *RedeemCodeQuery) *RedeemCodeQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultRedeemCodeOrder.Field {
+		query = query.Order(DefaultRedeemCodeOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *redeemcodePager) orderExpr(query *RedeemCodeQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultRedeemCodeOrder.Field {
+			b.Comma().Ident(DefaultRedeemCodeOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to RedeemCode.
+func (_m *RedeemCodeQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...RedeemCodePaginateOption,
+) (*RedeemCodeConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newRedeemCodePager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &RedeemCodeConnection{Edges: []*RedeemCodeEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// RedeemCodeOrderFieldCreatedAt orders RedeemCode by created_at.
+	RedeemCodeOrderFieldCreatedAt = &RedeemCodeOrderField{
+		Value: func(_m *RedeemCode) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: redeemcode.FieldCreatedAt,
+		toTerm: redeemcode.ByCreatedAt,
+		toCursor: func(_m *RedeemCode) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// RedeemCodeOrderFieldUpdatedAt orders RedeemCode by updated_at.
+	RedeemCodeOrderFieldUpdatedAt = &RedeemCodeOrderField{
+		Value: func(_m *RedeemCode) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: redeemcode.FieldUpdatedAt,
+		toTerm: redeemcode.ByUpdatedAt,
+		toCursor: func(_m *RedeemCode) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f RedeemCodeOrderField) String() string {
+	var str string
+	switch f.column {
+	case RedeemCodeOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case RedeemCodeOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f RedeemCodeOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *RedeemCodeOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("RedeemCodeOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *RedeemCodeOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *RedeemCodeOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid RedeemCodeOrderField", str)
+	}
+	return nil
+}
+
+// RedeemCodeOrderField defines the ordering field of RedeemCode.
+type RedeemCodeOrderField struct {
+	// Value extracts the ordering value from the given RedeemCode.
+	Value    func(*RedeemCode) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) redeemcode.OrderOption
+	toCursor func(*RedeemCode) Cursor
+}
+
+// RedeemCodeOrder defines the ordering of RedeemCode.
+type RedeemCodeOrder struct {
+	Direction OrderDirection        `json:"direction"`
+	Field     *RedeemCodeOrderField `json:"field"`
+}
+
+// DefaultRedeemCodeOrder is the default ordering of RedeemCode.
+var DefaultRedeemCodeOrder = &RedeemCodeOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &RedeemCodeOrderField{
+		Value: func(_m *RedeemCode) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: redeemcode.FieldID,
+		toTerm: redeemcode.ByID,
+		toCursor: func(_m *RedeemCode) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts RedeemCode into RedeemCodeEdge.
+func (_m *RedeemCode) ToEdge(order *RedeemCodeOrder) *RedeemCodeEdge {
+	if order == nil {
+		order = DefaultRedeemCodeOrder
+	}
+	return &RedeemCodeEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

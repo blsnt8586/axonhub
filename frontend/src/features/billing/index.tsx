@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { AlertCircle, CreditCard, ExternalLink, Loader2, RefreshCw, Wallet } from 'lucide-react';
+import { AlertCircle, CreditCard, ExternalLink, Loader2, RefreshCw, Ticket, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
-import { useCreateMyEPayRechargeCheckout, useMyBillingOverview } from './data/billing';
+import { useCreateMyEPayRechargeCheckout, useMyBillingOverview, useRedeemCode } from './data/billing';
 
 function microsToAmount(value: number) {
   return value / 1_000_000;
@@ -44,8 +44,10 @@ function normalizeAmount(value: string) {
 export default function BillingPage() {
   const { t, i18n } = useTranslation();
   const [amount, setAmount] = useState('20.00');
+  const [redeemCode, setRedeemCode] = useState('');
   const { data, isLoading, isFetching, error, refetch } = useMyBillingOverview(10);
   const createCheckout = useCreateMyEPayRechargeCheckout();
+  const redeemCodeMutation = useRedeemCode();
 
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
   const currency = data?.account.currency || 'CNY';
@@ -85,6 +87,24 @@ export default function BillingPage() {
         return;
       }
       window.location.assign(checkout.url);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('common.errors.unknownError');
+      toast.error(message);
+    }
+  }
+
+  async function handleRedeem(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const code = redeemCode.trim();
+    if (!code) {
+      toast.error(t('billing.redeem.invalidCode'));
+      return;
+    }
+
+    try {
+      await redeemCodeMutation.mutateAsync({ code });
+      toast.success(t('billing.redeem.success'));
+      setRedeemCode('');
     } catch (err) {
       const message = err instanceof Error ? err.message : t('common.errors.unknownError');
       toast.error(message);
@@ -174,37 +194,69 @@ export default function BillingPage() {
         </div>
 
         <div className='grid gap-4 lg:grid-cols-[360px_1fr]'>
-          <Card className='rounded-lg'>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2 text-base'>
-                <CreditCard className='size-4' />
-                {t('billing.recharge.title')}
-              </CardTitle>
-              <CardDescription>{t('billing.recharge.description')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className='space-y-4' onSubmit={handleRecharge}>
-                <div className='space-y-2'>
-                  <label className='text-sm font-medium' htmlFor='billing-recharge-amount'>
-                    {t('billing.recharge.amount')}
-                  </label>
-                  <Input
-                    id='billing-recharge-amount'
-                    inputMode='decimal'
-                    value={amount}
-                    onChange={(event) => setAmount(event.target.value)}
-                    placeholder='20.00'
-                    aria-invalid={amount.trim() !== '' && !normalizeAmount(amount)}
-                  />
-                  <p className='text-muted-foreground text-xs'>{t('billing.recharge.amountHint', { currency })}</p>
-                </div>
-                <Button className='w-full' type='submit' disabled={createCheckout.isPending}>
-                  {createCheckout.isPending ? <Loader2 className='size-4 animate-spin' /> : <ExternalLink className='size-4' />}
-                  {t('billing.recharge.submit')}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <div className='space-y-4'>
+            <Card className='rounded-lg'>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2 text-base'>
+                  <CreditCard className='size-4' />
+                  {t('billing.recharge.title')}
+                </CardTitle>
+                <CardDescription>{t('billing.recharge.description')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className='space-y-4' onSubmit={handleRecharge}>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium' htmlFor='billing-recharge-amount'>
+                      {t('billing.recharge.amount')}
+                    </label>
+                    <Input
+                      id='billing-recharge-amount'
+                      inputMode='decimal'
+                      value={amount}
+                      onChange={(event) => setAmount(event.target.value)}
+                      placeholder='20.00'
+                      aria-invalid={amount.trim() !== '' && !normalizeAmount(amount)}
+                    />
+                    <p className='text-muted-foreground text-xs'>{t('billing.recharge.amountHint', { currency })}</p>
+                  </div>
+                  <Button className='w-full' type='submit' disabled={createCheckout.isPending}>
+                    {createCheckout.isPending ? <Loader2 className='size-4 animate-spin' /> : <ExternalLink className='size-4' />}
+                    {t('billing.recharge.submit')}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card className='rounded-lg'>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2 text-base'>
+                  <Ticket className='size-4' />
+                  {t('billing.redeem.title')}
+                </CardTitle>
+                <CardDescription>{t('billing.redeem.description')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className='space-y-4' onSubmit={handleRedeem}>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium' htmlFor='billing-redeem-code'>
+                      {t('billing.redeem.code')}
+                    </label>
+                    <Input
+                      id='billing-redeem-code'
+                      value={redeemCode}
+                      onChange={(event) => setRedeemCode(event.target.value)}
+                      placeholder={t('billing.redeem.codePlaceholder')}
+                      autoComplete='off'
+                    />
+                  </div>
+                  <Button className='w-full' type='submit' disabled={redeemCodeMutation.isPending}>
+                    {redeemCodeMutation.isPending ? <Loader2 className='size-4 animate-spin' /> : <Ticket className='size-4' />}
+                    {t('billing.redeem.submit')}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
 
           <Card className='rounded-lg'>
             <CardHeader>
@@ -245,6 +297,47 @@ export default function BillingPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('billing.redeem.historyTitle')}</CardTitle>
+            <CardDescription>{t('billing.redeem.historyDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className='overflow-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('billing.columns.time')}</TableHead>
+                  <TableHead>{t('billing.columns.code')}</TableHead>
+                  <TableHead>{t('billing.columns.status')}</TableHead>
+                  <TableHead>{t('billing.columns.expiresAt')}</TableHead>
+                  <TableHead className='text-right'>{t('billing.columns.amount')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(data?.redeemCodes ?? []).length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className='text-muted-foreground h-24 text-center'>
+                      {isLoading ? t('common.loading') : t('common.noData')}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  data?.redeemCodes.map((code) => (
+                    <TableRow key={code.id}>
+                      <TableCell>{formatDate(code.usedAt || code.createdAt)}</TableCell>
+                      <TableCell className='font-mono text-xs'>{code.code}</TableCell>
+                      <TableCell>
+                        <Badge variant={code.status === 'used' ? 'default' : 'secondary'}>{code.status}</Badge>
+                      </TableCell>
+                      <TableCell>{formatDate(code.expiresAt)}</TableCell>
+                      <TableCell className='text-right font-mono'>{formatCurrency.format(microsToAmount(code.amountMicros))}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
         <div className='grid gap-4 lg:grid-cols-2'>
           <Card className='rounded-lg'>

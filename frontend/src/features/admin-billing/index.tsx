@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Ban, BarChart3, Download, Loader2, RefreshCw, Save, Unlock, WalletCards } from 'lucide-react';
+import { AlertCircle, Ban, BarChart3, Clock, Download, Loader2, RefreshCw, Save, Ticket, Trash2, Unlock, WalletCards } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { extractNumberIDAsNumber } from '@/lib/utils';
@@ -22,6 +22,7 @@ import {
   type AdminBillingReportFilter,
   type AdminPaymentEventsFilter,
   type AdminPaymentOrdersFilter,
+  type AdminRedeemCodesFilter,
   type AdminUsageBillingRecordsFilter,
   type BillingCSVExportDataset,
   type BillingCommercialReport,
@@ -33,6 +34,9 @@ import {
   type PaymentEventStatus,
   type PaymentOrderStatus,
   type PaymentProviderType,
+  type RedeemCode,
+  type RedeemCodeStatus,
+  type RedeemCodeType,
   type UsageBillingRecordStatus,
   useAdjustUserBalance,
   useAdminBillingOverview,
@@ -41,13 +45,18 @@ import {
   useAdminLedgerTransactions,
   useAdminPaymentEvents,
   useAdminPaymentOrders,
+  useAdminRedeemCodes,
   useAdminUsageBillingRecords,
   useAdminUserBillingDetail,
+  useAdminCreateAndRedeemCode,
   useCancelPaymentOrder,
+  useCreateRedeemCodes,
+  useDeleteRedeemCode,
   useExportAdminBillingCSV,
   useReleaseBillingHold,
   useMakeUpPaymentOrder,
   useSaveBillingPriceRule,
+  useUpdateRedeemCodeStatus,
   useUpdateUserBillingAccount,
   useUpsertEPayPaymentProvider,
 } from './data/admin-billing';
@@ -119,6 +128,35 @@ type EventFilterForm = {
   eventKey: string;
   from: string;
   to: string;
+};
+
+type RedeemFilterForm = {
+  userId: string;
+  createdById: string;
+  status: 'all' | RedeemCodeStatus;
+  type: 'all' | RedeemCodeType;
+  code: string;
+  batchId: string;
+  from: string;
+  to: string;
+  expiresBefore: string;
+};
+
+type RedeemGenerateForm = {
+  count: string;
+  amount: string;
+  currency: string;
+  prefix: string;
+  expiresAt: string;
+  notes: string;
+};
+
+type RedeemGrantForm = {
+  userId: string;
+  amount: string;
+  currency: string;
+  expiresAt: string;
+  notes: string;
 };
 
 type ReportFilterForm = {
@@ -312,6 +350,41 @@ function defaultEventFilter(): EventFilterForm {
   return { paymentOrderId: '', providerInstanceId: '', providerType: 'all', status: 'all', eventType: '', eventKey: '', from: '', to: '' };
 }
 
+function defaultRedeemFilter(): RedeemFilterForm {
+  return {
+    userId: '',
+    createdById: '',
+    status: 'all',
+    type: 'all',
+    code: '',
+    batchId: '',
+    from: '',
+    to: '',
+    expiresBefore: '',
+  };
+}
+
+function defaultRedeemGenerateForm(): RedeemGenerateForm {
+  return {
+    count: '10',
+    amount: '10.00',
+    currency: 'CNY',
+    prefix: 'AX',
+    expiresAt: '',
+    notes: '',
+  };
+}
+
+function defaultRedeemGrantForm(): RedeemGrantForm {
+  return {
+    userId: '',
+    amount: '10.00',
+    currency: 'CNY',
+    expiresAt: '',
+    notes: '',
+  };
+}
+
 function buildReportFilter(form: ReportFilterForm): AdminBillingReportFilter {
   return {
     from: optionalTime(form.from),
@@ -388,6 +461,37 @@ function buildEventFilter(form: EventFilterForm): AdminPaymentEventsFilter {
   };
 }
 
+function buildRedeemFilter(form: RedeemFilterForm): AdminRedeemCodesFilter {
+  return {
+    userId: optionalInt(form.userId),
+    createdById: optionalInt(form.createdById),
+    status: form.status === 'all' ? undefined : form.status,
+    type: form.type === 'all' ? undefined : form.type,
+    code: optionalText(form.code),
+    batchId: optionalText(form.batchId),
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+    expiresBefore: optionalTime(form.expiresBefore),
+  };
+}
+
+function csvCell(value: unknown) {
+  const text = value === null || value === undefined ? '' : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadTextFile(fileName: string, content: string, contentType = 'text/csv;charset=utf-8') {
+  const blob = new Blob([content], { type: contentType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export default function AdminBillingPage() {
   const { t, i18n } = useTranslation();
   const { data, isLoading, isFetching, error, refetch } = useAdminBillingOverview(50);
@@ -404,12 +508,16 @@ export default function AdminBillingPage() {
   const [holdFilter, setHoldFilter] = useState<HoldFilterForm>(() => defaultHoldFilter());
   const [orderFilter, setOrderFilter] = useState<OrderFilterForm>(() => defaultOrderFilter());
   const [eventFilter, setEventFilter] = useState<EventFilterForm>(() => defaultEventFilter());
+  const [redeemFilter, setRedeemFilter] = useState<RedeemFilterForm>(() => defaultRedeemFilter());
+  const [redeemGenerateForm, setRedeemGenerateForm] = useState<RedeemGenerateForm>(() => defaultRedeemGenerateForm());
+  const [redeemGrantForm, setRedeemGrantForm] = useState<RedeemGrantForm>(() => defaultRedeemGrantForm());
   const [reportFilter, setReportFilter] = useState<ReportFilterForm>(() => defaultReportFilter());
   const [appliedLedgerFilter, setAppliedLedgerFilter] = useState<AdminLedgerTransactionsFilter>({});
   const [appliedUsageFilter, setAppliedUsageFilter] = useState<AdminUsageBillingRecordsFilter>({});
   const [appliedHoldFilter, setAppliedHoldFilter] = useState<AdminBillingHoldsFilter>({});
   const [appliedOrderFilter, setAppliedOrderFilter] = useState<AdminPaymentOrdersFilter>({});
   const [appliedEventFilter, setAppliedEventFilter] = useState<AdminPaymentEventsFilter>({});
+  const [appliedRedeemFilter, setAppliedRedeemFilter] = useState<AdminRedeemCodesFilter>({});
   const [appliedReportFilter, setAppliedReportFilter] = useState<AdminBillingReportFilter>(() => buildReportFilter(defaultReportFilter()));
   const [holdReleaseReasons, setHoldReleaseReasons] = useState<Record<string, string>>({});
   const [orderReasons, setOrderReasons] = useState<Record<string, string>>({});
@@ -435,6 +543,7 @@ export default function AdminBillingPage() {
   const adminHolds = useAdminBillingHolds(appliedHoldFilter, 50);
   const adminOrders = useAdminPaymentOrders(appliedOrderFilter, 50);
   const adminEvents = useAdminPaymentEvents(appliedEventFilter, 50);
+  const adminRedeemCodes = useAdminRedeemCodes(appliedRedeemFilter, 50);
   const adminReport = useAdminBillingReport(appliedReportFilter);
   const adjustBalance = useAdjustUserBalance();
   const updateAccount = useUpdateUserBillingAccount();
@@ -442,6 +551,10 @@ export default function AdminBillingPage() {
   const cancelOrder = useCancelPaymentOrder();
   const makeUpOrder = useMakeUpPaymentOrder();
   const exportBillingCSV = useExportAdminBillingCSV();
+  const createRedeemCodes = useCreateRedeemCodes();
+  const adminCreateAndRedeemCode = useAdminCreateAndRedeemCode();
+  const updateRedeemCodeStatus = useUpdateRedeemCodeStatus();
+  const deleteRedeemCode = useDeleteRedeemCode();
   const savePriceRule = useSaveBillingPriceRule();
   const upsertEPay = useUpsertEPayPaymentProvider();
 
@@ -477,6 +590,7 @@ export default function AdminBillingPage() {
       adminHolds.refetch(),
       adminOrders.refetch(),
       adminEvents.refetch(),
+      adminRedeemCodes.refetch(),
       adminReport.refetch(),
       selectedUserBilling.refetch(),
     ]);
@@ -632,6 +746,132 @@ export default function AdminBillingPage() {
     exportBillingCSV.mutate({ dataset, ...appliedReportFilter });
   }
 
+  async function handleCreateRedeemCodes(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const amount = normalizeAmount(redeemGenerateForm.amount, 2);
+    const count = Number(redeemGenerateForm.count);
+    if (!Number.isInteger(count) || count <= 0 || count > 500) {
+      toast.error(t('adminBilling.redeem.invalidCount'));
+      return;
+    }
+    if (!amount) {
+      toast.error(t('adminBilling.redeem.invalidAmount'));
+      return;
+    }
+
+    try {
+      const created = await createRedeemCodes.mutateAsync({
+        count,
+        type: 'balance',
+        amount,
+        currency: redeemGenerateForm.currency.trim().toUpperCase() || 'CNY',
+        prefix: optionalText(redeemGenerateForm.prefix.toUpperCase()),
+        expiresAt: optionalTime(redeemGenerateForm.expiresAt),
+        notes: optionalText(redeemGenerateForm.notes),
+      });
+      toast.success(t('adminBilling.redeem.generateSuccess', { count: created.length }));
+      setRedeemGenerateForm((prev) => ({ ...prev, count: '10', notes: '' }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleAdminCreateAndRedeemCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!redeemGrantForm.userId) {
+      toast.error(t('adminBilling.redeem.selectUserRequired'));
+      return;
+    }
+    const amount = normalizeAmount(redeemGrantForm.amount, 2);
+    if (!amount) {
+      toast.error(t('adminBilling.redeem.invalidAmount'));
+      return;
+    }
+
+    try {
+      await adminCreateAndRedeemCode.mutateAsync({
+        userId: redeemGrantForm.userId,
+        amount,
+        currency: redeemGrantForm.currency.trim().toUpperCase() || 'CNY',
+        expiresAt: optionalTime(redeemGrantForm.expiresAt),
+        notes: optionalText(redeemGrantForm.notes),
+      });
+      toast.success(t('adminBilling.redeem.createAndRedeemSuccess'));
+      setRedeemGrantForm((prev) => ({ ...prev, amount: '10.00', notes: '' }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleUpdateRedeemCodeStatus(code: RedeemCode, status: RedeemCodeStatus) {
+    try {
+      await updateRedeemCodeStatus.mutateAsync({
+        codeId: code.id,
+        status,
+        notes: code.notes || undefined,
+      });
+      toast.success(t('adminBilling.redeem.statusSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleDeleteRedeemCode(code: RedeemCode) {
+    if (code.status === 'used') {
+      toast.error(t('adminBilling.redeem.deleteUsedDenied'));
+      return;
+    }
+    if (!window.confirm(t('adminBilling.redeem.deleteConfirm'))) {
+      return;
+    }
+
+    try {
+      await deleteRedeemCode.mutateAsync(code.id);
+      toast.success(t('adminBilling.redeem.deleteSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  function handleExportRedeemCodes(rows: RedeemCode[]) {
+    const header = [
+      'code',
+      'type',
+      'status',
+      'amountMicros',
+      'currency',
+      'createdAt',
+      'expiresAt',
+      'usedAt',
+      'createdByID',
+      'usedByID',
+      'ledgerTransactionID',
+      'batchID',
+      'notes',
+    ];
+    const body = rows.map((row) =>
+      [
+        row.code,
+        row.type,
+        row.status,
+        row.amountMicros,
+        row.currency,
+        row.createdAt,
+        row.expiresAt,
+        row.usedAt,
+        row.createdByID,
+        row.usedByID,
+        row.ledgerTransactionID,
+        row.batchID,
+        row.notes,
+      ]
+        .map(csvCell)
+        .join(',')
+    );
+    downloadTextFile(`redeem-codes-${new Date().toISOString().slice(0, 10)}.csv`, [header.join(','), ...body].join('\n'));
+    toast.success(t('adminBilling.redeem.exportSuccess'));
+  }
+
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
       <Header fixed>
@@ -651,6 +891,7 @@ export default function AdminBillingPage() {
               adminHolds.isFetching ||
               adminOrders.isFetching ||
               adminEvents.isFetching ||
+              adminRedeemCodes.isFetching ||
               adminReport.isFetching
             }
           >
@@ -660,6 +901,7 @@ export default function AdminBillingPage() {
             adminHolds.isFetching ||
             adminOrders.isFetching ||
             adminEvents.isFetching ||
+            adminRedeemCodes.isFetching ||
             adminReport.isFetching ? (
               <Loader2 className='size-4 animate-spin' />
             ) : (
@@ -679,11 +921,12 @@ export default function AdminBillingPage() {
             adminHolds.error ||
             adminOrders.error ||
             adminEvents.error ||
+            adminRedeemCodes.error ||
             adminReport.error
           }
         />
 
-        <div className='grid gap-4 md:grid-cols-6'>
+        <div className='grid gap-4 md:grid-cols-4 xl:grid-cols-7'>
           <MetricCard title={t('adminBilling.metrics.accounts')} value={String(data?.accounts.length ?? 0)} loading={isLoading} />
           <MetricCard
             title={t('adminBilling.metrics.ledger')}
@@ -702,6 +945,11 @@ export default function AdminBillingPage() {
             value={String(adminEvents.data?.length ?? 0)}
             loading={adminEvents.isLoading}
           />
+          <MetricCard
+            title={t('adminBilling.metrics.redeemCodes')}
+            value={String(adminRedeemCodes.data?.length ?? 0)}
+            loading={adminRedeemCodes.isLoading}
+          />
         </div>
 
         <Tabs defaultValue='reports' className='gap-4'>
@@ -713,6 +961,7 @@ export default function AdminBillingPage() {
             <TabsTrigger value='holds'>{t('adminBilling.tabs.holds')}</TabsTrigger>
             <TabsTrigger value='orders'>{t('adminBilling.tabs.orders')}</TabsTrigger>
             <TabsTrigger value='events'>{t('adminBilling.tabs.events')}</TabsTrigger>
+            <TabsTrigger value='redeemCodes'>{t('adminBilling.tabs.redeemCodes')}</TabsTrigger>
             <TabsTrigger value='pricing'>{t('adminBilling.tabs.pricing')}</TabsTrigger>
             <TabsTrigger value='providers'>{t('adminBilling.tabs.providers')}</TabsTrigger>
           </TabsList>
@@ -1534,6 +1783,39 @@ export default function AdminBillingPage() {
             </Card>
           </TabsContent>
 
+          <TabsContent value='redeemCodes' className='mt-0'>
+            <RedeemCodesTab
+              users={users}
+              rows={adminRedeemCodes.data ?? []}
+              isLoading={adminRedeemCodes.isLoading}
+              filter={redeemFilter}
+              setFilter={setRedeemFilter}
+              onApplyFilter={(event) => {
+                event.preventDefault();
+                setAppliedRedeemFilter(buildRedeemFilter(redeemFilter));
+              }}
+              onResetFilter={() => {
+                const next = defaultRedeemFilter();
+                setRedeemFilter(next);
+                setAppliedRedeemFilter({});
+              }}
+              generateForm={redeemGenerateForm}
+              setGenerateForm={setRedeemGenerateForm}
+              onCreateRedeemCodes={handleCreateRedeemCodes}
+              createPending={createRedeemCodes.isPending}
+              grantForm={redeemGrantForm}
+              setGrantForm={setRedeemGrantForm}
+              onAdminCreateAndRedeemCode={handleAdminCreateAndRedeemCode}
+              grantPending={adminCreateAndRedeemCode.isPending}
+              onUpdateStatus={handleUpdateRedeemCodeStatus}
+              updatePending={updateRedeemCodeStatus.isPending}
+              onDelete={handleDeleteRedeemCode}
+              deletePending={deleteRedeemCode.isPending}
+              onExport={handleExportRedeemCodes}
+              formatMicros={formatMicros}
+            />
+          </TabsContent>
+
           <TabsContent value='pricing' className='mt-0'>
             <PricingCard
               data={data?.priceRules ?? []}
@@ -1818,6 +2100,305 @@ function ErrorAlert({ error }: { error: unknown }) {
       <AlertTitle>{t('common.loadError')}</AlertTitle>
       <AlertDescription>{error instanceof Error ? error.message : t('common.errors.unknownError')}</AlertDescription>
     </Alert>
+  );
+}
+
+function RedeemCodesTab({
+  users,
+  rows,
+  isLoading,
+  filter,
+  setFilter,
+  onApplyFilter,
+  onResetFilter,
+  generateForm,
+  setGenerateForm,
+  onCreateRedeemCodes,
+  createPending,
+  grantForm,
+  setGrantForm,
+  onAdminCreateAndRedeemCode,
+  grantPending,
+  onUpdateStatus,
+  updatePending,
+  onDelete,
+  deletePending,
+  onExport,
+  formatMicros,
+}: {
+  users: Array<{ id: string; email: string }>;
+  rows: RedeemCode[];
+  isLoading: boolean;
+  filter: RedeemFilterForm;
+  setFilter: (value: RedeemFilterForm | ((prev: RedeemFilterForm) => RedeemFilterForm)) => void;
+  onApplyFilter: (event: FormEvent<HTMLFormElement>) => void;
+  onResetFilter: () => void;
+  generateForm: RedeemGenerateForm;
+  setGenerateForm: (value: RedeemGenerateForm | ((prev: RedeemGenerateForm) => RedeemGenerateForm)) => void;
+  onCreateRedeemCodes: (event: FormEvent<HTMLFormElement>) => void;
+  createPending: boolean;
+  grantForm: RedeemGrantForm;
+  setGrantForm: (value: RedeemGrantForm | ((prev: RedeemGrantForm) => RedeemGrantForm)) => void;
+  onAdminCreateAndRedeemCode: (event: FormEvent<HTMLFormElement>) => void;
+  grantPending: boolean;
+  onUpdateStatus: (code: RedeemCode, status: RedeemCodeStatus) => void;
+  updatePending: boolean;
+  onDelete: (code: RedeemCode) => void;
+  deletePending: boolean;
+  onExport: (rows: RedeemCode[]) => void;
+  formatMicros: (value: number, valueCurrency?: string, minimumFractionDigits?: number) => string;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className='space-y-4'>
+      <div className='grid gap-4 xl:grid-cols-2'>
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 text-base'>
+              <Ticket className='size-4' />
+              {t('adminBilling.redeem.generateTitle')}
+            </CardTitle>
+            <CardDescription>{t('adminBilling.redeem.generateDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className='grid gap-3 md:grid-cols-2' onSubmit={onCreateRedeemCodes}>
+              <FilterInput
+                label={t('adminBilling.redeem.count')}
+                value={generateForm.count}
+                onChange={(value) => setGenerateForm((prev) => ({ ...prev, count: value }))}
+              />
+              <FilterInput
+                label={t('adminBilling.columns.amount')}
+                value={generateForm.amount}
+                onChange={(value) => setGenerateForm((prev) => ({ ...prev, amount: value }))}
+              />
+              <FilterInput
+                label={t('adminBilling.columns.currency')}
+                value={generateForm.currency}
+                onChange={(value) => setGenerateForm((prev) => ({ ...prev, currency: value.toUpperCase() }))}
+              />
+              <FilterInput
+                label={t('adminBilling.redeem.prefix')}
+                value={generateForm.prefix}
+                onChange={(value) => setGenerateForm((prev) => ({ ...prev, prefix: value.toUpperCase() }))}
+              />
+              <FilterInput
+                label={t('adminBilling.columns.expiresAt')}
+                type='datetime-local'
+                value={generateForm.expiresAt}
+                onChange={(value) => setGenerateForm((prev) => ({ ...prev, expiresAt: value }))}
+              />
+              <FilterInput
+                label={t('adminBilling.redeem.notes')}
+                value={generateForm.notes}
+                onChange={(value) => setGenerateForm((prev) => ({ ...prev, notes: value }))}
+              />
+              <div className='flex items-end md:col-span-2'>
+                <Button type='submit' disabled={createPending}>
+                  {createPending ? <Loader2 className='size-4 animate-spin' /> : <Ticket className='size-4' />}
+                  {t('adminBilling.redeem.generate')}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.redeem.createAndRedeemTitle')}</CardTitle>
+            <CardDescription>{t('adminBilling.redeem.createAndRedeemDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className='grid gap-3 md:grid-cols-2' onSubmit={onAdminCreateAndRedeemCode}>
+              <div className='md:col-span-2'>
+                <UserSelect
+                  users={users}
+                  value={grantForm.userId}
+                  onChange={(value) => setGrantForm((prev) => ({ ...prev, userId: value }))}
+                  label={t('adminBilling.adjust.user')}
+                  placeholder={t('adminBilling.adjust.userPlaceholder')}
+                />
+              </div>
+              <FilterInput
+                label={t('adminBilling.columns.amount')}
+                value={grantForm.amount}
+                onChange={(value) => setGrantForm((prev) => ({ ...prev, amount: value }))}
+              />
+              <FilterInput
+                label={t('adminBilling.columns.currency')}
+                value={grantForm.currency}
+                onChange={(value) => setGrantForm((prev) => ({ ...prev, currency: value.toUpperCase() }))}
+              />
+              <FilterInput
+                label={t('adminBilling.columns.expiresAt')}
+                type='datetime-local'
+                value={grantForm.expiresAt}
+                onChange={(value) => setGrantForm((prev) => ({ ...prev, expiresAt: value }))}
+              />
+              <FilterInput
+                label={t('adminBilling.redeem.notes')}
+                value={grantForm.notes}
+                onChange={(value) => setGrantForm((prev) => ({ ...prev, notes: value }))}
+              />
+              <div className='flex items-end md:col-span-2'>
+                <Button type='submit' disabled={grantPending}>
+                  {grantPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                  {t('adminBilling.redeem.createAndRedeem')}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className='rounded-lg'>
+        <CardHeader>
+          <div className='flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between'>
+            <div>
+              <CardTitle className='text-base'>{t('adminBilling.redeem.title')}</CardTitle>
+              <CardDescription>{t('adminBilling.redeem.description')}</CardDescription>
+            </div>
+            <Button type='button' variant='outline' size='sm' onClick={() => onExport(rows)} disabled={rows.length === 0}>
+              <Download className='size-4' />
+              {t('adminBilling.redeem.export')}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className='space-y-4 overflow-auto'>
+          <form className='grid gap-3 md:grid-cols-4 xl:grid-cols-9' onSubmit={onApplyFilter}>
+            <FilterInput
+              label={t('adminBilling.filters.userId')}
+              value={filter.userId}
+              onChange={(value) => setFilter((prev) => ({ ...prev, userId: value }))}
+            />
+            <FilterInput
+              label={t('adminBilling.redeem.createdById')}
+              value={filter.createdById}
+              onChange={(value) => setFilter((prev) => ({ ...prev, createdById: value }))}
+            />
+            <FilterSelect
+              label={t('adminBilling.columns.status')}
+              value={filter.status}
+              onChange={(value) => setFilter((prev) => ({ ...prev, status: value as RedeemFilterForm['status'] }))}
+              options={['all', 'active', 'used', 'disabled', 'expired']}
+            />
+            <FilterSelect
+              label={t('adminBilling.columns.type')}
+              value={filter.type}
+              onChange={(value) => setFilter((prev) => ({ ...prev, type: value as RedeemFilterForm['type'] }))}
+              options={['all', 'balance', 'credit', 'subscription']}
+            />
+            <FilterInput
+              label={t('adminBilling.redeem.code')}
+              value={filter.code}
+              onChange={(value) => setFilter((prev) => ({ ...prev, code: value }))}
+            />
+            <FilterInput
+              label={t('adminBilling.redeem.batchId')}
+              value={filter.batchId}
+              onChange={(value) => setFilter((prev) => ({ ...prev, batchId: value }))}
+            />
+            <FilterInput
+              label={t('adminBilling.filters.from')}
+              type='datetime-local'
+              value={filter.from}
+              onChange={(value) => setFilter((prev) => ({ ...prev, from: value }))}
+            />
+            <FilterInput
+              label={t('adminBilling.filters.to')}
+              type='datetime-local'
+              value={filter.to}
+              onChange={(value) => setFilter((prev) => ({ ...prev, to: value }))}
+            />
+            <FilterInput
+              label={t('adminBilling.filters.expiresBefore')}
+              type='datetime-local'
+              value={filter.expiresBefore}
+              onChange={(value) => setFilter((prev) => ({ ...prev, expiresBefore: value }))}
+            />
+            <FilterActions onReset={onResetFilter} />
+          </form>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('adminBilling.redeem.code')}</TableHead>
+                <TableHead>{t('adminBilling.columns.type')}</TableHead>
+                <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                <TableHead>{t('adminBilling.columns.expiresAt')}</TableHead>
+                <TableHead>{t('adminBilling.redeem.usedById')}</TableHead>
+                <TableHead>{t('adminBilling.redeem.batchId')}</TableHead>
+                <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
+                <TableHead>{t('adminBilling.columns.action')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <DataStateRow colSpan={9} isLoading={isLoading} isEmpty={rows.length === 0} />
+              {rows.map((code) => (
+                <TableRow key={code.id}>
+                  <TableCell>
+                    <div className='font-mono text-xs'>{code.code}</div>
+                    {code.notes && <div className='text-muted-foreground max-w-[180px] truncate text-xs'>{code.notes}</div>}
+                  </TableCell>
+                  <TableCell>{code.type}</TableCell>
+                  <TableCell>
+                    <StatusBadge value={code.status} positive={code.status === 'used'} />
+                  </TableCell>
+                  <TableCell>{formatDate(code.createdAt)}</TableCell>
+                  <TableCell>{formatDate(code.expiresAt)}</TableCell>
+                  <TableCell className='font-mono text-xs'>{code.usedByID || '-'}</TableCell>
+                  <TableCell className='font-mono text-xs'>{code.batchID || '-'}</TableCell>
+                  <TableCell className='text-right font-mono'>{formatMicros(code.amountMicros, code.currency)}</TableCell>
+                  <TableCell className='min-w-[250px]'>
+                    <div className='flex flex-wrap items-center gap-2'>
+                      {code.status === 'active' && (
+                        <>
+                          <Button
+                            type='button'
+                            size='sm'
+                            variant='outline'
+                            disabled={updatePending}
+                            onClick={() => onUpdateStatus(code, 'disabled')}
+                          >
+                            {updatePending ? <Loader2 className='size-4 animate-spin' /> : <Ban className='size-4' />}
+                            {t('adminBilling.redeem.disable')}
+                          </Button>
+                          <Button
+                            type='button'
+                            size='sm'
+                            variant='outline'
+                            disabled={updatePending}
+                            onClick={() => onUpdateStatus(code, 'expired')}
+                          >
+                            {updatePending ? <Loader2 className='size-4 animate-spin' /> : <Clock className='size-4' />}
+                            {t('adminBilling.redeem.expire')}
+                          </Button>
+                        </>
+                      )}
+                      {code.status !== 'used' && (
+                        <Button
+                          type='button'
+                          size='sm'
+                          variant='destructive'
+                          disabled={deletePending}
+                          onClick={() => onDelete(code)}
+                        >
+                          {deletePending ? <Loader2 className='size-4 animate-spin' /> : <Trash2 className='size-4' />}
+                          {t('adminBilling.redeem.delete')}
+                        </Button>
+                      )}
+                      {code.status === 'used' && <span className='text-muted-foreground text-xs'>{formatDate(code.usedAt)}</span>}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

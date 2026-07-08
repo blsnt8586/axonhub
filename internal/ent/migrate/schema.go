@@ -524,7 +524,7 @@ var (
 		{Name: "direction", Type: field.TypeEnum, Enums: []string{"credit", "debit"}},
 		{Name: "amount_micros", Type: field.TypeInt64},
 		{Name: "currency", Type: field.TypeString, Default: "CNY"},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"payment_recharge", "usage_charge", "admin_adjustment", "refund", "chargeback", "subscription_grant", "subscription_deduct"}},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"payment_recharge", "usage_charge", "admin_adjustment", "refund", "chargeback", "subscription_grant", "subscription_deduct", "redeem_code"}},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"posted", "voided"}, Default: "posted"},
 		{Name: "idempotency_key", Type: field.TypeString},
 		{Name: "reference_type", Type: field.TypeString, Default: ""},
@@ -903,6 +903,77 @@ var (
 				Name:    "providerquotastatus_next_check_at",
 				Unique:  false,
 				Columns: []*schema.Column{ProviderQuotaStatusColumns[9]},
+			},
+		},
+	}
+	// RedeemCodesColumns holds the columns for the "redeem_codes" table.
+	RedeemCodesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "code", Type: field.TypeString},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"balance", "credit", "subscription"}, Default: "balance"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "used", "disabled", "expired"}, Default: "active"},
+		{Name: "amount_micros", Type: field.TypeInt64},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "notes", Type: field.TypeString, Default: ""},
+		{Name: "batch_id", Type: field.TypeString, Default: ""},
+		{Name: "ledger_transaction_id", Type: field.TypeInt, Nullable: true},
+		{Name: "created_by_id", Type: field.TypeInt, Nullable: true},
+		{Name: "used_by_id", Type: field.TypeInt, Nullable: true},
+	}
+	// RedeemCodesTable holds the schema information for the "redeem_codes" table.
+	RedeemCodesTable = &schema.Table{
+		Name:       "redeem_codes",
+		Columns:    RedeemCodesColumns,
+		PrimaryKey: []*schema.Column{RedeemCodesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "redeem_codes_ledger_transactions_redeem_codes",
+				Columns:    []*schema.Column{RedeemCodesColumns[12]},
+				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "redeem_codes_users_created_redeem_codes",
+				Columns:    []*schema.Column{RedeemCodesColumns[13]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "redeem_codes_users_used_redeem_codes",
+				Columns:    []*schema.Column{RedeemCodesColumns[14]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "redeem_codes_by_code",
+				Unique:  true,
+				Columns: []*schema.Column{RedeemCodesColumns[3]},
+			},
+			{
+				Name:    "redeem_codes_by_status_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{RedeemCodesColumns[5], RedeemCodesColumns[9]},
+			},
+			{
+				Name:    "redeem_codes_by_used_by_used_at",
+				Unique:  false,
+				Columns: []*schema.Column{RedeemCodesColumns[14], RedeemCodesColumns[8]},
+			},
+			{
+				Name:    "redeem_codes_by_created_by_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{RedeemCodesColumns[13], RedeemCodesColumns[1]},
+			},
+			{
+				Name:    "redeem_codes_by_batch_id",
+				Unique:  false,
+				Columns: []*schema.Column{RedeemCodesColumns[11]},
 			},
 		},
 	}
@@ -1527,6 +1598,7 @@ var (
 		PromptsTable,
 		PromptProtectionRulesTable,
 		ProviderQuotaStatusTable,
+		RedeemCodesTable,
 		RequestsTable,
 		RequestExecutionsTable,
 		RolesTable,
@@ -1564,6 +1636,9 @@ func init() {
 	PaymentOrdersTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
 	PaymentOrdersTable.ForeignKeys[2].RefTable = PaymentProviderInstancesTable
 	ProviderQuotaStatusTable.ForeignKeys[0].RefTable = ChannelsTable
+	RedeemCodesTable.ForeignKeys[0].RefTable = LedgerTransactionsTable
+	RedeemCodesTable.ForeignKeys[1].RefTable = UsersTable
+	RedeemCodesTable.ForeignKeys[2].RefTable = UsersTable
 	RequestsTable.ForeignKeys[0].RefTable = APIKeysTable
 	RequestsTable.ForeignKeys[1].RefTable = ChannelsTable
 	RequestsTable.ForeignKeys[2].RefTable = DataStoragesTable

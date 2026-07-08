@@ -17,6 +17,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
@@ -134,6 +135,18 @@ type AdminPaymentOrdersFilter struct {
 	ExternalTradeNo  *string                    `json:"externalTradeNo,omitempty"`
 	From             *time.Time                 `json:"from,omitempty"`
 	To               *time.Time                 `json:"to,omitempty"`
+}
+
+type AdminRedeemCodesFilter struct {
+	UserID        *int               `json:"userId,omitempty"`
+	CreatedByID   *int               `json:"createdById,omitempty"`
+	Status        *redeemcode.Status `json:"status,omitempty"`
+	Type          *redeemcode.Type   `json:"type,omitempty"`
+	Code          *string            `json:"code,omitempty"`
+	BatchID       *string            `json:"batchId,omitempty"`
+	From          *time.Time         `json:"from,omitempty"`
+	To            *time.Time         `json:"to,omitempty"`
+	ExpiresBefore *time.Time         `json:"expiresBefore,omitempty"`
 }
 
 type AdminUsageBillingRecordsFilter struct {

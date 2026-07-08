@@ -60,21 +60,27 @@ type UserEdges struct {
 	ChannelOverrideTemplates []*ChannelOverrideTemplate `json:"channel_override_templates,omitempty"`
 	// OidcIdentities holds the value of the oidc_identities edge.
 	OidcIdentities []*OIDCIdentity `json:"oidc_identities,omitempty"`
+	// CreatedRedeemCodes holds the value of the created_redeem_codes edge.
+	CreatedRedeemCodes []*RedeemCode `json:"created_redeem_codes,omitempty"`
+	// UsedRedeemCodes holds the value of the used_redeem_codes edge.
+	UsedRedeemCodes []*RedeemCode `json:"used_redeem_codes,omitempty"`
 	// ProjectUsers holds the value of the project_users edge.
 	ProjectUsers []*UserProject `json:"project_users,omitempty"`
 	// UserRoles holds the value of the user_roles edge.
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [9]bool
 	// totalCount holds the count of the edges above.
-	totalCount [7]map[string]int
+	totalCount [9]map[string]int
 
 	namedProjects                 map[string][]*Project
 	namedAPIKeys                  map[string][]*APIKey
 	namedRoles                    map[string][]*Role
 	namedChannelOverrideTemplates map[string][]*ChannelOverrideTemplate
 	namedOidcIdentities           map[string][]*OIDCIdentity
+	namedCreatedRedeemCodes       map[string][]*RedeemCode
+	namedUsedRedeemCodes          map[string][]*RedeemCode
 	namedProjectUsers             map[string][]*UserProject
 	namedUserRoles                map[string][]*UserRole
 }
@@ -124,10 +130,28 @@ func (e UserEdges) OidcIdentitiesOrErr() ([]*OIDCIdentity, error) {
 	return nil, &NotLoadedError{edge: "oidc_identities"}
 }
 
+// CreatedRedeemCodesOrErr returns the CreatedRedeemCodes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CreatedRedeemCodesOrErr() ([]*RedeemCode, error) {
+	if e.loadedTypes[5] {
+		return e.CreatedRedeemCodes, nil
+	}
+	return nil, &NotLoadedError{edge: "created_redeem_codes"}
+}
+
+// UsedRedeemCodesOrErr returns the UsedRedeemCodes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UsedRedeemCodesOrErr() ([]*RedeemCode, error) {
+	if e.loadedTypes[6] {
+		return e.UsedRedeemCodes, nil
+	}
+	return nil, &NotLoadedError{edge: "used_redeem_codes"}
+}
+
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[7] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -136,7 +160,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[8] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -288,6 +312,16 @@ func (_m *User) QueryChannelOverrideTemplates() *ChannelOverrideTemplateQuery {
 // QueryOidcIdentities queries the "oidc_identities" edge of the User entity.
 func (_m *User) QueryOidcIdentities() *OIDCIdentityQuery {
 	return NewUserClient(_m.config).QueryOidcIdentities(_m)
+}
+
+// QueryCreatedRedeemCodes queries the "created_redeem_codes" edge of the User entity.
+func (_m *User) QueryCreatedRedeemCodes() *RedeemCodeQuery {
+	return NewUserClient(_m.config).QueryCreatedRedeemCodes(_m)
+}
+
+// QueryUsedRedeemCodes queries the "used_redeem_codes" edge of the User entity.
+func (_m *User) QueryUsedRedeemCodes() *RedeemCodeQuery {
+	return NewUserClient(_m.config).QueryUsedRedeemCodes(_m)
 }
 
 // QueryProjectUsers queries the "project_users" edge of the User entity.
@@ -478,6 +512,54 @@ func (_m *User) appendNamedOidcIdentities(name string, edges ...*OIDCIdentity) {
 		_m.Edges.namedOidcIdentities[name] = []*OIDCIdentity{}
 	} else {
 		_m.Edges.namedOidcIdentities[name] = append(_m.Edges.namedOidcIdentities[name], edges...)
+	}
+}
+
+// NamedCreatedRedeemCodes returns the CreatedRedeemCodes named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedCreatedRedeemCodes(name string) ([]*RedeemCode, error) {
+	if _m.Edges.namedCreatedRedeemCodes == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedCreatedRedeemCodes[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedCreatedRedeemCodes(name string, edges ...*RedeemCode) {
+	if _m.Edges.namedCreatedRedeemCodes == nil {
+		_m.Edges.namedCreatedRedeemCodes = make(map[string][]*RedeemCode)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedCreatedRedeemCodes[name] = []*RedeemCode{}
+	} else {
+		_m.Edges.namedCreatedRedeemCodes[name] = append(_m.Edges.namedCreatedRedeemCodes[name], edges...)
+	}
+}
+
+// NamedUsedRedeemCodes returns the UsedRedeemCodes named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedUsedRedeemCodes(name string) ([]*RedeemCode, error) {
+	if _m.Edges.namedUsedRedeemCodes == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUsedRedeemCodes[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedUsedRedeemCodes(name string, edges ...*RedeemCode) {
+	if _m.Edges.namedUsedRedeemCodes == nil {
+		_m.Edges.namedUsedRedeemCodes = make(map[string][]*RedeemCode)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUsedRedeemCodes[name] = []*RedeemCode{}
+	} else {
+		_m.Edges.namedUsedRedeemCodes[name] = append(_m.Edges.namedUsedRedeemCodes[name], edges...)
 	}
 }
 

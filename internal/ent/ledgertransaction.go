@@ -64,16 +64,19 @@ type LedgerTransactionEdges struct {
 	BillingHolds []*BillingHold `json:"billing_holds,omitempty"`
 	// PaymentOrders holds the value of the payment_orders edge.
 	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
+	// RedeemCodes holds the value of the redeem_codes edge.
+	RedeemCodes []*RedeemCode `json:"redeem_codes,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 	// totalCount holds the count of the edges above.
-	totalCount [5]map[string]int
+	totalCount [6]map[string]int
 
 	namedEntries             map[string][]*LedgerEntry
 	namedUsageBillingRecords map[string][]*UsageBillingRecord
 	namedBillingHolds        map[string][]*BillingHold
 	namedPaymentOrders       map[string][]*PaymentOrder
+	namedRedeemCodes         map[string][]*RedeemCode
 }
 
 // BillingAccountOrErr returns the BillingAccount value or an error if the edge
@@ -121,6 +124,15 @@ func (e LedgerTransactionEdges) PaymentOrdersOrErr() ([]*PaymentOrder, error) {
 		return e.PaymentOrders, nil
 	}
 	return nil, &NotLoadedError{edge: "payment_orders"}
+}
+
+// RedeemCodesOrErr returns the RedeemCodes value or an error if the edge
+// was not loaded in eager-loading.
+func (e LedgerTransactionEdges) RedeemCodesOrErr() ([]*RedeemCode, error) {
+	if e.loadedTypes[5] {
+		return e.RedeemCodes, nil
+	}
+	return nil, &NotLoadedError{edge: "redeem_codes"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -275,6 +287,11 @@ func (_m *LedgerTransaction) QueryBillingHolds() *BillingHoldQuery {
 // QueryPaymentOrders queries the "payment_orders" edge of the LedgerTransaction entity.
 func (_m *LedgerTransaction) QueryPaymentOrders() *PaymentOrderQuery {
 	return NewLedgerTransactionClient(_m.config).QueryPaymentOrders(_m)
+}
+
+// QueryRedeemCodes queries the "redeem_codes" edge of the LedgerTransaction entity.
+func (_m *LedgerTransaction) QueryRedeemCodes() *RedeemCodeQuery {
+	return NewLedgerTransactionClient(_m.config).QueryRedeemCodes(_m)
 }
 
 // Update returns a builder for updating this LedgerTransaction.
@@ -438,6 +455,30 @@ func (_m *LedgerTransaction) appendNamedPaymentOrders(name string, edges ...*Pay
 		_m.Edges.namedPaymentOrders[name] = []*PaymentOrder{}
 	} else {
 		_m.Edges.namedPaymentOrders[name] = append(_m.Edges.namedPaymentOrders[name], edges...)
+	}
+}
+
+// NamedRedeemCodes returns the RedeemCodes named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *LedgerTransaction) NamedRedeemCodes(name string) ([]*RedeemCode, error) {
+	if _m.Edges.namedRedeemCodes == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedRedeemCodes[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *LedgerTransaction) appendNamedRedeemCodes(name string, edges ...*RedeemCode) {
+	if _m.Edges.namedRedeemCodes == nil {
+		_m.Edges.namedRedeemCodes = make(map[string][]*RedeemCode)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedRedeemCodes[name] = []*RedeemCode{}
+	} else {
+		_m.Edges.namedRedeemCodes[name] = append(_m.Edges.namedRedeemCodes[name], edges...)
 	}
 }
 

@@ -5,6 +5,8 @@ export type BillingAccountStatus = 'active' | 'frozen' | 'closed';
 export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
 export type LedgerTransactionDirection = 'credit' | 'debit';
 export type UsageBillingRecordStatus = 'pending' | 'charged' | 'failed';
+export type RedeemCodeStatus = 'active' | 'used' | 'disabled' | 'expired';
+export type RedeemCodeType = 'balance' | 'credit' | 'subscription';
 
 export interface BillingAccount {
   id: string;
@@ -60,6 +62,22 @@ export interface UsageBillingRecord {
   error: string;
 }
 
+export interface RedeemCode {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  code: string;
+  type: RedeemCodeType;
+  status: RedeemCodeStatus;
+  amountMicros: number;
+  currency: string;
+  usedAt?: string | null;
+  expiresAt?: string | null;
+  notes: string;
+  ledgerTransactionID?: string | null;
+  batchID: string;
+}
+
 export interface PaymentCheckout {
   providerType: string;
   orderNo: string;
@@ -74,6 +92,7 @@ export interface BillingOverview {
   paymentOrders: PaymentOrder[];
   ledgerTransactions: LedgerTransaction[];
   usageBillingRecords: UsageBillingRecord[];
+  redeemCodes: RedeemCode[];
 }
 
 const BILLING_OVERVIEW_QUERY = `
@@ -140,6 +159,25 @@ const BILLING_OVERVIEW_QUERY = `
         }
       }
     }
+    myRedeemCodes(first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          code
+          type
+          status
+          amountMicros
+          currency
+          usedAt
+          expiresAt
+          notes
+          ledgerTransactionID
+          batchID
+        }
+      }
+    }
   }
 `;
 
@@ -152,6 +190,26 @@ const CREATE_MY_EPAY_RECHARGE_CHECKOUT = `
       url
       amount
       currency
+    }
+  }
+`;
+
+const REDEEM_CODE_MUTATION = `
+  mutation RedeemCode($input: RedeemCodeInput!) {
+    redeemCode(input: $input) {
+      id
+      createdAt
+      updatedAt
+      code
+      type
+      status
+      amountMicros
+      currency
+      usedAt
+      expiresAt
+      notes
+      ledgerTransactionID
+      batchID
     }
   }
 `;
@@ -173,6 +231,7 @@ export function useMyBillingOverview(first = 10) {
         myPaymentOrders: Connection<PaymentOrder>;
         myLedgerTransactions: Connection<LedgerTransaction>;
         myUsageBillingRecords: Connection<UsageBillingRecord>;
+        myRedeemCodes: Connection<RedeemCode>;
       }>(BILLING_OVERVIEW_QUERY, { first });
 
       return {
@@ -180,6 +239,7 @@ export function useMyBillingOverview(first = 10) {
         paymentOrders: nodes(data.myPaymentOrders),
         ledgerTransactions: nodes(data.myLedgerTransactions),
         usageBillingRecords: nodes(data.myUsageBillingRecords),
+        redeemCodes: nodes(data.myRedeemCodes),
       } satisfies BillingOverview;
     },
   });
@@ -194,6 +254,20 @@ export function useCreateMyEPayRechargeCheckout() {
         input,
       });
       return data.createMyEPayRechargeCheckout;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useRedeemCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { code: string }) => {
+      const data = await graphqlRequest<{ redeemCode: RedeemCode }>(REDEEM_CODE_MUTATION, { input });
+      return data.redeemCode;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });

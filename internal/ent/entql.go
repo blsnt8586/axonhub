@@ -28,6 +28,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
@@ -48,7 +49,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 35)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 36)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -621,6 +622,33 @@ var schemaGraph = func() *sqlgraph.Schema {
 	}
 	graph.Nodes[24] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
+			Table:   redeemcode.Table,
+			Columns: redeemcode.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: redeemcode.FieldID,
+			},
+		},
+		Type: "RedeemCode",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			redeemcode.FieldCreatedAt:           {Type: field.TypeTime, Column: redeemcode.FieldCreatedAt},
+			redeemcode.FieldUpdatedAt:           {Type: field.TypeTime, Column: redeemcode.FieldUpdatedAt},
+			redeemcode.FieldCode:                {Type: field.TypeString, Column: redeemcode.FieldCode},
+			redeemcode.FieldType:                {Type: field.TypeEnum, Column: redeemcode.FieldType},
+			redeemcode.FieldStatus:              {Type: field.TypeEnum, Column: redeemcode.FieldStatus},
+			redeemcode.FieldAmountMicros:        {Type: field.TypeInt64, Column: redeemcode.FieldAmountMicros},
+			redeemcode.FieldCurrency:            {Type: field.TypeString, Column: redeemcode.FieldCurrency},
+			redeemcode.FieldCreatedByID:         {Type: field.TypeInt, Column: redeemcode.FieldCreatedByID},
+			redeemcode.FieldUsedByID:            {Type: field.TypeInt, Column: redeemcode.FieldUsedByID},
+			redeemcode.FieldUsedAt:              {Type: field.TypeTime, Column: redeemcode.FieldUsedAt},
+			redeemcode.FieldExpiresAt:           {Type: field.TypeTime, Column: redeemcode.FieldExpiresAt},
+			redeemcode.FieldNotes:               {Type: field.TypeString, Column: redeemcode.FieldNotes},
+			redeemcode.FieldLedgerTransactionID: {Type: field.TypeInt, Column: redeemcode.FieldLedgerTransactionID},
+			redeemcode.FieldBatchID:             {Type: field.TypeString, Column: redeemcode.FieldBatchID},
+		},
+	}
+	graph.Nodes[25] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
 			Table:   request.Table,
 			Columns: request.Columns,
 			ID: &sqlgraph.FieldSpec{
@@ -658,7 +686,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			request.FieldContentSavedAt:             {Type: field.TypeTime, Column: request.FieldContentSavedAt},
 		},
 	}
-	graph.Nodes[25] = &sqlgraph.Node{
+	graph.Nodes[26] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   requestexecution.Table,
 			Columns: requestexecution.Columns,
@@ -693,7 +721,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			requestexecution.FieldPassThroughApplied:         {Type: field.TypeBool, Column: requestexecution.FieldPassThroughApplied},
 		},
 	}
-	graph.Nodes[26] = &sqlgraph.Node{
+	graph.Nodes[27] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   role.Table,
 			Columns: role.Columns,
@@ -713,7 +741,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			role.FieldScopes:    {Type: field.TypeJSON, Column: role.FieldScopes},
 		},
 	}
-	graph.Nodes[27] = &sqlgraph.Node{
+	graph.Nodes[28] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   system.Table,
 			Columns: system.Columns,
@@ -731,7 +759,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			system.FieldValue:     {Type: field.TypeString, Column: system.FieldValue},
 		},
 	}
-	graph.Nodes[28] = &sqlgraph.Node{
+	graph.Nodes[29] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   thread.Table,
 			Columns: thread.Columns,
@@ -748,7 +776,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			thread.FieldThreadID:  {Type: field.TypeString, Column: thread.FieldThreadID},
 		},
 	}
-	graph.Nodes[29] = &sqlgraph.Node{
+	graph.Nodes[30] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   trace.Table,
 			Columns: trace.Columns,
@@ -766,7 +794,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			trace.FieldThreadID:  {Type: field.TypeInt, Column: trace.FieldThreadID},
 		},
 	}
-	graph.Nodes[30] = &sqlgraph.Node{
+	graph.Nodes[31] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagebillingrecord.Table,
 			Columns: usagebillingrecord.Columns,
@@ -799,7 +827,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagebillingrecord.FieldError:               {Type: field.TypeString, Column: usagebillingrecord.FieldError},
 		},
 	}
-	graph.Nodes[31] = &sqlgraph.Node{
+	graph.Nodes[32] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagelog.Table,
 			Columns: usagelog.Columns,
@@ -836,7 +864,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagelog.FieldCostPriceReferenceID:               {Type: field.TypeString, Column: usagelog.FieldCostPriceReferenceID},
 		},
 	}
-	graph.Nodes[32] = &sqlgraph.Node{
+	graph.Nodes[33] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -861,7 +889,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldScopes:         {Type: field.TypeJSON, Column: user.FieldScopes},
 		},
 	}
-	graph.Nodes[33] = &sqlgraph.Node{
+	graph.Nodes[34] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userproject.Table,
 			Columns: userproject.Columns,
@@ -880,7 +908,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userproject.FieldScopes:    {Type: field.TypeJSON, Column: userproject.FieldScopes},
 		},
 	}
-	graph.Nodes[34] = &sqlgraph.Node{
+	graph.Nodes[35] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userrole.Table,
 			Columns: userrole.Columns,
@@ -1294,6 +1322,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"PaymentOrder",
 	)
 	graph.MustAddE(
+		"redeem_codes",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.RedeemCodesTable,
+			Columns: []string{ledgertransaction.RedeemCodesColumn},
+			Bidi:    false,
+		},
+		"LedgerTransaction",
+		"RedeemCode",
+	)
+	graph.MustAddE(
 		"user",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -1544,6 +1584,42 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"ProviderQuotaStatus",
 		"Channel",
+	)
+	graph.MustAddE(
+		"created_by",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   redeemcode.CreatedByTable,
+			Columns: []string{redeemcode.CreatedByColumn},
+			Bidi:    false,
+		},
+		"RedeemCode",
+		"User",
+	)
+	graph.MustAddE(
+		"used_by",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   redeemcode.UsedByTable,
+			Columns: []string{redeemcode.UsedByColumn},
+			Bidi:    false,
+		},
+		"RedeemCode",
+		"User",
+	)
+	graph.MustAddE(
+		"ledger_transaction",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   redeemcode.LedgerTransactionTable,
+			Columns: []string{redeemcode.LedgerTransactionColumn},
+			Bidi:    false,
+		},
+		"RedeemCode",
+		"LedgerTransaction",
 	)
 	graph.MustAddE(
 		"api_key",
@@ -1928,6 +2004,30 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"User",
 		"OIDCIdentity",
+	)
+	graph.MustAddE(
+		"created_redeem_codes",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedRedeemCodesTable,
+			Columns: []string{user.CreatedRedeemCodesColumn},
+			Bidi:    false,
+		},
+		"User",
+		"RedeemCode",
+	)
+	graph.MustAddE(
+		"used_redeem_codes",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UsedRedeemCodesTable,
+			Columns: []string{user.UsedRedeemCodesColumn},
+			Bidi:    false,
+		},
+		"User",
+		"RedeemCode",
 	)
 	graph.MustAddE(
 		"project_users",
@@ -3872,6 +3972,20 @@ func (f *LedgerTransactionFilter) WhereHasPaymentOrdersWith(preds ...predicate.P
 	})))
 }
 
+// WhereHasRedeemCodes applies a predicate to check if query has an edge redeem_codes.
+func (f *LedgerTransactionFilter) WhereHasRedeemCodes() {
+	f.Where(entql.HasEdge("redeem_codes"))
+}
+
+// WhereHasRedeemCodesWith applies a predicate to check if query has an edge redeem_codes with a given conditions (other predicates).
+func (f *LedgerTransactionFilter) WhereHasRedeemCodesWith(preds ...predicate.RedeemCode) {
+	f.Where(entql.HasEdgeWith("redeem_codes", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *ModelQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -5017,6 +5131,158 @@ func (f *ProviderQuotaStatusFilter) WhereHasChannelWith(preds ...predicate.Chann
 }
 
 // addPredicate implements the predicateAdder interface.
+func (_q *RedeemCodeQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the RedeemCodeQuery builder.
+func (_q *RedeemCodeQuery) Filter() *RedeemCodeFilter {
+	return &RedeemCodeFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *RedeemCodeMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the RedeemCodeMutation builder.
+func (m *RedeemCodeMutation) Filter() *RedeemCodeFilter {
+	return &RedeemCodeFilter{config: m.config, predicateAdder: m}
+}
+
+// RedeemCodeFilter provides a generic filtering capability at runtime for RedeemCodeQuery.
+type RedeemCodeFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *RedeemCodeFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *RedeemCodeFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(redeemcode.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *RedeemCodeFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(redeemcode.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *RedeemCodeFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(redeemcode.FieldUpdatedAt))
+}
+
+// WhereCode applies the entql string predicate on the code field.
+func (f *RedeemCodeFilter) WhereCode(p entql.StringP) {
+	f.Where(p.Field(redeemcode.FieldCode))
+}
+
+// WhereType applies the entql string predicate on the type field.
+func (f *RedeemCodeFilter) WhereType(p entql.StringP) {
+	f.Where(p.Field(redeemcode.FieldType))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *RedeemCodeFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(redeemcode.FieldStatus))
+}
+
+// WhereAmountMicros applies the entql int64 predicate on the amount_micros field.
+func (f *RedeemCodeFilter) WhereAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(redeemcode.FieldAmountMicros))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *RedeemCodeFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(redeemcode.FieldCurrency))
+}
+
+// WhereCreatedByID applies the entql int predicate on the created_by_id field.
+func (f *RedeemCodeFilter) WhereCreatedByID(p entql.IntP) {
+	f.Where(p.Field(redeemcode.FieldCreatedByID))
+}
+
+// WhereUsedByID applies the entql int predicate on the used_by_id field.
+func (f *RedeemCodeFilter) WhereUsedByID(p entql.IntP) {
+	f.Where(p.Field(redeemcode.FieldUsedByID))
+}
+
+// WhereUsedAt applies the entql time.Time predicate on the used_at field.
+func (f *RedeemCodeFilter) WhereUsedAt(p entql.TimeP) {
+	f.Where(p.Field(redeemcode.FieldUsedAt))
+}
+
+// WhereExpiresAt applies the entql time.Time predicate on the expires_at field.
+func (f *RedeemCodeFilter) WhereExpiresAt(p entql.TimeP) {
+	f.Where(p.Field(redeemcode.FieldExpiresAt))
+}
+
+// WhereNotes applies the entql string predicate on the notes field.
+func (f *RedeemCodeFilter) WhereNotes(p entql.StringP) {
+	f.Where(p.Field(redeemcode.FieldNotes))
+}
+
+// WhereLedgerTransactionID applies the entql int predicate on the ledger_transaction_id field.
+func (f *RedeemCodeFilter) WhereLedgerTransactionID(p entql.IntP) {
+	f.Where(p.Field(redeemcode.FieldLedgerTransactionID))
+}
+
+// WhereBatchID applies the entql string predicate on the batch_id field.
+func (f *RedeemCodeFilter) WhereBatchID(p entql.StringP) {
+	f.Where(p.Field(redeemcode.FieldBatchID))
+}
+
+// WhereHasCreatedBy applies a predicate to check if query has an edge created_by.
+func (f *RedeemCodeFilter) WhereHasCreatedBy() {
+	f.Where(entql.HasEdge("created_by"))
+}
+
+// WhereHasCreatedByWith applies a predicate to check if query has an edge created_by with a given conditions (other predicates).
+func (f *RedeemCodeFilter) WhereHasCreatedByWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("created_by", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUsedBy applies a predicate to check if query has an edge used_by.
+func (f *RedeemCodeFilter) WhereHasUsedBy() {
+	f.Where(entql.HasEdge("used_by"))
+}
+
+// WhereHasUsedByWith applies a predicate to check if query has an edge used_by with a given conditions (other predicates).
+func (f *RedeemCodeFilter) WhereHasUsedByWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("used_by", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasLedgerTransaction applies a predicate to check if query has an edge ledger_transaction.
+func (f *RedeemCodeFilter) WhereHasLedgerTransaction() {
+	f.Where(entql.HasEdge("ledger_transaction"))
+}
+
+// WhereHasLedgerTransactionWith applies a predicate to check if query has an edge ledger_transaction with a given conditions (other predicates).
+func (f *RedeemCodeFilter) WhereHasLedgerTransactionWith(preds ...predicate.LedgerTransaction) {
+	f.Where(entql.HasEdgeWith("ledger_transaction", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (_q *RequestQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
 }
@@ -5045,7 +5311,7 @@ type RequestFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5327,7 +5593,7 @@ type RequestExecutionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestExecutionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5519,7 +5785,7 @@ type RoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5636,7 +5902,7 @@ type SystemFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SystemFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5701,7 +5967,7 @@ type ThreadFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ThreadFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5789,7 +6055,7 @@ type TraceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *TraceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5896,7 +6162,7 @@ type UsageBillingRecordFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageBillingRecordFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6078,7 +6344,7 @@ type UsageLogFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageLogFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6308,7 +6574,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6449,6 +6715,34 @@ func (f *UserFilter) WhereHasOidcIdentitiesWith(preds ...predicate.OIDCIdentity)
 	})))
 }
 
+// WhereHasCreatedRedeemCodes applies a predicate to check if query has an edge created_redeem_codes.
+func (f *UserFilter) WhereHasCreatedRedeemCodes() {
+	f.Where(entql.HasEdge("created_redeem_codes"))
+}
+
+// WhereHasCreatedRedeemCodesWith applies a predicate to check if query has an edge created_redeem_codes with a given conditions (other predicates).
+func (f *UserFilter) WhereHasCreatedRedeemCodesWith(preds ...predicate.RedeemCode) {
+	f.Where(entql.HasEdgeWith("created_redeem_codes", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUsedRedeemCodes applies a predicate to check if query has an edge used_redeem_codes.
+func (f *UserFilter) WhereHasUsedRedeemCodes() {
+	f.Where(entql.HasEdge("used_redeem_codes"))
+}
+
+// WhereHasUsedRedeemCodesWith applies a predicate to check if query has an edge used_redeem_codes with a given conditions (other predicates).
+func (f *UserFilter) WhereHasUsedRedeemCodesWith(preds ...predicate.RedeemCode) {
+	f.Where(entql.HasEdgeWith("used_redeem_codes", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasProjectUsers applies a predicate to check if query has an edge project_users.
 func (f *UserFilter) WhereHasProjectUsers() {
 	f.Where(entql.HasEdge("project_users"))
@@ -6506,7 +6800,7 @@ type UserProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[34].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6604,7 +6898,7 @@ type UserRoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserRoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[34].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[35].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})

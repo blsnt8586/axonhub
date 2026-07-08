@@ -28,6 +28,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/model"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/prompt"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
@@ -78,6 +79,7 @@ type Dependencies struct {
 	BillingHoldService             *biz.BillingHoldService
 	PaymentService                 *biz.PaymentService
 	PricingService                 *biz.PricingService
+	RedeemCodeService              *biz.RedeemCodeService
 	Scheduler                      *scheduler.Scheduler
 	DefaultSelector                *orchestrator.DefaultSelector
 	CandidateSelectorDiagnostics   *orchestrator.CandidateSelectorDiagnostics
@@ -122,6 +124,7 @@ func NewGraphqlHandlers(deps Dependencies) *GraphqlHandler {
 			deps.BillingHoldService,
 			deps.PaymentService,
 			deps.PricingService,
+			deps.RedeemCodeService,
 			deps.Scheduler,
 			deps.DefaultSelector,
 			deps.CandidateSelectorDiagnostics,
@@ -207,6 +210,7 @@ var guidTypeToNodeType = map[string]string{
 	ent.TypeTrace:                   trace.Table,
 	ent.TypeDataStorage:             datastorage.Table,
 	ent.TypePrompt:                  prompt.Table,
+	ent.TypeRedeemCode:              redeemcode.Table,
 }
 
 func getNilableChannel(ctx context.Context, client *ent.Client, channelID int) (*ent.Channel, error) {

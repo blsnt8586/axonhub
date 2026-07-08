@@ -479,6 +479,27 @@ func (_m *LedgerTransaction) PaymentOrders(
 	return _m.QueryPaymentOrders().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *LedgerTransaction) RedeemCodes(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *RedeemCodeOrder, where *RedeemCodeWhereInput,
+) (*RedeemCodeConnection, error) {
+	opts := []RedeemCodePaginateOption{
+		WithRedeemCodeOrder(orderBy),
+		WithRedeemCodeFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
+	if nodes, err := _m.NamedRedeemCodes(alias); err == nil || hasTotalCount {
+		pager, err := newRedeemCodePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &RedeemCodeConnection{Edges: []*RedeemCodeEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryRedeemCodes().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *OIDCIdentity) User(ctx context.Context) (*User, error) {
 	result, err := _m.Edges.UserOrErr()
 	if IsNotLoaded(err) {
@@ -827,6 +848,30 @@ func (_m *ProviderQuotaStatus) Channel(ctx context.Context) (*Channel, error) {
 		result, err = _m.QueryChannel().Only(ctx)
 	}
 	return result, err
+}
+
+func (_m *RedeemCode) CreatedBy(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.CreatedByOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryCreatedBy().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *RedeemCode) UsedBy(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.UsedByOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUsedBy().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *RedeemCode) LedgerTransaction(ctx context.Context) (*LedgerTransaction, error) {
+	result, err := _m.Edges.LedgerTransactionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryLedgerTransaction().Only(ctx)
+	}
+	return result, MaskNotFound(err)
 }
 
 func (_m *Request) APIKey(ctx context.Context) (*APIKey, error) {
@@ -1267,6 +1312,48 @@ func (_m *User) OidcIdentities(
 	return _m.QueryOidcIdentities().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *User) CreatedRedeemCodes(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *RedeemCodeOrder, where *RedeemCodeWhereInput,
+) (*RedeemCodeConnection, error) {
+	opts := []RedeemCodePaginateOption{
+		WithRedeemCodeOrder(orderBy),
+		WithRedeemCodeFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
+	if nodes, err := _m.NamedCreatedRedeemCodes(alias); err == nil || hasTotalCount {
+		pager, err := newRedeemCodePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &RedeemCodeConnection{Edges: []*RedeemCodeEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryCreatedRedeemCodes().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *User) UsedRedeemCodes(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *RedeemCodeOrder, where *RedeemCodeWhereInput,
+) (*RedeemCodeConnection, error) {
+	opts := []RedeemCodePaginateOption{
+		WithRedeemCodeOrder(orderBy),
+		WithRedeemCodeFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[6][alias]
+	if nodes, err := _m.NamedUsedRedeemCodes(alias); err == nil || hasTotalCount {
+		pager, err := newRedeemCodePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &RedeemCodeConnection{Edges: []*RedeemCodeEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUsedRedeemCodes().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *User) ProjectUsers(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserProjectOrder, where *UserProjectWhereInput,
 ) (*UserProjectConnection, error) {
@@ -1275,7 +1362,7 @@ func (_m *User) ProjectUsers(
 		WithUserProjectFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
 	if nodes, err := _m.NamedProjectUsers(alias); err == nil || hasTotalCount {
 		pager, err := newUserProjectPager(opts, last != nil)
 		if err != nil {
@@ -1296,7 +1383,7 @@ func (_m *User) UserRoles(
 		WithUserRoleFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[6][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[8][alias]
 	if nodes, err := _m.NamedUserRoles(alias); err == nil || hasTotalCount {
 		pager, err := newUserRolePager(opts, last != nil)
 		if err != nil {

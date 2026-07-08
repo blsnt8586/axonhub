@@ -70,6 +70,34 @@ input UpdateUserBillingAccountInput {
   creditLimit: DecimalInput
 }
 
+input RedeemCodeInput {
+  code: String!
+}
+
+input CreateRedeemCodesInput {
+  count: Int
+  type: RedeemCodeType
+  amount: DecimalInput!
+  currency: String
+  expiresAt: Time
+  notes: String
+  prefix: String
+}
+
+input AdminCreateAndRedeemCodeInput {
+  userId: ID!
+  amount: DecimalInput!
+  currency: String
+  expiresAt: Time
+  notes: String
+}
+
+input UpdateRedeemCodeStatusInput {
+  codeId: ID!
+  status: RedeemCodeStatus!
+  notes: String
+}
+
 input SaveBillingPriceRuleForm {
   id: ID
   scopeType: BillingPriceRuleScopeType!
@@ -137,6 +165,18 @@ input AdminPaymentEventsFilter {
   eventKey: String
   from: Time
   to: Time
+}
+
+input AdminRedeemCodesFilter {
+  userId: Int
+  createdById: Int
+  status: RedeemCodeStatus
+  type: RedeemCodeType
+  code: String
+  batchId: String
+  from: Time
+  to: Time
+  expiresBefore: Time
 }
 
 input AdminBillingReportFilter {
@@ -232,6 +272,11 @@ extend type Mutation {
   createMyEPayRechargeCheckout(input: CreateMyEPayRechargeCheckoutInput!): PaymentCheckout!
   adjustUserBalance(input: AdjustUserBalanceInput!): LedgerTransaction!
   updateUserBillingAccount(input: UpdateUserBillingAccountInput!): BillingAccount!
+  redeemCode(input: RedeemCodeInput!): RedeemCode!
+  createRedeemCodes(input: CreateRedeemCodesInput!): [RedeemCode!]!
+  adminCreateAndRedeemCode(input: AdminCreateAndRedeemCodeInput!): RedeemCode!
+  updateRedeemCodeStatus(input: UpdateRedeemCodeStatusInput!): RedeemCode!
+  deleteRedeemCode(id: ID!): Boolean!
   releaseBillingHold(id: ID!, reason: String!): BillingHold!
   saveBillingPriceRule(input: SaveBillingPriceRuleForm!): BillingPriceRule!
   deleteBillingPriceRule(id: ID!): Boolean!
@@ -247,11 +292,13 @@ extend type Query {
   userUsageBillingRecords(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UsageBillingRecordOrder): UsageBillingRecordConnection!
   myLedgerTransactions(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   userLedgerTransactions(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
+  myRedeemCodes(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: RedeemCodeOrder): RedeemCodeConnection!
   adminLedgerTransactions(filter: AdminLedgerTransactionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   adminUsageBillingRecords(filter: AdminUsageBillingRecordsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UsageBillingRecordOrder): UsageBillingRecordConnection!
   adminBillingHolds(filter: AdminBillingHoldsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: BillingHoldOrder): BillingHoldConnection!
   adminPaymentOrders(filter: AdminPaymentOrdersFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentOrderOrder): PaymentOrderConnection!
   adminPaymentEvents(filter: AdminPaymentEventsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentEventOrder): PaymentEventConnection!
+  adminRedeemCodes(filter: AdminRedeemCodesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: RedeemCodeOrder): RedeemCodeConnection!
   adminBillingReport(filter: AdminBillingReportFilter): BillingCommercialReport!
   exportAdminBillingCSV(input: ExportAdminBillingCSVInput!): BillingCSVExportPayload!
 }

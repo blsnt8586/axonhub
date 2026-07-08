@@ -29,6 +29,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
@@ -979,6 +980,46 @@ func init() {
 	providerquotastatusDescReady := providerquotastatusFields[5].Descriptor()
 	// providerquotastatus.DefaultReady holds the default value on creation for the ready field.
 	providerquotastatus.DefaultReady = providerquotastatusDescReady.Default.(bool)
+	redeemcodeMixin := schema.RedeemCode{}.Mixin()
+	redeemcode.Policy = privacy.NewPolicies(schema.RedeemCode{})
+	redeemcode.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := redeemcode.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	redeemcodeMixinFields0 := redeemcodeMixin[0].Fields()
+	_ = redeemcodeMixinFields0
+	redeemcodeFields := schema.RedeemCode{}.Fields()
+	_ = redeemcodeFields
+	// redeemcodeDescCreatedAt is the schema descriptor for created_at field.
+	redeemcodeDescCreatedAt := redeemcodeMixinFields0[0].Descriptor()
+	// redeemcode.DefaultCreatedAt holds the default value on creation for the created_at field.
+	redeemcode.DefaultCreatedAt = redeemcodeDescCreatedAt.Default.(func() time.Time)
+	// redeemcodeDescUpdatedAt is the schema descriptor for updated_at field.
+	redeemcodeDescUpdatedAt := redeemcodeMixinFields0[1].Descriptor()
+	// redeemcode.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	redeemcode.DefaultUpdatedAt = redeemcodeDescUpdatedAt.Default.(func() time.Time)
+	// redeemcode.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	redeemcode.UpdateDefaultUpdatedAt = redeemcodeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// redeemcodeDescAmountMicros is the schema descriptor for amount_micros field.
+	redeemcodeDescAmountMicros := redeemcodeFields[3].Descriptor()
+	// redeemcode.AmountMicrosValidator is a validator for the "amount_micros" field. It is called by the builders before save.
+	redeemcode.AmountMicrosValidator = redeemcodeDescAmountMicros.Validators[0].(func(int64) error)
+	// redeemcodeDescCurrency is the schema descriptor for currency field.
+	redeemcodeDescCurrency := redeemcodeFields[4].Descriptor()
+	// redeemcode.DefaultCurrency holds the default value on creation for the currency field.
+	redeemcode.DefaultCurrency = redeemcodeDescCurrency.Default.(string)
+	// redeemcodeDescNotes is the schema descriptor for notes field.
+	redeemcodeDescNotes := redeemcodeFields[9].Descriptor()
+	// redeemcode.DefaultNotes holds the default value on creation for the notes field.
+	redeemcode.DefaultNotes = redeemcodeDescNotes.Default.(string)
+	// redeemcodeDescBatchID is the schema descriptor for batch_id field.
+	redeemcodeDescBatchID := redeemcodeFields[11].Descriptor()
+	// redeemcode.DefaultBatchID holds the default value on creation for the batch_id field.
+	redeemcode.DefaultBatchID = redeemcodeDescBatchID.Default.(string)
 	requestMixin := schema.Request{}.Mixin()
 	request.Policy = privacy.NewPolicies(schema.Request{})
 	request.Hooks[0] = func(next ent.Mutator) ent.Mutator {

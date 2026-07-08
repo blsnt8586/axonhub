@@ -39,6 +39,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
@@ -105,6 +106,8 @@ type Client struct {
 	PromptProtectionRule *PromptProtectionRuleClient
 	// ProviderQuotaStatus is the client for interacting with the ProviderQuotaStatus builders.
 	ProviderQuotaStatus *ProviderQuotaStatusClient
+	// RedeemCode is the client for interacting with the RedeemCode builders.
+	RedeemCode *RedeemCodeClient
 	// Request is the client for interacting with the Request builders.
 	Request *RequestClient
 	// RequestExecution is the client for interacting with the RequestExecution builders.
@@ -164,6 +167,7 @@ func (c *Client) init() {
 	c.Prompt = NewPromptClient(c.config)
 	c.PromptProtectionRule = NewPromptProtectionRuleClient(c.config)
 	c.ProviderQuotaStatus = NewProviderQuotaStatusClient(c.config)
+	c.RedeemCode = NewRedeemCodeClient(c.config)
 	c.Request = NewRequestClient(c.config)
 	c.RequestExecution = NewRequestExecutionClient(c.config)
 	c.Role = NewRoleClient(c.config)
@@ -291,6 +295,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Prompt:                   NewPromptClient(cfg),
 		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
 		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
+		RedeemCode:               NewRedeemCodeClient(cfg),
 		Request:                  NewRequestClient(cfg),
 		RequestExecution:         NewRequestExecutionClient(cfg),
 		Role:                     NewRoleClient(cfg),
@@ -345,6 +350,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Prompt:                   NewPromptClient(cfg),
 		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
 		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
+		RedeemCode:               NewRedeemCodeClient(cfg),
 		Request:                  NewRequestClient(cfg),
 		RequestExecution:         NewRequestExecutionClient(cfg),
 		Role:                     NewRoleClient(cfg),
@@ -390,9 +396,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
 		c.ChannelProbe, c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model,
 		c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance,
-		c.Project, c.Prompt, c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request,
-		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageBillingRecord,
-		c.UsageLog, c.User, c.UserProject, c.UserRole,
+		c.Project, c.Prompt, c.PromptProtectionRule, c.ProviderQuotaStatus,
+		c.RedeemCode, c.Request, c.RequestExecution, c.Role, c.System, c.Thread,
+		c.Trace, c.UsageBillingRecord, c.UsageLog, c.User, c.UserProject, c.UserRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -407,9 +413,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
 		c.ChannelProbe, c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model,
 		c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance,
-		c.Project, c.Prompt, c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request,
-		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageBillingRecord,
-		c.UsageLog, c.User, c.UserProject, c.UserRole,
+		c.Project, c.Prompt, c.PromptProtectionRule, c.ProviderQuotaStatus,
+		c.RedeemCode, c.Request, c.RequestExecution, c.Role, c.System, c.Thread,
+		c.Trace, c.UsageBillingRecord, c.UsageLog, c.User, c.UserProject, c.UserRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -466,6 +472,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PromptProtectionRule.mutate(ctx, m)
 	case *ProviderQuotaStatusMutation:
 		return c.ProviderQuotaStatus.mutate(ctx, m)
+	case *RedeemCodeMutation:
+		return c.RedeemCode.mutate(ctx, m)
 	case *RequestMutation:
 		return c.Request.mutate(ctx, m)
 	case *RequestExecutionMutation:
@@ -3010,6 +3018,22 @@ func (c *LedgerTransactionClient) QueryPaymentOrders(_m *LedgerTransaction) *Pay
 	return query
 }
 
+// QueryRedeemCodes queries the redeem_codes edge of a LedgerTransaction.
+func (c *LedgerTransactionClient) QueryRedeemCodes(_m *LedgerTransaction) *RedeemCodeQuery {
+	query := (&RedeemCodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, id),
+			sqlgraph.To(redeemcode.Table, redeemcode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.RedeemCodesTable, ledgertransaction.RedeemCodesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *LedgerTransactionClient) Hooks() []Hook {
 	hooks := c.hooks.LedgerTransaction
@@ -4581,6 +4605,188 @@ func (c *ProviderQuotaStatusClient) mutate(ctx context.Context, m *ProviderQuota
 		return (&ProviderQuotaStatusDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ProviderQuotaStatus mutation op: %q", m.Op())
+	}
+}
+
+// RedeemCodeClient is a client for the RedeemCode schema.
+type RedeemCodeClient struct {
+	config
+}
+
+// NewRedeemCodeClient returns a client for the RedeemCode from the given config.
+func NewRedeemCodeClient(c config) *RedeemCodeClient {
+	return &RedeemCodeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `redeemcode.Hooks(f(g(h())))`.
+func (c *RedeemCodeClient) Use(hooks ...Hook) {
+	c.hooks.RedeemCode = append(c.hooks.RedeemCode, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `redeemcode.Intercept(f(g(h())))`.
+func (c *RedeemCodeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RedeemCode = append(c.inters.RedeemCode, interceptors...)
+}
+
+// Create returns a builder for creating a RedeemCode entity.
+func (c *RedeemCodeClient) Create() *RedeemCodeCreate {
+	mutation := newRedeemCodeMutation(c.config, OpCreate)
+	return &RedeemCodeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RedeemCode entities.
+func (c *RedeemCodeClient) CreateBulk(builders ...*RedeemCodeCreate) *RedeemCodeCreateBulk {
+	return &RedeemCodeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RedeemCodeClient) MapCreateBulk(slice any, setFunc func(*RedeemCodeCreate, int)) *RedeemCodeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RedeemCodeCreateBulk{err: fmt.Errorf("calling to RedeemCodeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RedeemCodeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RedeemCodeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RedeemCode.
+func (c *RedeemCodeClient) Update() *RedeemCodeUpdate {
+	mutation := newRedeemCodeMutation(c.config, OpUpdate)
+	return &RedeemCodeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RedeemCodeClient) UpdateOne(_m *RedeemCode) *RedeemCodeUpdateOne {
+	mutation := newRedeemCodeMutation(c.config, OpUpdateOne, withRedeemCode(_m))
+	return &RedeemCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RedeemCodeClient) UpdateOneID(id int) *RedeemCodeUpdateOne {
+	mutation := newRedeemCodeMutation(c.config, OpUpdateOne, withRedeemCodeID(id))
+	return &RedeemCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RedeemCode.
+func (c *RedeemCodeClient) Delete() *RedeemCodeDelete {
+	mutation := newRedeemCodeMutation(c.config, OpDelete)
+	return &RedeemCodeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RedeemCodeClient) DeleteOne(_m *RedeemCode) *RedeemCodeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RedeemCodeClient) DeleteOneID(id int) *RedeemCodeDeleteOne {
+	builder := c.Delete().Where(redeemcode.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RedeemCodeDeleteOne{builder}
+}
+
+// Query returns a query builder for RedeemCode.
+func (c *RedeemCodeClient) Query() *RedeemCodeQuery {
+	return &RedeemCodeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRedeemCode},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RedeemCode entity by its id.
+func (c *RedeemCodeClient) Get(ctx context.Context, id int) (*RedeemCode, error) {
+	return c.Query().Where(redeemcode.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RedeemCodeClient) GetX(ctx context.Context, id int) *RedeemCode {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCreatedBy queries the created_by edge of a RedeemCode.
+func (c *RedeemCodeClient) QueryCreatedBy(_m *RedeemCode) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(redeemcode.Table, redeemcode.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, redeemcode.CreatedByTable, redeemcode.CreatedByColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsedBy queries the used_by edge of a RedeemCode.
+func (c *RedeemCodeClient) QueryUsedBy(_m *RedeemCode) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(redeemcode.Table, redeemcode.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, redeemcode.UsedByTable, redeemcode.UsedByColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryLedgerTransaction queries the ledger_transaction edge of a RedeemCode.
+func (c *RedeemCodeClient) QueryLedgerTransaction(_m *RedeemCode) *LedgerTransactionQuery {
+	query := (&LedgerTransactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(redeemcode.Table, redeemcode.FieldID, id),
+			sqlgraph.To(ledgertransaction.Table, ledgertransaction.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, redeemcode.LedgerTransactionTable, redeemcode.LedgerTransactionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *RedeemCodeClient) Hooks() []Hook {
+	hooks := c.hooks.RedeemCode
+	return append(hooks[:len(hooks):len(hooks)], redeemcode.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *RedeemCodeClient) Interceptors() []Interceptor {
+	return c.inters.RedeemCode
+}
+
+func (c *RedeemCodeClient) mutate(ctx context.Context, m *RedeemCodeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RedeemCodeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RedeemCodeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RedeemCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RedeemCodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RedeemCode mutation op: %q", m.Op())
 	}
 }
 
@@ -6277,6 +6483,38 @@ func (c *UserClient) QueryOidcIdentities(_m *User) *OIDCIdentityQuery {
 	return query
 }
 
+// QueryCreatedRedeemCodes queries the created_redeem_codes edge of a User.
+func (c *UserClient) QueryCreatedRedeemCodes(_m *User) *RedeemCodeQuery {
+	query := (&RedeemCodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(redeemcode.Table, redeemcode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CreatedRedeemCodesTable, user.CreatedRedeemCodesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsedRedeemCodes queries the used_redeem_codes edge of a User.
+func (c *UserClient) QueryUsedRedeemCodes(_m *User) *RedeemCodeQuery {
+	query := (&RedeemCodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(redeemcode.Table, redeemcode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UsedRedeemCodesTable, user.UsedRedeemCodesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryProjectUsers queries the project_users edge of a User.
 func (c *UserClient) QueryProjectUsers(_m *User) *UserProjectQuery {
 	query := (&UserProjectClient{config: c.config}).Query()
@@ -6675,8 +6913,9 @@ type (
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
 		PaymentOrder, PaymentProviderInstance, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, Request, RequestExecution, Role, System, Thread, Trace,
-		UsageBillingRecord, UsageLog, User, UserProject, UserRole []ent.Hook
+		ProviderQuotaStatus, RedeemCode, Request, RequestExecution, Role, System,
+		Thread, Trace, UsageBillingRecord, UsageLog, User, UserProject,
+		UserRole []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, BillingAccount, BillingAccountBinding,
@@ -6684,7 +6923,8 @@ type (
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
 		PaymentOrder, PaymentProviderInstance, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, Request, RequestExecution, Role, System, Thread, Trace,
-		UsageBillingRecord, UsageLog, User, UserProject, UserRole []ent.Interceptor
+		ProviderQuotaStatus, RedeemCode, Request, RequestExecution, Role, System,
+		Thread, Trace, UsageBillingRecord, UsageLog, User, UserProject,
+		UserRole []ent.Interceptor
 	}
 )

@@ -52,6 +52,10 @@ const (
 	EdgeChannelOverrideTemplates = "channel_override_templates"
 	// EdgeOidcIdentities holds the string denoting the oidc_identities edge name in mutations.
 	EdgeOidcIdentities = "oidc_identities"
+	// EdgeCreatedRedeemCodes holds the string denoting the created_redeem_codes edge name in mutations.
+	EdgeCreatedRedeemCodes = "created_redeem_codes"
+	// EdgeUsedRedeemCodes holds the string denoting the used_redeem_codes edge name in mutations.
+	EdgeUsedRedeemCodes = "used_redeem_codes"
 	// EdgeProjectUsers holds the string denoting the project_users edge name in mutations.
 	EdgeProjectUsers = "project_users"
 	// EdgeUserRoles holds the string denoting the user_roles edge name in mutations.
@@ -89,6 +93,20 @@ const (
 	OidcIdentitiesInverseTable = "oidc_identities"
 	// OidcIdentitiesColumn is the table column denoting the oidc_identities relation/edge.
 	OidcIdentitiesColumn = "user_id"
+	// CreatedRedeemCodesTable is the table that holds the created_redeem_codes relation/edge.
+	CreatedRedeemCodesTable = "redeem_codes"
+	// CreatedRedeemCodesInverseTable is the table name for the RedeemCode entity.
+	// It exists in this package in order to avoid circular dependency with the "redeemcode" package.
+	CreatedRedeemCodesInverseTable = "redeem_codes"
+	// CreatedRedeemCodesColumn is the table column denoting the created_redeem_codes relation/edge.
+	CreatedRedeemCodesColumn = "created_by_id"
+	// UsedRedeemCodesTable is the table that holds the used_redeem_codes relation/edge.
+	UsedRedeemCodesTable = "redeem_codes"
+	// UsedRedeemCodesInverseTable is the table name for the RedeemCode entity.
+	// It exists in this package in order to avoid circular dependency with the "redeemcode" package.
+	UsedRedeemCodesInverseTable = "redeem_codes"
+	// UsedRedeemCodesColumn is the table column denoting the used_redeem_codes relation/edge.
+	UsedRedeemCodesColumn = "used_by_id"
 	// ProjectUsersTable is the table that holds the project_users relation/edge.
 	ProjectUsersTable = "user_projects"
 	// ProjectUsersInverseTable is the table name for the UserProject entity.
@@ -329,6 +347,34 @@ func ByOidcIdentities(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByCreatedRedeemCodesCount orders the results by created_redeem_codes count.
+func ByCreatedRedeemCodesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCreatedRedeemCodesStep(), opts...)
+	}
+}
+
+// ByCreatedRedeemCodes orders the results by created_redeem_codes terms.
+func ByCreatedRedeemCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCreatedRedeemCodesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUsedRedeemCodesCount orders the results by used_redeem_codes count.
+func ByUsedRedeemCodesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUsedRedeemCodesStep(), opts...)
+	}
+}
+
+// ByUsedRedeemCodes orders the results by used_redeem_codes terms.
+func ByUsedRedeemCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUsedRedeemCodesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProjectUsersCount orders the results by project_users count.
 func ByProjectUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -389,6 +435,20 @@ func newOidcIdentitiesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OidcIdentitiesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, true, OidcIdentitiesTable, OidcIdentitiesColumn),
+	)
+}
+func newCreatedRedeemCodesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CreatedRedeemCodesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CreatedRedeemCodesTable, CreatedRedeemCodesColumn),
+	)
+}
+func newUsedRedeemCodesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UsedRedeemCodesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UsedRedeemCodesTable, UsedRedeemCodesColumn),
 	)
 }
 func newProjectUsersStep() *sqlgraph.Step {

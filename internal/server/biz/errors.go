@@ -27,4 +27,8 @@ var (
 	ErrInsufficientBalance    = errors.New("insufficient billing balance")
 	ErrPaymentOrderNotFound   = errors.New("payment order not found")
 	ErrPaymentOrderNotPayable = errors.New("payment order is not payable")
+	ErrRedeemCodeNotFound     = errors.New("redeem code not found")
+	ErrRedeemCodeUsed         = errors.New("redeem code has already been used")
+	ErrRedeemCodeDisabled     = errors.New("redeem code is disabled")
+	ErrRedeemCodeExpired      = errors.New("redeem code is expired")
 )

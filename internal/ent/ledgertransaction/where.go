@@ -830,6 +830,29 @@ func HasPaymentOrdersWith(preds ...predicate.PaymentOrder) predicate.LedgerTrans
 	})
 }
 
+// HasRedeemCodes applies the HasEdge predicate on the "redeem_codes" edge.
+func HasRedeemCodes() predicate.LedgerTransaction {
+	return predicate.LedgerTransaction(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RedeemCodesTable, RedeemCodesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRedeemCodesWith applies the HasEdge predicate on the "redeem_codes" edge with a given conditions (other predicates).
+func HasRedeemCodesWith(preds ...predicate.RedeemCode) predicate.LedgerTransaction {
+	return predicate.LedgerTransaction(func(s *sql.Selector) {
+		step := newRedeemCodesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.LedgerTransaction) predicate.LedgerTransaction {
 	return predicate.LedgerTransaction(sql.AndPredicates(predicates...))

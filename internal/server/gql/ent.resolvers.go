@@ -728,6 +728,21 @@ func (r *queryResolver) PromptProtectionRules(ctx context.Context, after *entgql
 	)
 }
 
+// RedeemCodes is the resolver for the redeemCodes field.
+func (r *queryResolver) RedeemCodes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) (*ent.RedeemCodeConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.RedeemCode.Query().Paginate(ctx, after, first, before, last,
+		ent.WithRedeemCodeOrder(orderBy),
+		ent.WithRedeemCodeFilter(where.Filter),
+	)
+}
+
 // Requests is the resolver for the requests field.
 func (r *queryResolver) Requests(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) (*ent.RequestConnection, error) {
 	if err := validatePaginationArgs(first, last); err != nil {
@@ -846,6 +861,50 @@ func (r *queryResolver) Users(ctx context.Context, after *entgql.Cursor[int], fi
 		ent.WithUserOrder(orderBy),
 		ent.WithUserFilter(where.Filter),
 	)
+}
+
+// ID is the resolver for the id field.
+func (r *redeemCodeResolver) ID(ctx context.Context, obj *ent.RedeemCode) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeRedeemCode,
+		ID:   obj.ID,
+	}, nil
+}
+
+// CreatedByID is the resolver for the createdByID field.
+func (r *redeemCodeResolver) CreatedByID(ctx context.Context, obj *ent.RedeemCode) (*objects.GUID, error) {
+	if obj.CreatedByID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypeUser,
+		ID:   *obj.CreatedByID,
+	}, nil
+}
+
+// UsedByID is the resolver for the usedByID field.
+func (r *redeemCodeResolver) UsedByID(ctx context.Context, obj *ent.RedeemCode) (*objects.GUID, error) {
+	if obj.UsedByID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypeUser,
+		ID:   *obj.UsedByID,
+	}, nil
+}
+
+// LedgerTransactionID is the resolver for the ledgerTransactionID field.
+func (r *redeemCodeResolver) LedgerTransactionID(ctx context.Context, obj *ent.RedeemCode) (*objects.GUID, error) {
+	if obj.LedgerTransactionID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypeLedgerTransaction,
+		ID:   *obj.LedgerTransactionID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
@@ -1335,6 +1394,9 @@ func (r *Resolver) ProviderQuotaStatus() ProviderQuotaStatusResolver {
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// RedeemCode returns RedeemCodeResolver implementation.
+func (r *Resolver) RedeemCode() RedeemCodeResolver { return &redeemCodeResolver{r} }
+
 // Request returns RequestResolver implementation.
 func (r *Resolver) Request() RequestResolver { return &requestResolver{r} }
 
@@ -1395,6 +1457,7 @@ type promptResolver struct{ *Resolver }
 type promptProtectionRuleResolver struct{ *Resolver }
 type providerQuotaStatusResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type redeemCodeResolver struct{ *Resolver }
 type requestResolver struct{ *Resolver }
 type requestExecutionResolver struct{ *Resolver }
 type roleResolver struct{ *Resolver }

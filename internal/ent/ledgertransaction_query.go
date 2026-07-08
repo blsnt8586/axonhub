@@ -19,6 +19,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 )
 
@@ -34,12 +35,14 @@ type LedgerTransactionQuery struct {
 	withUsageBillingRecords      *UsageBillingRecordQuery
 	withBillingHolds             *BillingHoldQuery
 	withPaymentOrders            *PaymentOrderQuery
+	withRedeemCodes              *RedeemCodeQuery
 	loadTotal                    []func(context.Context, []*LedgerTransaction) error
 	modifiers                    []func(*sql.Selector)
 	withNamedEntries             map[string]*LedgerEntryQuery
 	withNamedUsageBillingRecords map[string]*UsageBillingRecordQuery
 	withNamedBillingHolds        map[string]*BillingHoldQuery
 	withNamedPaymentOrders       map[string]*PaymentOrderQuery
+	withNamedRedeemCodes         map[string]*RedeemCodeQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -179,6 +182,28 @@ func (_q *LedgerTransactionQuery) QueryPaymentOrders() *PaymentOrderQuery {
 			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, selector),
 			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.PaymentOrdersTable, ledgertransaction.PaymentOrdersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRedeemCodes chains the current query on the "redeem_codes" edge.
+func (_q *LedgerTransactionQuery) QueryRedeemCodes() *RedeemCodeQuery {
+	query := (&RedeemCodeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, selector),
+			sqlgraph.To(redeemcode.Table, redeemcode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.RedeemCodesTable, ledgertransaction.RedeemCodesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -383,6 +408,7 @@ func (_q *LedgerTransactionQuery) Clone() *LedgerTransactionQuery {
 		withUsageBillingRecords: _q.withUsageBillingRecords.Clone(),
 		withBillingHolds:        _q.withBillingHolds.Clone(),
 		withPaymentOrders:       _q.withPaymentOrders.Clone(),
+		withRedeemCodes:         _q.withRedeemCodes.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -442,6 +468,17 @@ func (_q *LedgerTransactionQuery) WithPaymentOrders(opts ...func(*PaymentOrderQu
 		opt(query)
 	}
 	_q.withPaymentOrders = query
+	return _q
+}
+
+// WithRedeemCodes tells the query-builder to eager-load the nodes that are connected to
+// the "redeem_codes" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerTransactionQuery) WithRedeemCodes(opts ...func(*RedeemCodeQuery)) *LedgerTransactionQuery {
+	query := (&RedeemCodeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRedeemCodes = query
 	return _q
 }
 
@@ -529,12 +566,13 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	var (
 		nodes       = []*LedgerTransaction{}
 		_spec       = _q.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			_q.withBillingAccount != nil,
 			_q.withEntries != nil,
 			_q.withUsageBillingRecords != nil,
 			_q.withBillingHolds != nil,
 			_q.withPaymentOrders != nil,
+			_q.withRedeemCodes != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -594,6 +632,13 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 			return nil, err
 		}
 	}
+	if query := _q.withRedeemCodes; query != nil {
+		if err := _q.loadRedeemCodes(ctx, query, nodes,
+			func(n *LedgerTransaction) { n.Edges.RedeemCodes = []*RedeemCode{} },
+			func(n *LedgerTransaction, e *RedeemCode) { n.Edges.RedeemCodes = append(n.Edges.RedeemCodes, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedEntries {
 		if err := _q.loadEntries(ctx, query, nodes,
 			func(n *LedgerTransaction) { n.appendNamedEntries(name) },
@@ -619,6 +664,13 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 		if err := _q.loadPaymentOrders(ctx, query, nodes,
 			func(n *LedgerTransaction) { n.appendNamedPaymentOrders(name) },
 			func(n *LedgerTransaction, e *PaymentOrder) { n.appendNamedPaymentOrders(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedRedeemCodes {
+		if err := _q.loadRedeemCodes(ctx, query, nodes,
+			func(n *LedgerTransaction) { n.appendNamedRedeemCodes(name) },
+			func(n *LedgerTransaction, e *RedeemCode) { n.appendNamedRedeemCodes(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -764,6 +816,39 @@ func (_q *LedgerTransactionQuery) loadPaymentOrders(ctx context.Context, query *
 	}
 	query.Where(predicate.PaymentOrder(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(ledgertransaction.PaymentOrdersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.LedgerTransactionID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "ledger_transaction_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ledger_transaction_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *LedgerTransactionQuery) loadRedeemCodes(ctx context.Context, query *RedeemCodeQuery, nodes []*LedgerTransaction, init func(*LedgerTransaction), assign func(*LedgerTransaction, *RedeemCode)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*LedgerTransaction)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(redeemcode.FieldLedgerTransactionID)
+	}
+	query.Where(predicate.RedeemCode(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ledgertransaction.RedeemCodesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -932,6 +1017,20 @@ func (_q *LedgerTransactionQuery) WithNamedPaymentOrders(name string, opts ...fu
 		_q.withNamedPaymentOrders = make(map[string]*PaymentOrderQuery)
 	}
 	_q.withNamedPaymentOrders[name] = query
+	return _q
+}
+
+// WithNamedRedeemCodes tells the query-builder to eager-load the nodes that are connected to the "redeem_codes"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerTransactionQuery) WithNamedRedeemCodes(name string, opts ...func(*RedeemCodeQuery)) *LedgerTransactionQuery {
+	query := (&RedeemCodeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedRedeemCodes == nil {
+		_q.withNamedRedeemCodes = make(map[string]*RedeemCodeQuery)
+	}
+	_q.withNamedRedeemCodes[name] = query
 	return _q
 }
 

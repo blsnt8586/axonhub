@@ -13,12 +13,15 @@ export type LedgerTransactionType =
   | 'refund'
   | 'chargeback'
   | 'subscription_grant'
-  | 'subscription_deduct';
+  | 'subscription_deduct'
+  | 'redeem_code';
 export type UsageBillingRecordStatus = 'pending' | 'charged' | 'skipped' | 'failed' | 'refunded';
 export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
 export type PaymentProviderType = 'manual' | 'epay' | 'stripe' | 'custom';
 export type PaymentEventStatus = 'received' | 'processed' | 'failed' | 'ignored';
 export type BillingHoldStatus = 'held' | 'captured' | 'released' | 'expired';
+export type RedeemCodeStatus = 'active' | 'used' | 'disabled' | 'expired';
+export type RedeemCodeType = 'balance' | 'credit' | 'subscription';
 
 export interface BillingAccount {
   id: string;
@@ -157,6 +160,24 @@ export interface PaymentEvent {
   error: string;
 }
 
+export interface RedeemCode {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  code: string;
+  type: RedeemCodeType;
+  status: RedeemCodeStatus;
+  amountMicros: number;
+  currency: string;
+  createdByID?: string | null;
+  usedByID?: string | null;
+  usedAt?: string | null;
+  expiresAt?: string | null;
+  notes: string;
+  ledgerTransactionID?: string | null;
+  batchID: string;
+}
+
 export interface AdminLedgerTransactionsFilter {
   userId?: number;
   billingAccountId?: number;
@@ -212,6 +233,18 @@ export interface AdminPaymentEventsFilter {
   eventKey?: string;
   from?: string;
   to?: string;
+}
+
+export interface AdminRedeemCodesFilter {
+  userId?: number;
+  createdById?: number;
+  status?: RedeemCodeStatus;
+  type?: RedeemCodeType;
+  code?: string;
+  batchId?: string;
+  from?: string;
+  to?: string;
+  expiresBefore?: string;
 }
 
 export interface AdminBillingReportFilter {
@@ -559,6 +592,32 @@ const ADMIN_PAYMENT_EVENTS_QUERY = `
   }
 `;
 
+const ADMIN_REDEEM_CODES_QUERY = `
+  query AdminRedeemCodes($filter: AdminRedeemCodesFilter, $first: Int!) {
+    adminRedeemCodes(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          code
+          type
+          status
+          amountMicros
+          currency
+          createdByID
+          usedByID
+          usedAt
+          expiresAt
+          notes
+          ledgerTransactionID
+          batchID
+        }
+      }
+    }
+  }
+`;
+
 const ADMIN_BILLING_REPORT_QUERY = `
   query AdminBillingReport($filter: AdminBillingReportFilter) {
     adminBillingReport(filter: $filter) {
@@ -723,6 +782,78 @@ const UPSERT_EPAY_PROVIDER_MUTATION = `
   }
 `;
 
+const CREATE_REDEEM_CODES_MUTATION = `
+  mutation CreateRedeemCodes($input: CreateRedeemCodesInput!) {
+    createRedeemCodes(input: $input) {
+      id
+      createdAt
+      updatedAt
+      code
+      type
+      status
+      amountMicros
+      currency
+      createdByID
+      usedByID
+      usedAt
+      expiresAt
+      notes
+      ledgerTransactionID
+      batchID
+    }
+  }
+`;
+
+const ADMIN_CREATE_AND_REDEEM_CODE_MUTATION = `
+  mutation AdminCreateAndRedeemCode($input: AdminCreateAndRedeemCodeInput!) {
+    adminCreateAndRedeemCode(input: $input) {
+      id
+      createdAt
+      updatedAt
+      code
+      type
+      status
+      amountMicros
+      currency
+      createdByID
+      usedByID
+      usedAt
+      expiresAt
+      notes
+      ledgerTransactionID
+      batchID
+    }
+  }
+`;
+
+const UPDATE_REDEEM_CODE_STATUS_MUTATION = `
+  mutation UpdateRedeemCodeStatus($input: UpdateRedeemCodeStatusInput!) {
+    updateRedeemCodeStatus(input: $input) {
+      id
+      createdAt
+      updatedAt
+      code
+      type
+      status
+      amountMicros
+      currency
+      createdByID
+      usedByID
+      usedAt
+      expiresAt
+      notes
+      ledgerTransactionID
+      batchID
+    }
+  }
+`;
+
+const DELETE_REDEEM_CODE_MUTATION = `
+  mutation DeleteRedeemCode($id: ID!) {
+    deleteRedeemCode(id: $id)
+  }
+`;
+
 export function useAdminBillingOverview(first = 20) {
   return useQuery({
     queryKey: ['admin-billing', 'overview', first],
@@ -816,6 +947,16 @@ export function useAdminPaymentEvents(filter: AdminPaymentEventsFilter = {}, fir
     queryFn: async () => {
       const data = await graphqlRequest<{ adminPaymentEvents: Connection<PaymentEvent> }>(ADMIN_PAYMENT_EVENTS_QUERY, { filter, first });
       return nodes(data.adminPaymentEvents);
+    },
+  });
+}
+
+export function useAdminRedeemCodes(filter: AdminRedeemCodesFilter = {}, first = 50) {
+  return useQuery({
+    queryKey: ['admin-billing', 'redeem-codes', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminRedeemCodes: Connection<RedeemCode> }>(ADMIN_REDEEM_CODES_QUERY, { filter, first });
+      return nodes(data.adminRedeemCodes);
     },
   });
 }
@@ -980,6 +1121,72 @@ export function useUpsertEPayPaymentProvider() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'overview'] });
+    },
+  });
+}
+
+export function useCreateRedeemCodes() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      count?: number;
+      type?: RedeemCodeType;
+      amount: string;
+      currency?: string;
+      expiresAt?: string;
+      notes?: string;
+      prefix?: string;
+    }) => {
+      const data = await graphqlRequest<{ createRedeemCodes: RedeemCode[] }>(CREATE_REDEEM_CODES_MUTATION, { input });
+      return data.createRedeemCodes;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'redeem-codes'] });
+    },
+  });
+}
+
+export function useAdminCreateAndRedeemCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { userId: string; amount: string; currency?: string; expiresAt?: string; notes?: string }) => {
+      const data = await graphqlRequest<{ adminCreateAndRedeemCode: RedeemCode }>(ADMIN_CREATE_AND_REDEEM_CODE_MUTATION, { input });
+      return data.adminCreateAndRedeemCode;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useUpdateRedeemCodeStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { codeId: string; status: RedeemCodeStatus; notes?: string }) => {
+      const data = await graphqlRequest<{ updateRedeemCodeStatus: RedeemCode }>(UPDATE_REDEEM_CODE_STATUS_MUTATION, { input });
+      return data.updateRedeemCodeStatus;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'redeem-codes'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useDeleteRedeemCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const data = await graphqlRequest<{ deleteRedeemCode: boolean }>(DELETE_REDEEM_CODE_MUTATION, { id });
+      return data.deleteRedeemCode;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'redeem-codes'] });
     },
   });
 }

@@ -176,31 +176,32 @@ Verification:
 
 ## Stage 5: Redeem Codes
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: support balance grants, compensation, and campaign distribution through auditable redeem codes.
 
 Backend scope:
 
-- [ ] Add redeem code entity with code, type, amount, status, created_by, used_by, used_at, expires_at, and notes.
-- [ ] Support balance redeem first; reserve fields for credit/subscription redeem if needed.
-- [ ] Support batch generation.
-- [ ] Support admin create-and-redeem for a target user.
-- [ ] Redeem success credits wallet through ledger transaction.
-- [ ] Concurrent redeem of the same code can succeed only once.
+- [x] Add redeem code entity with code, type, amount, status, created_by, used_by, used_at, expires_at, and notes.
+- [x] Support balance redeem first; reserve fields for credit/subscription redeem if needed.
+- [x] Support batch generation.
+- [x] Support admin create-and-redeem for a target user.
+- [x] Redeem success credits wallet through ledger transaction.
+- [x] Concurrent redeem of the same code can succeed only once.
 
 Frontend scope:
 
-- [ ] User redeem form and redeem history.
-- [ ] Admin redeem code list with filters.
-- [ ] Admin batch generation, disable, expire, delete, export, and create-and-redeem actions.
+- [x] User redeem form and redeem history.
+- [x] Admin redeem code list with filters.
+- [x] Admin batch generation, disable, expire, delete, export, and create-and-redeem actions.
 
 Verification:
 
-- [ ] Used, disabled, and expired codes cannot be redeemed.
-- [ ] Concurrent redeem credits only once.
-- [ ] Ledger reference links redeem code to wallet credit.
-- [ ] Commit completed stage.
+- [x] Used, disabled, and expired codes cannot be redeemed.
+- [x] Concurrent redeem credits only once.
+- [x] Ledger reference links redeem code to wallet credit.
+- [x] Frontend typecheck and production build pass.
+- [x] Commit completed stage.
 
 ## Stage 6: Subscription Plans
 
@@ -349,8 +350,8 @@ Verification:
 - [x] Stage 1: Wallet Holds And Pre-Authorization
 - [x] Stage 2: Production Payment Order Lifecycle
 - [x] Stage 3: Commercial Reports And Audit Console
-- [ ] Stage 4: API Key Budgets And Commercial Limits
-- [ ] Stage 5: Redeem Codes
+- [x] Stage 4: API Key Budgets And Commercial Limits
+- [x] Stage 5: Redeem Codes
 - [ ] Stage 6: Subscription Plans
 - [ ] Stage 7: Promo Codes
 - [ ] Stage 8: Affiliate And Rebates

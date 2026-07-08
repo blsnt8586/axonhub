@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/role"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -246,6 +247,36 @@ func (_c *UserCreate) AddOidcIdentities(v ...*OIDCIdentity) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddOidcIdentityIDs(ids...)
+}
+
+// AddCreatedRedeemCodeIDs adds the "created_redeem_codes" edge to the RedeemCode entity by IDs.
+func (_c *UserCreate) AddCreatedRedeemCodeIDs(ids ...int) *UserCreate {
+	_c.mutation.AddCreatedRedeemCodeIDs(ids...)
+	return _c
+}
+
+// AddCreatedRedeemCodes adds the "created_redeem_codes" edges to the RedeemCode entity.
+func (_c *UserCreate) AddCreatedRedeemCodes(v ...*RedeemCode) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCreatedRedeemCodeIDs(ids...)
+}
+
+// AddUsedRedeemCodeIDs adds the "used_redeem_codes" edge to the RedeemCode entity by IDs.
+func (_c *UserCreate) AddUsedRedeemCodeIDs(ids ...int) *UserCreate {
+	_c.mutation.AddUsedRedeemCodeIDs(ids...)
+	return _c
+}
+
+// AddUsedRedeemCodes adds the "used_redeem_codes" edges to the RedeemCode entity.
+func (_c *UserCreate) AddUsedRedeemCodes(v ...*RedeemCode) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUsedRedeemCodeIDs(ids...)
 }
 
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
@@ -547,6 +578,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(oidcidentity.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CreatedRedeemCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedRedeemCodesTable,
+			Columns: []string{user.CreatedRedeemCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UsedRedeemCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UsedRedeemCodesTable,
+			Columns: []string{user.UsedRedeemCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
