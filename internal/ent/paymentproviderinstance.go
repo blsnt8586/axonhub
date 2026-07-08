@@ -32,7 +32,7 @@ type PaymentProviderInstance struct {
 	// Default settlement currency.
 	Currency string `json:"currency,omitempty"`
 	// Provider-specific encrypted or externalized configuration payload.
-	Config objects.JSONRawMessage `json:"config,omitempty"`
+	Config objects.JSONRawMessage `json:"-"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PaymentProviderInstanceQuery when eager-loading is set.
 	Edges        PaymentProviderInstanceEdges `json:"edges"`
@@ -215,8 +215,7 @@ func (_m *PaymentProviderInstance) String() string {
 	builder.WriteString("currency=")
 	builder.WriteString(_m.Currency)
 	builder.WriteString(", ")
-	builder.WriteString("config=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Config))
+	builder.WriteString("config=<sensitive>")
 	builder.WriteByte(')')
 	return builder.String()
 }

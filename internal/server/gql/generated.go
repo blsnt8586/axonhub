@@ -1312,7 +1312,6 @@ type ComplexityRoot struct {
 	}
 
 	PaymentProviderInstance struct {
-		Config        func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		Currency      func(childComplexity int) int
 		ID            func(childComplexity int) int
@@ -8096,12 +8095,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PaymentOrderEdge.Node(childComplexity), true
 
-	case "PaymentProviderInstance.config":
-		if e.complexity.PaymentProviderInstance.Config == nil {
-			break
-		}
-
-		return e.complexity.PaymentProviderInstance.Config(childComplexity), true
 	case "PaymentProviderInstance.createdAt":
 		if e.complexity.PaymentProviderInstance.CreatedAt == nil {
 			break
@@ -43482,8 +43475,6 @@ func (ec *executionContext) fieldContext_PaymentEvent_providerInstance(_ context
 				return ec.fieldContext_PaymentProviderInstance_status(ctx, field)
 			case "currency":
 				return ec.fieldContext_PaymentProviderInstance_currency(ctx, field)
-			case "config":
-				return ec.fieldContext_PaymentProviderInstance_config(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_PaymentProviderInstance_paymentOrders(ctx, field)
 			case "paymentEvents":
@@ -44243,8 +44234,6 @@ func (ec *executionContext) fieldContext_PaymentOrder_providerInstance(_ context
 				return ec.fieldContext_PaymentProviderInstance_status(ctx, field)
 			case "currency":
 				return ec.fieldContext_PaymentProviderInstance_currency(ctx, field)
-			case "config":
-				return ec.fieldContext_PaymentProviderInstance_config(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_PaymentProviderInstance_paymentOrders(ctx, field)
 			case "paymentEvents":
@@ -44780,35 +44769,6 @@ func (ec *executionContext) fieldContext_PaymentProviderInstance_currency(_ cont
 	return fc, nil
 }
 
-func (ec *executionContext) _PaymentProviderInstance_config(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentProviderInstance) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_PaymentProviderInstance_config,
-		func(ctx context.Context) (any, error) {
-			return obj.Config, nil
-		},
-		nil,
-		ec.marshalOJSONRawMessage2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage,
-		true,
-		false,
-	)
-}
-
-func (ec *executionContext) fieldContext_PaymentProviderInstance_config(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PaymentProviderInstance",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type JSONRawMessage does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PaymentProviderInstance_paymentOrders(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentProviderInstance) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -45048,8 +45008,6 @@ func (ec *executionContext) fieldContext_PaymentProviderInstanceEdge_node(_ cont
 				return ec.fieldContext_PaymentProviderInstance_status(ctx, field)
 			case "currency":
 				return ec.fieldContext_PaymentProviderInstance_currency(ctx, field)
-			case "config":
-				return ec.fieldContext_PaymentProviderInstance_config(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_PaymentProviderInstance_paymentOrders(ctx, field)
 			case "paymentEvents":
@@ -113757,8 +113715,6 @@ func (ec *executionContext) _PaymentProviderInstance(ctx context.Context, sel as
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "config":
-			out.Values[i] = ec._PaymentProviderInstance_config(ctx, field, obj)
 		case "paymentOrders":
 			field := field
 

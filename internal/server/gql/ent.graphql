@@ -4889,10 +4889,6 @@ type PaymentProviderInstance implements Node {
   Default settlement currency.
   """
   currency: String!
-  """
-  Provider-specific encrypted or externalized configuration payload.
-  """
-  config: JSONRawMessage
   paymentOrders(
     """
     Returns the elements in the list that come after the specified cursor.

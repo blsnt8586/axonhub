@@ -2012,7 +2012,7 @@ func (_m *PaymentProviderInstance) Node(ctx context.Context) (node *Node, err er
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "PaymentProviderInstance",
-		Fields: make([]*Field, 7),
+		Fields: make([]*Field, 6),
 		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
@@ -2062,14 +2062,6 @@ func (_m *PaymentProviderInstance) Node(ctx context.Context) (node *Node, err er
 	node.Fields[5] = &Field{
 		Type:  "string",
 		Name:  "currency",
-		Value: string(buf),
-	}
-	if buf, err = json.Marshal(_m.Config); err != nil {
-		return nil, err
-	}
-	node.Fields[6] = &Field{
-		Type:  "objects.JSONRawMessage",
-		Name:  "config",
 		Value: string(buf),
 	}
 	node.Edges[0] = &Edge{

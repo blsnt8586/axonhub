@@ -4161,11 +4161,6 @@ func (_q *PaymentProviderInstanceQuery) collectField(ctx context.Context, oneNod
 				selectedFields = append(selectedFields, paymentproviderinstance.FieldCurrency)
 				fieldSeen[paymentproviderinstance.FieldCurrency] = struct{}{}
 			}
-		case "config":
-			if _, ok := fieldSeen[paymentproviderinstance.FieldConfig]; !ok {
-				selectedFields = append(selectedFields, paymentproviderinstance.FieldConfig)
-				fieldSeen[paymentproviderinstance.FieldConfig] = struct{}{}
-			}
 		case "id":
 		case "__typename":
 		default:

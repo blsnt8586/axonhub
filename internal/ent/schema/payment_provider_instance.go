@@ -48,6 +48,8 @@ func (PaymentProviderInstance) Fields() []ent.Field {
 			Comment("Default settlement currency."),
 		field.JSON("config", objects.JSONRawMessage{}).
 			Optional().
+			Sensitive().
+			Annotations(entgql.Skip(entgql.SkipAll)).
 			Comment("Provider-specific encrypted or externalized configuration payload."),
 	}
 }
