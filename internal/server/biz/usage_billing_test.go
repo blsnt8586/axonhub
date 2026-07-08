@@ -9,6 +9,7 @@ import (
 
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/enttest"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -98,6 +99,58 @@ func TestUsageBillingProcessorChargesUsageOnce(t *testing.T) {
 	reloaded, err := client.BillingAccount.Get(ctx, account.ID)
 	require.NoError(t, err)
 	require.Equal(t, int64(8_500_000), reloaded.BalanceMicros)
+}
+
+func TestUsageBillingProcessorRequestUsageBillingMarksOutboxDone(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, processor, account := newUsageBillingTestProcessor(t, "usage_billing_outbox_done")
+	_, err := client.BillingPriceRule.Create().
+		SetScopeType(billingpricerule.ScopeTypeGlobal).
+		SetScopeID(0).
+		SetModelPattern("gpt-test").
+		SetPrice(testModelPrice("1")).
+		SetReferenceID("sell-v1").
+		Save(ctx)
+	require.NoError(t, err)
+	ledgerSvc := NewLedgerService(LedgerServiceParams{Ent: client})
+	_, err = ledgerSvc.Credit(ctx, account.ID, decimal.RequireFromString("10"), ledgertransaction.TypePaymentRecharge, "initial-credit")
+	require.NoError(t, err)
+
+	usageLog := createUsageLogForBillingTest(t, client, ctx, account.OwnerID, "gpt-test", 1_000_000, 0)
+	record, err := processor.RequestUsageBilling(ctx, usageLog.ID)
+	require.NoError(t, err)
+	require.Equal(t, usagebillingrecord.StatusCharged, record.Status)
+
+	outbox, err := client.BillingOutbox.Query().
+		Where(billingoutbox.EventKeyEQ(usageBillingIdempotencyKey(usageLog.ID))).
+		Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, billingoutbox.EventTypeUsageBillingRequested, outbox.EventType)
+	require.Equal(t, billingoutbox.StatusDone, outbox.Status)
+	require.Equal(t, 1, outbox.Attempts)
+	require.Empty(t, outbox.LastError)
+	require.Nil(t, outbox.NextAttemptAt)
+}
+
+func TestUsageBillingProcessorRequestUsageBillingMarksOutboxFailed(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, processor, account := newUsageBillingTestProcessor(t, "usage_billing_outbox_failed")
+
+	usageLog := createUsageLogForBillingTest(t, client, ctx, account.OwnerID, "missing-model", 1_000_000, 0)
+	record, err := processor.RequestUsageBilling(ctx, usageLog.ID)
+	require.ErrorIs(t, err, ErrBillingPriceNotFound)
+	require.Equal(t, usagebillingrecord.StatusFailed, record.Status)
+
+	outbox, err := client.BillingOutbox.Query().
+		Where(billingoutbox.EventKeyEQ(usageBillingIdempotencyKey(usageLog.ID))).
+		Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, billingoutbox.StatusFailed, outbox.Status)
+	require.Equal(t, 1, outbox.Attempts)
+	require.Contains(t, outbox.LastError, ErrBillingPriceNotFound.Error())
+	require.NotNil(t, outbox.NextAttemptAt)
 }
 
 func TestUsageBillingProcessorRecordsFailedWhenPriceMissing(t *testing.T) {

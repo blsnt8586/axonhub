@@ -69,9 +69,14 @@ func (m *persistRequestMiddleware) OnOutboundLlmResponse(ctx context.Context, ll
 	// Determine usage to log - unified in Response.Usage for all request types.
 	usageToLog := llmResp.Usage
 
-	_, err := state.UsageLogService.CreateUsageLogFromRequest(persistCtx, state.Request, state.RequestExec, usageToLog)
+	usageLog, err := state.UsageLogService.CreateUsageLogFromRequest(persistCtx, state.Request, state.RequestExec, usageToLog)
 	if err != nil {
 		log.Warn(persistCtx, "Failed to create usage log from request", log.Cause(err))
+	}
+	if err == nil && usageLog != nil && state.UsageBillingProcessor != nil {
+		if _, err := state.UsageBillingProcessor.RequestUsageBilling(persistCtx, usageLog.ID); err != nil {
+			log.Warn(persistCtx, "Failed to bill usage log", log.Int("usage_log_id", usageLog.ID), log.Cause(err))
+		}
 	}
 
 	return llmResp, nil

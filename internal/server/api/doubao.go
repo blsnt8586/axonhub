@@ -33,6 +33,8 @@ type DoubaoHandlersParams struct {
 	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	AdmissionService            *biz.AdmissionService
+	UsageBillingProcessor       *biz.UsageBillingProcessor
 }
 
 type DoubaoHandlers struct {
@@ -60,6 +62,7 @@ func NewDoubaoHandlers(params DoubaoHandlersParams) *DoubaoHandlers {
 			params.LiveStreamRegistry,
 			params.ChannelLimiterManager,
 			params.ProviderQuotaStatusProvider,
+			orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor),
 		),
 		InboundTransformer: inbound,
 	}

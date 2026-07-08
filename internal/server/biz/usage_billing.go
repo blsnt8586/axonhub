@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/shopspring/decimal"
 	"go.uber.org/fx"
 
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/objects"
@@ -40,6 +42,63 @@ func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingP
 		billingAccountService: params.BillingAccountService,
 		ledgerService:         params.LedgerService,
 	}
+}
+
+func (p *UsageBillingProcessor) RequestUsageBilling(ctx context.Context, usageLogID int) (*ent.UsageBillingRecord, error) {
+	outbox, err := p.createUsageBillingOutbox(ctx, usageLogID)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := p.BillUsage(ctx, usageLogID)
+	if err != nil {
+		_, updateErr := p.entFromContext(ctx).BillingOutbox.UpdateOneID(outbox.ID).
+			SetStatus(billingoutbox.StatusFailed).
+			AddAttempts(1).
+			SetLastError(err.Error()).
+			SetNextAttemptAt(time.Now().UTC().Add(time.Minute)).
+			Save(ctx)
+		if updateErr != nil {
+			return record, errors.Join(err, fmt.Errorf("failed to update usage billing outbox failure: %w", updateErr))
+		}
+
+		return record, err
+	}
+
+	_, err = p.entFromContext(ctx).BillingOutbox.UpdateOneID(outbox.ID).
+		SetStatus(billingoutbox.StatusDone).
+		AddAttempts(1).
+		SetLastError("").
+		ClearNextAttemptAt().
+		Save(ctx)
+	if err != nil {
+		return record, fmt.Errorf("failed to mark usage billing outbox done: %w", err)
+	}
+
+	return record, nil
+}
+
+func (p *UsageBillingProcessor) createUsageBillingOutbox(ctx context.Context, usageLogID int) (*ent.BillingOutbox, error) {
+	payload, err := json.Marshal(map[string]int{"usage_log_id": usageLogID})
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal usage billing outbox payload: %w", err)
+	}
+
+	outbox, err := p.entFromContext(ctx).BillingOutbox.Create().
+		SetEventKey(usageBillingIdempotencyKey(usageLogID)).
+		SetEventType(billingoutbox.EventTypeUsageBillingRequested).
+		SetPayload(objects.JSONRawMessage(payload)).
+		Save(ctx)
+	if ent.IsConstraintError(err) {
+		return p.entFromContext(ctx).BillingOutbox.Query().
+			Where(billingoutbox.EventKeyEQ(usageBillingIdempotencyKey(usageLogID))).
+			Only(ctx)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to create usage billing outbox: %w", err)
+	}
+
+	return outbox, nil
 }
 
 func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (*ent.UsageBillingRecord, error) {

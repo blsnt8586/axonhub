@@ -32,6 +32,7 @@ func NewChatCompletionOrchestrator(
 	liveStreamRegistry *biz.LiveStreamRegistry,
 	channelLimiterManager *ChannelLimiterManager,
 	quotaProvider ProviderQuotaStatusProvider,
+	options ...ChatCompletionOrchestratorOption,
 ) *ChatCompletionOrchestrator {
 	rateLimitTracker := NewChannelRequestTracker()
 
@@ -71,7 +72,7 @@ func NewChatCompletionOrchestrator(
 		quotaStrategy,
 	).WithoutWeightTieBreaker().WithRoundRobinHealthFilter(roundRobinHealthFilter)
 
-	return &ChatCompletionOrchestrator{
+	processor := &ChatCompletionOrchestrator{
 		Inbound:            inbound,
 		RequestService:     requestService,
 		ChannelService:     channelService,
@@ -99,21 +100,38 @@ func NewChatCompletionOrchestrator(
 		quotaProvider:              quotaProvider,
 		proxy:                      nil,
 	}
+
+	for _, option := range options {
+		option(processor)
+	}
+
+	return processor
+}
+
+type ChatCompletionOrchestratorOption func(*ChatCompletionOrchestrator)
+
+func WithCommercialBilling(admissionService *biz.AdmissionService, usageBillingProcessor *biz.UsageBillingProcessor) ChatCompletionOrchestratorOption {
+	return func(processor *ChatCompletionOrchestrator) {
+		processor.AdmissionService = admissionService
+		processor.UsageBillingProcessor = usageBillingProcessor
+	}
 }
 
 type ChatCompletionOrchestrator struct {
-	Inbound            transformer.Inbound
-	RequestService     *biz.RequestService
-	ChannelService     *biz.ChannelService
-	SystemService      *biz.SystemService
-	UsageLogService    *biz.UsageLogService
-	QuotaService       *biz.QuotaService
-	LiveStreamRegistry *biz.LiveStreamRegistry
-	PromptProvider     PromptProvider
-	PromptProtecter    PromptProtecter
-	Middlewares        []pipeline.Middleware
-	PipelineFactory    *pipeline.Factory
-	ModelMapper        *ModelMapper
+	Inbound               transformer.Inbound
+	RequestService        *biz.RequestService
+	ChannelService        *biz.ChannelService
+	SystemService         *biz.SystemService
+	UsageLogService       *biz.UsageLogService
+	UsageBillingProcessor *biz.UsageBillingProcessor
+	QuotaService          *biz.QuotaService
+	LiveStreamRegistry    *biz.LiveStreamRegistry
+	PromptProvider        PromptProvider
+	PromptProtecter       PromptProtecter
+	Middlewares           []pipeline.Middleware
+	PipelineFactory       *pipeline.Factory
+	ModelMapper           *ModelMapper
+	AdmissionService      *biz.AdmissionService
 
 	// The runtime fields.
 
@@ -207,12 +225,14 @@ func (processor *ChatCompletionOrchestrator) Process(ctx context.Context, reques
 		APIKey:                apiKey,
 		RequestService:        processor.RequestService,
 		UsageLogService:       processor.UsageLogService,
+		UsageBillingProcessor: processor.UsageBillingProcessor,
 		ChannelService:        processor.ChannelService,
 		PromptProvider:        processor.PromptProvider,
 		PromptProtecter:       processor.PromptProtecter,
 		RetryPolicyProvider:   processor.SystemService,
 		CandidateSelector:     processor.channelSelector,
 		LoadBalancer:          loadBalancer,
+		AdmissionService:      processor.AdmissionService,
 		ModelMapper:           processor.ModelMapper,
 		Proxy:                 processor.proxy,
 		CurrentCandidateIndex: 0,
@@ -251,6 +271,7 @@ func (processor *ChatCompletionOrchestrator) Process(ctx context.Context, reques
 		applyAutoReasoningEffort(processor.SystemService),
 		checkApiKeyModelAccess(inbound),
 		applyModelMapping(inbound),
+		enforceBillingAdmission(inbound),
 		selectCandidates(inbound, processor.quotaProvider, processor.SystemService),
 		injectPrompts(inbound),
 		protectPrompts(inbound),
