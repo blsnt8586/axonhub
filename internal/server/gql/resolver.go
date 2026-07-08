@@ -45,6 +45,8 @@ type Resolver struct {
 	promptService                  *biz.PromptService
 	promptProtectionRuleService    *biz.PromptProtectionRuleService
 	providerQuotaService           *biz.ProviderQuotaService
+	billingAccountService          *biz.BillingAccountService
+	paymentService                 *biz.PaymentService
 	scheduler                      *scheduler.Scheduler
 	modelFetcher                   *biz.ModelFetcher
 	defaultSelector                *orchestrator.DefaultSelector
@@ -79,6 +81,8 @@ func NewSchema(
 	promptService *biz.PromptService,
 	promptProtectionRuleService *biz.PromptProtectionRuleService,
 	providerQuotaService *biz.ProviderQuotaService,
+	billingAccountService *biz.BillingAccountService,
+	paymentService *biz.PaymentService,
 	scheduler *scheduler.Scheduler,
 	defaultSelector *orchestrator.DefaultSelector,
 	candidateSelectorDiagnostics *orchestrator.CandidateSelectorDiagnostics,
@@ -112,6 +116,8 @@ func NewSchema(
 			promptService:                  promptService,
 			promptProtectionRuleService:    promptProtectionRuleService,
 			providerQuotaService:           providerQuotaService,
+			billingAccountService:          billingAccountService,
+			paymentService:                 paymentService,
 			scheduler:                      scheduler,
 			modelFetcher:                   modelFetcher,
 			defaultSelector:                defaultSelector,

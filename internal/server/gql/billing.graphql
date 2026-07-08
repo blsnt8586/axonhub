@@ -1,0 +1,23 @@
+input CreateManualRechargeOrderInput {
+  projectId: ID!
+  amount: DecimalInput!
+  currency: String
+  metadata: JSONRawMessageInput
+}
+
+input ConfirmManualPaymentInput {
+  orderNo: String!
+  eventKey: String
+  externalTradeNo: String
+  payload: JSONRawMessageInput
+  paidAt: Time
+}
+
+extend type Mutation {
+  createManualRechargeOrder(input: CreateManualRechargeOrderInput!): PaymentOrder!
+  confirmManualPayment(input: ConfirmManualPaymentInput!): PaymentOrder!
+}
+
+extend type Query {
+  projectBillingAccount(projectId: ID!): BillingAccount!
+}

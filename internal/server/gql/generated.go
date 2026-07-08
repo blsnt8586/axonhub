@@ -1074,11 +1074,13 @@ type ComplexityRoot struct {
 		CompleteAutoDisableChannelOnboarding func(childComplexity int, input CompleteAutoDisableChannelOnboardingInput) int
 		CompleteOnboarding                   func(childComplexity int, input CompleteOnboardingInput) int
 		CompleteSystemModelSettingOnboarding func(childComplexity int, input CompleteSystemModelSettingOnboardingInput) int
+		ConfirmManualPayment                 func(childComplexity int, input biz.ConfirmManualPaymentInput) int
 		CreateAPIKey                         func(childComplexity int, input ent.CreateAPIKeyInput) int
 		CreateAPIKeyProfileTemplate          func(childComplexity int, input ent.CreateAPIKeyProfileTemplateInput, profile objects.APIKeyProfile) int
 		CreateChannel                        func(childComplexity int, input ent.CreateChannelInput) int
 		CreateChannelOverrideTemplate        func(childComplexity int, input ent.CreateChannelOverrideTemplateInput) int
 		CreateDataStorage                    func(childComplexity int, input ent.CreateDataStorageInput) int
+		CreateManualRechargeOrder            func(childComplexity int, input biz.CreateManualRechargeOrderInput) int
 		CreateModel                          func(childComplexity int, input ent.CreateModelInput) int
 		CreateProject                        func(childComplexity int, input ent.CreateProjectInput) int
 		CreatePrompt                         func(childComplexity int, input ent.CreatePromptInput) int
@@ -1536,6 +1538,7 @@ type ComplexityRoot struct {
 		PaymentOrders                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) int
 		PaymentProviderInstances     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentProviderInstanceOrder, where *ent.PaymentProviderInstanceWhereInput) int
 		PreviewGcCleanup             func(childComplexity int, input gc.TriggerGcCleanupInput) int
+		ProjectBillingAccount        func(childComplexity int, projectID objects.GUID) int
 		Projects                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) int
 		PromptProtectionRules        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptProtectionRuleOrder, where *ent.PromptProtectionRuleWhereInput) int
 		Prompts                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptOrder, where *ent.PromptWhereInput) int
@@ -2493,6 +2496,8 @@ type MutationResolver interface {
 	BulkDisablePromptProtectionRules(ctx context.Context, ids []*objects.GUID) (bool, error)
 	PreviewPromptProtectionRule(ctx context.Context, input PromptProtectionRulePreviewInput) (*PromptProtectionRulePreviewResult, error)
 	SaveChannelModelPrices(ctx context.Context, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) ([]*ent.ChannelModelPrice, error)
+	CreateManualRechargeOrder(ctx context.Context, input biz.CreateManualRechargeOrderInput) (*ent.PaymentOrder, error)
+	ConfirmManualPayment(ctx context.Context, input biz.ConfirmManualPaymentInput) (*ent.PaymentOrder, error)
 }
 type OIDCIdentityResolver interface {
 	ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error)
@@ -2617,6 +2622,7 @@ type QueryResolver interface {
 	QueryUnassociatedChannels(ctx context.Context) ([]*biz.UnassociatedChannel, error)
 	AutoBackupSettings(ctx context.Context) (*biz.AutoBackupSettings, error)
 	ChannelProbeData(ctx context.Context, input biz.GetChannelProbeDataInput) ([]*biz.ChannelProbeData, error)
+	ProjectBillingAccount(ctx context.Context, projectID objects.GUID) (*ent.BillingAccount, error)
 }
 type RequestResolver interface {
 	ID(ctx context.Context, obj *ent.Request) (*objects.GUID, error)
@@ -6558,6 +6564,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CompleteSystemModelSettingOnboarding(childComplexity, args["input"].(CompleteSystemModelSettingOnboardingInput)), true
+	case "Mutation.confirmManualPayment":
+		if e.complexity.Mutation.ConfirmManualPayment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_confirmManualPayment_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ConfirmManualPayment(childComplexity, args["input"].(biz.ConfirmManualPaymentInput)), true
 	case "Mutation.createAPIKey":
 		if e.complexity.Mutation.CreateAPIKey == nil {
 			break
@@ -6613,6 +6630,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateDataStorage(childComplexity, args["input"].(ent.CreateDataStorageInput)), true
+	case "Mutation.createManualRechargeOrder":
+		if e.complexity.Mutation.CreateManualRechargeOrder == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createManualRechargeOrder_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateManualRechargeOrder(childComplexity, args["input"].(biz.CreateManualRechargeOrderInput)), true
 	case "Mutation.createModel":
 		if e.complexity.Mutation.CreateModel == nil {
 			break
@@ -9207,6 +9235,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.PreviewGcCleanup(childComplexity, args["input"].(gc.TriggerGcCleanupInput)), true
+	case "Query.projectBillingAccount":
+		if e.complexity.Query.ProjectBillingAccount == nil {
+			break
+		}
+
+		args, err := ec.field_Query_projectBillingAccount_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ProjectBillingAccount(childComplexity, args["projectId"].(objects.GUID)), true
 	case "Query.projects":
 		if e.complexity.Query.Projects == nil {
 			break
@@ -12457,6 +12496,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCompleteAutoDisableChannelOnboardingInput,
 		ec.unmarshalInputCompleteOnboardingInput,
 		ec.unmarshalInputCompleteSystemModelSettingOnboardingInput,
+		ec.unmarshalInputConfirmManualPaymentInput,
 		ec.unmarshalInputCostItemInput,
 		ec.unmarshalInputCountChannelsByTypeInput,
 		ec.unmarshalInputCreateAPIKeyInput,
@@ -12464,6 +12504,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateChannelInput,
 		ec.unmarshalInputCreateChannelOverrideTemplateInput,
 		ec.unmarshalInputCreateDataStorageInput,
+		ec.unmarshalInputCreateManualRechargeOrderInput,
 		ec.unmarshalInputCreateModelInput,
 		ec.unmarshalInputCreateOIDCIdentityInput,
 		ec.unmarshalInputCreateProjectInput,
@@ -12717,7 +12758,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "axonhub.graphql" "ent.graphql" "dashboard.graphql" "scopes.graphql" "me.graphql" "system.graphql" "filter.graphql" "model.graphql" "backup.graphql" "channel_probe.graphql" "prompt.graphql" "prompt_protection_rule.graphql" "price.graphql" "cost.graphql"
+//go:embed "axonhub.graphql" "ent.graphql" "dashboard.graphql" "scopes.graphql" "me.graphql" "system.graphql" "filter.graphql" "model.graphql" "backup.graphql" "channel_probe.graphql" "prompt.graphql" "prompt_protection_rule.graphql" "price.graphql" "cost.graphql" "billing.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -12743,6 +12784,7 @@ var sources = []*ast.Source{
 	{Name: "prompt_protection_rule.graphql", Input: sourceData("prompt_protection_rule.graphql"), BuiltIn: false},
 	{Name: "price.graphql", Input: sourceData("price.graphql"), BuiltIn: false},
 	{Name: "cost.graphql", Input: sourceData("cost.graphql"), BuiltIn: false},
+	{Name: "billing.graphql", Input: sourceData("billing.graphql"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -13559,6 +13601,17 @@ func (ec *executionContext) field_Mutation_completeSystemModelSettingOnboarding_
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_confirmManualPayment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNConfirmManualPaymentInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐConfirmManualPaymentInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createAPIKey_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -13612,6 +13665,17 @@ func (ec *executionContext) field_Mutation_createDataStorage_args(ctx context.Co
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateDataStorageInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐCreateDataStorageInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createManualRechargeOrder_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateManualRechargeOrderInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐCreateManualRechargeOrderInput)
 	if err != nil {
 		return nil, err
 	}
@@ -15837,6 +15901,17 @@ func (ec *executionContext) field_Query_previewGcCleanup_args(ctx context.Contex
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_projectBillingAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "projectId", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["projectId"] = arg0
 	return args, nil
 }
 
@@ -40989,6 +41064,172 @@ func (ec *executionContext) fieldContext_Mutation_saveChannelModelPrices(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createManualRechargeOrder(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createManualRechargeOrder,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateManualRechargeOrder(ctx, fc.Args["input"].(biz.CreateManualRechargeOrderInput))
+		},
+		nil,
+		ec.marshalNPaymentOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrder,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createManualRechargeOrder(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PaymentOrder_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PaymentOrder_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PaymentOrder_updatedAt(ctx, field)
+			case "orderNo":
+				return ec.fieldContext_PaymentOrder_orderNo(ctx, field)
+			case "projectID":
+				return ec.fieldContext_PaymentOrder_projectID(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_PaymentOrder_billingAccountID(ctx, field)
+			case "providerInstanceID":
+				return ec.fieldContext_PaymentOrder_providerInstanceID(ctx, field)
+			case "providerType":
+				return ec.fieldContext_PaymentOrder_providerType(ctx, field)
+			case "purpose":
+				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_PaymentOrder_currency(ctx, field)
+			case "status":
+				return ec.fieldContext_PaymentOrder_status(ctx, field)
+			case "externalTradeNo":
+				return ec.fieldContext_PaymentOrder_externalTradeNo(ctx, field)
+			case "paidAt":
+				return ec.fieldContext_PaymentOrder_paidAt(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_PaymentOrder_ledgerTransactionID(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PaymentOrder_metadata(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_PaymentOrder_billingAccount(ctx, field)
+			case "providerInstance":
+				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "paymentEvents":
+				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createManualRechargeOrder_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_confirmManualPayment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_confirmManualPayment,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ConfirmManualPayment(ctx, fc.Args["input"].(biz.ConfirmManualPaymentInput))
+		},
+		nil,
+		ec.marshalNPaymentOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrder,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_confirmManualPayment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PaymentOrder_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PaymentOrder_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PaymentOrder_updatedAt(ctx, field)
+			case "orderNo":
+				return ec.fieldContext_PaymentOrder_orderNo(ctx, field)
+			case "projectID":
+				return ec.fieldContext_PaymentOrder_projectID(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_PaymentOrder_billingAccountID(ctx, field)
+			case "providerInstanceID":
+				return ec.fieldContext_PaymentOrder_providerInstanceID(ctx, field)
+			case "providerType":
+				return ec.fieldContext_PaymentOrder_providerType(ctx, field)
+			case "purpose":
+				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_PaymentOrder_currency(ctx, field)
+			case "status":
+				return ec.fieldContext_PaymentOrder_status(ctx, field)
+			case "externalTradeNo":
+				return ec.fieldContext_PaymentOrder_externalTradeNo(ctx, field)
+			case "paidAt":
+				return ec.fieldContext_PaymentOrder_paidAt(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_PaymentOrder_ledgerTransactionID(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PaymentOrder_metadata(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_PaymentOrder_billingAccount(ctx, field)
+			case "providerInstance":
+				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "paymentEvents":
+				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_confirmManualPayment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OAuthCredentials_accessToken(ctx context.Context, field graphql.CollectedField, obj *oauth.OAuthCredentials) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -51761,6 +52002,75 @@ func (ec *executionContext) fieldContext_Query_channelProbeData(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_channelProbeData_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_projectBillingAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_projectBillingAccount,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ProjectBillingAccount(ctx, fc.Args["projectId"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNBillingAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_projectBillingAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingAccount_updatedAt(ctx, field)
+			case "ownerType":
+				return ec.fieldContext_BillingAccount_ownerType(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_BillingAccount_ownerID(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingAccount_currency(ctx, field)
+			case "balanceMicros":
+				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "creditLimitMicros":
+				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
+			case "status":
+				return ec.fieldContext_BillingAccount_status(ctx, field)
+			case "bindings":
+				return ec.fieldContext_BillingAccount_bindings(ctx, field)
+			case "ledgerTransactions":
+				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_projectBillingAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -77102,6 +77412,61 @@ func (ec *executionContext) unmarshalInputCompleteSystemModelSettingOnboardingIn
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputConfirmManualPaymentInput(ctx context.Context, obj any) (biz.ConfirmManualPaymentInput, error) {
+	var it biz.ConfirmManualPaymentInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"orderNo", "eventKey", "externalTradeNo", "payload", "paidAt"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "orderNo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderNo"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrderNo = data
+		case "eventKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKey"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKey = data
+		case "externalTradeNo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalTradeNo"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalTradeNo = data
+		case "payload":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payload"))
+			data, err := ec.unmarshalOJSONRawMessageInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Payload = data
+		case "paidAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paidAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaidAt = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCostItemInput(ctx context.Context, obj any) (objects.CostItem, error) {
 	var it objects.CostItem
 	asMap := map[string]any{}
@@ -77496,6 +77861,58 @@ func (ec *executionContext) unmarshalInputCreateDataStorageInput(ctx context.Con
 				return it, err
 			}
 			it.Status = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateManualRechargeOrderInput(ctx context.Context, obj any) (biz.CreateManualRechargeOrderInput, error) {
+	var it biz.CreateManualRechargeOrderInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"projectId", "amount", "currency", "metadata"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "projectId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectId"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ProjectID = converted
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "metadata":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metadata"))
+			data, err := ec.unmarshalOJSONRawMessageInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Metadata = data
 		}
 	}
 
@@ -111353,6 +111770,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createManualRechargeOrder":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createManualRechargeOrder(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "confirmManualPayment":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_confirmManualPayment(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -116598,6 +117029,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_channelProbeData(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "projectBillingAccount":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_projectBillingAccount(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -124995,6 +125448,10 @@ func (ec *executionContext) marshalNBackupPayload2ᚖgithubᚗcomᚋloopljᚋaxo
 	return ec._BackupPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNBillingAccount2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccount(ctx context.Context, sel ast.SelectionSet, v ent.BillingAccount) graphql.Marshaler {
+	return ec._BillingAccount(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNBillingAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccount(ctx context.Context, sel ast.SelectionSet, v *ent.BillingAccount) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -126180,6 +126637,11 @@ func (ec *executionContext) unmarshalNCompleteSystemModelSettingOnboardingInput2
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNConfirmManualPaymentInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐConfirmManualPaymentInput(ctx context.Context, v any) (biz.ConfirmManualPaymentInput, error) {
+	res, err := ec.unmarshalInputConfirmManualPaymentInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNCostItem2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐCostItem(ctx context.Context, sel ast.SelectionSet, v objects.CostItem) graphql.Marshaler {
 	return ec._CostItem(ctx, sel, &v)
 }
@@ -126425,6 +126887,11 @@ func (ec *executionContext) unmarshalNCreateDataStorageInput2githubᚗcomᚋloop
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateManualRechargeOrderInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐCreateManualRechargeOrderInput(ctx context.Context, v any) (biz.CreateManualRechargeOrderInput, error) {
+	res, err := ec.unmarshalInputCreateManualRechargeOrderInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateModelInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐCreateModelInput(ctx context.Context, v any) (ent.CreateModelInput, error) {
 	res, err := ec.unmarshalInputCreateModelInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -126649,6 +127116,22 @@ func (ec *executionContext) unmarshalNDecimal2githubᚗcomᚋshopspringᚋdecima
 }
 
 func (ec *executionContext) marshalNDecimal2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx context.Context, sel ast.SelectionSet, v decimal.Decimal) graphql.Marshaler {
+	_ = sel
+	res := objects.MarshalDecimal(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx context.Context, v any) (decimal.Decimal, error) {
+	res, err := objects.UnmarshalDecimal(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx context.Context, sel ast.SelectionSet, v decimal.Decimal) graphql.Marshaler {
 	_ = sel
 	res := objects.MarshalDecimal(v)
 	if res == graphql.Null {
@@ -128269,6 +128752,20 @@ func (ec *executionContext) marshalNPaymentEventStatus2githubᚗcomᚋloopljᚋa
 func (ec *executionContext) unmarshalNPaymentEventWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentEventWhereInput(ctx context.Context, v any) (*ent.PaymentEventWhereInput, error) {
 	res, err := ec.unmarshalInputPaymentEventWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPaymentOrder2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrder(ctx context.Context, sel ast.SelectionSet, v ent.PaymentOrder) graphql.Marshaler {
+	return ec._PaymentOrder(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPaymentOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrder(ctx context.Context, sel ast.SelectionSet, v *ent.PaymentOrder) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PaymentOrder(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPaymentOrderConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderConnection(ctx context.Context, sel ast.SelectionSet, v ent.PaymentOrderConnection) graphql.Marshaler {

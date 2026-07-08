@@ -64,27 +64,42 @@ func (r *aPIKeyProfileTemplateResolver) ProjectID(ctx context.Context, obj *ent.
 
 // ID is the resolver for the id field.
 func (r *billingAccountResolver) ID(ctx context.Context, obj *ent.BillingAccount) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypeBillingAccount,
+		ID:   obj.ID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *billingAccountBindingResolver) ID(ctx context.Context, obj *ent.BillingAccountBinding) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypeBillingAccountBinding,
+		ID:   obj.ID,
+	}, nil
 }
 
 // BillingAccountID is the resolver for the billingAccountID field.
 func (r *billingAccountBindingResolver) BillingAccountID(ctx context.Context, obj *ent.BillingAccountBinding) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+	return &objects.GUID{
+		Type: ent.TypeBillingAccount,
+		ID:   obj.BillingAccountID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *billingOutboxResolver) ID(ctx context.Context, obj *ent.BillingOutbox) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypeBillingOutbox,
+		ID:   obj.ID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *billingPriceRuleResolver) ID(ctx context.Context, obj *ent.BillingPriceRule) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypeBillingPriceRule,
+		ID:   obj.ID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
@@ -234,22 +249,34 @@ func (r *dataStorageResolver) ID(ctx context.Context, obj *ent.DataStorage) (*ob
 
 // ID is the resolver for the id field.
 func (r *ledgerEntryResolver) ID(ctx context.Context, obj *ent.LedgerEntry) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypeLedgerEntry,
+		ID:   obj.ID,
+	}, nil
 }
 
 // LedgerTransactionID is the resolver for the ledgerTransactionID field.
 func (r *ledgerEntryResolver) LedgerTransactionID(ctx context.Context, obj *ent.LedgerEntry) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: LedgerTransactionID - ledgerTransactionID"))
+	return &objects.GUID{
+		Type: ent.TypeLedgerTransaction,
+		ID:   obj.LedgerTransactionID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *ledgerTransactionResolver) ID(ctx context.Context, obj *ent.LedgerTransaction) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypeLedgerTransaction,
+		ID:   obj.ID,
+	}, nil
 }
 
 // BillingAccountID is the resolver for the billingAccountID field.
 func (r *ledgerTransactionResolver) BillingAccountID(ctx context.Context, obj *ent.LedgerTransaction) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+	return &objects.GUID{
+		Type: ent.TypeBillingAccount,
+		ID:   obj.BillingAccountID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
@@ -278,42 +305,82 @@ func (r *oIDCIdentityResolver) UserID(ctx context.Context, obj *ent.OIDCIdentity
 
 // ID is the resolver for the id field.
 func (r *paymentEventResolver) ID(ctx context.Context, obj *ent.PaymentEvent) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypePaymentEvent,
+		ID:   obj.ID,
+	}, nil
 }
 
 // PaymentOrderID is the resolver for the paymentOrderID field.
 func (r *paymentEventResolver) PaymentOrderID(ctx context.Context, obj *ent.PaymentEvent) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: PaymentOrderID - paymentOrderID"))
+	if obj.PaymentOrderID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypePaymentOrder,
+		ID:   *obj.PaymentOrderID,
+	}, nil
 }
 
 // ProviderInstanceID is the resolver for the providerInstanceID field.
 func (r *paymentEventResolver) ProviderInstanceID(ctx context.Context, obj *ent.PaymentEvent) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ProviderInstanceID - providerInstanceID"))
+	if obj.ProviderInstanceID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypePaymentProviderInstance,
+		ID:   *obj.ProviderInstanceID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *paymentOrderResolver) ID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypePaymentOrder,
+		ID:   obj.ID,
+	}, nil
 }
 
 // BillingAccountID is the resolver for the billingAccountID field.
 func (r *paymentOrderResolver) BillingAccountID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+	return &objects.GUID{
+		Type: ent.TypeBillingAccount,
+		ID:   obj.BillingAccountID,
+	}, nil
 }
 
 // ProviderInstanceID is the resolver for the providerInstanceID field.
 func (r *paymentOrderResolver) ProviderInstanceID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ProviderInstanceID - providerInstanceID"))
+	if obj.ProviderInstanceID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypePaymentProviderInstance,
+		ID:   *obj.ProviderInstanceID,
+	}, nil
 }
 
 // LedgerTransactionID is the resolver for the ledgerTransactionID field.
 func (r *paymentOrderResolver) LedgerTransactionID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: LedgerTransactionID - ledgerTransactionID"))
+	if obj.LedgerTransactionID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypeLedgerTransaction,
+		ID:   *obj.LedgerTransactionID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *paymentProviderInstanceResolver) ID(ctx context.Context, obj *ent.PaymentProviderInstance) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypePaymentProviderInstance,
+		ID:   obj.ID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
@@ -410,22 +477,50 @@ func (r *queryResolver) APIKeyProfileTemplates(ctx context.Context, after *entgq
 
 // BillingAccounts is the resolver for the billingAccounts field.
 func (r *queryResolver) BillingAccounts(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountOrder, where *ent.BillingAccountWhereInput) (*ent.BillingAccountConnection, error) {
-	panic(fmt.Errorf("not implemented: BillingAccounts - billingAccounts"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.BillingAccount.Query().Paginate(ctx, after, first, before, last,
+		ent.WithBillingAccountOrder(orderBy),
+		ent.WithBillingAccountFilter(where.Filter),
+	)
 }
 
 // BillingAccountBindings is the resolver for the billingAccountBindings field.
 func (r *queryResolver) BillingAccountBindings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) (*ent.BillingAccountBindingConnection, error) {
-	panic(fmt.Errorf("not implemented: BillingAccountBindings - billingAccountBindings"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.BillingAccountBinding.Query().Paginate(ctx, after, first, before, last,
+		ent.WithBillingAccountBindingOrder(orderBy),
+		ent.WithBillingAccountBindingFilter(where.Filter),
+	)
 }
 
 // BillingOutboxes is the resolver for the billingOutboxes field.
 func (r *queryResolver) BillingOutboxes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingOutboxOrder, where *ent.BillingOutboxWhereInput) (*ent.BillingOutboxConnection, error) {
-	panic(fmt.Errorf("not implemented: BillingOutboxes - billingOutboxes"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.BillingOutbox.Query().Paginate(ctx, after, first, before, last,
+		ent.WithBillingOutboxOrder(orderBy),
+		ent.WithBillingOutboxFilter(where.Filter),
+	)
 }
 
 // BillingPriceRules is the resolver for the billingPriceRules field.
 func (r *queryResolver) BillingPriceRules(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingPriceRuleOrder, where *ent.BillingPriceRuleWhereInput) (*ent.BillingPriceRuleConnection, error) {
-	panic(fmt.Errorf("not implemented: BillingPriceRules - billingPriceRules"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.BillingPriceRule.Query().Paginate(ctx, after, first, before, last,
+		ent.WithBillingPriceRuleOrder(orderBy),
+		ent.WithBillingPriceRuleFilter(where.Filter),
+	)
 }
 
 // Channels is the resolver for the channels field.
@@ -474,12 +569,26 @@ func (r *queryResolver) DataStorages(ctx context.Context, after *entgql.Cursor[i
 
 // LedgerEntries is the resolver for the ledgerEntries field.
 func (r *queryResolver) LedgerEntries(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerEntryOrder, where *ent.LedgerEntryWhereInput) (*ent.LedgerEntryConnection, error) {
-	panic(fmt.Errorf("not implemented: LedgerEntries - ledgerEntries"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.LedgerEntry.Query().Paginate(ctx, after, first, before, last,
+		ent.WithLedgerEntryOrder(orderBy),
+		ent.WithLedgerEntryFilter(where.Filter),
+	)
 }
 
 // LedgerTransactions is the resolver for the ledgerTransactions field.
 func (r *queryResolver) LedgerTransactions(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder, where *ent.LedgerTransactionWhereInput) (*ent.LedgerTransactionConnection, error) {
-	panic(fmt.Errorf("not implemented: LedgerTransactions - ledgerTransactions"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.LedgerTransaction.Query().Paginate(ctx, after, first, before, last,
+		ent.WithLedgerTransactionOrder(orderBy),
+		ent.WithLedgerTransactionFilter(where.Filter),
+	)
 }
 
 // Models is the resolver for the models field.
@@ -507,17 +616,38 @@ func (r *queryResolver) OidcIdentities(ctx context.Context, after *entgql.Cursor
 
 // PaymentEvents is the resolver for the paymentEvents field.
 func (r *queryResolver) PaymentEvents(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder, where *ent.PaymentEventWhereInput) (*ent.PaymentEventConnection, error) {
-	panic(fmt.Errorf("not implemented: PaymentEvents - paymentEvents"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.PaymentEvent.Query().Paginate(ctx, after, first, before, last,
+		ent.WithPaymentEventOrder(orderBy),
+		ent.WithPaymentEventFilter(where.Filter),
+	)
 }
 
 // PaymentOrders is the resolver for the paymentOrders field.
 func (r *queryResolver) PaymentOrders(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) (*ent.PaymentOrderConnection, error) {
-	panic(fmt.Errorf("not implemented: PaymentOrders - paymentOrders"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.PaymentOrder.Query().Paginate(ctx, after, first, before, last,
+		ent.WithPaymentOrderOrder(orderBy),
+		ent.WithPaymentOrderFilter(where.Filter),
+	)
 }
 
 // PaymentProviderInstances is the resolver for the paymentProviderInstances field.
 func (r *queryResolver) PaymentProviderInstances(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentProviderInstanceOrder, where *ent.PaymentProviderInstanceWhereInput) (*ent.PaymentProviderInstanceConnection, error) {
-	panic(fmt.Errorf("not implemented: PaymentProviderInstances - paymentProviderInstances"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.PaymentProviderInstance.Query().Paginate(ctx, after, first, before, last,
+		ent.WithPaymentProviderInstanceOrder(orderBy),
+		ent.WithPaymentProviderInstanceFilter(where.Filter),
+	)
 }
 
 // Projects is the resolver for the projects field.
@@ -646,7 +776,14 @@ func (r *queryResolver) Traces(ctx context.Context, after *entgql.Cursor[int], f
 
 // UsageBillingRecords is the resolver for the usageBillingRecords field.
 func (r *queryResolver) UsageBillingRecords(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder, where *ent.UsageBillingRecordWhereInput) (*ent.UsageBillingRecordConnection, error) {
-	panic(fmt.Errorf("not implemented: UsageBillingRecords - usageBillingRecords"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.UsageBillingRecord.Query().Paginate(ctx, after, first, before, last,
+		ent.WithUsageBillingRecordOrder(orderBy),
+		ent.WithUsageBillingRecordFilter(where.Filter),
+	)
 }
 
 // UsageLogs is the resolver for the usageLogs field.
@@ -938,22 +1075,38 @@ func (r *traceResolver) ThreadID(ctx context.Context, obj *ent.Trace) (*objects.
 
 // ID is the resolver for the id field.
 func (r *usageBillingRecordResolver) ID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypeUsageBillingRecord,
+		ID:   obj.ID,
+	}, nil
 }
 
 // UsageLogID is the resolver for the usageLogID field.
 func (r *usageBillingRecordResolver) UsageLogID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: UsageLogID - usageLogID"))
+	return &objects.GUID{
+		Type: ent.TypeUsageLog,
+		ID:   obj.UsageLogID,
+	}, nil
 }
 
 // BillingAccountID is the resolver for the billingAccountID field.
 func (r *usageBillingRecordResolver) BillingAccountID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+	return &objects.GUID{
+		Type: ent.TypeBillingAccount,
+		ID:   obj.BillingAccountID,
+	}, nil
 }
 
 // LedgerTransactionID is the resolver for the ledgerTransactionID field.
 func (r *usageBillingRecordResolver) LedgerTransactionID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: LedgerTransactionID - ledgerTransactionID"))
+	if obj.LedgerTransactionID == 0 {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypeLedgerTransaction,
+		ID:   obj.LedgerTransactionID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
