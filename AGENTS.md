@@ -6,9 +6,13 @@ This file provides guidance to AI coding assistants when working with code in th
 
 ## Global Rules
 
-1. Do NOT run lint or build commands unless explicitly requested by the user.
-2. Do NOT restart the development server — it's already started and managed.
-3. All summary files should be stored in `.agent/summary` directory if available.
+1. Run meaningful verification for the area you changed before claiming the task is complete. Prefer focused checks first, then broaden when the change touches shared contracts, generated code, routing, or production packaging.
+2. Frontend changes may be verified with `pnpm exec tsc --noEmit`, targeted `pnpm exec eslint <changed files>`, and `pnpm build` when the change affects user-facing pages, routes, GraphQL data flow, or release bundles. Full `pnpm lint` is allowed when useful, but if it fails because of unrelated existing issues, isolate the changed files and report both results clearly.
+3. Backend changes should be verified with `go test` for affected packages. Broaden to neighboring packages or `go test ./...` only when shared behavior, generated code, middleware, or cross-module contracts changed. Use the owning Go module for commands.
+4. Formatting and generation commands such as `gofmt`, `pnpm exec prettier --write <changed files>`, and `make generate` are allowed when required by the edited files.
+5. Do NOT restart the development server unless the user explicitly asks; assume it is already managed.
+6. Do not treat unrelated pre-existing lint, build, or test failures as fixed by the current task. Capture the failing command, identify whether changed files are involved, and report the residual risk.
+7. All summary files should be stored in `.agent/summary` directory if available.
 
 ## Configuration
 
