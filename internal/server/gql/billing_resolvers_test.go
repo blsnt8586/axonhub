@@ -399,6 +399,78 @@ func TestBillingResolversOwnerCanQueryAdminBillingOperationsWithFilters(t *testi
 	require.Equal(t, "evt_admin_filter_user", paymentEvents.Edges[0].Node.EventKey)
 }
 
+func TestBillingResolversOwnerCanQueryAdminBillingReportAndExportCSV(t *testing.T) {
+	_, queryResolver, ctx, client, owner, project := setupBillingResolversTest(t, "billing_resolver_admin_report")
+	user := createBillingResolverUser(t, ctx, client, false)
+	account, err := queryResolver.billingAccountService.GetOrCreateForSubject(ctx, biz.UserBillingSubject(user.ID))
+	require.NoError(t, err)
+	now := time.Date(2026, 7, 8, 10, 0, 0, 0, time.UTC)
+	from := now.Add(-time.Hour)
+	to := now.Add(time.Hour)
+
+	_, err = client.LedgerTransaction.Create().
+		SetCreatedAt(now).
+		SetBillingAccountID(account.ID).
+		SetDirection(ledgertransaction.DirectionCredit).
+		SetAmountMicros(15_000_000).
+		SetCurrency("CNY").
+		SetType(ledgertransaction.TypePaymentRecharge).
+		SetStatus(ledgertransaction.StatusPosted).
+		SetIdempotencyKey("resolver-report-ledger").
+		Save(ctx)
+	require.NoError(t, err)
+
+	usageLog := createBillingResolverUsageLog(t, ctx, client, project.ID, "gpt-report")
+	_, err = client.UsageBillingRecord.Create().
+		SetCreatedAt(now).
+		SetUsageLogID(usageLog.ID).
+		SetBillingAccountID(account.ID).
+		SetProjectID(project.ID).
+		SetUserID(user.ID).
+		SetModelID("gpt-report").
+		SetPriceSnapshot(objects.ModelPrice{}).
+		SetPriceReferenceID("resolver-report-price").
+		SetChargeAmountMicros(4_000_000).
+		SetCurrency("CNY").
+		SetStatus(usagebillingrecord.StatusCharged).
+		SetIdempotencyKey("resolver-report-usage").
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.PaymentOrder.Create().
+		SetCreatedAt(now).
+		SetOrderNo("resolver-report-order").
+		SetProjectID(project.ID).
+		SetBillingAccountID(account.ID).
+		SetProviderType(paymentorder.ProviderTypeManual).
+		SetPurpose(paymentorder.PurposeRecharge).
+		SetAmountMicros(15_000_000).
+		SetCurrency("CNY").
+		SetStatus(paymentorder.StatusPaid).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ownerCtx := contexts.WithUser(ctx, owner)
+	limit := 5
+	report, err := queryResolver.AdminBillingReport(ownerCtx, &AdminBillingReportFilter{From: &from, To: &to, Currency: ptr("CNY"), Limit: &limit})
+	require.NoError(t, err)
+	require.Equal(t, int64(15_000_000), report.Summary.RechargeAmountMicros)
+	require.Len(t, report.TopModels, 1)
+	require.Equal(t, "gpt-report", report.TopModels[0].ModelID)
+
+	csvPayload, err := queryResolver.ExportAdminBillingCSV(ownerCtx, ExportAdminBillingCSVInput{
+		Dataset:  string(biz.BillingCSVExportDatasetUsageBillingRecords),
+		From:     &from,
+		To:       &to,
+		Currency: ptr("CNY"),
+		Limit:    &limit,
+	})
+	require.NoError(t, err)
+	require.Equal(t, "text/csv", csvPayload.ContentType)
+	require.Contains(t, csvPayload.FileName, "usage-billing-records")
+	require.Contains(t, csvPayload.Content, "gpt-report")
+}
+
 func TestBillingResolversOwnerCanUpdateUserBillingAccount(t *testing.T) {
 	mutationResolver, queryResolver, ctx, client, owner, _ := setupBillingResolversTest(t, "billing_resolver_owner_update_user_account")
 	user := createBillingResolverUser(t, ctx, client, false)
@@ -452,6 +524,10 @@ func TestBillingResolversRejectsUserBillingAdminOperationsForNonOwner(t *testing
 	_, err = queryResolver.AdminPaymentOrders(userCtx, nil, nil, &first, nil, nil, nil)
 	require.True(t, errors.Is(err, ErrNotOwner))
 	_, err = queryResolver.AdminPaymentEvents(userCtx, nil, nil, &first, nil, nil, nil)
+	require.True(t, errors.Is(err, ErrNotOwner))
+	_, err = queryResolver.AdminBillingReport(userCtx, nil)
+	require.True(t, errors.Is(err, ErrNotOwner))
+	_, err = queryResolver.ExportAdminBillingCSV(userCtx, ExportAdminBillingCSVInput{Dataset: string(biz.BillingCSVExportDatasetLedgerTransactions)})
 	require.True(t, errors.Is(err, ErrNotOwner))
 }
 

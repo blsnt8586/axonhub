@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Ban, Loader2, RefreshCw, Save, Unlock, WalletCards } from 'lucide-react';
+import { AlertCircle, Ban, BarChart3, Download, Loader2, RefreshCw, Save, Unlock, WalletCards } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { extractNumberIDAsNumber } from '@/lib/utils';
@@ -19,9 +19,12 @@ import { useUsers } from '@/features/users/data/users';
 import {
   type AdminLedgerTransactionsFilter,
   type AdminBillingHoldsFilter,
+  type AdminBillingReportFilter,
   type AdminPaymentEventsFilter,
   type AdminPaymentOrdersFilter,
   type AdminUsageBillingRecordsFilter,
+  type BillingCSVExportDataset,
+  type BillingCommercialReport,
   type BillingHoldStatus,
   type BillingAccountStatus,
   type BillingPriceRule,
@@ -33,6 +36,7 @@ import {
   type UsageBillingRecordStatus,
   useAdjustUserBalance,
   useAdminBillingOverview,
+  useAdminBillingReport,
   useAdminBillingHolds,
   useAdminLedgerTransactions,
   useAdminPaymentEvents,
@@ -40,6 +44,7 @@ import {
   useAdminUsageBillingRecords,
   useAdminUserBillingDetail,
   useCancelPaymentOrder,
+  useExportAdminBillingCSV,
   useReleaseBillingHold,
   useMakeUpPaymentOrder,
   useSaveBillingPriceRule,
@@ -116,6 +121,13 @@ type EventFilterForm = {
   to: string;
 };
 
+type ReportFilterForm = {
+  from: string;
+  to: string;
+  currency: string;
+  limit: string;
+};
+
 type EPayProviderForm = {
   name: string;
   status: 'enabled' | 'disabled';
@@ -189,6 +201,24 @@ function optionalText(value: string) {
 
 function optionalTime(value: string) {
   return value ? new Date(value).toISOString() : undefined;
+}
+
+function toDateTimeLocalValue(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function defaultReportFilter(): ReportFilterForm {
+  const to = new Date();
+  const from = new Date(to);
+  from.setDate(from.getDate() - 6);
+  from.setHours(0, 0, 0, 0);
+  return {
+    from: toDateTimeLocalValue(from),
+    to: toDateTimeLocalValue(to),
+    currency: 'CNY',
+    limit: '10',
+  };
 }
 
 function modelPriceFromForm(promptPrice: string, completionPrice: string): ModelPrice {
@@ -282,6 +312,15 @@ function defaultEventFilter(): EventFilterForm {
   return { paymentOrderId: '', providerInstanceId: '', providerType: 'all', status: 'all', eventType: '', eventKey: '', from: '', to: '' };
 }
 
+function buildReportFilter(form: ReportFilterForm): AdminBillingReportFilter {
+  return {
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+    currency: optionalText(form.currency.toUpperCase()),
+    limit: optionalInt(form.limit),
+  };
+}
+
 function buildLedgerFilter(form: LedgerFilterForm): AdminLedgerTransactionsFilter {
   return {
     userId: optionalInt(form.userId),
@@ -365,11 +404,13 @@ export default function AdminBillingPage() {
   const [holdFilter, setHoldFilter] = useState<HoldFilterForm>(() => defaultHoldFilter());
   const [orderFilter, setOrderFilter] = useState<OrderFilterForm>(() => defaultOrderFilter());
   const [eventFilter, setEventFilter] = useState<EventFilterForm>(() => defaultEventFilter());
+  const [reportFilter, setReportFilter] = useState<ReportFilterForm>(() => defaultReportFilter());
   const [appliedLedgerFilter, setAppliedLedgerFilter] = useState<AdminLedgerTransactionsFilter>({});
   const [appliedUsageFilter, setAppliedUsageFilter] = useState<AdminUsageBillingRecordsFilter>({});
   const [appliedHoldFilter, setAppliedHoldFilter] = useState<AdminBillingHoldsFilter>({});
   const [appliedOrderFilter, setAppliedOrderFilter] = useState<AdminPaymentOrdersFilter>({});
   const [appliedEventFilter, setAppliedEventFilter] = useState<AdminPaymentEventsFilter>({});
+  const [appliedReportFilter, setAppliedReportFilter] = useState<AdminBillingReportFilter>(() => buildReportFilter(defaultReportFilter()));
   const [holdReleaseReasons, setHoldReleaseReasons] = useState<Record<string, string>>({});
   const [orderReasons, setOrderReasons] = useState<Record<string, string>>({});
   const [providerForm, setProviderForm] = useState<EPayProviderForm>({
@@ -394,11 +435,13 @@ export default function AdminBillingPage() {
   const adminHolds = useAdminBillingHolds(appliedHoldFilter, 50);
   const adminOrders = useAdminPaymentOrders(appliedOrderFilter, 50);
   const adminEvents = useAdminPaymentEvents(appliedEventFilter, 50);
+  const adminReport = useAdminBillingReport(appliedReportFilter);
   const adjustBalance = useAdjustUserBalance();
   const updateAccount = useUpdateUserBillingAccount();
   const releaseHold = useReleaseBillingHold();
   const cancelOrder = useCancelPaymentOrder();
   const makeUpOrder = useMakeUpPaymentOrder();
+  const exportBillingCSV = useExportAdminBillingCSV();
   const savePriceRule = useSaveBillingPriceRule();
   const upsertEPay = useUpsertEPayPaymentProvider();
 
@@ -434,6 +477,7 @@ export default function AdminBillingPage() {
       adminHolds.refetch(),
       adminOrders.refetch(),
       adminEvents.refetch(),
+      adminReport.refetch(),
       selectedUserBilling.refetch(),
     ]);
   }
@@ -584,6 +628,10 @@ export default function AdminBillingPage() {
     }
   }
 
+  function handleExportReport(dataset: BillingCSVExportDataset) {
+    exportBillingCSV.mutate({ dataset, ...appliedReportFilter });
+  }
+
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
       <Header fixed>
@@ -602,7 +650,8 @@ export default function AdminBillingPage() {
               adminUsage.isFetching ||
               adminHolds.isFetching ||
               adminOrders.isFetching ||
-              adminEvents.isFetching
+              adminEvents.isFetching ||
+              adminReport.isFetching
             }
           >
             {isFetching ||
@@ -610,7 +659,8 @@ export default function AdminBillingPage() {
             adminUsage.isFetching ||
             adminHolds.isFetching ||
             adminOrders.isFetching ||
-            adminEvents.isFetching ? (
+            adminEvents.isFetching ||
+            adminReport.isFetching ? (
               <Loader2 className='size-4 animate-spin' />
             ) : (
               <RefreshCw className='size-4' />
@@ -621,7 +671,17 @@ export default function AdminBillingPage() {
       </Header>
 
       <Main fixed className='flex flex-col gap-4 overflow-auto'>
-        <ErrorAlert error={error || adminLedger.error || adminUsage.error || adminHolds.error || adminOrders.error || adminEvents.error} />
+        <ErrorAlert
+          error={
+            error ||
+            adminLedger.error ||
+            adminUsage.error ||
+            adminHolds.error ||
+            adminOrders.error ||
+            adminEvents.error ||
+            adminReport.error
+          }
+        />
 
         <div className='grid gap-4 md:grid-cols-6'>
           <MetricCard title={t('adminBilling.metrics.accounts')} value={String(data?.accounts.length ?? 0)} loading={isLoading} />
@@ -644,8 +704,9 @@ export default function AdminBillingPage() {
           />
         </div>
 
-        <Tabs defaultValue='wallets' className='gap-4'>
+        <Tabs defaultValue='reports' className='gap-4'>
           <TabsList className='shadow-soft border-border bg-background flex h-auto w-full justify-start overflow-x-auto rounded-lg border p-1'>
+            <TabsTrigger value='reports'>{t('adminBilling.tabs.reports')}</TabsTrigger>
             <TabsTrigger value='wallets'>{t('adminBilling.tabs.wallets')}</TabsTrigger>
             <TabsTrigger value='ledger'>{t('adminBilling.tabs.ledger')}</TabsTrigger>
             <TabsTrigger value='usage'>{t('adminBilling.tabs.usage')}</TabsTrigger>
@@ -655,6 +716,27 @@ export default function AdminBillingPage() {
             <TabsTrigger value='pricing'>{t('adminBilling.tabs.pricing')}</TabsTrigger>
             <TabsTrigger value='providers'>{t('adminBilling.tabs.providers')}</TabsTrigger>
           </TabsList>
+
+          <TabsContent value='reports' className='mt-0'>
+            <ReportsTab
+              report={adminReport.data}
+              isLoading={adminReport.isLoading}
+              reportFilter={reportFilter}
+              setReportFilter={setReportFilter}
+              onApplyReportFilter={(event) => {
+                event.preventDefault();
+                setAppliedReportFilter(buildReportFilter(reportFilter));
+              }}
+              onResetReportFilter={() => {
+                const next = defaultReportFilter();
+                setReportFilter(next);
+                setAppliedReportFilter(buildReportFilter(next));
+              }}
+              onExport={handleExportReport}
+              exportPending={exportBillingCSV.isPending}
+              formatMicros={formatMicros}
+            />
+          </TabsContent>
 
           <TabsContent value='wallets' className='mt-0'>
             <div className='grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]'>
@@ -1475,6 +1557,254 @@ export default function AdminBillingPage() {
           </TabsContent>
         </Tabs>
       </Main>
+    </div>
+  );
+}
+
+function ReportsTab({
+  report,
+  isLoading,
+  reportFilter,
+  setReportFilter,
+  onApplyReportFilter,
+  onResetReportFilter,
+  onExport,
+  exportPending,
+  formatMicros,
+}: {
+  report?: BillingCommercialReport;
+  isLoading: boolean;
+  reportFilter: ReportFilterForm;
+  setReportFilter: (value: ReportFilterForm | ((prev: ReportFilterForm) => ReportFilterForm)) => void;
+  onApplyReportFilter: (event: FormEvent<HTMLFormElement>) => void;
+  onResetReportFilter: () => void;
+  onExport: (dataset: BillingCSVExportDataset) => void;
+  exportPending: boolean;
+  formatMicros: (value: number, valueCurrency?: string, minimumFractionDigits?: number) => string;
+}) {
+  const { t } = useTranslation();
+  const summary = report?.summary;
+  const reportCurrency = report?.currency || reportFilter.currency || 'CNY';
+  const exportItems: Array<{ dataset: BillingCSVExportDataset; label: string }> = [
+    { dataset: 'ledger_transactions', label: t('adminBilling.reports.exportLedger') },
+    { dataset: 'usage_billing_records', label: t('adminBilling.reports.exportUsage') },
+    { dataset: 'payment_orders', label: t('adminBilling.reports.exportOrders') },
+    { dataset: 'payment_events', label: t('adminBilling.reports.exportEvents') },
+  ];
+
+  return (
+    <div className='space-y-4'>
+      <Card className='rounded-lg'>
+        <CardHeader>
+          <CardTitle className='flex items-center gap-2 text-base'>
+            <BarChart3 className='size-4' />
+            {t('adminBilling.reports.title')}
+          </CardTitle>
+          <CardDescription>{t('adminBilling.reports.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <form className='grid gap-3 md:grid-cols-4 xl:grid-cols-6' onSubmit={onApplyReportFilter}>
+            <FilterInput
+              label={t('adminBilling.filters.from')}
+              type='datetime-local'
+              value={reportFilter.from}
+              onChange={(value) => setReportFilter((prev) => ({ ...prev, from: value }))}
+            />
+            <FilterInput
+              label={t('adminBilling.filters.to')}
+              type='datetime-local'
+              value={reportFilter.to}
+              onChange={(value) => setReportFilter((prev) => ({ ...prev, to: value }))}
+            />
+            <FilterInput
+              label={t('adminBilling.reports.currency')}
+              value={reportFilter.currency}
+              onChange={(value) => setReportFilter((prev) => ({ ...prev, currency: value.toUpperCase() }))}
+            />
+            <FilterInput
+              label={t('adminBilling.reports.limit')}
+              value={reportFilter.limit}
+              onChange={(value) => setReportFilter((prev) => ({ ...prev, limit: value }))}
+            />
+            <FilterActions onReset={onResetReportFilter} />
+          </form>
+
+          <div className='flex flex-wrap items-center gap-2 border-t pt-4'>
+            {exportItems.map((item) => (
+              <Button
+                key={item.dataset}
+                type='button'
+                variant='outline'
+                size='sm'
+                disabled={exportPending}
+                onClick={() => onExport(item.dataset)}
+              >
+                {exportPending ? <Loader2 className='size-4 animate-spin' /> : <Download className='size-4' />}
+                {item.label}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-6'>
+        <MetricCard
+          title={t('adminBilling.reports.summary.recharge')}
+          value={formatMicros(summary?.rechargeAmountMicros ?? 0, reportCurrency)}
+          loading={isLoading}
+        />
+        <MetricCard
+          title={t('adminBilling.reports.summary.consumption')}
+          value={formatMicros(summary?.consumptionAmountMicros ?? 0, reportCurrency)}
+          loading={isLoading}
+        />
+        <MetricCard
+          title={t('adminBilling.reports.summary.net')}
+          value={formatMicros(summary?.netMovementMicros ?? 0, reportCurrency)}
+          loading={isLoading}
+        />
+        <MetricCard
+          title={t('adminBilling.reports.summary.refund')}
+          value={formatMicros(summary?.refundAmountMicros ?? 0, reportCurrency)}
+          loading={isLoading}
+        />
+        <MetricCard
+          title={t('adminBilling.reports.summary.failedPayments')}
+          value={`${summary?.failedPaymentCount ?? 0} / ${summary?.failedPaymentEventCount ?? 0}`}
+          loading={isLoading}
+        />
+        <MetricCard
+          title={t('adminBilling.reports.summary.pendingHolds')}
+          value={`${formatMicros(summary?.pendingHoldAmountMicros ?? 0, reportCurrency)} (${summary?.pendingHoldCount ?? 0})`}
+          loading={isLoading}
+        />
+      </div>
+
+      <div className='grid gap-4 xl:grid-cols-2'>
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.reports.topModels')}</CardTitle>
+          </CardHeader>
+          <CardContent className='overflow-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.columns.model')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.count')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <DataStateRow colSpan={3} isLoading={isLoading} isEmpty={(report?.topModels ?? []).length === 0} />
+                {report?.topModels.map((model) => (
+                  <TableRow key={model.modelId}>
+                    <TableCell className='max-w-[280px] truncate font-mono text-xs'>{model.modelId}</TableCell>
+                    <TableCell className='text-right font-mono'>{model.requestCount}</TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(model.chargeAmountMicros, reportCurrency)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.reports.topProjects')}</CardTitle>
+          </CardHeader>
+          <CardContent className='overflow-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.columns.project')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.count')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <DataStateRow colSpan={3} isLoading={isLoading} isEmpty={(report?.topProjects ?? []).length === 0} />
+                {report?.topProjects.map((project) => (
+                  <TableRow key={project.projectId}>
+                    <TableCell>
+                      <div className='font-medium'>{project.projectName || `#${project.projectId}`}</div>
+                      <div className='text-muted-foreground text-xs'>ID {project.projectId}</div>
+                    </TableCell>
+                    <TableCell className='text-right font-mono'>{project.requestCount}</TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(project.chargeAmountMicros, reportCurrency)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className='grid gap-4 xl:grid-cols-2'>
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.reports.topUsers')}</CardTitle>
+          </CardHeader>
+          <CardContent className='overflow-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.columns.user')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.reports.summary.recharge')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.reports.summary.consumption')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.net')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <DataStateRow colSpan={4} isLoading={isLoading} isEmpty={(report?.topUsers ?? []).length === 0} />
+                {report?.topUsers.map((user) => (
+                  <TableRow key={user.userId}>
+                    <TableCell>
+                      <div className='font-medium'>{user.email || `#${user.userId}`}</div>
+                      <div className='text-muted-foreground text-xs'>ID {user.userId}</div>
+                    </TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(user.rechargeAmountMicros, reportCurrency)}</TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(user.consumptionAmountMicros, reportCurrency)}</TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(user.netAmountMicros, reportCurrency)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.reports.daily')}</CardTitle>
+          </CardHeader>
+          <CardContent className='overflow-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.columns.date')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.reports.summary.recharge')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.reports.summary.consumption')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.net')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.reports.summary.failedPayments')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <DataStateRow colSpan={5} isLoading={isLoading} isEmpty={(report?.daily ?? []).length === 0} />
+                {report?.daily.map((row) => (
+                  <TableRow key={row.date}>
+                    <TableCell>{row.date}</TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(row.rechargeAmountMicros, reportCurrency)}</TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(row.consumptionAmountMicros, reportCurrency)}</TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(row.netMovementMicros, reportCurrency)}</TableCell>
+                    <TableCell className='text-right font-mono'>
+                      {row.failedPaymentCount} / {row.failedPaymentEventCount}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

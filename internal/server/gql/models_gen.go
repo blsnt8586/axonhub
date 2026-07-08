@@ -77,6 +77,13 @@ type AdminBillingHoldsFilter struct {
 	ExpiresBefore    *time.Time          `json:"expiresBefore,omitempty"`
 }
 
+type AdminBillingReportFilter struct {
+	From     *time.Time `json:"from,omitempty"`
+	To       *time.Time `json:"to,omitempty"`
+	Currency *string    `json:"currency,omitempty"`
+	Limit    *int       `json:"limit,omitempty"`
+}
+
 type AdminLedgerTransactionsFilter struct {
 	UserID           *int                         `json:"userId,omitempty"`
 	BillingAccountID *int                         `json:"billingAccountId,omitempty"`
@@ -299,6 +306,14 @@ type DashboardOverview struct {
 	RequestStats        *RequestStats `json:"requestStats"`
 	FailedRequests      int           `json:"failedRequests"`
 	AverageResponseTime *float64      `json:"averageResponseTime,omitempty"`
+}
+
+type ExportAdminBillingCSVInput struct {
+	Dataset  string     `json:"dataset"`
+	From     *time.Time `json:"from,omitempty"`
+	To       *time.Time `json:"to,omitempty"`
+	Currency *string    `json:"currency,omitempty"`
+	Limit    *int       `json:"limit,omitempty"`
 }
 
 type FastestChannel struct {

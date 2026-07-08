@@ -139,6 +139,79 @@ input AdminPaymentEventsFilter {
   to: Time
 }
 
+input AdminBillingReportFilter {
+  from: Time
+  to: Time
+  currency: String
+  limit: Int
+}
+
+input ExportAdminBillingCSVInput {
+  dataset: String!
+  from: Time
+  to: Time
+  currency: String
+  limit: Int
+}
+
+type BillingReportSummary {
+  rechargeAmountMicros: Int!
+  consumptionAmountMicros: Int!
+  netMovementMicros: Int!
+  refundAmountMicros: Int!
+  failedPaymentCount: Int!
+  failedPaymentEventCount: Int!
+  pendingHoldAmountMicros: Int!
+  pendingHoldCount: Int!
+}
+
+type BillingDailyReportRow {
+  date: String!
+  rechargeAmountMicros: Int!
+  consumptionAmountMicros: Int!
+  netMovementMicros: Int!
+  failedPaymentCount: Int!
+  failedPaymentEventCount: Int!
+}
+
+type BillingTopModelRow {
+  modelId: String!
+  chargeAmountMicros: Int!
+  requestCount: Int!
+}
+
+type BillingTopProjectRow {
+  projectId: Int!
+  projectName: String!
+  chargeAmountMicros: Int!
+  requestCount: Int!
+}
+
+type BillingTopUserReportRow {
+  userId: Int!
+  email: String!
+  rechargeAmountMicros: Int!
+  consumptionAmountMicros: Int!
+  netAmountMicros: Int!
+}
+
+type BillingCommercialReport {
+  from: Time
+  to: Time
+  currency: String!
+  summary: BillingReportSummary!
+  daily: [BillingDailyReportRow!]!
+  topModels: [BillingTopModelRow!]!
+  topProjects: [BillingTopProjectRow!]!
+  topUsers: [BillingTopUserReportRow!]!
+}
+
+type BillingCSVExportPayload {
+  fileName: String!
+  content: String!
+  contentType: String!
+}
+
 type PaymentCheckout {
   providerType: String!
   orderNo: String!
@@ -179,4 +252,6 @@ extend type Query {
   adminBillingHolds(filter: AdminBillingHoldsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: BillingHoldOrder): BillingHoldConnection!
   adminPaymentOrders(filter: AdminPaymentOrdersFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentOrderOrder): PaymentOrderConnection!
   adminPaymentEvents(filter: AdminPaymentEventsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentEventOrder): PaymentEventConnection!
+  adminBillingReport(filter: AdminBillingReportFilter): BillingCommercialReport!
+  exportAdminBillingCSV(input: ExportAdminBillingCSVInput!): BillingCSVExportPayload!
 }

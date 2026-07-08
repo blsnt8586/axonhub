@@ -339,6 +339,32 @@ type ComplexityRoot struct {
 		Node   func(childComplexity int) int
 	}
 
+	BillingCSVExportPayload struct {
+		Content     func(childComplexity int) int
+		ContentType func(childComplexity int) int
+		FileName    func(childComplexity int) int
+	}
+
+	BillingCommercialReport struct {
+		Currency    func(childComplexity int) int
+		Daily       func(childComplexity int) int
+		From        func(childComplexity int) int
+		Summary     func(childComplexity int) int
+		To          func(childComplexity int) int
+		TopModels   func(childComplexity int) int
+		TopProjects func(childComplexity int) int
+		TopUsers    func(childComplexity int) int
+	}
+
+	BillingDailyReportRow struct {
+		ConsumptionAmountMicros func(childComplexity int) int
+		Date                    func(childComplexity int) int
+		FailedPaymentCount      func(childComplexity int) int
+		FailedPaymentEventCount func(childComplexity int) int
+		NetMovementMicros       func(childComplexity int) int
+		RechargeAmountMicros    func(childComplexity int) int
+	}
+
 	BillingHold struct {
 		APIKeyID                    func(childComplexity int) int
 		AmountMicros                func(childComplexity int) int
@@ -428,6 +454,38 @@ type ComplexityRoot struct {
 	BillingPriceRuleEdge struct {
 		Cursor func(childComplexity int) int
 		Node   func(childComplexity int) int
+	}
+
+	BillingReportSummary struct {
+		ConsumptionAmountMicros func(childComplexity int) int
+		FailedPaymentCount      func(childComplexity int) int
+		FailedPaymentEventCount func(childComplexity int) int
+		NetMovementMicros       func(childComplexity int) int
+		PendingHoldAmountMicros func(childComplexity int) int
+		PendingHoldCount        func(childComplexity int) int
+		RechargeAmountMicros    func(childComplexity int) int
+		RefundAmountMicros      func(childComplexity int) int
+	}
+
+	BillingTopModelRow struct {
+		ChargeAmountMicros func(childComplexity int) int
+		ModelID            func(childComplexity int) int
+		RequestCount       func(childComplexity int) int
+	}
+
+	BillingTopProjectRow struct {
+		ChargeAmountMicros func(childComplexity int) int
+		ProjectID          func(childComplexity int) int
+		ProjectName        func(childComplexity int) int
+		RequestCount       func(childComplexity int) int
+	}
+
+	BillingTopUserReportRow struct {
+		ConsumptionAmountMicros func(childComplexity int) int
+		Email                   func(childComplexity int) int
+		NetAmountMicros         func(childComplexity int) int
+		RechargeAmountMicros    func(childComplexity int) int
+		UserID                  func(childComplexity int) int
 	}
 
 	BrandSettings struct {
@@ -1571,6 +1629,7 @@ type ComplexityRoot struct {
 		APIKeyTokenUsageStats        func(childComplexity int, input *APIKeyTokenUsageStatsInput) int
 		APIKeys                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyOrder, where *ent.APIKeyWhereInput) int
 		AdminBillingHolds            func(childComplexity int, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) int
+		AdminBillingReport           func(childComplexity int, filter *AdminBillingReportFilter) int
 		AdminLedgerTransactions      func(childComplexity int, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
 		AdminPaymentEvents           func(childComplexity int, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) int
 		AdminPaymentOrders           func(childComplexity int, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
@@ -1599,6 +1658,7 @@ type ComplexityRoot struct {
 		DashboardOverview            func(childComplexity int) int
 		DataStorages                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.DataStorageOrder, where *ent.DataStorageWhereInput) int
 		DefaultDataStorageID         func(childComplexity int) int
+		ExportAdminBillingCSV        func(childComplexity int, input ExportAdminBillingCSVInput) int
 		FastestChannels              func(childComplexity int, input FastestChannelsInput) int
 		FastestModels                func(childComplexity int, input FastestChannelsInput) int
 		FetchModels                  func(childComplexity int, input biz.FetchModelsInput) int
@@ -2747,6 +2807,8 @@ type QueryResolver interface {
 	AdminBillingHolds(ctx context.Context, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) (*ent.BillingHoldConnection, error)
 	AdminPaymentOrders(ctx context.Context, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) (*ent.PaymentOrderConnection, error)
 	AdminPaymentEvents(ctx context.Context, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) (*ent.PaymentEventConnection, error)
+	AdminBillingReport(ctx context.Context, filter *AdminBillingReportFilter) (*biz.BillingCommercialReport, error)
+	ExportAdminBillingCSV(ctx context.Context, input ExportAdminBillingCSVInput) (*biz.BillingCSVExportPayload, error)
 }
 type RequestResolver interface {
 	ID(ctx context.Context, obj *ent.Request) (*objects.GUID, error)
@@ -3697,6 +3759,111 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.BillingAccountEdge.Node(childComplexity), true
 
+	case "BillingCSVExportPayload.content":
+		if e.complexity.BillingCSVExportPayload.Content == nil {
+			break
+		}
+
+		return e.complexity.BillingCSVExportPayload.Content(childComplexity), true
+	case "BillingCSVExportPayload.contentType":
+		if e.complexity.BillingCSVExportPayload.ContentType == nil {
+			break
+		}
+
+		return e.complexity.BillingCSVExportPayload.ContentType(childComplexity), true
+	case "BillingCSVExportPayload.fileName":
+		if e.complexity.BillingCSVExportPayload.FileName == nil {
+			break
+		}
+
+		return e.complexity.BillingCSVExportPayload.FileName(childComplexity), true
+
+	case "BillingCommercialReport.currency":
+		if e.complexity.BillingCommercialReport.Currency == nil {
+			break
+		}
+
+		return e.complexity.BillingCommercialReport.Currency(childComplexity), true
+	case "BillingCommercialReport.daily":
+		if e.complexity.BillingCommercialReport.Daily == nil {
+			break
+		}
+
+		return e.complexity.BillingCommercialReport.Daily(childComplexity), true
+	case "BillingCommercialReport.from":
+		if e.complexity.BillingCommercialReport.From == nil {
+			break
+		}
+
+		return e.complexity.BillingCommercialReport.From(childComplexity), true
+	case "BillingCommercialReport.summary":
+		if e.complexity.BillingCommercialReport.Summary == nil {
+			break
+		}
+
+		return e.complexity.BillingCommercialReport.Summary(childComplexity), true
+	case "BillingCommercialReport.to":
+		if e.complexity.BillingCommercialReport.To == nil {
+			break
+		}
+
+		return e.complexity.BillingCommercialReport.To(childComplexity), true
+	case "BillingCommercialReport.topModels":
+		if e.complexity.BillingCommercialReport.TopModels == nil {
+			break
+		}
+
+		return e.complexity.BillingCommercialReport.TopModels(childComplexity), true
+	case "BillingCommercialReport.topProjects":
+		if e.complexity.BillingCommercialReport.TopProjects == nil {
+			break
+		}
+
+		return e.complexity.BillingCommercialReport.TopProjects(childComplexity), true
+	case "BillingCommercialReport.topUsers":
+		if e.complexity.BillingCommercialReport.TopUsers == nil {
+			break
+		}
+
+		return e.complexity.BillingCommercialReport.TopUsers(childComplexity), true
+
+	case "BillingDailyReportRow.consumptionAmountMicros":
+		if e.complexity.BillingDailyReportRow.ConsumptionAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingDailyReportRow.ConsumptionAmountMicros(childComplexity), true
+	case "BillingDailyReportRow.date":
+		if e.complexity.BillingDailyReportRow.Date == nil {
+			break
+		}
+
+		return e.complexity.BillingDailyReportRow.Date(childComplexity), true
+	case "BillingDailyReportRow.failedPaymentCount":
+		if e.complexity.BillingDailyReportRow.FailedPaymentCount == nil {
+			break
+		}
+
+		return e.complexity.BillingDailyReportRow.FailedPaymentCount(childComplexity), true
+	case "BillingDailyReportRow.failedPaymentEventCount":
+		if e.complexity.BillingDailyReportRow.FailedPaymentEventCount == nil {
+			break
+		}
+
+		return e.complexity.BillingDailyReportRow.FailedPaymentEventCount(childComplexity), true
+	case "BillingDailyReportRow.netMovementMicros":
+		if e.complexity.BillingDailyReportRow.NetMovementMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingDailyReportRow.NetMovementMicros(childComplexity), true
+	case "BillingDailyReportRow.rechargeAmountMicros":
+		if e.complexity.BillingDailyReportRow.RechargeAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingDailyReportRow.RechargeAmountMicros(childComplexity), true
+
 	case "BillingHold.apiKeyID":
 		if e.complexity.BillingHold.APIKeyID == nil {
 			break
@@ -4089,6 +4256,130 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.BillingPriceRuleEdge.Node(childComplexity), true
+
+	case "BillingReportSummary.consumptionAmountMicros":
+		if e.complexity.BillingReportSummary.ConsumptionAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingReportSummary.ConsumptionAmountMicros(childComplexity), true
+	case "BillingReportSummary.failedPaymentCount":
+		if e.complexity.BillingReportSummary.FailedPaymentCount == nil {
+			break
+		}
+
+		return e.complexity.BillingReportSummary.FailedPaymentCount(childComplexity), true
+	case "BillingReportSummary.failedPaymentEventCount":
+		if e.complexity.BillingReportSummary.FailedPaymentEventCount == nil {
+			break
+		}
+
+		return e.complexity.BillingReportSummary.FailedPaymentEventCount(childComplexity), true
+	case "BillingReportSummary.netMovementMicros":
+		if e.complexity.BillingReportSummary.NetMovementMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingReportSummary.NetMovementMicros(childComplexity), true
+	case "BillingReportSummary.pendingHoldAmountMicros":
+		if e.complexity.BillingReportSummary.PendingHoldAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingReportSummary.PendingHoldAmountMicros(childComplexity), true
+	case "BillingReportSummary.pendingHoldCount":
+		if e.complexity.BillingReportSummary.PendingHoldCount == nil {
+			break
+		}
+
+		return e.complexity.BillingReportSummary.PendingHoldCount(childComplexity), true
+	case "BillingReportSummary.rechargeAmountMicros":
+		if e.complexity.BillingReportSummary.RechargeAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingReportSummary.RechargeAmountMicros(childComplexity), true
+	case "BillingReportSummary.refundAmountMicros":
+		if e.complexity.BillingReportSummary.RefundAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingReportSummary.RefundAmountMicros(childComplexity), true
+
+	case "BillingTopModelRow.chargeAmountMicros":
+		if e.complexity.BillingTopModelRow.ChargeAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingTopModelRow.ChargeAmountMicros(childComplexity), true
+	case "BillingTopModelRow.modelId":
+		if e.complexity.BillingTopModelRow.ModelID == nil {
+			break
+		}
+
+		return e.complexity.BillingTopModelRow.ModelID(childComplexity), true
+	case "BillingTopModelRow.requestCount":
+		if e.complexity.BillingTopModelRow.RequestCount == nil {
+			break
+		}
+
+		return e.complexity.BillingTopModelRow.RequestCount(childComplexity), true
+
+	case "BillingTopProjectRow.chargeAmountMicros":
+		if e.complexity.BillingTopProjectRow.ChargeAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingTopProjectRow.ChargeAmountMicros(childComplexity), true
+	case "BillingTopProjectRow.projectId":
+		if e.complexity.BillingTopProjectRow.ProjectID == nil {
+			break
+		}
+
+		return e.complexity.BillingTopProjectRow.ProjectID(childComplexity), true
+	case "BillingTopProjectRow.projectName":
+		if e.complexity.BillingTopProjectRow.ProjectName == nil {
+			break
+		}
+
+		return e.complexity.BillingTopProjectRow.ProjectName(childComplexity), true
+	case "BillingTopProjectRow.requestCount":
+		if e.complexity.BillingTopProjectRow.RequestCount == nil {
+			break
+		}
+
+		return e.complexity.BillingTopProjectRow.RequestCount(childComplexity), true
+
+	case "BillingTopUserReportRow.consumptionAmountMicros":
+		if e.complexity.BillingTopUserReportRow.ConsumptionAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingTopUserReportRow.ConsumptionAmountMicros(childComplexity), true
+	case "BillingTopUserReportRow.email":
+		if e.complexity.BillingTopUserReportRow.Email == nil {
+			break
+		}
+
+		return e.complexity.BillingTopUserReportRow.Email(childComplexity), true
+	case "BillingTopUserReportRow.netAmountMicros":
+		if e.complexity.BillingTopUserReportRow.NetAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingTopUserReportRow.NetAmountMicros(childComplexity), true
+	case "BillingTopUserReportRow.rechargeAmountMicros":
+		if e.complexity.BillingTopUserReportRow.RechargeAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingTopUserReportRow.RechargeAmountMicros(childComplexity), true
+	case "BillingTopUserReportRow.userId":
+		if e.complexity.BillingTopUserReportRow.UserID == nil {
+			break
+		}
+
+		return e.complexity.BillingTopUserReportRow.UserID(childComplexity), true
 
 	case "BrandSettings.brandLogo":
 		if e.complexity.BrandSettings.BrandLogo == nil {
@@ -9397,6 +9688,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.AdminBillingHolds(childComplexity, args["filter"].(*AdminBillingHoldsFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder)), true
+	case "Query.adminBillingReport":
+		if e.complexity.Query.AdminBillingReport == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminBillingReport_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminBillingReport(childComplexity, args["filter"].(*AdminBillingReportFilter)), true
 	case "Query.adminLedgerTransactions":
 		if e.complexity.Query.AdminLedgerTransactions == nil {
 			break
@@ -9665,6 +9967,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.DefaultDataStorageID(childComplexity), true
+	case "Query.exportAdminBillingCSV":
+		if e.complexity.Query.ExportAdminBillingCSV == nil {
+			break
+		}
+
+		args, err := ec.field_Query_exportAdminBillingCSV_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ExportAdminBillingCSV(childComplexity, args["input"].(ExportAdminBillingCSVInput)), true
 	case "Query.fastestChannels":
 		if e.complexity.Query.FastestChannels == nil {
 			break
@@ -13181,6 +13494,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAddUserToProjectInput,
 		ec.unmarshalInputAdjustUserBalanceInput,
 		ec.unmarshalInputAdminBillingHoldsFilter,
+		ec.unmarshalInputAdminBillingReportFilter,
 		ec.unmarshalInputAdminLedgerTransactionsFilter,
 		ec.unmarshalInputAdminPaymentEventsFilter,
 		ec.unmarshalInputAdminPaymentOrdersFilter,
@@ -13258,6 +13572,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputDataStorageWhereInput,
 		ec.unmarshalInputDeveloperModelSettingsInput,
 		ec.unmarshalInputExcludeAssociationInput,
+		ec.unmarshalInputExportAdminBillingCSVInput,
 		ec.unmarshalInputFastestChannelsInput,
 		ec.unmarshalInputFetchModelsInput,
 		ec.unmarshalInputFilterConditionInput,
@@ -16099,6 +16414,17 @@ func (ec *executionContext) field_Query_adminBillingHolds_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_adminBillingReport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOAdminBillingReportFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminBillingReportFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_adminLedgerTransactions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -16715,6 +17041,17 @@ func (ec *executionContext) field_Query_dataStorages_args(ctx context.Context, r
 		return nil, err
 	}
 	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_exportAdminBillingCSV_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNExportAdminBillingCSVInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐExportAdminBillingCSVInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -22618,6 +22955,561 @@ func (ec *executionContext) fieldContext_BillingAccountEdge_cursor(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _BillingCSVExportPayload_fileName(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCSVExportPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCSVExportPayload_fileName,
+		func(ctx context.Context) (any, error) {
+			return obj.FileName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCSVExportPayload_fileName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCSVExportPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCSVExportPayload_content(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCSVExportPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCSVExportPayload_content,
+		func(ctx context.Context) (any, error) {
+			return obj.Content, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCSVExportPayload_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCSVExportPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCSVExportPayload_contentType(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCSVExportPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCSVExportPayload_contentType,
+		func(ctx context.Context) (any, error) {
+			return obj.ContentType, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCSVExportPayload_contentType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCSVExportPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCommercialReport_from(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCommercialReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCommercialReport_from,
+		func(ctx context.Context) (any, error) {
+			return obj.From, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCommercialReport_from(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCommercialReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCommercialReport_to(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCommercialReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCommercialReport_to,
+		func(ctx context.Context) (any, error) {
+			return obj.To, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCommercialReport_to(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCommercialReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCommercialReport_currency(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCommercialReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCommercialReport_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCommercialReport_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCommercialReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCommercialReport_summary(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCommercialReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCommercialReport_summary,
+		func(ctx context.Context) (any, error) {
+			return obj.Summary, nil
+		},
+		nil,
+		ec.marshalNBillingReportSummary2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingReportSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCommercialReport_summary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCommercialReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "rechargeAmountMicros":
+				return ec.fieldContext_BillingReportSummary_rechargeAmountMicros(ctx, field)
+			case "consumptionAmountMicros":
+				return ec.fieldContext_BillingReportSummary_consumptionAmountMicros(ctx, field)
+			case "netMovementMicros":
+				return ec.fieldContext_BillingReportSummary_netMovementMicros(ctx, field)
+			case "refundAmountMicros":
+				return ec.fieldContext_BillingReportSummary_refundAmountMicros(ctx, field)
+			case "failedPaymentCount":
+				return ec.fieldContext_BillingReportSummary_failedPaymentCount(ctx, field)
+			case "failedPaymentEventCount":
+				return ec.fieldContext_BillingReportSummary_failedPaymentEventCount(ctx, field)
+			case "pendingHoldAmountMicros":
+				return ec.fieldContext_BillingReportSummary_pendingHoldAmountMicros(ctx, field)
+			case "pendingHoldCount":
+				return ec.fieldContext_BillingReportSummary_pendingHoldCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingReportSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCommercialReport_daily(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCommercialReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCommercialReport_daily,
+		func(ctx context.Context) (any, error) {
+			return obj.Daily, nil
+		},
+		nil,
+		ec.marshalNBillingDailyReportRow2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingDailyReportRowᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCommercialReport_daily(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCommercialReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "date":
+				return ec.fieldContext_BillingDailyReportRow_date(ctx, field)
+			case "rechargeAmountMicros":
+				return ec.fieldContext_BillingDailyReportRow_rechargeAmountMicros(ctx, field)
+			case "consumptionAmountMicros":
+				return ec.fieldContext_BillingDailyReportRow_consumptionAmountMicros(ctx, field)
+			case "netMovementMicros":
+				return ec.fieldContext_BillingDailyReportRow_netMovementMicros(ctx, field)
+			case "failedPaymentCount":
+				return ec.fieldContext_BillingDailyReportRow_failedPaymentCount(ctx, field)
+			case "failedPaymentEventCount":
+				return ec.fieldContext_BillingDailyReportRow_failedPaymentEventCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingDailyReportRow", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCommercialReport_topModels(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCommercialReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCommercialReport_topModels,
+		func(ctx context.Context) (any, error) {
+			return obj.TopModels, nil
+		},
+		nil,
+		ec.marshalNBillingTopModelRow2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopModelRowᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCommercialReport_topModels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCommercialReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modelId":
+				return ec.fieldContext_BillingTopModelRow_modelId(ctx, field)
+			case "chargeAmountMicros":
+				return ec.fieldContext_BillingTopModelRow_chargeAmountMicros(ctx, field)
+			case "requestCount":
+				return ec.fieldContext_BillingTopModelRow_requestCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingTopModelRow", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCommercialReport_topProjects(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCommercialReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCommercialReport_topProjects,
+		func(ctx context.Context) (any, error) {
+			return obj.TopProjects, nil
+		},
+		nil,
+		ec.marshalNBillingTopProjectRow2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopProjectRowᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCommercialReport_topProjects(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCommercialReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "projectId":
+				return ec.fieldContext_BillingTopProjectRow_projectId(ctx, field)
+			case "projectName":
+				return ec.fieldContext_BillingTopProjectRow_projectName(ctx, field)
+			case "chargeAmountMicros":
+				return ec.fieldContext_BillingTopProjectRow_chargeAmountMicros(ctx, field)
+			case "requestCount":
+				return ec.fieldContext_BillingTopProjectRow_requestCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingTopProjectRow", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingCommercialReport_topUsers(ctx context.Context, field graphql.CollectedField, obj *biz.BillingCommercialReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingCommercialReport_topUsers,
+		func(ctx context.Context) (any, error) {
+			return obj.TopUsers, nil
+		},
+		nil,
+		ec.marshalNBillingTopUserReportRow2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopUserReportRowᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingCommercialReport_topUsers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingCommercialReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_BillingTopUserReportRow_userId(ctx, field)
+			case "email":
+				return ec.fieldContext_BillingTopUserReportRow_email(ctx, field)
+			case "rechargeAmountMicros":
+				return ec.fieldContext_BillingTopUserReportRow_rechargeAmountMicros(ctx, field)
+			case "consumptionAmountMicros":
+				return ec.fieldContext_BillingTopUserReportRow_consumptionAmountMicros(ctx, field)
+			case "netAmountMicros":
+				return ec.fieldContext_BillingTopUserReportRow_netAmountMicros(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingTopUserReportRow", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingDailyReportRow_date(ctx context.Context, field graphql.CollectedField, obj *biz.BillingDailyReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingDailyReportRow_date,
+		func(ctx context.Context) (any, error) {
+			return obj.Date, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingDailyReportRow_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDailyReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingDailyReportRow_rechargeAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingDailyReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingDailyReportRow_rechargeAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.RechargeAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingDailyReportRow_rechargeAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDailyReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingDailyReportRow_consumptionAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingDailyReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingDailyReportRow_consumptionAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.ConsumptionAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingDailyReportRow_consumptionAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDailyReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingDailyReportRow_netMovementMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingDailyReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingDailyReportRow_netMovementMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.NetMovementMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingDailyReportRow_netMovementMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDailyReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingDailyReportRow_failedPaymentCount(ctx context.Context, field graphql.CollectedField, obj *biz.BillingDailyReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingDailyReportRow_failedPaymentCount,
+		func(ctx context.Context) (any, error) {
+			return obj.FailedPaymentCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingDailyReportRow_failedPaymentCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDailyReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingDailyReportRow_failedPaymentEventCount(ctx context.Context, field graphql.CollectedField, obj *biz.BillingDailyReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingDailyReportRow_failedPaymentEventCount,
+		func(ctx context.Context) (any, error) {
+			return obj.FailedPaymentEventCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingDailyReportRow_failedPaymentEventCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingDailyReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _BillingHold_id(ctx context.Context, field graphql.CollectedField, obj *ent.BillingHold) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -24833,6 +25725,586 @@ func (ec *executionContext) fieldContext_BillingPriceRuleEdge_cursor(_ context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingReportSummary_rechargeAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingReportSummary_rechargeAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.RechargeAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingReportSummary_rechargeAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingReportSummary_consumptionAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingReportSummary_consumptionAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.ConsumptionAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingReportSummary_consumptionAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingReportSummary_netMovementMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingReportSummary_netMovementMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.NetMovementMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingReportSummary_netMovementMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingReportSummary_refundAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingReportSummary_refundAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.RefundAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingReportSummary_refundAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingReportSummary_failedPaymentCount(ctx context.Context, field graphql.CollectedField, obj *biz.BillingReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingReportSummary_failedPaymentCount,
+		func(ctx context.Context) (any, error) {
+			return obj.FailedPaymentCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingReportSummary_failedPaymentCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingReportSummary_failedPaymentEventCount(ctx context.Context, field graphql.CollectedField, obj *biz.BillingReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingReportSummary_failedPaymentEventCount,
+		func(ctx context.Context) (any, error) {
+			return obj.FailedPaymentEventCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingReportSummary_failedPaymentEventCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingReportSummary_pendingHoldAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingReportSummary_pendingHoldAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.PendingHoldAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingReportSummary_pendingHoldAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingReportSummary_pendingHoldCount(ctx context.Context, field graphql.CollectedField, obj *biz.BillingReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingReportSummary_pendingHoldCount,
+		func(ctx context.Context) (any, error) {
+			return obj.PendingHoldCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingReportSummary_pendingHoldCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopModelRow_modelId(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopModelRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopModelRow_modelId,
+		func(ctx context.Context) (any, error) {
+			return obj.ModelID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopModelRow_modelId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopModelRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopModelRow_chargeAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopModelRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopModelRow_chargeAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.ChargeAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopModelRow_chargeAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopModelRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopModelRow_requestCount(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopModelRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopModelRow_requestCount,
+		func(ctx context.Context) (any, error) {
+			return obj.RequestCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopModelRow_requestCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopModelRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopProjectRow_projectId(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopProjectRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopProjectRow_projectId,
+		func(ctx context.Context) (any, error) {
+			return obj.ProjectID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopProjectRow_projectId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopProjectRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopProjectRow_projectName(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopProjectRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopProjectRow_projectName,
+		func(ctx context.Context) (any, error) {
+			return obj.ProjectName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopProjectRow_projectName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopProjectRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopProjectRow_chargeAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopProjectRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopProjectRow_chargeAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.ChargeAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopProjectRow_chargeAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopProjectRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopProjectRow_requestCount(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopProjectRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopProjectRow_requestCount,
+		func(ctx context.Context) (any, error) {
+			return obj.RequestCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopProjectRow_requestCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopProjectRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopUserReportRow_userId(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopUserReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopUserReportRow_userId,
+		func(ctx context.Context) (any, error) {
+			return obj.UserID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopUserReportRow_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopUserReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopUserReportRow_email(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopUserReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopUserReportRow_email,
+		func(ctx context.Context) (any, error) {
+			return obj.Email, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopUserReportRow_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopUserReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopUserReportRow_rechargeAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopUserReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopUserReportRow_rechargeAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.RechargeAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopUserReportRow_rechargeAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopUserReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopUserReportRow_consumptionAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopUserReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopUserReportRow_consumptionAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.ConsumptionAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopUserReportRow_consumptionAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopUserReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingTopUserReportRow_netAmountMicros(ctx context.Context, field graphql.CollectedField, obj *biz.BillingTopUserReportRow) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingTopUserReportRow_netAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.NetAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingTopUserReportRow_netAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingTopUserReportRow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -56816,6 +58288,114 @@ func (ec *executionContext) fieldContext_Query_adminPaymentEvents(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_adminBillingReport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminBillingReport,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AdminBillingReport(ctx, fc.Args["filter"].(*AdminBillingReportFilter))
+		},
+		nil,
+		ec.marshalNBillingCommercialReport2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingCommercialReport,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminBillingReport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "from":
+				return ec.fieldContext_BillingCommercialReport_from(ctx, field)
+			case "to":
+				return ec.fieldContext_BillingCommercialReport_to(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingCommercialReport_currency(ctx, field)
+			case "summary":
+				return ec.fieldContext_BillingCommercialReport_summary(ctx, field)
+			case "daily":
+				return ec.fieldContext_BillingCommercialReport_daily(ctx, field)
+			case "topModels":
+				return ec.fieldContext_BillingCommercialReport_topModels(ctx, field)
+			case "topProjects":
+				return ec.fieldContext_BillingCommercialReport_topProjects(ctx, field)
+			case "topUsers":
+				return ec.fieldContext_BillingCommercialReport_topUsers(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingCommercialReport", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminBillingReport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_exportAdminBillingCSV(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_exportAdminBillingCSV,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ExportAdminBillingCSV(ctx, fc.Args["input"].(ExportAdminBillingCSVInput))
+		},
+		nil,
+		ec.marshalNBillingCSVExportPayload2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingCSVExportPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_exportAdminBillingCSV(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "fileName":
+				return ec.fieldContext_BillingCSVExportPayload_fileName(ctx, field)
+			case "content":
+				return ec.fieldContext_BillingCSVExportPayload_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_BillingCSVExportPayload_contentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingCSVExportPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_exportAdminBillingCSV_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -75360,6 +76940,54 @@ func (ec *executionContext) unmarshalInputAdminBillingHoldsFilter(ctx context.Co
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAdminBillingReportFilter(ctx context.Context, obj any) (AdminBillingReportFilter, error) {
+	var it AdminBillingReportFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"from", "to", "currency", "limit"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "from":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.From = data
+		case "to":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.To = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "limit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Limit = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAdminLedgerTransactionsFilter(ctx context.Context, obj any) (AdminLedgerTransactionsFilter, error) {
 	var it AdminLedgerTransactionsFilter
 	asMap := map[string]any{}
@@ -86939,6 +88567,61 @@ func (ec *executionContext) unmarshalInputExcludeAssociationInput(ctx context.Co
 				return it, err
 			}
 			it.ChannelTags = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputExportAdminBillingCSVInput(ctx context.Context, obj any) (ExportAdminBillingCSVInput, error) {
+	var it ExportAdminBillingCSVInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"dataset", "from", "to", "currency", "limit"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "dataset":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dataset"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Dataset = data
+		case "from":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.From = data
+		case "to":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.To = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "limit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Limit = data
 		}
 	}
 
@@ -112915,6 +114598,187 @@ func (ec *executionContext) _BillingAccountEdge(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var billingCSVExportPayloadImplementors = []string{"BillingCSVExportPayload"}
+
+func (ec *executionContext) _BillingCSVExportPayload(ctx context.Context, sel ast.SelectionSet, obj *biz.BillingCSVExportPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingCSVExportPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingCSVExportPayload")
+		case "fileName":
+			out.Values[i] = ec._BillingCSVExportPayload_fileName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "content":
+			out.Values[i] = ec._BillingCSVExportPayload_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contentType":
+			out.Values[i] = ec._BillingCSVExportPayload_contentType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingCommercialReportImplementors = []string{"BillingCommercialReport"}
+
+func (ec *executionContext) _BillingCommercialReport(ctx context.Context, sel ast.SelectionSet, obj *biz.BillingCommercialReport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingCommercialReportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingCommercialReport")
+		case "from":
+			out.Values[i] = ec._BillingCommercialReport_from(ctx, field, obj)
+		case "to":
+			out.Values[i] = ec._BillingCommercialReport_to(ctx, field, obj)
+		case "currency":
+			out.Values[i] = ec._BillingCommercialReport_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "summary":
+			out.Values[i] = ec._BillingCommercialReport_summary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "daily":
+			out.Values[i] = ec._BillingCommercialReport_daily(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "topModels":
+			out.Values[i] = ec._BillingCommercialReport_topModels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "topProjects":
+			out.Values[i] = ec._BillingCommercialReport_topProjects(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "topUsers":
+			out.Values[i] = ec._BillingCommercialReport_topUsers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingDailyReportRowImplementors = []string{"BillingDailyReportRow"}
+
+func (ec *executionContext) _BillingDailyReportRow(ctx context.Context, sel ast.SelectionSet, obj *biz.BillingDailyReportRow) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingDailyReportRowImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingDailyReportRow")
+		case "date":
+			out.Values[i] = ec._BillingDailyReportRow_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rechargeAmountMicros":
+			out.Values[i] = ec._BillingDailyReportRow_rechargeAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "consumptionAmountMicros":
+			out.Values[i] = ec._BillingDailyReportRow_consumptionAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netMovementMicros":
+			out.Values[i] = ec._BillingDailyReportRow_netMovementMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "failedPaymentCount":
+			out.Values[i] = ec._BillingDailyReportRow_failedPaymentCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "failedPaymentEventCount":
+			out.Values[i] = ec._BillingDailyReportRow_failedPaymentEventCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var billingHoldImplementors = []string{"BillingHold", "Node"}
 
 func (ec *executionContext) _BillingHold(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingHold) graphql.Marshaler {
@@ -113799,6 +115663,242 @@ func (ec *executionContext) _BillingPriceRuleEdge(ctx context.Context, sel ast.S
 			out.Values[i] = ec._BillingPriceRuleEdge_node(ctx, field, obj)
 		case "cursor":
 			out.Values[i] = ec._BillingPriceRuleEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingReportSummaryImplementors = []string{"BillingReportSummary"}
+
+func (ec *executionContext) _BillingReportSummary(ctx context.Context, sel ast.SelectionSet, obj *biz.BillingReportSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingReportSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingReportSummary")
+		case "rechargeAmountMicros":
+			out.Values[i] = ec._BillingReportSummary_rechargeAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "consumptionAmountMicros":
+			out.Values[i] = ec._BillingReportSummary_consumptionAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netMovementMicros":
+			out.Values[i] = ec._BillingReportSummary_netMovementMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "refundAmountMicros":
+			out.Values[i] = ec._BillingReportSummary_refundAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "failedPaymentCount":
+			out.Values[i] = ec._BillingReportSummary_failedPaymentCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "failedPaymentEventCount":
+			out.Values[i] = ec._BillingReportSummary_failedPaymentEventCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pendingHoldAmountMicros":
+			out.Values[i] = ec._BillingReportSummary_pendingHoldAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pendingHoldCount":
+			out.Values[i] = ec._BillingReportSummary_pendingHoldCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingTopModelRowImplementors = []string{"BillingTopModelRow"}
+
+func (ec *executionContext) _BillingTopModelRow(ctx context.Context, sel ast.SelectionSet, obj *biz.BillingTopModelRow) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingTopModelRowImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingTopModelRow")
+		case "modelId":
+			out.Values[i] = ec._BillingTopModelRow_modelId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "chargeAmountMicros":
+			out.Values[i] = ec._BillingTopModelRow_chargeAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "requestCount":
+			out.Values[i] = ec._BillingTopModelRow_requestCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingTopProjectRowImplementors = []string{"BillingTopProjectRow"}
+
+func (ec *executionContext) _BillingTopProjectRow(ctx context.Context, sel ast.SelectionSet, obj *biz.BillingTopProjectRow) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingTopProjectRowImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingTopProjectRow")
+		case "projectId":
+			out.Values[i] = ec._BillingTopProjectRow_projectId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "projectName":
+			out.Values[i] = ec._BillingTopProjectRow_projectName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "chargeAmountMicros":
+			out.Values[i] = ec._BillingTopProjectRow_chargeAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "requestCount":
+			out.Values[i] = ec._BillingTopProjectRow_requestCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingTopUserReportRowImplementors = []string{"BillingTopUserReportRow"}
+
+func (ec *executionContext) _BillingTopUserReportRow(ctx context.Context, sel ast.SelectionSet, obj *biz.BillingTopUserReportRow) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingTopUserReportRowImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingTopUserReportRow")
+		case "userId":
+			out.Values[i] = ec._BillingTopUserReportRow_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "email":
+			out.Values[i] = ec._BillingTopUserReportRow_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rechargeAmountMicros":
+			out.Values[i] = ec._BillingTopUserReportRow_rechargeAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "consumptionAmountMicros":
+			out.Values[i] = ec._BillingTopUserReportRow_consumptionAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netAmountMicros":
+			out.Values[i] = ec._BillingTopUserReportRow_netAmountMicros(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -126459,6 +128559,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminBillingReport":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminBillingReport(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "exportAdminBillingCSV":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_exportAdminBillingCSV(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -135037,6 +137181,82 @@ func (ec *executionContext) unmarshalNBillingAccountWhereInput2ᚖgithubᚗcom�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNBillingCSVExportPayload2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingCSVExportPayload(ctx context.Context, sel ast.SelectionSet, v biz.BillingCSVExportPayload) graphql.Marshaler {
+	return ec._BillingCSVExportPayload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingCSVExportPayload2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingCSVExportPayload(ctx context.Context, sel ast.SelectionSet, v *biz.BillingCSVExportPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingCSVExportPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBillingCommercialReport2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingCommercialReport(ctx context.Context, sel ast.SelectionSet, v biz.BillingCommercialReport) graphql.Marshaler {
+	return ec._BillingCommercialReport(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingCommercialReport2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingCommercialReport(ctx context.Context, sel ast.SelectionSet, v *biz.BillingCommercialReport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingCommercialReport(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBillingDailyReportRow2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingDailyReportRow(ctx context.Context, sel ast.SelectionSet, v biz.BillingDailyReportRow) graphql.Marshaler {
+	return ec._BillingDailyReportRow(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingDailyReportRow2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingDailyReportRowᚄ(ctx context.Context, sel ast.SelectionSet, v []biz.BillingDailyReportRow) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingDailyReportRow2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingDailyReportRow(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNBillingHold2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHold(ctx context.Context, sel ast.SelectionSet, v ent.BillingHold) graphql.Marshaler {
 	return ec._BillingHold(ctx, sel, &v)
 }
@@ -135218,6 +137438,154 @@ func (ec *executionContext) marshalNBillingPriceRuleScopeType2githubᚗcomᚋloo
 func (ec *executionContext) unmarshalNBillingPriceRuleWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingPriceRuleWhereInput(ctx context.Context, v any) (*ent.BillingPriceRuleWhereInput, error) {
 	res, err := ec.unmarshalInputBillingPriceRuleWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingReportSummary2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingReportSummary(ctx context.Context, sel ast.SelectionSet, v biz.BillingReportSummary) graphql.Marshaler {
+	return ec._BillingReportSummary(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingTopModelRow2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopModelRow(ctx context.Context, sel ast.SelectionSet, v biz.BillingTopModelRow) graphql.Marshaler {
+	return ec._BillingTopModelRow(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingTopModelRow2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopModelRowᚄ(ctx context.Context, sel ast.SelectionSet, v []biz.BillingTopModelRow) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingTopModelRow2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopModelRow(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNBillingTopProjectRow2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopProjectRow(ctx context.Context, sel ast.SelectionSet, v biz.BillingTopProjectRow) graphql.Marshaler {
+	return ec._BillingTopProjectRow(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingTopProjectRow2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopProjectRowᚄ(ctx context.Context, sel ast.SelectionSet, v []biz.BillingTopProjectRow) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingTopProjectRow2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopProjectRow(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNBillingTopUserReportRow2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopUserReportRow(ctx context.Context, sel ast.SelectionSet, v biz.BillingTopUserReportRow) graphql.Marshaler {
+	return ec._BillingTopUserReportRow(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingTopUserReportRow2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopUserReportRowᚄ(ctx context.Context, sel ast.SelectionSet, v []biz.BillingTopUserReportRow) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingTopUserReportRow2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBillingTopUserReportRow(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
@@ -136880,6 +139248,11 @@ func (ec *executionContext) marshalNExcludeAssociation2ᚖgithubᚗcomᚋlooplj�
 func (ec *executionContext) unmarshalNExcludeAssociationInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐExcludeAssociation(ctx context.Context, v any) (*objects.ExcludeAssociation, error) {
 	res, err := ec.unmarshalInputExcludeAssociationInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNExportAdminBillingCSVInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐExportAdminBillingCSVInput(ctx context.Context, v any) (ExportAdminBillingCSVInput, error) {
+	res, err := ec.unmarshalInputExportAdminBillingCSVInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNFastestChannel2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐFastestChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*FastestChannel) graphql.Marshaler {
@@ -141875,6 +144248,14 @@ func (ec *executionContext) unmarshalOAdminBillingHoldsFilter2ᚖgithubᚗcomᚋ
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputAdminBillingHoldsFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAdminBillingReportFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminBillingReportFilter(ctx context.Context, v any) (*AdminBillingReportFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAdminBillingReportFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

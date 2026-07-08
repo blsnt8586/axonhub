@@ -368,3 +368,45 @@ func (r *queryResolver) AdminPaymentEvents(ctx context.Context, filter *AdminPay
 
 	return r.adminPaymentEvents(ctx, filter, after, first, before, last, orderBy)
 }
+
+// AdminBillingReport is the resolver for the adminBillingReport field.
+func (r *queryResolver) AdminBillingReport(ctx context.Context, filter *AdminBillingReportFilter) (*biz.BillingCommercialReport, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	input := biz.BillingReportFilter{}
+	if filter != nil {
+		input.From = filter.From
+		input.To = filter.To
+		input.Currency = stringValue(filter.Currency)
+		if filter.Limit != nil {
+			input.Limit = *filter.Limit
+		}
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-report", func(ctx context.Context) (*biz.BillingCommercialReport, error) {
+		return biz.NewBillingReportService(biz.BillingReportServiceParams{Ent: r.client}).GetCommercialReport(ctx, input)
+	})
+}
+
+// ExportAdminBillingCSV is the resolver for the exportAdminBillingCSV field.
+func (r *queryResolver) ExportAdminBillingCSV(ctx context.Context, input ExportAdminBillingCSVInput) (*biz.BillingCSVExportPayload, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	exportInput := biz.BillingCSVExportInput{
+		Dataset:  biz.BillingCSVExportDataset(input.Dataset),
+		From:     input.From,
+		To:       input.To,
+		Currency: stringValue(input.Currency),
+	}
+	if input.Limit != nil {
+		exportInput.Limit = *input.Limit
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-report-csv", func(ctx context.Context) (*biz.BillingCSVExportPayload, error) {
+		return biz.NewBillingReportService(biz.BillingReportServiceParams{Ent: r.client}).ExportCSV(ctx, exportInput)
+	})
+}

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
+import { toast } from 'sonner';
+import i18n from '@/lib/i18n';
 
 export type BillingAccountStatus = 'active' | 'frozen' | 'closed';
 export type LedgerTransactionDirection = 'credit' | 'debit';
@@ -210,6 +212,77 @@ export interface AdminPaymentEventsFilter {
   eventKey?: string;
   from?: string;
   to?: string;
+}
+
+export interface AdminBillingReportFilter {
+  from?: string;
+  to?: string;
+  currency?: string;
+  limit?: number;
+}
+
+export interface BillingReportSummary {
+  rechargeAmountMicros: number;
+  consumptionAmountMicros: number;
+  netMovementMicros: number;
+  refundAmountMicros: number;
+  failedPaymentCount: number;
+  failedPaymentEventCount: number;
+  pendingHoldAmountMicros: number;
+  pendingHoldCount: number;
+}
+
+export interface BillingDailyReportRow {
+  date: string;
+  rechargeAmountMicros: number;
+  consumptionAmountMicros: number;
+  netMovementMicros: number;
+  failedPaymentCount: number;
+  failedPaymentEventCount: number;
+}
+
+export interface BillingTopModelRow {
+  modelId: string;
+  chargeAmountMicros: number;
+  requestCount: number;
+}
+
+export interface BillingTopProjectRow {
+  projectId: number;
+  projectName: string;
+  chargeAmountMicros: number;
+  requestCount: number;
+}
+
+export interface BillingTopUserReportRow {
+  userId: number;
+  email: string;
+  rechargeAmountMicros: number;
+  consumptionAmountMicros: number;
+  netAmountMicros: number;
+}
+
+export interface BillingCommercialReport {
+  from?: string | null;
+  to?: string | null;
+  currency: string;
+  summary: BillingReportSummary;
+  daily: BillingDailyReportRow[];
+  topModels: BillingTopModelRow[];
+  topProjects: BillingTopProjectRow[];
+  topUsers: BillingTopUserReportRow[];
+}
+
+export type BillingCSVExportDataset = 'ledger_transactions' | 'usage_billing_records' | 'payment_orders' | 'payment_events';
+
+export interface ExportAdminBillingCSVInput extends AdminBillingReportFilter {
+  dataset: BillingCSVExportDataset;
+}
+
+export interface BillingCSVExportPayload {
+  fileName: string;
+  content: string;
+  contentType: string;
 }
 
 type Connection<T> = {
@@ -486,6 +559,62 @@ const ADMIN_PAYMENT_EVENTS_QUERY = `
   }
 `;
 
+const ADMIN_BILLING_REPORT_QUERY = `
+  query AdminBillingReport($filter: AdminBillingReportFilter) {
+    adminBillingReport(filter: $filter) {
+      from
+      to
+      currency
+      summary {
+        rechargeAmountMicros
+        consumptionAmountMicros
+        netMovementMicros
+        refundAmountMicros
+        failedPaymentCount
+        failedPaymentEventCount
+        pendingHoldAmountMicros
+        pendingHoldCount
+      }
+      daily {
+        date
+        rechargeAmountMicros
+        consumptionAmountMicros
+        netMovementMicros
+        failedPaymentCount
+        failedPaymentEventCount
+      }
+      topModels {
+        modelId
+        chargeAmountMicros
+        requestCount
+      }
+      topProjects {
+        projectId
+        projectName
+        chargeAmountMicros
+        requestCount
+      }
+      topUsers {
+        userId
+        email
+        rechargeAmountMicros
+        consumptionAmountMicros
+        netAmountMicros
+      }
+    }
+  }
+`;
+
+const EXPORT_ADMIN_BILLING_CSV_QUERY = `
+  query ExportAdminBillingCSV($input: ExportAdminBillingCSVInput!) {
+    exportAdminBillingCSV(input: $input) {
+      fileName
+      content
+      contentType
+    }
+  }
+`;
+
 const ADJUST_USER_BALANCE_MUTATION = `
   mutation AdjustUserBalance($input: AdjustUserBalanceInput!) {
     adjustUserBalance(input: $input) {
@@ -687,6 +816,40 @@ export function useAdminPaymentEvents(filter: AdminPaymentEventsFilter = {}, fir
     queryFn: async () => {
       const data = await graphqlRequest<{ adminPaymentEvents: Connection<PaymentEvent> }>(ADMIN_PAYMENT_EVENTS_QUERY, { filter, first });
       return nodes(data.adminPaymentEvents);
+    },
+  });
+}
+
+export function useAdminBillingReport(filter: AdminBillingReportFilter = {}) {
+  return useQuery({
+    queryKey: ['admin-billing', 'commercial-report', filter],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminBillingReport: BillingCommercialReport }>(ADMIN_BILLING_REPORT_QUERY, { filter });
+      return data.adminBillingReport;
+    },
+  });
+}
+
+export function useExportAdminBillingCSV() {
+  return useMutation({
+    mutationFn: async (input: ExportAdminBillingCSVInput) => {
+      const data = await graphqlRequest<{ exportAdminBillingCSV: BillingCSVExportPayload }>(EXPORT_ADMIN_BILLING_CSV_QUERY, { input });
+      return data.exportAdminBillingCSV;
+    },
+    onSuccess: (data) => {
+      const blob = new Blob([data.content], { type: data.contentType || 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = data.fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(i18n.t('adminBilling.reports.exportSuccess'));
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : i18n.t('common.errors.unknownError'));
     },
   });
 }
