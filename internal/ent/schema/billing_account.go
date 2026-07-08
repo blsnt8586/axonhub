@@ -32,10 +32,10 @@ func (BillingAccount) Indexes() []ent.Index {
 func (BillingAccount) Fields() []ent.Field {
 	return []ent.Field{
 		field.Enum("owner_type").
-			Values("project").
-			Default("project").
+			Values("user", "project").
+			Default("user").
 			Immutable().
-			Comment("Commercial owner type. v1 supports project; keep generic for future org/user/reseller billing."),
+			Comment("Commercial owner type. User is the default wallet owner; project is reserved for shared enterprise wallets."),
 		field.Int("owner_id").
 			Immutable().
 			Comment("Owner identifier matching owner_type."),

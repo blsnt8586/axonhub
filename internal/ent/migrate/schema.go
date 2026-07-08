@@ -97,7 +97,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
-		{Name: "owner_type", Type: field.TypeEnum, Enums: []string{"project"}, Default: "project"},
+		{Name: "owner_type", Type: field.TypeEnum, Enums: []string{"user", "project"}, Default: "user"},
 		{Name: "owner_id", Type: field.TypeInt},
 		{Name: "currency", Type: field.TypeString, Default: "CNY"},
 		{Name: "balance_micros", Type: field.TypeInt64, Default: 0},

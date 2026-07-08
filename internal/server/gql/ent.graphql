@@ -404,7 +404,7 @@ type BillingAccount implements Node {
   createdAt: Time!
   updatedAt: Time!
   """
-  Commercial owner type. v1 supports project; keep generic for future org/user/reseller billing.
+  Commercial owner type. User is the default wallet owner; project is reserved for shared enterprise wallets.
   """
   ownerType: BillingAccountOwnerType!
   """
@@ -772,6 +772,7 @@ enum BillingAccountOrderField {
 BillingAccountOwnerType is enum for the field owner_type
 """
 enum BillingAccountOwnerType @goModel(model: "github.com/looplj/axonhub/internal/ent/billingaccount.OwnerType") {
+  user
   project
 }
 """

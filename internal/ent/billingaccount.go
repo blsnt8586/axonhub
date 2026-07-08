@@ -21,7 +21,7 @@ type BillingAccount struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Commercial owner type. v1 supports project; keep generic for future org/user/reseller billing.
+	// Commercial owner type. User is the default wallet owner; project is reserved for shared enterprise wallets.
 	OwnerType billingaccount.OwnerType `json:"owner_type,omitempty"`
 	// Owner identifier matching owner_type.
 	OwnerID int `json:"owner_id,omitempty"`

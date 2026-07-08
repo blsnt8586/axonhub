@@ -38,7 +38,7 @@ func (c BillingConfig) normalized() BillingConfig {
 		c.Mode = AdmissionModeDisabled
 	}
 	if c.Subject == "" {
-		c.Subject = BillingSubjectTypeProject
+		c.Subject = BillingSubjectTypeUser
 	}
 	if c.Currency == "" {
 		c.Currency = defaultBillingCurrency

@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	BillingSubjectTypeUser    = "user"
 	BillingSubjectTypeProject = "project"
 	defaultBillingCurrency    = "CNY"
 )
@@ -25,8 +26,12 @@ func ProjectBillingSubject(projectID int) BillingSubject {
 	return BillingSubject{Type: BillingSubjectTypeProject, ID: projectID}
 }
 
+func UserBillingSubject(userID int) BillingSubject {
+	return BillingSubject{Type: BillingSubjectTypeUser, ID: userID}
+}
+
 func (s BillingSubject) validate() error {
-	if s.Type != BillingSubjectTypeProject {
+	if s.Type != BillingSubjectTypeUser && s.Type != BillingSubjectTypeProject {
 		return fmt.Errorf("unsupported billing subject type %q", s.Type)
 	}
 	if s.ID <= 0 {
