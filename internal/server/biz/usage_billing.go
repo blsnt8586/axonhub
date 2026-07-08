@@ -118,9 +118,16 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (
 		Where(usagebillingrecord.UsageLogIDEQ(usageLogID)).
 		Only(ctx)
 	if err == nil {
-		return existing, nil
-	}
-	if !ent.IsNotFound(err) {
+		if existing.Status != usagebillingrecord.StatusFailed {
+			return existing, nil
+		}
+		if existing.LedgerTransactionID != 0 {
+			return nil, fmt.Errorf("failed usage billing record %d has ledger transaction %d and cannot be retried", existing.ID, existing.LedgerTransactionID)
+		}
+		if err := p.entFromContext(ctx).UsageBillingRecord.DeleteOneID(existing.ID).Exec(ctx); err != nil {
+			return nil, fmt.Errorf("failed to remove failed usage billing record before retry: %w", err)
+		}
+	} else if !ent.IsNotFound(err) {
 		return nil, fmt.Errorf("failed to query usage billing record: %w", err)
 	}
 
@@ -142,17 +149,7 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (
 
 	priceRule, err := p.pricingService.FindSellPrice(ctx, usageLog.ProjectID, usageLog.ModelID)
 	if err != nil {
-		record, recordErr := p.createFailedUsageBillingRecord(ctx, failedUsageBillingRecordInput{
-			usageLog:       usageLog,
-			accountID:      account.ID,
-			usageSnapshot:  usageSnapshot,
-			idempotencyKey: usageBillingIdempotencyKey(usageLogID),
-			err:            err,
-		})
-		if recordErr != nil {
-			return nil, errors.Join(err, recordErr)
-		}
-		return record, err
+		return nil, err
 	}
 
 	chargeItems, chargeTotal := ComputeUsageCost(usage, priceRule.Price)
@@ -238,71 +235,7 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (
 		return nil
 	})
 	if err != nil {
-		failed, recordErr := p.createFailedUsageBillingRecord(ctx, failedUsageBillingRecordInput{
-			usageLog:           usageLog,
-			accountID:          account.ID,
-			usageSnapshot:      usageSnapshot,
-			priceSnapshot:      priceRule.Price,
-			priceReferenceID:   priceRule.ReferenceID,
-			chargeItems:        chargeItems,
-			costAmountMicros:   costMicros,
-			chargeAmountMicros: chargeMicros,
-			currency:           priceRule.Currency,
-			idempotencyKey:     idempotencyKey,
-			err:                err,
-		})
-		if recordErr != nil {
-			return nil, errors.Join(err, recordErr)
-		}
-		return failed, err
-	}
-
-	return record, nil
-}
-
-type failedUsageBillingRecordInput struct {
-	usageLog           *ent.UsageLog
-	accountID          int
-	usageSnapshot      []byte
-	priceSnapshot      objects.ModelPrice
-	priceReferenceID   string
-	chargeItems        []objects.CostItem
-	costAmountMicros   int64
-	chargeAmountMicros int64
-	currency           string
-	idempotencyKey     string
-	err                error
-}
-
-func (p *UsageBillingProcessor) createFailedUsageBillingRecord(ctx context.Context, input failedUsageBillingRecordInput) (*ent.UsageBillingRecord, error) {
-	if input.currency == "" {
-		input.currency = defaultBillingCurrency
-	}
-
-	record, err := p.entFromContext(ctx).UsageBillingRecord.Create().
-		SetUsageLogID(input.usageLog.ID).
-		SetBillingAccountID(input.accountID).
-		SetProjectID(input.usageLog.ProjectID).
-		SetNillableAPIKeyID(usageLogAPIKeyIDPtr(input.usageLog)).
-		SetModelID(input.usageLog.ModelID).
-		SetUsageSnapshot(objects.JSONRawMessage(input.usageSnapshot)).
-		SetPriceSnapshot(input.priceSnapshot).
-		SetPriceReferenceID(input.priceReferenceID).
-		SetChargeItems(input.chargeItems).
-		SetCostAmountMicros(input.costAmountMicros).
-		SetChargeAmountMicros(input.chargeAmountMicros).
-		SetCurrency(input.currency).
-		SetStatus(usagebillingrecord.StatusFailed).
-		SetIdempotencyKey(input.idempotencyKey).
-		SetError(input.err.Error()).
-		Save(ctx)
-	if ent.IsConstraintError(err) {
-		return p.entFromContext(ctx).UsageBillingRecord.Query().
-			Where(usagebillingrecord.UsageLogIDEQ(input.usageLog.ID)).
-			Only(ctx)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to create failed usage billing record: %w", err)
+		return nil, err
 	}
 
 	return record, nil

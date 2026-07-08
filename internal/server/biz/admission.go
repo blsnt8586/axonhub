@@ -20,13 +20,17 @@ const (
 )
 
 type BillingConfig struct {
-	Mode                 AdmissionMode   `conf:"mode" yaml:"mode" json:"mode"`
-	Subject              string          `conf:"subject" yaml:"subject" json:"subject"`
-	Currency             string          `conf:"currency" yaml:"currency" json:"currency"`
-	MinBalance           decimal.Decimal `conf:"min_balance" yaml:"min_balance" json:"min_balance"`
-	AllowNegative        bool            `conf:"allow_negative" yaml:"allow_negative" json:"allow_negative"`
-	CreditLimitDefault   decimal.Decimal `conf:"credit_limit_default" yaml:"credit_limit_default" json:"credit_limit_default"`
-	BlockWhenNoPriceRule bool            `conf:"block_when_no_price_rule" yaml:"block_when_no_price_rule" json:"block_when_no_price_rule"`
+	Mode                        AdmissionMode   `conf:"mode" yaml:"mode" json:"mode"`
+	Subject                     string          `conf:"subject" yaml:"subject" json:"subject"`
+	Currency                    string          `conf:"currency" yaml:"currency" json:"currency"`
+	MinBalance                  decimal.Decimal `conf:"min_balance" yaml:"min_balance" json:"min_balance"`
+	AllowNegative               bool            `conf:"allow_negative" yaml:"allow_negative" json:"allow_negative"`
+	CreditLimitDefault          decimal.Decimal `conf:"credit_limit_default" yaml:"credit_limit_default" json:"credit_limit_default"`
+	BlockWhenNoPriceRule        bool            `conf:"block_when_no_price_rule" yaml:"block_when_no_price_rule" json:"block_when_no_price_rule"`
+	OutboxWorkerIntervalSeconds int             `conf:"outbox_worker_interval_seconds" yaml:"outbox_worker_interval_seconds" json:"outbox_worker_interval_seconds"`
+	OutboxBatchSize             int             `conf:"outbox_batch_size" yaml:"outbox_batch_size" json:"outbox_batch_size"`
+	OutboxMaxAttempts           int             `conf:"outbox_max_attempts" yaml:"outbox_max_attempts" json:"outbox_max_attempts"`
+	OutboxRetryDelaySeconds     int             `conf:"outbox_retry_delay_seconds" yaml:"outbox_retry_delay_seconds" json:"outbox_retry_delay_seconds"`
 }
 
 func (c BillingConfig) normalized() BillingConfig {
@@ -38,6 +42,18 @@ func (c BillingConfig) normalized() BillingConfig {
 	}
 	if c.Currency == "" {
 		c.Currency = defaultBillingCurrency
+	}
+	if c.OutboxWorkerIntervalSeconds <= 0 {
+		c.OutboxWorkerIntervalSeconds = 60
+	}
+	if c.OutboxBatchSize <= 0 {
+		c.OutboxBatchSize = 100
+	}
+	if c.OutboxMaxAttempts <= 0 {
+		c.OutboxMaxAttempts = 10
+	}
+	if c.OutboxRetryDelaySeconds <= 0 {
+		c.OutboxRetryDelaySeconds = 60
 	}
 
 	return c
