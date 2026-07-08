@@ -20,6 +20,19 @@ const (
 	AdmissionModeEnforce  AdmissionMode = "enforce"
 )
 
+type AdmissionCode string
+
+const (
+	AdmissionCodeAllowed               AdmissionCode = "allowed"
+	AdmissionCodeBillingDisabled       AdmissionCode = "billing_disabled"
+	AdmissionCodeAccountNotFound       AdmissionCode = "billing_account_not_found"
+	AdmissionCodeAccountLoadFailed     AdmissionCode = "billing_account_load_failed"
+	AdmissionCodeAccountFrozen         AdmissionCode = "billing_account_frozen"
+	AdmissionCodeAccountClosed         AdmissionCode = "billing_account_closed"
+	AdmissionCodeInvalidMinimumBalance AdmissionCode = "invalid_minimum_balance"
+	AdmissionCodeInsufficientBalance   AdmissionCode = "insufficient_billing_balance"
+)
+
 type BillingConfig struct {
 	Mode                        AdmissionMode   `conf:"mode" yaml:"mode" json:"mode"`
 	Subject                     string          `conf:"subject" yaml:"subject" json:"subject"`
@@ -108,13 +121,15 @@ type AdmissionCheckInput struct {
 type AdmissionDecision struct {
 	Allowed bool
 	Mode    AdmissionMode
+	Code    AdmissionCode
 	Reason  string
 }
 
 func (s *AdmissionService) Check(ctx context.Context, input AdmissionCheckInput) (AdmissionDecision, error) {
 	cfg := s.config.normalized()
-	decision := AdmissionDecision{Allowed: true, Mode: cfg.Mode}
+	decision := AdmissionDecision{Allowed: true, Mode: cfg.Mode, Code: AdmissionCodeAllowed}
 	if cfg.Mode == AdmissionModeDisabled {
+		decision.Code = AdmissionCodeBillingDisabled
 		decision.Reason = "billing disabled"
 		return decision, nil
 	}
@@ -122,12 +137,14 @@ func (s *AdmissionService) Check(ctx context.Context, input AdmissionCheckInput)
 		input.Subject.Type = cfg.Subject
 	}
 
-	reason, err := s.checkBillingAccount(ctx, cfg, input.Subject)
+	code, reason, err := s.checkBillingAccount(ctx, cfg, input.Subject)
 	if err == nil {
+		decision.Code = code
 		decision.Reason = "allowed"
 		return decision, nil
 	}
 	if cfg.Mode == AdmissionModeWarn {
+		decision.Code = code
 		decision.Reason = reason
 		return decision, nil
 	}
@@ -136,36 +153,37 @@ func (s *AdmissionService) Check(ctx context.Context, input AdmissionCheckInput)
 	}
 
 	decision.Allowed = false
+	decision.Code = code
 	decision.Reason = reason
 	return decision, err
 }
 
-func (s *AdmissionService) checkBillingAccount(ctx context.Context, cfg BillingConfig, subject BillingSubject) (string, error) {
+func (s *AdmissionService) checkBillingAccount(ctx context.Context, cfg BillingConfig, subject BillingSubject) (AdmissionCode, string, error) {
 	account, err := s.billingAccountService.GetBySubject(ctx, subject)
 	if err != nil {
 		if errors.Is(err, ErrBillingAccountNotFound) {
-			return "billing account not found", err
+			return AdmissionCodeAccountNotFound, "billing account not found", err
 		}
-		return "failed to load billing account", err
+		return AdmissionCodeAccountLoadFailed, "failed to load billing account", err
 	}
 
 	switch account.Status {
 	case billingaccount.StatusFrozen:
-		return "billing account frozen", ErrBillingAccountFrozen
+		return AdmissionCodeAccountFrozen, "billing account frozen", ErrBillingAccountFrozen
 	case billingaccount.StatusClosed:
-		return "billing account closed", ErrBillingAccountClosed
+		return AdmissionCodeAccountClosed, "billing account closed", ErrBillingAccountClosed
 	}
 
 	minBalanceMicros, err := decimalToMicros(cfg.MinBalance)
 	if err != nil {
-		return "invalid minimum balance", err
+		return AdmissionCodeInvalidMinimumBalance, "invalid minimum balance", err
 	}
 	if cfg.AllowNegative {
-		return "allowed", nil
+		return AdmissionCodeAllowed, "allowed", nil
 	}
 	if account.BalanceMicros+account.CreditLimitMicros <= minBalanceMicros {
-		return "insufficient billing balance", ErrInsufficientBalance
+		return AdmissionCodeInsufficientBalance, "insufficient billing balance", ErrInsufficientBalance
 	}
 
-	return "allowed", nil
+	return AdmissionCodeAllowed, "allowed", nil
 }

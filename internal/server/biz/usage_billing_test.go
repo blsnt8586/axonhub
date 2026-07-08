@@ -457,6 +457,43 @@ func TestBillingOutboxWorkerRetriesLegacyFailedUsageBillingRecord(t *testing.T) 
 	require.Equal(t, billingoutbox.StatusDone, reloadedOutbox.Status)
 }
 
+func TestUsageBillingProcessorRejectsRetryOfFailedRecordWithLedgerTransaction(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, processor, account := newUsageBillingTestProcessor(t, "usage_billing_failed_with_ledger_retry")
+	ledgerSvc := NewLedgerService(LedgerServiceParams{Ent: client})
+	ledgerTx, err := ledgerSvc.Credit(ctx, account.ID, decimal.RequireFromString("1"), ledgertransaction.TypePaymentRecharge, "legacy-ledger")
+	require.NoError(t, err)
+
+	usageLog := createUsageLogForBillingTest(t, client, ctx, account.OwnerID, "gpt-test", 1_000_000, 0)
+	failed, err := client.UsageBillingRecord.Create().
+		SetUsageLogID(usageLog.ID).
+		SetBillingAccountID(account.ID).
+		SetProjectID(usageLog.ProjectID).
+		SetModelID(usageLog.ModelID).
+		SetUsageSnapshot(objects.JSONRawMessage([]byte(`{}`))).
+		SetPriceSnapshot(objects.ModelPrice{}).
+		SetPriceReferenceID("").
+		SetChargeAmountMicros(0).
+		SetCurrency("CNY").
+		SetStatus(usagebillingrecord.StatusFailed).
+		SetLedgerTransactionID(ledgerTx.ID).
+		SetIdempotencyKey(usageBillingIdempotencyKey(usageLog.ID)).
+		SetError("legacy failed after ledger post").
+		Save(ctx)
+	require.NoError(t, err)
+
+	record, err := processor.BillUsage(ctx, usageLog.ID)
+	require.Error(t, err)
+	require.Nil(t, record)
+	require.Contains(t, err.Error(), "cannot be retried")
+
+	reloaded, err := client.UsageBillingRecord.Get(ctx, failed.ID)
+	require.NoError(t, err)
+	require.Equal(t, usagebillingrecord.StatusFailed, reloaded.Status)
+	require.Equal(t, ledgerTx.ID, reloaded.LedgerTransactionID)
+}
+
 func TestUsageBillingProcessorDoesNotCreateRecordWhenPriceMissing(t *testing.T) {
 	t.Parallel()
 

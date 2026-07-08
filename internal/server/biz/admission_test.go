@@ -37,6 +37,7 @@ func TestAdmissionDisabledDoesNotRequireBillingAccount(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, decision.Allowed)
 	require.Equal(t, AdmissionModeDisabled, decision.Mode)
+	require.Equal(t, AdmissionCodeBillingDisabled, decision.Code)
 }
 
 func TestAdmissionWarnAllowsMissingBillingAccount(t *testing.T) {
@@ -47,6 +48,7 @@ func TestAdmissionWarnAllowsMissingBillingAccount(t *testing.T) {
 	decision, err := svc.Check(ctx, AdmissionCheckInput{Subject: ProjectBillingSubject(999)})
 	require.NoError(t, err)
 	require.True(t, decision.Allowed)
+	require.Equal(t, AdmissionCodeAccountNotFound, decision.Code)
 	require.Equal(t, "billing account not found", decision.Reason)
 }
 
@@ -58,6 +60,7 @@ func TestAdmissionEnforceRejectsMissingBillingAccount(t *testing.T) {
 	decision, err := svc.Check(ctx, AdmissionCheckInput{Subject: ProjectBillingSubject(999)})
 	require.ErrorIs(t, err, ErrBillingAccountNotFound)
 	require.False(t, decision.Allowed)
+	require.Equal(t, AdmissionCodeAccountNotFound, decision.Code)
 }
 
 func TestAdmissionEnforceRejectsZeroBalanceByDefault(t *testing.T) {
@@ -70,6 +73,7 @@ func TestAdmissionEnforceRejectsZeroBalanceByDefault(t *testing.T) {
 	decision, err := svc.Check(ctx, AdmissionCheckInput{Subject: ProjectBillingSubject(1)})
 	require.ErrorIs(t, err, ErrInsufficientBalance)
 	require.False(t, decision.Allowed)
+	require.Equal(t, AdmissionCodeInsufficientBalance, decision.Code)
 }
 
 func TestAdmissionEnforceAllowsPositiveBalance(t *testing.T) {
@@ -84,6 +88,7 @@ func TestAdmissionEnforceAllowsPositiveBalance(t *testing.T) {
 	decision, err := svc.Check(ctx, AdmissionCheckInput{Subject: ProjectBillingSubject(1)})
 	require.NoError(t, err)
 	require.True(t, decision.Allowed)
+	require.Equal(t, AdmissionCodeAllowed, decision.Code)
 }
 
 func TestAdmissionEnforceAllowsCreditLimit(t *testing.T) {
@@ -98,6 +103,7 @@ func TestAdmissionEnforceAllowsCreditLimit(t *testing.T) {
 	decision, err := svc.Check(ctx, AdmissionCheckInput{Subject: ProjectBillingSubject(1)})
 	require.NoError(t, err)
 	require.True(t, decision.Allowed)
+	require.Equal(t, AdmissionCodeAllowed, decision.Code)
 }
 
 func TestAdmissionRejectsFrozenAccount(t *testing.T) {
@@ -112,4 +118,20 @@ func TestAdmissionRejectsFrozenAccount(t *testing.T) {
 	decision, err := svc.Check(ctx, AdmissionCheckInput{Subject: ProjectBillingSubject(1)})
 	require.ErrorIs(t, err, ErrBillingAccountFrozen)
 	require.False(t, decision.Allowed)
+	require.Equal(t, AdmissionCodeAccountFrozen, decision.Code)
+}
+
+func TestAdmissionRejectsClosedAccount(t *testing.T) {
+	t.Parallel()
+
+	svc, accountSvc, _, ctx := newAdmissionTestServices(t, "admission_closed", BillingConfig{Mode: AdmissionModeEnforce})
+	account, err := accountSvc.GetOrCreateForSubject(ctx, ProjectBillingSubject(1))
+	require.NoError(t, err)
+	_, err = accountSvc.entFromContext(ctx).BillingAccount.UpdateOneID(account.ID).SetStatus(billingaccount.StatusClosed).Save(ctx)
+	require.NoError(t, err)
+
+	decision, err := svc.Check(ctx, AdmissionCheckInput{Subject: ProjectBillingSubject(1)})
+	require.ErrorIs(t, err, ErrBillingAccountClosed)
+	require.False(t, decision.Allowed)
+	require.Equal(t, AdmissionCodeAccountClosed, decision.Code)
 }

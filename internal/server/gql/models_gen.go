@@ -12,7 +12,11 @@ import (
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
+	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
+	"github.com/looplj/axonhub/internal/ent/paymentevent"
+	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
 	"github.com/looplj/axonhub/llm/httpclient"
@@ -58,6 +62,51 @@ type AddUserToProjectInput struct {
 	IsOwner   *bool           `json:"isOwner,omitempty"`
 	Scopes    []string        `json:"scopes,omitempty"`
 	RoleIDs   []*objects.GUID `json:"roleIDs,omitempty"`
+}
+
+type AdminLedgerTransactionsFilter struct {
+	UserID           *int                         `json:"userId,omitempty"`
+	BillingAccountID *int                         `json:"billingAccountId,omitempty"`
+	Direction        *ledgertransaction.Direction `json:"direction,omitempty"`
+	Status           *ledgertransaction.Status    `json:"status,omitempty"`
+	Type             *ledgertransaction.Type      `json:"type,omitempty"`
+	ReferenceType    *string                      `json:"referenceType,omitempty"`
+	From             *time.Time                   `json:"from,omitempty"`
+	To               *time.Time                   `json:"to,omitempty"`
+}
+
+type AdminPaymentEventsFilter struct {
+	PaymentOrderID     *int                       `json:"paymentOrderId,omitempty"`
+	ProviderInstanceID *int                       `json:"providerInstanceId,omitempty"`
+	ProviderType       *paymentevent.ProviderType `json:"providerType,omitempty"`
+	Status             *paymentevent.Status       `json:"status,omitempty"`
+	EventType          *string                    `json:"eventType,omitempty"`
+	EventKey           *string                    `json:"eventKey,omitempty"`
+	From               *time.Time                 `json:"from,omitempty"`
+	To                 *time.Time                 `json:"to,omitempty"`
+}
+
+type AdminPaymentOrdersFilter struct {
+	UserID           *int                       `json:"userId,omitempty"`
+	ProjectID        *int                       `json:"projectId,omitempty"`
+	BillingAccountID *int                       `json:"billingAccountId,omitempty"`
+	ProviderType     *paymentorder.ProviderType `json:"providerType,omitempty"`
+	Status           *paymentorder.Status       `json:"status,omitempty"`
+	OrderNo          *string                    `json:"orderNo,omitempty"`
+	ExternalTradeNo  *string                    `json:"externalTradeNo,omitempty"`
+	From             *time.Time                 `json:"from,omitempty"`
+	To               *time.Time                 `json:"to,omitempty"`
+}
+
+type AdminUsageBillingRecordsFilter struct {
+	UserID           *int                       `json:"userId,omitempty"`
+	ProjectID        *int                       `json:"projectId,omitempty"`
+	APIKeyID         *int                       `json:"apiKeyId,omitempty"`
+	BillingAccountID *int                       `json:"billingAccountId,omitempty"`
+	ModelID          *string                    `json:"modelId,omitempty"`
+	Status           *usagebillingrecord.Status `json:"status,omitempty"`
+	From             *time.Time                 `json:"from,omitempty"`
+	To               *time.Time                 `json:"to,omitempty"`
 }
 
 type ApplyChannelOverrideTemplateInput struct {

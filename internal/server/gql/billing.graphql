@@ -71,6 +71,51 @@ input SaveBillingPriceRuleForm {
   referenceId: String
 }
 
+input AdminLedgerTransactionsFilter {
+  userId: Int
+  billingAccountId: Int
+  direction: LedgerTransactionDirection
+  status: LedgerTransactionStatus
+  type: LedgerTransactionType
+  referenceType: String
+  from: Time
+  to: Time
+}
+
+input AdminUsageBillingRecordsFilter {
+  userId: Int
+  projectId: Int
+  apiKeyId: Int
+  billingAccountId: Int
+  modelId: String
+  status: UsageBillingRecordStatus
+  from: Time
+  to: Time
+}
+
+input AdminPaymentOrdersFilter {
+  userId: Int
+  projectId: Int
+  billingAccountId: Int
+  providerType: PaymentOrderProviderType
+  status: PaymentOrderStatus
+  orderNo: String
+  externalTradeNo: String
+  from: Time
+  to: Time
+}
+
+input AdminPaymentEventsFilter {
+  paymentOrderId: Int
+  providerInstanceId: Int
+  providerType: PaymentEventProviderType
+  status: PaymentEventStatus
+  eventType: String
+  eventKey: String
+  from: Time
+  to: Time
+}
+
 type PaymentCheckout {
   providerType: String!
   orderNo: String!
@@ -103,4 +148,8 @@ extend type Query {
   userUsageBillingRecords(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UsageBillingRecordOrder): UsageBillingRecordConnection!
   myLedgerTransactions(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   userLedgerTransactions(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
+  adminLedgerTransactions(filter: AdminLedgerTransactionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
+  adminUsageBillingRecords(filter: AdminUsageBillingRecordsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UsageBillingRecordOrder): UsageBillingRecordConnection!
+  adminPaymentOrders(filter: AdminPaymentOrdersFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentOrderOrder): PaymentOrderConnection!
+  adminPaymentEvents(filter: AdminPaymentEventsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentEventOrder): PaymentEventConnection!
 }

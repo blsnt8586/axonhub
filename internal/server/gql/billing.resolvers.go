@@ -272,3 +272,39 @@ func (r *queryResolver) UserLedgerTransactions(ctx context.Context, userID objec
 
 	return r.userLedgerTransactions(ctx, id, after, first, before, last, orderBy)
 }
+
+// AdminLedgerTransactions is the resolver for the adminLedgerTransactions field.
+func (r *queryResolver) AdminLedgerTransactions(ctx context.Context, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.adminLedgerTransactions(ctx, filter, after, first, before, last, orderBy)
+}
+
+// AdminUsageBillingRecords is the resolver for the adminUsageBillingRecords field.
+func (r *queryResolver) AdminUsageBillingRecords(ctx context.Context, filter *AdminUsageBillingRecordsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) (*ent.UsageBillingRecordConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.adminUsageBillingRecords(ctx, filter, after, first, before, last, orderBy)
+}
+
+// AdminPaymentOrders is the resolver for the adminPaymentOrders field.
+func (r *queryResolver) AdminPaymentOrders(ctx context.Context, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) (*ent.PaymentOrderConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.adminPaymentOrders(ctx, filter, after, first, before, last, orderBy)
+}
+
+// AdminPaymentEvents is the resolver for the adminPaymentEvents field.
+func (r *queryResolver) AdminPaymentEvents(ctx context.Context, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) (*ent.PaymentEventConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.adminPaymentEvents(ctx, filter, after, first, before, last, orderBy)
+}

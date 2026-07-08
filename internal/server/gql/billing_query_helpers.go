@@ -2,7 +2,9 @@ package gql
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	"entgo.io/contrib/entgql"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
+	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/objects"
@@ -85,5 +88,176 @@ func (r *queryResolver) userLedgerTransactions(ctx context.Context, userID int, 
 		return r.client.LedgerTransaction.Query().
 			Where(ledgertransaction.BillingAccountIDEQ(account.ID)).
 			Paginate(ctx, after, first, before, last, ent.WithLedgerTransactionOrder(orderBy))
+	})
+}
+
+func (r *queryResolver) adminLedgerTransactions(ctx context.Context, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-ledger-transactions", func(ctx context.Context) (*ent.LedgerTransactionConnection, error) {
+		query := r.client.LedgerTransaction.Query()
+		if filter != nil {
+			if filter.UserID != nil {
+				account, err := r.billingAccountService.GetBySubject(ctx, biz.UserBillingSubject(*filter.UserID))
+				if err != nil {
+					if !errors.Is(err, biz.ErrBillingAccountNotFound) {
+						return nil, err
+					}
+					query.Where(ledgertransaction.BillingAccountIDEQ(-1))
+				} else {
+					query.Where(ledgertransaction.BillingAccountIDEQ(account.ID))
+				}
+			}
+			if filter.BillingAccountID != nil {
+				query.Where(ledgertransaction.BillingAccountIDEQ(*filter.BillingAccountID))
+			}
+			if filter.Direction != nil {
+				query.Where(ledgertransaction.DirectionEQ(*filter.Direction))
+			}
+			if filter.Status != nil {
+				query.Where(ledgertransaction.StatusEQ(*filter.Status))
+			}
+			if filter.Type != nil {
+				query.Where(ledgertransaction.TypeEQ(*filter.Type))
+			}
+			if value := strings.TrimSpace(stringValue(filter.ReferenceType)); value != "" {
+				query.Where(ledgertransaction.ReferenceTypeEQ(value))
+			}
+			if filter.From != nil {
+				query.Where(ledgertransaction.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(ledgertransaction.CreatedAtLTE(*filter.To))
+			}
+		}
+
+		return query.Paginate(ctx, after, first, before, last, ent.WithLedgerTransactionOrder(orderBy))
+	})
+}
+
+func (r *queryResolver) adminUsageBillingRecords(ctx context.Context, filter *AdminUsageBillingRecordsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) (*ent.UsageBillingRecordConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-usage-records", func(ctx context.Context) (*ent.UsageBillingRecordConnection, error) {
+		query := r.client.UsageBillingRecord.Query()
+		if filter != nil {
+			if filter.UserID != nil {
+				query.Where(usagebillingrecord.UserIDEQ(*filter.UserID))
+			}
+			if filter.ProjectID != nil {
+				query.Where(usagebillingrecord.ProjectIDEQ(*filter.ProjectID))
+			}
+			if filter.APIKeyID != nil {
+				query.Where(usagebillingrecord.APIKeyIDEQ(*filter.APIKeyID))
+			}
+			if filter.BillingAccountID != nil {
+				query.Where(usagebillingrecord.BillingAccountIDEQ(*filter.BillingAccountID))
+			}
+			if value := strings.TrimSpace(stringValue(filter.ModelID)); value != "" {
+				query.Where(usagebillingrecord.ModelIDContainsFold(value))
+			}
+			if filter.Status != nil {
+				query.Where(usagebillingrecord.StatusEQ(*filter.Status))
+			}
+			if filter.From != nil {
+				query.Where(usagebillingrecord.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(usagebillingrecord.CreatedAtLTE(*filter.To))
+			}
+		}
+
+		return query.Paginate(ctx, after, first, before, last, ent.WithUsageBillingRecordOrder(orderBy))
+	})
+}
+
+func (r *queryResolver) adminPaymentOrders(ctx context.Context, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) (*ent.PaymentOrderConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-payment-orders", func(ctx context.Context) (*ent.PaymentOrderConnection, error) {
+		query := r.client.PaymentOrder.Query()
+		if filter != nil {
+			if filter.UserID != nil {
+				account, err := r.billingAccountService.GetBySubject(ctx, biz.UserBillingSubject(*filter.UserID))
+				if err != nil {
+					if !errors.Is(err, biz.ErrBillingAccountNotFound) {
+						return nil, err
+					}
+					query.Where(paymentorder.BillingAccountIDEQ(-1))
+				} else {
+					query.Where(paymentorder.BillingAccountIDEQ(account.ID))
+				}
+			}
+			if filter.ProjectID != nil {
+				query.Where(paymentorder.ProjectIDEQ(*filter.ProjectID))
+			}
+			if filter.BillingAccountID != nil {
+				query.Where(paymentorder.BillingAccountIDEQ(*filter.BillingAccountID))
+			}
+			if filter.ProviderType != nil {
+				query.Where(paymentorder.ProviderTypeEQ(*filter.ProviderType))
+			}
+			if filter.Status != nil {
+				query.Where(paymentorder.StatusEQ(*filter.Status))
+			}
+			if value := strings.TrimSpace(stringValue(filter.OrderNo)); value != "" {
+				query.Where(paymentorder.OrderNoContainsFold(value))
+			}
+			if value := strings.TrimSpace(stringValue(filter.ExternalTradeNo)); value != "" {
+				query.Where(paymentorder.ExternalTradeNoContainsFold(value))
+			}
+			if filter.From != nil {
+				query.Where(paymentorder.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(paymentorder.CreatedAtLTE(*filter.To))
+			}
+		}
+
+		return query.Paginate(ctx, after, first, before, last, ent.WithPaymentOrderOrder(orderBy))
+	})
+}
+
+func (r *queryResolver) adminPaymentEvents(ctx context.Context, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) (*ent.PaymentEventConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-payment-events", func(ctx context.Context) (*ent.PaymentEventConnection, error) {
+		query := r.client.PaymentEvent.Query()
+		if filter != nil {
+			if filter.PaymentOrderID != nil {
+				query.Where(paymentevent.PaymentOrderIDEQ(*filter.PaymentOrderID))
+			}
+			if filter.ProviderInstanceID != nil {
+				query.Where(paymentevent.ProviderInstanceIDEQ(*filter.ProviderInstanceID))
+			}
+			if filter.ProviderType != nil {
+				query.Where(paymentevent.ProviderTypeEQ(*filter.ProviderType))
+			}
+			if filter.Status != nil {
+				query.Where(paymentevent.StatusEQ(*filter.Status))
+			}
+			if value := strings.TrimSpace(stringValue(filter.EventType)); value != "" {
+				query.Where(paymentevent.EventTypeContainsFold(value))
+			}
+			if value := strings.TrimSpace(stringValue(filter.EventKey)); value != "" {
+				query.Where(paymentevent.EventKeyContainsFold(value))
+			}
+			if filter.From != nil {
+				query.Where(paymentevent.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(paymentevent.CreatedAtLTE(*filter.To))
+			}
+		}
+
+		return query.Paginate(ctx, after, first, before, last, ent.WithPaymentEventOrder(orderBy))
 	})
 }

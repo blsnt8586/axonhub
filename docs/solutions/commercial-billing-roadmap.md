@@ -28,30 +28,30 @@ This document tracks the staged plan for turning AxonHub into a production-grade
 
 ## Stage 0: Harden Existing Commercial Modules
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: make the current wallet, ledger, payment, and usage billing implementation stable enough to become the foundation for later modules.
 
 Backend scope:
 
-- [ ] Refine billing admission errors into stable machine-readable codes: missing account, frozen account, closed account, insufficient balance, insufficient credit.
-- [ ] Ensure failed usage billing records can be retried safely only when no ledger transaction was posted.
-- [ ] Add owner-only admin queries for ledger transactions, usage billing records, payment orders, and payment events.
-- [ ] Add filtering by user, project, API key, model, status, direction, provider, and time range where applicable.
-- [ ] Confirm all wallet balance changes are ledger-backed and idempotent.
+- [x] Refine billing admission errors into stable machine-readable codes: missing account, frozen account, closed account, insufficient balance, insufficient credit.
+- [x] Ensure failed usage billing records can be retried safely only when no ledger transaction was posted.
+- [x] Add owner-only admin queries for ledger transactions, usage billing records, payment orders, and payment events.
+- [x] Add filtering by user, project, API key, model, status, direction, provider, and time range where applicable.
+- [x] Confirm all wallet balance changes are ledger-backed and idempotent.
 
 Frontend scope:
 
-- [ ] Split admin billing into tabs: wallet accounts, ledger, usage charges, payment orders, payment events, sell price rules, payment providers.
-- [ ] Add user billing filters and clear empty/error/loading states.
-- [ ] Normalize currency and micros formatting in billing pages.
-- [ ] Surface stable billing failure reasons in user-facing and admin-facing views.
+- [x] Split admin billing into tabs: wallet accounts, ledger, usage charges, payment orders, payment events, sell price rules, payment providers.
+- [x] Add user billing filters and clear empty/error/loading states.
+- [x] Normalize currency and micros formatting in billing pages.
+- [x] Surface stable billing failure reasons in user-facing and admin-facing views.
 
 Verification:
 
-- [ ] Backend tests cover frozen/closed/insufficient-balance paths.
-- [ ] Backend tests cover usage billing retry safety.
-- [ ] Frontend lint/build passes for changed frontend files.
+- [x] Backend tests cover frozen/closed/insufficient-balance paths.
+- [x] Backend tests cover usage billing retry safety.
+- [x] Frontend TypeScript check passes for changed frontend files. Lint/build were not run because `AGENTS.md` forbids them unless explicitly requested.
 - [ ] Commit completed stage.
 
 ## Stage 1: Wallet Holds And Pre-Authorization
@@ -344,7 +344,7 @@ Verification:
 
 ## Suggested Stage Order
 
-- [ ] Stage 0: Harden Existing Commercial Modules
+- [x] Stage 0: Harden Existing Commercial Modules
 - [ ] Stage 1: Wallet Holds And Pre-Authorization
 - [ ] Stage 2: Production Payment Order Lifecycle
 - [ ] Stage 3: Commercial Reports And Audit Console
@@ -363,3 +363,4 @@ Append one line per completed stage.
 | Stage | Commit | Date | Notes |
 | --- | --- | --- | --- |
 | Baseline | `4ad0913d` and earlier billing commits | 2026-07-08 | Wallet, ledger, ePay, sell price rules, user/admin billing pages, and user wallet controls are in place. |
+| Stage 0 | This stage commit | 2026-07-08 | Hardened admission codes, usage retry safety, owner-only billing operation queries, admin billing tabs, filters, and failure reason display. |

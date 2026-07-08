@@ -3,6 +3,19 @@ import { graphqlRequest } from '@/gql/graphql';
 
 export type BillingAccountStatus = 'active' | 'frozen' | 'closed';
 export type LedgerTransactionDirection = 'credit' | 'debit';
+export type LedgerTransactionStatus = 'posted' | 'voided';
+export type LedgerTransactionType =
+  | 'payment_recharge'
+  | 'usage_charge'
+  | 'admin_adjustment'
+  | 'refund'
+  | 'chargeback'
+  | 'subscription_grant'
+  | 'subscription_deduct';
+export type UsageBillingRecordStatus = 'pending' | 'charged' | 'skipped' | 'failed' | 'refunded';
+export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
+export type PaymentProviderType = 'manual' | 'epay' | 'stripe' | 'custom';
+export type PaymentEventStatus = 'received' | 'processed' | 'failed' | 'ignored';
 
 export interface BillingAccount {
   id: string;
@@ -52,24 +65,103 @@ export interface ModelPrice {
 export interface LedgerTransaction {
   id: string;
   createdAt: string;
+  billingAccountID: string;
   direction: LedgerTransactionDirection;
   amountMicros: number;
   currency: string;
-  type: string;
-  status: string;
+  type: LedgerTransactionType;
+  status: LedgerTransactionStatus;
+  referenceType: string;
+  referenceID: string;
   memo: string;
+  createdByType: string;
+  createdByID: string;
 }
 
 export interface PaymentOrder {
   id: string;
   createdAt: string;
   orderNo: string;
-  providerType: string;
+  projectID: number;
+  billingAccountID: string;
+  providerType: PaymentProviderType;
   amountMicros: number;
   currency: string;
-  status: string;
+  status: PaymentOrderStatus;
   externalTradeNo?: string | null;
   paidAt?: string | null;
+}
+
+export interface UsageBillingRecord {
+  id: string;
+  createdAt: string;
+  billingAccountID: string;
+  projectID: number;
+  userID?: number | null;
+  apiKeyID?: number | null;
+  modelID: string;
+  costAmountMicros: number;
+  chargeAmountMicros: number;
+  currency: string;
+  status: UsageBillingRecordStatus;
+  error: string;
+}
+
+export interface PaymentEvent {
+  id: string;
+  createdAt: string;
+  eventKey: string;
+  paymentOrderID?: string | null;
+  providerInstanceID?: string | null;
+  providerType: PaymentProviderType;
+  eventType: string;
+  status: PaymentEventStatus;
+  error: string;
+}
+
+export interface AdminLedgerTransactionsFilter {
+  userId?: number;
+  billingAccountId?: number;
+  direction?: LedgerTransactionDirection;
+  status?: LedgerTransactionStatus;
+  type?: LedgerTransactionType;
+  referenceType?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface AdminUsageBillingRecordsFilter {
+  userId?: number;
+  projectId?: number;
+  apiKeyId?: number;
+  billingAccountId?: number;
+  modelId?: string;
+  status?: UsageBillingRecordStatus;
+  from?: string;
+  to?: string;
+}
+
+export interface AdminPaymentOrdersFilter {
+  userId?: number;
+  projectId?: number;
+  billingAccountId?: number;
+  providerType?: PaymentProviderType;
+  status?: PaymentOrderStatus;
+  orderNo?: string;
+  externalTradeNo?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface AdminPaymentEventsFilter {
+  paymentOrderId?: number;
+  providerInstanceId?: number;
+  providerType?: PaymentProviderType;
+  status?: PaymentEventStatus;
+  eventType?: string;
+  eventKey?: string;
+  from?: string;
+  to?: string;
 }
 
 type Connection<T> = {
@@ -153,12 +245,17 @@ const USER_BILLING_DETAIL_QUERY = `
         node {
           id
           createdAt
+          billingAccountID
           direction
           amountMicros
           currency
           type
           status
+          referenceType
+          referenceID
           memo
+          createdByType
+          createdByID
         }
       }
     }
@@ -168,12 +265,121 @@ const USER_BILLING_DETAIL_QUERY = `
           id
           createdAt
           orderNo
+          projectID
+          billingAccountID
           providerType
           amountMicros
           currency
           status
           externalTradeNo
           paidAt
+        }
+      }
+    }
+    userUsageBillingRecords(userId: $userId, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          billingAccountID
+          projectID
+          userID
+          apiKeyID
+          modelID
+          costAmountMicros
+          chargeAmountMicros
+          currency
+          status
+          error
+        }
+      }
+    }
+  }
+`;
+
+const ADMIN_LEDGER_TRANSACTIONS_QUERY = `
+  query AdminLedgerTransactions($filter: AdminLedgerTransactionsFilter, $first: Int!) {
+    adminLedgerTransactions(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          billingAccountID
+          direction
+          amountMicros
+          currency
+          type
+          status
+          referenceType
+          referenceID
+          memo
+          createdByType
+          createdByID
+        }
+      }
+    }
+  }
+`;
+
+const ADMIN_USAGE_BILLING_RECORDS_QUERY = `
+  query AdminUsageBillingRecords($filter: AdminUsageBillingRecordsFilter, $first: Int!) {
+    adminUsageBillingRecords(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          billingAccountID
+          projectID
+          userID
+          apiKeyID
+          modelID
+          costAmountMicros
+          chargeAmountMicros
+          currency
+          status
+          error
+        }
+      }
+    }
+  }
+`;
+
+const ADMIN_PAYMENT_ORDERS_QUERY = `
+  query AdminPaymentOrders($filter: AdminPaymentOrdersFilter, $first: Int!) {
+    adminPaymentOrders(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          orderNo
+          projectID
+          billingAccountID
+          providerType
+          amountMicros
+          currency
+          status
+          externalTradeNo
+          paidAt
+        }
+      }
+    }
+  }
+`;
+
+const ADMIN_PAYMENT_EVENTS_QUERY = `
+  query AdminPaymentEvents($filter: AdminPaymentEventsFilter, $first: Int!) {
+    adminPaymentEvents(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          eventKey
+          paymentOrderID
+          providerInstanceID
+          providerType
+          eventType
+          status
+          error
         }
       }
     }
@@ -275,13 +481,61 @@ export function useAdminUserBillingDetail(userId?: string, first = 10) {
         userBillingAccount: BillingAccount;
         userLedgerTransactions: Connection<LedgerTransaction>;
         userPaymentOrders: Connection<PaymentOrder>;
+        userUsageBillingRecords: Connection<UsageBillingRecord>;
       }>(USER_BILLING_DETAIL_QUERY, { userId, first });
 
       return {
         account: data.userBillingAccount,
         ledgerTransactions: nodes(data.userLedgerTransactions),
         paymentOrders: nodes(data.userPaymentOrders),
+        usageBillingRecords: nodes(data.userUsageBillingRecords),
       };
+    },
+  });
+}
+
+export function useAdminLedgerTransactions(filter: AdminLedgerTransactionsFilter = {}, first = 20) {
+  return useQuery({
+    queryKey: ['admin-billing', 'ledger-transactions', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminLedgerTransactions: Connection<LedgerTransaction> }>(ADMIN_LEDGER_TRANSACTIONS_QUERY, {
+        filter,
+        first,
+      });
+      return nodes(data.adminLedgerTransactions);
+    },
+  });
+}
+
+export function useAdminUsageBillingRecords(filter: AdminUsageBillingRecordsFilter = {}, first = 20) {
+  return useQuery({
+    queryKey: ['admin-billing', 'usage-billing-records', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminUsageBillingRecords: Connection<UsageBillingRecord> }>(ADMIN_USAGE_BILLING_RECORDS_QUERY, {
+        filter,
+        first,
+      });
+      return nodes(data.adminUsageBillingRecords);
+    },
+  });
+}
+
+export function useAdminPaymentOrders(filter: AdminPaymentOrdersFilter = {}, first = 20) {
+  return useQuery({
+    queryKey: ['admin-billing', 'payment-orders', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminPaymentOrders: Connection<PaymentOrder> }>(ADMIN_PAYMENT_ORDERS_QUERY, { filter, first });
+      return nodes(data.adminPaymentOrders);
+    },
+  });
+}
+
+export function useAdminPaymentEvents(filter: AdminPaymentEventsFilter = {}, first = 20) {
+  return useQuery({
+    queryKey: ['admin-billing', 'payment-events', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminPaymentEvents: Connection<PaymentEvent> }>(ADMIN_PAYMENT_EVENTS_QUERY, { filter, first });
+      return nodes(data.adminPaymentEvents);
     },
   });
 }

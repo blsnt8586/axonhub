@@ -18,6 +18,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/enttest"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
+	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	entproject "github.com/looplj/axonhub/internal/ent/project"
@@ -286,6 +287,118 @@ func TestBillingResolversOwnerCanAdjustAndQueryUserBalance(t *testing.T) {
 	require.Equal(t, tx.ID, ledgerTxs.Edges[0].Node.ID)
 }
 
+func TestBillingResolversOwnerCanQueryAdminBillingOperationsWithFilters(t *testing.T) {
+	_, queryResolver, ctx, client, owner, project := setupBillingResolversTest(t, "billing_resolver_admin_operation_filters")
+	user := createBillingResolverUser(t, ctx, client, false)
+	other := createBillingResolverUser(t, ctx, client, false)
+
+	userAccount, err := queryResolver.billingAccountService.GetOrCreateForSubject(ctx, biz.UserBillingSubject(user.ID))
+	require.NoError(t, err)
+	otherAccount, err := queryResolver.billingAccountService.GetOrCreateForSubject(ctx, biz.UserBillingSubject(other.ID))
+	require.NoError(t, err)
+
+	ledgerSvc := biz.NewLedgerService(biz.LedgerServiceParams{Ent: client})
+	userLedger, err := ledgerSvc.Credit(ctx, userAccount.ID, decimal.RequireFromString("5"), ledgertransaction.TypePaymentRecharge, "admin-filter-user-credit")
+	require.NoError(t, err)
+	_, err = ledgerSvc.Credit(ctx, otherAccount.ID, decimal.RequireFromString("9"), ledgertransaction.TypePaymentRecharge, "admin-filter-other-credit")
+	require.NoError(t, err)
+
+	userOrder, err := client.PaymentOrder.Create().
+		SetOrderNo("pay_admin_filter_user").
+		SetProjectID(project.ID).
+		SetBillingAccountID(userAccount.ID).
+		SetProviderType(paymentorder.ProviderTypeEpay).
+		SetPurpose(paymentorder.PurposeRecharge).
+		SetAmountMicros(5_000_000).
+		SetCurrency("CNY").
+		SetStatus(paymentorder.StatusPaid).
+		SetExternalTradeNo("trade_admin_filter_user").
+		Save(ctx)
+	require.NoError(t, err)
+	otherOrder, err := client.PaymentOrder.Create().
+		SetOrderNo("pay_admin_filter_other").
+		SetProjectID(project.ID).
+		SetBillingAccountID(otherAccount.ID).
+		SetProviderType(paymentorder.ProviderTypeManual).
+		SetPurpose(paymentorder.PurposeRecharge).
+		SetAmountMicros(9_000_000).
+		SetCurrency("CNY").
+		SetStatus(paymentorder.StatusPending).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.PaymentEvent.Create().
+		SetEventKey("evt_admin_filter_user").
+		SetPaymentOrderID(userOrder.ID).
+		SetProviderType(paymentevent.ProviderTypeEpay).
+		SetEventType("notify").
+		SetPayload(objects.JSONRawMessage([]byte(`{"trade_no":"trade_admin_filter_user"}`))).
+		SetStatus(paymentevent.StatusProcessed).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.PaymentEvent.Create().
+		SetEventKey("evt_admin_filter_other").
+		SetPaymentOrderID(otherOrder.ID).
+		SetProviderType(paymentevent.ProviderTypeManual).
+		SetEventType("manual").
+		SetStatus(paymentevent.StatusReceived).
+		Save(ctx)
+	require.NoError(t, err)
+
+	userUsageLog := createBillingResolverUsageLog(t, ctx, client, project.ID, "gpt-admin-filter")
+	otherUsageLog := createBillingResolverUsageLog(t, ctx, client, project.ID, "gpt-admin-filter-other")
+	_, err = client.UsageBillingRecord.Create().
+		SetUsageLogID(userUsageLog.ID).
+		SetBillingAccountID(userAccount.ID).
+		SetProjectID(project.ID).
+		SetUserID(user.ID).
+		SetModelID("gpt-admin-filter").
+		SetPriceSnapshot(objects.ModelPrice{}).
+		SetPriceReferenceID("price-user").
+		SetChargeAmountMicros(1_000_000).
+		SetCurrency("CNY").
+		SetStatus(usagebillingrecord.StatusCharged).
+		SetIdempotencyKey("usage:admin-filter-user").
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.UsageBillingRecord.Create().
+		SetUsageLogID(otherUsageLog.ID).
+		SetBillingAccountID(otherAccount.ID).
+		SetProjectID(project.ID).
+		SetUserID(other.ID).
+		SetModelID("gpt-admin-filter-other").
+		SetPriceSnapshot(objects.ModelPrice{}).
+		SetPriceReferenceID("price-other").
+		SetChargeAmountMicros(2_000_000).
+		SetCurrency("CNY").
+		SetStatus(usagebillingrecord.StatusFailed).
+		SetIdempotencyKey("usage:admin-filter-other").
+		Save(ctx)
+	require.NoError(t, err)
+
+	ownerCtx := contexts.WithUser(ctx, owner)
+	first := 10
+	ledgerTxs, err := queryResolver.AdminLedgerTransactions(ownerCtx, &AdminLedgerTransactionsFilter{UserID: &user.ID, Direction: ptr(ledgertransaction.DirectionCredit)}, nil, &first, nil, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, ledgerTxs.TotalCount)
+	require.Equal(t, userLedger.ID, ledgerTxs.Edges[0].Node.ID)
+
+	usageRecords, err := queryResolver.AdminUsageBillingRecords(ownerCtx, &AdminUsageBillingRecordsFilter{UserID: &user.ID, ProjectID: &project.ID, ModelID: ptr("admin-filter"), Status: ptr(usagebillingrecord.StatusCharged)}, nil, &first, nil, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, usageRecords.TotalCount)
+	require.Equal(t, user.ID, usageRecords.Edges[0].Node.UserID)
+
+	paymentOrders, err := queryResolver.AdminPaymentOrders(ownerCtx, &AdminPaymentOrdersFilter{UserID: &user.ID, ProviderType: ptr(paymentorder.ProviderTypeEpay), Status: ptr(paymentorder.StatusPaid), ExternalTradeNo: ptr("admin_filter_user")}, nil, &first, nil, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, paymentOrders.TotalCount)
+	require.Equal(t, userOrder.ID, paymentOrders.Edges[0].Node.ID)
+
+	paymentEvents, err := queryResolver.AdminPaymentEvents(ownerCtx, &AdminPaymentEventsFilter{PaymentOrderID: &userOrder.ID, ProviderType: ptr(paymentevent.ProviderTypeEpay), Status: ptr(paymentevent.StatusProcessed), EventKey: ptr("filter_user")}, nil, &first, nil, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, paymentEvents.TotalCount)
+	require.Equal(t, "evt_admin_filter_user", paymentEvents.Edges[0].Node.EventKey)
+}
+
 func TestBillingResolversOwnerCanUpdateUserBillingAccount(t *testing.T) {
 	mutationResolver, queryResolver, ctx, client, owner, _ := setupBillingResolversTest(t, "billing_resolver_owner_update_user_account")
 	user := createBillingResolverUser(t, ctx, client, false)
@@ -329,6 +442,16 @@ func TestBillingResolversRejectsUserBillingAdminOperationsForNonOwner(t *testing
 		UserID: user.ID,
 		Status: ptr(billingaccount.StatusFrozen),
 	})
+	require.True(t, errors.Is(err, ErrNotOwner))
+
+	first := 10
+	_, err = queryResolver.AdminLedgerTransactions(userCtx, nil, nil, &first, nil, nil, nil)
+	require.True(t, errors.Is(err, ErrNotOwner))
+	_, err = queryResolver.AdminUsageBillingRecords(userCtx, nil, nil, &first, nil, nil, nil)
+	require.True(t, errors.Is(err, ErrNotOwner))
+	_, err = queryResolver.AdminPaymentOrders(userCtx, nil, nil, &first, nil, nil, nil)
+	require.True(t, errors.Is(err, ErrNotOwner))
+	_, err = queryResolver.AdminPaymentEvents(userCtx, nil, nil, &first, nil, nil, nil)
 	require.True(t, errors.Is(err, ErrNotOwner))
 }
 

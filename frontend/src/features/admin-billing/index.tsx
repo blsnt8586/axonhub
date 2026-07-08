@@ -1,7 +1,8 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Loader2, RefreshCw, Save, WalletCards } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { extractNumberIDAsNumber } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,20 +12,32 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
-import { extractNumberIDAsNumber } from '@/lib/utils';
 import { useUsers } from '@/features/users/data/users';
 import {
-  type BillingPriceRule,
+  type AdminLedgerTransactionsFilter,
+  type AdminPaymentEventsFilter,
+  type AdminPaymentOrdersFilter,
+  type AdminUsageBillingRecordsFilter,
   type BillingAccountStatus,
+  type BillingPriceRule,
   type LedgerTransactionDirection,
   type ModelPrice,
-  useAdminBillingOverview,
-  useAdminUserBillingDetail,
+  type PaymentEventStatus,
+  type PaymentOrderStatus,
+  type PaymentProviderType,
+  type UsageBillingRecordStatus,
   useAdjustUserBalance,
-  useUpdateUserBillingAccount,
+  useAdminBillingOverview,
+  useAdminLedgerTransactions,
+  useAdminPaymentEvents,
+  useAdminPaymentOrders,
+  useAdminUsageBillingRecords,
+  useAdminUserBillingDetail,
   useSaveBillingPriceRule,
+  useUpdateUserBillingAccount,
   useUpsertEPayPaymentProvider,
 } from './data/admin-billing';
 
@@ -38,6 +51,64 @@ type PriceForm = {
   currency: string;
   priority: string;
   enabled: boolean;
+};
+
+type LedgerFilterForm = {
+  userId: string;
+  billingAccountId: string;
+  direction: 'all' | LedgerTransactionDirection;
+  status: 'all' | 'posted' | 'voided';
+  type: string;
+  referenceType: string;
+  from: string;
+  to: string;
+};
+
+type UsageFilterForm = {
+  userId: string;
+  projectId: string;
+  apiKeyId: string;
+  billingAccountId: string;
+  modelId: string;
+  status: 'all' | UsageBillingRecordStatus;
+  from: string;
+  to: string;
+};
+
+type OrderFilterForm = {
+  userId: string;
+  projectId: string;
+  billingAccountId: string;
+  providerType: 'all' | PaymentProviderType;
+  status: 'all' | PaymentOrderStatus;
+  orderNo: string;
+  externalTradeNo: string;
+  from: string;
+  to: string;
+};
+
+type EventFilterForm = {
+  paymentOrderId: string;
+  providerInstanceId: string;
+  providerType: 'all' | PaymentProviderType;
+  status: 'all' | PaymentEventStatus;
+  eventType: string;
+  eventKey: string;
+  from: string;
+  to: string;
+};
+
+type EPayProviderForm = {
+  name: string;
+  status: 'enabled' | 'disabled';
+  currency: string;
+  gatewayUrl: string;
+  pid: string;
+  key: string;
+  notifyUrl: string;
+  returnUrl: string;
+  type: string;
+  siteName: string;
 };
 
 function microsToAmount(value: number) {
@@ -71,6 +142,22 @@ function normalizeNonNegativeAmount(value: string, scale = 6) {
   const amount = Number(trimmed);
   if (!Number.isFinite(amount) || amount < 0) return '';
   return trimmed;
+}
+
+function optionalInt(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = Number(trimmed);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function optionalText(value: string) {
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function optionalTime(value: string) {
+  return value ? new Date(value).toISOString() : undefined;
 }
 
 function modelPriceFromForm(promptPrice: string, completionPrice: string): ModelPrice {
@@ -124,9 +211,88 @@ function defaultPriceForm(): PriceForm {
   };
 }
 
+function defaultLedgerFilter(): LedgerFilterForm {
+  return { userId: '', billingAccountId: '', direction: 'all', status: 'all', type: '', referenceType: '', from: '', to: '' };
+}
+
+function defaultUsageFilter(): UsageFilterForm {
+  return { userId: '', projectId: '', apiKeyId: '', billingAccountId: '', modelId: '', status: 'all', from: '', to: '' };
+}
+
+function defaultOrderFilter(): OrderFilterForm {
+  return {
+    userId: '',
+    projectId: '',
+    billingAccountId: '',
+    providerType: 'all',
+    status: 'all',
+    orderNo: '',
+    externalTradeNo: '',
+    from: '',
+    to: '',
+  };
+}
+
+function defaultEventFilter(): EventFilterForm {
+  return { paymentOrderId: '', providerInstanceId: '', providerType: 'all', status: 'all', eventType: '', eventKey: '', from: '', to: '' };
+}
+
+function buildLedgerFilter(form: LedgerFilterForm): AdminLedgerTransactionsFilter {
+  return {
+    userId: optionalInt(form.userId),
+    billingAccountId: optionalInt(form.billingAccountId),
+    direction: form.direction === 'all' ? undefined : form.direction,
+    status: form.status === 'all' ? undefined : form.status,
+    type: optionalText(form.type) as AdminLedgerTransactionsFilter['type'],
+    referenceType: optionalText(form.referenceType),
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+  };
+}
+
+function buildUsageFilter(form: UsageFilterForm): AdminUsageBillingRecordsFilter {
+  return {
+    userId: optionalInt(form.userId),
+    projectId: optionalInt(form.projectId),
+    apiKeyId: optionalInt(form.apiKeyId),
+    billingAccountId: optionalInt(form.billingAccountId),
+    modelId: optionalText(form.modelId),
+    status: form.status === 'all' ? undefined : form.status,
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+  };
+}
+
+function buildOrderFilter(form: OrderFilterForm): AdminPaymentOrdersFilter {
+  return {
+    userId: optionalInt(form.userId),
+    projectId: optionalInt(form.projectId),
+    billingAccountId: optionalInt(form.billingAccountId),
+    providerType: form.providerType === 'all' ? undefined : form.providerType,
+    status: form.status === 'all' ? undefined : form.status,
+    orderNo: optionalText(form.orderNo),
+    externalTradeNo: optionalText(form.externalTradeNo),
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+  };
+}
+
+function buildEventFilter(form: EventFilterForm): AdminPaymentEventsFilter {
+  return {
+    paymentOrderId: optionalInt(form.paymentOrderId),
+    providerInstanceId: optionalInt(form.providerInstanceId),
+    providerType: form.providerType === 'all' ? undefined : form.providerType,
+    status: form.status === 'all' ? undefined : form.status,
+    eventType: optionalText(form.eventType),
+    eventKey: optionalText(form.eventKey),
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+  };
+}
+
 export default function AdminBillingPage() {
   const { t, i18n } = useTranslation();
-  const { data, isLoading, isFetching, error, refetch } = useAdminBillingOverview(20);
+  const { data, isLoading, isFetching, error, refetch } = useAdminBillingOverview(50);
   const { data: usersData } = useUsers({ first: 50, orderBy: { field: 'CREATED_AT', direction: 'DESC' } });
   const [selectedUserID, setSelectedUserID] = useState('');
   const [accountStatus, setAccountStatus] = useState<BillingAccountStatus>('active');
@@ -135,7 +301,15 @@ export default function AdminBillingPage() {
   const [adjustAmount, setAdjustAmount] = useState('10.00');
   const [adjustMemo, setAdjustMemo] = useState('manual wallet adjustment');
   const [priceForm, setPriceForm] = useState<PriceForm>(() => defaultPriceForm());
-  const [providerForm, setProviderForm] = useState({
+  const [ledgerFilter, setLedgerFilter] = useState<LedgerFilterForm>(() => defaultLedgerFilter());
+  const [usageFilter, setUsageFilter] = useState<UsageFilterForm>(() => defaultUsageFilter());
+  const [orderFilter, setOrderFilter] = useState<OrderFilterForm>(() => defaultOrderFilter());
+  const [eventFilter, setEventFilter] = useState<EventFilterForm>(() => defaultEventFilter());
+  const [appliedLedgerFilter, setAppliedLedgerFilter] = useState<AdminLedgerTransactionsFilter>({});
+  const [appliedUsageFilter, setAppliedUsageFilter] = useState<AdminUsageBillingRecordsFilter>({});
+  const [appliedOrderFilter, setAppliedOrderFilter] = useState<AdminPaymentOrdersFilter>({});
+  const [appliedEventFilter, setAppliedEventFilter] = useState<AdminPaymentEventsFilter>({});
+  const [providerForm, setProviderForm] = useState<EPayProviderForm>({
     name: 'Default ePay',
     status: 'enabled' as 'enabled' | 'disabled',
     currency: 'CNY',
@@ -150,7 +324,12 @@ export default function AdminBillingPage() {
 
   const users = useMemo(() => usersData?.edges?.map((edge) => edge.node) ?? [], [usersData?.edges]);
   const selectedUser = users.find((user) => user.id === selectedUserID);
+  const selectedUserNumericID = selectedUserID ? extractNumberIDAsNumber(selectedUserID) : 0;
   const selectedUserBilling = useAdminUserBillingDetail(selectedUserID || undefined, 10);
+  const adminLedger = useAdminLedgerTransactions(appliedLedgerFilter, 50);
+  const adminUsage = useAdminUsageBillingRecords(appliedUsageFilter, 50);
+  const adminOrders = useAdminPaymentOrders(appliedOrderFilter, 50);
+  const adminEvents = useAdminPaymentEvents(appliedEventFilter, 50);
   const adjustBalance = useAdjustUserBalance();
   const updateAccount = useUpdateUserBillingAccount();
   const savePriceRule = useSaveBillingPriceRule();
@@ -165,23 +344,31 @@ export default function AdminBillingPage() {
 
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
   const currency = selectedUserBilling.data?.account.currency || data?.accounts[0]?.currency || 'CNY';
-  const formatCurrency = useMemo(
-    () =>
-      new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency,
-        currencyDisplay: 'narrowSymbol',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-    [currency, locale]
-  );
+  const formatMicros = (value: number, valueCurrency = currency, minimumFractionDigits = 2) =>
+    t('currencies.format', {
+      val: microsToAmount(value),
+      currency: valueCurrency,
+      locale,
+      minimumFractionDigits,
+      maximumFractionDigits: Math.max(minimumFractionDigits, 6),
+    });
 
   const userEmailByID = useMemo(() => {
     const map = new Map<number, string>();
     users.forEach((user) => map.set(extractNumberIDAsNumber(user.id), user.email));
     return map;
   }, [users]);
+
+  async function refreshAll() {
+    await Promise.all([
+      refetch(),
+      adminLedger.refetch(),
+      adminUsage.refetch(),
+      adminOrders.refetch(),
+      adminEvents.refetch(),
+      selectedUserBilling.refetch(),
+    ]);
+  }
 
   async function handleAdjustBalance(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -289,382 +476,693 @@ export default function AdminBillingPage() {
             <h2 className='text-xl font-bold tracking-tight'>{t('adminBilling.title')}</h2>
             <p className='text-muted-foreground text-sm'>{t('adminBilling.description')}</p>
           </div>
-          <Button variant='outline' size='sm' onClick={() => void refetch()} disabled={isFetching}>
-            {isFetching ? <Loader2 className='size-4 animate-spin' /> : <RefreshCw className='size-4' />}
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => void refreshAll()}
+            disabled={isFetching || adminLedger.isFetching || adminUsage.isFetching || adminOrders.isFetching || adminEvents.isFetching}
+          >
+            {isFetching || adminLedger.isFetching || adminUsage.isFetching || adminOrders.isFetching || adminEvents.isFetching ? (
+              <Loader2 className='size-4 animate-spin' />
+            ) : (
+              <RefreshCw className='size-4' />
+            )}
             {t('common.refresh')}
           </Button>
         </div>
       </Header>
 
       <Main fixed className='flex flex-col gap-4 overflow-auto'>
-        {error && (
-          <Alert variant='destructive'>
-            <AlertCircle className='size-4' />
-            <AlertTitle>{t('common.loadError')}</AlertTitle>
-            <AlertDescription>{error instanceof Error ? error.message : t('common.errors.unknownError')}</AlertDescription>
-          </Alert>
-        )}
+        <ErrorAlert error={error || adminLedger.error || adminUsage.error || adminOrders.error || adminEvents.error} />
 
-        <div className='grid gap-4 md:grid-cols-3'>
+        <div className='grid gap-4 md:grid-cols-5'>
           <MetricCard title={t('adminBilling.metrics.accounts')} value={String(data?.accounts.length ?? 0)} loading={isLoading} />
-          <MetricCard title={t('adminBilling.metrics.providers')} value={String(data?.providers.length ?? 0)} loading={isLoading} />
-          <MetricCard title={t('adminBilling.metrics.priceRules')} value={String(data?.priceRules.length ?? 0)} loading={isLoading} />
+          <MetricCard
+            title={t('adminBilling.metrics.ledger')}
+            value={String(adminLedger.data?.length ?? 0)}
+            loading={adminLedger.isLoading}
+          />
+          <MetricCard title={t('adminBilling.metrics.usage')} value={String(adminUsage.data?.length ?? 0)} loading={adminUsage.isLoading} />
+          <MetricCard
+            title={t('adminBilling.metrics.orders')}
+            value={String(adminOrders.data?.length ?? 0)}
+            loading={adminOrders.isLoading}
+          />
+          <MetricCard
+            title={t('adminBilling.metrics.events')}
+            value={String(adminEvents.data?.length ?? 0)}
+            loading={adminEvents.isLoading}
+          />
         </div>
 
-        <div className='grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]'>
-          <Card className='rounded-lg'>
-            <CardHeader>
-              <CardTitle className='text-base'>{t('adminBilling.accounts.title')}</CardTitle>
-              <CardDescription>{t('adminBilling.accounts.description')}</CardDescription>
-            </CardHeader>
-            <CardContent className='overflow-auto'>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('adminBilling.columns.owner')}</TableHead>
-                    <TableHead>{t('adminBilling.columns.status')}</TableHead>
-                    <TableHead>{t('adminBilling.columns.credit')}</TableHead>
-                    <TableHead className='text-right'>{t('adminBilling.columns.balance')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(data?.accounts ?? []).length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className='text-muted-foreground h-24 text-center'>
-                        {isLoading ? t('common.loading') : t('common.noData')}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    data?.accounts.map((account) => (
-                      <TableRow key={account.id}>
-                        <TableCell>
-                          <div className='font-medium'>{userEmailByID.get(account.ownerID) || `${account.ownerType}:${account.ownerID}`}</div>
-                          <div className='text-muted-foreground text-xs'>{account.ownerType}</div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={account.status === 'active' ? 'default' : 'destructive'}>{account.status}</Badge>
-                        </TableCell>
-                        <TableCell className='font-mono'>{formatCurrency.format(microsToAmount(account.creditLimitMicros))}</TableCell>
-                        <TableCell className='text-right font-mono'>{formatCurrency.format(microsToAmount(account.balanceMicros))}</TableCell>
+        <Tabs defaultValue='wallets' className='gap-4'>
+          <TabsList className='shadow-soft border-border bg-background flex h-auto w-full justify-start overflow-x-auto rounded-lg border p-1'>
+            <TabsTrigger value='wallets'>{t('adminBilling.tabs.wallets')}</TabsTrigger>
+            <TabsTrigger value='ledger'>{t('adminBilling.tabs.ledger')}</TabsTrigger>
+            <TabsTrigger value='usage'>{t('adminBilling.tabs.usage')}</TabsTrigger>
+            <TabsTrigger value='orders'>{t('adminBilling.tabs.orders')}</TabsTrigger>
+            <TabsTrigger value='events'>{t('adminBilling.tabs.events')}</TabsTrigger>
+            <TabsTrigger value='pricing'>{t('adminBilling.tabs.pricing')}</TabsTrigger>
+            <TabsTrigger value='providers'>{t('adminBilling.tabs.providers')}</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value='wallets' className='mt-0'>
+            <div className='grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]'>
+              <Card className='rounded-lg'>
+                <CardHeader>
+                  <CardTitle className='text-base'>{t('adminBilling.accounts.title')}</CardTitle>
+                  <CardDescription>{t('adminBilling.accounts.description')}</CardDescription>
+                </CardHeader>
+                <CardContent className='overflow-auto'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('adminBilling.columns.owner')}</TableHead>
+                        <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                        <TableHead>{t('adminBilling.columns.credit')}</TableHead>
+                        <TableHead className='text-right'>{t('adminBilling.columns.balance')}</TableHead>
                       </TableRow>
-                    ))
+                    </TableHeader>
+                    <TableBody>
+                      <DataStateRow colSpan={4} isLoading={isLoading} isEmpty={(data?.accounts ?? []).length === 0} />
+                      {data?.accounts.map((account) => (
+                        <TableRow key={account.id}>
+                          <TableCell>
+                            <div className='font-medium'>
+                              {userEmailByID.get(account.ownerID) || `${account.ownerType}:${account.ownerID}`}
+                            </div>
+                            <div className='text-muted-foreground text-xs'>{account.ownerType}</div>
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge value={account.status} positive={account.status === 'active'} />
+                          </TableCell>
+                          <TableCell className='font-mono'>{formatMicros(account.creditLimitMicros, account.currency)}</TableCell>
+                          <TableCell className='text-right font-mono'>{formatMicros(account.balanceMicros, account.currency)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              <Card className='rounded-lg'>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2 text-base'>
+                    <WalletCards className='size-4' />
+                    {t('adminBilling.adjust.title')}
+                  </CardTitle>
+                  <CardDescription>{t('adminBilling.adjust.description')}</CardDescription>
+                </CardHeader>
+                <CardContent className='space-y-5'>
+                  <UserSelect
+                    users={users}
+                    value={selectedUserID}
+                    onChange={setSelectedUserID}
+                    placeholder={t('adminBilling.adjust.userPlaceholder')}
+                    label={t('adminBilling.adjust.user')}
+                  />
+
+                  {selectedUserBilling.data?.account && (
+                    <div className='bg-muted/50 rounded-md border p-3 text-sm'>
+                      <div className='text-muted-foreground'>{selectedUser?.email}</div>
+                      <div className='font-mono text-lg font-semibold'>
+                        {formatMicros(selectedUserBilling.data.account.balanceMicros, selectedUserBilling.data.account.currency)}
+                      </div>
+                      <div className='text-muted-foreground mt-1 text-xs'>
+                        {t('adminBilling.account.creditLimit')}:{' '}
+                        {formatMicros(selectedUserBilling.data.account.creditLimitMicros, selectedUserBilling.data.account.currency)}
+                      </div>
+                    </div>
                   )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
 
-          <Card className='rounded-lg'>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2 text-base'>
-                <WalletCards className='size-4' />
-                {t('adminBilling.adjust.title')}
-              </CardTitle>
-              <CardDescription>{t('adminBilling.adjust.description')}</CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-5'>
-              <div className='space-y-2'>
-                <Label>{t('adminBilling.adjust.user')}</Label>
-                <Select value={selectedUserID} onValueChange={setSelectedUserID}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('adminBilling.adjust.userPlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <form className='space-y-4' onSubmit={handleUpdateAccount}>
+                    <div className='text-sm font-medium'>{t('adminBilling.account.title')}</div>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div className='space-y-2'>
+                        <Label>{t('adminBilling.account.status')}</Label>
+                        <Select
+                          value={accountStatus}
+                          onValueChange={(value) => setAccountStatus(value as BillingAccountStatus)}
+                          disabled={!selectedUserID}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='active'>{t('adminBilling.account.active')}</SelectItem>
+                            <SelectItem value='frozen'>{t('adminBilling.account.frozen')}</SelectItem>
+                            <SelectItem value='closed'>{t('adminBilling.account.closed')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className='space-y-2'>
+                        <Label htmlFor='admin-billing-credit-limit'>{t('adminBilling.account.creditLimit')}</Label>
+                        <Input
+                          id='admin-billing-credit-limit'
+                          inputMode='decimal'
+                          value={creditLimit}
+                          disabled={!selectedUserID}
+                          onChange={(event) => setCreditLimit(event.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <Button type='submit' className='w-full' variant='outline' disabled={updateAccount.isPending || !selectedUserID}>
+                      {updateAccount.isPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                      {t('adminBilling.account.submit')}
+                    </Button>
+                  </form>
 
-              {selectedUserBilling.data?.account && (
-                <div className='bg-muted/50 rounded-md border p-3 text-sm'>
-                  <div className='text-muted-foreground'>{selectedUser?.email}</div>
-                  <div className='font-mono text-lg font-semibold'>{formatCurrency.format(microsToAmount(selectedUserBilling.data.account.balanceMicros))}</div>
-                </div>
-              )}
+                  <form className='space-y-4 border-t pt-5' onSubmit={handleAdjustBalance}>
+                    <div className='text-sm font-medium'>{t('adminBilling.adjust.sectionTitle')}</div>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div className='space-y-2'>
+                        <Label>{t('adminBilling.adjust.direction')}</Label>
+                        <Select value={adjustDirection} onValueChange={(value) => setAdjustDirection(value as LedgerTransactionDirection)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='credit'>{t('adminBilling.adjust.credit')}</SelectItem>
+                            <SelectItem value='debit'>{t('adminBilling.adjust.debit')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className='space-y-2'>
+                        <Label htmlFor='admin-billing-adjust-amount'>{t('adminBilling.adjust.amount')}</Label>
+                        <Input
+                          id='admin-billing-adjust-amount'
+                          inputMode='decimal'
+                          value={adjustAmount}
+                          onChange={(event) => setAdjustAmount(event.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className='space-y-2'>
+                      <Label htmlFor='admin-billing-adjust-memo'>{t('adminBilling.adjust.memo')}</Label>
+                      <Input id='admin-billing-adjust-memo' value={adjustMemo} onChange={(event) => setAdjustMemo(event.target.value)} />
+                    </div>
+                    <Button type='submit' className='w-full' disabled={adjustBalance.isPending || !selectedUserID}>
+                      {adjustBalance.isPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                      {t('adminBilling.adjust.submit')}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
 
-              <form className='space-y-4' onSubmit={handleUpdateAccount}>
-                <div className='text-sm font-medium'>{t('adminBilling.account.title')}</div>
-                <div className='grid grid-cols-2 gap-3'>
-                  <div className='space-y-2'>
-                    <Label>{t('adminBilling.account.status')}</Label>
-                    <Select value={accountStatus} onValueChange={(value) => setAccountStatus(value as BillingAccountStatus)} disabled={!selectedUserID}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='active'>{t('adminBilling.account.active')}</SelectItem>
-                        <SelectItem value='frozen'>{t('adminBilling.account.frozen')}</SelectItem>
-                        <SelectItem value='closed'>{t('adminBilling.account.closed')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='admin-billing-credit-limit'>{t('adminBilling.account.creditLimit')}</Label>
-                    <Input
-                      id='admin-billing-credit-limit'
-                      inputMode='decimal'
-                      value={creditLimit}
-                      disabled={!selectedUserID}
-                      onChange={(event) => setCreditLimit(event.target.value)}
-                    />
-                  </div>
-                </div>
-                <Button type='submit' className='w-full' variant='outline' disabled={updateAccount.isPending || !selectedUserID}>
-                  {updateAccount.isPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
-                  {t('adminBilling.account.submit')}
-                </Button>
-              </form>
-
-              <form className='space-y-4 border-t pt-5' onSubmit={handleAdjustBalance}>
-                <div className='text-sm font-medium'>{t('adminBilling.adjust.sectionTitle')}</div>
-                <div className='grid grid-cols-2 gap-3'>
-                  <div className='space-y-2'>
-                    <Label>{t('adminBilling.adjust.direction')}</Label>
-                    <Select value={adjustDirection} onValueChange={(value) => setAdjustDirection(value as LedgerTransactionDirection)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='credit'>{t('adminBilling.adjust.credit')}</SelectItem>
-                        <SelectItem value='debit'>{t('adminBilling.adjust.debit')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='admin-billing-adjust-amount'>{t('adminBilling.adjust.amount')}</Label>
-                    <Input id='admin-billing-adjust-amount' inputMode='decimal' value={adjustAmount} onChange={(event) => setAdjustAmount(event.target.value)} />
-                  </div>
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-adjust-memo'>{t('adminBilling.adjust.memo')}</Label>
-                  <Input id='admin-billing-adjust-memo' value={adjustMemo} onChange={(event) => setAdjustMemo(event.target.value)} />
-                </div>
-                <Button type='submit' className='w-full' disabled={adjustBalance.isPending || !selectedUserID}>
-                  {adjustBalance.isPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
-                  {t('adminBilling.adjust.submit')}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className='grid gap-4 xl:grid-cols-2'>
-          <Card className='rounded-lg'>
-            <CardHeader>
-              <CardTitle className='text-base'>{t('adminBilling.pricing.title')}</CardTitle>
-              <CardDescription>{t('adminBilling.pricing.description')}</CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              <form className='grid gap-3 md:grid-cols-2' onSubmit={handleSavePriceRule}>
-                <div className='space-y-2'>
-                  <Label>{t('adminBilling.pricing.scopeType')}</Label>
-                  <Select
-                    value={priceForm.scopeType}
-                    onValueChange={(value) =>
-                      setPriceForm((prev) => ({ ...prev, scopeType: value as PriceForm['scopeType'], scopeId: value === 'global' ? '0' : prev.scopeId }))
-                    }
+            {selectedUserID && (
+              <Card className='mt-4 rounded-lg'>
+                <CardHeader>
+                  <CardTitle className='text-base'>{t('adminBilling.userDetail.title')}</CardTitle>
+                  <CardDescription>{selectedUser?.email || selectedUserNumericID}</CardDescription>
+                </CardHeader>
+                <CardContent className='grid gap-4 xl:grid-cols-3'>
+                  <MiniList
+                    title={t('adminBilling.tabs.ledger')}
+                    isLoading={selectedUserBilling.isLoading}
+                    empty={(selectedUserBilling.data?.ledgerTransactions ?? []).length === 0}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='global'>{t('adminBilling.pricing.global')}</SelectItem>
-                      <SelectItem value='project'>{t('adminBilling.pricing.project')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-scope-id'>{t('adminBilling.pricing.scopeId')}</Label>
-                  <Input
-                    id='admin-billing-scope-id'
-                    value={priceForm.scopeId}
-                    disabled={priceForm.scopeType === 'global'}
-                    onChange={(event) => setPriceForm((prev) => ({ ...prev, scopeId: event.target.value }))}
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-model-pattern'>{t('adminBilling.pricing.modelPattern')}</Label>
-                  <Input
-                    id='admin-billing-model-pattern'
-                    value={priceForm.modelPattern}
-                    onChange={(event) => setPriceForm((prev) => ({ ...prev, modelPattern: event.target.value }))}
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-priority'>{t('adminBilling.pricing.priority')}</Label>
-                  <Input
-                    id='admin-billing-priority'
-                    inputMode='numeric'
-                    value={priceForm.priority}
-                    onChange={(event) => setPriceForm((prev) => ({ ...prev, priority: event.target.value }))}
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-prompt-price'>{t('adminBilling.pricing.promptPrice')}</Label>
-                  <Input
-                    id='admin-billing-prompt-price'
-                    inputMode='decimal'
-                    value={priceForm.promptPrice}
-                    onChange={(event) => setPriceForm((prev) => ({ ...prev, promptPrice: event.target.value }))}
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-completion-price'>{t('adminBilling.pricing.completionPrice')}</Label>
-                  <Input
-                    id='admin-billing-completion-price'
-                    inputMode='decimal'
-                    value={priceForm.completionPrice}
-                    onChange={(event) => setPriceForm((prev) => ({ ...prev, completionPrice: event.target.value }))}
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-price-currency'>{t('adminBilling.columns.currency')}</Label>
-                  <Input
-                    id='admin-billing-price-currency'
-                    value={priceForm.currency}
-                    onChange={(event) => setPriceForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))}
-                  />
-                </div>
-                <div className='flex items-center justify-between rounded-md border px-3 py-2'>
-                  <Label htmlFor='admin-billing-price-enabled'>{t('adminBilling.pricing.enabled')}</Label>
-                  <Switch
-                    id='admin-billing-price-enabled'
-                    checked={priceForm.enabled}
-                    onCheckedChange={(checked) => setPriceForm((prev) => ({ ...prev, enabled: checked }))}
-                  />
-                </div>
-                <div className='flex gap-2 md:col-span-2'>
-                  <Button type='submit' disabled={savePriceRule.isPending}>
-                    {savePriceRule.isPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
-                    {priceForm.id ? t('adminBilling.pricing.update') : t('adminBilling.pricing.create')}
-                  </Button>
-                  <Button type='button' variant='outline' onClick={() => setPriceForm(defaultPriceForm())}>
-                    {t('adminBilling.pricing.newRule')}
-                  </Button>
-                </div>
-              </form>
+                    {selectedUserBilling.data?.ledgerTransactions.map((tx) => (
+                      <MiniRow
+                        key={tx.id}
+                        left={tx.type}
+                        right={`${tx.direction === 'debit' ? '-' : '+'}${formatMicros(tx.amountMicros, tx.currency)}`}
+                        sub={formatDate(tx.createdAt)}
+                      />
+                    ))}
+                  </MiniList>
+                  <MiniList
+                    title={t('adminBilling.tabs.orders')}
+                    isLoading={selectedUserBilling.isLoading}
+                    empty={(selectedUserBilling.data?.paymentOrders ?? []).length === 0}
+                  >
+                    {selectedUserBilling.data?.paymentOrders.map((order) => (
+                      <MiniRow
+                        key={order.id}
+                        left={order.orderNo}
+                        right={formatMicros(order.amountMicros, order.currency)}
+                        sub={order.status}
+                      />
+                    ))}
+                  </MiniList>
+                  <MiniList
+                    title={t('adminBilling.tabs.usage')}
+                    isLoading={selectedUserBilling.isLoading}
+                    empty={(selectedUserBilling.data?.usageBillingRecords ?? []).length === 0}
+                  >
+                    {selectedUserBilling.data?.usageBillingRecords.map((record) => (
+                      <MiniRow
+                        key={record.id}
+                        left={record.modelID}
+                        right={formatMicros(record.chargeAmountMicros, record.currency)}
+                        sub={record.error || record.status}
+                      />
+                    ))}
+                  </MiniList>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('adminBilling.columns.scope')}</TableHead>
-                    <TableHead>{t('adminBilling.columns.model')}</TableHead>
-                    <TableHead>{t('adminBilling.columns.price')}</TableHead>
-                    <TableHead>{t('adminBilling.columns.status')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(data?.priceRules ?? []).length === 0 ? (
+          <TabsContent value='ledger' className='mt-0'>
+            <Card className='rounded-lg'>
+              <CardHeader>
+                <CardTitle className='text-base'>{t('adminBilling.ledger.title')}</CardTitle>
+                <CardDescription>{t('adminBilling.ledger.description')}</CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <form
+                  className='grid gap-3 md:grid-cols-4 xl:grid-cols-8'
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    setAppliedLedgerFilter(buildLedgerFilter(ledgerFilter));
+                  }}
+                >
+                  <FilterInput
+                    label={t('adminBilling.filters.userId')}
+                    value={ledgerFilter.userId}
+                    onChange={(value) => setLedgerFilter((prev) => ({ ...prev, userId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.accountId')}
+                    value={ledgerFilter.billingAccountId}
+                    onChange={(value) => setLedgerFilter((prev) => ({ ...prev, billingAccountId: value }))}
+                  />
+                  <FilterSelect
+                    label={t('adminBilling.adjust.direction')}
+                    value={ledgerFilter.direction}
+                    onChange={(value) => setLedgerFilter((prev) => ({ ...prev, direction: value as LedgerFilterForm['direction'] }))}
+                    options={['all', 'credit', 'debit']}
+                  />
+                  <FilterSelect
+                    label={t('adminBilling.columns.status')}
+                    value={ledgerFilter.status}
+                    onChange={(value) => setLedgerFilter((prev) => ({ ...prev, status: value as LedgerFilterForm['status'] }))}
+                    options={['all', 'posted', 'voided']}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.columns.type')}
+                    value={ledgerFilter.type}
+                    onChange={(value) => setLedgerFilter((prev) => ({ ...prev, type: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.columns.reference')}
+                    value={ledgerFilter.referenceType}
+                    onChange={(value) => setLedgerFilter((prev) => ({ ...prev, referenceType: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.from')}
+                    type='datetime-local'
+                    value={ledgerFilter.from}
+                    onChange={(value) => setLedgerFilter((prev) => ({ ...prev, from: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.to')}
+                    type='datetime-local'
+                    value={ledgerFilter.to}
+                    onChange={(value) => setLedgerFilter((prev) => ({ ...prev, to: value }))}
+                  />
+                  <FilterActions
+                    onReset={() => {
+                      const next = defaultLedgerFilter();
+                      setLedgerFilter(next);
+                      setAppliedLedgerFilter({});
+                    }}
+                  />
+                </form>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={4} className='text-muted-foreground h-24 text-center'>
-                        {isLoading ? t('common.loading') : t('common.noData')}
-                      </TableCell>
+                      <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                      <TableHead>{t('adminBilling.filters.accountId')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.type')}</TableHead>
+                      <TableHead>{t('adminBilling.adjust.direction')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.reference')}</TableHead>
+                      <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
                     </TableRow>
-                  ) : (
-                    data?.priceRules.map((rule) => (
-                      <TableRow key={rule.id} className='cursor-pointer' onClick={() => setPriceForm(priceFormFromRule(rule))}>
-                        <TableCell>{`${rule.scopeType}:${rule.scopeID}`}</TableCell>
-                        <TableCell className='font-mono text-xs'>{rule.modelPattern}</TableCell>
-                        <TableCell className='max-w-[260px] truncate font-mono text-xs'>{priceSummary(rule)}</TableCell>
+                  </TableHeader>
+                  <TableBody>
+                    <DataStateRow colSpan={6} isLoading={adminLedger.isLoading} isEmpty={(adminLedger.data ?? []).length === 0} />
+                    {adminLedger.data?.map((tx) => (
+                      <TableRow key={tx.id}>
+                        <TableCell>{formatDate(tx.createdAt)}</TableCell>
+                        <TableCell className='font-mono text-xs'>{tx.billingAccountID}</TableCell>
+                        <TableCell>{tx.type}</TableCell>
                         <TableCell>
-                          <Badge variant={rule.enabled ? 'default' : 'secondary'}>{rule.enabled ? 'enabled' : 'disabled'}</Badge>
+                          <StatusBadge value={tx.direction} positive={tx.direction === 'credit'} />
+                        </TableCell>
+                        <TableCell className='max-w-[220px] truncate text-xs'>
+                          {tx.referenceType || '-'} {tx.referenceID || ''}
+                        </TableCell>
+                        <TableCell className='text-right font-mono'>
+                          {tx.direction === 'debit' ? '-' : '+'}
+                          {formatMicros(tx.amountMicros, tx.currency)}
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <Card className='rounded-lg'>
-            <CardHeader>
-              <CardTitle className='text-base'>{t('adminBilling.epay.title')}</CardTitle>
-              <CardDescription>{t('adminBilling.epay.description')}</CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              <form className='grid gap-3 md:grid-cols-2' onSubmit={handleSaveEPayProvider}>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-epay-name'>{t('adminBilling.epay.name')}</Label>
-                  <Input id='admin-billing-epay-name' value={providerForm.name} onChange={(event) => setProviderForm((prev) => ({ ...prev, name: event.target.value }))} />
-                </div>
-                <div className='space-y-2'>
-                  <Label>{t('adminBilling.columns.status')}</Label>
-                  <Select value={providerForm.status} onValueChange={(value) => setProviderForm((prev) => ({ ...prev, status: value as 'enabled' | 'disabled' }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='enabled'>enabled</SelectItem>
-                      <SelectItem value='disabled'>disabled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className='space-y-2 md:col-span-2'>
-                  <Label htmlFor='admin-billing-epay-gateway'>{t('adminBilling.epay.gatewayUrl')}</Label>
-                  <Input id='admin-billing-epay-gateway' value={providerForm.gatewayUrl} onChange={(event) => setProviderForm((prev) => ({ ...prev, gatewayUrl: event.target.value }))} />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-epay-pid'>{t('adminBilling.epay.pid')}</Label>
-                  <Input id='admin-billing-epay-pid' value={providerForm.pid} onChange={(event) => setProviderForm((prev) => ({ ...prev, pid: event.target.value }))} />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='admin-billing-epay-key'>{t('adminBilling.epay.key')}</Label>
-                  <Input id='admin-billing-epay-key' value={providerForm.key} onChange={(event) => setProviderForm((prev) => ({ ...prev, key: event.target.value }))} />
-                </div>
-                <div className='space-y-2 md:col-span-2'>
-                  <Label htmlFor='admin-billing-epay-notify'>{t('adminBilling.epay.notifyUrl')}</Label>
-                  <Input id='admin-billing-epay-notify' value={providerForm.notifyUrl} onChange={(event) => setProviderForm((prev) => ({ ...prev, notifyUrl: event.target.value }))} />
-                </div>
-                <div className='space-y-2 md:col-span-2'>
-                  <Label htmlFor='admin-billing-epay-return'>{t('adminBilling.epay.returnUrl')}</Label>
-                  <Input id='admin-billing-epay-return' value={providerForm.returnUrl} onChange={(event) => setProviderForm((prev) => ({ ...prev, returnUrl: event.target.value }))} />
-                </div>
-                <Button type='submit' disabled={upsertEPay.isPending}>
-                  {upsertEPay.isPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
-                  {t('adminBilling.epay.submit')}
-                </Button>
-              </form>
-
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('adminBilling.epay.name')}</TableHead>
-                    <TableHead>{t('adminBilling.columns.status')}</TableHead>
-                    <TableHead>{t('adminBilling.columns.currency')}</TableHead>
-                    <TableHead>{t('adminBilling.columns.updatedAt')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(data?.providers ?? []).length === 0 ? (
+          <TabsContent value='usage' className='mt-0'>
+            <Card className='rounded-lg'>
+              <CardHeader>
+                <CardTitle className='text-base'>{t('adminBilling.usage.title')}</CardTitle>
+                <CardDescription>{t('adminBilling.usage.description')}</CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <form
+                  className='grid gap-3 md:grid-cols-4 xl:grid-cols-8'
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    setAppliedUsageFilter(buildUsageFilter(usageFilter));
+                  }}
+                >
+                  <FilterInput
+                    label={t('adminBilling.filters.userId')}
+                    value={usageFilter.userId}
+                    onChange={(value) => setUsageFilter((prev) => ({ ...prev, userId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.projectId')}
+                    value={usageFilter.projectId}
+                    onChange={(value) => setUsageFilter((prev) => ({ ...prev, projectId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.apiKeyId')}
+                    value={usageFilter.apiKeyId}
+                    onChange={(value) => setUsageFilter((prev) => ({ ...prev, apiKeyId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.columns.model')}
+                    value={usageFilter.modelId}
+                    onChange={(value) => setUsageFilter((prev) => ({ ...prev, modelId: value }))}
+                  />
+                  <FilterSelect
+                    label={t('adminBilling.columns.status')}
+                    value={usageFilter.status}
+                    onChange={(value) => setUsageFilter((prev) => ({ ...prev, status: value as UsageFilterForm['status'] }))}
+                    options={['all', 'pending', 'charged', 'skipped', 'failed', 'refunded']}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.accountId')}
+                    value={usageFilter.billingAccountId}
+                    onChange={(value) => setUsageFilter((prev) => ({ ...prev, billingAccountId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.from')}
+                    type='datetime-local'
+                    value={usageFilter.from}
+                    onChange={(value) => setUsageFilter((prev) => ({ ...prev, from: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.to')}
+                    type='datetime-local'
+                    value={usageFilter.to}
+                    onChange={(value) => setUsageFilter((prev) => ({ ...prev, to: value }))}
+                  />
+                  <FilterActions
+                    onReset={() => {
+                      const next = defaultUsageFilter();
+                      setUsageFilter(next);
+                      setAppliedUsageFilter({});
+                    }}
+                  />
+                </form>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={4} className='text-muted-foreground h-24 text-center'>
-                        {isLoading ? t('common.loading') : t('common.noData')}
-                      </TableCell>
+                      <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                      <TableHead>{t('adminBilling.filters.userId')}</TableHead>
+                      <TableHead>{t('adminBilling.filters.projectId')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.model')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.reason')}</TableHead>
+                      <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
                     </TableRow>
-                  ) : (
-                    data?.providers.map((provider) => (
-                      <TableRow key={provider.id}>
-                        <TableCell>{provider.name}</TableCell>
+                  </TableHeader>
+                  <TableBody>
+                    <DataStateRow colSpan={7} isLoading={adminUsage.isLoading} isEmpty={(adminUsage.data ?? []).length === 0} />
+                    {adminUsage.data?.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell>{formatDate(record.createdAt)}</TableCell>
+                        <TableCell>{record.userID ?? '-'}</TableCell>
+                        <TableCell>{record.projectID}</TableCell>
+                        <TableCell className='max-w-[220px] truncate font-mono text-xs'>{record.modelID}</TableCell>
                         <TableCell>
-                          <Badge variant={provider.status === 'enabled' ? 'default' : 'secondary'}>{provider.status}</Badge>
+                          <StatusBadge value={record.status} positive={record.status === 'charged'} />
                         </TableCell>
-                        <TableCell>{provider.currency}</TableCell>
-                        <TableCell>{formatDate(provider.updatedAt)}</TableCell>
+                        <TableCell className='max-w-[280px] truncate text-xs'>{record.error || '-'}</TableCell>
+                        <TableCell className='text-right font-mono'>{formatMicros(record.chargeAmountMicros, record.currency)}</TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value='orders' className='mt-0'>
+            <Card className='rounded-lg'>
+              <CardHeader>
+                <CardTitle className='text-base'>{t('adminBilling.orders.title')}</CardTitle>
+                <CardDescription>{t('adminBilling.orders.description')}</CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <form
+                  className='grid gap-3 md:grid-cols-4 xl:grid-cols-8'
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    setAppliedOrderFilter(buildOrderFilter(orderFilter));
+                  }}
+                >
+                  <FilterInput
+                    label={t('adminBilling.filters.userId')}
+                    value={orderFilter.userId}
+                    onChange={(value) => setOrderFilter((prev) => ({ ...prev, userId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.projectId')}
+                    value={orderFilter.projectId}
+                    onChange={(value) => setOrderFilter((prev) => ({ ...prev, projectId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.accountId')}
+                    value={orderFilter.billingAccountId}
+                    onChange={(value) => setOrderFilter((prev) => ({ ...prev, billingAccountId: value }))}
+                  />
+                  <FilterSelect
+                    label={t('adminBilling.columns.provider')}
+                    value={orderFilter.providerType}
+                    onChange={(value) => setOrderFilter((prev) => ({ ...prev, providerType: value as OrderFilterForm['providerType'] }))}
+                    options={['all', 'manual', 'epay', 'stripe', 'custom']}
+                  />
+                  <FilterSelect
+                    label={t('adminBilling.columns.status')}
+                    value={orderFilter.status}
+                    onChange={(value) => setOrderFilter((prev) => ({ ...prev, status: value as OrderFilterForm['status'] }))}
+                    options={['all', 'pending', 'paid', 'failed', 'canceled', 'expired', 'refunded']}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.columns.orderNo')}
+                    value={orderFilter.orderNo}
+                    onChange={(value) => setOrderFilter((prev) => ({ ...prev, orderNo: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.columns.tradeNo')}
+                    value={orderFilter.externalTradeNo}
+                    onChange={(value) => setOrderFilter((prev) => ({ ...prev, externalTradeNo: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.from')}
+                    type='datetime-local'
+                    value={orderFilter.from}
+                    onChange={(value) => setOrderFilter((prev) => ({ ...prev, from: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.to')}
+                    type='datetime-local'
+                    value={orderFilter.to}
+                    onChange={(value) => setOrderFilter((prev) => ({ ...prev, to: value }))}
+                  />
+                  <FilterActions
+                    onReset={() => {
+                      const next = defaultOrderFilter();
+                      setOrderFilter(next);
+                      setAppliedOrderFilter({});
+                    }}
+                  />
+                </form>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.orderNo')}</TableHead>
+                      <TableHead>{t('adminBilling.filters.projectId')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.provider')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.tradeNo')}</TableHead>
+                      <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <DataStateRow colSpan={7} isLoading={adminOrders.isLoading} isEmpty={(adminOrders.data ?? []).length === 0} />
+                    {adminOrders.data?.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>{formatDate(order.createdAt)}</TableCell>
+                        <TableCell className='font-mono text-xs'>{order.orderNo}</TableCell>
+                        <TableCell>{order.projectID}</TableCell>
+                        <TableCell>{order.providerType}</TableCell>
+                        <TableCell>
+                          <StatusBadge value={order.status} positive={order.status === 'paid'} />
+                        </TableCell>
+                        <TableCell className='font-mono text-xs'>{order.externalTradeNo || '-'}</TableCell>
+                        <TableCell className='text-right font-mono'>{formatMicros(order.amountMicros, order.currency)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value='events' className='mt-0'>
+            <Card className='rounded-lg'>
+              <CardHeader>
+                <CardTitle className='text-base'>{t('adminBilling.events.title')}</CardTitle>
+                <CardDescription>{t('adminBilling.events.description')}</CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <form
+                  className='grid gap-3 md:grid-cols-4 xl:grid-cols-8'
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    setAppliedEventFilter(buildEventFilter(eventFilter));
+                  }}
+                >
+                  <FilterInput
+                    label={t('adminBilling.filters.paymentOrderId')}
+                    value={eventFilter.paymentOrderId}
+                    onChange={(value) => setEventFilter((prev) => ({ ...prev, paymentOrderId: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.providerInstanceId')}
+                    value={eventFilter.providerInstanceId}
+                    onChange={(value) => setEventFilter((prev) => ({ ...prev, providerInstanceId: value }))}
+                  />
+                  <FilterSelect
+                    label={t('adminBilling.columns.provider')}
+                    value={eventFilter.providerType}
+                    onChange={(value) => setEventFilter((prev) => ({ ...prev, providerType: value as EventFilterForm['providerType'] }))}
+                    options={['all', 'manual', 'epay', 'stripe', 'custom']}
+                  />
+                  <FilterSelect
+                    label={t('adminBilling.columns.status')}
+                    value={eventFilter.status}
+                    onChange={(value) => setEventFilter((prev) => ({ ...prev, status: value as EventFilterForm['status'] }))}
+                    options={['all', 'received', 'processed', 'failed', 'ignored']}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.columns.eventType')}
+                    value={eventFilter.eventType}
+                    onChange={(value) => setEventFilter((prev) => ({ ...prev, eventType: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.columns.eventKey')}
+                    value={eventFilter.eventKey}
+                    onChange={(value) => setEventFilter((prev) => ({ ...prev, eventKey: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.from')}
+                    type='datetime-local'
+                    value={eventFilter.from}
+                    onChange={(value) => setEventFilter((prev) => ({ ...prev, from: value }))}
+                  />
+                  <FilterInput
+                    label={t('adminBilling.filters.to')}
+                    type='datetime-local'
+                    value={eventFilter.to}
+                    onChange={(value) => setEventFilter((prev) => ({ ...prev, to: value }))}
+                  />
+                  <FilterActions
+                    onReset={() => {
+                      const next = defaultEventFilter();
+                      setEventFilter(next);
+                      setAppliedEventFilter({});
+                    }}
+                  />
+                </form>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.eventKey')}</TableHead>
+                      <TableHead>{t('adminBilling.filters.paymentOrderId')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.provider')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.eventType')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.reason')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <DataStateRow colSpan={7} isLoading={adminEvents.isLoading} isEmpty={(adminEvents.data ?? []).length === 0} />
+                    {adminEvents.data?.map((event) => (
+                      <TableRow key={event.id}>
+                        <TableCell>{formatDate(event.createdAt)}</TableCell>
+                        <TableCell className='font-mono text-xs'>{event.eventKey}</TableCell>
+                        <TableCell className='font-mono text-xs'>{event.paymentOrderID || '-'}</TableCell>
+                        <TableCell>{event.providerType}</TableCell>
+                        <TableCell>{event.eventType}</TableCell>
+                        <TableCell>
+                          <StatusBadge value={event.status} positive={event.status === 'processed'} />
+                        </TableCell>
+                        <TableCell className='max-w-[280px] truncate text-xs'>{event.error || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value='pricing' className='mt-0'>
+            <PricingCard
+              data={data?.priceRules ?? []}
+              isLoading={isLoading}
+              priceForm={priceForm}
+              setPriceForm={setPriceForm}
+              handleSavePriceRule={handleSavePriceRule}
+              savePending={savePriceRule.isPending}
+            />
+          </TabsContent>
+
+          <TabsContent value='providers' className='mt-0'>
+            <ProvidersCard
+              providers={data?.providers ?? []}
+              isLoading={isLoading}
+              providerForm={providerForm}
+              setProviderForm={setProviderForm}
+              handleSaveEPayProvider={handleSaveEPayProvider}
+              savePending={upsertEPay.isPending}
+            />
+          </TabsContent>
+        </Tabs>
       </Main>
     </div>
+  );
+}
+
+function ErrorAlert({ error }: { error: unknown }) {
+  const { t } = useTranslation();
+  if (!error) return null;
+  return (
+    <Alert variant='destructive'>
+      <AlertCircle className='size-4' />
+      <AlertTitle>{t('common.loadError')}</AlertTitle>
+      <AlertDescription>{error instanceof Error ? error.message : t('common.errors.unknownError')}</AlertDescription>
+    </Alert>
   );
 }
 
@@ -676,6 +1174,373 @@ function MetricCard({ title, value, loading }: { title: string; value: string; l
       </CardHeader>
       <CardContent>
         <div className='font-mono text-2xl font-semibold'>{loading ? '-' : value}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DataStateRow({ colSpan, isLoading, isEmpty }: { colSpan: number; isLoading: boolean; isEmpty: boolean }) {
+  const { t } = useTranslation();
+  if (!isLoading && !isEmpty) return null;
+  return (
+    <TableRow>
+      <TableCell colSpan={colSpan} className='text-muted-foreground h-24 text-center'>
+        {isLoading ? t('common.loading') : t('common.noData')}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function StatusBadge({ value, positive }: { value: string; positive: boolean }) {
+  return <Badge variant={positive ? 'default' : 'secondary'}>{value}</Badge>;
+}
+
+function FilterInput({
+  label,
+  value,
+  onChange,
+  type = 'text',
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <div className='space-y-2'>
+      <Label>{label}</Label>
+      <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} />
+    </div>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+}) {
+  return (
+    <div className='space-y-2'>
+      <Label>{label}</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function FilterActions({ onReset }: { onReset: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className='flex items-end gap-2 md:col-span-2'>
+      <Button type='submit'>{t('adminBilling.filters.apply')}</Button>
+      <Button type='button' variant='outline' onClick={onReset}>
+        {t('adminBilling.filters.reset')}
+      </Button>
+    </div>
+  );
+}
+
+function UserSelect({
+  users,
+  value,
+  onChange,
+  label,
+  placeholder,
+}: {
+  users: Array<{ id: string; email: string }>;
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+  placeholder: string;
+}) {
+  return (
+    <div className='space-y-2'>
+      <Label>{label}</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {users.map((user) => (
+            <SelectItem key={user.id} value={user.id}>
+              {user.email}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function MiniList({ title, isLoading, empty, children }: { title: string; isLoading: boolean; empty: boolean; children: ReactNode }) {
+  const { t } = useTranslation();
+  return (
+    <div className='rounded-md border p-3'>
+      <div className='mb-2 text-sm font-medium'>{title}</div>
+      {isLoading ? (
+        <div className='text-muted-foreground text-sm'>{t('common.loading')}</div>
+      ) : empty ? (
+        <div className='text-muted-foreground text-sm'>{t('common.noData')}</div>
+      ) : (
+        <div className='space-y-2'>{children}</div>
+      )}
+    </div>
+  );
+}
+
+function MiniRow({ left, right, sub }: { left: string; right: string; sub: string }) {
+  return (
+    <div className='flex items-start justify-between gap-3 text-sm'>
+      <div className='min-w-0'>
+        <div className='truncate font-medium'>{left}</div>
+        <div className='text-muted-foreground truncate text-xs'>{sub}</div>
+      </div>
+      <div className='font-mono text-xs'>{right}</div>
+    </div>
+  );
+}
+
+function PricingCard({
+  data,
+  isLoading,
+  priceForm,
+  setPriceForm,
+  handleSavePriceRule,
+  savePending,
+}: {
+  data: BillingPriceRule[];
+  isLoading: boolean;
+  priceForm: PriceForm;
+  setPriceForm: (value: PriceForm | ((prev: PriceForm) => PriceForm)) => void;
+  handleSavePriceRule: (event: FormEvent<HTMLFormElement>) => void;
+  savePending: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Card className='rounded-lg'>
+      <CardHeader>
+        <CardTitle className='text-base'>{t('adminBilling.pricing.title')}</CardTitle>
+        <CardDescription>{t('adminBilling.pricing.description')}</CardDescription>
+      </CardHeader>
+      <CardContent className='space-y-4'>
+        <form className='grid gap-3 md:grid-cols-2 xl:grid-cols-4' onSubmit={handleSavePriceRule}>
+          <div className='space-y-2'>
+            <Label>{t('adminBilling.pricing.scopeType')}</Label>
+            <Select
+              value={priceForm.scopeType}
+              onValueChange={(value) =>
+                setPriceForm((prev) => ({
+                  ...prev,
+                  scopeType: value as PriceForm['scopeType'],
+                  scopeId: value === 'global' ? '0' : prev.scopeId,
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='global'>{t('adminBilling.pricing.global')}</SelectItem>
+                <SelectItem value='project'>{t('adminBilling.pricing.project')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <FilterInput
+            label={t('adminBilling.pricing.scopeId')}
+            value={priceForm.scopeId}
+            onChange={(value) => setPriceForm((prev) => ({ ...prev, scopeId: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.pricing.modelPattern')}
+            value={priceForm.modelPattern}
+            onChange={(value) => setPriceForm((prev) => ({ ...prev, modelPattern: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.pricing.priority')}
+            value={priceForm.priority}
+            onChange={(value) => setPriceForm((prev) => ({ ...prev, priority: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.pricing.promptPrice')}
+            value={priceForm.promptPrice}
+            onChange={(value) => setPriceForm((prev) => ({ ...prev, promptPrice: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.pricing.completionPrice')}
+            value={priceForm.completionPrice}
+            onChange={(value) => setPriceForm((prev) => ({ ...prev, completionPrice: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.columns.currency')}
+            value={priceForm.currency}
+            onChange={(value) => setPriceForm((prev) => ({ ...prev, currency: value.toUpperCase() }))}
+          />
+          <div className='flex items-center justify-between rounded-md border px-3 py-2'>
+            <Label htmlFor='admin-billing-price-enabled'>{t('adminBilling.pricing.enabled')}</Label>
+            <Switch
+              id='admin-billing-price-enabled'
+              checked={priceForm.enabled}
+              onCheckedChange={(checked) => setPriceForm((prev) => ({ ...prev, enabled: checked }))}
+            />
+          </div>
+          <div className='flex items-end gap-2 md:col-span-2 xl:col-span-4'>
+            <Button type='submit' disabled={savePending}>
+              {savePending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+              {priceForm.id ? t('adminBilling.pricing.update') : t('adminBilling.pricing.create')}
+            </Button>
+            <Button type='button' variant='outline' onClick={() => setPriceForm(defaultPriceForm())}>
+              {t('adminBilling.pricing.newRule')}
+            </Button>
+          </div>
+        </form>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('adminBilling.columns.scope')}</TableHead>
+              <TableHead>{t('adminBilling.columns.model')}</TableHead>
+              <TableHead>{t('adminBilling.columns.price')}</TableHead>
+              <TableHead>{t('adminBilling.columns.status')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <DataStateRow colSpan={4} isLoading={isLoading} isEmpty={data.length === 0} />
+            {data.map((rule) => (
+              <TableRow key={rule.id} className='cursor-pointer' onClick={() => setPriceForm(priceFormFromRule(rule))}>
+                <TableCell>{`${rule.scopeType}:${rule.scopeID}`}</TableCell>
+                <TableCell className='font-mono text-xs'>{rule.modelPattern}</TableCell>
+                <TableCell className='max-w-[360px] truncate font-mono text-xs'>{priceSummary(rule)}</TableCell>
+                <TableCell>
+                  <StatusBadge value={rule.enabled ? 'enabled' : 'disabled'} positive={rule.enabled} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProvidersCard({
+  providers,
+  isLoading,
+  providerForm,
+  setProviderForm,
+  handleSaveEPayProvider,
+  savePending,
+}: {
+  providers: Array<{ id: string; name: string; status: string; currency: string; updatedAt: string }>;
+  isLoading: boolean;
+  providerForm: EPayProviderForm;
+  setProviderForm: (value: EPayProviderForm | ((prev: EPayProviderForm) => EPayProviderForm)) => void;
+  handleSaveEPayProvider: (event: FormEvent<HTMLFormElement>) => void;
+  savePending: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Card className='rounded-lg'>
+      <CardHeader>
+        <CardTitle className='text-base'>{t('adminBilling.epay.title')}</CardTitle>
+        <CardDescription>{t('adminBilling.epay.description')}</CardDescription>
+      </CardHeader>
+      <CardContent className='space-y-4'>
+        <form className='grid gap-3 md:grid-cols-2 xl:grid-cols-4' onSubmit={handleSaveEPayProvider}>
+          <FilterInput
+            label={t('adminBilling.epay.name')}
+            value={providerForm.name}
+            onChange={(value) => setProviderForm((prev) => ({ ...prev, name: value }))}
+          />
+          <div className='space-y-2'>
+            <Label>{t('adminBilling.columns.status')}</Label>
+            <Select
+              value={providerForm.status}
+              onValueChange={(value) => setProviderForm((prev) => ({ ...prev, status: value as 'enabled' | 'disabled' }))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='enabled'>enabled</SelectItem>
+                <SelectItem value='disabled'>disabled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <FilterInput
+            label={t('adminBilling.epay.gatewayUrl')}
+            value={providerForm.gatewayUrl}
+            onChange={(value) => setProviderForm((prev) => ({ ...prev, gatewayUrl: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.epay.pid')}
+            value={providerForm.pid}
+            onChange={(value) => setProviderForm((prev) => ({ ...prev, pid: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.epay.key')}
+            value={providerForm.key}
+            onChange={(value) => setProviderForm((prev) => ({ ...prev, key: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.epay.notifyUrl')}
+            value={providerForm.notifyUrl}
+            onChange={(value) => setProviderForm((prev) => ({ ...prev, notifyUrl: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.epay.returnUrl')}
+            value={providerForm.returnUrl}
+            onChange={(value) => setProviderForm((prev) => ({ ...prev, returnUrl: value }))}
+          />
+          <FilterInput
+            label={t('adminBilling.columns.currency')}
+            value={providerForm.currency}
+            onChange={(value) => setProviderForm((prev) => ({ ...prev, currency: value.toUpperCase() }))}
+          />
+          <div className='flex items-end'>
+            <Button type='submit' disabled={savePending}>
+              {savePending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+              {t('adminBilling.epay.submit')}
+            </Button>
+          </div>
+        </form>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('adminBilling.epay.name')}</TableHead>
+              <TableHead>{t('adminBilling.columns.status')}</TableHead>
+              <TableHead>{t('adminBilling.columns.currency')}</TableHead>
+              <TableHead>{t('adminBilling.columns.updatedAt')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <DataStateRow colSpan={4} isLoading={isLoading} isEmpty={providers.length === 0} />
+            {providers.map((provider) => (
+              <TableRow key={provider.id}>
+                <TableCell>{provider.name}</TableCell>
+                <TableCell>
+                  <StatusBadge value={provider.status} positive={provider.status === 'enabled'} />
+                </TableCell>
+                <TableCell>{provider.currency}</TableCell>
+                <TableCell>{formatDate(provider.updatedAt)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
