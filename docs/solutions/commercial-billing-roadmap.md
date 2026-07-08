@@ -118,32 +118,32 @@ Verification:
 
 ## Stage 3: Commercial Reports And Audit Console
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: let operators reconcile revenue, usage charges, failed billing, and user-level money movement without querying the database directly.
 
 Backend scope:
 
-- [ ] Add daily recharge, consumption, net movement, and failed-payment aggregates.
-- [ ] Add top models by charge amount.
-- [ ] Add top projects by charge amount.
-- [ ] Add top users by recharge and consumption.
-- [ ] Add CSV export for ledgers, orders, usage charges, and payment events.
-- [ ] Ensure aggregate totals reconcile with ledger transactions.
+- [x] Add daily recharge, consumption, net movement, and failed-payment aggregates.
+- [x] Add top models by charge amount.
+- [x] Add top projects by charge amount.
+- [x] Add top users by recharge and consumption.
+- [x] Add CSV export for ledgers, orders, usage charges, and payment events.
+- [x] Ensure aggregate totals reconcile with ledger transactions.
 
 Frontend scope:
 
-- [ ] Admin dashboard cards for recharge, consumption, net revenue, failed payments, and pending holds.
-- [ ] Tables for ranked models, projects, and users.
-- [ ] CSV export buttons on operational tables.
-- [ ] Date range selector with stable default range.
+- [x] Admin dashboard cards for recharge, consumption, net revenue, failed payments, and pending holds.
+- [x] Tables for ranked models, projects, and users.
+- [x] CSV export buttons on operational tables.
+- [x] Date range selector with stable default range.
 
 Verification:
 
-- [ ] Aggregate tests compare report totals against seeded ledger rows.
-- [ ] Permission tests enforce owner-only access.
-- [ ] Frontend build passes.
-- [ ] Commit completed stage.
+- [x] Aggregate tests compare report totals against seeded ledger rows.
+- [x] Permission tests enforce owner-only access.
+- [x] Frontend build passes.
+- [x] Commit completed stage.
 
 ## Stage 4: API Key Budgets And Commercial Limits
 
@@ -347,7 +347,7 @@ Verification:
 - [x] Stage 0: Harden Existing Commercial Modules
 - [x] Stage 1: Wallet Holds And Pre-Authorization
 - [x] Stage 2: Production Payment Order Lifecycle
-- [ ] Stage 3: Commercial Reports And Audit Console
+- [x] Stage 3: Commercial Reports And Audit Console
 - [ ] Stage 4: API Key Budgets And Commercial Limits
 - [ ] Stage 5: Redeem Codes
 - [ ] Stage 6: Subscription Plans
@@ -366,3 +366,4 @@ Append one line per completed stage.
 | Stage 0 | `f96625b4` | 2026-07-08 | Hardened admission codes, usage retry safety, owner-only billing operation queries, admin billing tabs, filters, and failure reason display. |
 | Stage 1 | `94106a72` | 2026-07-08 | Added wallet holds, request pre-authorization, hold capture/release/expiry, admin hold operations, and held/available wallet UI. |
 | Stage 2 | `bf4368b5` | 2026-07-08 | Hardened payment order lifecycle with expiry, cancel, admin make-up, callback audit, read-only return page, event payload summaries, and refund reserve fields. |
+| Stage 3 | `482fad12` | 2026-07-08 | Added owner-only commercial reports, ledger-backed reconciliation totals, ranked model/project/user tables, CSV exports, admin report dashboard, and frontend verification. |
