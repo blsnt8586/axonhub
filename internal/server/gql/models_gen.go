@@ -11,6 +11,7 @@ import (
 
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/channel"
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
 	"github.com/looplj/axonhub/llm/httpclient"
@@ -573,6 +574,19 @@ type UpdateSecuritySettingsInput struct {
 
 type UpdateUserAgentPassThroughSettingsInput struct {
 	Enabled bool `json:"enabled"`
+}
+
+type UpsertEPayPaymentProviderInput struct {
+	Name       string                          `json:"name"`
+	Status     *paymentproviderinstance.Status `json:"status,omitempty"`
+	Currency   *string                         `json:"currency,omitempty"`
+	GatewayURL string                          `json:"gatewayUrl"`
+	Pid        string                          `json:"pid"`
+	Key        *string                         `json:"key,omitempty"`
+	NotifyURL  string                          `json:"notifyUrl"`
+	ReturnURL  string                          `json:"returnUrl"`
+	Type       *string                         `json:"type,omitempty"`
+	SiteName   *string                         `json:"siteName,omitempty"`
 }
 
 // Usage statistics grouped by user

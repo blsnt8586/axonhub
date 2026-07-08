@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -47,6 +48,140 @@ func NewPaymentService(params PaymentServiceParams) *PaymentService {
 }
 
 const simulatedEPayProviderName = "Simulated ePay"
+
+type UpsertEPayProviderInput struct {
+	Name       string
+	Status     paymentproviderinstance.Status
+	Currency   string
+	GatewayURL string
+	PID        string
+	Key        string
+	NotifyURL  string
+	ReturnURL  string
+	Type       string
+	SiteName   string
+}
+
+func (s *PaymentService) UpsertEPayProvider(ctx context.Context, input UpsertEPayProviderInput) (*ent.PaymentProviderInstance, error) {
+	input.Name = strings.TrimSpace(input.Name)
+	if input.Name == "" {
+		return nil, fmt.Errorf("payment provider name is required")
+	}
+	if input.Name == simulatedEPayProviderName {
+		return nil, fmt.Errorf("payment provider name %q is reserved for local simulation", simulatedEPayProviderName)
+	}
+	if input.Currency == "" {
+		input.Currency = defaultBillingCurrency
+	}
+	if input.Status == "" {
+		input.Status = paymentproviderinstance.StatusEnabled
+	}
+	if input.Status != paymentproviderinstance.StatusEnabled && input.Status != paymentproviderinstance.StatusDisabled {
+		return nil, fmt.Errorf("unsupported payment provider status %q", input.Status)
+	}
+
+	cfg := EPayConfig{
+		GatewayURL: strings.TrimSpace(input.GatewayURL),
+		PID:        strings.TrimSpace(input.PID),
+		Key:        strings.TrimSpace(input.Key),
+		NotifyURL:  strings.TrimSpace(input.NotifyURL),
+		ReturnURL:  strings.TrimSpace(input.ReturnURL),
+		Type:       strings.TrimSpace(input.Type),
+		SiteName:   strings.TrimSpace(input.SiteName),
+	}
+	if cfg.Type == "" {
+		cfg.Type = "alipay"
+	}
+	if cfg.SiteName == "" {
+		cfg.SiteName = "AxonHub"
+	}
+
+	client := s.entFromContext(ctx)
+	existing, err := client.PaymentProviderInstance.Query().
+		Where(
+			paymentproviderinstance.ProviderTypeEQ(paymentproviderinstance.ProviderTypeEpay),
+			paymentproviderinstance.NameEQ(input.Name),
+		).
+		Only(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		return nil, fmt.Errorf("failed to load epay provider: %w", err)
+	}
+	if existing != nil && cfg.Key == "" {
+		existingCfg, err := parseEPayConfig(existing.Config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to reuse existing epay key: %w", err)
+		}
+		cfg.Key = existingCfg.Key
+	}
+
+	if err := validateEPayConfig(cfg); err != nil {
+		return nil, err
+	}
+	raw, err := json.Marshal(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal epay config: %w", err)
+	}
+
+	if existing == nil {
+		return client.PaymentProviderInstance.Create().
+			SetName(input.Name).
+			SetProviderType(paymentproviderinstance.ProviderTypeEpay).
+			SetStatus(input.Status).
+			SetCurrency(input.Currency).
+			SetConfig(objects.JSONRawMessage(raw)).
+			Save(ctx)
+	}
+
+	return client.PaymentProviderInstance.UpdateOneID(existing.ID).
+		SetStatus(input.Status).
+		SetCurrency(input.Currency).
+		SetConfig(objects.JSONRawMessage(raw)).
+		Save(ctx)
+}
+
+func validateEPayConfig(cfg EPayConfig) error {
+	if cfg.GatewayURL == "" {
+		return fmt.Errorf("epay gateway_url is required")
+	}
+	if cfg.PID == "" {
+		return fmt.Errorf("epay pid is required")
+	}
+	if cfg.Key == "" {
+		return fmt.Errorf("epay key is required")
+	}
+	if cfg.NotifyURL == "" {
+		return fmt.Errorf("epay notify_url is required")
+	}
+	if cfg.ReturnURL == "" {
+		return fmt.Errorf("epay return_url is required")
+	}
+	if err := validateHTTPURL("epay gateway_url", cfg.GatewayURL); err != nil {
+		return err
+	}
+	if err := validateHTTPURL("epay notify_url", cfg.NotifyURL); err != nil {
+		return err
+	}
+	if err := validateHTTPURL("epay return_url", cfg.ReturnURL); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateHTTPURL(fieldName string, rawURL string) error {
+	parsed, err := url.ParseRequestURI(rawURL)
+	if err != nil {
+		return fmt.Errorf("%s is invalid: %w", fieldName, err)
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return fmt.Errorf("%s must use http or https", fieldName)
+	}
+	if parsed.Host == "" {
+		return fmt.Errorf("%s must include host", fieldName)
+	}
+
+	return nil
+}
 
 type CreateRechargeCheckoutInput struct {
 	ProjectID          int

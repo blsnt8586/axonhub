@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	entproject "github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/objects"
 )
@@ -171,6 +172,80 @@ func TestPaymentServiceRejectsEPayNotifyWithInvalidSignature(t *testing.T) {
 	_, err = svc.HandleEPayNotify(ctx, HandleEPayNotifyInput{Params: notify})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid epay signature")
+}
+
+func TestPaymentServiceUpsertEPayProviderCreatesAndPreservesKeyOnUpdate(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, svc := newPaymentTestService(t, "payment_epay_provider_upsert")
+	provider, err := svc.UpsertEPayProvider(ctx, UpsertEPayProviderInput{
+		Name:       "Prod ePay",
+		GatewayURL: "https://pay.example.com/submit.php",
+		PID:        "1002",
+		Key:        "secret-key-v1",
+		NotifyURL:  "https://axon.example.com/payment/notify/epay",
+		ReturnURL:  "https://axon.example.com/admin/billing",
+		Type:       "wxpay",
+		SiteName:   "AxonHub Prod",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "Prod ePay", provider.Name)
+	require.Equal(t, paymentproviderinstance.ProviderTypeEpay, provider.ProviderType)
+	require.Equal(t, paymentproviderinstance.StatusEnabled, provider.Status)
+	require.Equal(t, "CNY", provider.Currency)
+
+	cfg, err := parseEPayConfig(provider.Config)
+	require.NoError(t, err)
+	require.Equal(t, "secret-key-v1", cfg.Key)
+	require.Equal(t, "wxpay", cfg.Type)
+
+	updated, err := svc.UpsertEPayProvider(ctx, UpsertEPayProviderInput{
+		Name:       "Prod ePay",
+		Status:     paymentproviderinstance.StatusDisabled,
+		Currency:   "CNY",
+		GatewayURL: "https://pay2.example.com/submit.php",
+		PID:        "1002",
+		NotifyURL:  "https://axon.example.com/payment/notify/epay",
+		ReturnURL:  "https://axon.example.com/admin/billing",
+	})
+	require.NoError(t, err)
+	require.Equal(t, provider.ID, updated.ID)
+	require.Equal(t, paymentproviderinstance.StatusDisabled, updated.Status)
+
+	cfg, err = parseEPayConfig(updated.Config)
+	require.NoError(t, err)
+	require.Equal(t, "secret-key-v1", cfg.Key)
+	require.Equal(t, "https://pay2.example.com/submit.php", cfg.GatewayURL)
+	require.Equal(t, "alipay", cfg.Type)
+	require.Equal(t, "AxonHub", cfg.SiteName)
+
+	count, err := client.PaymentProviderInstance.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, count)
+}
+
+func TestPaymentServiceUpsertEPayProviderRejectsMissingInitialKey(t *testing.T) {
+	t.Parallel()
+
+	_, ctx, svc := newPaymentTestService(t, "payment_epay_provider_missing_key")
+	_, err := svc.UpsertEPayProvider(ctx, UpsertEPayProviderInput{
+		Name:       "Prod ePay",
+		GatewayURL: "https://pay.example.com/submit.php",
+		PID:        "1002",
+		NotifyURL:  "https://axon.example.com/payment/notify/epay",
+		ReturnURL:  "https://axon.example.com/admin/billing",
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "epay key is required")
+}
+
+func TestPaymentServiceUpsertEPayProviderRejectsReservedSimulationName(t *testing.T) {
+	t.Parallel()
+
+	_, ctx, svc := newPaymentTestService(t, "payment_epay_provider_reserved_name")
+	_, err := svc.UpsertEPayProvider(ctx, UpsertEPayProviderInput{Name: simulatedEPayProviderName})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "reserved")
 }
 
 func newPaymentTestService(t *testing.T, name string) (*ent.Client, context.Context, *PaymentService) {

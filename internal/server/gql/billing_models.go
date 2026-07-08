@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
 )
@@ -35,6 +36,14 @@ func paymentCheckoutFromBiz(checkout *biz.PaymentProviderCheckout) (*PaymentChec
 }
 
 func stringValue(value *string) string {
+	if value == nil {
+		return ""
+	}
+
+	return *value
+}
+
+func paymentProviderStatusValue(value *paymentproviderinstance.Status) paymentproviderinstance.Status {
 	if value == nil {
 		return ""
 	}

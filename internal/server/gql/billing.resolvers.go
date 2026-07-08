@@ -63,6 +63,26 @@ func (r *mutationResolver) CreateSimulatedEPayRechargeCheckout(ctx context.Conte
 	return paymentCheckoutFromBiz(checkout)
 }
 
+// UpsertEPayPaymentProvider is the resolver for the upsertEPayPaymentProvider field.
+func (r *mutationResolver) UpsertEPayPaymentProvider(ctx context.Context, input UpsertEPayPaymentProviderInput) (*ent.PaymentProviderInstance, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.paymentService.UpsertEPayProvider(ctx, biz.UpsertEPayProviderInput{
+		Name:       input.Name,
+		Status:     paymentProviderStatusValue(input.Status),
+		Currency:   stringValue(input.Currency),
+		GatewayURL: input.GatewayURL,
+		PID:        input.Pid,
+		Key:        stringValue(input.Key),
+		NotifyURL:  input.NotifyURL,
+		ReturnURL:  input.ReturnURL,
+		Type:       stringValue(input.Type),
+		SiteName:   stringValue(input.SiteName),
+	})
+}
+
 // ProjectBillingAccount is the resolver for the projectBillingAccount field.
 func (r *queryResolver) ProjectBillingAccount(ctx context.Context, projectID objects.GUID) (*ent.BillingAccount, error) {
 	if err := requireOwner(ctx); err != nil {

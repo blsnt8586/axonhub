@@ -22,6 +22,19 @@ input CreateSimulatedEPayRechargeCheckoutInput {
   metadata: JSONRawMessageInput
 }
 
+input UpsertEPayPaymentProviderInput {
+  name: String!
+  status: PaymentProviderInstanceStatus
+  currency: String
+  gatewayUrl: String!
+  pid: String!
+  key: String
+  notifyUrl: String!
+  returnUrl: String!
+  type: String
+  siteName: String
+}
+
 type PaymentCheckout {
   providerType: String!
   orderNo: String!
@@ -36,6 +49,7 @@ extend type Mutation {
   createManualRechargeOrder(input: CreateManualRechargeOrderInput!): PaymentOrder!
   confirmManualPayment(input: ConfirmManualPaymentInput!): PaymentOrder!
   createSimulatedEPayRechargeCheckout(input: CreateSimulatedEPayRechargeCheckoutInput!): PaymentCheckout!
+  upsertEPayPaymentProvider(input: UpsertEPayPaymentProviderInput!): PaymentProviderInstance!
 }
 
 extend type Query {

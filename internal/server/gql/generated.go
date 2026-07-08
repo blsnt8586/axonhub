@@ -1157,6 +1157,7 @@ type ComplexityRoot struct {
 		UpdateUserStatus                     func(childComplexity int, id objects.GUID, status user.Status) int
 		UpdateVideoStorageSettings           func(childComplexity int, input biz.VideoStorageSettings) int
 		UpdateWebhookNotifierConfig          func(childComplexity int, input biz.WebhookNotifierConfig) int
+		UpsertEPayPaymentProvider            func(childComplexity int, input UpsertEPayPaymentProviderInput) int
 	}
 
 	OAuthCredentials struct {
@@ -2509,6 +2510,7 @@ type MutationResolver interface {
 	CreateManualRechargeOrder(ctx context.Context, input biz.CreateManualRechargeOrderInput) (*ent.PaymentOrder, error)
 	ConfirmManualPayment(ctx context.Context, input biz.ConfirmManualPaymentInput) (*ent.PaymentOrder, error)
 	CreateSimulatedEPayRechargeCheckout(ctx context.Context, input CreateSimulatedEPayRechargeCheckoutInput) (*PaymentCheckout, error)
+	UpsertEPayPaymentProvider(ctx context.Context, input UpsertEPayPaymentProviderInput) (*ent.PaymentProviderInstance, error)
 }
 type OIDCIdentityResolver interface {
 	ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error)
@@ -7483,6 +7485,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateWebhookNotifierConfig(childComplexity, args["input"].(biz.WebhookNotifierConfig)), true
+	case "Mutation.upsertEPayPaymentProvider":
+		if e.complexity.Mutation.UpsertEPayPaymentProvider == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_upsertEPayPaymentProvider_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpsertEPayPaymentProvider(childComplexity, args["input"].(UpsertEPayPaymentProviderInput)), true
 
 	case "OAuthCredentials.accessToken":
 		if e.complexity.OAuthCredentials.AccessToken == nil {
@@ -12707,6 +12720,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateUserAgentPassThroughSettingsInput,
 		ec.unmarshalInputUpdateUserInput,
 		ec.unmarshalInputUpdateVideoStorageSettingsInput,
+		ec.unmarshalInputUpsertEPayPaymentProviderInput,
 		ec.unmarshalInputUpstreamErrorPolicyInput,
 		ec.unmarshalInputUsageBillingRecordOrder,
 		ec.unmarshalInputUsageBillingRecordWhereInput,
@@ -14721,6 +14735,17 @@ func (ec *executionContext) field_Mutation_updateWebhookNotifierConfig_args(ctx 
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNWebhookNotifierConfigInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐWebhookNotifierConfig)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_upsertEPayPaymentProvider_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpsertEPayPaymentProviderInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpsertEPayPaymentProviderInput)
 	if err != nil {
 		return nil, err
 	}
@@ -41352,6 +41377,67 @@ func (ec *executionContext) fieldContext_Mutation_createSimulatedEPayRechargeChe
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createSimulatedEPayRechargeCheckout_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_upsertEPayPaymentProvider(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_upsertEPayPaymentProvider,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpsertEPayPaymentProvider(ctx, fc.Args["input"].(UpsertEPayPaymentProviderInput))
+		},
+		nil,
+		ec.marshalNPaymentProviderInstance2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentProviderInstance,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_upsertEPayPaymentProvider(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PaymentProviderInstance_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PaymentProviderInstance_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PaymentProviderInstance_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_PaymentProviderInstance_name(ctx, field)
+			case "providerType":
+				return ec.fieldContext_PaymentProviderInstance_providerType(ctx, field)
+			case "status":
+				return ec.fieldContext_PaymentProviderInstance_status(ctx, field)
+			case "currency":
+				return ec.fieldContext_PaymentProviderInstance_currency(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_PaymentProviderInstance_paymentOrders(ctx, field)
+			case "paymentEvents":
+				return ec.fieldContext_PaymentProviderInstance_paymentEvents(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PaymentProviderInstance", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_upsertEPayPaymentProvider_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -97961,6 +98047,96 @@ func (ec *executionContext) unmarshalInputUpdateVideoStorageSettingsInput(ctx co
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpsertEPayPaymentProviderInput(ctx context.Context, obj any) (UpsertEPayPaymentProviderInput, error) {
+	var it UpsertEPayPaymentProviderInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "status", "currency", "gatewayUrl", "pid", "key", "notifyUrl", "returnUrl", "type", "siteName"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOPaymentProviderInstanceStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpaymentproviderinstanceᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "gatewayUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gatewayUrl"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GatewayURL = data
+		case "pid":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pid"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Pid = data
+		case "key":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Key = data
+		case "notifyUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notifyUrl"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotifyURL = data
+		case "returnUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("returnUrl"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReturnURL = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "siteName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("siteName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SiteName = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpstreamErrorPolicyInput(ctx context.Context, obj any) (biz.UpstreamErrorPolicy, error) {
 	var it biz.UpstreamErrorPolicy
 	asMap := map[string]any{}
@@ -112145,6 +112321,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createSimulatedEPayRechargeCheckout":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createSimulatedEPayRechargeCheckout(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "upsertEPayPaymentProvider":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_upsertEPayPaymentProvider(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -129278,6 +129461,20 @@ func (ec *executionContext) unmarshalNPaymentOrderWhereInput2ᚖgithubᚗcomᚋl
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNPaymentProviderInstance2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentProviderInstance(ctx context.Context, sel ast.SelectionSet, v ent.PaymentProviderInstance) graphql.Marshaler {
+	return ec._PaymentProviderInstance(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPaymentProviderInstance2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentProviderInstance(ctx context.Context, sel ast.SelectionSet, v *ent.PaymentProviderInstance) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PaymentProviderInstance(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNPaymentProviderInstanceConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentProviderInstanceConnection(ctx context.Context, sel ast.SelectionSet, v ent.PaymentProviderInstanceConnection) graphql.Marshaler {
 	return ec._PaymentProviderInstanceConnection(ctx, sel, &v)
 }
@@ -131428,6 +131625,11 @@ func (ec *executionContext) marshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋg
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNUpsertEPayPaymentProviderInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpsertEPayPaymentProviderInput(ctx context.Context, v any) (UpsertEPayPaymentProviderInput, error) {
+	res, err := ec.unmarshalInputUpsertEPayPaymentProviderInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNUpstreamErrorPolicy2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamErrorPolicy(ctx context.Context, sel ast.SelectionSet, v biz.UpstreamErrorPolicy) graphql.Marshaler {

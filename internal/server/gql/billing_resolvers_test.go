@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/enttest"
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	entproject "github.com/looplj/axonhub/internal/ent/project"
 	entuser "github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/objects"
@@ -73,6 +75,43 @@ func TestBillingResolversRequireOwner(t *testing.T) {
 
 	_, err = mutationResolver.ConfirmManualPayment(ctx, biz.ConfirmManualPaymentInput{OrderNo: "pay_missing"})
 	require.True(t, errors.Is(err, ErrNotOwner))
+
+	_, err = mutationResolver.UpsertEPayPaymentProvider(ctx, UpsertEPayPaymentProviderInput{
+		Name:       "Prod ePay",
+		GatewayURL: "https://pay.example.com/submit.php",
+		Pid:        "1002",
+		Key:        ptr("secret-key"),
+		NotifyURL:  "https://axon.example.com/payment/notify/epay",
+		ReturnURL:  "https://axon.example.com/admin/billing",
+	})
+	require.True(t, errors.Is(err, ErrNotOwner))
+}
+
+func TestBillingResolversUpsertEPayPaymentProvider(t *testing.T) {
+	mutationResolver, _, ctx, _, owner, _ := setupBillingResolversTest(t, "billing_resolver_epay_provider")
+
+	ctx = contexts.WithUser(ctx, owner)
+	status := paymentproviderinstance.StatusEnabled
+	provider, err := mutationResolver.UpsertEPayPaymentProvider(ctx, UpsertEPayPaymentProviderInput{
+		Name:       "Prod ePay",
+		Status:     &status,
+		Currency:   ptr("CNY"),
+		GatewayURL: "https://pay.example.com/submit.php",
+		Pid:        "1002",
+		Key:        ptr("secret-key"),
+		NotifyURL:  "https://axon.example.com/payment/notify/epay",
+		ReturnURL:  "https://axon.example.com/admin/billing",
+		Type:       ptr("wxpay"),
+		SiteName:   ptr("AxonHub Prod"),
+	})
+	require.NoError(t, err)
+	require.Equal(t, "Prod ePay", provider.Name)
+	require.Equal(t, paymentproviderinstance.ProviderTypeEpay, provider.ProviderType)
+	require.NotContains(t, fmt.Sprint(provider), "secret-key")
+
+	var cfg map[string]string
+	require.NoError(t, json.Unmarshal(provider.Config, &cfg))
+	require.Equal(t, "secret-key", cfg["key"])
 }
 
 func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *queryResolver, context.Context, *ent.Client, *ent.User, *ent.Project) {
@@ -94,6 +133,7 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 		Ent:                   client,
 		BillingAccountService: billingAccountSvc,
 		LedgerService:         ledgerSvc,
+		ProviderRegistry:      biz.NewPaymentProviderRegistry(),
 	})
 
 	resolver := &Resolver{
@@ -103,6 +143,10 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 	}
 
 	return &mutationResolver{resolver}, &queryResolver{resolver}, ctx, client, owner, project
+}
+
+func ptr[T any](value T) *T {
+	return &value
 }
 
 func createBillingResolverUser(t *testing.T, ctx context.Context, client *ent.Client, isOwner bool) *ent.User {
