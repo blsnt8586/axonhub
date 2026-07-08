@@ -242,6 +242,37 @@ func TestPaymentServiceRecordsEPayMoneyMismatchWithValidSignature(t *testing.T) 
 	require.Equal(t, 0, ledgerCount)
 }
 
+func TestPaymentServiceEPayReturnDoesNotCreditLedger(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, svc := newPaymentTestService(t, "payment_epay_return_readonly")
+	provider, err := svc.GetOrCreateSimulatedEPayProvider(ctx, "http://axon.local")
+	require.NoError(t, err)
+
+	checkout, err := svc.CreateRechargeCheckout(ctx, CreateRechargeCheckoutInput{
+		ProjectID:          1,
+		ProviderInstanceID: &provider.ID,
+		ProviderType:       provider.ProviderType,
+		Amount:             decimal.RequireFromString("7.89"),
+	})
+	require.NoError(t, err)
+
+	returnParams := NewSimulatedEPayNotifyFromCheckout(checkout.Params, "axonhub-simulated-epay-secret")
+	status, err := svc.HandleEPayReturn(ctx, HandleEPayReturnInput{Params: returnParams})
+	require.NoError(t, err)
+	require.False(t, status.Paid)
+	require.Equal(t, paymentorder.StatusPending, status.Order.Status)
+	require.Equal(t, returnParams["trade_no"], status.TradeNo)
+
+	ledgerCount, err := client.LedgerTransaction.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 0, ledgerCount)
+
+	account, err := client.BillingAccount.Get(ctx, status.Order.BillingAccountID)
+	require.NoError(t, err)
+	require.Equal(t, int64(0), account.BalanceMicros)
+}
+
 func TestPaymentServiceUpsertEPayProviderCreatesAndPreservesKeyOnUpdate(t *testing.T) {
 	t.Parallel()
 

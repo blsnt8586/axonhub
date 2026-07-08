@@ -42,6 +42,24 @@ func (h *PaymentHandlers) NotifyEPay(c *gin.Context) {
 	c.String(http.StatusOK, "success")
 }
 
+func (h *PaymentHandlers) ReturnEPay(c *gin.Context) {
+	params := biz.EPayParamsFromValues(c.Request.URL.Query())
+	status, err := h.PaymentService.HandleEPayReturn(c.Request.Context(), biz.HandleEPayReturnInput{Params: params})
+	if err != nil {
+		JSONError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":       "ok",
+		"paid":         status.Paid,
+		"order_no":     status.Order.OrderNo,
+		"order_status": status.Order.Status,
+		"trade_no":     status.TradeNo,
+		"trade_status": status.TradeStatus,
+	})
+}
+
 func (h *PaymentHandlers) SimulateEPaySubmit(c *gin.Context) {
 	params := biz.EPayParamsFromValues(c.Request.URL.Query())
 	if params["out_trade_no"] == "" || params["pid"] == "" || params["money"] == "" {

@@ -356,6 +356,81 @@ func (s *PaymentService) resolvePaymentProvider(ctx context.Context, providerTyp
 	return provider, nil
 }
 
+type HandleEPayReturnInput struct {
+	Params map[string]string
+}
+
+type EPayReturnStatus struct {
+	Order       *ent.PaymentOrder
+	TradeNo     string
+	TradeStatus string
+	Paid        bool
+}
+
+func (s *PaymentService) HandleEPayReturn(ctx context.Context, input HandleEPayReturnInput) (*EPayReturnStatus, error) {
+	if len(input.Params) == 0 {
+		return nil, fmt.Errorf("epay return params are required")
+	}
+	orderNo := input.Params["out_trade_no"]
+	if orderNo == "" {
+		return nil, fmt.Errorf("epay return missing out_trade_no")
+	}
+	tradeNo := input.Params["trade_no"]
+	if tradeNo == "" {
+		return nil, fmt.Errorf("epay return missing trade_no")
+	}
+
+	order, err := s.entFromContext(ctx).PaymentOrder.Query().
+		Where(paymentorder.OrderNoEQ(orderNo)).
+		Only(ctx)
+	if ent.IsNotFound(err) {
+		return nil, ErrPaymentOrderNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to load payment order: %w", err)
+	}
+	if order.ProviderType != paymentorder.ProviderTypeEpay {
+		return nil, fmt.Errorf("payment order %s is not an epay order", order.OrderNo)
+	}
+	if order.ProviderInstanceID == nil {
+		return nil, fmt.Errorf("payment order %s has no provider instance", order.OrderNo)
+	}
+
+	provider, err := s.entFromContext(ctx).PaymentProviderInstance.Get(ctx, *order.ProviderInstanceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load epay provider: %w", err)
+	}
+	cfg, err := parseEPayConfig(provider.Config)
+	if err != nil {
+		return nil, err
+	}
+	if input.Params["pid"] != cfg.PID {
+		return nil, fmt.Errorf("epay pid mismatch")
+	}
+	if !VerifyEPaySignature(input.Params, cfg.Key) {
+		return nil, fmt.Errorf("invalid epay signature")
+	}
+
+	status := input.Params["trade_status"]
+	if status != "TRADE_SUCCESS" {
+		return nil, fmt.Errorf("epay trade status is not successful: %s", status)
+	}
+	notifyAmount, err := decimal.NewFromString(input.Params["money"])
+	if err != nil {
+		return nil, fmt.Errorf("invalid epay money: %w", err)
+	}
+	if !notifyAmount.Equal(microsToDecimal(order.AmountMicros)) {
+		return nil, fmt.Errorf("epay money mismatch: got %s want %s", notifyAmount, microsToDecimal(order.AmountMicros))
+	}
+
+	return &EPayReturnStatus{
+		Order:       order,
+		TradeNo:     tradeNo,
+		TradeStatus: status,
+		Paid:        order.Status == paymentorder.StatusPaid,
+	}, nil
+}
+
 type HandleEPayNotifyInput struct {
 	Params map[string]string
 }

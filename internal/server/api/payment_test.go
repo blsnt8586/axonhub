@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/enttest"
+	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	entproject "github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/server/biz"
 )
@@ -49,6 +51,58 @@ func TestPaymentHandlersSimulateEPaySubmitCreditsOrder(t *testing.T) {
 	account, err := client.BillingAccount.Get(ctx, order.BillingAccountID)
 	require.NoError(t, err)
 	require.Equal(t, int64(5_670_000), account.BalanceMicros)
+}
+
+func TestPaymentHandlersReturnEPayReportsOrderStatusWithoutCrediting(t *testing.T) {
+	t.Parallel()
+
+	gin.SetMode(gin.TestMode)
+	client, ctx, paymentSvc := newPaymentAPITestService(t, "api_payment_epay_return")
+	provider, err := paymentSvc.GetOrCreateSimulatedEPayProvider(ctx, "http://axon.local")
+	require.NoError(t, err)
+
+	checkout, err := paymentSvc.CreateRechargeCheckout(ctx, biz.CreateRechargeCheckoutInput{
+		ProjectID:          1,
+		ProviderInstanceID: &provider.ID,
+		ProviderType:       provider.ProviderType,
+		Amount:             decimal.RequireFromString("3.21"),
+		Currency:           "CNY",
+	})
+	require.NoError(t, err)
+
+	returnParams := biz.NewSimulatedEPayNotifyFromCheckout(checkout.Params, "axonhub-simulated-epay-secret")
+	returnURL, err := appendEPayReturnParams("/payment/return/epay", returnParams)
+	require.NoError(t, err)
+
+	router := gin.New()
+	handlers := NewPaymentHandlers(PaymentHandlersParams{PaymentService: paymentSvc})
+	router.GET("/payment/return/epay", handlers.ReturnEPay)
+
+	req := httptest.NewRequest(http.MethodGet, returnURL, nil).WithContext(ctx)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	require.Equal(t, false, body["paid"])
+	require.Equal(t, string(paymentorder.StatusPending), body["order_status"])
+
+	ledgerCount, err := client.LedgerTransaction.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 0, ledgerCount)
+
+	_, err = paymentSvc.HandleEPayNotify(ctx, biz.HandleEPayNotifyInput{Params: returnParams})
+	require.NoError(t, err)
+
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	body = map[string]any{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	require.Equal(t, true, body["paid"])
+	require.Equal(t, string(paymentorder.StatusPaid), body["order_status"])
 }
 
 func newPaymentAPITestService(t *testing.T, name string) (*ent.Client, context.Context, *biz.PaymentService) {

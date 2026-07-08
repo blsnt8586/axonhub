@@ -87,6 +87,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		publicGroup.GET("/health", handlers.System.Health)
 		publicGroup.GET("/payment/notify/epay", handlers.Payment.NotifyEPay)
 		publicGroup.POST("/payment/notify/epay", handlers.Payment.NotifyEPay)
+		publicGroup.GET("/payment/return/epay", handlers.Payment.ReturnEPay)
 		publicGroup.GET("/payment/simulate/epay/submit", handlers.Payment.SimulateEPaySubmit)
 	}
 
