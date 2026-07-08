@@ -14,7 +14,9 @@ import (
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/enttest"
+	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	entproject "github.com/looplj/axonhub/internal/ent/project"
 	entuser "github.com/looplj/axonhub/internal/ent/user"
@@ -114,24 +116,19 @@ func TestBillingResolversUpsertEPayPaymentProvider(t *testing.T) {
 	require.Equal(t, "secret-key", cfg["key"])
 }
 
-func TestBillingResolversProjectMemberCanCreateEPayRechargeCheckout(t *testing.T) {
-	mutationResolver, _, ctx, client, _, project := setupBillingResolversTest(t, "billing_resolver_member_checkout")
-	member := createBillingResolverUser(t, ctx, client, false)
-	_, err := client.UserProject.Create().
-		SetUserID(member.ID).
-		SetProjectID(project.ID).
-		Save(ctx)
-	require.NoError(t, err)
+func TestBillingResolversUserCanCreateMyEPayRechargeCheckout(t *testing.T) {
+	mutationResolver, _, ctx, client, _, project := setupBillingResolversTest(t, "billing_resolver_my_checkout")
+	user := createBillingResolverUser(t, ctx, client, false)
 
 	provider, err := mutationResolver.paymentService.GetOrCreateSimulatedEPayProvider(ctx, "https://axon.example.com")
 	require.NoError(t, err)
 
-	ctx = contexts.WithUser(ctx, member)
-	checkout, err := mutationResolver.CreateProjectEPayRechargeCheckout(ctx, CreateProjectEPayRechargeCheckoutInput{
-		ProjectID:          objects.GUID{Type: ent.TypeProject, ID: project.ID},
+	ctx = contexts.WithUser(ctx, user)
+	checkout, err := mutationResolver.CreateMyEPayRechargeCheckout(ctx, CreateMyEPayRechargeCheckoutInput{
+		ProjectID:          &objects.GUID{Type: ent.TypeProject, ID: project.ID},
 		Amount:             decimal.RequireFromString("20.00"),
 		Currency:           ptr("CNY"),
-		Subject:            ptr("member recharge"),
+		Subject:            ptr("user recharge"),
 		ProviderInstanceID: &objects.GUID{Type: ent.TypePaymentProviderInstance, ID: provider.ID},
 	})
 	require.NoError(t, err)
@@ -140,16 +137,24 @@ func TestBillingResolversProjectMemberCanCreateEPayRechargeCheckout(t *testing.T
 	require.NotNil(t, checkout.URL)
 	require.Contains(t, *checkout.URL, "/payment/simulate/epay/submit?")
 	require.True(t, checkout.Amount.Equal(decimal.RequireFromString("20")))
+
+	order, err := client.PaymentOrder.Query().
+		Where(paymentorder.OrderNoEQ(checkout.OrderNo)).
+		Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, project.ID, order.ProjectID)
+
+	account, err := client.BillingAccount.Get(ctx, order.BillingAccountID)
+	require.NoError(t, err)
+	require.Equal(t, billingaccount.OwnerTypeUser, account.OwnerType)
+	require.Equal(t, user.ID, account.OwnerID)
 }
 
-func TestBillingResolversRejectsProjectEPayCheckoutForNonMember(t *testing.T) {
-	mutationResolver, _, ctx, client, _, project := setupBillingResolversTest(t, "billing_resolver_non_member_checkout")
-	nonMember := createBillingResolverUser(t, ctx, client, false)
+func TestBillingResolversRejectsMyEPayCheckoutWithoutUser(t *testing.T) {
+	mutationResolver, _, ctx, _, _, _ := setupBillingResolversTest(t, "billing_resolver_my_checkout_no_user")
 
-	ctx = contexts.WithUser(ctx, nonMember)
-	_, err := mutationResolver.CreateProjectEPayRechargeCheckout(ctx, CreateProjectEPayRechargeCheckoutInput{
-		ProjectID: objects.GUID{Type: ent.TypeProject, ID: project.ID},
-		Amount:    decimal.RequireFromString("20.00"),
+	_, err := mutationResolver.CreateMyEPayRechargeCheckout(ctx, CreateMyEPayRechargeCheckoutInput{
+		Amount: decimal.RequireFromString("20.00"),
 	})
 	require.True(t, errors.Is(err, ErrNotOwner))
 }

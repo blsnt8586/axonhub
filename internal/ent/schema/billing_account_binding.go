@@ -35,10 +35,10 @@ func (BillingAccountBinding) Fields() []ent.Field {
 			Immutable().
 			Comment("Bound billing account ID."),
 		field.Enum("owner_type").
-			Values("project").
-			Default("project").
+			Values("user", "project").
+			Default("user").
 			Immutable().
-			Comment("Bound owner type. v1 supports project."),
+			Comment("Bound owner type. User is the default wallet owner; project is reserved for shared enterprise wallets."),
 		field.Int("owner_id").
 			Immutable().
 			Comment("Bound owner identifier."),

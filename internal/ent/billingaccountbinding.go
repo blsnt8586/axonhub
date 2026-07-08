@@ -24,7 +24,7 @@ type BillingAccountBinding struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Bound billing account ID.
 	BillingAccountID int `json:"billing_account_id,omitempty"`
-	// Bound owner type. v1 supports project.
+	// Bound owner type. User is the default wallet owner; project is reserved for shared enterprise wallets.
 	OwnerType billingaccountbinding.OwnerType `json:"owner_type,omitempty"`
 	// Bound owner identifier.
 	OwnerID int `json:"owner_id,omitempty"`

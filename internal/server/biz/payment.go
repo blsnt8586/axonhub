@@ -185,6 +185,7 @@ func validateHTTPURL(fieldName string, rawURL string) error {
 
 type CreateRechargeCheckoutInput struct {
 	ProjectID          int
+	BillingSubject     BillingSubject
 	ProviderInstanceID *int
 	ProviderType       paymentproviderinstance.ProviderType
 	Amount             decimal.Decimal
@@ -197,8 +198,11 @@ func (s *PaymentService) CreateRechargeCheckout(ctx context.Context, input Creat
 	if s.providerRegistry == nil {
 		return nil, fmt.Errorf("payment provider registry is not configured")
 	}
-	if input.ProjectID <= 0 {
-		return nil, fmt.Errorf("project id is required")
+	if input.BillingSubject.Type == "" {
+		if input.ProjectID <= 0 {
+			return nil, fmt.Errorf("billing subject is required")
+		}
+		input.BillingSubject = ProjectBillingSubject(input.ProjectID)
 	}
 	if input.Currency == "" {
 		input.Currency = defaultBillingCurrency
@@ -226,7 +230,7 @@ func (s *PaymentService) CreateRechargeCheckout(ctx context.Context, input Creat
 		return nil, fmt.Errorf("payment currency %s does not match provider currency %s", input.Currency, provider.Currency)
 	}
 
-	account, err := s.billingAccountService.GetOrCreateForSubject(ctx, ProjectBillingSubject(input.ProjectID))
+	account, err := s.billingAccountService.GetOrCreateForSubject(ctx, input.BillingSubject)
 	if err != nil {
 		return nil, err
 	}

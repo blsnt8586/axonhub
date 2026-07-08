@@ -70,7 +70,7 @@ func TestBillingSubjectValidation(t *testing.T) {
 	t.Parallel()
 
 	require.NoError(t, ProjectBillingSubject(1).validate())
-	require.Error(t, BillingSubject{Type: "user", ID: 1}.validate())
+	require.NoError(t, UserBillingSubject(1).validate())
 	require.Error(t, BillingSubject{Type: "project", ID: 0}.validate())
 }
 

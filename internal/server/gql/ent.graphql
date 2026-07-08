@@ -561,7 +561,7 @@ type BillingAccountBinding implements Node {
   """
   billingAccountID: ID!
   """
-  Bound owner type. v1 supports project.
+  Bound owner type. User is the default wallet owner; project is reserved for shared enterprise wallets.
   """
   ownerType: BillingAccountBindingOwnerType!
   """
@@ -628,6 +628,7 @@ enum BillingAccountBindingOrderField {
 BillingAccountBindingOwnerType is enum for the field owner_type
 """
 enum BillingAccountBindingOwnerType @goModel(model: "github.com/looplj/axonhub/internal/ent/billingaccountbinding.OwnerType") {
+  user
   project
 }
 """

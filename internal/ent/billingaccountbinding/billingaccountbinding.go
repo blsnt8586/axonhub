@@ -85,11 +85,12 @@ var (
 // OwnerType defines the type for the "owner_type" enum field.
 type OwnerType string
 
-// OwnerTypeProject is the default value of the OwnerType enum.
-const DefaultOwnerType = OwnerTypeProject
+// OwnerTypeUser is the default value of the OwnerType enum.
+const DefaultOwnerType = OwnerTypeUser
 
 // OwnerType values.
 const (
+	OwnerTypeUser    OwnerType = "user"
 	OwnerTypeProject OwnerType = "project"
 )
 
@@ -100,7 +101,7 @@ func (ot OwnerType) String() string {
 // OwnerTypeValidator is a validator for the "owner_type" field enum values. It is called by the builders before save.
 func OwnerTypeValidator(ot OwnerType) error {
 	switch ot {
-	case OwnerTypeProject:
+	case OwnerTypeUser, OwnerTypeProject:
 		return nil
 	default:
 		return fmt.Errorf("billingaccountbinding: invalid enum value for owner_type field: %q", ot)

@@ -1082,8 +1082,8 @@ type ComplexityRoot struct {
 		CreateDataStorage                    func(childComplexity int, input ent.CreateDataStorageInput) int
 		CreateManualRechargeOrder            func(childComplexity int, input biz.CreateManualRechargeOrderInput) int
 		CreateModel                          func(childComplexity int, input ent.CreateModelInput) int
+		CreateMyEPayRechargeCheckout         func(childComplexity int, input CreateMyEPayRechargeCheckoutInput) int
 		CreateProject                        func(childComplexity int, input ent.CreateProjectInput) int
-		CreateProjectEPayRechargeCheckout    func(childComplexity int, input CreateProjectEPayRechargeCheckoutInput) int
 		CreatePrompt                         func(childComplexity int, input ent.CreatePromptInput) int
 		CreatePromptProtectionRule           func(childComplexity int, input ent.CreatePromptProtectionRuleInput) int
 		CreateRole                           func(childComplexity int, input ent.CreateRoleInput) int
@@ -2512,7 +2512,7 @@ type MutationResolver interface {
 	ConfirmManualPayment(ctx context.Context, input biz.ConfirmManualPaymentInput) (*ent.PaymentOrder, error)
 	CreateSimulatedEPayRechargeCheckout(ctx context.Context, input CreateSimulatedEPayRechargeCheckoutInput) (*PaymentCheckout, error)
 	UpsertEPayPaymentProvider(ctx context.Context, input UpsertEPayPaymentProviderInput) (*ent.PaymentProviderInstance, error)
-	CreateProjectEPayRechargeCheckout(ctx context.Context, input CreateProjectEPayRechargeCheckoutInput) (*PaymentCheckout, error)
+	CreateMyEPayRechargeCheckout(ctx context.Context, input CreateMyEPayRechargeCheckoutInput) (*PaymentCheckout, error)
 }
 type OIDCIdentityResolver interface {
 	ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error)
@@ -6667,6 +6667,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateModel(childComplexity, args["input"].(ent.CreateModelInput)), true
+	case "Mutation.createMyEPayRechargeCheckout":
+		if e.complexity.Mutation.CreateMyEPayRechargeCheckout == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createMyEPayRechargeCheckout_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateMyEPayRechargeCheckout(childComplexity, args["input"].(CreateMyEPayRechargeCheckoutInput)), true
 	case "Mutation.createProject":
 		if e.complexity.Mutation.CreateProject == nil {
 			break
@@ -6678,17 +6689,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateProject(childComplexity, args["input"].(ent.CreateProjectInput)), true
-	case "Mutation.createProjectEPayRechargeCheckout":
-		if e.complexity.Mutation.CreateProjectEPayRechargeCheckout == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createProjectEPayRechargeCheckout_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateProjectEPayRechargeCheckout(childComplexity, args["input"].(CreateProjectEPayRechargeCheckoutInput)), true
 	case "Mutation.createPrompt":
 		if e.complexity.Mutation.CreatePrompt == nil {
 			break
@@ -12591,8 +12591,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateDataStorageInput,
 		ec.unmarshalInputCreateManualRechargeOrderInput,
 		ec.unmarshalInputCreateModelInput,
+		ec.unmarshalInputCreateMyEPayRechargeCheckoutInput,
 		ec.unmarshalInputCreateOIDCIdentityInput,
-		ec.unmarshalInputCreateProjectEPayRechargeCheckoutInput,
 		ec.unmarshalInputCreateProjectInput,
 		ec.unmarshalInputCreatePromptInput,
 		ec.unmarshalInputCreatePromptProtectionRuleInput,
@@ -13782,10 +13782,10 @@ func (ec *executionContext) field_Mutation_createModel_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createProjectEPayRechargeCheckout_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_createMyEPayRechargeCheckout_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateProjectEPayRechargeCheckoutInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateProjectEPayRechargeCheckoutInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateMyEPayRechargeCheckoutInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateMyEPayRechargeCheckoutInput)
 	if err != nil {
 		return nil, err
 	}
@@ -41469,15 +41469,15 @@ func (ec *executionContext) fieldContext_Mutation_upsertEPayPaymentProvider(ctx 
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createProjectEPayRechargeCheckout(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createMyEPayRechargeCheckout(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createProjectEPayRechargeCheckout,
+		ec.fieldContext_Mutation_createMyEPayRechargeCheckout,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateProjectEPayRechargeCheckout(ctx, fc.Args["input"].(CreateProjectEPayRechargeCheckoutInput))
+			return ec.resolvers.Mutation().CreateMyEPayRechargeCheckout(ctx, fc.Args["input"].(CreateMyEPayRechargeCheckoutInput))
 		},
 		nil,
 		ec.marshalNPaymentCheckout2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐPaymentCheckout,
@@ -41486,7 +41486,7 @@ func (ec *executionContext) _Mutation_createProjectEPayRechargeCheckout(ctx cont
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createProjectEPayRechargeCheckout(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createMyEPayRechargeCheckout(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -41519,7 +41519,7 @@ func (ec *executionContext) fieldContext_Mutation_createProjectEPayRechargeCheck
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createProjectEPayRechargeCheckout_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createMyEPayRechargeCheckout_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -78466,6 +78466,68 @@ func (ec *executionContext) unmarshalInputCreateModelInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateMyEPayRechargeCheckoutInput(ctx context.Context, obj any) (CreateMyEPayRechargeCheckoutInput, error) {
+	var it CreateMyEPayRechargeCheckoutInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"amount", "currency", "subject", "projectId", "providerInstanceId", "metadata"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "subject":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subject"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Subject = data
+		case "projectId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectId"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectID = data
+		case "providerInstanceId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerInstanceId"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProviderInstanceID = data
+		case "metadata":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metadata"))
+			data, err := ec.unmarshalOJSONRawMessageInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Metadata = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateOIDCIdentityInput(ctx context.Context, obj any) (ent.CreateOIDCIdentityInput, error) {
 	var it ent.CreateOIDCIdentityInput
 	asMap := map[string]any{}
@@ -78515,68 +78577,6 @@ func (ec *executionContext) unmarshalInputCreateOIDCIdentityInput(ctx context.Co
 				return it, err
 			}
 			it.LastLoginAt = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputCreateProjectEPayRechargeCheckoutInput(ctx context.Context, obj any) (CreateProjectEPayRechargeCheckoutInput, error) {
-	var it CreateProjectEPayRechargeCheckoutInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"projectId", "amount", "currency", "subject", "providerInstanceId", "metadata"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "projectId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectId"))
-			data, err := ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ProjectID = data
-		case "amount":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
-			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Amount = data
-		case "currency":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Currency = data
-		case "subject":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subject"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Subject = data
-		case "providerInstanceId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerInstanceId"))
-			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ProviderInstanceID = data
-		case "metadata":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metadata"))
-			data, err := ec.unmarshalOJSONRawMessageInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Metadata = data
 		}
 	}
 
@@ -112476,9 +112476,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createProjectEPayRechargeCheckout":
+		case "createMyEPayRechargeCheckout":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createProjectEPayRechargeCheckout(ctx, field)
+				return ec._Mutation_createMyEPayRechargeCheckout(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -127677,8 +127677,8 @@ func (ec *executionContext) unmarshalNCreateModelInput2ᚖgithubᚗcomᚋlooplj�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateProjectEPayRechargeCheckoutInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateProjectEPayRechargeCheckoutInput(ctx context.Context, v any) (CreateProjectEPayRechargeCheckoutInput, error) {
-	res, err := ec.unmarshalInputCreateProjectEPayRechargeCheckoutInput(ctx, v)
+func (ec *executionContext) unmarshalNCreateMyEPayRechargeCheckoutInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateMyEPayRechargeCheckoutInput(ctx context.Context, v any) (CreateMyEPayRechargeCheckoutInput, error) {
+	res, err := ec.unmarshalInputCreateMyEPayRechargeCheckoutInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
