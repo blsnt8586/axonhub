@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/objects"
@@ -399,6 +400,18 @@ type RequestStatsByModel struct {
 type RestorePayload struct {
 	Success bool    `json:"success"`
 	Message *string `json:"message,omitempty"`
+}
+
+type SaveBillingPriceRuleForm struct {
+	ID           *objects.GUID              `json:"id,omitempty"`
+	ScopeType    billingpricerule.ScopeType `json:"scopeType"`
+	ScopeID      int                        `json:"scopeId"`
+	ModelPattern string                     `json:"modelPattern"`
+	Price        *objects.ModelPrice        `json:"price"`
+	Currency     *string                    `json:"currency,omitempty"`
+	Priority     *int                       `json:"priority,omitempty"`
+	Enabled      *bool                      `json:"enabled,omitempty"`
+	ReferenceID  *string                    `json:"referenceId,omitempty"`
 }
 
 type ScopeInfo struct {

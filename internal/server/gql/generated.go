@@ -1091,6 +1091,7 @@ type ComplexityRoot struct {
 		CreateSimulatedEPayRechargeCheckout  func(childComplexity int, input CreateSimulatedEPayRechargeCheckoutInput) int
 		CreateUser                           func(childComplexity int, input ent.CreateUserInput) int
 		DeleteAPIKeyProfileTemplate          func(childComplexity int, id objects.GUID) int
+		DeleteBillingPriceRule               func(childComplexity int, id objects.GUID) int
 		DeleteChannel                        func(childComplexity int, id objects.GUID) int
 		DeleteChannelOverrideTemplate        func(childComplexity int, id objects.GUID) int
 		DeleteDisabledChannelAPIKeys         func(childComplexity int, channelID objects.GUID, keys []string) int
@@ -1112,6 +1113,7 @@ type ComplexityRoot struct {
 		ResetChannelQuotaNow                 func(childComplexity int, channelID objects.GUID) int
 		Restore                              func(childComplexity int, file graphql.Upload, input backup.RestoreOptions) int
 		RotateAPIKey                         func(childComplexity int, id objects.GUID) int
+		SaveBillingPriceRule                 func(childComplexity int, input SaveBillingPriceRuleForm) int
 		SaveChannelEndpoints                 func(childComplexity int, input biz.SaveChannelEndpointsInput) int
 		SaveChannelModelPrices               func(childComplexity int, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) int
 		SaveProxyPreset                      func(childComplexity int, input biz.ProxyPreset) int
@@ -2524,6 +2526,8 @@ type MutationResolver interface {
 	UpsertEPayPaymentProvider(ctx context.Context, input UpsertEPayPaymentProviderInput) (*ent.PaymentProviderInstance, error)
 	CreateMyEPayRechargeCheckout(ctx context.Context, input CreateMyEPayRechargeCheckoutInput) (*PaymentCheckout, error)
 	AdjustUserBalance(ctx context.Context, input biz.AdjustUserBalanceInput) (*ent.LedgerTransaction, error)
+	SaveBillingPriceRule(ctx context.Context, input SaveBillingPriceRuleForm) (*ent.BillingPriceRule, error)
+	DeleteBillingPriceRule(ctx context.Context, id objects.GUID) (bool, error)
 }
 type OIDCIdentityResolver interface {
 	ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error)
@@ -6785,6 +6789,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteAPIKeyProfileTemplate(childComplexity, args["id"].(objects.GUID)), true
+	case "Mutation.deleteBillingPriceRule":
+		if e.complexity.Mutation.DeleteBillingPriceRule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteBillingPriceRule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteBillingPriceRule(childComplexity, args["id"].(objects.GUID)), true
 	case "Mutation.deleteChannel":
 		if e.complexity.Mutation.DeleteChannel == nil {
 			break
@@ -7016,6 +7031,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.RotateAPIKey(childComplexity, args["id"].(objects.GUID)), true
+	case "Mutation.saveBillingPriceRule":
+		if e.complexity.Mutation.SaveBillingPriceRule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_saveBillingPriceRule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SaveBillingPriceRule(childComplexity, args["input"].(SaveBillingPriceRuleForm)), true
 	case "Mutation.saveChannelEndpoints":
 		if e.complexity.Mutation.SaveChannelEndpoints == nil {
 			break
@@ -12801,6 +12827,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputRoleOrder,
 		ec.unmarshalInputRoleWhereInput,
 		ec.unmarshalInputS3Input,
+		ec.unmarshalInputSaveBillingPriceRuleForm,
 		ec.unmarshalInputSaveChannelEndpointsInput,
 		ec.unmarshalInputSaveChannelModelPriceInput,
 		ec.unmarshalInputSaveProxyPresetInput,
@@ -14001,6 +14028,17 @@ func (ec *executionContext) field_Mutation_deleteApiKeyProfileTemplate_args(ctx 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteBillingPriceRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteChannelOverrideTemplate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -14259,6 +14297,17 @@ func (ec *executionContext) field_Mutation_rotateAPIKey_args(ctx context.Context
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_saveBillingPriceRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSaveBillingPriceRuleForm2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐSaveBillingPriceRuleForm)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -41944,6 +41993,112 @@ func (ec *executionContext) fieldContext_Mutation_adjustUserBalance(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_adjustUserBalance_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_saveBillingPriceRule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_saveBillingPriceRule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SaveBillingPriceRule(ctx, fc.Args["input"].(SaveBillingPriceRuleForm))
+		},
+		nil,
+		ec.marshalNBillingPriceRule2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingPriceRule,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_saveBillingPriceRule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingPriceRule_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingPriceRule_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingPriceRule_updatedAt(ctx, field)
+			case "scopeType":
+				return ec.fieldContext_BillingPriceRule_scopeType(ctx, field)
+			case "scopeID":
+				return ec.fieldContext_BillingPriceRule_scopeID(ctx, field)
+			case "modelPattern":
+				return ec.fieldContext_BillingPriceRule_modelPattern(ctx, field)
+			case "price":
+				return ec.fieldContext_BillingPriceRule_price(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingPriceRule_currency(ctx, field)
+			case "priority":
+				return ec.fieldContext_BillingPriceRule_priority(ctx, field)
+			case "enabled":
+				return ec.fieldContext_BillingPriceRule_enabled(ctx, field)
+			case "referenceID":
+				return ec.fieldContext_BillingPriceRule_referenceID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingPriceRule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_saveBillingPriceRule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteBillingPriceRule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteBillingPriceRule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeleteBillingPriceRule(ctx, fc.Args["id"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteBillingPriceRule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteBillingPriceRule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -94865,6 +95020,89 @@ func (ec *executionContext) unmarshalInputS3Input(ctx context.Context, obj any) 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSaveBillingPriceRuleForm(ctx context.Context, obj any) (SaveBillingPriceRuleForm, error) {
+	var it SaveBillingPriceRuleForm
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "scopeType", "scopeId", "modelPattern", "price", "currency", "priority", "enabled", "referenceId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "scopeType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopeType"))
+			data, err := ec.unmarshalNBillingPriceRuleScopeType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingpriceruleᚐScopeType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ScopeType = data
+		case "scopeId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopeId"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ScopeID = data
+		case "modelPattern":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelPattern"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelPattern = data
+		case "price":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
+			data, err := ec.unmarshalNModelPriceInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelPrice(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Price = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "priority":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Priority = data
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "referenceId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceID = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSaveChannelEndpointsInput(ctx context.Context, obj any) (biz.SaveChannelEndpointsInput, error) {
 	var it biz.SaveChannelEndpointsInput
 	asMap := map[string]any{}
@@ -113501,6 +113739,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "saveBillingPriceRule":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_saveBillingPriceRule(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteBillingPriceRule":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteBillingPriceRule(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -127578,6 +127830,20 @@ func (ec *executionContext) unmarshalNBillingOutboxWhereInput2ᚖgithubᚗcomᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNBillingPriceRule2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingPriceRule(ctx context.Context, sel ast.SelectionSet, v ent.BillingPriceRule) graphql.Marshaler {
+	return ec._BillingPriceRule(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingPriceRule2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingPriceRule(ctx context.Context, sel ast.SelectionSet, v *ent.BillingPriceRule) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingPriceRule(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNBillingPriceRuleConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingPriceRuleConnection(ctx context.Context, sel ast.SelectionSet, v ent.BillingPriceRuleConnection) graphql.Marshaler {
 	return ec._BillingPriceRuleConnection(ctx, sel, &v)
 }
@@ -130298,6 +130564,11 @@ func (ec *executionContext) unmarshalNModelPriceInput2githubᚗcomᚋloopljᚋax
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNModelPriceInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelPrice(ctx context.Context, v any) (*objects.ModelPrice, error) {
+	res, err := ec.unmarshalInputModelPriceInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNModelPriceItem2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelPriceItem(ctx context.Context, sel ast.SelectionSet, v objects.ModelPriceItem) graphql.Marshaler {
 	return ec._ModelPriceItem(ctx, sel, &v)
 }
@@ -132045,6 +132316,11 @@ func (ec *executionContext) marshalNRoleOrderField2ᚖgithubᚗcomᚋloopljᚋax
 func (ec *executionContext) unmarshalNRoleWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRoleWhereInput(ctx context.Context, v any) (*ent.RoleWhereInput, error) {
 	res, err := ec.unmarshalInputRoleWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSaveBillingPriceRuleForm2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐSaveBillingPriceRuleForm(ctx context.Context, v any) (SaveBillingPriceRuleForm, error) {
+	res, err := ec.unmarshalInputSaveBillingPriceRuleForm(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNSaveChannelEndpointsInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveChannelEndpointsInput(ctx context.Context, v any) (biz.SaveChannelEndpointsInput, error) {

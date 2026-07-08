@@ -74,6 +74,79 @@ func TestPricingServiceFallsBackToGlobalWildcard(t *testing.T) {
 	require.Equal(t, "global-wildcard", rule.ReferenceID)
 }
 
+func TestPricingServiceSaveUpdateDeleteBillingPriceRule(t *testing.T) {
+	t.Parallel()
+
+	client := enttest.NewEntClient(t, "sqlite3", "file:pricing_save_update_delete?mode=memory&_fk=1")
+	ctx := authz.WithTestBypass(context.Background())
+	svc := NewPricingService(PricingServiceParams{Ent: client})
+	enabled := true
+
+	rule, err := svc.SaveBillingPriceRule(ctx, SaveBillingPriceRuleInput{
+		ScopeType:    billingpricerule.ScopeTypeProject,
+		ScopeID:      42,
+		ModelPattern: " gpt-test ",
+		Price:        testModelPrice("1"),
+		Priority:     10,
+		Enabled:      &enabled,
+		ReferenceID:  "project-gpt-test-v1",
+	})
+	require.NoError(t, err)
+	require.Equal(t, billingpricerule.ScopeTypeProject, rule.ScopeType)
+	require.Equal(t, 42, rule.ScopeID)
+	require.Equal(t, "gpt-test", rule.ModelPattern)
+	require.Equal(t, "project-gpt-test-v1", rule.ReferenceID)
+
+	disabled := false
+	updated, err := svc.SaveBillingPriceRule(ctx, SaveBillingPriceRuleInput{
+		ID:           rule.ID,
+		ScopeType:    billingpricerule.ScopeTypeProject,
+		ScopeID:      42,
+		ModelPattern: "gpt-test",
+		Price:        testModelPrice("2"),
+		Priority:     20,
+		Enabled:      &disabled,
+		ReferenceID:  "project-gpt-test-v2",
+	})
+	require.NoError(t, err)
+	require.Equal(t, rule.ID, updated.ID)
+	require.Equal(t, 20, updated.Priority)
+	require.False(t, updated.Enabled)
+	require.Equal(t, "project-gpt-test-v2", updated.ReferenceID)
+
+	deleted, err := svc.DeleteBillingPriceRule(ctx, rule.ID)
+	require.NoError(t, err)
+	require.True(t, deleted)
+
+	deletedAgain, err := svc.DeleteBillingPriceRule(ctx, rule.ID)
+	require.NoError(t, err)
+	require.False(t, deletedAgain)
+}
+
+func TestPricingServiceRejectsUnsupportedBillingPriceRule(t *testing.T) {
+	t.Parallel()
+
+	client := enttest.NewEntClient(t, "sqlite3", "file:pricing_reject_invalid?mode=memory&_fk=1")
+	ctx := authz.WithTestBypass(context.Background())
+	svc := NewPricingService(PricingServiceParams{Ent: client})
+
+	_, err := svc.SaveBillingPriceRule(ctx, SaveBillingPriceRuleInput{
+		ScopeType:    billingpricerule.ScopeTypeProject,
+		ScopeID:      0,
+		ModelPattern: "gpt-test",
+		Price:        testModelPrice("1"),
+	})
+	require.Error(t, err)
+
+	_, err = svc.SaveBillingPriceRule(ctx, SaveBillingPriceRuleInput{
+		ScopeType:    billingpricerule.ScopeTypeGlobal,
+		ScopeID:      0,
+		ModelPattern: "",
+		Price:        testModelPrice("1"),
+	})
+	require.Error(t, err)
+}
+
 func TestUsageBillingProcessorChargesUsageOnce(t *testing.T) {
 	t.Parallel()
 

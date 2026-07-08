@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/enttest"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
@@ -302,6 +303,74 @@ func TestBillingResolversRejectsUserBillingAdminOperationsForNonOwner(t *testing
 	require.True(t, errors.Is(err, ErrNotOwner))
 }
 
+func TestBillingResolversOwnerCanManageBillingPriceRules(t *testing.T) {
+	mutationResolver, _, ctx, client, owner, _ := setupBillingResolversTest(t, "billing_resolver_price_rules")
+	ownerCtx := contexts.WithUser(ctx, owner)
+	price := billingResolverModelPrice("1")
+	enabled := true
+	priority := 50
+	referenceID := "global-gpt-test-v1"
+
+	rule, err := mutationResolver.SaveBillingPriceRule(ownerCtx, SaveBillingPriceRuleForm{
+		ScopeType:    billingpricerule.ScopeTypeGlobal,
+		ScopeID:      0,
+		ModelPattern: "gpt-test",
+		Price:        &price,
+		Priority:     &priority,
+		Enabled:      &enabled,
+		ReferenceID:  &referenceID,
+	})
+	require.NoError(t, err)
+	require.Equal(t, billingpricerule.ScopeTypeGlobal, rule.ScopeType)
+	require.Equal(t, "gpt-test", rule.ModelPattern)
+	require.Equal(t, "global-gpt-test-v1", rule.ReferenceID)
+
+	stored, err := client.BillingPriceRule.Get(ctx, rule.ID)
+	require.NoError(t, err)
+	require.Equal(t, 50, stored.Priority)
+
+	updatedPrice := billingResolverModelPrice("2")
+	updatedReferenceID := "global-gpt-test-v2"
+	updated, err := mutationResolver.SaveBillingPriceRule(ownerCtx, SaveBillingPriceRuleForm{
+		ID:           &objects.GUID{Type: ent.TypeBillingPriceRule, ID: rule.ID},
+		ScopeType:    billingpricerule.ScopeTypeGlobal,
+		ScopeID:      0,
+		ModelPattern: "gpt-test",
+		Price:        &updatedPrice,
+		Priority:     &priority,
+		Enabled:      &enabled,
+		ReferenceID:  &updatedReferenceID,
+	})
+	require.NoError(t, err)
+	require.Equal(t, rule.ID, updated.ID)
+	require.Equal(t, "global-gpt-test-v2", updated.ReferenceID)
+
+	deleted, err := mutationResolver.DeleteBillingPriceRule(ownerCtx, objects.GUID{Type: ent.TypeBillingPriceRule, ID: rule.ID})
+	require.NoError(t, err)
+	require.True(t, deleted)
+
+	_, err = client.BillingPriceRule.Get(ctx, rule.ID)
+	require.True(t, ent.IsNotFound(err))
+}
+
+func TestBillingResolversRejectsPriceRuleManagementForNonOwner(t *testing.T) {
+	mutationResolver, _, ctx, client, _, _ := setupBillingResolversTest(t, "billing_resolver_price_rules_non_owner")
+	normalUser := createBillingResolverUser(t, ctx, client, false)
+	userCtx := contexts.WithUser(ctx, normalUser)
+	price := billingResolverModelPrice("1")
+
+	_, err := mutationResolver.SaveBillingPriceRule(userCtx, SaveBillingPriceRuleForm{
+		ScopeType:    billingpricerule.ScopeTypeGlobal,
+		ScopeID:      0,
+		ModelPattern: "gpt-test",
+		Price:        &price,
+	})
+	require.True(t, errors.Is(err, ErrNotOwner))
+
+	_, err = mutationResolver.DeleteBillingPriceRule(userCtx, objects.GUID{Type: ent.TypeBillingPriceRule, ID: 1})
+	require.True(t, errors.Is(err, ErrNotOwner))
+}
+
 func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *queryResolver, context.Context, *ent.Client, *ent.User, *ent.Project) {
 	t.Helper()
 
@@ -317,6 +386,7 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 
 	billingAccountSvc := biz.NewBillingAccountService(biz.BillingAccountServiceParams{Ent: client})
 	ledgerSvc := biz.NewLedgerService(biz.LedgerServiceParams{Ent: client})
+	pricingSvc := biz.NewPricingService(biz.PricingServiceParams{Ent: client})
 	paymentSvc := biz.NewPaymentService(biz.PaymentServiceParams{
 		Ent:                   client,
 		BillingAccountService: billingAccountSvc,
@@ -328,6 +398,7 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 		client:                client,
 		billingAccountService: billingAccountSvc,
 		paymentService:        paymentSvc,
+		pricingService:        pricingSvc,
 	}
 
 	return &mutationResolver{resolver}, &queryResolver{resolver}, ctx, client, owner, project
@@ -379,4 +450,19 @@ func createBillingResolverUsageLog(t *testing.T, ctx context.Context, client *en
 	require.NoError(t, err)
 
 	return usageLog
+}
+
+func billingResolverModelPrice(unitPrice string) objects.ModelPrice {
+	price := decimal.RequireFromString(unitPrice)
+	return objects.ModelPrice{
+		Items: []objects.ModelPriceItem{
+			{
+				ItemCode: objects.PriceItemCodeUsage,
+				Pricing: objects.Pricing{
+					Mode:         objects.PricingModeUsagePerUnit,
+					UsagePerUnit: &price,
+				},
+			},
+		},
+	}
 }

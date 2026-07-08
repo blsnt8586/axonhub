@@ -47,6 +47,7 @@ type Resolver struct {
 	providerQuotaService           *biz.ProviderQuotaService
 	billingAccountService          *biz.BillingAccountService
 	paymentService                 *biz.PaymentService
+	pricingService                 *biz.PricingService
 	scheduler                      *scheduler.Scheduler
 	modelFetcher                   *biz.ModelFetcher
 	defaultSelector                *orchestrator.DefaultSelector
@@ -83,6 +84,7 @@ func NewSchema(
 	providerQuotaService *biz.ProviderQuotaService,
 	billingAccountService *biz.BillingAccountService,
 	paymentService *biz.PaymentService,
+	pricingService *biz.PricingService,
 	scheduler *scheduler.Scheduler,
 	defaultSelector *orchestrator.DefaultSelector,
 	candidateSelectorDiagnostics *orchestrator.CandidateSelectorDiagnostics,
@@ -118,6 +120,7 @@ func NewSchema(
 			providerQuotaService:           providerQuotaService,
 			billingAccountService:          billingAccountService,
 			paymentService:                 paymentService,
+			pricingService:                 pricingService,
 			scheduler:                      scheduler,
 			modelFetcher:                   modelFetcher,
 			defaultSelector:                defaultSelector,

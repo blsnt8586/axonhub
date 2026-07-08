@@ -136,6 +136,27 @@ func (r *mutationResolver) AdjustUserBalance(ctx context.Context, input biz.Adju
 	})
 }
 
+// SaveBillingPriceRule is the resolver for the saveBillingPriceRule field.
+func (r *mutationResolver) SaveBillingPriceRule(ctx context.Context, input SaveBillingPriceRuleForm) (*ent.BillingPriceRule, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.saveBillingPriceRule(ctx, input)
+}
+
+// DeleteBillingPriceRule is the resolver for the deleteBillingPriceRule field.
+func (r *mutationResolver) DeleteBillingPriceRule(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := requireOwner(ctx); err != nil {
+		return false, err
+	}
+	if id.Type != ent.TypeBillingPriceRule {
+		return false, fmt.Errorf("id must be a BillingPriceRule ID")
+	}
+
+	return r.pricingService.DeleteBillingPriceRule(ctx, id.ID)
+}
+
 // ProjectBillingAccount is the resolver for the projectBillingAccount field.
 func (r *queryResolver) ProjectBillingAccount(ctx context.Context, projectID objects.GUID) (*ent.BillingAccount, error) {
 	if err := requireOwner(ctx); err != nil {

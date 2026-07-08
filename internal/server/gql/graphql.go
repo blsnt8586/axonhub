@@ -75,6 +75,7 @@ type Dependencies struct {
 	ProviderQuotaService           *biz.ProviderQuotaService
 	BillingAccountService          *biz.BillingAccountService
 	PaymentService                 *biz.PaymentService
+	PricingService                 *biz.PricingService
 	Scheduler                      *scheduler.Scheduler
 	DefaultSelector                *orchestrator.DefaultSelector
 	CandidateSelectorDiagnostics   *orchestrator.CandidateSelectorDiagnostics
@@ -116,6 +117,7 @@ func NewGraphqlHandlers(deps Dependencies) *GraphqlHandler {
 			deps.ProviderQuotaService,
 			deps.BillingAccountService,
 			deps.PaymentService,
+			deps.PricingService,
 			deps.Scheduler,
 			deps.DefaultSelector,
 			deps.CandidateSelectorDiagnostics,
