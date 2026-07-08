@@ -696,6 +696,14 @@ var (
 		{Name: "amount_micros", Type: field.TypeInt64},
 		{Name: "currency", Type: field.TypeString, Default: "CNY"},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "paid", "failed", "canceled", "expired", "refunded"}, Default: "pending"},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "canceled_at", Type: field.TypeTime, Nullable: true},
+		{Name: "cancel_reason", Type: field.TypeString, Default: ""},
+		{Name: "makeup_reason", Type: field.TypeString, Default: ""},
+		{Name: "failure_reason", Type: field.TypeString, Default: ""},
+		{Name: "refunded_at", Type: field.TypeTime, Nullable: true},
+		{Name: "refund_reason", Type: field.TypeString, Default: ""},
+		{Name: "refund_amount_micros", Type: field.TypeInt64, Default: 0},
 		{Name: "external_trade_no", Type: field.TypeString, Nullable: true},
 		{Name: "paid_at", Type: field.TypeTime, Nullable: true},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
@@ -711,19 +719,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "payment_orders_billing_accounts_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[13]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[21]},
 				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "payment_orders_ledger_transactions_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[14]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[22]},
 				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "payment_orders_payment_provider_instances_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[15]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[23]},
 				RefColumns: []*schema.Column{PaymentProviderInstancesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -742,12 +750,12 @@ var (
 			{
 				Name:    "payment_orders_by_account_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{PaymentOrdersColumns[13], PaymentOrdersColumns[1]},
+				Columns: []*schema.Column{PaymentOrdersColumns[21], PaymentOrdersColumns[1]},
 			},
 			{
 				Name:    "payment_orders_by_provider_trade_no",
 				Unique:  true,
-				Columns: []*schema.Column{PaymentOrdersColumns[5], PaymentOrdersColumns[10]},
+				Columns: []*schema.Column{PaymentOrdersColumns[5], PaymentOrdersColumns[18]},
 			},
 		},
 	}

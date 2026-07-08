@@ -496,6 +496,14 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentorder.FieldAmountMicros:        {Type: field.TypeInt64, Column: paymentorder.FieldAmountMicros},
 			paymentorder.FieldCurrency:            {Type: field.TypeString, Column: paymentorder.FieldCurrency},
 			paymentorder.FieldStatus:              {Type: field.TypeEnum, Column: paymentorder.FieldStatus},
+			paymentorder.FieldExpiresAt:           {Type: field.TypeTime, Column: paymentorder.FieldExpiresAt},
+			paymentorder.FieldCanceledAt:          {Type: field.TypeTime, Column: paymentorder.FieldCanceledAt},
+			paymentorder.FieldCancelReason:        {Type: field.TypeString, Column: paymentorder.FieldCancelReason},
+			paymentorder.FieldMakeupReason:        {Type: field.TypeString, Column: paymentorder.FieldMakeupReason},
+			paymentorder.FieldFailureReason:       {Type: field.TypeString, Column: paymentorder.FieldFailureReason},
+			paymentorder.FieldRefundedAt:          {Type: field.TypeTime, Column: paymentorder.FieldRefundedAt},
+			paymentorder.FieldRefundReason:        {Type: field.TypeString, Column: paymentorder.FieldRefundReason},
+			paymentorder.FieldRefundAmountMicros:  {Type: field.TypeInt64, Column: paymentorder.FieldRefundAmountMicros},
 			paymentorder.FieldExternalTradeNo:     {Type: field.TypeString, Column: paymentorder.FieldExternalTradeNo},
 			paymentorder.FieldPaidAt:              {Type: field.TypeTime, Column: paymentorder.FieldPaidAt},
 			paymentorder.FieldLedgerTransactionID: {Type: field.TypeInt, Column: paymentorder.FieldLedgerTransactionID},
@@ -4273,6 +4281,46 @@ func (f *PaymentOrderFilter) WhereCurrency(p entql.StringP) {
 // WhereStatus applies the entql string predicate on the status field.
 func (f *PaymentOrderFilter) WhereStatus(p entql.StringP) {
 	f.Where(p.Field(paymentorder.FieldStatus))
+}
+
+// WhereExpiresAt applies the entql time.Time predicate on the expires_at field.
+func (f *PaymentOrderFilter) WhereExpiresAt(p entql.TimeP) {
+	f.Where(p.Field(paymentorder.FieldExpiresAt))
+}
+
+// WhereCanceledAt applies the entql time.Time predicate on the canceled_at field.
+func (f *PaymentOrderFilter) WhereCanceledAt(p entql.TimeP) {
+	f.Where(p.Field(paymentorder.FieldCanceledAt))
+}
+
+// WhereCancelReason applies the entql string predicate on the cancel_reason field.
+func (f *PaymentOrderFilter) WhereCancelReason(p entql.StringP) {
+	f.Where(p.Field(paymentorder.FieldCancelReason))
+}
+
+// WhereMakeupReason applies the entql string predicate on the makeup_reason field.
+func (f *PaymentOrderFilter) WhereMakeupReason(p entql.StringP) {
+	f.Where(p.Field(paymentorder.FieldMakeupReason))
+}
+
+// WhereFailureReason applies the entql string predicate on the failure_reason field.
+func (f *PaymentOrderFilter) WhereFailureReason(p entql.StringP) {
+	f.Where(p.Field(paymentorder.FieldFailureReason))
+}
+
+// WhereRefundedAt applies the entql time.Time predicate on the refunded_at field.
+func (f *PaymentOrderFilter) WhereRefundedAt(p entql.TimeP) {
+	f.Where(p.Field(paymentorder.FieldRefundedAt))
+}
+
+// WhereRefundReason applies the entql string predicate on the refund_reason field.
+func (f *PaymentOrderFilter) WhereRefundReason(p entql.StringP) {
+	f.Where(p.Field(paymentorder.FieldRefundReason))
+}
+
+// WhereRefundAmountMicros applies the entql int64 predicate on the refund_amount_micros field.
+func (f *PaymentOrderFilter) WhereRefundAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(paymentorder.FieldRefundAmountMicros))
 }
 
 // WhereExternalTradeNo applies the entql string predicate on the external_trade_no field.

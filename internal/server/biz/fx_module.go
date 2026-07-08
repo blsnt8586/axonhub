@@ -130,4 +130,11 @@ var Module = fx.Module("biz",
 			},
 		})
 	}),
+	fx.Invoke(func(lc fx.Lifecycle, svc *PaymentService, s *scheduler.Scheduler) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				return svc.RegisterScheduledTasks(ctx, s)
+			},
+		})
+	}),
 )

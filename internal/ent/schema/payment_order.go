@@ -73,6 +73,27 @@ func (PaymentOrder) Fields() []ent.Field {
 			Values("pending", "paid", "failed", "canceled", "expired", "refunded").
 			Default("pending").
 			Comment("Payment order lifecycle status."),
+		field.Time("expires_at").
+			Optional().
+			Nillable().
+			Comment("When a pending order is no longer payable automatically."),
+		field.Time("canceled_at").
+			Optional().
+			Nillable(),
+		field.String("cancel_reason").
+			Default(""),
+		field.String("makeup_reason").
+			Default(""),
+		field.String("failure_reason").
+			Default(""),
+		field.Time("refunded_at").
+			Optional().
+			Nillable(),
+		field.String("refund_reason").
+			Default(""),
+		field.Int64("refund_amount_micros").
+			NonNegative().
+			Default(0),
 		field.String("external_trade_no").
 			Optional().
 			Nillable().

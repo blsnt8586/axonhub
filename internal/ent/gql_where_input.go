@@ -9178,6 +9178,112 @@ type PaymentOrderWhereInput struct {
 	StatusIn    []paymentorder.Status `json:"statusIn,omitempty"`
 	StatusNotIn []paymentorder.Status `json:"statusNotIn,omitempty"`
 
+	// "expires_at" field predicates.
+	ExpiresAt       *time.Time  `json:"expiresAt,omitempty"`
+	ExpiresAtNEQ    *time.Time  `json:"expiresAtNEQ,omitempty"`
+	ExpiresAtIn     []time.Time `json:"expiresAtIn,omitempty"`
+	ExpiresAtNotIn  []time.Time `json:"expiresAtNotIn,omitempty"`
+	ExpiresAtGT     *time.Time  `json:"expiresAtGT,omitempty"`
+	ExpiresAtGTE    *time.Time  `json:"expiresAtGTE,omitempty"`
+	ExpiresAtLT     *time.Time  `json:"expiresAtLT,omitempty"`
+	ExpiresAtLTE    *time.Time  `json:"expiresAtLTE,omitempty"`
+	ExpiresAtIsNil  bool        `json:"expiresAtIsNil,omitempty"`
+	ExpiresAtNotNil bool        `json:"expiresAtNotNil,omitempty"`
+
+	// "canceled_at" field predicates.
+	CanceledAt       *time.Time  `json:"canceledAt,omitempty"`
+	CanceledAtNEQ    *time.Time  `json:"canceledAtNEQ,omitempty"`
+	CanceledAtIn     []time.Time `json:"canceledAtIn,omitempty"`
+	CanceledAtNotIn  []time.Time `json:"canceledAtNotIn,omitempty"`
+	CanceledAtGT     *time.Time  `json:"canceledAtGT,omitempty"`
+	CanceledAtGTE    *time.Time  `json:"canceledAtGTE,omitempty"`
+	CanceledAtLT     *time.Time  `json:"canceledAtLT,omitempty"`
+	CanceledAtLTE    *time.Time  `json:"canceledAtLTE,omitempty"`
+	CanceledAtIsNil  bool        `json:"canceledAtIsNil,omitempty"`
+	CanceledAtNotNil bool        `json:"canceledAtNotNil,omitempty"`
+
+	// "cancel_reason" field predicates.
+	CancelReason             *string  `json:"cancelReason,omitempty"`
+	CancelReasonNEQ          *string  `json:"cancelReasonNEQ,omitempty"`
+	CancelReasonIn           []string `json:"cancelReasonIn,omitempty"`
+	CancelReasonNotIn        []string `json:"cancelReasonNotIn,omitempty"`
+	CancelReasonGT           *string  `json:"cancelReasonGT,omitempty"`
+	CancelReasonGTE          *string  `json:"cancelReasonGTE,omitempty"`
+	CancelReasonLT           *string  `json:"cancelReasonLT,omitempty"`
+	CancelReasonLTE          *string  `json:"cancelReasonLTE,omitempty"`
+	CancelReasonContains     *string  `json:"cancelReasonContains,omitempty"`
+	CancelReasonHasPrefix    *string  `json:"cancelReasonHasPrefix,omitempty"`
+	CancelReasonHasSuffix    *string  `json:"cancelReasonHasSuffix,omitempty"`
+	CancelReasonEqualFold    *string  `json:"cancelReasonEqualFold,omitempty"`
+	CancelReasonContainsFold *string  `json:"cancelReasonContainsFold,omitempty"`
+
+	// "makeup_reason" field predicates.
+	MakeupReason             *string  `json:"makeupReason,omitempty"`
+	MakeupReasonNEQ          *string  `json:"makeupReasonNEQ,omitempty"`
+	MakeupReasonIn           []string `json:"makeupReasonIn,omitempty"`
+	MakeupReasonNotIn        []string `json:"makeupReasonNotIn,omitempty"`
+	MakeupReasonGT           *string  `json:"makeupReasonGT,omitempty"`
+	MakeupReasonGTE          *string  `json:"makeupReasonGTE,omitempty"`
+	MakeupReasonLT           *string  `json:"makeupReasonLT,omitempty"`
+	MakeupReasonLTE          *string  `json:"makeupReasonLTE,omitempty"`
+	MakeupReasonContains     *string  `json:"makeupReasonContains,omitempty"`
+	MakeupReasonHasPrefix    *string  `json:"makeupReasonHasPrefix,omitempty"`
+	MakeupReasonHasSuffix    *string  `json:"makeupReasonHasSuffix,omitempty"`
+	MakeupReasonEqualFold    *string  `json:"makeupReasonEqualFold,omitempty"`
+	MakeupReasonContainsFold *string  `json:"makeupReasonContainsFold,omitempty"`
+
+	// "failure_reason" field predicates.
+	FailureReason             *string  `json:"failureReason,omitempty"`
+	FailureReasonNEQ          *string  `json:"failureReasonNEQ,omitempty"`
+	FailureReasonIn           []string `json:"failureReasonIn,omitempty"`
+	FailureReasonNotIn        []string `json:"failureReasonNotIn,omitempty"`
+	FailureReasonGT           *string  `json:"failureReasonGT,omitempty"`
+	FailureReasonGTE          *string  `json:"failureReasonGTE,omitempty"`
+	FailureReasonLT           *string  `json:"failureReasonLT,omitempty"`
+	FailureReasonLTE          *string  `json:"failureReasonLTE,omitempty"`
+	FailureReasonContains     *string  `json:"failureReasonContains,omitempty"`
+	FailureReasonHasPrefix    *string  `json:"failureReasonHasPrefix,omitempty"`
+	FailureReasonHasSuffix    *string  `json:"failureReasonHasSuffix,omitempty"`
+	FailureReasonEqualFold    *string  `json:"failureReasonEqualFold,omitempty"`
+	FailureReasonContainsFold *string  `json:"failureReasonContainsFold,omitempty"`
+
+	// "refunded_at" field predicates.
+	RefundedAt       *time.Time  `json:"refundedAt,omitempty"`
+	RefundedAtNEQ    *time.Time  `json:"refundedAtNEQ,omitempty"`
+	RefundedAtIn     []time.Time `json:"refundedAtIn,omitempty"`
+	RefundedAtNotIn  []time.Time `json:"refundedAtNotIn,omitempty"`
+	RefundedAtGT     *time.Time  `json:"refundedAtGT,omitempty"`
+	RefundedAtGTE    *time.Time  `json:"refundedAtGTE,omitempty"`
+	RefundedAtLT     *time.Time  `json:"refundedAtLT,omitempty"`
+	RefundedAtLTE    *time.Time  `json:"refundedAtLTE,omitempty"`
+	RefundedAtIsNil  bool        `json:"refundedAtIsNil,omitempty"`
+	RefundedAtNotNil bool        `json:"refundedAtNotNil,omitempty"`
+
+	// "refund_reason" field predicates.
+	RefundReason             *string  `json:"refundReason,omitempty"`
+	RefundReasonNEQ          *string  `json:"refundReasonNEQ,omitempty"`
+	RefundReasonIn           []string `json:"refundReasonIn,omitempty"`
+	RefundReasonNotIn        []string `json:"refundReasonNotIn,omitempty"`
+	RefundReasonGT           *string  `json:"refundReasonGT,omitempty"`
+	RefundReasonGTE          *string  `json:"refundReasonGTE,omitempty"`
+	RefundReasonLT           *string  `json:"refundReasonLT,omitempty"`
+	RefundReasonLTE          *string  `json:"refundReasonLTE,omitempty"`
+	RefundReasonContains     *string  `json:"refundReasonContains,omitempty"`
+	RefundReasonHasPrefix    *string  `json:"refundReasonHasPrefix,omitempty"`
+	RefundReasonHasSuffix    *string  `json:"refundReasonHasSuffix,omitempty"`
+	RefundReasonEqualFold    *string  `json:"refundReasonEqualFold,omitempty"`
+	RefundReasonContainsFold *string  `json:"refundReasonContainsFold,omitempty"`
+
+	// "refund_amount_micros" field predicates.
+	RefundAmountMicros      *int64  `json:"refundAmountMicros,omitempty"`
+	RefundAmountMicrosNEQ   *int64  `json:"refundAmountMicrosNEQ,omitempty"`
+	RefundAmountMicrosIn    []int64 `json:"refundAmountMicrosIn,omitempty"`
+	RefundAmountMicrosNotIn []int64 `json:"refundAmountMicrosNotIn,omitempty"`
+	RefundAmountMicrosGT    *int64  `json:"refundAmountMicrosGT,omitempty"`
+	RefundAmountMicrosGTE   *int64  `json:"refundAmountMicrosGTE,omitempty"`
+	RefundAmountMicrosLT    *int64  `json:"refundAmountMicrosLT,omitempty"`
+	RefundAmountMicrosLTE   *int64  `json:"refundAmountMicrosLTE,omitempty"`
+
 	// "external_trade_no" field predicates.
 	ExternalTradeNo             *string  `json:"externalTradeNo,omitempty"`
 	ExternalTradeNoNEQ          *string  `json:"externalTradeNoNEQ,omitempty"`
@@ -9566,6 +9672,276 @@ func (i *PaymentOrderWhereInput) P() (predicate.PaymentOrder, error) {
 	}
 	if len(i.StatusNotIn) > 0 {
 		predicates = append(predicates, paymentorder.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.ExpiresAt != nil {
+		predicates = append(predicates, paymentorder.ExpiresAtEQ(*i.ExpiresAt))
+	}
+	if i.ExpiresAtNEQ != nil {
+		predicates = append(predicates, paymentorder.ExpiresAtNEQ(*i.ExpiresAtNEQ))
+	}
+	if len(i.ExpiresAtIn) > 0 {
+		predicates = append(predicates, paymentorder.ExpiresAtIn(i.ExpiresAtIn...))
+	}
+	if len(i.ExpiresAtNotIn) > 0 {
+		predicates = append(predicates, paymentorder.ExpiresAtNotIn(i.ExpiresAtNotIn...))
+	}
+	if i.ExpiresAtGT != nil {
+		predicates = append(predicates, paymentorder.ExpiresAtGT(*i.ExpiresAtGT))
+	}
+	if i.ExpiresAtGTE != nil {
+		predicates = append(predicates, paymentorder.ExpiresAtGTE(*i.ExpiresAtGTE))
+	}
+	if i.ExpiresAtLT != nil {
+		predicates = append(predicates, paymentorder.ExpiresAtLT(*i.ExpiresAtLT))
+	}
+	if i.ExpiresAtLTE != nil {
+		predicates = append(predicates, paymentorder.ExpiresAtLTE(*i.ExpiresAtLTE))
+	}
+	if i.ExpiresAtIsNil {
+		predicates = append(predicates, paymentorder.ExpiresAtIsNil())
+	}
+	if i.ExpiresAtNotNil {
+		predicates = append(predicates, paymentorder.ExpiresAtNotNil())
+	}
+	if i.CanceledAt != nil {
+		predicates = append(predicates, paymentorder.CanceledAtEQ(*i.CanceledAt))
+	}
+	if i.CanceledAtNEQ != nil {
+		predicates = append(predicates, paymentorder.CanceledAtNEQ(*i.CanceledAtNEQ))
+	}
+	if len(i.CanceledAtIn) > 0 {
+		predicates = append(predicates, paymentorder.CanceledAtIn(i.CanceledAtIn...))
+	}
+	if len(i.CanceledAtNotIn) > 0 {
+		predicates = append(predicates, paymentorder.CanceledAtNotIn(i.CanceledAtNotIn...))
+	}
+	if i.CanceledAtGT != nil {
+		predicates = append(predicates, paymentorder.CanceledAtGT(*i.CanceledAtGT))
+	}
+	if i.CanceledAtGTE != nil {
+		predicates = append(predicates, paymentorder.CanceledAtGTE(*i.CanceledAtGTE))
+	}
+	if i.CanceledAtLT != nil {
+		predicates = append(predicates, paymentorder.CanceledAtLT(*i.CanceledAtLT))
+	}
+	if i.CanceledAtLTE != nil {
+		predicates = append(predicates, paymentorder.CanceledAtLTE(*i.CanceledAtLTE))
+	}
+	if i.CanceledAtIsNil {
+		predicates = append(predicates, paymentorder.CanceledAtIsNil())
+	}
+	if i.CanceledAtNotNil {
+		predicates = append(predicates, paymentorder.CanceledAtNotNil())
+	}
+	if i.CancelReason != nil {
+		predicates = append(predicates, paymentorder.CancelReasonEQ(*i.CancelReason))
+	}
+	if i.CancelReasonNEQ != nil {
+		predicates = append(predicates, paymentorder.CancelReasonNEQ(*i.CancelReasonNEQ))
+	}
+	if len(i.CancelReasonIn) > 0 {
+		predicates = append(predicates, paymentorder.CancelReasonIn(i.CancelReasonIn...))
+	}
+	if len(i.CancelReasonNotIn) > 0 {
+		predicates = append(predicates, paymentorder.CancelReasonNotIn(i.CancelReasonNotIn...))
+	}
+	if i.CancelReasonGT != nil {
+		predicates = append(predicates, paymentorder.CancelReasonGT(*i.CancelReasonGT))
+	}
+	if i.CancelReasonGTE != nil {
+		predicates = append(predicates, paymentorder.CancelReasonGTE(*i.CancelReasonGTE))
+	}
+	if i.CancelReasonLT != nil {
+		predicates = append(predicates, paymentorder.CancelReasonLT(*i.CancelReasonLT))
+	}
+	if i.CancelReasonLTE != nil {
+		predicates = append(predicates, paymentorder.CancelReasonLTE(*i.CancelReasonLTE))
+	}
+	if i.CancelReasonContains != nil {
+		predicates = append(predicates, paymentorder.CancelReasonContains(*i.CancelReasonContains))
+	}
+	if i.CancelReasonHasPrefix != nil {
+		predicates = append(predicates, paymentorder.CancelReasonHasPrefix(*i.CancelReasonHasPrefix))
+	}
+	if i.CancelReasonHasSuffix != nil {
+		predicates = append(predicates, paymentorder.CancelReasonHasSuffix(*i.CancelReasonHasSuffix))
+	}
+	if i.CancelReasonEqualFold != nil {
+		predicates = append(predicates, paymentorder.CancelReasonEqualFold(*i.CancelReasonEqualFold))
+	}
+	if i.CancelReasonContainsFold != nil {
+		predicates = append(predicates, paymentorder.CancelReasonContainsFold(*i.CancelReasonContainsFold))
+	}
+	if i.MakeupReason != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonEQ(*i.MakeupReason))
+	}
+	if i.MakeupReasonNEQ != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonNEQ(*i.MakeupReasonNEQ))
+	}
+	if len(i.MakeupReasonIn) > 0 {
+		predicates = append(predicates, paymentorder.MakeupReasonIn(i.MakeupReasonIn...))
+	}
+	if len(i.MakeupReasonNotIn) > 0 {
+		predicates = append(predicates, paymentorder.MakeupReasonNotIn(i.MakeupReasonNotIn...))
+	}
+	if i.MakeupReasonGT != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonGT(*i.MakeupReasonGT))
+	}
+	if i.MakeupReasonGTE != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonGTE(*i.MakeupReasonGTE))
+	}
+	if i.MakeupReasonLT != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonLT(*i.MakeupReasonLT))
+	}
+	if i.MakeupReasonLTE != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonLTE(*i.MakeupReasonLTE))
+	}
+	if i.MakeupReasonContains != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonContains(*i.MakeupReasonContains))
+	}
+	if i.MakeupReasonHasPrefix != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonHasPrefix(*i.MakeupReasonHasPrefix))
+	}
+	if i.MakeupReasonHasSuffix != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonHasSuffix(*i.MakeupReasonHasSuffix))
+	}
+	if i.MakeupReasonEqualFold != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonEqualFold(*i.MakeupReasonEqualFold))
+	}
+	if i.MakeupReasonContainsFold != nil {
+		predicates = append(predicates, paymentorder.MakeupReasonContainsFold(*i.MakeupReasonContainsFold))
+	}
+	if i.FailureReason != nil {
+		predicates = append(predicates, paymentorder.FailureReasonEQ(*i.FailureReason))
+	}
+	if i.FailureReasonNEQ != nil {
+		predicates = append(predicates, paymentorder.FailureReasonNEQ(*i.FailureReasonNEQ))
+	}
+	if len(i.FailureReasonIn) > 0 {
+		predicates = append(predicates, paymentorder.FailureReasonIn(i.FailureReasonIn...))
+	}
+	if len(i.FailureReasonNotIn) > 0 {
+		predicates = append(predicates, paymentorder.FailureReasonNotIn(i.FailureReasonNotIn...))
+	}
+	if i.FailureReasonGT != nil {
+		predicates = append(predicates, paymentorder.FailureReasonGT(*i.FailureReasonGT))
+	}
+	if i.FailureReasonGTE != nil {
+		predicates = append(predicates, paymentorder.FailureReasonGTE(*i.FailureReasonGTE))
+	}
+	if i.FailureReasonLT != nil {
+		predicates = append(predicates, paymentorder.FailureReasonLT(*i.FailureReasonLT))
+	}
+	if i.FailureReasonLTE != nil {
+		predicates = append(predicates, paymentorder.FailureReasonLTE(*i.FailureReasonLTE))
+	}
+	if i.FailureReasonContains != nil {
+		predicates = append(predicates, paymentorder.FailureReasonContains(*i.FailureReasonContains))
+	}
+	if i.FailureReasonHasPrefix != nil {
+		predicates = append(predicates, paymentorder.FailureReasonHasPrefix(*i.FailureReasonHasPrefix))
+	}
+	if i.FailureReasonHasSuffix != nil {
+		predicates = append(predicates, paymentorder.FailureReasonHasSuffix(*i.FailureReasonHasSuffix))
+	}
+	if i.FailureReasonEqualFold != nil {
+		predicates = append(predicates, paymentorder.FailureReasonEqualFold(*i.FailureReasonEqualFold))
+	}
+	if i.FailureReasonContainsFold != nil {
+		predicates = append(predicates, paymentorder.FailureReasonContainsFold(*i.FailureReasonContainsFold))
+	}
+	if i.RefundedAt != nil {
+		predicates = append(predicates, paymentorder.RefundedAtEQ(*i.RefundedAt))
+	}
+	if i.RefundedAtNEQ != nil {
+		predicates = append(predicates, paymentorder.RefundedAtNEQ(*i.RefundedAtNEQ))
+	}
+	if len(i.RefundedAtIn) > 0 {
+		predicates = append(predicates, paymentorder.RefundedAtIn(i.RefundedAtIn...))
+	}
+	if len(i.RefundedAtNotIn) > 0 {
+		predicates = append(predicates, paymentorder.RefundedAtNotIn(i.RefundedAtNotIn...))
+	}
+	if i.RefundedAtGT != nil {
+		predicates = append(predicates, paymentorder.RefundedAtGT(*i.RefundedAtGT))
+	}
+	if i.RefundedAtGTE != nil {
+		predicates = append(predicates, paymentorder.RefundedAtGTE(*i.RefundedAtGTE))
+	}
+	if i.RefundedAtLT != nil {
+		predicates = append(predicates, paymentorder.RefundedAtLT(*i.RefundedAtLT))
+	}
+	if i.RefundedAtLTE != nil {
+		predicates = append(predicates, paymentorder.RefundedAtLTE(*i.RefundedAtLTE))
+	}
+	if i.RefundedAtIsNil {
+		predicates = append(predicates, paymentorder.RefundedAtIsNil())
+	}
+	if i.RefundedAtNotNil {
+		predicates = append(predicates, paymentorder.RefundedAtNotNil())
+	}
+	if i.RefundReason != nil {
+		predicates = append(predicates, paymentorder.RefundReasonEQ(*i.RefundReason))
+	}
+	if i.RefundReasonNEQ != nil {
+		predicates = append(predicates, paymentorder.RefundReasonNEQ(*i.RefundReasonNEQ))
+	}
+	if len(i.RefundReasonIn) > 0 {
+		predicates = append(predicates, paymentorder.RefundReasonIn(i.RefundReasonIn...))
+	}
+	if len(i.RefundReasonNotIn) > 0 {
+		predicates = append(predicates, paymentorder.RefundReasonNotIn(i.RefundReasonNotIn...))
+	}
+	if i.RefundReasonGT != nil {
+		predicates = append(predicates, paymentorder.RefundReasonGT(*i.RefundReasonGT))
+	}
+	if i.RefundReasonGTE != nil {
+		predicates = append(predicates, paymentorder.RefundReasonGTE(*i.RefundReasonGTE))
+	}
+	if i.RefundReasonLT != nil {
+		predicates = append(predicates, paymentorder.RefundReasonLT(*i.RefundReasonLT))
+	}
+	if i.RefundReasonLTE != nil {
+		predicates = append(predicates, paymentorder.RefundReasonLTE(*i.RefundReasonLTE))
+	}
+	if i.RefundReasonContains != nil {
+		predicates = append(predicates, paymentorder.RefundReasonContains(*i.RefundReasonContains))
+	}
+	if i.RefundReasonHasPrefix != nil {
+		predicates = append(predicates, paymentorder.RefundReasonHasPrefix(*i.RefundReasonHasPrefix))
+	}
+	if i.RefundReasonHasSuffix != nil {
+		predicates = append(predicates, paymentorder.RefundReasonHasSuffix(*i.RefundReasonHasSuffix))
+	}
+	if i.RefundReasonEqualFold != nil {
+		predicates = append(predicates, paymentorder.RefundReasonEqualFold(*i.RefundReasonEqualFold))
+	}
+	if i.RefundReasonContainsFold != nil {
+		predicates = append(predicates, paymentorder.RefundReasonContainsFold(*i.RefundReasonContainsFold))
+	}
+	if i.RefundAmountMicros != nil {
+		predicates = append(predicates, paymentorder.RefundAmountMicrosEQ(*i.RefundAmountMicros))
+	}
+	if i.RefundAmountMicrosNEQ != nil {
+		predicates = append(predicates, paymentorder.RefundAmountMicrosNEQ(*i.RefundAmountMicrosNEQ))
+	}
+	if len(i.RefundAmountMicrosIn) > 0 {
+		predicates = append(predicates, paymentorder.RefundAmountMicrosIn(i.RefundAmountMicrosIn...))
+	}
+	if len(i.RefundAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, paymentorder.RefundAmountMicrosNotIn(i.RefundAmountMicrosNotIn...))
+	}
+	if i.RefundAmountMicrosGT != nil {
+		predicates = append(predicates, paymentorder.RefundAmountMicrosGT(*i.RefundAmountMicrosGT))
+	}
+	if i.RefundAmountMicrosGTE != nil {
+		predicates = append(predicates, paymentorder.RefundAmountMicrosGTE(*i.RefundAmountMicrosGTE))
+	}
+	if i.RefundAmountMicrosLT != nil {
+		predicates = append(predicates, paymentorder.RefundAmountMicrosLT(*i.RefundAmountMicrosLT))
+	}
+	if i.RefundAmountMicrosLTE != nil {
+		predicates = append(predicates, paymentorder.RefundAmountMicrosLTE(*i.RefundAmountMicrosLTE))
 	}
 	if i.ExternalTradeNo != nil {
 		predicates = append(predicates, paymentorder.ExternalTradeNoEQ(*i.ExternalTradeNo))

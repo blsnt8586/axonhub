@@ -41,6 +41,32 @@ func (r *mutationResolver) ConfirmManualPayment(ctx context.Context, input biz.C
 	return r.paymentService.ConfirmManualPayment(ctx, input)
 }
 
+// CancelPaymentOrder is the resolver for the cancelPaymentOrder field.
+func (r *mutationResolver) CancelPaymentOrder(ctx context.Context, input biz.CancelPaymentOrderInput) (*ent.PaymentOrder, error) {
+	actor, err := requireOwnerUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	input.ActorID = fmt.Sprint(actor.ID)
+
+	return authz.RunWithSystemBypass(ctx, "billing-cancel-payment-order", func(ctx context.Context) (*ent.PaymentOrder, error) {
+		return r.paymentService.CancelPaymentOrder(ctx, input)
+	})
+}
+
+// MakeUpPaymentOrder is the resolver for the makeUpPaymentOrder field.
+func (r *mutationResolver) MakeUpPaymentOrder(ctx context.Context, input biz.MakeUpPaymentOrderInput) (*ent.PaymentOrder, error) {
+	actor, err := requireOwnerUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	input.ActorID = fmt.Sprint(actor.ID)
+
+	return authz.RunWithSystemBypass(ctx, "billing-makeup-payment-order", func(ctx context.Context) (*ent.PaymentOrder, error) {
+		return r.paymentService.MakeUpPaymentOrder(ctx, input)
+	})
+}
+
 // CreateSimulatedEPayRechargeCheckout is the resolver for the createSimulatedEPayRechargeCheckout field.
 func (r *mutationResolver) CreateSimulatedEPayRechargeCheckout(ctx context.Context, input CreateSimulatedEPayRechargeCheckoutInput) (*PaymentCheckout, error) {
 	if err := requireOwner(ctx); err != nil {

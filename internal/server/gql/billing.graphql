@@ -13,6 +13,17 @@ input ConfirmManualPaymentInput {
   paidAt: Time
 }
 
+input CancelPaymentOrderInput {
+  orderNo: String!
+  reason: String!
+}
+
+input MakeUpPaymentOrderInput {
+  orderNo: String!
+  reason: String!
+  paidAt: Time
+}
+
 input CreateSimulatedEPayRechargeCheckoutInput {
   projectId: ID!
   amount: DecimalInput!
@@ -141,6 +152,8 @@ type PaymentCheckout {
 extend type Mutation {
   createManualRechargeOrder(input: CreateManualRechargeOrderInput!): PaymentOrder!
   confirmManualPayment(input: ConfirmManualPaymentInput!): PaymentOrder!
+  cancelPaymentOrder(input: CancelPaymentOrderInput!): PaymentOrder!
+  makeUpPaymentOrder(input: MakeUpPaymentOrderInput!): PaymentOrder!
   createSimulatedEPayRechargeCheckout(input: CreateSimulatedEPayRechargeCheckoutInput!): PaymentCheckout!
   upsertEPayPaymentProvider(input: UpsertEPayPaymentProviderInput!): PaymentProviderInstance!
   createMyEPayRechargeCheckout(input: CreateMyEPayRechargeCheckoutInput!): PaymentCheckout!

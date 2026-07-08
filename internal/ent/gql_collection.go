@@ -4292,6 +4292,46 @@ func (_q *PaymentOrderQuery) collectField(ctx context.Context, oneNode bool, opC
 				selectedFields = append(selectedFields, paymentorder.FieldStatus)
 				fieldSeen[paymentorder.FieldStatus] = struct{}{}
 			}
+		case "expiresAt":
+			if _, ok := fieldSeen[paymentorder.FieldExpiresAt]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldExpiresAt)
+				fieldSeen[paymentorder.FieldExpiresAt] = struct{}{}
+			}
+		case "canceledAt":
+			if _, ok := fieldSeen[paymentorder.FieldCanceledAt]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldCanceledAt)
+				fieldSeen[paymentorder.FieldCanceledAt] = struct{}{}
+			}
+		case "cancelReason":
+			if _, ok := fieldSeen[paymentorder.FieldCancelReason]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldCancelReason)
+				fieldSeen[paymentorder.FieldCancelReason] = struct{}{}
+			}
+		case "makeupReason":
+			if _, ok := fieldSeen[paymentorder.FieldMakeupReason]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldMakeupReason)
+				fieldSeen[paymentorder.FieldMakeupReason] = struct{}{}
+			}
+		case "failureReason":
+			if _, ok := fieldSeen[paymentorder.FieldFailureReason]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldFailureReason)
+				fieldSeen[paymentorder.FieldFailureReason] = struct{}{}
+			}
+		case "refundedAt":
+			if _, ok := fieldSeen[paymentorder.FieldRefundedAt]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldRefundedAt)
+				fieldSeen[paymentorder.FieldRefundedAt] = struct{}{}
+			}
+		case "refundReason":
+			if _, ok := fieldSeen[paymentorder.FieldRefundReason]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldRefundReason)
+				fieldSeen[paymentorder.FieldRefundReason] = struct{}{}
+			}
+		case "refundAmountMicros":
+			if _, ok := fieldSeen[paymentorder.FieldRefundAmountMicros]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldRefundAmountMicros)
+				fieldSeen[paymentorder.FieldRefundAmountMicros] = struct{}{}
+			}
 		case "externalTradeNo":
 			if _, ok := fieldSeen[paymentorder.FieldExternalTradeNo]; !ok {
 				selectedFields = append(selectedFields, paymentorder.FieldExternalTradeNo)

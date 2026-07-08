@@ -43,6 +43,7 @@ import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedRequestsRequestIdRouteImport } from './routes/_authenticated/requests/$requestId'
 import { Route as AuthenticatedDashboardChannelSuccessRatesRouteImport } from './routes/_authenticated/dashboard/channel-success-rates'
+import { Route as AuthenticatedBillingPaymentReturnRouteImport } from './routes/_authenticated/billing/payment-return'
 import { Route as AuthenticatedProjectUsersIndexRouteImport } from './routes/_authenticated/project/users/index'
 import { Route as AuthenticatedProjectUsageStatsIndexRouteImport } from './routes/_authenticated/project/usage-stats/index'
 import { Route as AuthenticatedProjectTracesIndexRouteImport } from './routes/_authenticated/project/traces/index'
@@ -244,6 +245,12 @@ const AuthenticatedDashboardChannelSuccessRatesRoute =
     path: '/dashboard/channel-success-rates',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBillingPaymentReturnRoute =
+  AuthenticatedBillingPaymentReturnRouteImport.update({
+    id: '/billing/payment-return',
+    path: '/billing/payment-return',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProjectUsersIndexRoute =
   AuthenticatedProjectUsersIndexRouteImport.update({
     id: '/project/users/',
@@ -336,6 +343,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/permission': typeof AuthenticatedPermissionRoute
+  '/billing/payment-return': typeof AuthenticatedBillingPaymentReturnRoute
   '/dashboard/channel-success-rates': typeof AuthenticatedDashboardChannelSuccessRatesRoute
   '/requests/$requestId': typeof AuthenticatedRequestsRequestIdRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -383,6 +391,7 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/permission': typeof AuthenticatedPermissionRoute
   '/': typeof AuthenticatedIndexRoute
+  '/billing/payment-return': typeof AuthenticatedBillingPaymentReturnRoute
   '/dashboard/channel-success-rates': typeof AuthenticatedDashboardChannelSuccessRatesRoute
   '/requests/$requestId': typeof AuthenticatedRequestsRequestIdRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -433,6 +442,7 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_authenticated/permission': typeof AuthenticatedPermissionRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/billing/payment-return': typeof AuthenticatedBillingPaymentReturnRoute
   '/_authenticated/dashboard/channel-success-rates': typeof AuthenticatedDashboardChannelSuccessRatesRoute
   '/_authenticated/requests/$requestId': typeof AuthenticatedRequestsRequestIdRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -483,6 +493,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/permission'
+    | '/billing/payment-return'
     | '/dashboard/channel-success-rates'
     | '/requests/$requestId'
     | '/settings/appearance'
@@ -530,6 +541,7 @@ export interface FileRouteTypes {
     | '/503'
     | '/permission'
     | '/'
+    | '/billing/payment-return'
     | '/dashboard/channel-success-rates'
     | '/requests/$requestId'
     | '/settings/appearance'
@@ -579,6 +591,7 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/_authenticated/permission'
     | '/_authenticated/'
+    | '/_authenticated/billing/payment-return'
     | '/_authenticated/dashboard/channel-success-rates'
     | '/_authenticated/requests/$requestId'
     | '/_authenticated/settings/appearance'
@@ -869,6 +882,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardChannelSuccessRatesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/billing/payment-return': {
+      id: '/_authenticated/billing/payment-return'
+      path: '/billing/payment-return'
+      fullPath: '/billing/payment-return'
+      preLoaderRoute: typeof AuthenticatedBillingPaymentReturnRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/project/users/': {
       id: '/_authenticated/project/users/'
       path: '/project/users'
@@ -990,6 +1010,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedPermissionRoute: typeof AuthenticatedPermissionRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedBillingPaymentReturnRoute: typeof AuthenticatedBillingPaymentReturnRoute
   AuthenticatedDashboardChannelSuccessRatesRoute: typeof AuthenticatedDashboardChannelSuccessRatesRoute
   AuthenticatedRequestsRequestIdRoute: typeof AuthenticatedRequestsRequestIdRoute
   AuthenticatedApiKeysIndexRoute: typeof AuthenticatedApiKeysIndexRoute
@@ -1024,6 +1045,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedPermissionRoute: AuthenticatedPermissionRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedBillingPaymentReturnRoute:
+    AuthenticatedBillingPaymentReturnRoute,
   AuthenticatedDashboardChannelSuccessRatesRoute:
     AuthenticatedDashboardChannelSuccessRatesRoute,
   AuthenticatedRequestsRequestIdRoute: AuthenticatedRequestsRequestIdRoute,

@@ -44,6 +44,22 @@ type PaymentOrder struct {
 	Currency string `json:"currency,omitempty"`
 	// Payment order lifecycle status.
 	Status paymentorder.Status `json:"status,omitempty"`
+	// When a pending order is no longer payable automatically.
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	// CanceledAt holds the value of the "canceled_at" field.
+	CanceledAt *time.Time `json:"canceled_at,omitempty"`
+	// CancelReason holds the value of the "cancel_reason" field.
+	CancelReason string `json:"cancel_reason,omitempty"`
+	// MakeupReason holds the value of the "makeup_reason" field.
+	MakeupReason string `json:"makeup_reason,omitempty"`
+	// FailureReason holds the value of the "failure_reason" field.
+	FailureReason string `json:"failure_reason,omitempty"`
+	// RefundedAt holds the value of the "refunded_at" field.
+	RefundedAt *time.Time `json:"refunded_at,omitempty"`
+	// RefundReason holds the value of the "refund_reason" field.
+	RefundReason string `json:"refund_reason,omitempty"`
+	// RefundAmountMicros holds the value of the "refund_amount_micros" field.
+	RefundAmountMicros int64 `json:"refund_amount_micros,omitempty"`
 	// Provider-side trade number.
 	ExternalTradeNo *string `json:"external_trade_no,omitempty"`
 	// PaidAt holds the value of the "paid_at" field.
@@ -126,11 +142,11 @@ func (*PaymentOrder) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case paymentorder.FieldMetadata:
 			values[i] = new([]byte)
-		case paymentorder.FieldID, paymentorder.FieldProjectID, paymentorder.FieldBillingAccountID, paymentorder.FieldProviderInstanceID, paymentorder.FieldAmountMicros, paymentorder.FieldLedgerTransactionID:
+		case paymentorder.FieldID, paymentorder.FieldProjectID, paymentorder.FieldBillingAccountID, paymentorder.FieldProviderInstanceID, paymentorder.FieldAmountMicros, paymentorder.FieldRefundAmountMicros, paymentorder.FieldLedgerTransactionID:
 			values[i] = new(sql.NullInt64)
-		case paymentorder.FieldOrderNo, paymentorder.FieldProviderType, paymentorder.FieldPurpose, paymentorder.FieldCurrency, paymentorder.FieldStatus, paymentorder.FieldExternalTradeNo:
+		case paymentorder.FieldOrderNo, paymentorder.FieldProviderType, paymentorder.FieldPurpose, paymentorder.FieldCurrency, paymentorder.FieldStatus, paymentorder.FieldCancelReason, paymentorder.FieldMakeupReason, paymentorder.FieldFailureReason, paymentorder.FieldRefundReason, paymentorder.FieldExternalTradeNo:
 			values[i] = new(sql.NullString)
-		case paymentorder.FieldCreatedAt, paymentorder.FieldUpdatedAt, paymentorder.FieldPaidAt:
+		case paymentorder.FieldCreatedAt, paymentorder.FieldUpdatedAt, paymentorder.FieldExpiresAt, paymentorder.FieldCanceledAt, paymentorder.FieldRefundedAt, paymentorder.FieldPaidAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -219,6 +235,57 @@ func (_m *PaymentOrder) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = paymentorder.Status(value.String)
+			}
+		case paymentorder.FieldExpiresAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field expires_at", values[i])
+			} else if value.Valid {
+				_m.ExpiresAt = new(time.Time)
+				*_m.ExpiresAt = value.Time
+			}
+		case paymentorder.FieldCanceledAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field canceled_at", values[i])
+			} else if value.Valid {
+				_m.CanceledAt = new(time.Time)
+				*_m.CanceledAt = value.Time
+			}
+		case paymentorder.FieldCancelReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cancel_reason", values[i])
+			} else if value.Valid {
+				_m.CancelReason = value.String
+			}
+		case paymentorder.FieldMakeupReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field makeup_reason", values[i])
+			} else if value.Valid {
+				_m.MakeupReason = value.String
+			}
+		case paymentorder.FieldFailureReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field failure_reason", values[i])
+			} else if value.Valid {
+				_m.FailureReason = value.String
+			}
+		case paymentorder.FieldRefundedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field refunded_at", values[i])
+			} else if value.Valid {
+				_m.RefundedAt = new(time.Time)
+				*_m.RefundedAt = value.Time
+			}
+		case paymentorder.FieldRefundReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field refund_reason", values[i])
+			} else if value.Valid {
+				_m.RefundReason = value.String
+			}
+		case paymentorder.FieldRefundAmountMicros:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field refund_amount_micros", values[i])
+			} else if value.Valid {
+				_m.RefundAmountMicros = value.Int64
 			}
 		case paymentorder.FieldExternalTradeNo:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -339,6 +406,36 @@ func (_m *PaymentOrder) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString(", ")
+	if v := _m.ExpiresAt; v != nil {
+		builder.WriteString("expires_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.CanceledAt; v != nil {
+		builder.WriteString("canceled_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("cancel_reason=")
+	builder.WriteString(_m.CancelReason)
+	builder.WriteString(", ")
+	builder.WriteString("makeup_reason=")
+	builder.WriteString(_m.MakeupReason)
+	builder.WriteString(", ")
+	builder.WriteString("failure_reason=")
+	builder.WriteString(_m.FailureReason)
+	builder.WriteString(", ")
+	if v := _m.RefundedAt; v != nil {
+		builder.WriteString("refunded_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("refund_reason=")
+	builder.WriteString(_m.RefundReason)
+	builder.WriteString(", ")
+	builder.WriteString("refund_amount_micros=")
+	builder.WriteString(fmt.Sprintf("%v", _m.RefundAmountMicros))
 	builder.WriteString(", ")
 	if v := _m.ExternalTradeNo; v != nil {
 		builder.WriteString("external_trade_no=")

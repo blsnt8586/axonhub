@@ -40,6 +40,22 @@ const (
 	FieldCurrency = "currency"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldExpiresAt holds the string denoting the expires_at field in the database.
+	FieldExpiresAt = "expires_at"
+	// FieldCanceledAt holds the string denoting the canceled_at field in the database.
+	FieldCanceledAt = "canceled_at"
+	// FieldCancelReason holds the string denoting the cancel_reason field in the database.
+	FieldCancelReason = "cancel_reason"
+	// FieldMakeupReason holds the string denoting the makeup_reason field in the database.
+	FieldMakeupReason = "makeup_reason"
+	// FieldFailureReason holds the string denoting the failure_reason field in the database.
+	FieldFailureReason = "failure_reason"
+	// FieldRefundedAt holds the string denoting the refunded_at field in the database.
+	FieldRefundedAt = "refunded_at"
+	// FieldRefundReason holds the string denoting the refund_reason field in the database.
+	FieldRefundReason = "refund_reason"
+	// FieldRefundAmountMicros holds the string denoting the refund_amount_micros field in the database.
+	FieldRefundAmountMicros = "refund_amount_micros"
 	// FieldExternalTradeNo holds the string denoting the external_trade_no field in the database.
 	FieldExternalTradeNo = "external_trade_no"
 	// FieldPaidAt holds the string denoting the paid_at field in the database.
@@ -102,6 +118,14 @@ var Columns = []string{
 	FieldAmountMicros,
 	FieldCurrency,
 	FieldStatus,
+	FieldExpiresAt,
+	FieldCanceledAt,
+	FieldCancelReason,
+	FieldMakeupReason,
+	FieldFailureReason,
+	FieldRefundedAt,
+	FieldRefundReason,
+	FieldRefundAmountMicros,
 	FieldExternalTradeNo,
 	FieldPaidAt,
 	FieldLedgerTransactionID,
@@ -136,6 +160,18 @@ var (
 	AmountMicrosValidator func(int64) error
 	// DefaultCurrency holds the default value on creation for the "currency" field.
 	DefaultCurrency string
+	// DefaultCancelReason holds the default value on creation for the "cancel_reason" field.
+	DefaultCancelReason string
+	// DefaultMakeupReason holds the default value on creation for the "makeup_reason" field.
+	DefaultMakeupReason string
+	// DefaultFailureReason holds the default value on creation for the "failure_reason" field.
+	DefaultFailureReason string
+	// DefaultRefundReason holds the default value on creation for the "refund_reason" field.
+	DefaultRefundReason string
+	// DefaultRefundAmountMicros holds the default value on creation for the "refund_amount_micros" field.
+	DefaultRefundAmountMicros int64
+	// RefundAmountMicrosValidator is a validator for the "refund_amount_micros" field. It is called by the builders before save.
+	RefundAmountMicrosValidator func(int64) error
 )
 
 // ProviderType defines the type for the "provider_type" enum field.
@@ -280,6 +316,46 @@ func ByCurrency(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByExpiresAt orders the results by the expires_at field.
+func ByExpiresAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpiresAt, opts...).ToFunc()
+}
+
+// ByCanceledAt orders the results by the canceled_at field.
+func ByCanceledAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCanceledAt, opts...).ToFunc()
+}
+
+// ByCancelReason orders the results by the cancel_reason field.
+func ByCancelReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCancelReason, opts...).ToFunc()
+}
+
+// ByMakeupReason orders the results by the makeup_reason field.
+func ByMakeupReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMakeupReason, opts...).ToFunc()
+}
+
+// ByFailureReason orders the results by the failure_reason field.
+func ByFailureReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFailureReason, opts...).ToFunc()
+}
+
+// ByRefundedAt orders the results by the refunded_at field.
+func ByRefundedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRefundedAt, opts...).ToFunc()
+}
+
+// ByRefundReason orders the results by the refund_reason field.
+func ByRefundReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRefundReason, opts...).ToFunc()
+}
+
+// ByRefundAmountMicros orders the results by the refund_amount_micros field.
+func ByRefundAmountMicros(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRefundAmountMicros, opts...).ToFunc()
 }
 
 // ByExternalTradeNo orders the results by the external_trade_no field.

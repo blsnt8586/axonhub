@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
@@ -315,6 +316,147 @@ func TestPaymentServiceEPayReturnDoesNotCreditLedger(t *testing.T) {
 	account, err := client.BillingAccount.Get(ctx, status.Order.BillingAccountID)
 	require.NoError(t, err)
 	require.Equal(t, int64(0), account.BalanceMicros)
+}
+
+func TestPaymentServiceExpiresPendingOrdersRepeatably(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, svc := newPaymentTestService(t, "payment_expire_pending")
+	order, err := svc.CreateManualRechargeOrder(ctx, CreateManualRechargeOrderInput{
+		ProjectID: 1,
+		Amount:    decimal.RequireFromString("5"),
+	})
+	require.NoError(t, err)
+	now := time.Now().UTC()
+	_, err = client.PaymentOrder.UpdateOneID(order.ID).SetExpiresAt(now.Add(-time.Minute)).Save(ctx)
+	require.NoError(t, err)
+
+	expired, err := svc.ExpirePendingPaymentOrders(ctx, now, 10)
+	require.NoError(t, err)
+	require.Equal(t, 1, expired)
+
+	expiredAgain, err := svc.ExpirePendingPaymentOrders(ctx, now, 10)
+	require.NoError(t, err)
+	require.Zero(t, expiredAgain)
+
+	reloaded, err := client.PaymentOrder.Get(ctx, order.ID)
+	require.NoError(t, err)
+	require.Equal(t, paymentorder.StatusExpired, reloaded.Status)
+
+	ledgerCount, err := client.LedgerTransaction.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Zero(t, ledgerCount)
+}
+
+func TestPaymentServiceCancelPendingOrderPreventsPayment(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, svc := newPaymentTestService(t, "payment_cancel_pending")
+	order, err := svc.CreateManualRechargeOrder(ctx, CreateManualRechargeOrderInput{
+		ProjectID: 1,
+		Amount:    decimal.RequireFromString("5"),
+	})
+	require.NoError(t, err)
+
+	canceled, err := svc.CancelPaymentOrder(ctx, CancelPaymentOrderInput{
+		OrderNo: order.OrderNo,
+		Reason:  "customer abandoned",
+		ActorID: "admin-1",
+	})
+	require.NoError(t, err)
+	require.Equal(t, paymentorder.StatusCanceled, canceled.Status)
+	require.NotNil(t, canceled.CanceledAt)
+	require.Equal(t, "customer abandoned", canceled.CancelReason)
+
+	_, err = svc.ConfirmManualPayment(ctx, ConfirmManualPaymentInput{
+		OrderNo:  order.OrderNo,
+		EventKey: "manual-canceled",
+		ActorID:  "admin-1",
+	})
+	require.ErrorIs(t, err, ErrPaymentOrderNotPayable)
+
+	ledgerCount, err := client.LedgerTransaction.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Zero(t, ledgerCount)
+}
+
+func TestPaymentServiceMakeUpPaymentCreditsExpiredOrderOnce(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, svc := newPaymentTestService(t, "payment_makeup_expired")
+	order, err := svc.CreateManualRechargeOrder(ctx, CreateManualRechargeOrderInput{
+		ProjectID: 1,
+		Amount:    decimal.RequireFromString("5"),
+	})
+	require.NoError(t, err)
+	_, err = client.PaymentOrder.UpdateOneID(order.ID).SetStatus(paymentorder.StatusExpired).SetExpiresAt(time.Now().UTC().Add(-time.Minute)).Save(ctx)
+	require.NoError(t, err)
+
+	paid, err := svc.MakeUpPaymentOrder(ctx, MakeUpPaymentOrderInput{
+		OrderNo: order.OrderNo,
+		Reason:  "bank slip verified",
+		ActorID: "admin-1",
+	})
+	require.NoError(t, err)
+	require.Equal(t, paymentorder.StatusPaid, paid.Status)
+	require.Equal(t, "bank slip verified", paid.MakeupReason)
+	require.NotNil(t, paid.LedgerTransactionID)
+
+	again, err := svc.MakeUpPaymentOrder(ctx, MakeUpPaymentOrderInput{
+		OrderNo: order.OrderNo,
+		Reason:  "retry",
+		ActorID: "admin-1",
+	})
+	require.NoError(t, err)
+	require.Equal(t, paid.ID, again.ID)
+
+	account, err := client.BillingAccount.Get(ctx, paid.BillingAccountID)
+	require.NoError(t, err)
+	require.Equal(t, int64(5_000_000), account.BalanceMicros)
+
+	ledgerCount, err := client.LedgerTransaction.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, ledgerCount)
+}
+
+func TestPaymentServiceLateEPayNotifyForExpiredOrderIsIgnored(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, svc := newPaymentTestService(t, "payment_epay_late_expired")
+	provider, err := svc.GetOrCreateSimulatedEPayProvider(ctx, "http://axon.local")
+	require.NoError(t, err)
+
+	checkout, err := svc.CreateRechargeCheckout(ctx, CreateRechargeCheckoutInput{
+		ProjectID:          1,
+		ProviderInstanceID: &provider.ID,
+		ProviderType:       provider.ProviderType,
+		Amount:             decimal.RequireFromString("3"),
+	})
+	require.NoError(t, err)
+
+	notify := NewSimulatedEPayNotifyFromCheckout(checkout.Params, "axonhub-simulated-epay-secret")
+	order, err := client.PaymentOrder.Query().Where(paymentorder.OrderNoEQ(checkout.OrderNo)).Only(ctx)
+	require.NoError(t, err)
+	_, err = client.PaymentOrder.UpdateOneID(order.ID).SetStatus(paymentorder.StatusExpired).SetExpiresAt(time.Now().UTC().Add(-time.Minute)).Save(ctx)
+	require.NoError(t, err)
+
+	_, err = svc.HandleEPayNotify(ctx, HandleEPayNotifyInput{Params: notify})
+	require.ErrorIs(t, err, ErrPaymentOrderNotPayable)
+
+	reloaded, err := client.PaymentOrder.Get(ctx, order.ID)
+	require.NoError(t, err)
+	require.Equal(t, paymentorder.StatusExpired, reloaded.Status)
+
+	event, err := client.PaymentEvent.Query().
+		Where(paymentevent.EventKeyEQ("epay_notify:" + notify["trade_no"])).
+		Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, paymentevent.StatusIgnored, event.Status)
+	require.Contains(t, event.Error, string(paymentorder.StatusExpired))
+
+	ledgerCount, err := client.LedgerTransaction.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Zero(t, ledgerCount)
 }
 
 func TestPaymentServiceUpsertEPayProviderCreatesAndPreservesKeyOnUpdate(t *testing.T) {

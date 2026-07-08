@@ -13,13 +13,16 @@ import (
 	"github.com/shopspring/decimal"
 	"go.uber.org/fx"
 
+	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/log"
 	"github.com/looplj/axonhub/internal/objects"
+	"github.com/looplj/axonhub/internal/server/scheduler"
 )
 
 type PaymentServiceParams struct {
@@ -48,7 +51,33 @@ func NewPaymentService(params PaymentServiceParams) *PaymentService {
 	}
 }
 
+func (s *PaymentService) RegisterScheduledTasks(ctx context.Context, sched *scheduler.Scheduler) error {
+	return sched.Register(ctx, scheduler.TaskSpec{
+		Name:        "payment-order-expiry",
+		Description: "Expire pending payment orders after their payment window closes",
+		FixRate:     time.Minute,
+	}, s.runExpiryWithSystemContext)
+}
+
+func (s *PaymentService) runExpiryWithSystemContext(ctx context.Context) {
+	ctx = authz.WithSystemBypass(ctx, "payment-order-expiry-worker")
+	ctx = ent.NewContext(ctx, s.entFromContext(ctx))
+
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	expired, err := s.ExpirePendingPaymentOrders(ctx, time.Now().UTC(), 100)
+	if err != nil {
+		log.Error(ctx, "payment order expiry worker failed", log.Cause(err))
+		return
+	}
+	if expired > 0 {
+		log.Info(ctx, "payment order expiry worker expired orders", log.Int("expired", expired))
+	}
+}
+
 const simulatedEPayProviderName = "Simulated ePay"
+const defaultPaymentOrderTTL = 30 * time.Minute
 
 type UpsertEPayProviderInput struct {
 	Name       string
@@ -253,7 +282,8 @@ func (s *PaymentService) CreateRechargeCheckout(ctx context.Context, input Creat
 		SetPurpose(paymentorder.PurposeRecharge).
 		SetAmountMicros(amountMicros).
 		SetCurrency(input.Currency).
-		SetStatus(paymentorder.StatusPending)
+		SetStatus(paymentorder.StatusPending).
+		SetExpiresAt(time.Now().UTC().Add(defaultPaymentOrderTTL))
 	if len(input.Metadata) > 0 {
 		create.SetMetadata(input.Metadata)
 	}
@@ -518,6 +548,7 @@ func (s *PaymentService) HandleEPayNotify(ctx context.Context, input HandleEPayN
 		CreatedByType:      ledgertransaction.CreatedByTypeProvider,
 		CreatedByID:        fmt.Sprint(provider.ID),
 		LedgerMemoProvider: "epay",
+		RecordIgnoredEvent: true,
 	})
 }
 
@@ -626,7 +657,8 @@ func (s *PaymentService) CreateManualRechargeOrder(ctx context.Context, input Cr
 		SetPurpose(paymentorder.PurposeRecharge).
 		SetAmountMicros(amountMicros).
 		SetCurrency(input.Currency).
-		SetStatus(paymentorder.StatusPending)
+		SetStatus(paymentorder.StatusPending).
+		SetExpiresAt(time.Now().UTC().Add(defaultPaymentOrderTTL))
 	if len(input.Metadata) > 0 {
 		create.SetMetadata(input.Metadata)
 	}
@@ -646,6 +678,19 @@ type ConfirmManualPaymentInput struct {
 	Payload         objects.JSONRawMessage
 	PaidAt          *time.Time
 	ActorID         string
+}
+
+type CancelPaymentOrderInput struct {
+	OrderNo string
+	Reason  string
+	ActorID string
+}
+
+type MakeUpPaymentOrderInput struct {
+	OrderNo string
+	Reason  string
+	ActorID string
+	PaidAt  *time.Time
 }
 
 type AdjustUserBalanceInput struct {
@@ -780,6 +825,138 @@ func (s *PaymentService) ConfirmManualPayment(ctx context.Context, input Confirm
 	})
 }
 
+func (s *PaymentService) CancelPaymentOrder(ctx context.Context, input CancelPaymentOrderInput) (*ent.PaymentOrder, error) {
+	input.OrderNo = strings.TrimSpace(input.OrderNo)
+	input.Reason = strings.TrimSpace(input.Reason)
+	if input.OrderNo == "" {
+		return nil, fmt.Errorf("order no is required")
+	}
+	if input.Reason == "" {
+		return nil, fmt.Errorf("cancel reason is required")
+	}
+
+	var canceled *ent.PaymentOrder
+	err := s.RunInTransaction(ctx, func(ctx context.Context) error {
+		client := s.entFromContext(ctx)
+		order, err := client.PaymentOrder.Query().
+			Where(paymentorder.OrderNoEQ(input.OrderNo)).
+			Only(ctx)
+		if ent.IsNotFound(err) {
+			return ErrPaymentOrderNotFound
+		}
+		if err != nil {
+			return fmt.Errorf("failed to load payment order: %w", err)
+		}
+		if order.Status == paymentorder.StatusCanceled {
+			canceled = order
+			return nil
+		}
+		if order.Status != paymentorder.StatusPending {
+			return fmt.Errorf("%w: %s", ErrPaymentOrderNotPayable, order.Status)
+		}
+
+		now := time.Now().UTC()
+		updated, err := client.PaymentOrder.UpdateOneID(order.ID).
+			SetStatus(paymentorder.StatusCanceled).
+			SetCanceledAt(now).
+			SetCancelReason(input.Reason).
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to cancel payment order: %w", err)
+		}
+
+		eventKey := fmt.Sprintf("payment_order_canceled:%d", order.ID)
+		_, err = client.PaymentEvent.Create().
+			SetEventKey(eventKey).
+			SetPaymentOrderID(order.ID).
+			SetNillableProviderInstanceID(order.ProviderInstanceID).
+			SetProviderType(paymentevent.ProviderType(order.ProviderType)).
+			SetEventType("payment_order_canceled").
+			SetStatus(paymentevent.StatusProcessed).
+			SetError(input.Reason).
+			Save(ctx)
+		if ent.IsConstraintError(err) {
+			err = nil
+		}
+		if err != nil {
+			return fmt.Errorf("failed to create payment cancellation event: %w", err)
+		}
+
+		canceled = updated
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return canceled, nil
+}
+
+func (s *PaymentService) MakeUpPaymentOrder(ctx context.Context, input MakeUpPaymentOrderInput) (*ent.PaymentOrder, error) {
+	input.OrderNo = strings.TrimSpace(input.OrderNo)
+	input.Reason = strings.TrimSpace(input.Reason)
+	if input.OrderNo == "" {
+		return nil, fmt.Errorf("order no is required")
+	}
+	if input.Reason == "" {
+		return nil, fmt.Errorf("make-up reason is required")
+	}
+	if input.PaidAt == nil {
+		now := time.Now().UTC()
+		input.PaidAt = &now
+	}
+
+	return s.confirmPaidOrder(ctx, confirmPaidOrderInput{
+		OrderNo:            input.OrderNo,
+		EventKey:           "admin_makeup:" + input.OrderNo,
+		PaidAt:             input.PaidAt,
+		ProviderType:       paymentevent.ProviderTypeManual,
+		EventType:          "admin_makeup",
+		CreatedByType:      ledgertransaction.CreatedByTypeAdmin,
+		CreatedByID:        input.ActorID,
+		LedgerMemoProvider: "admin make-up",
+		AllowNonPending:    true,
+		MakeupReason:       input.Reason,
+	})
+}
+
+func (s *PaymentService) ExpirePendingPaymentOrders(ctx context.Context, now time.Time, limit int) (int, error) {
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	if limit <= 0 {
+		limit = 100
+	}
+
+	orders, err := s.entFromContext(ctx).PaymentOrder.Query().
+		Where(
+			paymentorder.StatusEQ(paymentorder.StatusPending),
+			paymentorder.ExpiresAtNotNil(),
+			paymentorder.ExpiresAtLTE(now),
+		).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to query expired payment orders: %w", err)
+	}
+
+	var expired int
+	for _, order := range orders {
+		updated, err := s.entFromContext(ctx).PaymentOrder.Update().
+			Where(paymentorder.IDEQ(order.ID), paymentorder.StatusEQ(paymentorder.StatusPending)).
+			SetStatus(paymentorder.StatusExpired).
+			Save(ctx)
+		if err != nil {
+			return expired, fmt.Errorf("failed to expire payment order %s: %w", order.OrderNo, err)
+		}
+		if updated > 0 {
+			expired++
+		}
+	}
+
+	return expired, nil
+}
+
 type confirmPaidOrderInput struct {
 	OrderNo            string
 	EventKey           string
@@ -791,6 +968,9 @@ type confirmPaidOrderInput struct {
 	CreatedByType      ledgertransaction.CreatedByType
 	CreatedByID        string
 	LedgerMemoProvider string
+	AllowNonPending    bool
+	RecordIgnoredEvent bool
+	MakeupReason       string
 }
 
 func (s *PaymentService) confirmPaidOrder(ctx context.Context, input confirmPaidOrderInput) (*ent.PaymentOrder, error) {
@@ -812,6 +992,7 @@ func (s *PaymentService) confirmPaidOrder(ctx context.Context, input confirmPaid
 	}
 
 	var paidOrder *ent.PaymentOrder
+	var terminalErr error
 	err := s.RunInTransaction(ctx, func(ctx context.Context) error {
 		client := s.entFromContext(ctx)
 
@@ -829,8 +1010,14 @@ func (s *PaymentService) confirmPaidOrder(ctx context.Context, input confirmPaid
 			paidOrder = order
 			return nil
 		}
-		if order.Status != paymentorder.StatusPending {
-			return fmt.Errorf("%w: %s", ErrPaymentOrderNotPayable, order.Status)
+		if order.Status != paymentorder.StatusPending && !input.AllowNonPending {
+			terminalErr = fmt.Errorf("%w: %s", ErrPaymentOrderNotPayable, order.Status)
+			if input.RecordIgnoredEvent {
+				if err := s.recordIgnoredPaymentEvent(ctx, order, input, terminalErr); err != nil {
+					return err
+				}
+			}
+			return nil
 		}
 
 		event, err := client.PaymentEvent.Create().
@@ -883,6 +1070,9 @@ func (s *PaymentService) confirmPaidOrder(ctx context.Context, input confirmPaid
 			SetStatus(paymentorder.StatusPaid).
 			SetPaidAt(*input.PaidAt).
 			SetLedgerTransactionID(ledgerTx.ID)
+		if input.MakeupReason != "" {
+			update.SetMakeupReason(input.MakeupReason)
+		}
 		if input.ExternalTradeNo != "" {
 			update.SetExternalTradeNo(input.ExternalTradeNo)
 		}
@@ -905,8 +1095,48 @@ func (s *PaymentService) confirmPaidOrder(ctx context.Context, input confirmPaid
 	if err != nil {
 		return nil, err
 	}
+	if terminalErr != nil {
+		return nil, terminalErr
+	}
 
 	return paidOrder, nil
+}
+
+func (s *PaymentService) recordIgnoredPaymentEvent(ctx context.Context, order *ent.PaymentOrder, input confirmPaidOrderInput, cause error) error {
+	client := s.entFromContext(ctx)
+	event, err := client.PaymentEvent.Create().
+		SetEventKey(input.EventKey).
+		SetPaymentOrderID(order.ID).
+		SetNillableProviderInstanceID(order.ProviderInstanceID).
+		SetProviderType(input.ProviderType).
+		SetEventType(input.EventType).
+		SetPayload(input.Payload).
+		SetStatus(paymentevent.StatusIgnored).
+		SetError(cause.Error()).
+		Save(ctx)
+	if ent.IsConstraintError(err) {
+		event, err = client.PaymentEvent.Query().
+			Where(paymentevent.EventKeyEQ(input.EventKey)).
+			Only(ctx)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to create ignored payment event: %w", err)
+	}
+	if event.PaymentOrderID == nil || *event.PaymentOrderID != order.ID {
+		return fmt.Errorf("payment event %q does not belong to order %s", input.EventKey, input.OrderNo)
+	}
+
+	if event.Status != paymentevent.StatusIgnored {
+		_, err = client.PaymentEvent.UpdateOneID(event.ID).
+			SetStatus(paymentevent.StatusIgnored).
+			SetError(cause.Error()).
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to mark payment event ignored: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func paymentLedgerIdempotencyKey(orderID int) string {

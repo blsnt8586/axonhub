@@ -2105,7 +2105,7 @@ func (_m *PaymentOrder) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "PaymentOrder",
-		Fields: make([]*Field, 15),
+		Fields: make([]*Field, 23),
 		Edges:  make([]*Edge, 4),
 	}
 	var buf []byte
@@ -2197,10 +2197,74 @@ func (_m *PaymentOrder) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "status",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.ExternalTradeNo); err != nil {
+	if buf, err = json.Marshal(_m.ExpiresAt); err != nil {
 		return nil, err
 	}
 	node.Fields[11] = &Field{
+		Type:  "time.Time",
+		Name:  "expires_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.CanceledAt); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
+		Type:  "time.Time",
+		Name:  "canceled_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.CancelReason); err != nil {
+		return nil, err
+	}
+	node.Fields[13] = &Field{
+		Type:  "string",
+		Name:  "cancel_reason",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.MakeupReason); err != nil {
+		return nil, err
+	}
+	node.Fields[14] = &Field{
+		Type:  "string",
+		Name:  "makeup_reason",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.FailureReason); err != nil {
+		return nil, err
+	}
+	node.Fields[15] = &Field{
+		Type:  "string",
+		Name:  "failure_reason",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RefundedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[16] = &Field{
+		Type:  "time.Time",
+		Name:  "refunded_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RefundReason); err != nil {
+		return nil, err
+	}
+	node.Fields[17] = &Field{
+		Type:  "string",
+		Name:  "refund_reason",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RefundAmountMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[18] = &Field{
+		Type:  "int64",
+		Name:  "refund_amount_micros",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ExternalTradeNo); err != nil {
+		return nil, err
+	}
+	node.Fields[19] = &Field{
 		Type:  "string",
 		Name:  "external_trade_no",
 		Value: string(buf),
@@ -2208,7 +2272,7 @@ func (_m *PaymentOrder) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.PaidAt); err != nil {
 		return nil, err
 	}
-	node.Fields[12] = &Field{
+	node.Fields[20] = &Field{
 		Type:  "time.Time",
 		Name:  "paid_at",
 		Value: string(buf),
@@ -2216,7 +2280,7 @@ func (_m *PaymentOrder) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.LedgerTransactionID); err != nil {
 		return nil, err
 	}
-	node.Fields[13] = &Field{
+	node.Fields[21] = &Field{
 		Type:  "int",
 		Name:  "ledger_transaction_id",
 		Value: string(buf),
@@ -2224,7 +2288,7 @@ func (_m *PaymentOrder) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.Metadata); err != nil {
 		return nil, err
 	}
-	node.Fields[14] = &Field{
+	node.Fields[22] = &Field{
 		Type:  "objects.JSONRawMessage",
 		Name:  "metadata",
 		Value: string(buf),

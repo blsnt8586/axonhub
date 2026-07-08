@@ -141,6 +141,118 @@ func (_c *PaymentOrderCreate) SetNillableStatus(v *paymentorder.Status) *Payment
 	return _c
 }
 
+// SetExpiresAt sets the "expires_at" field.
+func (_c *PaymentOrderCreate) SetExpiresAt(v time.Time) *PaymentOrderCreate {
+	_c.mutation.SetExpiresAt(v)
+	return _c
+}
+
+// SetNillableExpiresAt sets the "expires_at" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableExpiresAt(v *time.Time) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetExpiresAt(*v)
+	}
+	return _c
+}
+
+// SetCanceledAt sets the "canceled_at" field.
+func (_c *PaymentOrderCreate) SetCanceledAt(v time.Time) *PaymentOrderCreate {
+	_c.mutation.SetCanceledAt(v)
+	return _c
+}
+
+// SetNillableCanceledAt sets the "canceled_at" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableCanceledAt(v *time.Time) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetCanceledAt(*v)
+	}
+	return _c
+}
+
+// SetCancelReason sets the "cancel_reason" field.
+func (_c *PaymentOrderCreate) SetCancelReason(v string) *PaymentOrderCreate {
+	_c.mutation.SetCancelReason(v)
+	return _c
+}
+
+// SetNillableCancelReason sets the "cancel_reason" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableCancelReason(v *string) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetCancelReason(*v)
+	}
+	return _c
+}
+
+// SetMakeupReason sets the "makeup_reason" field.
+func (_c *PaymentOrderCreate) SetMakeupReason(v string) *PaymentOrderCreate {
+	_c.mutation.SetMakeupReason(v)
+	return _c
+}
+
+// SetNillableMakeupReason sets the "makeup_reason" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableMakeupReason(v *string) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetMakeupReason(*v)
+	}
+	return _c
+}
+
+// SetFailureReason sets the "failure_reason" field.
+func (_c *PaymentOrderCreate) SetFailureReason(v string) *PaymentOrderCreate {
+	_c.mutation.SetFailureReason(v)
+	return _c
+}
+
+// SetNillableFailureReason sets the "failure_reason" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableFailureReason(v *string) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetFailureReason(*v)
+	}
+	return _c
+}
+
+// SetRefundedAt sets the "refunded_at" field.
+func (_c *PaymentOrderCreate) SetRefundedAt(v time.Time) *PaymentOrderCreate {
+	_c.mutation.SetRefundedAt(v)
+	return _c
+}
+
+// SetNillableRefundedAt sets the "refunded_at" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableRefundedAt(v *time.Time) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetRefundedAt(*v)
+	}
+	return _c
+}
+
+// SetRefundReason sets the "refund_reason" field.
+func (_c *PaymentOrderCreate) SetRefundReason(v string) *PaymentOrderCreate {
+	_c.mutation.SetRefundReason(v)
+	return _c
+}
+
+// SetNillableRefundReason sets the "refund_reason" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableRefundReason(v *string) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetRefundReason(*v)
+	}
+	return _c
+}
+
+// SetRefundAmountMicros sets the "refund_amount_micros" field.
+func (_c *PaymentOrderCreate) SetRefundAmountMicros(v int64) *PaymentOrderCreate {
+	_c.mutation.SetRefundAmountMicros(v)
+	return _c
+}
+
+// SetNillableRefundAmountMicros sets the "refund_amount_micros" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableRefundAmountMicros(v *int64) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetRefundAmountMicros(*v)
+	}
+	return _c
+}
+
 // SetExternalTradeNo sets the "external_trade_no" field.
 func (_c *PaymentOrderCreate) SetExternalTradeNo(v string) *PaymentOrderCreate {
 	_c.mutation.SetExternalTradeNo(v)
@@ -282,6 +394,26 @@ func (_c *PaymentOrderCreate) defaults() error {
 		v := paymentorder.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.CancelReason(); !ok {
+		v := paymentorder.DefaultCancelReason
+		_c.mutation.SetCancelReason(v)
+	}
+	if _, ok := _c.mutation.MakeupReason(); !ok {
+		v := paymentorder.DefaultMakeupReason
+		_c.mutation.SetMakeupReason(v)
+	}
+	if _, ok := _c.mutation.FailureReason(); !ok {
+		v := paymentorder.DefaultFailureReason
+		_c.mutation.SetFailureReason(v)
+	}
+	if _, ok := _c.mutation.RefundReason(); !ok {
+		v := paymentorder.DefaultRefundReason
+		_c.mutation.SetRefundReason(v)
+	}
+	if _, ok := _c.mutation.RefundAmountMicros(); !ok {
+		v := paymentorder.DefaultRefundAmountMicros
+		_c.mutation.SetRefundAmountMicros(v)
+	}
 	return nil
 }
 
@@ -329,6 +461,26 @@ func (_c *PaymentOrderCreate) check() error {
 	if v, ok := _c.mutation.Status(); ok {
 		if err := paymentorder.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.status": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.CancelReason(); !ok {
+		return &ValidationError{Name: "cancel_reason", err: errors.New(`ent: missing required field "PaymentOrder.cancel_reason"`)}
+	}
+	if _, ok := _c.mutation.MakeupReason(); !ok {
+		return &ValidationError{Name: "makeup_reason", err: errors.New(`ent: missing required field "PaymentOrder.makeup_reason"`)}
+	}
+	if _, ok := _c.mutation.FailureReason(); !ok {
+		return &ValidationError{Name: "failure_reason", err: errors.New(`ent: missing required field "PaymentOrder.failure_reason"`)}
+	}
+	if _, ok := _c.mutation.RefundReason(); !ok {
+		return &ValidationError{Name: "refund_reason", err: errors.New(`ent: missing required field "PaymentOrder.refund_reason"`)}
+	}
+	if _, ok := _c.mutation.RefundAmountMicros(); !ok {
+		return &ValidationError{Name: "refund_amount_micros", err: errors.New(`ent: missing required field "PaymentOrder.refund_amount_micros"`)}
+	}
+	if v, ok := _c.mutation.RefundAmountMicros(); ok {
+		if err := paymentorder.RefundAmountMicrosValidator(v); err != nil {
+			return &ValidationError{Name: "refund_amount_micros", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.refund_amount_micros": %w`, err)}
 		}
 	}
 	if len(_c.mutation.BillingAccountIDs()) == 0 {
@@ -396,6 +548,38 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(paymentorder.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
+	}
+	if value, ok := _c.mutation.ExpiresAt(); ok {
+		_spec.SetField(paymentorder.FieldExpiresAt, field.TypeTime, value)
+		_node.ExpiresAt = &value
+	}
+	if value, ok := _c.mutation.CanceledAt(); ok {
+		_spec.SetField(paymentorder.FieldCanceledAt, field.TypeTime, value)
+		_node.CanceledAt = &value
+	}
+	if value, ok := _c.mutation.CancelReason(); ok {
+		_spec.SetField(paymentorder.FieldCancelReason, field.TypeString, value)
+		_node.CancelReason = value
+	}
+	if value, ok := _c.mutation.MakeupReason(); ok {
+		_spec.SetField(paymentorder.FieldMakeupReason, field.TypeString, value)
+		_node.MakeupReason = value
+	}
+	if value, ok := _c.mutation.FailureReason(); ok {
+		_spec.SetField(paymentorder.FieldFailureReason, field.TypeString, value)
+		_node.FailureReason = value
+	}
+	if value, ok := _c.mutation.RefundedAt(); ok {
+		_spec.SetField(paymentorder.FieldRefundedAt, field.TypeTime, value)
+		_node.RefundedAt = &value
+	}
+	if value, ok := _c.mutation.RefundReason(); ok {
+		_spec.SetField(paymentorder.FieldRefundReason, field.TypeString, value)
+		_node.RefundReason = value
+	}
+	if value, ok := _c.mutation.RefundAmountMicros(); ok {
+		_spec.SetField(paymentorder.FieldRefundAmountMicros, field.TypeInt64, value)
+		_node.RefundAmountMicros = value
 	}
 	if value, ok := _c.mutation.ExternalTradeNo(); ok {
 		_spec.SetField(paymentorder.FieldExternalTradeNo, field.TypeString, value)
@@ -549,6 +733,126 @@ func (u *PaymentOrderUpsert) SetStatus(v paymentorder.Status) *PaymentOrderUpser
 // UpdateStatus sets the "status" field to the value that was provided on create.
 func (u *PaymentOrderUpsert) UpdateStatus() *PaymentOrderUpsert {
 	u.SetExcluded(paymentorder.FieldStatus)
+	return u
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (u *PaymentOrderUpsert) SetExpiresAt(v time.Time) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldExpiresAt, v)
+	return u
+}
+
+// UpdateExpiresAt sets the "expires_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateExpiresAt() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldExpiresAt)
+	return u
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (u *PaymentOrderUpsert) ClearExpiresAt() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldExpiresAt)
+	return u
+}
+
+// SetCanceledAt sets the "canceled_at" field.
+func (u *PaymentOrderUpsert) SetCanceledAt(v time.Time) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldCanceledAt, v)
+	return u
+}
+
+// UpdateCanceledAt sets the "canceled_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateCanceledAt() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldCanceledAt)
+	return u
+}
+
+// ClearCanceledAt clears the value of the "canceled_at" field.
+func (u *PaymentOrderUpsert) ClearCanceledAt() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldCanceledAt)
+	return u
+}
+
+// SetCancelReason sets the "cancel_reason" field.
+func (u *PaymentOrderUpsert) SetCancelReason(v string) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldCancelReason, v)
+	return u
+}
+
+// UpdateCancelReason sets the "cancel_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateCancelReason() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldCancelReason)
+	return u
+}
+
+// SetMakeupReason sets the "makeup_reason" field.
+func (u *PaymentOrderUpsert) SetMakeupReason(v string) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldMakeupReason, v)
+	return u
+}
+
+// UpdateMakeupReason sets the "makeup_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateMakeupReason() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldMakeupReason)
+	return u
+}
+
+// SetFailureReason sets the "failure_reason" field.
+func (u *PaymentOrderUpsert) SetFailureReason(v string) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldFailureReason, v)
+	return u
+}
+
+// UpdateFailureReason sets the "failure_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateFailureReason() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldFailureReason)
+	return u
+}
+
+// SetRefundedAt sets the "refunded_at" field.
+func (u *PaymentOrderUpsert) SetRefundedAt(v time.Time) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldRefundedAt, v)
+	return u
+}
+
+// UpdateRefundedAt sets the "refunded_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateRefundedAt() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldRefundedAt)
+	return u
+}
+
+// ClearRefundedAt clears the value of the "refunded_at" field.
+func (u *PaymentOrderUpsert) ClearRefundedAt() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldRefundedAt)
+	return u
+}
+
+// SetRefundReason sets the "refund_reason" field.
+func (u *PaymentOrderUpsert) SetRefundReason(v string) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldRefundReason, v)
+	return u
+}
+
+// UpdateRefundReason sets the "refund_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateRefundReason() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldRefundReason)
+	return u
+}
+
+// SetRefundAmountMicros sets the "refund_amount_micros" field.
+func (u *PaymentOrderUpsert) SetRefundAmountMicros(v int64) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldRefundAmountMicros, v)
+	return u
+}
+
+// UpdateRefundAmountMicros sets the "refund_amount_micros" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateRefundAmountMicros() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldRefundAmountMicros)
+	return u
+}
+
+// AddRefundAmountMicros adds v to the "refund_amount_micros" field.
+func (u *PaymentOrderUpsert) AddRefundAmountMicros(v int64) *PaymentOrderUpsert {
+	u.Add(paymentorder.FieldRefundAmountMicros, v)
 	return u
 }
 
@@ -718,6 +1022,146 @@ func (u *PaymentOrderUpsertOne) SetStatus(v paymentorder.Status) *PaymentOrderUp
 func (u *PaymentOrderUpsertOne) UpdateStatus() *PaymentOrderUpsertOne {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (u *PaymentOrderUpsertOne) SetExpiresAt(v time.Time) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetExpiresAt(v)
+	})
+}
+
+// UpdateExpiresAt sets the "expires_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateExpiresAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateExpiresAt()
+	})
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (u *PaymentOrderUpsertOne) ClearExpiresAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearExpiresAt()
+	})
+}
+
+// SetCanceledAt sets the "canceled_at" field.
+func (u *PaymentOrderUpsertOne) SetCanceledAt(v time.Time) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetCanceledAt(v)
+	})
+}
+
+// UpdateCanceledAt sets the "canceled_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateCanceledAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateCanceledAt()
+	})
+}
+
+// ClearCanceledAt clears the value of the "canceled_at" field.
+func (u *PaymentOrderUpsertOne) ClearCanceledAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearCanceledAt()
+	})
+}
+
+// SetCancelReason sets the "cancel_reason" field.
+func (u *PaymentOrderUpsertOne) SetCancelReason(v string) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetCancelReason(v)
+	})
+}
+
+// UpdateCancelReason sets the "cancel_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateCancelReason() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateCancelReason()
+	})
+}
+
+// SetMakeupReason sets the "makeup_reason" field.
+func (u *PaymentOrderUpsertOne) SetMakeupReason(v string) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetMakeupReason(v)
+	})
+}
+
+// UpdateMakeupReason sets the "makeup_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateMakeupReason() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateMakeupReason()
+	})
+}
+
+// SetFailureReason sets the "failure_reason" field.
+func (u *PaymentOrderUpsertOne) SetFailureReason(v string) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetFailureReason(v)
+	})
+}
+
+// UpdateFailureReason sets the "failure_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateFailureReason() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateFailureReason()
+	})
+}
+
+// SetRefundedAt sets the "refunded_at" field.
+func (u *PaymentOrderUpsertOne) SetRefundedAt(v time.Time) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetRefundedAt(v)
+	})
+}
+
+// UpdateRefundedAt sets the "refunded_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateRefundedAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateRefundedAt()
+	})
+}
+
+// ClearRefundedAt clears the value of the "refunded_at" field.
+func (u *PaymentOrderUpsertOne) ClearRefundedAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearRefundedAt()
+	})
+}
+
+// SetRefundReason sets the "refund_reason" field.
+func (u *PaymentOrderUpsertOne) SetRefundReason(v string) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetRefundReason(v)
+	})
+}
+
+// UpdateRefundReason sets the "refund_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateRefundReason() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateRefundReason()
+	})
+}
+
+// SetRefundAmountMicros sets the "refund_amount_micros" field.
+func (u *PaymentOrderUpsertOne) SetRefundAmountMicros(v int64) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetRefundAmountMicros(v)
+	})
+}
+
+// AddRefundAmountMicros adds v to the "refund_amount_micros" field.
+func (u *PaymentOrderUpsertOne) AddRefundAmountMicros(v int64) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddRefundAmountMicros(v)
+	})
+}
+
+// UpdateRefundAmountMicros sets the "refund_amount_micros" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateRefundAmountMicros() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateRefundAmountMicros()
 	})
 }
 
@@ -1065,6 +1509,146 @@ func (u *PaymentOrderUpsertBulk) SetStatus(v paymentorder.Status) *PaymentOrderU
 func (u *PaymentOrderUpsertBulk) UpdateStatus() *PaymentOrderUpsertBulk {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (u *PaymentOrderUpsertBulk) SetExpiresAt(v time.Time) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetExpiresAt(v)
+	})
+}
+
+// UpdateExpiresAt sets the "expires_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateExpiresAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateExpiresAt()
+	})
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (u *PaymentOrderUpsertBulk) ClearExpiresAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearExpiresAt()
+	})
+}
+
+// SetCanceledAt sets the "canceled_at" field.
+func (u *PaymentOrderUpsertBulk) SetCanceledAt(v time.Time) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetCanceledAt(v)
+	})
+}
+
+// UpdateCanceledAt sets the "canceled_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateCanceledAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateCanceledAt()
+	})
+}
+
+// ClearCanceledAt clears the value of the "canceled_at" field.
+func (u *PaymentOrderUpsertBulk) ClearCanceledAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearCanceledAt()
+	})
+}
+
+// SetCancelReason sets the "cancel_reason" field.
+func (u *PaymentOrderUpsertBulk) SetCancelReason(v string) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetCancelReason(v)
+	})
+}
+
+// UpdateCancelReason sets the "cancel_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateCancelReason() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateCancelReason()
+	})
+}
+
+// SetMakeupReason sets the "makeup_reason" field.
+func (u *PaymentOrderUpsertBulk) SetMakeupReason(v string) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetMakeupReason(v)
+	})
+}
+
+// UpdateMakeupReason sets the "makeup_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateMakeupReason() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateMakeupReason()
+	})
+}
+
+// SetFailureReason sets the "failure_reason" field.
+func (u *PaymentOrderUpsertBulk) SetFailureReason(v string) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetFailureReason(v)
+	})
+}
+
+// UpdateFailureReason sets the "failure_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateFailureReason() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateFailureReason()
+	})
+}
+
+// SetRefundedAt sets the "refunded_at" field.
+func (u *PaymentOrderUpsertBulk) SetRefundedAt(v time.Time) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetRefundedAt(v)
+	})
+}
+
+// UpdateRefundedAt sets the "refunded_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateRefundedAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateRefundedAt()
+	})
+}
+
+// ClearRefundedAt clears the value of the "refunded_at" field.
+func (u *PaymentOrderUpsertBulk) ClearRefundedAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearRefundedAt()
+	})
+}
+
+// SetRefundReason sets the "refund_reason" field.
+func (u *PaymentOrderUpsertBulk) SetRefundReason(v string) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetRefundReason(v)
+	})
+}
+
+// UpdateRefundReason sets the "refund_reason" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateRefundReason() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateRefundReason()
+	})
+}
+
+// SetRefundAmountMicros sets the "refund_amount_micros" field.
+func (u *PaymentOrderUpsertBulk) SetRefundAmountMicros(v int64) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetRefundAmountMicros(v)
+	})
+}
+
+// AddRefundAmountMicros adds v to the "refund_amount_micros" field.
+func (u *PaymentOrderUpsertBulk) AddRefundAmountMicros(v int64) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddRefundAmountMicros(v)
+	})
+}
+
+// UpdateRefundAmountMicros sets the "refund_amount_micros" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateRefundAmountMicros() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateRefundAmountMicros()
 	})
 }
 

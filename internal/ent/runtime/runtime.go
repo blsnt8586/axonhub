@@ -771,6 +771,28 @@ func init() {
 	paymentorderDescCurrency := paymentorderFields[7].Descriptor()
 	// paymentorder.DefaultCurrency holds the default value on creation for the currency field.
 	paymentorder.DefaultCurrency = paymentorderDescCurrency.Default.(string)
+	// paymentorderDescCancelReason is the schema descriptor for cancel_reason field.
+	paymentorderDescCancelReason := paymentorderFields[11].Descriptor()
+	// paymentorder.DefaultCancelReason holds the default value on creation for the cancel_reason field.
+	paymentorder.DefaultCancelReason = paymentorderDescCancelReason.Default.(string)
+	// paymentorderDescMakeupReason is the schema descriptor for makeup_reason field.
+	paymentorderDescMakeupReason := paymentorderFields[12].Descriptor()
+	// paymentorder.DefaultMakeupReason holds the default value on creation for the makeup_reason field.
+	paymentorder.DefaultMakeupReason = paymentorderDescMakeupReason.Default.(string)
+	// paymentorderDescFailureReason is the schema descriptor for failure_reason field.
+	paymentorderDescFailureReason := paymentorderFields[13].Descriptor()
+	// paymentorder.DefaultFailureReason holds the default value on creation for the failure_reason field.
+	paymentorder.DefaultFailureReason = paymentorderDescFailureReason.Default.(string)
+	// paymentorderDescRefundReason is the schema descriptor for refund_reason field.
+	paymentorderDescRefundReason := paymentorderFields[15].Descriptor()
+	// paymentorder.DefaultRefundReason holds the default value on creation for the refund_reason field.
+	paymentorder.DefaultRefundReason = paymentorderDescRefundReason.Default.(string)
+	// paymentorderDescRefundAmountMicros is the schema descriptor for refund_amount_micros field.
+	paymentorderDescRefundAmountMicros := paymentorderFields[16].Descriptor()
+	// paymentorder.DefaultRefundAmountMicros holds the default value on creation for the refund_amount_micros field.
+	paymentorder.DefaultRefundAmountMicros = paymentorderDescRefundAmountMicros.Default.(int64)
+	// paymentorder.RefundAmountMicrosValidator is a validator for the "refund_amount_micros" field. It is called by the builders before save.
+	paymentorder.RefundAmountMicrosValidator = paymentorderDescRefundAmountMicros.Validators[0].(func(int64) error)
 	paymentproviderinstanceMixin := schema.PaymentProviderInstance{}.Mixin()
 	paymentproviderinstance.Policy = privacy.NewPolicies(schema.PaymentProviderInstance{})
 	paymentproviderinstance.Hooks[0] = func(next ent.Mutator) ent.Mutator {

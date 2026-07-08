@@ -5057,6 +5057,17 @@ type PaymentOrder implements Node {
   """
   status: PaymentOrderStatus!
   """
+  When a pending order is no longer payable automatically.
+  """
+  expiresAt: Time
+  canceledAt: Time
+  cancelReason: String!
+  makeupReason: String!
+  failureReason: String!
+  refundedAt: Time
+  refundReason: String!
+  refundAmountMicros: Int!
+  """
   Provider-side trade number.
   """
   externalTradeNo: String
@@ -5313,6 +5324,120 @@ input PaymentOrderWhereInput {
   statusNEQ: PaymentOrderStatus
   statusIn: [PaymentOrderStatus!]
   statusNotIn: [PaymentOrderStatus!]
+  """
+  expires_at field predicates
+  """
+  expiresAt: Time
+  expiresAtNEQ: Time
+  expiresAtIn: [Time!]
+  expiresAtNotIn: [Time!]
+  expiresAtGT: Time
+  expiresAtGTE: Time
+  expiresAtLT: Time
+  expiresAtLTE: Time
+  expiresAtIsNil: Boolean
+  expiresAtNotNil: Boolean
+  """
+  canceled_at field predicates
+  """
+  canceledAt: Time
+  canceledAtNEQ: Time
+  canceledAtIn: [Time!]
+  canceledAtNotIn: [Time!]
+  canceledAtGT: Time
+  canceledAtGTE: Time
+  canceledAtLT: Time
+  canceledAtLTE: Time
+  canceledAtIsNil: Boolean
+  canceledAtNotNil: Boolean
+  """
+  cancel_reason field predicates
+  """
+  cancelReason: String
+  cancelReasonNEQ: String
+  cancelReasonIn: [String!]
+  cancelReasonNotIn: [String!]
+  cancelReasonGT: String
+  cancelReasonGTE: String
+  cancelReasonLT: String
+  cancelReasonLTE: String
+  cancelReasonContains: String
+  cancelReasonHasPrefix: String
+  cancelReasonHasSuffix: String
+  cancelReasonEqualFold: String
+  cancelReasonContainsFold: String
+  """
+  makeup_reason field predicates
+  """
+  makeupReason: String
+  makeupReasonNEQ: String
+  makeupReasonIn: [String!]
+  makeupReasonNotIn: [String!]
+  makeupReasonGT: String
+  makeupReasonGTE: String
+  makeupReasonLT: String
+  makeupReasonLTE: String
+  makeupReasonContains: String
+  makeupReasonHasPrefix: String
+  makeupReasonHasSuffix: String
+  makeupReasonEqualFold: String
+  makeupReasonContainsFold: String
+  """
+  failure_reason field predicates
+  """
+  failureReason: String
+  failureReasonNEQ: String
+  failureReasonIn: [String!]
+  failureReasonNotIn: [String!]
+  failureReasonGT: String
+  failureReasonGTE: String
+  failureReasonLT: String
+  failureReasonLTE: String
+  failureReasonContains: String
+  failureReasonHasPrefix: String
+  failureReasonHasSuffix: String
+  failureReasonEqualFold: String
+  failureReasonContainsFold: String
+  """
+  refunded_at field predicates
+  """
+  refundedAt: Time
+  refundedAtNEQ: Time
+  refundedAtIn: [Time!]
+  refundedAtNotIn: [Time!]
+  refundedAtGT: Time
+  refundedAtGTE: Time
+  refundedAtLT: Time
+  refundedAtLTE: Time
+  refundedAtIsNil: Boolean
+  refundedAtNotNil: Boolean
+  """
+  refund_reason field predicates
+  """
+  refundReason: String
+  refundReasonNEQ: String
+  refundReasonIn: [String!]
+  refundReasonNotIn: [String!]
+  refundReasonGT: String
+  refundReasonGTE: String
+  refundReasonLT: String
+  refundReasonLTE: String
+  refundReasonContains: String
+  refundReasonHasPrefix: String
+  refundReasonHasSuffix: String
+  refundReasonEqualFold: String
+  refundReasonContainsFold: String
+  """
+  refund_amount_micros field predicates
+  """
+  refundAmountMicros: Int
+  refundAmountMicrosNEQ: Int
+  refundAmountMicrosIn: [Int!]
+  refundAmountMicrosNotIn: [Int!]
+  refundAmountMicrosGT: Int
+  refundAmountMicrosGTE: Int
+  refundAmountMicrosLT: Int
+  refundAmountMicrosLTE: Int
   """
   external_trade_no field predicates
   """

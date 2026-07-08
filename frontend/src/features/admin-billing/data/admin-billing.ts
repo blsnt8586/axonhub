@@ -92,6 +92,14 @@ export interface PaymentOrder {
   status: PaymentOrderStatus;
   externalTradeNo?: string | null;
   paidAt?: string | null;
+  expiresAt?: string | null;
+  canceledAt?: string | null;
+  cancelReason: string;
+  makeupReason: string;
+  failureReason: string;
+  refundedAt?: string | null;
+  refundReason: string;
+  refundAmountMicros: number;
 }
 
 export interface UsageBillingRecord {
@@ -142,6 +150,7 @@ export interface PaymentEvent {
   providerInstanceID?: string | null;
   providerType: PaymentProviderType;
   eventType: string;
+  payload?: unknown;
   status: PaymentEventStatus;
   error: string;
 }
@@ -314,6 +323,14 @@ const USER_BILLING_DETAIL_QUERY = `
           status
           externalTradeNo
           paidAt
+          expiresAt
+          canceledAt
+          cancelReason
+          makeupReason
+          failureReason
+          refundedAt
+          refundReason
+          refundAmountMicros
         }
       }
     }
@@ -434,6 +451,14 @@ const ADMIN_PAYMENT_ORDERS_QUERY = `
           status
           externalTradeNo
           paidAt
+          expiresAt
+          canceledAt
+          cancelReason
+          makeupReason
+          failureReason
+          refundedAt
+          refundReason
+          refundAmountMicros
         }
       }
     }
@@ -452,6 +477,7 @@ const ADMIN_PAYMENT_EVENTS_QUERY = `
           providerInstanceID
           providerType
           eventType
+          payload
           status
           error
         }
@@ -486,6 +512,33 @@ const UPDATE_USER_BILLING_ACCOUNT_MUTATION = `
       heldBalanceMicros
       creditLimitMicros
       status
+    }
+  }
+`;
+
+const CANCEL_PAYMENT_ORDER_MUTATION = `
+  mutation CancelPaymentOrder($input: CancelPaymentOrderInput!) {
+    cancelPaymentOrder(input: $input) {
+      id
+      orderNo
+      status
+      canceledAt
+      cancelReason
+      failureReason
+    }
+  }
+`;
+
+const MAKE_UP_PAYMENT_ORDER_MUTATION = `
+  mutation MakeUpPaymentOrder($input: MakeUpPaymentOrderInput!) {
+    makeUpPaymentOrder(input: $input) {
+      id
+      orderNo
+      status
+      paidAt
+      ledgerTransactionID
+      makeupReason
+      failureReason
     }
   }
 `;
@@ -670,6 +723,36 @@ export function useUpdateUserBillingAccount() {
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'user-detail', variables.userId] });
+    },
+  });
+}
+
+export function useCancelPaymentOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { orderNo: string; reason: string }) => {
+      const data = await graphqlRequest<{ cancelPaymentOrder: PaymentOrder }>(CANCEL_PAYMENT_ORDER_MUTATION, { input });
+      return data.cancelPaymentOrder;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useMakeUpPaymentOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { orderNo: string; reason: string; paidAt?: string }) => {
+      const data = await graphqlRequest<{ makeUpPaymentOrder: PaymentOrder }>(MAKE_UP_PAYMENT_ORDER_MUTATION, { input });
+      return data.makeUpPaymentOrder;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
     },
   });
 }

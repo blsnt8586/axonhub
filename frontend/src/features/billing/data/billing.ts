@@ -27,6 +27,14 @@ export interface PaymentOrder {
   status: PaymentOrderStatus;
   externalTradeNo?: string | null;
   paidAt?: string | null;
+  expiresAt?: string | null;
+  canceledAt?: string | null;
+  cancelReason: string;
+  makeupReason: string;
+  failureReason: string;
+  refundedAt?: string | null;
+  refundReason: string;
+  refundAmountMicros: number;
 }
 
 export interface LedgerTransaction {
@@ -92,6 +100,14 @@ const BILLING_OVERVIEW_QUERY = `
           status
           externalTradeNo
           paidAt
+          expiresAt
+          canceledAt
+          cancelReason
+          makeupReason
+          failureReason
+          refundedAt
+          refundReason
+          refundAmountMicros
         }
       }
     }

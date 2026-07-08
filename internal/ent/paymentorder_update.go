@@ -53,6 +53,143 @@ func (_u *PaymentOrderUpdate) SetNillableStatus(v *paymentorder.Status) *Payment
 	return _u
 }
 
+// SetExpiresAt sets the "expires_at" field.
+func (_u *PaymentOrderUpdate) SetExpiresAt(v time.Time) *PaymentOrderUpdate {
+	_u.mutation.SetExpiresAt(v)
+	return _u
+}
+
+// SetNillableExpiresAt sets the "expires_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableExpiresAt(v *time.Time) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (_u *PaymentOrderUpdate) ClearExpiresAt() *PaymentOrderUpdate {
+	_u.mutation.ClearExpiresAt()
+	return _u
+}
+
+// SetCanceledAt sets the "canceled_at" field.
+func (_u *PaymentOrderUpdate) SetCanceledAt(v time.Time) *PaymentOrderUpdate {
+	_u.mutation.SetCanceledAt(v)
+	return _u
+}
+
+// SetNillableCanceledAt sets the "canceled_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableCanceledAt(v *time.Time) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetCanceledAt(*v)
+	}
+	return _u
+}
+
+// ClearCanceledAt clears the value of the "canceled_at" field.
+func (_u *PaymentOrderUpdate) ClearCanceledAt() *PaymentOrderUpdate {
+	_u.mutation.ClearCanceledAt()
+	return _u
+}
+
+// SetCancelReason sets the "cancel_reason" field.
+func (_u *PaymentOrderUpdate) SetCancelReason(v string) *PaymentOrderUpdate {
+	_u.mutation.SetCancelReason(v)
+	return _u
+}
+
+// SetNillableCancelReason sets the "cancel_reason" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableCancelReason(v *string) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetCancelReason(*v)
+	}
+	return _u
+}
+
+// SetMakeupReason sets the "makeup_reason" field.
+func (_u *PaymentOrderUpdate) SetMakeupReason(v string) *PaymentOrderUpdate {
+	_u.mutation.SetMakeupReason(v)
+	return _u
+}
+
+// SetNillableMakeupReason sets the "makeup_reason" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableMakeupReason(v *string) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetMakeupReason(*v)
+	}
+	return _u
+}
+
+// SetFailureReason sets the "failure_reason" field.
+func (_u *PaymentOrderUpdate) SetFailureReason(v string) *PaymentOrderUpdate {
+	_u.mutation.SetFailureReason(v)
+	return _u
+}
+
+// SetNillableFailureReason sets the "failure_reason" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableFailureReason(v *string) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetFailureReason(*v)
+	}
+	return _u
+}
+
+// SetRefundedAt sets the "refunded_at" field.
+func (_u *PaymentOrderUpdate) SetRefundedAt(v time.Time) *PaymentOrderUpdate {
+	_u.mutation.SetRefundedAt(v)
+	return _u
+}
+
+// SetNillableRefundedAt sets the "refunded_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableRefundedAt(v *time.Time) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetRefundedAt(*v)
+	}
+	return _u
+}
+
+// ClearRefundedAt clears the value of the "refunded_at" field.
+func (_u *PaymentOrderUpdate) ClearRefundedAt() *PaymentOrderUpdate {
+	_u.mutation.ClearRefundedAt()
+	return _u
+}
+
+// SetRefundReason sets the "refund_reason" field.
+func (_u *PaymentOrderUpdate) SetRefundReason(v string) *PaymentOrderUpdate {
+	_u.mutation.SetRefundReason(v)
+	return _u
+}
+
+// SetNillableRefundReason sets the "refund_reason" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableRefundReason(v *string) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetRefundReason(*v)
+	}
+	return _u
+}
+
+// SetRefundAmountMicros sets the "refund_amount_micros" field.
+func (_u *PaymentOrderUpdate) SetRefundAmountMicros(v int64) *PaymentOrderUpdate {
+	_u.mutation.ResetRefundAmountMicros()
+	_u.mutation.SetRefundAmountMicros(v)
+	return _u
+}
+
+// SetNillableRefundAmountMicros sets the "refund_amount_micros" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableRefundAmountMicros(v *int64) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetRefundAmountMicros(*v)
+	}
+	return _u
+}
+
+// AddRefundAmountMicros adds value to the "refund_amount_micros" field.
+func (_u *PaymentOrderUpdate) AddRefundAmountMicros(v int64) *PaymentOrderUpdate {
+	_u.mutation.AddRefundAmountMicros(v)
+	return _u
+}
+
 // SetExternalTradeNo sets the "external_trade_no" field.
 func (_u *PaymentOrderUpdate) SetExternalTradeNo(v string) *PaymentOrderUpdate {
 	_u.mutation.SetExternalTradeNo(v)
@@ -232,6 +369,11 @@ func (_u *PaymentOrderUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.RefundAmountMicros(); ok {
+		if err := paymentorder.RefundAmountMicrosValidator(v); err != nil {
+			return &ValidationError{Name: "refund_amount_micros", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.refund_amount_micros": %w`, err)}
+		}
+	}
 	if _u.mutation.BillingAccountCleared() && len(_u.mutation.BillingAccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PaymentOrder.billing_account"`)
 	}
@@ -261,6 +403,42 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(paymentorder.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.ExpiresAt(); ok {
+		_spec.SetField(paymentorder.FieldExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiresAtCleared() {
+		_spec.ClearField(paymentorder.FieldExpiresAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.CanceledAt(); ok {
+		_spec.SetField(paymentorder.FieldCanceledAt, field.TypeTime, value)
+	}
+	if _u.mutation.CanceledAtCleared() {
+		_spec.ClearField(paymentorder.FieldCanceledAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.CancelReason(); ok {
+		_spec.SetField(paymentorder.FieldCancelReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.MakeupReason(); ok {
+		_spec.SetField(paymentorder.FieldMakeupReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.FailureReason(); ok {
+		_spec.SetField(paymentorder.FieldFailureReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RefundedAt(); ok {
+		_spec.SetField(paymentorder.FieldRefundedAt, field.TypeTime, value)
+	}
+	if _u.mutation.RefundedAtCleared() {
+		_spec.ClearField(paymentorder.FieldRefundedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.RefundReason(); ok {
+		_spec.SetField(paymentorder.FieldRefundReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RefundAmountMicros(); ok {
+		_spec.SetField(paymentorder.FieldRefundAmountMicros, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedRefundAmountMicros(); ok {
+		_spec.AddField(paymentorder.FieldRefundAmountMicros, field.TypeInt64, value)
 	}
 	if value, ok := _u.mutation.ExternalTradeNo(); ok {
 		_spec.SetField(paymentorder.FieldExternalTradeNo, field.TypeString, value)
@@ -398,6 +576,143 @@ func (_u *PaymentOrderUpdateOne) SetNillableStatus(v *paymentorder.Status) *Paym
 	if v != nil {
 		_u.SetStatus(*v)
 	}
+	return _u
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (_u *PaymentOrderUpdateOne) SetExpiresAt(v time.Time) *PaymentOrderUpdateOne {
+	_u.mutation.SetExpiresAt(v)
+	return _u
+}
+
+// SetNillableExpiresAt sets the "expires_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableExpiresAt(v *time.Time) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (_u *PaymentOrderUpdateOne) ClearExpiresAt() *PaymentOrderUpdateOne {
+	_u.mutation.ClearExpiresAt()
+	return _u
+}
+
+// SetCanceledAt sets the "canceled_at" field.
+func (_u *PaymentOrderUpdateOne) SetCanceledAt(v time.Time) *PaymentOrderUpdateOne {
+	_u.mutation.SetCanceledAt(v)
+	return _u
+}
+
+// SetNillableCanceledAt sets the "canceled_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableCanceledAt(v *time.Time) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetCanceledAt(*v)
+	}
+	return _u
+}
+
+// ClearCanceledAt clears the value of the "canceled_at" field.
+func (_u *PaymentOrderUpdateOne) ClearCanceledAt() *PaymentOrderUpdateOne {
+	_u.mutation.ClearCanceledAt()
+	return _u
+}
+
+// SetCancelReason sets the "cancel_reason" field.
+func (_u *PaymentOrderUpdateOne) SetCancelReason(v string) *PaymentOrderUpdateOne {
+	_u.mutation.SetCancelReason(v)
+	return _u
+}
+
+// SetNillableCancelReason sets the "cancel_reason" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableCancelReason(v *string) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetCancelReason(*v)
+	}
+	return _u
+}
+
+// SetMakeupReason sets the "makeup_reason" field.
+func (_u *PaymentOrderUpdateOne) SetMakeupReason(v string) *PaymentOrderUpdateOne {
+	_u.mutation.SetMakeupReason(v)
+	return _u
+}
+
+// SetNillableMakeupReason sets the "makeup_reason" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableMakeupReason(v *string) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetMakeupReason(*v)
+	}
+	return _u
+}
+
+// SetFailureReason sets the "failure_reason" field.
+func (_u *PaymentOrderUpdateOne) SetFailureReason(v string) *PaymentOrderUpdateOne {
+	_u.mutation.SetFailureReason(v)
+	return _u
+}
+
+// SetNillableFailureReason sets the "failure_reason" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableFailureReason(v *string) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetFailureReason(*v)
+	}
+	return _u
+}
+
+// SetRefundedAt sets the "refunded_at" field.
+func (_u *PaymentOrderUpdateOne) SetRefundedAt(v time.Time) *PaymentOrderUpdateOne {
+	_u.mutation.SetRefundedAt(v)
+	return _u
+}
+
+// SetNillableRefundedAt sets the "refunded_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableRefundedAt(v *time.Time) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetRefundedAt(*v)
+	}
+	return _u
+}
+
+// ClearRefundedAt clears the value of the "refunded_at" field.
+func (_u *PaymentOrderUpdateOne) ClearRefundedAt() *PaymentOrderUpdateOne {
+	_u.mutation.ClearRefundedAt()
+	return _u
+}
+
+// SetRefundReason sets the "refund_reason" field.
+func (_u *PaymentOrderUpdateOne) SetRefundReason(v string) *PaymentOrderUpdateOne {
+	_u.mutation.SetRefundReason(v)
+	return _u
+}
+
+// SetNillableRefundReason sets the "refund_reason" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableRefundReason(v *string) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetRefundReason(*v)
+	}
+	return _u
+}
+
+// SetRefundAmountMicros sets the "refund_amount_micros" field.
+func (_u *PaymentOrderUpdateOne) SetRefundAmountMicros(v int64) *PaymentOrderUpdateOne {
+	_u.mutation.ResetRefundAmountMicros()
+	_u.mutation.SetRefundAmountMicros(v)
+	return _u
+}
+
+// SetNillableRefundAmountMicros sets the "refund_amount_micros" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableRefundAmountMicros(v *int64) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetRefundAmountMicros(*v)
+	}
+	return _u
+}
+
+// AddRefundAmountMicros adds value to the "refund_amount_micros" field.
+func (_u *PaymentOrderUpdateOne) AddRefundAmountMicros(v int64) *PaymentOrderUpdateOne {
+	_u.mutation.AddRefundAmountMicros(v)
 	return _u
 }
 
@@ -593,6 +908,11 @@ func (_u *PaymentOrderUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.RefundAmountMicros(); ok {
+		if err := paymentorder.RefundAmountMicrosValidator(v); err != nil {
+			return &ValidationError{Name: "refund_amount_micros", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.refund_amount_micros": %w`, err)}
+		}
+	}
 	if _u.mutation.BillingAccountCleared() && len(_u.mutation.BillingAccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PaymentOrder.billing_account"`)
 	}
@@ -639,6 +959,42 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(paymentorder.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.ExpiresAt(); ok {
+		_spec.SetField(paymentorder.FieldExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiresAtCleared() {
+		_spec.ClearField(paymentorder.FieldExpiresAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.CanceledAt(); ok {
+		_spec.SetField(paymentorder.FieldCanceledAt, field.TypeTime, value)
+	}
+	if _u.mutation.CanceledAtCleared() {
+		_spec.ClearField(paymentorder.FieldCanceledAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.CancelReason(); ok {
+		_spec.SetField(paymentorder.FieldCancelReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.MakeupReason(); ok {
+		_spec.SetField(paymentorder.FieldMakeupReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.FailureReason(); ok {
+		_spec.SetField(paymentorder.FieldFailureReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RefundedAt(); ok {
+		_spec.SetField(paymentorder.FieldRefundedAt, field.TypeTime, value)
+	}
+	if _u.mutation.RefundedAtCleared() {
+		_spec.ClearField(paymentorder.FieldRefundedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.RefundReason(); ok {
+		_spec.SetField(paymentorder.FieldRefundReason, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RefundAmountMicros(); ok {
+		_spec.SetField(paymentorder.FieldRefundAmountMicros, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedRefundAmountMicros(); ok {
+		_spec.AddField(paymentorder.FieldRefundAmountMicros, field.TypeInt64, value)
 	}
 	if value, ok := _u.mutation.ExternalTradeNo(); ok {
 		_spec.SetField(paymentorder.FieldExternalTradeNo, field.TypeString, value)

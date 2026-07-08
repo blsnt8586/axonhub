@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Loader2, RefreshCw, Save, Unlock, WalletCards } from 'lucide-react';
+import { AlertCircle, Ban, Loader2, RefreshCw, Save, Unlock, WalletCards } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { extractNumberIDAsNumber } from '@/lib/utils';
@@ -39,7 +39,9 @@ import {
   useAdminPaymentOrders,
   useAdminUsageBillingRecords,
   useAdminUserBillingDetail,
+  useCancelPaymentOrder,
   useReleaseBillingHold,
+  useMakeUpPaymentOrder,
   useSaveBillingPriceRule,
   useUpdateUserBillingAccount,
   useUpsertEPayPaymentProvider,
@@ -140,6 +142,19 @@ function formatDate(value?: string | null) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(value));
+}
+
+function summarizeJSONPayload(payload: unknown) {
+  if (payload === null || payload === undefined) return '-';
+  if (typeof payload === 'string') {
+    return payload.length > 160 ? `${payload.slice(0, 157)}...` : payload;
+  }
+  try {
+    const serialized = JSON.stringify(payload);
+    return serialized.length > 160 ? `${serialized.slice(0, 157)}...` : serialized;
+  } catch {
+    return String(payload);
+  }
 }
 
 function normalizeAmount(value: string, scale = 6) {
@@ -356,6 +371,7 @@ export default function AdminBillingPage() {
   const [appliedOrderFilter, setAppliedOrderFilter] = useState<AdminPaymentOrdersFilter>({});
   const [appliedEventFilter, setAppliedEventFilter] = useState<AdminPaymentEventsFilter>({});
   const [holdReleaseReasons, setHoldReleaseReasons] = useState<Record<string, string>>({});
+  const [orderReasons, setOrderReasons] = useState<Record<string, string>>({});
   const [providerForm, setProviderForm] = useState<EPayProviderForm>({
     name: 'Default ePay',
     status: 'enabled' as 'enabled' | 'disabled',
@@ -381,6 +397,8 @@ export default function AdminBillingPage() {
   const adjustBalance = useAdjustUserBalance();
   const updateAccount = useUpdateUserBillingAccount();
   const releaseHold = useReleaseBillingHold();
+  const cancelOrder = useCancelPaymentOrder();
+  const makeUpOrder = useMakeUpPaymentOrder();
   const savePriceRule = useSaveBillingPriceRule();
   const upsertEPay = useUpsertEPayPaymentProvider();
 
@@ -431,6 +449,38 @@ export default function AdminBillingPage() {
       await releaseHold.mutateAsync({ id: holdId, reason });
       toast.success(t('adminBilling.holds.releaseSuccess'));
       setHoldReleaseReasons((prev) => ({ ...prev, [holdId]: '' }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleCancelOrder(orderNo: string) {
+    const reason = (orderReasons[orderNo] || t('adminBilling.orders.defaultCancelReason')).trim();
+    if (!reason) {
+      toast.error(t('adminBilling.orders.reasonRequired'));
+      return;
+    }
+
+    try {
+      await cancelOrder.mutateAsync({ orderNo, reason });
+      toast.success(t('adminBilling.orders.cancelSuccess'));
+      setOrderReasons((prev) => ({ ...prev, [orderNo]: '' }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleMakeUpOrder(orderNo: string) {
+    const reason = (orderReasons[orderNo] || t('adminBilling.orders.defaultMakeupReason')).trim();
+    if (!reason) {
+      toast.error(t('adminBilling.orders.reasonRequired'));
+      return;
+    }
+
+    try {
+      await makeUpOrder.mutateAsync({ orderNo, reason });
+      toast.success(t('adminBilling.orders.makeupSuccess'));
+      setOrderReasons((prev) => ({ ...prev, [orderNo]: '' }));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
     }
@@ -555,7 +605,12 @@ export default function AdminBillingPage() {
               adminEvents.isFetching
             }
           >
-            {isFetching || adminLedger.isFetching || adminUsage.isFetching || adminHolds.isFetching || adminOrders.isFetching || adminEvents.isFetching ? (
+            {isFetching ||
+            adminLedger.isFetching ||
+            adminUsage.isFetching ||
+            adminHolds.isFetching ||
+            adminOrders.isFetching ||
+            adminEvents.isFetching ? (
               <Loader2 className='size-4 animate-spin' />
             ) : (
               <RefreshCw className='size-4' />
@@ -1227,12 +1282,15 @@ export default function AdminBillingPage() {
                       <TableHead>{t('adminBilling.filters.projectId')}</TableHead>
                       <TableHead>{t('adminBilling.columns.provider')}</TableHead>
                       <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.expiresAt')}</TableHead>
                       <TableHead>{t('adminBilling.columns.tradeNo')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.reason')}</TableHead>
                       <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.action')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <DataStateRow colSpan={7} isLoading={adminOrders.isLoading} isEmpty={(adminOrders.data ?? []).length === 0} />
+                    <DataStateRow colSpan={10} isLoading={adminOrders.isLoading} isEmpty={(adminOrders.data ?? []).length === 0} />
                     {adminOrders.data?.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell>{formatDate(order.createdAt)}</TableCell>
@@ -1242,8 +1300,47 @@ export default function AdminBillingPage() {
                         <TableCell>
                           <StatusBadge value={order.status} positive={order.status === 'paid'} />
                         </TableCell>
+                        <TableCell>{formatDate(order.expiresAt)}</TableCell>
                         <TableCell className='font-mono text-xs'>{order.externalTradeNo || '-'}</TableCell>
+                        <TableCell className='max-w-[220px] truncate text-xs'>
+                          {order.failureReason || order.cancelReason || order.makeupReason || order.refundReason || '-'}
+                        </TableCell>
                         <TableCell className='text-right font-mono'>{formatMicros(order.amountMicros, order.currency)}</TableCell>
+                        <TableCell className='min-w-[320px]'>
+                          {order.status === 'paid' || order.status === 'refunded' ? (
+                            <span className='text-muted-foreground text-xs'>{order.paidAt ? formatDate(order.paidAt) : '-'}</span>
+                          ) : (
+                            <div className='flex items-center gap-2'>
+                              <Input
+                                className='h-8 min-w-[150px]'
+                                value={orderReasons[order.orderNo] ?? ''}
+                                placeholder={t('adminBilling.orders.reasonPlaceholder')}
+                                onChange={(event) => setOrderReasons((prev) => ({ ...prev, [order.orderNo]: event.target.value }))}
+                              />
+                              {order.status === 'pending' && (
+                                <Button
+                                  type='button'
+                                  size='sm'
+                                  variant='outline'
+                                  disabled={cancelOrder.isPending || makeUpOrder.isPending}
+                                  onClick={() => void handleCancelOrder(order.orderNo)}
+                                >
+                                  {cancelOrder.isPending ? <Loader2 className='size-4 animate-spin' /> : <Ban className='size-4' />}
+                                  {t('adminBilling.orders.cancel')}
+                                </Button>
+                              )}
+                              <Button
+                                type='button'
+                                size='sm'
+                                disabled={cancelOrder.isPending || makeUpOrder.isPending}
+                                onClick={() => void handleMakeUpOrder(order.orderNo)}
+                              >
+                                {makeUpOrder.isPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                                {t('adminBilling.orders.makeup')}
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1327,11 +1424,12 @@ export default function AdminBillingPage() {
                       <TableHead>{t('adminBilling.columns.provider')}</TableHead>
                       <TableHead>{t('adminBilling.columns.eventType')}</TableHead>
                       <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                      <TableHead>{t('adminBilling.columns.payload')}</TableHead>
                       <TableHead>{t('adminBilling.columns.reason')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <DataStateRow colSpan={7} isLoading={adminEvents.isLoading} isEmpty={(adminEvents.data ?? []).length === 0} />
+                    <DataStateRow colSpan={8} isLoading={adminEvents.isLoading} isEmpty={(adminEvents.data ?? []).length === 0} />
                     {adminEvents.data?.map((event) => (
                       <TableRow key={event.id}>
                         <TableCell>{formatDate(event.createdAt)}</TableCell>
@@ -1341,6 +1439,9 @@ export default function AdminBillingPage() {
                         <TableCell>{event.eventType}</TableCell>
                         <TableCell>
                           <StatusBadge value={event.status} positive={event.status === 'processed'} />
+                        </TableCell>
+                        <TableCell className='max-w-[320px] truncate font-mono text-xs' title={summarizeJSONPayload(event.payload)}>
+                          {summarizeJSONPayload(event.payload)}
                         </TableCell>
                         <TableCell className='max-w-[280px] truncate text-xs'>{event.error || '-'}</TableCell>
                       </TableRow>
