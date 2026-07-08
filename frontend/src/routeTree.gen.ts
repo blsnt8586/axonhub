@@ -34,6 +34,7 @@ import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedDataStoragesIndexRouteImport } from './routes/_authenticated/data-storages/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedChannelsIndexRouteImport } from './routes/_authenticated/channels/index'
+import { Route as AuthenticatedBillingIndexRouteImport } from './routes/_authenticated/billing/index'
 import { Route as AuthenticatedApiKeysIndexRouteImport } from './routes/_authenticated/api-keys/index'
 import { Route as OauthOidcIdpCallbackRouteImport } from './routes/oauth/oidc/idp-callback'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings/profile'
@@ -189,6 +190,12 @@ const AuthenticatedChannelsIndexRoute =
     path: '/channels/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBillingIndexRoute =
+  AuthenticatedBillingIndexRouteImport.update({
+    id: '/billing/',
+    path: '/billing/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedApiKeysIndexRoute =
   AuthenticatedApiKeysIndexRouteImport.update({
     id: '/api-keys/',
@@ -330,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/oauth/oidc/idp-callback': typeof OauthOidcIdpCallbackRoute
   '/api-keys/': typeof AuthenticatedApiKeysIndexRoute
+  '/billing/': typeof AuthenticatedBillingIndexRoute
   '/channels/': typeof AuthenticatedChannelsIndexRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/data-storages/': typeof AuthenticatedDataStoragesIndexRoute
@@ -375,6 +383,7 @@ export interface FileRoutesByTo {
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/oauth/oidc/idp-callback': typeof OauthOidcIdpCallbackRoute
   '/api-keys': typeof AuthenticatedApiKeysIndexRoute
+  '/billing': typeof AuthenticatedBillingIndexRoute
   '/channels': typeof AuthenticatedChannelsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/data-storages': typeof AuthenticatedDataStoragesIndexRoute
@@ -423,6 +432,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/oauth/oidc/idp-callback': typeof OauthOidcIdpCallbackRoute
   '/_authenticated/api-keys/': typeof AuthenticatedApiKeysIndexRoute
+  '/_authenticated/billing/': typeof AuthenticatedBillingIndexRoute
   '/_authenticated/channels/': typeof AuthenticatedChannelsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/data-storages/': typeof AuthenticatedDataStoragesIndexRoute
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/oauth/oidc/idp-callback'
     | '/api-keys/'
+    | '/billing/'
     | '/channels/'
     | '/chats/'
     | '/data-storages/'
@@ -516,6 +527,7 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/oauth/oidc/idp-callback'
     | '/api-keys'
+    | '/billing'
     | '/channels'
     | '/chats'
     | '/data-storages'
@@ -563,6 +575,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/profile'
     | '/oauth/oidc/idp-callback'
     | '/_authenticated/api-keys/'
+    | '/_authenticated/billing/'
     | '/_authenticated/channels/'
     | '/_authenticated/chats/'
     | '/_authenticated/data-storages/'
@@ -780,6 +793,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChannelsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/billing/': {
+      id: '/_authenticated/billing/'
+      path: '/billing'
+      fullPath: '/billing/'
+      preLoaderRoute: typeof AuthenticatedBillingIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/api-keys/': {
       id: '/_authenticated/api-keys/'
       path: '/api-keys'
@@ -953,6 +973,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardChannelSuccessRatesRoute: typeof AuthenticatedDashboardChannelSuccessRatesRoute
   AuthenticatedRequestsRequestIdRoute: typeof AuthenticatedRequestsRequestIdRoute
   AuthenticatedApiKeysIndexRoute: typeof AuthenticatedApiKeysIndexRoute
+  AuthenticatedBillingIndexRoute: typeof AuthenticatedBillingIndexRoute
   AuthenticatedChannelsIndexRoute: typeof AuthenticatedChannelsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedDataStoragesIndexRoute: typeof AuthenticatedDataStoragesIndexRoute
@@ -986,6 +1007,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedDashboardChannelSuccessRatesRoute,
   AuthenticatedRequestsRequestIdRoute: AuthenticatedRequestsRequestIdRoute,
   AuthenticatedApiKeysIndexRoute: AuthenticatedApiKeysIndexRoute,
+  AuthenticatedBillingIndexRoute: AuthenticatedBillingIndexRoute,
   AuthenticatedChannelsIndexRoute: AuthenticatedChannelsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedDataStoragesIndexRoute: AuthenticatedDataStoragesIndexRoute,

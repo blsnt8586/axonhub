@@ -13,6 +13,7 @@ import {
   IconAi,
   IconNote,
   IconChartBar,
+  IconWallet,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -170,6 +171,11 @@ export function useSidebarData(): SidebarData {
     {
       title: t('sidebar.groups.settings'),
       items: [
+        {
+          title: t('sidebar.items.billing'),
+          url: '/billing',
+          icon: IconWallet,
+        } as NavLink,
         {
           title: t('sidebar.items.system'),
           url: '/system',

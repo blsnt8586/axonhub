@@ -142,6 +142,10 @@ export const routeConfigs: RouteGroup[] = [
         // Profile 设置所有用户都可以访问
       },
       {
+        path: '/billing',
+        // 用户账务所有登录用户都可以访问
+      },
+      {
         path: '/settings/profile',
         // Profile 设置所有用户都可以访问
       },

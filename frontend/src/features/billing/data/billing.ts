@@ -1,0 +1,184 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { graphqlRequest } from '@/gql/graphql';
+
+export type BillingAccountStatus = 'active' | 'frozen' | 'closed';
+export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
+export type LedgerTransactionDirection = 'credit' | 'debit';
+export type UsageBillingRecordStatus = 'pending' | 'charged' | 'failed';
+
+export interface BillingAccount {
+  id: string;
+  ownerType: string;
+  ownerID: number;
+  currency: string;
+  balanceMicros: number;
+  creditLimitMicros: number;
+  status: BillingAccountStatus;
+}
+
+export interface PaymentOrder {
+  id: string;
+  createdAt: string;
+  orderNo: string;
+  providerType: string;
+  amountMicros: number;
+  currency: string;
+  status: PaymentOrderStatus;
+  externalTradeNo?: string | null;
+  paidAt?: string | null;
+}
+
+export interface LedgerTransaction {
+  id: string;
+  createdAt: string;
+  direction: LedgerTransactionDirection;
+  amountMicros: number;
+  currency: string;
+  type: string;
+  status: string;
+  memo: string;
+}
+
+export interface UsageBillingRecord {
+  id: string;
+  createdAt: string;
+  projectID: number;
+  modelID: string;
+  requestType: string;
+  chargeAmountMicros: number;
+  currency: string;
+  status: UsageBillingRecordStatus;
+  error: string;
+}
+
+export interface PaymentCheckout {
+  providerType: string;
+  orderNo: string;
+  method: string;
+  url?: string | null;
+  amount: string;
+  currency: string;
+}
+
+export interface BillingOverview {
+  account: BillingAccount;
+  paymentOrders: PaymentOrder[];
+  ledgerTransactions: LedgerTransaction[];
+  usageBillingRecords: UsageBillingRecord[];
+}
+
+const BILLING_OVERVIEW_QUERY = `
+  query MyBillingOverview($first: Int!) {
+    myBillingAccount {
+      id
+      ownerType
+      ownerID
+      currency
+      balanceMicros
+      creditLimitMicros
+      status
+    }
+    myPaymentOrders(first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          orderNo
+          providerType
+          amountMicros
+          currency
+          status
+          externalTradeNo
+          paidAt
+        }
+      }
+    }
+    myLedgerTransactions(first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          direction
+          amountMicros
+          currency
+          type
+          status
+          memo
+        }
+      }
+    }
+    myUsageBillingRecords(first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          projectID
+          modelID
+          requestType
+          chargeAmountMicros
+          currency
+          status
+          error
+        }
+      }
+    }
+  }
+`;
+
+const CREATE_MY_EPAY_RECHARGE_CHECKOUT = `
+  mutation CreateMyEPayRechargeCheckout($input: CreateMyEPayRechargeCheckoutInput!) {
+    createMyEPayRechargeCheckout(input: $input) {
+      providerType
+      orderNo
+      method
+      url
+      amount
+      currency
+    }
+  }
+`;
+
+type Connection<T> = {
+  edges?: Array<{ node?: T | null } | null> | null;
+};
+
+function nodes<T>(connection?: Connection<T> | null): T[] {
+  return connection?.edges?.flatMap((edge) => (edge?.node ? [edge.node] : [])) ?? [];
+}
+
+export function useMyBillingOverview(first = 10) {
+  return useQuery({
+    queryKey: ['billing', 'my-overview', first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{
+        myBillingAccount: BillingAccount;
+        myPaymentOrders: Connection<PaymentOrder>;
+        myLedgerTransactions: Connection<LedgerTransaction>;
+        myUsageBillingRecords: Connection<UsageBillingRecord>;
+      }>(BILLING_OVERVIEW_QUERY, { first });
+
+      return {
+        account: data.myBillingAccount,
+        paymentOrders: nodes(data.myPaymentOrders),
+        ledgerTransactions: nodes(data.myLedgerTransactions),
+        usageBillingRecords: nodes(data.myUsageBillingRecords),
+      } satisfies BillingOverview;
+    },
+  });
+}
+
+export function useCreateMyEPayRechargeCheckout() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { amount: string; currency?: string; subject?: string }) => {
+      const data = await graphqlRequest<{ createMyEPayRechargeCheckout: PaymentCheckout }>(CREATE_MY_EPAY_RECHARGE_CHECKOUT, {
+        input,
+      });
+      return data.createMyEPayRechargeCheckout;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
