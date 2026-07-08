@@ -101,6 +101,25 @@ func TestUsageBillingProcessorChargesUsageOnce(t *testing.T) {
 	require.Equal(t, int64(8_500_000), reloaded.BalanceMicros)
 }
 
+func TestUsageBillingProcessorRequestUsageBillingNoopsWhenBillingDisabled(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, processor, account := newUsageBillingTestProcessorWithConfig(
+		t,
+		"usage_billing_request_disabled",
+		BillingConfig{Mode: AdmissionModeDisabled},
+	)
+	usageLog := createUsageLogForBillingTest(t, client, ctx, account.OwnerID, "gpt-test", 1_000_000, 0)
+
+	record, err := processor.RequestUsageBilling(ctx, usageLog.ID)
+	require.NoError(t, err)
+	require.Nil(t, record)
+
+	count, err := client.BillingOutbox.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Zero(t, count)
+}
+
 func TestUsageBillingProcessorRequestUsageBillingMarksOutboxDone(t *testing.T) {
 	t.Parallel()
 
@@ -188,6 +207,12 @@ func TestUsageBillingProcessorRecordsFailedWhenBalanceInsufficient(t *testing.T)
 func newUsageBillingTestProcessor(t *testing.T, name string) (*ent.Client, context.Context, *UsageBillingProcessor, *ent.BillingAccount) {
 	t.Helper()
 
+	return newUsageBillingTestProcessorWithConfig(t, name, BillingConfig{Mode: AdmissionModeWarn})
+}
+
+func newUsageBillingTestProcessorWithConfig(t *testing.T, name string, cfg BillingConfig) (*ent.Client, context.Context, *UsageBillingProcessor, *ent.BillingAccount) {
+	t.Helper()
+
 	client := enttest.NewEntClient(t, "sqlite3", "file:"+name+"?mode=memory&_fk=1")
 	ctx := authz.WithTestBypass(context.Background())
 	_, err := client.Project.Create().
@@ -201,6 +226,7 @@ func newUsageBillingTestProcessor(t *testing.T, name string) (*ent.Client, conte
 	pricingSvc := NewPricingService(PricingServiceParams{Ent: client})
 	ledgerSvc := NewLedgerService(LedgerServiceParams{Ent: client})
 	processor := NewUsageBillingProcessor(UsageBillingProcessorParams{
+		Config:                cfg,
 		Ent:                   client,
 		PricingService:        pricingSvc,
 		BillingAccountService: accountSvc,

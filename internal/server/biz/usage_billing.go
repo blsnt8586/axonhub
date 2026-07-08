@@ -21,6 +21,7 @@ import (
 type UsageBillingProcessorParams struct {
 	fx.In
 
+	Config                BillingConfig
 	Ent                   *ent.Client
 	PricingService        *PricingService
 	BillingAccountService *BillingAccountService
@@ -30,6 +31,7 @@ type UsageBillingProcessorParams struct {
 type UsageBillingProcessor struct {
 	*AbstractService
 
+	config                BillingConfig
 	pricingService        *PricingService
 	billingAccountService *BillingAccountService
 	ledgerService         *LedgerService
@@ -38,6 +40,7 @@ type UsageBillingProcessor struct {
 func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingProcessor {
 	return &UsageBillingProcessor{
 		AbstractService:       &AbstractService{db: params.Ent},
+		config:                params.Config.normalized(),
 		pricingService:        params.PricingService,
 		billingAccountService: params.BillingAccountService,
 		ledgerService:         params.LedgerService,
@@ -45,6 +48,10 @@ func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingP
 }
 
 func (p *UsageBillingProcessor) RequestUsageBilling(ctx context.Context, usageLogID int) (*ent.UsageBillingRecord, error) {
+	if !p.requestBillingEnabled() {
+		return nil, nil
+	}
+
 	outbox, err := p.createUsageBillingOutbox(ctx, usageLogID)
 	if err != nil {
 		return nil, err
@@ -76,6 +83,11 @@ func (p *UsageBillingProcessor) RequestUsageBilling(ctx context.Context, usageLo
 	}
 
 	return record, nil
+}
+
+func (p *UsageBillingProcessor) requestBillingEnabled() bool {
+	cfg := p.config.normalized()
+	return cfg.Mode != AdmissionModeDisabled
 }
 
 func (p *UsageBillingProcessor) createUsageBillingOutbox(ctx context.Context, usageLogID int) (*ent.BillingOutbox, error) {
