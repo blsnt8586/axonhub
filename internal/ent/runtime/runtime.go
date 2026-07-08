@@ -98,6 +98,10 @@ func init() {
 	apikeyDescProfiles := apikeyFields[7].Descriptor()
 	// apikey.DefaultProfiles holds the default value on creation for the profiles field.
 	apikey.DefaultProfiles = apikeyDescProfiles.Default.(*objects.APIKeyProfiles)
+	// apikeyDescCommercialLimits is the schema descriptor for commercial_limits field.
+	apikeyDescCommercialLimits := apikeyFields[8].Descriptor()
+	// apikey.DefaultCommercialLimits holds the default value on creation for the commercial_limits field.
+	apikey.DefaultCommercialLimits = apikeyDescCommercialLimits.Default.(*objects.APIKeyCommercialLimits)
 	apikeyprofiletemplateMixin := schema.APIKeyProfileTemplate{}.Mixin()
 	apikeyprofiletemplate.Policy = privacy.NewPolicies(schema.APIKeyProfileTemplate{})
 	apikeyprofiletemplate.Hooks[0] = func(next ent.Mutator) ent.Mutator {

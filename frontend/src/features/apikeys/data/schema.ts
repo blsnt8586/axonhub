@@ -21,6 +21,17 @@ const channelTagsMatchModeFieldSchema = z.preprocess((value) => {
   return value;
 }, channelTagsMatchModeSchema);
 
+export const apiKeyCommercialLimitsSchema = z.object({
+  enabled: z.boolean().default(false),
+  currency: z.string().optional().nullable(),
+  totalBudgetMicros: z.number().optional().nullable(),
+  dailyBudgetMicros: z.number().optional().nullable(),
+  monthlyBudgetMicros: z.number().optional().nullable(),
+  singleRequestMaxMicros: z.number().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+export type ApiKeyCommercialLimits = z.infer<typeof apiKeyCommercialLimitsSchema>;
+
 // API Key schema based on GraphQL schema
 export const apiKeySchema = z.object({
   id: z.string(),
@@ -32,6 +43,7 @@ export const apiKeySchema = z.object({
   type: apiKeyTypeSchema,
   status: apiKeyStatusSchema,
   scopes: z.array(z.string()).optional().nullable(),
+  commercialLimits: apiKeyCommercialLimitsSchema.optional().nullable(),
   // Optional profiles for detailed view (may be omitted in list queries)
   profiles: z
     .object({
@@ -103,6 +115,7 @@ export const createApiKeyInputSchemaFactory = (t: (key: string) => string) =>
     name: z.string().min(1, t('apikeys.validation.nameRequired')),
     type: apiKeyTypeSchema.optional(),
     scopes: z.array(z.string()).optional(),
+    commercialLimits: apiKeyCommercialLimitsSchema.optional().nullable(),
     projectID: z.number().optional(),
   });
 
@@ -111,6 +124,7 @@ export const createApiKeyInputSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   type: apiKeyTypeSchema.optional(),
   scopes: z.array(z.string()).optional(),
+  commercialLimits: apiKeyCommercialLimitsSchema.optional().nullable(),
   projectID: z.number().optional(),
 });
 export type CreateApiKeyInput = z.infer<typeof createApiKeyInputSchema>;
@@ -120,12 +134,16 @@ export const updateApiKeyInputSchemaFactory = (t: (key: string) => string) =>
   z.object({
     name: z.string().min(1, t('apikeys.validation.nameRequired')).optional(),
     scopes: z.array(z.string()).optional(),
+    commercialLimits: apiKeyCommercialLimitsSchema.optional().nullable(),
+    clearCommercialLimits: z.boolean().optional(),
   });
 
 // Default schema for backward compatibility
 export const updateApiKeyInputSchema = z.object({
   name: z.string().min(1, 'Name is required').optional(),
   scopes: z.array(z.string()).optional(),
+  commercialLimits: apiKeyCommercialLimitsSchema.optional().nullable(),
+  clearCommercialLimits: z.boolean().optional(),
 });
 export type UpdateApiKeyInput = z.infer<typeof updateApiKeyInputSchema>;
 
@@ -395,3 +413,23 @@ export const apiKeyTokenUsageStatsSchema = z.object({
   ),
 });
 export type ApiKeyTokenUsageStats = z.infer<typeof apiKeyTokenUsageStatsSchema>;
+
+export const apiKeyCommercialLimitWindowUsageSchema = z.object({
+  budgetMicros: z.number().optional().nullable(),
+  spentMicros: z.number(),
+  remainingMicros: z.number().optional().nullable(),
+  window: apiKeyQuotaWindowSchema,
+  exceeded: z.boolean(),
+});
+export type ApiKeyCommercialLimitWindowUsage = z.infer<typeof apiKeyCommercialLimitWindowUsageSchema>;
+
+export const apiKeyCommercialLimitUsageSchema = z.object({
+  apiKeyId: z.string(),
+  currency: z.string(),
+  enabled: z.boolean(),
+  total: apiKeyCommercialLimitWindowUsageSchema,
+  daily: apiKeyCommercialLimitWindowUsageSchema,
+  monthly: apiKeyCommercialLimitWindowUsageSchema,
+  singleRequestMaxMicros: z.number().optional().nullable(),
+});
+export type ApiKeyCommercialLimitUsage = z.infer<typeof apiKeyCommercialLimitUsageSchema>;

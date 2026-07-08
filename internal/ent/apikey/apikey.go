@@ -41,6 +41,8 @@ const (
 	FieldScopes = "scopes"
 	// FieldProfiles holds the string denoting the profiles field in the database.
 	FieldProfiles = "profiles"
+	// FieldCommercialLimits holds the string denoting the commercial_limits field in the database.
+	FieldCommercialLimits = "commercial_limits"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// EdgeProject holds the string denoting the project edge name in mutations.
@@ -86,6 +88,7 @@ var Columns = []string{
 	FieldStatus,
 	FieldScopes,
 	FieldProfiles,
+	FieldCommercialLimits,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -121,6 +124,8 @@ var (
 	DefaultScopes []string
 	// DefaultProfiles holds the default value on creation for the "profiles" field.
 	DefaultProfiles *objects.APIKeyProfiles
+	// DefaultCommercialLimits holds the default value on creation for the "commercial_limits" field.
+	DefaultCommercialLimits *objects.APIKeyCommercialLimits
 )
 
 // Type defines the type for the "type" enum field.

@@ -21,32 +21,35 @@ import (
 type UsageBillingProcessorParams struct {
 	fx.In
 
-	Config                BillingConfig
-	Ent                   *ent.Client
-	PricingService        *PricingService
-	BillingAccountService *BillingAccountService
-	LedgerService         *LedgerService
-	BillingHoldService    *BillingHoldService
+	Config                 BillingConfig
+	Ent                    *ent.Client
+	PricingService         *PricingService
+	BillingAccountService  *BillingAccountService
+	LedgerService          *LedgerService
+	BillingHoldService     *BillingHoldService
+	CommercialLimitService *APIKeyCommercialLimitService
 }
 
 type UsageBillingProcessor struct {
 	*AbstractService
 
-	config                BillingConfig
-	pricingService        *PricingService
-	billingAccountService *BillingAccountService
-	ledgerService         *LedgerService
-	billingHoldService    *BillingHoldService
+	config                 BillingConfig
+	pricingService         *PricingService
+	billingAccountService  *BillingAccountService
+	ledgerService          *LedgerService
+	billingHoldService     *BillingHoldService
+	commercialLimitService *APIKeyCommercialLimitService
 }
 
 func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingProcessor {
 	return &UsageBillingProcessor{
-		AbstractService:       &AbstractService{db: params.Ent},
-		config:                params.Config.normalized(),
-		pricingService:        params.PricingService,
-		billingAccountService: params.BillingAccountService,
-		ledgerService:         params.LedgerService,
-		billingHoldService:    params.BillingHoldService,
+		AbstractService:        &AbstractService{db: params.Ent},
+		config:                 params.Config.normalized(),
+		pricingService:         params.PricingService,
+		billingAccountService:  params.BillingAccountService,
+		ledgerService:          params.LedgerService,
+		billingHoldService:     params.BillingHoldService,
+		commercialLimitService: params.CommercialLimitService,
 	}
 }
 
@@ -181,6 +184,20 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 	chargeMicros, err := decimalToMicros(chargeTotal)
 	if err != nil {
 		return nil, err
+	}
+	if p.commercialLimitService != nil && usageLog.APIKeyID > 0 {
+		apiKey, err := p.entFromContext(ctx).APIKey.Get(ctx, usageLog.APIKeyID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get usage log api key for commercial limit check: %w", err)
+		}
+		_, err = p.commercialLimitService.Check(ctx, APIKeyCommercialLimitCheckInput{
+			APIKey:                apiKey,
+			Currency:              priceRule.Currency,
+			EstimatedChargeMicros: chargeMicros,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	costMicros := usageLogCostMicros(usageLog)
 	idempotencyKey := usageBillingIdempotencyKey(usageLogID)

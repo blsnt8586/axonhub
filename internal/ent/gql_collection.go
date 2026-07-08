@@ -237,6 +237,11 @@ func (_q *APIKeyQuery) collectField(ctx context.Context, oneNode bool, opCtx *gr
 				selectedFields = append(selectedFields, apikey.FieldProfiles)
 				fieldSeen[apikey.FieldProfiles] = struct{}{}
 			}
+		case "commercialLimits":
+			if _, ok := fieldSeen[apikey.FieldCommercialLimits]; !ok {
+				selectedFields = append(selectedFields, apikey.FieldCommercialLimits)
+				fieldSeen[apikey.FieldCommercialLimits] = struct{}{}
+			}
 		case "id":
 		case "__typename":
 		default:

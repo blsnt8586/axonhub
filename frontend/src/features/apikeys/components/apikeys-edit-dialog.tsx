@@ -11,6 +11,8 @@ import { useApiKeysContext } from '../context/apikeys-context';
 import { useUpdateApiKey } from '../data/apikeys';
 import { UpdateApiKeyInput, updateApiKeyInputSchemaFactory } from '../data/schema';
 import { ScopesSelect } from '@/components/scopes-select';
+import { ApiKeyCommercialLimitsFields } from './api-key-commercial-limits-fields';
+import { defaultCommercialLimits, normalizeCommercialLimitsForSubmit } from './api-key-commercial-limits-utils';
 
 export function ApiKeysEditDialog() {
   const { t } = useTranslation();
@@ -25,6 +27,7 @@ export function ApiKeysEditDialog() {
     defaultValues: {
       name: '',
       scopes: [],
+      commercialLimits: defaultCommercialLimits(),
     },
   });
 
@@ -33,6 +36,10 @@ export function ApiKeysEditDialog() {
       form.reset({
         name: selectedApiKey.name,
         scopes: selectedApiKey.scopes || [],
+        commercialLimits: {
+          ...defaultCommercialLimits(),
+          ...selectedApiKey.commercialLimits,
+        },
       });
     }
   }, [selectedApiKey, isDialogOpen.edit, form]);
@@ -44,6 +51,7 @@ export function ApiKeysEditDialog() {
     try {
       const input: UpdateApiKeyInput = {
         name: data.name,
+        commercialLimits: normalizeCommercialLimitsForSubmit(data.commercialLimits),
       };
 
       if (selectedApiKey.type === 'service_account') {
@@ -56,7 +64,8 @@ export function ApiKeysEditDialog() {
       });
 
       closeDialog('edit');
-    } catch (error) {
+    } catch (_error) {
+      // Error is handled by the mutation
     } finally {
       setIsSubmitting(false);
     }
@@ -120,6 +129,7 @@ export function ApiKeysEditDialog() {
                 </p>
               </div>
             </div>
+            <ApiKeyCommercialLimitsFields form={form} />
             <DialogFooter className='flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end'>
               <div className='flex w-full gap-2 sm:w-auto'>
                 <Button type='button' variant='outline' onClick={handleClose} disabled={isSubmitting}>

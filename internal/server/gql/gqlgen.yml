@@ -97,6 +97,9 @@ models:
   DecimalInput:
     model:
       - github.com/looplj/axonhub/internal/objects.Decimal
+  Int64:
+    model:
+      - github.com/99designs/gqlgen/graphql.Int64
   ModelMapping:
     model:
       - github.com/looplj/axonhub/internal/objects.ModelMapping
@@ -244,6 +247,12 @@ models:
   APIKeyProfile:
     model:
       - github.com/looplj/axonhub/internal/objects.APIKeyProfile
+  APIKeyCommercialLimitsInput:
+    model:
+      - github.com/looplj/axonhub/internal/objects.APIKeyCommercialLimits
+  APIKeyCommercialLimits:
+    model:
+      - github.com/looplj/axonhub/internal/objects.APIKeyCommercialLimits
   UpdateProjectProfilesInput:
     model:
       - github.com/looplj/axonhub/internal/objects.ProjectProfiles

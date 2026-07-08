@@ -99,31 +99,32 @@ const (
 // APIKeyMutation represents an operation that mutates the APIKey nodes in the graph.
 type APIKeyMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	created_at      *time.Time
-	updated_at      *time.Time
-	deleted_at      *int
-	adddeleted_at   *int
-	key             *string
-	name            *string
-	_type           *apikey.Type
-	status          *apikey.Status
-	scopes          *[]string
-	appendscopes    []string
-	profiles        **objects.APIKeyProfiles
-	clearedFields   map[string]struct{}
-	user            *int
-	cleareduser     bool
-	project         *int
-	clearedproject  bool
-	requests        map[int]struct{}
-	removedrequests map[int]struct{}
-	clearedrequests bool
-	done            bool
-	oldValue        func(context.Context) (*APIKey, error)
-	predicates      []predicate.APIKey
+	op                Op
+	typ               string
+	id                *int
+	created_at        *time.Time
+	updated_at        *time.Time
+	deleted_at        *int
+	adddeleted_at     *int
+	key               *string
+	name              *string
+	_type             *apikey.Type
+	status            *apikey.Status
+	scopes            *[]string
+	appendscopes      []string
+	profiles          **objects.APIKeyProfiles
+	commercial_limits **objects.APIKeyCommercialLimits
+	clearedFields     map[string]struct{}
+	user              *int
+	cleareduser       bool
+	project           *int
+	clearedproject    bool
+	requests          map[int]struct{}
+	removedrequests   map[int]struct{}
+	clearedrequests   bool
+	done              bool
+	oldValue          func(context.Context) (*APIKey, error)
+	predicates        []predicate.APIKey
 }
 
 var _ ent.Mutation = (*APIKeyMutation)(nil)
@@ -695,6 +696,55 @@ func (m *APIKeyMutation) ResetProfiles() {
 	delete(m.clearedFields, apikey.FieldProfiles)
 }
 
+// SetCommercialLimits sets the "commercial_limits" field.
+func (m *APIKeyMutation) SetCommercialLimits(okcl *objects.APIKeyCommercialLimits) {
+	m.commercial_limits = &okcl
+}
+
+// CommercialLimits returns the value of the "commercial_limits" field in the mutation.
+func (m *APIKeyMutation) CommercialLimits() (r *objects.APIKeyCommercialLimits, exists bool) {
+	v := m.commercial_limits
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCommercialLimits returns the old "commercial_limits" field's value of the APIKey entity.
+// If the APIKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *APIKeyMutation) OldCommercialLimits(ctx context.Context) (v *objects.APIKeyCommercialLimits, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCommercialLimits is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCommercialLimits requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCommercialLimits: %w", err)
+	}
+	return oldValue.CommercialLimits, nil
+}
+
+// ClearCommercialLimits clears the value of the "commercial_limits" field.
+func (m *APIKeyMutation) ClearCommercialLimits() {
+	m.commercial_limits = nil
+	m.clearedFields[apikey.FieldCommercialLimits] = struct{}{}
+}
+
+// CommercialLimitsCleared returns if the "commercial_limits" field was cleared in this mutation.
+func (m *APIKeyMutation) CommercialLimitsCleared() bool {
+	_, ok := m.clearedFields[apikey.FieldCommercialLimits]
+	return ok
+}
+
+// ResetCommercialLimits resets all changes to the "commercial_limits" field.
+func (m *APIKeyMutation) ResetCommercialLimits() {
+	m.commercial_limits = nil
+	delete(m.clearedFields, apikey.FieldCommercialLimits)
+}
+
 // ClearUser clears the "user" edge to the User entity.
 func (m *APIKeyMutation) ClearUser() {
 	m.cleareduser = true
@@ -837,7 +887,7 @@ func (m *APIKeyMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *APIKeyMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.created_at != nil {
 		fields = append(fields, apikey.FieldCreatedAt)
 	}
@@ -871,6 +921,9 @@ func (m *APIKeyMutation) Fields() []string {
 	if m.profiles != nil {
 		fields = append(fields, apikey.FieldProfiles)
 	}
+	if m.commercial_limits != nil {
+		fields = append(fields, apikey.FieldCommercialLimits)
+	}
 	return fields
 }
 
@@ -901,6 +954,8 @@ func (m *APIKeyMutation) Field(name string) (ent.Value, bool) {
 		return m.Scopes()
 	case apikey.FieldProfiles:
 		return m.Profiles()
+	case apikey.FieldCommercialLimits:
+		return m.CommercialLimits()
 	}
 	return nil, false
 }
@@ -932,6 +987,8 @@ func (m *APIKeyMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldScopes(ctx)
 	case apikey.FieldProfiles:
 		return m.OldProfiles(ctx)
+	case apikey.FieldCommercialLimits:
+		return m.OldCommercialLimits(ctx)
 	}
 	return nil, fmt.Errorf("unknown APIKey field %s", name)
 }
@@ -1018,6 +1075,13 @@ func (m *APIKeyMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetProfiles(v)
 		return nil
+	case apikey.FieldCommercialLimits:
+		v, ok := value.(*objects.APIKeyCommercialLimits)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCommercialLimits(v)
+		return nil
 	}
 	return fmt.Errorf("unknown APIKey field %s", name)
 }
@@ -1072,6 +1136,9 @@ func (m *APIKeyMutation) ClearedFields() []string {
 	if m.FieldCleared(apikey.FieldProfiles) {
 		fields = append(fields, apikey.FieldProfiles)
 	}
+	if m.FieldCleared(apikey.FieldCommercialLimits) {
+		fields = append(fields, apikey.FieldCommercialLimits)
+	}
 	return fields
 }
 
@@ -1094,6 +1161,9 @@ func (m *APIKeyMutation) ClearField(name string) error {
 		return nil
 	case apikey.FieldProfiles:
 		m.ClearProfiles()
+		return nil
+	case apikey.FieldCommercialLimits:
+		m.ClearCommercialLimits()
 		return nil
 	}
 	return fmt.Errorf("unknown APIKey nullable field %s", name)
@@ -1135,6 +1205,9 @@ func (m *APIKeyMutation) ResetField(name string) error {
 		return nil
 	case apikey.FieldProfiles:
 		m.ResetProfiles()
+		return nil
+	case apikey.FieldCommercialLimits:
+		m.ResetCommercialLimits()
 		return nil
 	}
 	return fmt.Errorf("unknown APIKey field %s", name)

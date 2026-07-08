@@ -24,6 +24,10 @@ type APIKey implements Node {
   """
   scopes: [String!]
   profiles: APIKeyProfiles
+  """
+  Commercial spend limits for this API key. The user wallet remains the payer.
+  """
+  commercialLimits: APIKeyCommercialLimits
   user: User @goField(forceResolver: true)
   project: Project!
   requests(
@@ -2914,6 +2918,10 @@ input CreateAPIKeyInput {
   API Key specific scopes. For user type: default read_channels, write_requests (immutable). For service_account: custom scopes.
   """
   scopes: [String!]
+  """
+  Commercial spend limits for this API key. The user wallet remains the payer.
+  """
+  commercialLimits: APIKeyCommercialLimitsInput
   projectID: ID!
 }
 """
@@ -9330,6 +9338,11 @@ input UpdateAPIKeyInput {
   scopes: [String!]
   appendScopes: [String!]
   clearScopes: Boolean
+  """
+  Commercial spend limits for this API key. The user wallet remains the payer.
+  """
+  commercialLimits: APIKeyCommercialLimitsInput
+  clearCommercialLimits: Boolean
 }
 """
 UpdateAPIKeyProfileTemplateInput is used for update APIKeyProfileTemplate object.

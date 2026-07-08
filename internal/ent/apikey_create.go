@@ -148,6 +148,12 @@ func (_c *APIKeyCreate) SetProfiles(v *objects.APIKeyProfiles) *APIKeyCreate {
 	return _c
 }
 
+// SetCommercialLimits sets the "commercial_limits" field.
+func (_c *APIKeyCreate) SetCommercialLimits(v *objects.APIKeyCommercialLimits) *APIKeyCreate {
+	_c.mutation.SetCommercialLimits(v)
+	return _c
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (_c *APIKeyCreate) SetUser(v *User) *APIKeyCreate {
 	return _c.SetUserID(v.ID)
@@ -248,6 +254,10 @@ func (_c *APIKeyCreate) defaults() error {
 		v := apikey.DefaultProfiles
 		_c.mutation.SetProfiles(v)
 	}
+	if _, ok := _c.mutation.CommercialLimits(); !ok {
+		v := apikey.DefaultCommercialLimits
+		_c.mutation.SetCommercialLimits(v)
+	}
 	return nil
 }
 
@@ -346,6 +356,10 @@ func (_c *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Profiles(); ok {
 		_spec.SetField(apikey.FieldProfiles, field.TypeJSON, value)
 		_node.Profiles = value
+	}
+	if value, ok := _c.mutation.CommercialLimits(); ok {
+		_spec.SetField(apikey.FieldCommercialLimits, field.TypeJSON, value)
+		_node.CommercialLimits = value
 	}
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -563,6 +577,24 @@ func (u *APIKeyUpsert) ClearProfiles() *APIKeyUpsert {
 	return u
 }
 
+// SetCommercialLimits sets the "commercial_limits" field.
+func (u *APIKeyUpsert) SetCommercialLimits(v *objects.APIKeyCommercialLimits) *APIKeyUpsert {
+	u.Set(apikey.FieldCommercialLimits, v)
+	return u
+}
+
+// UpdateCommercialLimits sets the "commercial_limits" field to the value that was provided on create.
+func (u *APIKeyUpsert) UpdateCommercialLimits() *APIKeyUpsert {
+	u.SetExcluded(apikey.FieldCommercialLimits)
+	return u
+}
+
+// ClearCommercialLimits clears the value of the "commercial_limits" field.
+func (u *APIKeyUpsert) ClearCommercialLimits() *APIKeyUpsert {
+	u.SetNull(apikey.FieldCommercialLimits)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -744,6 +776,27 @@ func (u *APIKeyUpsertOne) UpdateProfiles() *APIKeyUpsertOne {
 func (u *APIKeyUpsertOne) ClearProfiles() *APIKeyUpsertOne {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearProfiles()
+	})
+}
+
+// SetCommercialLimits sets the "commercial_limits" field.
+func (u *APIKeyUpsertOne) SetCommercialLimits(v *objects.APIKeyCommercialLimits) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetCommercialLimits(v)
+	})
+}
+
+// UpdateCommercialLimits sets the "commercial_limits" field to the value that was provided on create.
+func (u *APIKeyUpsertOne) UpdateCommercialLimits() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateCommercialLimits()
+	})
+}
+
+// ClearCommercialLimits clears the value of the "commercial_limits" field.
+func (u *APIKeyUpsertOne) ClearCommercialLimits() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearCommercialLimits()
 	})
 }
 
@@ -1094,6 +1147,27 @@ func (u *APIKeyUpsertBulk) UpdateProfiles() *APIKeyUpsertBulk {
 func (u *APIKeyUpsertBulk) ClearProfiles() *APIKeyUpsertBulk {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearProfiles()
+	})
+}
+
+// SetCommercialLimits sets the "commercial_limits" field.
+func (u *APIKeyUpsertBulk) SetCommercialLimits(v *objects.APIKeyCommercialLimits) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetCommercialLimits(v)
+	})
+}
+
+// UpdateCommercialLimits sets the "commercial_limits" field to the value that was provided on create.
+func (u *APIKeyUpsertBulk) UpdateCommercialLimits() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateCommercialLimits()
+	})
+}
+
+// ClearCommercialLimits clears the value of the "commercial_limits" field.
+func (u *APIKeyUpsertBulk) ClearCommercialLimits() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearCommercialLimits()
 	})
 }
 

@@ -122,20 +122,49 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	APIKey struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Key       func(childComplexity int) int
-		Name      func(childComplexity int) int
-		Profiles  func(childComplexity int) int
-		Project   func(childComplexity int) int
-		ProjectID func(childComplexity int) int
-		Requests  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
-		Scopes    func(childComplexity int) int
-		Status    func(childComplexity int) int
-		Type      func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
-		User      func(childComplexity int) int
-		UserID    func(childComplexity int) int
+		CommercialLimits func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		ID               func(childComplexity int) int
+		Key              func(childComplexity int) int
+		Name             func(childComplexity int) int
+		Profiles         func(childComplexity int) int
+		Project          func(childComplexity int) int
+		ProjectID        func(childComplexity int) int
+		Requests         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
+		Scopes           func(childComplexity int) int
+		Status           func(childComplexity int) int
+		Type             func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
+		User             func(childComplexity int) int
+		UserID           func(childComplexity int) int
+	}
+
+	APIKeyCommercialLimitUsage struct {
+		APIKeyID               func(childComplexity int) int
+		Currency               func(childComplexity int) int
+		Daily                  func(childComplexity int) int
+		Enabled                func(childComplexity int) int
+		Monthly                func(childComplexity int) int
+		SingleRequestMaxMicros func(childComplexity int) int
+		Total                  func(childComplexity int) int
+	}
+
+	APIKeyCommercialLimitWindowUsage struct {
+		BudgetMicros    func(childComplexity int) int
+		Exceeded        func(childComplexity int) int
+		RemainingMicros func(childComplexity int) int
+		SpentMicros     func(childComplexity int) int
+		Window          func(childComplexity int) int
+	}
+
+	APIKeyCommercialLimits struct {
+		Currency               func(childComplexity int) int
+		DailyBudgetMicros      func(childComplexity int) int
+		Enabled                func(childComplexity int) int
+		MonthlyBudgetMicros    func(childComplexity int) int
+		Notes                  func(childComplexity int) int
+		SingleRequestMaxMicros func(childComplexity int) int
+		TotalBudgetMicros      func(childComplexity int) int
 	}
 
 	APIKeyConnection struct {
@@ -1624,6 +1653,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		APIKeyCommercialLimitUsage   func(childComplexity int, apiKeyID objects.GUID) int
 		APIKeyProfileTemplates       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyProfileTemplateOrder, where *ent.APIKeyProfileTemplateWhereInput) int
 		APIKeyQuotaUsages            func(childComplexity int, apiKeyID objects.GUID) int
 		APIKeyTokenUsageStats        func(childComplexity int, input *APIKeyTokenUsageStatsInput) int
@@ -2743,6 +2773,7 @@ type QueryResolver interface {
 	CountChannelsByType(ctx context.Context, input CountChannelsByTypeInput) ([]*ChannelTypeCount, error)
 	QueryChannels(ctx context.Context, input biz.QueryChannelsInput) (*ent.ChannelConnection, error)
 	APIKeyQuotaUsages(ctx context.Context, apiKeyID objects.GUID) ([]*APIKeyProfileQuotaUsage, error)
+	APIKeyCommercialLimitUsage(ctx context.Context, apiKeyID objects.GUID) (*APIKeyCommercialLimitUsage, error)
 	DashboardOverview(ctx context.Context) (*DashboardOverview, error)
 	RequestStats(ctx context.Context) (*RequestStats, error)
 	RequestStatsByChannel(ctx context.Context, timeWindow *string) ([]*RequestStatsByChannel, error)
@@ -2931,6 +2962,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
+	case "APIKey.commercialLimits":
+		if e.complexity.APIKey.CommercialLimits == nil {
+			break
+		}
+
+		return e.complexity.APIKey.CommercialLimits(childComplexity), true
 	case "APIKey.createdAt":
 		if e.complexity.APIKey.CreatedAt == nil {
 			break
@@ -3020,6 +3057,123 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.APIKey.UserID(childComplexity), true
+
+	case "APIKeyCommercialLimitUsage.apiKeyId":
+		if e.complexity.APIKeyCommercialLimitUsage.APIKeyID == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitUsage.APIKeyID(childComplexity), true
+	case "APIKeyCommercialLimitUsage.currency":
+		if e.complexity.APIKeyCommercialLimitUsage.Currency == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitUsage.Currency(childComplexity), true
+	case "APIKeyCommercialLimitUsage.daily":
+		if e.complexity.APIKeyCommercialLimitUsage.Daily == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitUsage.Daily(childComplexity), true
+	case "APIKeyCommercialLimitUsage.enabled":
+		if e.complexity.APIKeyCommercialLimitUsage.Enabled == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitUsage.Enabled(childComplexity), true
+	case "APIKeyCommercialLimitUsage.monthly":
+		if e.complexity.APIKeyCommercialLimitUsage.Monthly == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitUsage.Monthly(childComplexity), true
+	case "APIKeyCommercialLimitUsage.singleRequestMaxMicros":
+		if e.complexity.APIKeyCommercialLimitUsage.SingleRequestMaxMicros == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitUsage.SingleRequestMaxMicros(childComplexity), true
+	case "APIKeyCommercialLimitUsage.total":
+		if e.complexity.APIKeyCommercialLimitUsage.Total == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitUsage.Total(childComplexity), true
+
+	case "APIKeyCommercialLimitWindowUsage.budgetMicros":
+		if e.complexity.APIKeyCommercialLimitWindowUsage.BudgetMicros == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitWindowUsage.BudgetMicros(childComplexity), true
+	case "APIKeyCommercialLimitWindowUsage.exceeded":
+		if e.complexity.APIKeyCommercialLimitWindowUsage.Exceeded == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitWindowUsage.Exceeded(childComplexity), true
+	case "APIKeyCommercialLimitWindowUsage.remainingMicros":
+		if e.complexity.APIKeyCommercialLimitWindowUsage.RemainingMicros == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitWindowUsage.RemainingMicros(childComplexity), true
+	case "APIKeyCommercialLimitWindowUsage.spentMicros":
+		if e.complexity.APIKeyCommercialLimitWindowUsage.SpentMicros == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitWindowUsage.SpentMicros(childComplexity), true
+	case "APIKeyCommercialLimitWindowUsage.window":
+		if e.complexity.APIKeyCommercialLimitWindowUsage.Window == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimitWindowUsage.Window(childComplexity), true
+
+	case "APIKeyCommercialLimits.currency":
+		if e.complexity.APIKeyCommercialLimits.Currency == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimits.Currency(childComplexity), true
+	case "APIKeyCommercialLimits.dailyBudgetMicros":
+		if e.complexity.APIKeyCommercialLimits.DailyBudgetMicros == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimits.DailyBudgetMicros(childComplexity), true
+	case "APIKeyCommercialLimits.enabled":
+		if e.complexity.APIKeyCommercialLimits.Enabled == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimits.Enabled(childComplexity), true
+	case "APIKeyCommercialLimits.monthlyBudgetMicros":
+		if e.complexity.APIKeyCommercialLimits.MonthlyBudgetMicros == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimits.MonthlyBudgetMicros(childComplexity), true
+	case "APIKeyCommercialLimits.notes":
+		if e.complexity.APIKeyCommercialLimits.Notes == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimits.Notes(childComplexity), true
+	case "APIKeyCommercialLimits.singleRequestMaxMicros":
+		if e.complexity.APIKeyCommercialLimits.SingleRequestMaxMicros == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimits.SingleRequestMaxMicros(childComplexity), true
+	case "APIKeyCommercialLimits.totalBudgetMicros":
+		if e.complexity.APIKeyCommercialLimits.TotalBudgetMicros == nil {
+			break
+		}
+
+		return e.complexity.APIKeyCommercialLimits.TotalBudgetMicros(childComplexity), true
 
 	case "APIKeyConnection.edges":
 		if e.complexity.APIKeyConnection.Edges == nil {
@@ -9633,6 +9787,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ProxyPreset.Username(childComplexity), true
 
+	case "Query.apiKeyCommercialLimitUsage":
+		if e.complexity.Query.APIKeyCommercialLimitUsage == nil {
+			break
+		}
+
+		args, err := ec.field_Query_apiKeyCommercialLimitUsage_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.APIKeyCommercialLimitUsage(childComplexity, args["apiKeyId"].(objects.GUID)), true
 	case "Query.apiKeyProfileTemplates":
 		if e.complexity.Query.APIKeyProfileTemplates == nil {
 			break
@@ -13481,6 +13646,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputAPIKeyCommercialLimitsInput,
 		ec.unmarshalInputAPIKeyOrder,
 		ec.unmarshalInputAPIKeyProfileInput,
 		ec.unmarshalInputAPIKeyProfileTemplateOrder,
@@ -16591,6 +16757,17 @@ func (ec *executionContext) field_Query_allScopes_args(ctx context.Context, rawA
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_apiKeyCommercialLimitUsage_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "apiKeyId", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["apiKeyId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_apiKeyProfileTemplates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -18958,6 +19135,51 @@ func (ec *executionContext) fieldContext_APIKey_profiles(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _APIKey_commercialLimits(ctx context.Context, field graphql.CollectedField, obj *ent.APIKey) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKey_commercialLimits,
+		func(ctx context.Context) (any, error) {
+			return obj.CommercialLimits, nil
+		},
+		nil,
+		ec.marshalOAPIKeyCommercialLimits2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyCommercialLimits,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKey_commercialLimits(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKey",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_APIKeyCommercialLimits_enabled(ctx, field)
+			case "currency":
+				return ec.fieldContext_APIKeyCommercialLimits_currency(ctx, field)
+			case "totalBudgetMicros":
+				return ec.fieldContext_APIKeyCommercialLimits_totalBudgetMicros(ctx, field)
+			case "dailyBudgetMicros":
+				return ec.fieldContext_APIKeyCommercialLimits_dailyBudgetMicros(ctx, field)
+			case "monthlyBudgetMicros":
+				return ec.fieldContext_APIKeyCommercialLimits_monthlyBudgetMicros(ctx, field)
+			case "singleRequestMaxMicros":
+				return ec.fieldContext_APIKeyCommercialLimits_singleRequestMaxMicros(ctx, field)
+			case "notes":
+				return ec.fieldContext_APIKeyCommercialLimits_notes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type APIKeyCommercialLimits", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _APIKey_user(ctx context.Context, field graphql.CollectedField, obj *ent.APIKey) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -19139,6 +19361,599 @@ func (ec *executionContext) fieldContext_APIKey_requests(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _APIKeyCommercialLimitUsage_apiKeyId(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitUsage_apiKeyId,
+		func(ctx context.Context) (any, error) {
+			return obj.APIKeyID, nil
+		},
+		nil,
+		ec.marshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitUsage_apiKeyId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitUsage_currency(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitUsage_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitUsage_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitUsage_enabled(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitUsage_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitUsage_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitUsage_total(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitUsage_total,
+		func(ctx context.Context) (any, error) {
+			return obj.Total, nil
+		},
+		nil,
+		ec.marshalNAPIKeyCommercialLimitWindowUsage2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAPIKeyCommercialLimitWindowUsage,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitUsage_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "budgetMicros":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_budgetMicros(ctx, field)
+			case "spentMicros":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_spentMicros(ctx, field)
+			case "remainingMicros":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_remainingMicros(ctx, field)
+			case "window":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_window(ctx, field)
+			case "exceeded":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_exceeded(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type APIKeyCommercialLimitWindowUsage", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitUsage_daily(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitUsage_daily,
+		func(ctx context.Context) (any, error) {
+			return obj.Daily, nil
+		},
+		nil,
+		ec.marshalNAPIKeyCommercialLimitWindowUsage2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAPIKeyCommercialLimitWindowUsage,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitUsage_daily(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "budgetMicros":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_budgetMicros(ctx, field)
+			case "spentMicros":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_spentMicros(ctx, field)
+			case "remainingMicros":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_remainingMicros(ctx, field)
+			case "window":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_window(ctx, field)
+			case "exceeded":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_exceeded(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type APIKeyCommercialLimitWindowUsage", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitUsage_monthly(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitUsage_monthly,
+		func(ctx context.Context) (any, error) {
+			return obj.Monthly, nil
+		},
+		nil,
+		ec.marshalNAPIKeyCommercialLimitWindowUsage2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAPIKeyCommercialLimitWindowUsage,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitUsage_monthly(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "budgetMicros":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_budgetMicros(ctx, field)
+			case "spentMicros":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_spentMicros(ctx, field)
+			case "remainingMicros":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_remainingMicros(ctx, field)
+			case "window":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_window(ctx, field)
+			case "exceeded":
+				return ec.fieldContext_APIKeyCommercialLimitWindowUsage_exceeded(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type APIKeyCommercialLimitWindowUsage", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitUsage_singleRequestMaxMicros(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitUsage_singleRequestMaxMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.SingleRequestMaxMicros, nil
+		},
+		nil,
+		ec.marshalOInt642ᚖint64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitUsage_singleRequestMaxMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitWindowUsage_budgetMicros(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitWindowUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitWindowUsage_budgetMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.BudgetMicros, nil
+		},
+		nil,
+		ec.marshalOInt642ᚖint64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitWindowUsage_budgetMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitWindowUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitWindowUsage_spentMicros(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitWindowUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitWindowUsage_spentMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.SpentMicros, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitWindowUsage_spentMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitWindowUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitWindowUsage_remainingMicros(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitWindowUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitWindowUsage_remainingMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.RemainingMicros, nil
+		},
+		nil,
+		ec.marshalOInt642ᚖint64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitWindowUsage_remainingMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitWindowUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitWindowUsage_window(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitWindowUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitWindowUsage_window,
+		func(ctx context.Context) (any, error) {
+			return obj.Window, nil
+		},
+		nil,
+		ec.marshalNAPIKeyQuotaWindow2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAPIKeyQuotaWindow,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitWindowUsage_window(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitWindowUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "start":
+				return ec.fieldContext_APIKeyQuotaWindow_start(ctx, field)
+			case "end":
+				return ec.fieldContext_APIKeyQuotaWindow_end(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type APIKeyQuotaWindow", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimitWindowUsage_exceeded(ctx context.Context, field graphql.CollectedField, obj *APIKeyCommercialLimitWindowUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimitWindowUsage_exceeded,
+		func(ctx context.Context) (any, error) {
+			return obj.Exceeded, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimitWindowUsage_exceeded(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimitWindowUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimits_enabled(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyCommercialLimits) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimits_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimits_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimits",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimits_currency(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyCommercialLimits) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimits_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimits_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimits",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimits_totalBudgetMicros(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyCommercialLimits) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimits_totalBudgetMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalBudgetMicros, nil
+		},
+		nil,
+		ec.marshalOInt642ᚖint64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimits_totalBudgetMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimits",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimits_dailyBudgetMicros(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyCommercialLimits) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimits_dailyBudgetMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.DailyBudgetMicros, nil
+		},
+		nil,
+		ec.marshalOInt642ᚖint64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimits_dailyBudgetMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimits",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimits_monthlyBudgetMicros(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyCommercialLimits) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimits_monthlyBudgetMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.MonthlyBudgetMicros, nil
+		},
+		nil,
+		ec.marshalOInt642ᚖint64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimits_monthlyBudgetMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimits",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimits_singleRequestMaxMicros(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyCommercialLimits) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimits_singleRequestMaxMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.SingleRequestMaxMicros, nil
+		},
+		nil,
+		ec.marshalOInt642ᚖint64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimits_singleRequestMaxMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimits",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyCommercialLimits_notes(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyCommercialLimits) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyCommercialLimits_notes,
+		func(ctx context.Context) (any, error) {
+			return obj.Notes, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyCommercialLimits_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyCommercialLimits",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _APIKeyConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.APIKeyConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -19288,6 +20103,8 @@ func (ec *executionContext) fieldContext_APIKeyEdge_node(_ context.Context, fiel
 				return ec.fieldContext_APIKey_scopes(ctx, field)
 			case "profiles":
 				return ec.fieldContext_APIKey_profiles(ctx, field)
+			case "commercialLimits":
+				return ec.fieldContext_APIKey_commercialLimits(ctx, field)
 			case "user":
 				return ec.fieldContext_APIKey_user(ctx, field)
 			case "project":
@@ -40762,6 +41579,8 @@ func (ec *executionContext) fieldContext_Mutation_createAPIKey(ctx context.Conte
 				return ec.fieldContext_APIKey_scopes(ctx, field)
 			case "profiles":
 				return ec.fieldContext_APIKey_profiles(ctx, field)
+			case "commercialLimits":
+				return ec.fieldContext_APIKey_commercialLimits(ctx, field)
 			case "user":
 				return ec.fieldContext_APIKey_user(ctx, field)
 			case "project":
@@ -40833,6 +41652,8 @@ func (ec *executionContext) fieldContext_Mutation_updateAPIKey(ctx context.Conte
 				return ec.fieldContext_APIKey_scopes(ctx, field)
 			case "profiles":
 				return ec.fieldContext_APIKey_profiles(ctx, field)
+			case "commercialLimits":
+				return ec.fieldContext_APIKey_commercialLimits(ctx, field)
 			case "user":
 				return ec.fieldContext_APIKey_user(ctx, field)
 			case "project":
@@ -40904,6 +41725,8 @@ func (ec *executionContext) fieldContext_Mutation_updateAPIKeyStatus(ctx context
 				return ec.fieldContext_APIKey_scopes(ctx, field)
 			case "profiles":
 				return ec.fieldContext_APIKey_profiles(ctx, field)
+			case "commercialLimits":
+				return ec.fieldContext_APIKey_commercialLimits(ctx, field)
 			case "user":
 				return ec.fieldContext_APIKey_user(ctx, field)
 			case "project":
@@ -40975,6 +41798,8 @@ func (ec *executionContext) fieldContext_Mutation_updateAPIKeyProfiles(ctx conte
 				return ec.fieldContext_APIKey_scopes(ctx, field)
 			case "profiles":
 				return ec.fieldContext_APIKey_profiles(ctx, field)
+			case "commercialLimits":
+				return ec.fieldContext_APIKey_commercialLimits(ctx, field)
 			case "user":
 				return ec.fieldContext_APIKey_user(ctx, field)
 			case "project":
@@ -41046,6 +41871,8 @@ func (ec *executionContext) fieldContext_Mutation_rotateAPIKey(ctx context.Conte
 				return ec.fieldContext_APIKey_scopes(ctx, field)
 			case "profiles":
 				return ec.fieldContext_APIKey_profiles(ctx, field)
+			case "commercialLimits":
+				return ec.fieldContext_APIKey_commercialLimits(ctx, field)
 			case "user":
 				return ec.fieldContext_APIKey_user(ctx, field)
 			case "project":
@@ -42861,6 +43688,8 @@ func (ec *executionContext) fieldContext_Mutation_loadApiKeyProfileTemplate(ctx 
 				return ec.fieldContext_APIKey_scopes(ctx, field)
 			case "profiles":
 				return ec.fieldContext_APIKey_profiles(ctx, field)
+			case "commercialLimits":
+				return ec.fieldContext_APIKey_commercialLimits(ctx, field)
 			case "user":
 				return ec.fieldContext_APIKey_user(ctx, field)
 			case "project":
@@ -55284,6 +56113,63 @@ func (ec *executionContext) fieldContext_Query_apiKeyQuotaUsages(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_apiKeyCommercialLimitUsage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_apiKeyCommercialLimitUsage,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().APIKeyCommercialLimitUsage(ctx, fc.Args["apiKeyId"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNAPIKeyCommercialLimitUsage2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAPIKeyCommercialLimitUsage,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_apiKeyCommercialLimitUsage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "apiKeyId":
+				return ec.fieldContext_APIKeyCommercialLimitUsage_apiKeyId(ctx, field)
+			case "currency":
+				return ec.fieldContext_APIKeyCommercialLimitUsage_currency(ctx, field)
+			case "enabled":
+				return ec.fieldContext_APIKeyCommercialLimitUsage_enabled(ctx, field)
+			case "total":
+				return ec.fieldContext_APIKeyCommercialLimitUsage_total(ctx, field)
+			case "daily":
+				return ec.fieldContext_APIKeyCommercialLimitUsage_daily(ctx, field)
+			case "monthly":
+				return ec.fieldContext_APIKeyCommercialLimitUsage_monthly(ctx, field)
+			case "singleRequestMaxMicros":
+				return ec.fieldContext_APIKeyCommercialLimitUsage_singleRequestMaxMicros(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type APIKeyCommercialLimitUsage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_apiKeyCommercialLimitUsage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_dashboardOverview(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -59457,6 +60343,8 @@ func (ec *executionContext) fieldContext_Request_apiKey(_ context.Context, field
 				return ec.fieldContext_APIKey_scopes(ctx, field)
 			case "profiles":
 				return ec.fieldContext_APIKey_profiles(ctx, field)
+			case "commercialLimits":
+				return ec.fieldContext_APIKey_commercialLimits(ctx, field)
 			case "user":
 				return ec.fieldContext_APIKey_user(ctx, field)
 			case "project":
@@ -75289,6 +76177,75 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAPIKeyCommercialLimitsInput(ctx context.Context, obj any) (objects.APIKeyCommercialLimits, error) {
+	var it objects.APIKeyCommercialLimits
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"enabled", "currency", "totalBudgetMicros", "dailyBudgetMicros", "monthlyBudgetMicros", "singleRequestMaxMicros", "notes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "totalBudgetMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("totalBudgetMicros"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TotalBudgetMicros = data
+		case "dailyBudgetMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dailyBudgetMicros"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DailyBudgetMicros = data
+		case "monthlyBudgetMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("monthlyBudgetMicros"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MonthlyBudgetMicros = data
+		case "singleRequestMaxMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("singleRequestMaxMicros"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SingleRequestMaxMicros = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAPIKeyOrder(ctx context.Context, obj any) (ent.APIKeyOrder, error) {
 	var it ent.APIKeyOrder
 	asMap := map[string]any{}
@@ -86389,7 +87346,7 @@ func (ec *executionContext) unmarshalInputCreateAPIKeyInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "type", "scopes", "projectID"}
+	fieldsInOrder := [...]string{"name", "type", "scopes", "commercialLimits", "projectID"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86417,6 +87374,13 @@ func (ec *executionContext) unmarshalInputCreateAPIKeyInput(ctx context.Context,
 				return it, err
 			}
 			it.Scopes = data
+		case "commercialLimits":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commercialLimits"))
+			data, err := ec.unmarshalOAPIKeyCommercialLimitsInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyCommercialLimits(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CommercialLimits = data
 		case "projectID":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectID"))
 			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
@@ -104895,7 +105859,7 @@ func (ec *executionContext) unmarshalInputUpdateAPIKeyInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "scopes", "appendScopes", "clearScopes"}
+	fieldsInOrder := [...]string{"name", "scopes", "appendScopes", "clearScopes", "commercialLimits", "clearCommercialLimits"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -104930,6 +105894,20 @@ func (ec *executionContext) unmarshalInputUpdateAPIKeyInput(ctx context.Context,
 				return it, err
 			}
 			it.ClearScopes = data
+		case "commercialLimits":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commercialLimits"))
+			data, err := ec.unmarshalOAPIKeyCommercialLimitsInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyCommercialLimits(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CommercialLimits = data
+		case "clearCommercialLimits":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearCommercialLimits"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearCommercialLimits = data
 		}
 	}
 
@@ -112629,6 +113607,8 @@ func (ec *executionContext) _APIKey(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._APIKey_scopes(ctx, field, obj)
 		case "profiles":
 			out.Values[i] = ec._APIKey_profiles(ctx, field, obj)
+		case "commercialLimits":
+			out.Values[i] = ec._APIKey_commercialLimits(ctx, field, obj)
 		case "user":
 			field := field
 
@@ -112734,6 +113714,176 @@ func (ec *executionContext) _APIKey(ctx context.Context, sel ast.SelectionSet, o
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var aPIKeyCommercialLimitUsageImplementors = []string{"APIKeyCommercialLimitUsage"}
+
+func (ec *executionContext) _APIKeyCommercialLimitUsage(ctx context.Context, sel ast.SelectionSet, obj *APIKeyCommercialLimitUsage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, aPIKeyCommercialLimitUsageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("APIKeyCommercialLimitUsage")
+		case "apiKeyId":
+			out.Values[i] = ec._APIKeyCommercialLimitUsage_apiKeyId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currency":
+			out.Values[i] = ec._APIKeyCommercialLimitUsage_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "enabled":
+			out.Values[i] = ec._APIKeyCommercialLimitUsage_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "total":
+			out.Values[i] = ec._APIKeyCommercialLimitUsage_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "daily":
+			out.Values[i] = ec._APIKeyCommercialLimitUsage_daily(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "monthly":
+			out.Values[i] = ec._APIKeyCommercialLimitUsage_monthly(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "singleRequestMaxMicros":
+			out.Values[i] = ec._APIKeyCommercialLimitUsage_singleRequestMaxMicros(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var aPIKeyCommercialLimitWindowUsageImplementors = []string{"APIKeyCommercialLimitWindowUsage"}
+
+func (ec *executionContext) _APIKeyCommercialLimitWindowUsage(ctx context.Context, sel ast.SelectionSet, obj *APIKeyCommercialLimitWindowUsage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, aPIKeyCommercialLimitWindowUsageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("APIKeyCommercialLimitWindowUsage")
+		case "budgetMicros":
+			out.Values[i] = ec._APIKeyCommercialLimitWindowUsage_budgetMicros(ctx, field, obj)
+		case "spentMicros":
+			out.Values[i] = ec._APIKeyCommercialLimitWindowUsage_spentMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "remainingMicros":
+			out.Values[i] = ec._APIKeyCommercialLimitWindowUsage_remainingMicros(ctx, field, obj)
+		case "window":
+			out.Values[i] = ec._APIKeyCommercialLimitWindowUsage_window(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "exceeded":
+			out.Values[i] = ec._APIKeyCommercialLimitWindowUsage_exceeded(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var aPIKeyCommercialLimitsImplementors = []string{"APIKeyCommercialLimits"}
+
+func (ec *executionContext) _APIKeyCommercialLimits(ctx context.Context, sel ast.SelectionSet, obj *objects.APIKeyCommercialLimits) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, aPIKeyCommercialLimitsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("APIKeyCommercialLimits")
+		case "enabled":
+			out.Values[i] = ec._APIKeyCommercialLimits_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currency":
+			out.Values[i] = ec._APIKeyCommercialLimits_currency(ctx, field, obj)
+		case "totalBudgetMicros":
+			out.Values[i] = ec._APIKeyCommercialLimits_totalBudgetMicros(ctx, field, obj)
+		case "dailyBudgetMicros":
+			out.Values[i] = ec._APIKeyCommercialLimits_dailyBudgetMicros(ctx, field, obj)
+		case "monthlyBudgetMicros":
+			out.Values[i] = ec._APIKeyCommercialLimits_monthlyBudgetMicros(ctx, field, obj)
+		case "singleRequestMaxMicros":
+			out.Values[i] = ec._APIKeyCommercialLimits_singleRequestMaxMicros(ctx, field, obj)
+		case "notes":
+			out.Values[i] = ec._APIKeyCommercialLimits_notes(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -127157,6 +128307,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "apiKeyCommercialLimitUsage":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_apiKeyCommercialLimitUsage(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "dashboardOverview":
 			field := field
 
@@ -136539,6 +137711,30 @@ func (ec *executionContext) marshalNAPIKey2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋ
 	return ec._APIKey(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNAPIKeyCommercialLimitUsage2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAPIKeyCommercialLimitUsage(ctx context.Context, sel ast.SelectionSet, v APIKeyCommercialLimitUsage) graphql.Marshaler {
+	return ec._APIKeyCommercialLimitUsage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAPIKeyCommercialLimitUsage2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAPIKeyCommercialLimitUsage(ctx context.Context, sel ast.SelectionSet, v *APIKeyCommercialLimitUsage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._APIKeyCommercialLimitUsage(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAPIKeyCommercialLimitWindowUsage2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAPIKeyCommercialLimitWindowUsage(ctx context.Context, sel ast.SelectionSet, v *APIKeyCommercialLimitWindowUsage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._APIKeyCommercialLimitWindowUsage(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNAPIKeyConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAPIKeyConnection(ctx context.Context, sel ast.SelectionSet, v ent.APIKeyConnection) graphql.Marshaler {
 	return ec._APIKeyConnection(ctx, sel, &v)
 }
@@ -139633,6 +140829,22 @@ func (ec *executionContext) unmarshalNInt2int64(ctx context.Context, v any) (int
 }
 
 func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalInt64(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt642int64(ctx context.Context, v any) (int64, error) {
+	res, err := graphql.UnmarshalInt64(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalInt64(v)
 	if res == graphql.Null {
@@ -143770,6 +144982,21 @@ func (ec *executionContext) marshalOAPIKey2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋ
 	return ec._APIKey(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOAPIKeyCommercialLimits2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyCommercialLimits(ctx context.Context, sel ast.SelectionSet, v *objects.APIKeyCommercialLimits) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._APIKeyCommercialLimits(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAPIKeyCommercialLimitsInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyCommercialLimits(ctx context.Context, v any) (*objects.APIKeyCommercialLimits, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAPIKeyCommercialLimitsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalOAPIKeyEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAPIKeyEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.APIKeyEdge) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -147430,6 +148657,24 @@ func (ec *executionContext) unmarshalOInt2ᚖint64(ctx context.Context, v any) (
 }
 
 func (ec *executionContext) marshalOInt2ᚖint64(ctx context.Context, sel ast.SelectionSet, v *int64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalInt64(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt642ᚖint64(ctx context.Context, v any) (*int64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt64(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.SelectionSet, v *int64) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

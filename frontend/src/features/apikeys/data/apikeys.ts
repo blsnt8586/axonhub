@@ -9,6 +9,7 @@ import { useRequestPermissions } from '../../../hooks/useRequestPermissions';
 import type {
   ApiKey,
   ApiKeyConnection,
+  ApiKeyCommercialLimitUsage,
   ApiKeyProfileQuotaUsage,
   ApiKeyProfileTemplate,
   ApiKeyTokenUsageStats,
@@ -18,9 +19,28 @@ import type {
   UpdateApiKeyProfileTemplateInput,
   UpdateApiKeyProfilesInput,
 } from './schema';
-import { apiKeyConnectionSchema, apiKeyProfileQuotaUsageSchema, apiKeyProfileTemplateSchema, apiKeySchema, apiKeyTokenUsageStatsSchema } from './schema';
+import {
+  apiKeyCommercialLimitUsageSchema,
+  apiKeyConnectionSchema,
+  apiKeyProfileQuotaUsageSchema,
+  apiKeyProfileTemplateSchema,
+  apiKeySchema,
+  apiKeyTokenUsageStatsSchema,
+} from './schema';
 
 const NOAUTH_API_KEY_TYPE = 'noauth';
+
+const API_KEY_COMMERCIAL_LIMITS_FIELDS = `
+  commercialLimits {
+    enabled
+    currency
+    totalBudgetMicros
+    dailyBudgetMicros
+    monthlyBudgetMicros
+    singleRequestMaxMicros
+    notes
+  }
+`;
 
 // Dynamic GraphQL query builders
 function buildApiKeysQuery(permissions: { canViewUsers: boolean }) {
@@ -46,6 +66,7 @@ function buildApiKeysQuery(permissions: { canViewUsers: boolean }) {
             type
             status
             scopes
+            ${API_KEY_COMMERCIAL_LIMITS_FIELDS}
           }
           cursor
         }
@@ -83,6 +104,7 @@ function buildApiKeyQuery(permissions: { canViewUsers: boolean }) {
         type
         status
         scopes
+        ${API_KEY_COMMERCIAL_LIMITS_FIELDS}
         profiles {
           activeProfile
           profiles {
@@ -132,6 +154,7 @@ function buildCreateApiKeyMutation(permissions: { canViewUsers: boolean }) {
         type
         status
         scopes
+        ${API_KEY_COMMERCIAL_LIMITS_FIELDS}
       }
     }
   `;
@@ -158,6 +181,7 @@ function buildUpdateApiKeyMutation(permissions: { canViewUsers: boolean }) {
         type
         status
         scopes
+        ${API_KEY_COMMERCIAL_LIMITS_FIELDS}
       }
     }
   `;
@@ -234,6 +258,7 @@ const ROTATE_APIKEY_MUTATION = `
       type
       status
       scopes
+      ${API_KEY_COMMERCIAL_LIMITS_FIELDS}
       createdAt
       updatedAt
     }
@@ -256,6 +281,38 @@ const APIKEY_QUOTA_USAGES_QUERY = `
       }
       window { start end }
       usage { requestCount totalTokens totalCost }
+    }
+  }
+`;
+
+const APIKEY_COMMERCIAL_LIMIT_USAGE_QUERY = `
+  query APIKeyCommercialLimitUsage($apiKeyId: ID!) {
+    apiKeyCommercialLimitUsage(apiKeyId: $apiKeyId) {
+      apiKeyId
+      currency
+      enabled
+      total {
+        budgetMicros
+        spentMicros
+        remainingMicros
+        window { start end }
+        exceeded
+      }
+      daily {
+        budgetMicros
+        spentMicros
+        remainingMicros
+        window { start end }
+        exceeded
+      }
+      monthly {
+        budgetMicros
+        spentMicros
+        remainingMicros
+        window { start end }
+        exceeded
+      }
+      singleRequestMaxMicros
     }
   }
 `;
@@ -480,6 +537,38 @@ export function useApiKeyQuotaUsages(
           headers
         );
         return apiKeyProfileQuotaUsageSchema.array().parse(data.apiKeyQuotaUsages);
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
+    },
+    enabled: !!apiKeyId && (options?.enabled ?? true),
+    refetchInterval: options?.refetchInterval,
+  });
+}
+
+export function useApiKeyCommercialLimitUsage(
+  apiKeyId: string,
+  options?: {
+    enabled?: boolean;
+    refetchInterval?: number;
+  }
+) {
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
+  const selectedProjectId = useSelectedProjectId();
+
+  return useQuery({
+    queryKey: ['apiKeyCommercialLimitUsage', apiKeyId, selectedProjectId],
+    queryFn: async () => {
+      try {
+        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+        const data = await graphqlRequest<{ apiKeyCommercialLimitUsage: ApiKeyCommercialLimitUsage }>(
+          APIKEY_COMMERCIAL_LIMIT_USAGE_QUERY,
+          { apiKeyId },
+          headers
+        );
+        return apiKeyCommercialLimitUsageSchema.parse(data.apiKeyCommercialLimitUsage);
       } catch (error) {
         handleError(error, t('common.errors.internalServerError'));
         throw error;

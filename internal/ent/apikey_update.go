@@ -145,6 +145,18 @@ func (_u *APIKeyUpdate) ClearProfiles() *APIKeyUpdate {
 	return _u
 }
 
+// SetCommercialLimits sets the "commercial_limits" field.
+func (_u *APIKeyUpdate) SetCommercialLimits(v *objects.APIKeyCommercialLimits) *APIKeyUpdate {
+	_u.mutation.SetCommercialLimits(v)
+	return _u
+}
+
+// ClearCommercialLimits clears the value of the "commercial_limits" field.
+func (_u *APIKeyUpdate) ClearCommercialLimits() *APIKeyUpdate {
+	_u.mutation.ClearCommercialLimits()
+	return _u
+}
+
 // AddRequestIDs adds the "requests" edge to the Request entity by IDs.
 func (_u *APIKeyUpdate) AddRequestIDs(ids ...int) *APIKeyUpdate {
 	_u.mutation.AddRequestIDs(ids...)
@@ -301,6 +313,12 @@ func (_u *APIKeyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.ProfilesCleared() {
 		_spec.ClearField(apikey.FieldProfiles, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.CommercialLimits(); ok {
+		_spec.SetField(apikey.FieldCommercialLimits, field.TypeJSON, value)
+	}
+	if _u.mutation.CommercialLimitsCleared() {
+		_spec.ClearField(apikey.FieldCommercialLimits, field.TypeJSON)
 	}
 	if _u.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -479,6 +497,18 @@ func (_u *APIKeyUpdateOne) SetProfiles(v *objects.APIKeyProfiles) *APIKeyUpdateO
 // ClearProfiles clears the value of the "profiles" field.
 func (_u *APIKeyUpdateOne) ClearProfiles() *APIKeyUpdateOne {
 	_u.mutation.ClearProfiles()
+	return _u
+}
+
+// SetCommercialLimits sets the "commercial_limits" field.
+func (_u *APIKeyUpdateOne) SetCommercialLimits(v *objects.APIKeyCommercialLimits) *APIKeyUpdateOne {
+	_u.mutation.SetCommercialLimits(v)
+	return _u
+}
+
+// ClearCommercialLimits clears the value of the "commercial_limits" field.
+func (_u *APIKeyUpdateOne) ClearCommercialLimits() *APIKeyUpdateOne {
+	_u.mutation.ClearCommercialLimits()
 	return _u
 }
 
@@ -668,6 +698,12 @@ func (_u *APIKeyUpdateOne) sqlSave(ctx context.Context) (_node *APIKey, err erro
 	}
 	if _u.mutation.ProfilesCleared() {
 		_spec.ClearField(apikey.FieldProfiles, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.CommercialLimits(); ok {
+		_spec.SetField(apikey.FieldCommercialLimits, field.TypeJSON, value)
+	}
+	if _u.mutation.CommercialLimitsCleared() {
+		_spec.ClearField(apikey.FieldCommercialLimits, field.TypeJSON)
 	}
 	if _u.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{

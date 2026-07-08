@@ -11,6 +11,16 @@ type APIKeyProfiles struct {
 	Profiles      []APIKeyProfile `json:"profiles"`
 }
 
+type APIKeyCommercialLimits struct {
+	Enabled                bool    `json:"enabled"`
+	Currency               string  `json:"currency,omitempty"`
+	TotalBudgetMicros      *int64  `json:"totalBudgetMicros,omitempty"`
+	DailyBudgetMicros      *int64  `json:"dailyBudgetMicros,omitempty"`
+	MonthlyBudgetMicros    *int64  `json:"monthlyBudgetMicros,omitempty"`
+	SingleRequestMaxMicros *int64  `json:"singleRequestMaxMicros,omitempty"`
+	Notes                  *string `json:"notes,omitempty"`
+}
+
 type APIKeyProfile struct {
 	Name                string         `json:"name"`
 	ModelMappings       []ModelMapping `json:"modelMappings"`

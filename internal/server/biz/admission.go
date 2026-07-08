@@ -31,6 +31,7 @@ const (
 	AdmissionCodeAccountClosed         AdmissionCode = "billing_account_closed"
 	AdmissionCodeInvalidMinimumBalance AdmissionCode = "invalid_minimum_balance"
 	AdmissionCodeInsufficientBalance   AdmissionCode = "insufficient_billing_balance"
+	AdmissionCodeAPIKeyBudgetExceeded  AdmissionCode = "api_key_budget_exceeded"
 )
 
 type BillingConfig struct {
@@ -84,19 +85,22 @@ func (c BillingConfig) normalized() BillingConfig {
 type AdmissionServiceParams struct {
 	fx.In
 
-	Config                BillingConfig
-	BillingAccountService *BillingAccountService
+	Config                 BillingConfig
+	BillingAccountService  *BillingAccountService
+	CommercialLimitService *APIKeyCommercialLimitService
 }
 
 type AdmissionService struct {
-	config                BillingConfig
-	billingAccountService *BillingAccountService
+	config                 BillingConfig
+	billingAccountService  *BillingAccountService
+	commercialLimitService *APIKeyCommercialLimitService
 }
 
 func NewAdmissionService(params AdmissionServiceParams) *AdmissionService {
 	return &AdmissionService{
-		config:                params.Config.normalized(),
-		billingAccountService: params.BillingAccountService,
+		config:                 params.Config.normalized(),
+		billingAccountService:  params.BillingAccountService,
+		commercialLimitService: params.CommercialLimitService,
 	}
 }
 
@@ -122,8 +126,10 @@ func (s *AdmissionService) BillingSubjectForAPIKey(apiKey *ent.APIKey, projectID
 }
 
 type AdmissionCheckInput struct {
-	Subject BillingSubject
-	ModelID string
+	Subject               BillingSubject
+	ModelID               string
+	APIKey                *ent.APIKey
+	EstimatedChargeMicros int64
 }
 
 type AdmissionDecision struct {
@@ -143,6 +149,32 @@ func (s *AdmissionService) Check(ctx context.Context, input AdmissionCheckInput)
 	}
 	if input.Subject.Type == "" {
 		input.Subject.Type = cfg.Subject
+	}
+
+	if s.commercialLimitService != nil && input.APIKey != nil {
+		estimatedChargeMicros := input.EstimatedChargeMicros
+		if estimatedChargeMicros == 0 {
+			if micros, err := decimalToMicros(cfg.HoldDefaultAmount); err == nil {
+				estimatedChargeMicros = micros
+			}
+		}
+		limitResult, err := s.commercialLimitService.Check(ctx, APIKeyCommercialLimitCheckInput{
+			APIKey:                input.APIKey,
+			Currency:              cfg.Currency,
+			EstimatedChargeMicros: estimatedChargeMicros,
+		})
+		if err != nil {
+			decision.Code = AdmissionCodeAPIKeyBudgetExceeded
+			decision.Reason = limitResult.Message
+			if decision.Reason == "" {
+				decision.Reason = err.Error()
+			}
+			if cfg.Mode == AdmissionModeWarn {
+				return decision, nil
+			}
+			decision.Allowed = false
+			return decision, err
+		}
 	}
 
 	code, reason, err := s.checkBillingAccount(ctx, cfg, input.Subject)

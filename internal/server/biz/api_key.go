@@ -320,6 +320,9 @@ func (s *APIKeyService) CreateAPIKey(ctx context.Context, input ent.CreateAPIKey
 
 		apiKeyType = *input.Type
 	}
+	if err := ValidateAPIKeyCommercialLimits(input.CommercialLimits); err != nil {
+		return nil, err
+	}
 
 	// Generate API key with configured prefix
 	generatedKey, err := GenerateAPIKey(s.keyPrefix)
@@ -375,6 +378,9 @@ func (s *APIKeyService) CreateAPIKey(ctx context.Context, input ent.CreateAPIKey
 				create.SetScopes([]string{})
 			}
 		}
+		if input.CommercialLimits != nil {
+			create.SetCommercialLimits(input.CommercialLimits)
+		}
 
 		created, err := create.Save(ctx)
 		if err != nil {
@@ -413,6 +419,9 @@ func (s *APIKeyService) UpdateAPIKey(ctx context.Context, id int, input ent.Upda
 		if apiKey.Type == apikey.TypeNoauth {
 			return fmt.Errorf("noauth type API key cannot be updated")
 		}
+		if err := ValidateAPIKeyCommercialLimits(input.CommercialLimits); err != nil {
+			return err
+		}
 
 		if apiKey.Type == apikey.TypePersonal {
 			user, ok := contexts.GetUser(ctx)
@@ -450,6 +459,12 @@ func (s *APIKeyService) UpdateAPIKey(ctx context.Context, id int, input ent.Upda
 		}
 
 		update := client.APIKey.UpdateOneID(id).SetNillableName(input.Name)
+		if input.ClearCommercialLimits {
+			update.ClearCommercialLimits()
+		}
+		if input.CommercialLimits != nil {
+			update.SetCommercialLimits(input.CommercialLimits)
+		}
 
 		if apiKey.Type == apikey.TypeServiceAccount {
 			if len(input.Scopes) > 0 {

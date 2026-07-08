@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
@@ -799,6 +800,25 @@ func (r *queryResolver) APIKeyQuotaUsages(ctx context.Context, apiKeyID objects.
 	}
 
 	return result, nil
+}
+
+// APIKeyCommercialLimitUsage is the resolver for the apiKeyCommercialLimitUsage field.
+func (r *queryResolver) APIKeyCommercialLimitUsage(ctx context.Context, apiKeyID objects.GUID) (*APIKeyCommercialLimitUsage, error) {
+	if r.apiKeyCommercialLimitService == nil {
+		return nil, fmt.Errorf("api key commercial limit service is not available")
+	}
+
+	apiKey, err := r.client.APIKey.Get(ctx, apiKeyID.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get api key: %w", err)
+	}
+
+	usage, err := r.apiKeyCommercialLimitService.Usage(ctx, apiKey, "", time.Time{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get api key commercial limit usage: %w", err)
+	}
+
+	return toGQLAPIKeyCommercialLimitUsage(usage), nil
 }
 
 // ID is the resolver for the id field.

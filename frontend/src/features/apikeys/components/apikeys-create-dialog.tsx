@@ -11,6 +11,8 @@ import { useApiKeysContext } from '../context/apikeys-context';
 import { useCreateApiKey } from '../data/apikeys';
 import { CreateApiKeyInput, createApiKeyInputSchema } from '../data/schema';
 import { ScopesSelect } from '@/components/scopes-select';
+import { ApiKeyCommercialLimitsFields } from './api-key-commercial-limits-fields';
+import { defaultCommercialLimits, normalizeCommercialLimitsForSubmit } from './api-key-commercial-limits-utils';
 
 export function ApiKeysCreateDialog() {
   const { t } = useTranslation();
@@ -26,6 +28,7 @@ export function ApiKeysCreateDialog() {
       name: '',
       type: 'user',
       scopes: undefined,
+      commercialLimits: defaultCommercialLimits(),
     },
   });
 
@@ -34,14 +37,18 @@ export function ApiKeysCreateDialog() {
   const onSubmit = async (data: CreateApiKeyInput) => {
     setIsSubmitting(true);
     try {
-      const submitData = data.type === 'user' || data.type === 'personal' ? { ...data, scopes: undefined } : data;
+      const submitData = {
+        ...data,
+        commercialLimits: normalizeCommercialLimitsForSubmit(data.commercialLimits),
+        scopes: data.type === 'user' || data.type === 'personal' ? undefined : data.scopes,
+      };
       const result = await createApiKey.mutateAsync(submitData);
       form.reset();
       closeDialog('create');
       // Open view dialog with the created API key
       setSelectedApiKey(result.createAPIKey);
       openDialog('view', result.createAPIKey);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     } finally {
       setIsSubmitting(false);
@@ -130,6 +137,8 @@ export function ApiKeysCreateDialog() {
                 )}
               />
             )}
+
+            <ApiKeyCommercialLimitsFields form={form} />
 
             <DialogFooter className='flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end'>
               <div className='flex w-full gap-2 sm:w-auto'>

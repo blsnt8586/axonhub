@@ -2,6 +2,7 @@ scalar JSONRawMessage
 scalar JSONRawMessageInput
 scalar Decimal
 scalar DecimalInput
+scalar Int64
 
 type ModelMapping {
   from: String!
@@ -397,6 +398,44 @@ input UpdateAPIKeyScopesInput {
 type APIKeyProfiles {
   activeProfile: String!
   profiles: [APIKeyProfile!]
+}
+
+input APIKeyCommercialLimitsInput {
+  enabled: Boolean!
+  currency: String
+  totalBudgetMicros: Int64
+  dailyBudgetMicros: Int64
+  monthlyBudgetMicros: Int64
+  singleRequestMaxMicros: Int64
+  notes: String
+}
+
+type APIKeyCommercialLimits {
+  enabled: Boolean!
+  currency: String
+  totalBudgetMicros: Int64
+  dailyBudgetMicros: Int64
+  monthlyBudgetMicros: Int64
+  singleRequestMaxMicros: Int64
+  notes: String
+}
+
+type APIKeyCommercialLimitWindowUsage {
+  budgetMicros: Int64
+  spentMicros: Int64!
+  remainingMicros: Int64
+  window: APIKeyQuotaWindow!
+  exceeded: Boolean!
+}
+
+type APIKeyCommercialLimitUsage {
+  apiKeyId: ID!
+  currency: String!
+  enabled: Boolean!
+  total: APIKeyCommercialLimitWindowUsage!
+  daily: APIKeyCommercialLimitWindowUsage!
+  monthly: APIKeyCommercialLimitWindowUsage!
+  singleRequestMaxMicros: Int64
 }
 
 type APIKeyProfile {
@@ -961,4 +1000,5 @@ extend type Query {
   Returns quota usage for profiles that have quota enabled for an API key.
   """
   apiKeyQuotaUsages(apiKeyId: ID!): [APIKeyProfileQuotaUsage!]!
+  apiKeyCommercialLimitUsage(apiKeyId: ID!): APIKeyCommercialLimitUsage!
 }

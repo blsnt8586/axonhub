@@ -36,6 +36,7 @@ func enforceBillingAdmission(inbound *PersistentInboundTransformer) pipeline.Mid
 		decision, err := state.AdmissionService.Check(ctx, biz.AdmissionCheckInput{
 			Subject: subject,
 			ModelID: llmRequest.Model,
+			APIKey:  state.APIKey,
 		})
 		if decision.Allowed {
 			if decision.Code == biz.AdmissionCodeAllowed && state.BillingHoldService != nil {
@@ -115,7 +116,7 @@ func enforceBillingAdmission(inbound *PersistentInboundTransformer) pipeline.Mid
 		return nil, &llm.ResponseError{
 			StatusCode: http.StatusPaymentRequired,
 			Detail: llm.ErrorDetail{
-				Code:      "billing_admission_denied",
+				Code:      string(decision.Code),
 				Message:   decision.Reason,
 				Type:      "billing_error",
 				RequestID: requestID,

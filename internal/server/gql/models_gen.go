@@ -24,6 +24,24 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type APIKeyCommercialLimitUsage struct {
+	APIKeyID               objects.GUID                      `json:"apiKeyId"`
+	Currency               string                            `json:"currency"`
+	Enabled                bool                              `json:"enabled"`
+	Total                  *APIKeyCommercialLimitWindowUsage `json:"total"`
+	Daily                  *APIKeyCommercialLimitWindowUsage `json:"daily"`
+	Monthly                *APIKeyCommercialLimitWindowUsage `json:"monthly"`
+	SingleRequestMaxMicros *int64                            `json:"singleRequestMaxMicros,omitempty"`
+}
+
+type APIKeyCommercialLimitWindowUsage struct {
+	BudgetMicros    *int64             `json:"budgetMicros,omitempty"`
+	SpentMicros     int64              `json:"spentMicros"`
+	RemainingMicros *int64             `json:"remainingMicros,omitempty"`
+	Window          *APIKeyQuotaWindow `json:"window"`
+	Exceeded        bool               `json:"exceeded"`
+}
+
 type APIKeyProfileQuotaUsage struct {
 	ProfileName string               `json:"profileName"`
 	Quota       *objects.APIKeyQuota `json:"quota"`

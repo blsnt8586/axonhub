@@ -147,31 +147,32 @@ Verification:
 
 ## Stage 4: API Key Budgets And Commercial Limits
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: provide new-api-like API key budget controls while keeping the user wallet as the source of funds.
 
 Backend scope:
 
-- [ ] Add API key commercial budget configuration: total, daily, monthly, and single-request max.
-- [ ] Add model allow/deny constraints where they do not duplicate existing profile behavior.
-- [ ] Add project restriction support if missing from current API key/profile model.
-- [ ] Admission checks wallet availability and API key budget together.
-- [ ] Usage billing increments API key spend counters after charge.
-- [ ] Periodic budget reset handles daily/monthly windows.
+- [x] Add API key commercial budget configuration: total, daily, monthly, and single-request max.
+- [x] Keep model restrictions on the existing API key profile `modelIDs` path instead of duplicating allow/deny fields.
+- [x] Keep project restriction on the existing API key `project_id` path.
+- [x] Admission checks wallet availability and API key budget together.
+- [x] Usage billing records charged API key spend as the source of truth after charge.
+- [x] Daily/monthly budget reset is handled by deterministic usage windows.
 
 Frontend scope:
 
-- [ ] API key create/edit form includes budget controls.
-- [ ] API key list displays current spend and remaining budget.
-- [ ] User can self-limit own keys; owner can override through admin controls.
+- [x] API key create/edit form includes budget controls.
+- [x] API key list displays current spend and remaining budget.
+- [x] User can self-limit own keys; owner can override through API key management controls.
 
 Verification:
 
-- [ ] Wallet sufficient but key over budget is denied.
-- [ ] Key budget sufficient but wallet insufficient is denied.
-- [ ] Daily/monthly reset is deterministic and repeatable.
-- [ ] Commit completed stage.
+- [x] Wallet sufficient but key over budget is denied.
+- [x] Key budget sufficient but wallet insufficient is denied.
+- [x] Daily/monthly reset is deterministic and repeatable.
+- [x] Frontend typecheck, targeted lint, and production build pass.
+- [x] Commit completed stage.
 
 ## Stage 5: Redeem Codes
 
