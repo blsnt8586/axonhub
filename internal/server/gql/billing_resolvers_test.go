@@ -286,6 +286,29 @@ func TestBillingResolversOwnerCanAdjustAndQueryUserBalance(t *testing.T) {
 	require.Equal(t, tx.ID, ledgerTxs.Edges[0].Node.ID)
 }
 
+func TestBillingResolversOwnerCanUpdateUserBillingAccount(t *testing.T) {
+	mutationResolver, queryResolver, ctx, client, owner, _ := setupBillingResolversTest(t, "billing_resolver_owner_update_user_account")
+	user := createBillingResolverUser(t, ctx, client, false)
+	ownerCtx := contexts.WithUser(ctx, owner)
+
+	account, err := mutationResolver.UpdateUserBillingAccount(ownerCtx, biz.UpdateUserBillingAccountInput{
+		UserID:      user.ID,
+		Status:      ptr(billingaccount.StatusFrozen),
+		CreditLimit: ptr(decimal.RequireFromString("30")),
+	})
+	require.NoError(t, err)
+	require.Equal(t, billingaccount.OwnerTypeUser, account.OwnerType)
+	require.Equal(t, user.ID, account.OwnerID)
+	require.Equal(t, billingaccount.StatusFrozen, account.Status)
+	require.Equal(t, int64(30_000_000), account.CreditLimitMicros)
+
+	loaded, err := queryResolver.UserBillingAccount(ownerCtx, objects.GUID{Type: ent.TypeUser, ID: user.ID})
+	require.NoError(t, err)
+	require.Equal(t, account.ID, loaded.ID)
+	require.Equal(t, billingaccount.StatusFrozen, loaded.Status)
+	require.Equal(t, int64(30_000_000), loaded.CreditLimitMicros)
+}
+
 func TestBillingResolversRejectsUserBillingAdminOperationsForNonOwner(t *testing.T) {
 	mutationResolver, queryResolver, ctx, client, _, _ := setupBillingResolversTest(t, "billing_resolver_admin_reject_non_owner")
 	user := createBillingResolverUser(t, ctx, client, false)
@@ -299,6 +322,12 @@ func TestBillingResolversRejectsUserBillingAdminOperationsForNonOwner(t *testing
 		UserID:    user.ID,
 		Direction: ledgertransaction.DirectionCredit,
 		Amount:    decimal.NewFromInt(1),
+	})
+	require.True(t, errors.Is(err, ErrNotOwner))
+
+	_, err = mutationResolver.UpdateUserBillingAccount(userCtx, biz.UpdateUserBillingAccountInput{
+		UserID: user.ID,
+		Status: ptr(billingaccount.StatusFrozen),
 	})
 	require.True(t, errors.Is(err, ErrNotOwner))
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/enttest"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
@@ -104,6 +105,49 @@ func TestPaymentServiceRejectsEventKeyReusedByAnotherOrder(t *testing.T) {
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "does not belong to order")
+}
+
+func TestPaymentServiceUpdatesUserBillingAccount(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, svc := newPaymentTestService(t, "payment_update_user_billing_account")
+	user, err := client.User.Create().
+		SetEmail("billing-account-update@example.com").
+		SetPassword("hashed-password").
+		Save(ctx)
+	require.NoError(t, err)
+
+	account, err := svc.UpdateUserBillingAccount(ctx, UpdateUserBillingAccountInput{
+		UserID:      user.ID,
+		Status:      ptr(billingaccount.StatusFrozen),
+		CreditLimit: ptr(decimal.RequireFromString("25.5")),
+	})
+	require.NoError(t, err)
+	require.Equal(t, billingaccount.OwnerTypeUser, account.OwnerType)
+	require.Equal(t, user.ID, account.OwnerID)
+	require.Equal(t, billingaccount.StatusFrozen, account.Status)
+	require.Equal(t, int64(25_500_000), account.CreditLimitMicros)
+
+	account, err = svc.UpdateUserBillingAccount(ctx, UpdateUserBillingAccountInput{
+		UserID:      user.ID,
+		Status:      ptr(billingaccount.StatusActive),
+		CreditLimit: ptr(decimal.Zero),
+	})
+	require.NoError(t, err)
+	require.Equal(t, billingaccount.StatusActive, account.Status)
+	require.Equal(t, int64(0), account.CreditLimitMicros)
+}
+
+func TestPaymentServiceRejectsInvalidUserBillingAccountUpdate(t *testing.T) {
+	t.Parallel()
+
+	_, ctx, svc := newPaymentTestService(t, "payment_update_user_billing_invalid")
+	_, err := svc.UpdateUserBillingAccount(ctx, UpdateUserBillingAccountInput{UserID: 0})
+	require.ErrorContains(t, err, "user id is required")
+
+	negative := decimal.RequireFromString("-1")
+	_, err = svc.UpdateUserBillingAccount(ctx, UpdateUserBillingAccountInput{UserID: 1, CreditLimit: &negative})
+	require.ErrorContains(t, err, "credit limit cannot be negative")
 }
 
 func TestPaymentServiceSimulatedEPayCheckoutAndNotifyCreditsLedgerOnce(t *testing.T) {
@@ -368,4 +412,8 @@ func newPaymentTestService(t *testing.T, name string) (*ent.Client, context.Cont
 	})
 
 	return client, ctx, svc
+}
+
+func ptr[T any](value T) *T {
+	return &value
 }

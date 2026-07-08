@@ -53,6 +53,12 @@ input AdjustUserBalanceInput {
   memo: String
 }
 
+input UpdateUserBillingAccountInput {
+  userId: ID!
+  status: BillingAccountStatus
+  creditLimit: DecimalInput
+}
+
 input SaveBillingPriceRuleForm {
   id: ID
   scopeType: BillingPriceRuleScopeType!
@@ -82,6 +88,7 @@ extend type Mutation {
   upsertEPayPaymentProvider(input: UpsertEPayPaymentProviderInput!): PaymentProviderInstance!
   createMyEPayRechargeCheckout(input: CreateMyEPayRechargeCheckoutInput!): PaymentCheckout!
   adjustUserBalance(input: AdjustUserBalanceInput!): LedgerTransaction!
+  updateUserBillingAccount(input: UpdateUserBillingAccountInput!): BillingAccount!
   saveBillingPriceRule(input: SaveBillingPriceRuleForm!): BillingPriceRule!
   deleteBillingPriceRule(id: ID!): Boolean!
 }

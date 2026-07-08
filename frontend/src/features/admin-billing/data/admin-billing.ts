@@ -195,6 +195,20 @@ const ADJUST_USER_BALANCE_MUTATION = `
   }
 `;
 
+const UPDATE_USER_BILLING_ACCOUNT_MUTATION = `
+  mutation UpdateUserBillingAccount($input: UpdateUserBillingAccountInput!) {
+    updateUserBillingAccount(input: $input) {
+      id
+      ownerType
+      ownerID
+      currency
+      balanceMicros
+      creditLimitMicros
+      status
+    }
+  }
+`;
+
 const SAVE_BILLING_PRICE_RULE_MUTATION = `
   mutation SaveBillingPriceRule($input: SaveBillingPriceRuleForm!) {
     saveBillingPriceRule(input: $input) {
@@ -289,6 +303,21 @@ export function useAdjustUserBalance() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
+    },
+  });
+}
+
+export function useUpdateUserBillingAccount() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { userId: string; status?: BillingAccountStatus; creditLimit?: string }) => {
+      const data = await graphqlRequest<{ updateUserBillingAccount: BillingAccount }>(UPDATE_USER_BILLING_ACCOUNT_MUTATION, { input });
+      return data.updateUserBillingAccount;
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'user-detail', variables.userId] });
     },
   });
 }

@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Loader2, RefreshCw, Save, WalletCards } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -17,11 +17,13 @@ import { extractNumberIDAsNumber } from '@/lib/utils';
 import { useUsers } from '@/features/users/data/users';
 import {
   type BillingPriceRule,
+  type BillingAccountStatus,
   type LedgerTransactionDirection,
   type ModelPrice,
   useAdminBillingOverview,
   useAdminUserBillingDetail,
   useAdjustUserBalance,
+  useUpdateUserBillingAccount,
   useSaveBillingPriceRule,
   useUpsertEPayPaymentProvider,
 } from './data/admin-billing';
@@ -59,6 +61,15 @@ function normalizeAmount(value: string, scale = 6) {
   if (!pattern.test(trimmed)) return '';
   const amount = Number(trimmed);
   if (!Number.isFinite(amount) || amount <= 0) return '';
+  return trimmed;
+}
+
+function normalizeNonNegativeAmount(value: string, scale = 6) {
+  const trimmed = value.trim();
+  const pattern = new RegExp(`^\\d+(\\.\\d{1,${scale}})?$`);
+  if (!pattern.test(trimmed)) return '';
+  const amount = Number(trimmed);
+  if (!Number.isFinite(amount) || amount < 0) return '';
   return trimmed;
 }
 
@@ -118,6 +129,8 @@ export default function AdminBillingPage() {
   const { data, isLoading, isFetching, error, refetch } = useAdminBillingOverview(20);
   const { data: usersData } = useUsers({ first: 50, orderBy: { field: 'CREATED_AT', direction: 'DESC' } });
   const [selectedUserID, setSelectedUserID] = useState('');
+  const [accountStatus, setAccountStatus] = useState<BillingAccountStatus>('active');
+  const [creditLimit, setCreditLimit] = useState('0.00');
   const [adjustDirection, setAdjustDirection] = useState<LedgerTransactionDirection>('credit');
   const [adjustAmount, setAdjustAmount] = useState('10.00');
   const [adjustMemo, setAdjustMemo] = useState('manual wallet adjustment');
@@ -139,8 +152,16 @@ export default function AdminBillingPage() {
   const selectedUser = users.find((user) => user.id === selectedUserID);
   const selectedUserBilling = useAdminUserBillingDetail(selectedUserID || undefined, 10);
   const adjustBalance = useAdjustUserBalance();
+  const updateAccount = useUpdateUserBillingAccount();
   const savePriceRule = useSaveBillingPriceRule();
   const upsertEPay = useUpsertEPayPaymentProvider();
+
+  useEffect(() => {
+    const account = selectedUserBilling.data?.account;
+    if (!account) return;
+    setAccountStatus(account.status);
+    setCreditLimit(microsToAmount(account.creditLimitMicros).toFixed(2));
+  }, [selectedUserBilling.data?.account]);
 
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
   const currency = selectedUserBilling.data?.account.currency || data?.accounts[0]?.currency || 'CNY';
@@ -184,6 +205,30 @@ export default function AdminBillingPage() {
       });
       toast.success(t('adminBilling.adjust.success'));
       setAdjustAmount('10.00');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleUpdateAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedUserID) {
+      toast.error(t('adminBilling.adjust.selectUserRequired'));
+      return;
+    }
+    const normalizedCreditLimit = normalizeNonNegativeAmount(creditLimit, 2);
+    if (!normalizedCreditLimit) {
+      toast.error(t('adminBilling.account.invalidCreditLimit'));
+      return;
+    }
+
+    try {
+      await updateAccount.mutateAsync({
+        userId: selectedUserID,
+        status: accountStatus,
+        creditLimit: normalizedCreditLimit,
+      });
+      toast.success(t('adminBilling.account.success'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
     }
@@ -317,23 +362,65 @@ export default function AdminBillingPage() {
               </CardTitle>
               <CardDescription>{t('adminBilling.adjust.description')}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <form className='space-y-4' onSubmit={handleAdjustBalance}>
-                <div className='space-y-2'>
-                  <Label>{t('adminBilling.adjust.user')}</Label>
-                  <Select value={selectedUserID} onValueChange={setSelectedUserID}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('adminBilling.adjust.userPlaceholder')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            <CardContent className='space-y-5'>
+              <div className='space-y-2'>
+                <Label>{t('adminBilling.adjust.user')}</Label>
+                <Select value={selectedUserID} onValueChange={setSelectedUserID}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('adminBilling.adjust.userPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedUserBilling.data?.account && (
+                <div className='bg-muted/50 rounded-md border p-3 text-sm'>
+                  <div className='text-muted-foreground'>{selectedUser?.email}</div>
+                  <div className='font-mono text-lg font-semibold'>{formatCurrency.format(microsToAmount(selectedUserBilling.data.account.balanceMicros))}</div>
                 </div>
+              )}
+
+              <form className='space-y-4' onSubmit={handleUpdateAccount}>
+                <div className='text-sm font-medium'>{t('adminBilling.account.title')}</div>
+                <div className='grid grid-cols-2 gap-3'>
+                  <div className='space-y-2'>
+                    <Label>{t('adminBilling.account.status')}</Label>
+                    <Select value={accountStatus} onValueChange={(value) => setAccountStatus(value as BillingAccountStatus)} disabled={!selectedUserID}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='active'>{t('adminBilling.account.active')}</SelectItem>
+                        <SelectItem value='frozen'>{t('adminBilling.account.frozen')}</SelectItem>
+                        <SelectItem value='closed'>{t('adminBilling.account.closed')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className='space-y-2'>
+                    <Label htmlFor='admin-billing-credit-limit'>{t('adminBilling.account.creditLimit')}</Label>
+                    <Input
+                      id='admin-billing-credit-limit'
+                      inputMode='decimal'
+                      value={creditLimit}
+                      disabled={!selectedUserID}
+                      onChange={(event) => setCreditLimit(event.target.value)}
+                    />
+                  </div>
+                </div>
+                <Button type='submit' className='w-full' variant='outline' disabled={updateAccount.isPending || !selectedUserID}>
+                  {updateAccount.isPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                  {t('adminBilling.account.submit')}
+                </Button>
+              </form>
+
+              <form className='space-y-4 border-t pt-5' onSubmit={handleAdjustBalance}>
+                <div className='text-sm font-medium'>{t('adminBilling.adjust.sectionTitle')}</div>
                 <div className='grid grid-cols-2 gap-3'>
                   <div className='space-y-2'>
                     <Label>{t('adminBilling.adjust.direction')}</Label>
@@ -356,15 +443,7 @@ export default function AdminBillingPage() {
                   <Label htmlFor='admin-billing-adjust-memo'>{t('adminBilling.adjust.memo')}</Label>
                   <Input id='admin-billing-adjust-memo' value={adjustMemo} onChange={(event) => setAdjustMemo(event.target.value)} />
                 </div>
-                {selectedUserBilling.data?.account && (
-                  <div className='bg-muted/50 rounded-md border p-3 text-sm'>
-                    <div className='text-muted-foreground'>{selectedUser?.email}</div>
-                    <div className='font-mono text-lg font-semibold'>
-                      {formatCurrency.format(microsToAmount(selectedUserBilling.data.account.balanceMicros))}
-                    </div>
-                  </div>
-                )}
-                <Button type='submit' className='w-full' disabled={adjustBalance.isPending}>
+                <Button type='submit' className='w-full' disabled={adjustBalance.isPending || !selectedUserID}>
                   {adjustBalance.isPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
                   {t('adminBilling.adjust.submit')}
                 </Button>

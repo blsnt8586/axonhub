@@ -1158,6 +1158,7 @@ type ComplexityRoot struct {
 		UpdateSystemModelSettings            func(childComplexity int, input biz.SystemModelSettings) int
 		UpdateUser                           func(childComplexity int, id objects.GUID, input ent.UpdateUserInput) int
 		UpdateUserAgentPassThroughSettings   func(childComplexity int, input UpdateUserAgentPassThroughSettingsInput) int
+		UpdateUserBillingAccount             func(childComplexity int, input biz.UpdateUserBillingAccountInput) int
 		UpdateUserStatus                     func(childComplexity int, id objects.GUID, status user.Status) int
 		UpdateVideoStorageSettings           func(childComplexity int, input biz.VideoStorageSettings) int
 		UpdateWebhookNotifierConfig          func(childComplexity int, input biz.WebhookNotifierConfig) int
@@ -2526,6 +2527,7 @@ type MutationResolver interface {
 	UpsertEPayPaymentProvider(ctx context.Context, input UpsertEPayPaymentProviderInput) (*ent.PaymentProviderInstance, error)
 	CreateMyEPayRechargeCheckout(ctx context.Context, input CreateMyEPayRechargeCheckoutInput) (*PaymentCheckout, error)
 	AdjustUserBalance(ctx context.Context, input biz.AdjustUserBalanceInput) (*ent.LedgerTransaction, error)
+	UpdateUserBillingAccount(ctx context.Context, input biz.UpdateUserBillingAccountInput) (*ent.BillingAccount, error)
 	SaveBillingPriceRule(ctx context.Context, input SaveBillingPriceRuleForm) (*ent.BillingPriceRule, error)
 	DeleteBillingPriceRule(ctx context.Context, id objects.GUID) (bool, error)
 }
@@ -7521,6 +7523,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateUserAgentPassThroughSettings(childComplexity, args["input"].(UpdateUserAgentPassThroughSettingsInput)), true
+	case "Mutation.updateUserBillingAccount":
+		if e.complexity.Mutation.UpdateUserBillingAccount == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUserBillingAccount_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUserBillingAccount(childComplexity, args["input"].(biz.UpdateUserBillingAccountInput)), true
 	case "Mutation.updateUserStatus":
 		if e.complexity.Mutation.UpdateUserStatus == nil {
 			break
@@ -12879,6 +12892,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateTraceInput,
 		ec.unmarshalInputUpdateUsageLogInput,
 		ec.unmarshalInputUpdateUserAgentPassThroughSettingsInput,
+		ec.unmarshalInputUpdateUserBillingAccountInput,
 		ec.unmarshalInputUpdateUserInput,
 		ec.unmarshalInputUpdateVideoStorageSettingsInput,
 		ec.unmarshalInputUpsertEPayPaymentProviderInput,
@@ -14886,6 +14900,17 @@ func (ec *executionContext) field_Mutation_updateUserAgentPassThroughSettings_ar
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserAgentPassThroughSettingsInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateUserAgentPassThroughSettingsInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserBillingAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserBillingAccountInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdateUserBillingAccountInput)
 	if err != nil {
 		return nil, err
 	}
@@ -41993,6 +42018,75 @@ func (ec *executionContext) fieldContext_Mutation_adjustUserBalance(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_adjustUserBalance_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUserBillingAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateUserBillingAccount,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateUserBillingAccount(ctx, fc.Args["input"].(biz.UpdateUserBillingAccountInput))
+		},
+		nil,
+		ec.marshalNBillingAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUserBillingAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingAccount_updatedAt(ctx, field)
+			case "ownerType":
+				return ec.fieldContext_BillingAccount_ownerType(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_BillingAccount_ownerID(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingAccount_currency(ctx, field)
+			case "balanceMicros":
+				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "creditLimitMicros":
+				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
+			case "status":
+				return ec.fieldContext_BillingAccount_status(ctx, field)
+			case "bindings":
+				return ec.fieldContext_BillingAccount_bindings(ctx, field)
+			case "ledgerTransactions":
+				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUserBillingAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -99160,6 +99254,51 @@ func (ec *executionContext) unmarshalInputUpdateUserAgentPassThroughSettingsInpu
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateUserBillingAccountInput(ctx context.Context, obj any) (biz.UpdateUserBillingAccountInput, error) {
+	var it biz.UpdateUserBillingAccountInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userId", "status", "creditLimit"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserID = converted
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOBillingAccountStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingaccountᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "creditLimit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("creditLimit"))
+			data, err := ec.unmarshalODecimalInput2ᚖgithubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreditLimit = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, obj any) (ent.UpdateUserInput, error) {
 	var it ent.UpdateUserInput
 	asMap := map[string]any{}
@@ -113735,6 +113874,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "adjustUserBalance":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_adjustUserBalance(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateUserBillingAccount":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUserBillingAccount(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -133235,6 +133381,11 @@ func (ec *executionContext) unmarshalNUpdateSystemModelSettingsInput2githubᚗco
 
 func (ec *executionContext) unmarshalNUpdateUserAgentPassThroughSettingsInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateUserAgentPassThroughSettingsInput(ctx context.Context, v any) (UpdateUserAgentPassThroughSettingsInput, error) {
 	res, err := ec.unmarshalInputUpdateUserAgentPassThroughSettingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateUserBillingAccountInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdateUserBillingAccountInput(ctx context.Context, v any) (biz.UpdateUserBillingAccountInput, error) {
+	res, err := ec.unmarshalInputUpdateUserBillingAccountInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

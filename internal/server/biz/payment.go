@@ -14,6 +14,7 @@ import (
 	"go.uber.org/fx"
 
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
@@ -655,6 +656,50 @@ type AdjustUserBalanceInput struct {
 	IdempotencyKey string
 	Memo           string
 	ActorID        string
+}
+
+type UpdateUserBillingAccountInput struct {
+	UserID      int
+	Status      *billingaccount.Status
+	CreditLimit *decimal.Decimal
+}
+
+func (s *PaymentService) UpdateUserBillingAccount(ctx context.Context, input UpdateUserBillingAccountInput) (*ent.BillingAccount, error) {
+	if input.UserID <= 0 {
+		return nil, fmt.Errorf("user id is required")
+	}
+
+	account, err := s.billingAccountService.GetOrCreateForSubject(ctx, UserBillingSubject(input.UserID))
+	if err != nil {
+		return nil, err
+	}
+
+	update := s.entFromContext(ctx).BillingAccount.UpdateOneID(account.ID)
+	if input.Status != nil {
+		switch *input.Status {
+		case billingaccount.StatusActive, billingaccount.StatusFrozen, billingaccount.StatusClosed:
+			update.SetStatus(*input.Status)
+		default:
+			return nil, fmt.Errorf("unsupported billing account status %q", *input.Status)
+		}
+	}
+	if input.CreditLimit != nil {
+		if input.CreditLimit.IsNegative() {
+			return nil, fmt.Errorf("credit limit cannot be negative")
+		}
+		creditLimitMicros, err := decimalToMicros(*input.CreditLimit)
+		if err != nil {
+			return nil, err
+		}
+		update.SetCreditLimitMicros(creditLimitMicros)
+	}
+
+	updated, err := update.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update user billing account: %w", err)
+	}
+
+	return updated, nil
 }
 
 func (s *PaymentService) AdjustUserBalance(ctx context.Context, input AdjustUserBalanceInput) (*ent.LedgerTransaction, error) {

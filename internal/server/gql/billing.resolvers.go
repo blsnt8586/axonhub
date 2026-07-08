@@ -136,6 +136,17 @@ func (r *mutationResolver) AdjustUserBalance(ctx context.Context, input biz.Adju
 	})
 }
 
+// UpdateUserBillingAccount is the resolver for the updateUserBillingAccount field.
+func (r *mutationResolver) UpdateUserBillingAccount(ctx context.Context, input biz.UpdateUserBillingAccountInput) (*ent.BillingAccount, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-update-user-account", func(ctx context.Context) (*ent.BillingAccount, error) {
+		return r.paymentService.UpdateUserBillingAccount(ctx, input)
+	})
+}
+
 // SaveBillingPriceRule is the resolver for the saveBillingPriceRule field.
 func (r *mutationResolver) SaveBillingPriceRule(ctx context.Context, input SaveBillingPriceRuleForm) (*ent.BillingPriceRule, error) {
 	if err := requireOwner(ctx); err != nil {
