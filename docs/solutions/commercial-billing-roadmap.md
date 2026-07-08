@@ -363,4 +363,4 @@ Append one line per completed stage.
 | Stage | Commit | Date | Notes |
 | --- | --- | --- | --- |
 | Baseline | `4ad0913d` and earlier billing commits | 2026-07-08 | Wallet, ledger, ePay, sell price rules, user/admin billing pages, and user wallet controls are in place. |
-| Stage 0 | This stage commit | 2026-07-08 | Hardened admission codes, usage retry safety, owner-only billing operation queries, admin billing tabs, filters, and failure reason display. |
+| Stage 0 | `f96625b4` | 2026-07-08 | Hardened admission codes, usage retry safety, owner-only billing operation queries, admin billing tabs, filters, and failure reason display. |
