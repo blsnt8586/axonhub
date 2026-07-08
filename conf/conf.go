@@ -34,6 +34,7 @@ type Config struct {
 	GC               gc.Config           `conf:"gc" yaml:"gc" json:"gc"`
 	Cache            xcache.Config       `conf:"cache" yaml:"cache" json:"cache"`
 	ProviderQuota    providerQuotaConfig `conf:"provider_quota" yaml:"provider_quota" json:"provider_quota"`
+	Billing          biz.BillingConfig   `conf:"billing" yaml:"billing" json:"billing"`
 	OIDC             biz.OIDCConfig      `conf:"oidc" yaml:"oidc" json:"oidc"`
 	DisableSSLVerify bool                `name:"disable_ssl_verify" yaml:"-" json:"-"`
 	AllowNoAuth      bool                `name:"allow_no_auth" yaml:"-" json:"-"`
@@ -186,6 +187,16 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("server.cors.max_age", "30m")
 	v.SetDefault("server.api.auth.allow_no_auth", false)
 	v.SetDefault("server.api.auth.key_prefix", "ah")
+
+	// Billing defaults. Keep disabled by default so commercial features can be
+	// deployed before they are enforced.
+	v.SetDefault("billing.mode", "disabled")
+	v.SetDefault("billing.subject", "project")
+	v.SetDefault("billing.currency", "CNY")
+	v.SetDefault("billing.min_balance", "0")
+	v.SetDefault("billing.allow_negative", false)
+	v.SetDefault("billing.credit_limit_default", "0")
+	v.SetDefault("billing.block_when_no_price_rule", false)
 
 	// Database defaults
 	v.SetDefault("db.dialect", "sqlite3")
