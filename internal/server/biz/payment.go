@@ -364,6 +364,19 @@ func (s *PaymentService) HandleEPayNotify(ctx context.Context, input HandleEPayN
 	if len(input.Params) == 0 {
 		return nil, fmt.Errorf("epay notify params are required")
 	}
+	fail := func(reason string, order *ent.PaymentOrder, provider *ent.PaymentProviderInstance, err error) (*ent.PaymentOrder, error) {
+		if recordErr := s.recordFailedEPayNotify(ctx, recordFailedEPayNotifyInput{
+			Params:   input.Params,
+			Order:    order,
+			Provider: provider,
+			Reason:   reason,
+			Err:      err,
+		}); recordErr != nil {
+			return nil, fmt.Errorf("%w; failed to record epay notify failure: %v", err, recordErr)
+		}
+		return nil, err
+	}
+
 	orderNo := input.Params["out_trade_no"]
 	if orderNo == "" {
 		return nil, fmt.Errorf("epay notify missing out_trade_no")
@@ -376,42 +389,42 @@ func (s *PaymentService) HandleEPayNotify(ctx context.Context, input HandleEPayN
 		Where(paymentorder.OrderNoEQ(orderNo)).
 		Only(ctx)
 	if ent.IsNotFound(err) {
-		return nil, ErrPaymentOrderNotFound
+		return fail("unknown_order", nil, nil, ErrPaymentOrderNotFound)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to load payment order: %w", err)
 	}
 	if order.ProviderType != paymentorder.ProviderTypeEpay {
-		return nil, fmt.Errorf("payment order %s is not an epay order", order.OrderNo)
+		return fail("provider_type_mismatch", order, nil, fmt.Errorf("payment order %s is not an epay order", order.OrderNo))
 	}
 	if order.ProviderInstanceID == nil {
-		return nil, fmt.Errorf("payment order %s has no provider instance", order.OrderNo)
+		return fail("missing_provider_instance", order, nil, fmt.Errorf("payment order %s has no provider instance", order.OrderNo))
 	}
 
 	provider, err := s.entFromContext(ctx).PaymentProviderInstance.Get(ctx, *order.ProviderInstanceID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load epay provider: %w", err)
+		return fail("provider_load_failed", order, nil, fmt.Errorf("failed to load epay provider: %w", err))
 	}
 	cfg, err := parseEPayConfig(provider.Config)
 	if err != nil {
-		return nil, err
+		return fail("provider_config_invalid", order, provider, err)
 	}
 	if input.Params["pid"] != cfg.PID {
-		return nil, fmt.Errorf("epay pid mismatch")
+		return fail("pid_mismatch", order, provider, fmt.Errorf("epay pid mismatch"))
 	}
 	if !VerifyEPaySignature(input.Params, cfg.Key) {
-		return nil, fmt.Errorf("invalid epay signature")
+		return fail("invalid_signature", order, provider, fmt.Errorf("invalid epay signature"))
 	}
 	if status := input.Params["trade_status"]; status != "TRADE_SUCCESS" {
-		return nil, fmt.Errorf("epay trade status is not successful: %s", status)
+		return fail("trade_not_success", order, provider, fmt.Errorf("epay trade status is not successful: %s", status))
 	}
 
 	notifyAmount, err := decimal.NewFromString(input.Params["money"])
 	if err != nil {
-		return nil, fmt.Errorf("invalid epay money: %w", err)
+		return fail("invalid_money", order, provider, fmt.Errorf("invalid epay money: %w", err))
 	}
 	if !notifyAmount.Equal(microsToDecimal(order.AmountMicros)) {
-		return nil, fmt.Errorf("epay money mismatch: got %s want %s", notifyAmount, microsToDecimal(order.AmountMicros))
+		return fail("money_mismatch", order, provider, fmt.Errorf("epay money mismatch: got %s want %s", notifyAmount, microsToDecimal(order.AmountMicros)))
 	}
 
 	payload, err := json.Marshal(input.Params)
@@ -430,6 +443,67 @@ func (s *PaymentService) HandleEPayNotify(ctx context.Context, input HandleEPayN
 		CreatedByID:        fmt.Sprint(provider.ID),
 		LedgerMemoProvider: "epay",
 	})
+}
+
+type recordFailedEPayNotifyInput struct {
+	Params   map[string]string
+	Order    *ent.PaymentOrder
+	Provider *ent.PaymentProviderInstance
+	Reason   string
+	Err      error
+}
+
+func (s *PaymentService) recordFailedEPayNotify(ctx context.Context, input recordFailedEPayNotifyInput) error {
+	eventKey := failedEPayNotifyEventKey(input.Params, input.Reason)
+	if eventKey == "" {
+		return nil
+	}
+	payload, err := json.Marshal(input.Params)
+	if err != nil {
+		return fmt.Errorf("failed to marshal epay notify failure payload: %w", err)
+	}
+
+	message := ""
+	if input.Err != nil {
+		message = input.Err.Error()
+	}
+	create := s.entFromContext(ctx).PaymentEvent.Create().
+		SetEventKey(eventKey).
+		SetProviderType(paymentevent.ProviderTypeEpay).
+		SetEventType("epay_notify_failed").
+		SetPayload(objects.JSONRawMessage(payload)).
+		SetStatus(paymentevent.StatusFailed).
+		SetError(message)
+	if input.Order != nil {
+		create.SetPaymentOrderID(input.Order.ID)
+	}
+	if input.Provider != nil {
+		create.SetProviderInstanceID(input.Provider.ID)
+	}
+
+	if _, err := create.Save(ctx); ent.IsConstraintError(err) {
+		_, err = s.entFromContext(ctx).PaymentEvent.Query().
+			Where(paymentevent.EventKeyEQ(eventKey)).
+			Only(ctx)
+		return err
+	} else if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func failedEPayNotifyEventKey(params map[string]string, reason string) string {
+	if reason == "" {
+		reason = "unknown"
+	}
+	if tradeNo := strings.TrimSpace(params["trade_no"]); tradeNo != "" {
+		return fmt.Sprintf("epay_notify_failed:%s:%s", tradeNo, reason)
+	}
+	if orderNo := strings.TrimSpace(params["out_trade_no"]); orderNo != "" {
+		return fmt.Sprintf("epay_notify_failed:order:%s:%s", orderNo, reason)
+	}
+	return ""
 }
 
 type CreateManualRechargeOrderInput struct {

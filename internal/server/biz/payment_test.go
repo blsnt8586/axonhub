@@ -150,12 +150,18 @@ func TestPaymentServiceSimulatedEPayCheckoutAndNotifyCreditsLedgerOnce(t *testin
 	require.NoError(t, err)
 	require.Equal(t, ledgertransaction.CreatedByTypeProvider, ledger.CreatedByType)
 	require.Equal(t, fmt.Sprint(provider.ID), ledger.CreatedByID)
+
+	eventCount, err := client.PaymentEvent.Query().
+		Where(paymentevent.EventKeyEQ("epay_notify:" + notify["trade_no"])).
+		Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, eventCount)
 }
 
 func TestPaymentServiceRejectsEPayNotifyWithInvalidSignature(t *testing.T) {
 	t.Parallel()
 
-	_, ctx, svc := newPaymentTestService(t, "payment_epay_bad_sign")
+	client, ctx, svc := newPaymentTestService(t, "payment_epay_bad_sign")
 	provider, err := svc.GetOrCreateSimulatedEPayProvider(ctx, "http://axon.local")
 	require.NoError(t, err)
 
@@ -172,6 +178,68 @@ func TestPaymentServiceRejectsEPayNotifyWithInvalidSignature(t *testing.T) {
 	_, err = svc.HandleEPayNotify(ctx, HandleEPayNotifyInput{Params: notify})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid epay signature")
+
+	failedKey := fmt.Sprintf("epay_notify_failed:%s:invalid_signature", notify["trade_no"])
+	event, err := client.PaymentEvent.Query().
+		Where(paymentevent.EventKeyEQ(failedKey)).
+		Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, paymentevent.StatusFailed, event.Status)
+	require.Equal(t, "epay_notify_failed", event.EventType)
+	require.Contains(t, event.Error, "invalid epay signature")
+	require.NotNil(t, event.PaymentOrderID)
+	require.NotNil(t, event.ProviderInstanceID)
+
+	_, err = svc.HandleEPayNotify(ctx, HandleEPayNotifyInput{Params: notify})
+	require.Error(t, err)
+
+	eventCount, err := client.PaymentEvent.Query().
+		Where(paymentevent.EventKeyEQ(failedKey)).
+		Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, eventCount)
+
+	ledgerCount, err := client.LedgerTransaction.Query().
+		Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 0, ledgerCount)
+}
+
+func TestPaymentServiceRecordsEPayMoneyMismatchWithValidSignature(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, svc := newPaymentTestService(t, "payment_epay_money_mismatch")
+	provider, err := svc.GetOrCreateSimulatedEPayProvider(ctx, "http://axon.local")
+	require.NoError(t, err)
+
+	checkout, err := svc.CreateRechargeCheckout(ctx, CreateRechargeCheckoutInput{
+		ProjectID:          1,
+		ProviderInstanceID: &provider.ID,
+		ProviderType:       provider.ProviderType,
+		Amount:             decimal.RequireFromString("1"),
+	})
+	require.NoError(t, err)
+
+	notify := NewSimulatedEPayNotifyFromCheckout(checkout.Params, "axonhub-simulated-epay-secret")
+	notify["money"] = "99.00"
+	notify["sign"] = SignEPayParams(notify, "axonhub-simulated-epay-secret")
+
+	_, err = svc.HandleEPayNotify(ctx, HandleEPayNotifyInput{Params: notify})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "epay money mismatch")
+
+	failedKey := fmt.Sprintf("epay_notify_failed:%s:money_mismatch", notify["trade_no"])
+	event, err := client.PaymentEvent.Query().
+		Where(paymentevent.EventKeyEQ(failedKey)).
+		Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, paymentevent.StatusFailed, event.Status)
+	require.Contains(t, event.Error, "epay money mismatch")
+
+	ledgerCount, err := client.LedgerTransaction.Query().
+		Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 0, ledgerCount)
 }
 
 func TestPaymentServiceUpsertEPayProviderCreatesAndPreservesKeyOnUpdate(t *testing.T) {
