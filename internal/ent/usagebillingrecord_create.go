@@ -72,6 +72,20 @@ func (_c *UsageBillingRecordCreate) SetProjectID(v int) *UsageBillingRecordCreat
 	return _c
 }
 
+// SetUserID sets the "user_id" field.
+func (_c *UsageBillingRecordCreate) SetUserID(v int) *UsageBillingRecordCreate {
+	_c.mutation.SetUserID(v)
+	return _c
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_c *UsageBillingRecordCreate) SetNillableUserID(v *int) *UsageBillingRecordCreate {
+	if v != nil {
+		_c.SetUserID(*v)
+	}
+	return _c
+}
+
 // SetAPIKeyID sets the "api_key_id" field.
 func (_c *UsageBillingRecordCreate) SetAPIKeyID(v int) *UsageBillingRecordCreate {
 	_c.mutation.SetAPIKeyID(v)
@@ -409,6 +423,10 @@ func (_c *UsageBillingRecordCreate) createSpec() (*UsageBillingRecord, *sqlgraph
 		_spec.SetField(usagebillingrecord.FieldProjectID, field.TypeInt, value)
 		_node.ProjectID = value
 	}
+	if value, ok := _c.mutation.UserID(); ok {
+		_spec.SetField(usagebillingrecord.FieldUserID, field.TypeInt, value)
+		_node.UserID = value
+	}
 	if value, ok := _c.mutation.APIKeyID(); ok {
 		_spec.SetField(usagebillingrecord.FieldAPIKeyID, field.TypeInt, value)
 		_node.APIKeyID = value
@@ -640,6 +658,9 @@ func (u *UsageBillingRecordUpsertOne) UpdateNewValues() *UsageBillingRecordUpser
 		}
 		if _, exists := u.create.mutation.ProjectID(); exists {
 			s.SetIgnore(usagebillingrecord.FieldProjectID)
+		}
+		if _, exists := u.create.mutation.UserID(); exists {
+			s.SetIgnore(usagebillingrecord.FieldUserID)
 		}
 		if _, exists := u.create.mutation.APIKeyID(); exists {
 			s.SetIgnore(usagebillingrecord.FieldAPIKeyID)
@@ -955,6 +976,9 @@ func (u *UsageBillingRecordUpsertBulk) UpdateNewValues() *UsageBillingRecordUpse
 			}
 			if _, exists := b.mutation.ProjectID(); exists {
 				s.SetIgnore(usagebillingrecord.FieldProjectID)
+			}
+			if _, exists := b.mutation.UserID(); exists {
+				s.SetIgnore(usagebillingrecord.FieldUserID)
 			}
 			if _, exists := b.mutation.APIKeyID(); exists {
 				s.SetIgnore(usagebillingrecord.FieldAPIKeyID)

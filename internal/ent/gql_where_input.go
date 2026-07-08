@@ -14045,6 +14045,18 @@ type UsageBillingRecordWhereInput struct {
 	ProjectIDLT    *int  `json:"projectIDLT,omitempty"`
 	ProjectIDLTE   *int  `json:"projectIDLTE,omitempty"`
 
+	// "user_id" field predicates.
+	UserID       *int  `json:"userID,omitempty"`
+	UserIDNEQ    *int  `json:"userIDNEQ,omitempty"`
+	UserIDIn     []int `json:"userIDIn,omitempty"`
+	UserIDNotIn  []int `json:"userIDNotIn,omitempty"`
+	UserIDGT     *int  `json:"userIDGT,omitempty"`
+	UserIDGTE    *int  `json:"userIDGTE,omitempty"`
+	UserIDLT     *int  `json:"userIDLT,omitempty"`
+	UserIDLTE    *int  `json:"userIDLTE,omitempty"`
+	UserIDIsNil  bool  `json:"userIDIsNil,omitempty"`
+	UserIDNotNil bool  `json:"userIDNotNil,omitempty"`
+
 	// "api_key_id" field predicates.
 	APIKeyID       *int  `json:"apiKeyID,omitempty"`
 	APIKeyIDNEQ    *int  `json:"apiKeyIDNEQ,omitempty"`
@@ -14375,6 +14387,36 @@ func (i *UsageBillingRecordWhereInput) P() (predicate.UsageBillingRecord, error)
 	}
 	if i.ProjectIDLTE != nil {
 		predicates = append(predicates, usagebillingrecord.ProjectIDLTE(*i.ProjectIDLTE))
+	}
+	if i.UserID != nil {
+		predicates = append(predicates, usagebillingrecord.UserIDEQ(*i.UserID))
+	}
+	if i.UserIDNEQ != nil {
+		predicates = append(predicates, usagebillingrecord.UserIDNEQ(*i.UserIDNEQ))
+	}
+	if len(i.UserIDIn) > 0 {
+		predicates = append(predicates, usagebillingrecord.UserIDIn(i.UserIDIn...))
+	}
+	if len(i.UserIDNotIn) > 0 {
+		predicates = append(predicates, usagebillingrecord.UserIDNotIn(i.UserIDNotIn...))
+	}
+	if i.UserIDGT != nil {
+		predicates = append(predicates, usagebillingrecord.UserIDGT(*i.UserIDGT))
+	}
+	if i.UserIDGTE != nil {
+		predicates = append(predicates, usagebillingrecord.UserIDGTE(*i.UserIDGTE))
+	}
+	if i.UserIDLT != nil {
+		predicates = append(predicates, usagebillingrecord.UserIDLT(*i.UserIDLT))
+	}
+	if i.UserIDLTE != nil {
+		predicates = append(predicates, usagebillingrecord.UserIDLTE(*i.UserIDLTE))
+	}
+	if i.UserIDIsNil {
+		predicates = append(predicates, usagebillingrecord.UserIDIsNil())
+	}
+	if i.UserIDNotNil {
+		predicates = append(predicates, usagebillingrecord.UserIDNotNil())
 	}
 	if i.APIKeyID != nil {
 		predicates = append(predicates, usagebillingrecord.APIKeyIDEQ(*i.APIKeyID))

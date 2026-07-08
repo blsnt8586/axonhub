@@ -9108,6 +9108,7 @@ type UsageBillingRecord implements Node {
   usageLogID: ID!
   billingAccountID: ID!
   projectID: Int!
+  userID: Int
   apiKeyID: Int
   modelID: String!
   requestType: UsageBillingRecordRequestType!
@@ -9263,6 +9264,19 @@ input UsageBillingRecordWhereInput {
   projectIDGTE: Int
   projectIDLT: Int
   projectIDLTE: Int
+  """
+  user_id field predicates
+  """
+  userID: Int
+  userIDNEQ: Int
+  userIDIn: [Int!]
+  userIDNotIn: [Int!]
+  userIDGT: Int
+  userIDGTE: Int
+  userIDLT: Int
+  userIDLTE: Int
+  userIDIsNil: Boolean
+  userIDNotNil: Boolean
   """
   api_key_id field predicates
   """

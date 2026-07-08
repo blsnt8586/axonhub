@@ -1117,6 +1117,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "project_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
 		{Name: "api_key_id", Type: field.TypeInt, Nullable: true},
 		{Name: "model_id", Type: field.TypeString},
 		{Name: "request_type", Type: field.TypeEnum, Enums: []string{"chat", "image", "video", "embedding", "audio", "other"}, Default: "chat"},
@@ -1142,19 +1143,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "usage_billing_records_billing_accounts_usage_billing_records",
-				Columns:    []*schema.Column{UsageBillingRecordsColumns[17]},
+				Columns:    []*schema.Column{UsageBillingRecordsColumns[18]},
 				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "usage_billing_records_ledger_transactions_usage_billing_records",
-				Columns:    []*schema.Column{UsageBillingRecordsColumns[18]},
+				Columns:    []*schema.Column{UsageBillingRecordsColumns[19]},
 				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "usage_billing_records_usage_logs_usage_billing_records",
-				Columns:    []*schema.Column{UsageBillingRecordsColumns[19]},
+				Columns:    []*schema.Column{UsageBillingRecordsColumns[20]},
 				RefColumns: []*schema.Column{UsageLogsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1163,12 +1164,12 @@ var (
 			{
 				Name:    "usage_billing_records_by_usage_log_id",
 				Unique:  true,
-				Columns: []*schema.Column{UsageBillingRecordsColumns[19]},
+				Columns: []*schema.Column{UsageBillingRecordsColumns[20]},
 			},
 			{
 				Name:    "usage_billing_records_by_account_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{UsageBillingRecordsColumns[17], UsageBillingRecordsColumns[1]},
+				Columns: []*schema.Column{UsageBillingRecordsColumns[18], UsageBillingRecordsColumns[1]},
 			},
 			{
 				Name:    "usage_billing_records_by_project_created_at",
@@ -1176,9 +1177,14 @@ var (
 				Columns: []*schema.Column{UsageBillingRecordsColumns[3], UsageBillingRecordsColumns[1]},
 			},
 			{
+				Name:    "usage_billing_records_by_user_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsageBillingRecordsColumns[4], UsageBillingRecordsColumns[1]},
+			},
+			{
 				Name:    "usage_billing_records_by_idempotency_key",
 				Unique:  true,
-				Columns: []*schema.Column{UsageBillingRecordsColumns[15]},
+				Columns: []*schema.Column{UsageBillingRecordsColumns[16]},
 			},
 		},
 	}

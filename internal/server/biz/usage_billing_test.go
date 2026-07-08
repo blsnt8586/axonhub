@@ -11,6 +11,8 @@ import (
 
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/apikey"
+	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/enttest"
@@ -18,6 +20,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	entuser "github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -101,6 +104,33 @@ func TestUsageBillingProcessorChargesUsageOnce(t *testing.T) {
 	reloaded, err := client.BillingAccount.Get(ctx, account.ID)
 	require.NoError(t, err)
 	require.Equal(t, int64(8_500_000), reloaded.BalanceMicros)
+}
+
+func TestUsageBillingProcessorChargesUserWalletWithProjectPrice(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, processor, account := newUsageBillingTestProcessor(t, "usage_billing_user_wallet_project_price")
+	_, err := client.BillingPriceRule.Create().
+		SetScopeType(billingpricerule.ScopeTypeProject).
+		SetScopeID(1).
+		SetModelPattern("gpt-test").
+		SetPrice(testModelPrice("2")).
+		SetReferenceID("project-sell-v1").
+		Save(ctx)
+	require.NoError(t, err)
+	ledgerSvc := NewLedgerService(LedgerServiceParams{Ent: client})
+	_, err = ledgerSvc.Credit(ctx, account.ID, decimal.RequireFromString("10"), ledgertransaction.TypePaymentRecharge, "initial-credit")
+	require.NoError(t, err)
+
+	usageLog := createUsageLogForBillingTest(t, client, ctx, 1, "gpt-test", 1_000_000, 500_000)
+	record, err := processor.BillUsage(ctx, usageLog.ID)
+	require.NoError(t, err)
+	require.Equal(t, account.ID, record.BillingAccountID)
+	require.Equal(t, billingaccount.OwnerTypeUser, account.OwnerType)
+	require.Equal(t, account.OwnerID, record.UserID)
+	require.Equal(t, 1, record.ProjectID)
+	require.Equal(t, "project-sell-v1", record.PriceReferenceID)
+	require.Equal(t, int64(3_000_000), record.ChargeAmountMicros)
 }
 
 func TestUsageBillingProcessorRequestUsageBillingNoopsWhenBillingDisabled(t *testing.T) {
@@ -403,13 +433,32 @@ func newUsageBillingTestProcessorWithConfig(t *testing.T, name string, cfg Billi
 
 	client := enttest.NewEntClient(t, "sqlite3", "file:"+name+"?mode=memory&_fk=1")
 	ctx := authz.WithTestBypass(context.Background())
-	_, err := client.Project.Create().
+	projectRow, err := client.Project.Create().
 		SetName(name).
 		SetStatus(project.StatusActive).
 		Save(ctx)
 	require.NoError(t, err)
+	password, err := HashPassword("test-password")
+	require.NoError(t, err)
+	user, err := client.User.Create().
+		SetEmail(fmt.Sprintf("%s@example.com", name)).
+		SetPassword(password).
+		SetFirstName("Usage").
+		SetLastName("Billing").
+		SetStatus(entuser.StatusActivated).
+		Save(ctx)
+	require.NoError(t, err)
+	apiKeyValue, err := GenerateAPIKey("ah")
+	require.NoError(t, err)
+	_, err = client.APIKey.Create().
+		SetKey(apiKeyValue).
+		SetName("billing key").
+		SetUserID(user.ID).
+		SetProjectID(projectRow.ID).
+		Save(ctx)
+	require.NoError(t, err)
 	accountSvc := NewBillingAccountService(BillingAccountServiceParams{Ent: client})
-	account, err := accountSvc.GetOrCreateForSubject(ctx, ProjectBillingSubject(1))
+	account, err := accountSvc.GetOrCreateForSubject(ctx, UserBillingSubject(user.ID))
 	require.NoError(t, err)
 	pricingSvc := NewPricingService(PricingServiceParams{Ent: client})
 	ledgerSvc := NewLedgerService(LedgerServiceParams{Ent: client})
@@ -427,7 +476,13 @@ func newUsageBillingTestProcessorWithConfig(t *testing.T, name string, cfg Billi
 func createUsageLogForBillingTest(t *testing.T, client *ent.Client, ctx context.Context, projectID int, modelID string, promptTokens int64, completionTokens int64) *ent.UsageLog {
 	t.Helper()
 
+	apiKey, err := client.APIKey.Query().
+		Where(apikey.ProjectIDEQ(projectID)).
+		First(ctx)
+	require.NoError(t, err)
+
 	req, err := client.Request.Create().
+		SetAPIKeyID(apiKey.ID).
 		SetProjectID(projectID).
 		SetModelID(modelID).
 		SetFormat("openai/chat_completions").
@@ -438,6 +493,7 @@ func createUsageLogForBillingTest(t *testing.T, client *ent.Client, ctx context.
 
 	usageLog, err := client.UsageLog.Create().
 		SetRequestID(req.ID).
+		SetAPIKeyID(apiKey.ID).
 		SetProjectID(projectID).
 		SetChannelID(1).
 		SetModelID(modelID).

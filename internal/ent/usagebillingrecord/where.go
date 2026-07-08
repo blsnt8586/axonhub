@@ -80,6 +80,11 @@ func ProjectID(v int) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldEQ(FieldProjectID, v))
 }
 
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldEQ(FieldUserID, v))
+}
+
 // APIKeyID applies equality check predicate on the "api_key_id" field. It's identical to APIKeyIDEQ.
 func APIKeyID(v int) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldEQ(FieldAPIKeyID, v))
@@ -283,6 +288,56 @@ func ProjectIDLT(v int) predicate.UsageBillingRecord {
 // ProjectIDLTE applies the LTE predicate on the "project_id" field.
 func ProjectIDLTE(v int) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldLTE(FieldProjectID, v))
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldEQ(FieldUserID, v))
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldNEQ(FieldUserID, v))
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldIn(FieldUserID, vs...))
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldNotIn(FieldUserID, vs...))
+}
+
+// UserIDGT applies the GT predicate on the "user_id" field.
+func UserIDGT(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldGT(FieldUserID, v))
+}
+
+// UserIDGTE applies the GTE predicate on the "user_id" field.
+func UserIDGTE(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldGTE(FieldUserID, v))
+}
+
+// UserIDLT applies the LT predicate on the "user_id" field.
+func UserIDLT(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldLT(FieldUserID, v))
+}
+
+// UserIDLTE applies the LTE predicate on the "user_id" field.
+func UserIDLTE(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldLTE(FieldUserID, v))
+}
+
+// UserIDIsNil applies the IsNil predicate on the "user_id" field.
+func UserIDIsNil() predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldIsNull(FieldUserID))
+}
+
+// UserIDNotNil applies the NotNil predicate on the "user_id" field.
+func UserIDNotNil() predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldNotNull(FieldUserID))
 }
 
 // APIKeyIDEQ applies the EQ predicate on the "api_key_id" field.

@@ -2112,6 +2112,7 @@ type ComplexityRoot struct {
 		UsageLog            func(childComplexity int) int
 		UsageLogID          func(childComplexity int) int
 		UsageSnapshot       func(childComplexity int) int
+		UserID              func(childComplexity int) int
 	}
 
 	UsageBillingRecordConnection struct {
@@ -11688,6 +11689,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageBillingRecord.UsageSnapshot(childComplexity), true
+	case "UsageBillingRecord.userID":
+		if e.complexity.UsageBillingRecord.UserID == nil {
+			break
+		}
+
+		return e.complexity.UsageBillingRecord.UserID(childComplexity), true
 
 	case "UsageBillingRecordConnection.edges":
 		if e.complexity.UsageBillingRecordConnection.Edges == nil {
@@ -62708,6 +62715,35 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_projectID(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _UsageBillingRecord_userID(ctx context.Context, field graphql.CollectedField, obj *ent.UsageBillingRecord) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageBillingRecord_userID,
+		func(ctx context.Context) (any, error) {
+			return obj.UserID, nil
+		},
+		nil,
+		ec.marshalOInt2int,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageBillingRecord_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageBillingRecord",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UsageBillingRecord_apiKeyID(ctx context.Context, field graphql.CollectedField, obj *ent.UsageBillingRecord) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -63482,6 +63518,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecordEdge_node(_ context.C
 				return ec.fieldContext_UsageBillingRecord_billingAccountID(ctx, field)
 			case "projectID":
 				return ec.fieldContext_UsageBillingRecord_projectID(ctx, field)
+			case "userID":
+				return ec.fieldContext_UsageBillingRecord_userID(ctx, field)
 			case "apiKeyID":
 				return ec.fieldContext_UsageBillingRecord_apiKeyID(ctx, field)
 			case "modelID":
@@ -98360,7 +98398,7 @@ func (ec *executionContext) unmarshalInputUsageBillingRecordWhereInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "usageLogID", "usageLogIDNEQ", "usageLogIDIn", "usageLogIDNotIn", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "apiKeyID", "apiKeyIDNEQ", "apiKeyIDIn", "apiKeyIDNotIn", "apiKeyIDGT", "apiKeyIDGTE", "apiKeyIDLT", "apiKeyIDLTE", "apiKeyIDIsNil", "apiKeyIDNotNil", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "requestType", "requestTypeNEQ", "requestTypeIn", "requestTypeNotIn", "priceReferenceID", "priceReferenceIDNEQ", "priceReferenceIDIn", "priceReferenceIDNotIn", "priceReferenceIDGT", "priceReferenceIDGTE", "priceReferenceIDLT", "priceReferenceIDLTE", "priceReferenceIDContains", "priceReferenceIDHasPrefix", "priceReferenceIDHasSuffix", "priceReferenceIDEqualFold", "priceReferenceIDContainsFold", "costAmountMicros", "costAmountMicrosNEQ", "costAmountMicrosIn", "costAmountMicrosNotIn", "costAmountMicrosGT", "costAmountMicrosGTE", "costAmountMicrosLT", "costAmountMicrosLTE", "chargeAmountMicros", "chargeAmountMicrosNEQ", "chargeAmountMicrosIn", "chargeAmountMicrosNotIn", "chargeAmountMicrosGT", "chargeAmountMicrosGTE", "chargeAmountMicrosLT", "chargeAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "error", "errorNEQ", "errorIn", "errorNotIn", "errorGT", "errorGTE", "errorLT", "errorLTE", "errorContains", "errorHasPrefix", "errorHasSuffix", "errorEqualFold", "errorContainsFold", "hasUsageLog", "hasUsageLogWith", "hasBillingAccount", "hasBillingAccountWith", "hasLedgerTransaction", "hasLedgerTransactionWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "usageLogID", "usageLogIDNEQ", "usageLogIDIn", "usageLogIDNotIn", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "userIDGT", "userIDGTE", "userIDLT", "userIDLTE", "userIDIsNil", "userIDNotNil", "apiKeyID", "apiKeyIDNEQ", "apiKeyIDIn", "apiKeyIDNotIn", "apiKeyIDGT", "apiKeyIDGTE", "apiKeyIDLT", "apiKeyIDLTE", "apiKeyIDIsNil", "apiKeyIDNotNil", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "requestType", "requestTypeNEQ", "requestTypeIn", "requestTypeNotIn", "priceReferenceID", "priceReferenceIDNEQ", "priceReferenceIDIn", "priceReferenceIDNotIn", "priceReferenceIDGT", "priceReferenceIDGTE", "priceReferenceIDLT", "priceReferenceIDLTE", "priceReferenceIDContains", "priceReferenceIDHasPrefix", "priceReferenceIDHasSuffix", "priceReferenceIDEqualFold", "priceReferenceIDContainsFold", "costAmountMicros", "costAmountMicrosNEQ", "costAmountMicrosIn", "costAmountMicrosNotIn", "costAmountMicrosGT", "costAmountMicrosGTE", "costAmountMicrosLT", "costAmountMicrosLTE", "chargeAmountMicros", "chargeAmountMicrosNEQ", "chargeAmountMicrosIn", "chargeAmountMicrosNotIn", "chargeAmountMicrosGT", "chargeAmountMicrosGTE", "chargeAmountMicrosLT", "chargeAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "error", "errorNEQ", "errorIn", "errorNotIn", "errorGT", "errorGTE", "errorLT", "errorLTE", "errorContains", "errorHasPrefix", "errorHasSuffix", "errorEqualFold", "errorContainsFold", "hasUsageLog", "hasUsageLogWith", "hasBillingAccount", "hasBillingAccountWith", "hasLedgerTransaction", "hasLedgerTransactionWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -98732,6 +98770,76 @@ func (ec *executionContext) unmarshalInputUsageBillingRecordWhereInput(ctx conte
 				return it, err
 			}
 			it.ProjectIDLTE = data
+		case "userID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "userIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDNEQ = data
+		case "userIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDIn = data
+		case "userIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDNotIn = data
+		case "userIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDGT = data
+		case "userIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDGTE = data
+		case "userIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDLT = data
+		case "userIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDLTE = data
+		case "userIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDIsNil = data
+		case "userIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDNotNil = data
 		case "apiKeyID":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyID"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
@@ -123017,6 +123125,8 @@ func (ec *executionContext) _UsageBillingRecord(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "userID":
+			out.Values[i] = ec._UsageBillingRecord_userID(ctx, field, obj)
 		case "apiKeyID":
 			out.Values[i] = ec._UsageBillingRecord_apiKeyID(ctx, field, obj)
 		case "modelID":

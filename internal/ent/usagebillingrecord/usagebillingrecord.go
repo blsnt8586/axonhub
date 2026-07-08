@@ -29,6 +29,8 @@ const (
 	FieldBillingAccountID = "billing_account_id"
 	// FieldProjectID holds the string denoting the project_id field in the database.
 	FieldProjectID = "project_id"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
 	// FieldAPIKeyID holds the string denoting the api_key_id field in the database.
 	FieldAPIKeyID = "api_key_id"
 	// FieldModelID holds the string denoting the model_id field in the database.
@@ -96,6 +98,7 @@ var Columns = []string{
 	FieldUsageLogID,
 	FieldBillingAccountID,
 	FieldProjectID,
+	FieldUserID,
 	FieldAPIKeyID,
 	FieldModelID,
 	FieldRequestType,
@@ -236,6 +239,11 @@ func ByBillingAccountID(opts ...sql.OrderTermOption) OrderOption {
 // ByProjectID orders the results by the project_id field.
 func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProjectID, opts...).ToFunc()
+}
+
+// ByUserID orders the results by the user_id field.
+func ByUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserID, opts...).ToFunc()
 }
 
 // ByAPIKeyID orders the results by the api_key_id field.

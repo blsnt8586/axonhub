@@ -179,6 +179,9 @@ func (_u *UsageBillingRecordUpdate) sqlSave(ctx context.Context) (_node int, err
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(usagebillingrecord.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if _u.mutation.UserIDCleared() {
+		_spec.ClearField(usagebillingrecord.FieldUserID, field.TypeInt)
+	}
 	if _u.mutation.APIKeyIDCleared() {
 		_spec.ClearField(usagebillingrecord.FieldAPIKeyID, field.TypeInt)
 	}
@@ -420,6 +423,9 @@ func (_u *UsageBillingRecordUpdateOne) sqlSave(ctx context.Context) (_node *Usag
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(usagebillingrecord.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.UserIDCleared() {
+		_spec.ClearField(usagebillingrecord.FieldUserID, field.TypeInt)
 	}
 	if _u.mutation.APIKeyIDCleared() {
 		_spec.ClearField(usagebillingrecord.FieldAPIKeyID, field.TypeInt)

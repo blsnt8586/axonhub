@@ -7374,6 +7374,11 @@ func (_q *UsageBillingRecordQuery) collectField(ctx context.Context, oneNode boo
 				selectedFields = append(selectedFields, usagebillingrecord.FieldProjectID)
 				fieldSeen[usagebillingrecord.FieldProjectID] = struct{}{}
 			}
+		case "userID":
+			if _, ok := fieldSeen[usagebillingrecord.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, usagebillingrecord.FieldUserID)
+				fieldSeen[usagebillingrecord.FieldUserID] = struct{}{}
+			}
 		case "apiKeyID":
 			if _, ok := fieldSeen[usagebillingrecord.FieldAPIKeyID]; !ok {
 				selectedFields = append(selectedFields, usagebillingrecord.FieldAPIKeyID)

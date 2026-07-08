@@ -1122,19 +1122,19 @@ func init() {
 	// usagebillingrecord.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	usagebillingrecord.UpdateDefaultUpdatedAt = usagebillingrecordDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// usagebillingrecordDescChargeItems is the schema descriptor for charge_items field.
-	usagebillingrecordDescChargeItems := usagebillingrecordFields[9].Descriptor()
+	usagebillingrecordDescChargeItems := usagebillingrecordFields[10].Descriptor()
 	// usagebillingrecord.DefaultChargeItems holds the default value on creation for the charge_items field.
 	usagebillingrecord.DefaultChargeItems = usagebillingrecordDescChargeItems.Default.([]objects.CostItem)
 	// usagebillingrecordDescCostAmountMicros is the schema descriptor for cost_amount_micros field.
-	usagebillingrecordDescCostAmountMicros := usagebillingrecordFields[10].Descriptor()
+	usagebillingrecordDescCostAmountMicros := usagebillingrecordFields[11].Descriptor()
 	// usagebillingrecord.DefaultCostAmountMicros holds the default value on creation for the cost_amount_micros field.
 	usagebillingrecord.DefaultCostAmountMicros = usagebillingrecordDescCostAmountMicros.Default.(int64)
 	// usagebillingrecordDescCurrency is the schema descriptor for currency field.
-	usagebillingrecordDescCurrency := usagebillingrecordFields[12].Descriptor()
+	usagebillingrecordDescCurrency := usagebillingrecordFields[13].Descriptor()
 	// usagebillingrecord.DefaultCurrency holds the default value on creation for the currency field.
 	usagebillingrecord.DefaultCurrency = usagebillingrecordDescCurrency.Default.(string)
 	// usagebillingrecordDescError is the schema descriptor for error field.
-	usagebillingrecordDescError := usagebillingrecordFields[16].Descriptor()
+	usagebillingrecordDescError := usagebillingrecordFields[17].Descriptor()
 	// usagebillingrecord.DefaultError holds the default value on creation for the error field.
 	usagebillingrecord.DefaultError = usagebillingrecordDescError.Default.(string)
 	usagelogMixin := schema.UsageLog{}.Mixin()

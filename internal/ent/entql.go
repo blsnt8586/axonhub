@@ -735,6 +735,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagebillingrecord.FieldUsageLogID:          {Type: field.TypeInt, Column: usagebillingrecord.FieldUsageLogID},
 			usagebillingrecord.FieldBillingAccountID:    {Type: field.TypeInt, Column: usagebillingrecord.FieldBillingAccountID},
 			usagebillingrecord.FieldProjectID:           {Type: field.TypeInt, Column: usagebillingrecord.FieldProjectID},
+			usagebillingrecord.FieldUserID:              {Type: field.TypeInt, Column: usagebillingrecord.FieldUserID},
 			usagebillingrecord.FieldAPIKeyID:            {Type: field.TypeInt, Column: usagebillingrecord.FieldAPIKeyID},
 			usagebillingrecord.FieldModelID:             {Type: field.TypeString, Column: usagebillingrecord.FieldModelID},
 			usagebillingrecord.FieldRequestType:         {Type: field.TypeEnum, Column: usagebillingrecord.FieldRequestType},
@@ -5483,6 +5484,11 @@ func (f *UsageBillingRecordFilter) WhereBillingAccountID(p entql.IntP) {
 // WhereProjectID applies the entql int predicate on the project_id field.
 func (f *UsageBillingRecordFilter) WhereProjectID(p entql.IntP) {
 	f.Where(p.Field(usagebillingrecord.FieldProjectID))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *UsageBillingRecordFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(usagebillingrecord.FieldUserID))
 }
 
 // WhereAPIKeyID applies the entql int predicate on the api_key_id field.

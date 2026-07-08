@@ -27,8 +27,13 @@ func enforceBillingAdmission(inbound *PersistentInboundTransformer) pipeline.Mid
 			return llmRequest, nil
 		}
 
+		subject, ok := state.AdmissionService.BillingSubjectForAPIKey(state.APIKey, projectID)
+		if !ok {
+			return llmRequest, nil
+		}
+
 		decision, err := state.AdmissionService.Check(ctx, biz.AdmissionCheckInput{
-			Subject: biz.ProjectBillingSubject(projectID),
+			Subject: subject,
 			ModelID: llmRequest.Model,
 		})
 		if decision.Allowed {

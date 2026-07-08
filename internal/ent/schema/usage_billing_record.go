@@ -31,6 +31,8 @@ func (UsageBillingRecord) Indexes() []ent.Index {
 			StorageKey("usage_billing_records_by_account_created_at"),
 		index.Fields("project_id", "created_at").
 			StorageKey("usage_billing_records_by_project_created_at"),
+		index.Fields("user_id", "created_at").
+			StorageKey("usage_billing_records_by_user_created_at"),
 		index.Fields("idempotency_key").
 			StorageKey("usage_billing_records_by_idempotency_key").
 			Unique(),
@@ -44,6 +46,9 @@ func (UsageBillingRecord) Fields() []ent.Field {
 		field.Int("billing_account_id").
 			Immutable(),
 		field.Int("project_id").
+			Immutable(),
+		field.Int("user_id").
+			Optional().
 			Immutable(),
 		field.Int("api_key_id").
 			Optional().

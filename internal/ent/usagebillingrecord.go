@@ -32,6 +32,8 @@ type UsageBillingRecord struct {
 	BillingAccountID int `json:"billing_account_id,omitempty"`
 	// ProjectID holds the value of the "project_id" field.
 	ProjectID int `json:"project_id,omitempty"`
+	// UserID holds the value of the "user_id" field.
+	UserID int `json:"user_id,omitempty"`
 	// APIKeyID holds the value of the "api_key_id" field.
 	APIKeyID int `json:"api_key_id,omitempty"`
 	// ModelID holds the value of the "model_id" field.
@@ -121,7 +123,7 @@ func (*UsageBillingRecord) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case usagebillingrecord.FieldUsageSnapshot, usagebillingrecord.FieldPriceSnapshot, usagebillingrecord.FieldChargeItems:
 			values[i] = new([]byte)
-		case usagebillingrecord.FieldID, usagebillingrecord.FieldUsageLogID, usagebillingrecord.FieldBillingAccountID, usagebillingrecord.FieldProjectID, usagebillingrecord.FieldAPIKeyID, usagebillingrecord.FieldCostAmountMicros, usagebillingrecord.FieldChargeAmountMicros, usagebillingrecord.FieldLedgerTransactionID:
+		case usagebillingrecord.FieldID, usagebillingrecord.FieldUsageLogID, usagebillingrecord.FieldBillingAccountID, usagebillingrecord.FieldProjectID, usagebillingrecord.FieldUserID, usagebillingrecord.FieldAPIKeyID, usagebillingrecord.FieldCostAmountMicros, usagebillingrecord.FieldChargeAmountMicros, usagebillingrecord.FieldLedgerTransactionID:
 			values[i] = new(sql.NullInt64)
 		case usagebillingrecord.FieldModelID, usagebillingrecord.FieldRequestType, usagebillingrecord.FieldPriceReferenceID, usagebillingrecord.FieldCurrency, usagebillingrecord.FieldStatus, usagebillingrecord.FieldIdempotencyKey, usagebillingrecord.FieldError:
 			values[i] = new(sql.NullString)
@@ -177,6 +179,12 @@ func (_m *UsageBillingRecord) assignValues(columns []string, values []any) error
 				return fmt.Errorf("unexpected type %T for field project_id", values[i])
 			} else if value.Valid {
 				_m.ProjectID = int(value.Int64)
+			}
+		case usagebillingrecord.FieldUserID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+			} else if value.Valid {
+				_m.UserID = int(value.Int64)
 			}
 		case usagebillingrecord.FieldAPIKeyID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -333,6 +341,9 @@ func (_m *UsageBillingRecord) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("project_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ProjectID))
+	builder.WriteString(", ")
+	builder.WriteString("user_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
 	builder.WriteString("api_key_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.APIKeyID))

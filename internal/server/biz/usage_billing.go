@@ -136,7 +136,15 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (
 		return nil, fmt.Errorf("failed to get usage log: %w", err)
 	}
 
-	account, err := p.billingAccountService.GetOrCreateForSubject(ctx, ProjectBillingSubject(usageLog.ProjectID))
+	subject, subjectUserID, ok, err := p.billingSubjectForUsageLog(ctx, usageLog)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, nil
+	}
+
+	account, err := p.billingAccountService.GetOrCreateForSubject(ctx, subject)
 	if err != nil {
 		return nil, err
 	}
@@ -165,6 +173,7 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (
 			SetUsageLogID(usageLog.ID).
 			SetBillingAccountID(account.ID).
 			SetProjectID(usageLog.ProjectID).
+			SetNillableUserID(subjectUserID).
 			SetNillableAPIKeyID(usageLogAPIKeyIDPtr(usageLog)).
 			SetModelID(usageLog.ModelID).
 			SetUsageSnapshot(objects.JSONRawMessage(usageSnapshot)).
@@ -191,6 +200,7 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int) (
 			SetUsageLogID(usageLog.ID).
 			SetBillingAccountID(account.ID).
 			SetProjectID(usageLog.ProjectID).
+			SetNillableUserID(subjectUserID).
 			SetNillableAPIKeyID(usageLogAPIKeyIDPtr(usageLog)).
 			SetModelID(usageLog.ModelID).
 			SetUsageSnapshot(objects.JSONRawMessage(usageSnapshot)).
@@ -264,6 +274,28 @@ func usageLogAPIKeyIDPtr(usageLog *ent.UsageLog) *int {
 	}
 
 	return &usageLog.APIKeyID
+}
+
+func (p *UsageBillingProcessor) billingSubjectForUsageLog(ctx context.Context, usageLog *ent.UsageLog) (BillingSubject, *int, bool, error) {
+	var apiKey *ent.APIKey
+	if usageLog.APIKeyID > 0 {
+		loaded, err := p.entFromContext(ctx).APIKey.Get(ctx, usageLog.APIKeyID)
+		if err != nil {
+			return BillingSubject{}, nil, false, fmt.Errorf("failed to get usage log api key: %w", err)
+		}
+		apiKey = loaded
+	}
+
+	subject, ok := BillingSubjectForAPIKey(p.config, apiKey, usageLog.ProjectID)
+	if !ok {
+		return BillingSubject{}, nil, false, nil
+	}
+
+	if subject.Type != BillingSubjectTypeUser {
+		return subject, nil, true, nil
+	}
+
+	return subject, &subject.ID, true, nil
 }
 
 func usageFromUsageLog(usageLog *ent.UsageLog) *llm.Usage {

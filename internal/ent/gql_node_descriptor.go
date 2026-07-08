@@ -3304,7 +3304,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "UsageBillingRecord",
-		Fields: make([]*Field, 19),
+		Fields: make([]*Field, 20),
 		Edges:  make([]*Edge, 3),
 	}
 	var buf []byte
@@ -3348,10 +3348,18 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 		Name:  "project_id",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.APIKeyID); err != nil {
+	if buf, err = json.Marshal(_m.UserID); err != nil {
 		return nil, err
 	}
 	node.Fields[5] = &Field{
+		Type:  "int",
+		Name:  "user_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.APIKeyID); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
 		Type:  "int",
 		Name:  "api_key_id",
 		Value: string(buf),
@@ -3359,7 +3367,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.ModelID); err != nil {
 		return nil, err
 	}
-	node.Fields[6] = &Field{
+	node.Fields[7] = &Field{
 		Type:  "string",
 		Name:  "model_id",
 		Value: string(buf),
@@ -3367,7 +3375,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.RequestType); err != nil {
 		return nil, err
 	}
-	node.Fields[7] = &Field{
+	node.Fields[8] = &Field{
 		Type:  "usagebillingrecord.RequestType",
 		Name:  "request_type",
 		Value: string(buf),
@@ -3375,7 +3383,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.UsageSnapshot); err != nil {
 		return nil, err
 	}
-	node.Fields[8] = &Field{
+	node.Fields[9] = &Field{
 		Type:  "objects.JSONRawMessage",
 		Name:  "usage_snapshot",
 		Value: string(buf),
@@ -3383,7 +3391,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.PriceSnapshot); err != nil {
 		return nil, err
 	}
-	node.Fields[9] = &Field{
+	node.Fields[10] = &Field{
 		Type:  "objects.ModelPrice",
 		Name:  "price_snapshot",
 		Value: string(buf),
@@ -3391,7 +3399,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.PriceReferenceID); err != nil {
 		return nil, err
 	}
-	node.Fields[10] = &Field{
+	node.Fields[11] = &Field{
 		Type:  "string",
 		Name:  "price_reference_id",
 		Value: string(buf),
@@ -3399,7 +3407,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.ChargeItems); err != nil {
 		return nil, err
 	}
-	node.Fields[11] = &Field{
+	node.Fields[12] = &Field{
 		Type:  "[]objects.CostItem",
 		Name:  "charge_items",
 		Value: string(buf),
@@ -3407,7 +3415,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.CostAmountMicros); err != nil {
 		return nil, err
 	}
-	node.Fields[12] = &Field{
+	node.Fields[13] = &Field{
 		Type:  "int64",
 		Name:  "cost_amount_micros",
 		Value: string(buf),
@@ -3415,7 +3423,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.ChargeAmountMicros); err != nil {
 		return nil, err
 	}
-	node.Fields[13] = &Field{
+	node.Fields[14] = &Field{
 		Type:  "int64",
 		Name:  "charge_amount_micros",
 		Value: string(buf),
@@ -3423,7 +3431,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.Currency); err != nil {
 		return nil, err
 	}
-	node.Fields[14] = &Field{
+	node.Fields[15] = &Field{
 		Type:  "string",
 		Name:  "currency",
 		Value: string(buf),
@@ -3431,7 +3439,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.Status); err != nil {
 		return nil, err
 	}
-	node.Fields[15] = &Field{
+	node.Fields[16] = &Field{
 		Type:  "usagebillingrecord.Status",
 		Name:  "status",
 		Value: string(buf),
@@ -3439,7 +3447,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.LedgerTransactionID); err != nil {
 		return nil, err
 	}
-	node.Fields[16] = &Field{
+	node.Fields[17] = &Field{
 		Type:  "int",
 		Name:  "ledger_transaction_id",
 		Value: string(buf),
@@ -3447,7 +3455,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.IdempotencyKey); err != nil {
 		return nil, err
 	}
-	node.Fields[17] = &Field{
+	node.Fields[18] = &Field{
 		Type:  "string",
 		Name:  "idempotency_key",
 		Value: string(buf),
@@ -3455,7 +3463,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.Error); err != nil {
 		return nil, err
 	}
-	node.Fields[18] = &Field{
+	node.Fields[19] = &Field{
 		Type:  "string",
 		Name:  "error",
 		Value: string(buf),

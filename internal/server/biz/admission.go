@@ -8,6 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 	"go.uber.org/fx"
 
+	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 )
 
@@ -76,6 +77,27 @@ func NewAdmissionService(params AdmissionServiceParams) *AdmissionService {
 		config:                params.Config.normalized(),
 		billingAccountService: params.BillingAccountService,
 	}
+}
+
+func BillingSubjectForAPIKey(cfg BillingConfig, apiKey *ent.APIKey, projectID int) (BillingSubject, bool) {
+	switch cfg.normalized().Subject {
+	case BillingSubjectTypeUser:
+		if apiKey != nil && apiKey.UserID > 0 {
+			return UserBillingSubject(apiKey.UserID), true
+		}
+		return BillingSubject{}, false
+	case BillingSubjectTypeProject:
+		if projectID > 0 {
+			return ProjectBillingSubject(projectID), true
+		}
+		return BillingSubject{}, false
+	default:
+		return BillingSubject{}, false
+	}
+}
+
+func (s *AdmissionService) BillingSubjectForAPIKey(apiKey *ent.APIKey, projectID int) (BillingSubject, bool) {
+	return BillingSubjectForAPIKey(s.config, apiKey, projectID)
 }
 
 type AdmissionCheckInput struct {

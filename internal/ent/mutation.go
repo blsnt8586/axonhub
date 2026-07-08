@@ -31698,6 +31698,8 @@ type UsageBillingRecordMutation struct {
 	updated_at                *time.Time
 	project_id                *int
 	addproject_id             *int
+	user_id                   *int
+	adduser_id                *int
 	api_key_id                *int
 	addapi_key_id             *int
 	model_id                  *string
@@ -32024,6 +32026,76 @@ func (m *UsageBillingRecordMutation) AddedProjectID() (r int, exists bool) {
 func (m *UsageBillingRecordMutation) ResetProjectID() {
 	m.project_id = nil
 	m.addproject_id = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *UsageBillingRecordMutation) SetUserID(i int) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *UsageBillingRecordMutation) UserID() (r int, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the UsageBillingRecord entity.
+// If the UsageBillingRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRecordMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *UsageBillingRecordMutation) AddUserID(i int) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *UsageBillingRecordMutation) AddedUserID() (r int, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (m *UsageBillingRecordMutation) ClearUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+	m.clearedFields[usagebillingrecord.FieldUserID] = struct{}{}
+}
+
+// UserIDCleared returns if the "user_id" field was cleared in this mutation.
+func (m *UsageBillingRecordMutation) UserIDCleared() bool {
+	_, ok := m.clearedFields[usagebillingrecord.FieldUserID]
+	return ok
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *UsageBillingRecordMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+	delete(m.clearedFields, usagebillingrecord.FieldUserID)
 }
 
 // SetAPIKeyID sets the "api_key_id" field.
@@ -32776,7 +32848,7 @@ func (m *UsageBillingRecordMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageBillingRecordMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 20)
 	if m.created_at != nil {
 		fields = append(fields, usagebillingrecord.FieldCreatedAt)
 	}
@@ -32791,6 +32863,9 @@ func (m *UsageBillingRecordMutation) Fields() []string {
 	}
 	if m.project_id != nil {
 		fields = append(fields, usagebillingrecord.FieldProjectID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, usagebillingrecord.FieldUserID)
 	}
 	if m.api_key_id != nil {
 		fields = append(fields, usagebillingrecord.FieldAPIKeyID)
@@ -32852,6 +32927,8 @@ func (m *UsageBillingRecordMutation) Field(name string) (ent.Value, bool) {
 		return m.BillingAccountID()
 	case usagebillingrecord.FieldProjectID:
 		return m.ProjectID()
+	case usagebillingrecord.FieldUserID:
+		return m.UserID()
 	case usagebillingrecord.FieldAPIKeyID:
 		return m.APIKeyID()
 	case usagebillingrecord.FieldModelID:
@@ -32899,6 +32976,8 @@ func (m *UsageBillingRecordMutation) OldField(ctx context.Context, name string) 
 		return m.OldBillingAccountID(ctx)
 	case usagebillingrecord.FieldProjectID:
 		return m.OldProjectID(ctx)
+	case usagebillingrecord.FieldUserID:
+		return m.OldUserID(ctx)
 	case usagebillingrecord.FieldAPIKeyID:
 		return m.OldAPIKeyID(ctx)
 	case usagebillingrecord.FieldModelID:
@@ -32970,6 +33049,13 @@ func (m *UsageBillingRecordMutation) SetField(name string, value ent.Value) erro
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProjectID(v)
+		return nil
+	case usagebillingrecord.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
 		return nil
 	case usagebillingrecord.FieldAPIKeyID:
 		v, ok := value.(int)
@@ -33080,6 +33166,9 @@ func (m *UsageBillingRecordMutation) AddedFields() []string {
 	if m.addproject_id != nil {
 		fields = append(fields, usagebillingrecord.FieldProjectID)
 	}
+	if m.adduser_id != nil {
+		fields = append(fields, usagebillingrecord.FieldUserID)
+	}
 	if m.addapi_key_id != nil {
 		fields = append(fields, usagebillingrecord.FieldAPIKeyID)
 	}
@@ -33099,6 +33188,8 @@ func (m *UsageBillingRecordMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case usagebillingrecord.FieldProjectID:
 		return m.AddedProjectID()
+	case usagebillingrecord.FieldUserID:
+		return m.AddedUserID()
 	case usagebillingrecord.FieldAPIKeyID:
 		return m.AddedAPIKeyID()
 	case usagebillingrecord.FieldCostAmountMicros:
@@ -33120,6 +33211,13 @@ func (m *UsageBillingRecordMutation) AddField(name string, value ent.Value) erro
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddProjectID(v)
+		return nil
+	case usagebillingrecord.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
 		return nil
 	case usagebillingrecord.FieldAPIKeyID:
 		v, ok := value.(int)
@@ -33150,6 +33248,9 @@ func (m *UsageBillingRecordMutation) AddField(name string, value ent.Value) erro
 // mutation.
 func (m *UsageBillingRecordMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(usagebillingrecord.FieldUserID) {
+		fields = append(fields, usagebillingrecord.FieldUserID)
+	}
 	if m.FieldCleared(usagebillingrecord.FieldAPIKeyID) {
 		fields = append(fields, usagebillingrecord.FieldAPIKeyID)
 	}
@@ -33173,6 +33274,9 @@ func (m *UsageBillingRecordMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *UsageBillingRecordMutation) ClearField(name string) error {
 	switch name {
+	case usagebillingrecord.FieldUserID:
+		m.ClearUserID()
+		return nil
 	case usagebillingrecord.FieldAPIKeyID:
 		m.ClearAPIKeyID()
 		return nil
@@ -33204,6 +33308,9 @@ func (m *UsageBillingRecordMutation) ResetField(name string) error {
 		return nil
 	case usagebillingrecord.FieldProjectID:
 		m.ResetProjectID()
+		return nil
+	case usagebillingrecord.FieldUserID:
+		m.ResetUserID()
 		return nil
 	case usagebillingrecord.FieldAPIKeyID:
 		m.ResetAPIKeyID()
