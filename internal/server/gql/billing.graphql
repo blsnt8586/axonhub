@@ -44,6 +44,15 @@ input CreateMyEPayRechargeCheckoutInput {
   metadata: JSONRawMessageInput
 }
 
+input AdjustUserBalanceInput {
+  userId: ID!
+  direction: LedgerTransactionDirection!
+  amount: DecimalInput!
+  currency: String
+  idempotencyKey: String
+  memo: String
+}
+
 type PaymentCheckout {
   providerType: String!
   orderNo: String!
@@ -60,8 +69,17 @@ extend type Mutation {
   createSimulatedEPayRechargeCheckout(input: CreateSimulatedEPayRechargeCheckoutInput!): PaymentCheckout!
   upsertEPayPaymentProvider(input: UpsertEPayPaymentProviderInput!): PaymentProviderInstance!
   createMyEPayRechargeCheckout(input: CreateMyEPayRechargeCheckoutInput!): PaymentCheckout!
+  adjustUserBalance(input: AdjustUserBalanceInput!): LedgerTransaction!
 }
 
 extend type Query {
   projectBillingAccount(projectId: ID!): BillingAccount!
+  myBillingAccount: BillingAccount!
+  userBillingAccount(userId: ID!): BillingAccount!
+  myPaymentOrders(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentOrderOrder): PaymentOrderConnection!
+  userPaymentOrders(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentOrderOrder): PaymentOrderConnection!
+  myUsageBillingRecords(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UsageBillingRecordOrder): UsageBillingRecordConnection!
+  userUsageBillingRecords(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UsageBillingRecordOrder): UsageBillingRecordConnection!
+  myLedgerTransactions(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
+  userLedgerTransactions(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
 }

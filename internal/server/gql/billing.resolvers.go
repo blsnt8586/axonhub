@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 
+	"entgo.io/contrib/entgql"
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
@@ -122,6 +123,19 @@ func (r *mutationResolver) CreateMyEPayRechargeCheckout(ctx context.Context, inp
 	return paymentCheckoutFromBiz(checkout)
 }
 
+// AdjustUserBalance is the resolver for the adjustUserBalance field.
+func (r *mutationResolver) AdjustUserBalance(ctx context.Context, input biz.AdjustUserBalanceInput) (*ent.LedgerTransaction, error) {
+	actor, err := requireOwnerUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	input.ActorID = fmt.Sprint(actor.ID)
+	return authz.RunWithSystemBypass(ctx, "billing-adjust-user-balance", func(ctx context.Context) (*ent.LedgerTransaction, error) {
+		return r.paymentService.AdjustUserBalance(ctx, input)
+	})
+}
+
 // ProjectBillingAccount is the resolver for the projectBillingAccount field.
 func (r *queryResolver) ProjectBillingAccount(ctx context.Context, projectID objects.GUID) (*ent.BillingAccount, error) {
 	if err := requireOwner(ctx); err != nil {
@@ -129,4 +143,100 @@ func (r *queryResolver) ProjectBillingAccount(ctx context.Context, projectID obj
 	}
 
 	return r.billingAccountService.GetOrCreateForSubject(ctx, biz.ProjectBillingSubject(projectID.ID))
+}
+
+// MyBillingAccount is the resolver for the myBillingAccount field.
+func (r *queryResolver) MyBillingAccount(ctx context.Context) (*ent.BillingAccount, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userBillingAccount(ctx, user.ID)
+}
+
+// UserBillingAccount is the resolver for the userBillingAccount field.
+func (r *queryResolver) UserBillingAccount(ctx context.Context, userID objects.GUID) (*ent.BillingAccount, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	id, err := requireUserGUID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userBillingAccount(ctx, id)
+}
+
+// MyPaymentOrders is the resolver for the myPaymentOrders field.
+func (r *queryResolver) MyPaymentOrders(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) (*ent.PaymentOrderConnection, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userPaymentOrders(ctx, user.ID, after, first, before, last, orderBy)
+}
+
+// UserPaymentOrders is the resolver for the userPaymentOrders field.
+func (r *queryResolver) UserPaymentOrders(ctx context.Context, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) (*ent.PaymentOrderConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	id, err := requireUserGUID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userPaymentOrders(ctx, id, after, first, before, last, orderBy)
+}
+
+// MyUsageBillingRecords is the resolver for the myUsageBillingRecords field.
+func (r *queryResolver) MyUsageBillingRecords(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) (*ent.UsageBillingRecordConnection, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userUsageBillingRecords(ctx, user.ID, after, first, before, last, orderBy)
+}
+
+// UserUsageBillingRecords is the resolver for the userUsageBillingRecords field.
+func (r *queryResolver) UserUsageBillingRecords(ctx context.Context, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) (*ent.UsageBillingRecordConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	id, err := requireUserGUID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userUsageBillingRecords(ctx, id, after, first, before, last, orderBy)
+}
+
+// MyLedgerTransactions is the resolver for the myLedgerTransactions field.
+func (r *queryResolver) MyLedgerTransactions(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userLedgerTransactions(ctx, user.ID, after, first, before, last, orderBy)
+}
+
+// UserLedgerTransactions is the resolver for the userLedgerTransactions field.
+func (r *queryResolver) UserLedgerTransactions(ctx context.Context, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	id, err := requireUserGUID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userLedgerTransactions(ctx, id, after, first, before, last, orderBy)
 }

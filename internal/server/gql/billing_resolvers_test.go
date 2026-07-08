@@ -16,9 +16,12 @@ import (
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/enttest"
+	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	entproject "github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/request"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	entuser "github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
@@ -159,6 +162,146 @@ func TestBillingResolversRejectsMyEPayCheckoutWithoutUser(t *testing.T) {
 	require.True(t, errors.Is(err, ErrNotOwner))
 }
 
+func TestBillingResolversUserBillingQueriesAreScopedToCurrentUser(t *testing.T) {
+	_, queryResolver, ctx, client, _, project := setupBillingResolversTest(t, "billing_resolver_my_billing_scope")
+	user := createBillingResolverUser(t, ctx, client, false)
+	other := createBillingResolverUser(t, ctx, client, false)
+
+	userAccount, err := queryResolver.billingAccountService.GetOrCreateForSubject(ctx, biz.UserBillingSubject(user.ID))
+	require.NoError(t, err)
+	otherAccount, err := queryResolver.billingAccountService.GetOrCreateForSubject(ctx, biz.UserBillingSubject(other.ID))
+	require.NoError(t, err)
+
+	ledgerSvc := biz.NewLedgerService(biz.LedgerServiceParams{Ent: client})
+	_, err = ledgerSvc.Credit(ctx, userAccount.ID, decimal.RequireFromString("5"), ledgertransaction.TypePaymentRecharge, "user-credit")
+	require.NoError(t, err)
+	_, err = ledgerSvc.Credit(ctx, otherAccount.ID, decimal.RequireFromString("9"), ledgertransaction.TypePaymentRecharge, "other-credit")
+	require.NoError(t, err)
+
+	_, err = client.PaymentOrder.Create().
+		SetOrderNo("pay_user_scope").
+		SetProjectID(project.ID).
+		SetBillingAccountID(userAccount.ID).
+		SetProviderType(paymentorder.ProviderTypeManual).
+		SetPurpose(paymentorder.PurposeRecharge).
+		SetAmountMicros(5_000_000).
+		SetCurrency("CNY").
+		SetStatus(paymentorder.StatusPaid).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.PaymentOrder.Create().
+		SetOrderNo("pay_other_scope").
+		SetProjectID(project.ID).
+		SetBillingAccountID(otherAccount.ID).
+		SetProviderType(paymentorder.ProviderTypeManual).
+		SetPurpose(paymentorder.PurposeRecharge).
+		SetAmountMicros(9_000_000).
+		SetCurrency("CNY").
+		SetStatus(paymentorder.StatusPaid).
+		Save(ctx)
+	require.NoError(t, err)
+
+	userUsageLog := createBillingResolverUsageLog(t, ctx, client, project.ID, "gpt-test")
+	otherUsageLog := createBillingResolverUsageLog(t, ctx, client, project.ID, "gpt-test")
+
+	_, err = client.UsageBillingRecord.Create().
+		SetUsageLogID(userUsageLog.ID).
+		SetBillingAccountID(userAccount.ID).
+		SetProjectID(project.ID).
+		SetUserID(user.ID).
+		SetModelID("gpt-test").
+		SetPriceSnapshot(objects.ModelPrice{}).
+		SetPriceReferenceID("price-user").
+		SetChargeAmountMicros(1_000_000).
+		SetCurrency("CNY").
+		SetStatus(usagebillingrecord.StatusCharged).
+		SetIdempotencyKey("usage:user").
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.UsageBillingRecord.Create().
+		SetUsageLogID(otherUsageLog.ID).
+		SetBillingAccountID(otherAccount.ID).
+		SetProjectID(project.ID).
+		SetUserID(other.ID).
+		SetModelID("gpt-test").
+		SetPriceSnapshot(objects.ModelPrice{}).
+		SetPriceReferenceID("price-other").
+		SetChargeAmountMicros(2_000_000).
+		SetCurrency("CNY").
+		SetStatus(usagebillingrecord.StatusCharged).
+		SetIdempotencyKey("usage:other").
+		Save(ctx)
+	require.NoError(t, err)
+
+	userCtx := contexts.WithUser(ctx, user)
+	account, err := queryResolver.MyBillingAccount(userCtx)
+	require.NoError(t, err)
+	require.Equal(t, userAccount.ID, account.ID)
+	require.Equal(t, int64(5_000_000), account.BalanceMicros)
+
+	first := 10
+	orders, err := queryResolver.MyPaymentOrders(userCtx, nil, &first, nil, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, orders.TotalCount)
+	require.Equal(t, userAccount.ID, orders.Edges[0].Node.BillingAccountID)
+
+	usageRecords, err := queryResolver.MyUsageBillingRecords(userCtx, nil, &first, nil, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, usageRecords.TotalCount)
+	require.Equal(t, user.ID, usageRecords.Edges[0].Node.UserID)
+
+	ledgerTxs, err := queryResolver.MyLedgerTransactions(userCtx, nil, &first, nil, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, ledgerTxs.TotalCount)
+	require.Equal(t, userAccount.ID, ledgerTxs.Edges[0].Node.BillingAccountID)
+}
+
+func TestBillingResolversOwnerCanAdjustAndQueryUserBalance(t *testing.T) {
+	mutationResolver, queryResolver, ctx, client, owner, _ := setupBillingResolversTest(t, "billing_resolver_owner_adjust_user")
+	user := createBillingResolverUser(t, ctx, client, false)
+
+	ownerCtx := contexts.WithUser(ctx, owner)
+	tx, err := mutationResolver.AdjustUserBalance(ownerCtx, biz.AdjustUserBalanceInput{
+		UserID:         user.ID,
+		Direction:      ledgertransaction.DirectionCredit,
+		Amount:         decimal.RequireFromString("12.5"),
+		IdempotencyKey: "admin-adjust-user-1",
+		Memo:           "manual top-up",
+	})
+	require.NoError(t, err)
+	require.Equal(t, ledgertransaction.TypeAdminAdjustment, tx.Type)
+	require.Equal(t, fmt.Sprint(owner.ID), tx.CreatedByID)
+
+	account, err := queryResolver.UserBillingAccount(ownerCtx, objects.GUID{Type: ent.TypeUser, ID: user.ID})
+	require.NoError(t, err)
+	require.Equal(t, billingaccount.OwnerTypeUser, account.OwnerType)
+	require.Equal(t, user.ID, account.OwnerID)
+	require.Equal(t, int64(12_500_000), account.BalanceMicros)
+
+	first := 10
+	ledgerTxs, err := queryResolver.UserLedgerTransactions(ownerCtx, objects.GUID{Type: ent.TypeUser, ID: user.ID}, nil, &first, nil, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, ledgerTxs.TotalCount)
+	require.Equal(t, tx.ID, ledgerTxs.Edges[0].Node.ID)
+}
+
+func TestBillingResolversRejectsUserBillingAdminOperationsForNonOwner(t *testing.T) {
+	mutationResolver, queryResolver, ctx, client, _, _ := setupBillingResolversTest(t, "billing_resolver_admin_reject_non_owner")
+	user := createBillingResolverUser(t, ctx, client, false)
+	normalUser := createBillingResolverUser(t, ctx, client, false)
+	userCtx := contexts.WithUser(ctx, normalUser)
+
+	_, err := queryResolver.UserBillingAccount(userCtx, objects.GUID{Type: ent.TypeUser, ID: user.ID})
+	require.True(t, errors.Is(err, ErrNotOwner))
+
+	_, err = mutationResolver.AdjustUserBalance(userCtx, biz.AdjustUserBalanceInput{
+		UserID:    user.ID,
+		Direction: ledgertransaction.DirectionCredit,
+		Amount:    decimal.NewFromInt(1),
+	})
+	require.True(t, errors.Is(err, ErrNotOwner))
+}
+
 func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *queryResolver, context.Context, *ent.Client, *ent.User, *ent.Project) {
 	t.Helper()
 
@@ -211,4 +354,29 @@ func createBillingResolverUser(t *testing.T, ctx context.Context, client *ent.Cl
 	require.NoError(t, err)
 
 	return user
+}
+
+func createBillingResolverUsageLog(t *testing.T, ctx context.Context, client *ent.Client, projectID int, modelID string) *ent.UsageLog {
+	t.Helper()
+
+	req, err := client.Request.Create().
+		SetProjectID(projectID).
+		SetModelID(modelID).
+		SetFormat("openai/chat_completions").
+		SetStatus(request.StatusCompleted).
+		SetRequestBody(objects.JSONRawMessage([]byte(`{}`))).
+		Save(ctx)
+	require.NoError(t, err)
+
+	usageLog, err := client.UsageLog.Create().
+		SetRequestID(req.ID).
+		SetProjectID(projectID).
+		SetModelID(modelID).
+		SetPromptTokens(1).
+		SetCompletionTokens(1).
+		SetTotalTokens(2).
+		Save(ctx)
+	require.NoError(t, err)
+
+	return usageLog
 }

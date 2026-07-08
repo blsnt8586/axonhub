@@ -498,6 +498,68 @@ type ConfirmManualPaymentInput struct {
 	ActorID         string
 }
 
+type AdjustUserBalanceInput struct {
+	UserID         int
+	Direction      ledgertransaction.Direction
+	Amount         decimal.Decimal
+	Currency       string
+	IdempotencyKey string
+	Memo           string
+	ActorID        string
+}
+
+func (s *PaymentService) AdjustUserBalance(ctx context.Context, input AdjustUserBalanceInput) (*ent.LedgerTransaction, error) {
+	if input.UserID <= 0 {
+		return nil, fmt.Errorf("user id is required")
+	}
+	if input.Direction != ledgertransaction.DirectionCredit && input.Direction != ledgertransaction.DirectionDebit {
+		return nil, fmt.Errorf("unsupported adjustment direction %q", input.Direction)
+	}
+	if input.Currency == "" {
+		input.Currency = defaultBillingCurrency
+	}
+	if input.IdempotencyKey == "" {
+		randSuffix, err := randomHex(8)
+		if err != nil {
+			return nil, err
+		}
+		input.IdempotencyKey = fmt.Sprintf("admin_adjustment:user:%d:%s", input.UserID, randSuffix)
+	}
+	if input.Memo == "" {
+		input.Memo = "admin balance adjustment"
+	}
+
+	amountMicros, err := decimalToMicros(input.Amount)
+	if err != nil {
+		return nil, err
+	}
+	if amountMicros <= 0 {
+		return nil, fmt.Errorf("amount must be positive")
+	}
+
+	account, err := s.billingAccountService.GetOrCreateForSubject(ctx, UserBillingSubject(input.UserID))
+	if err != nil {
+		return nil, err
+	}
+	if account.Currency != input.Currency {
+		return nil, fmt.Errorf("ledger currency %s does not match account currency %s", input.Currency, account.Currency)
+	}
+
+	return s.ledgerService.Post(ctx, LedgerPostInput{
+		BillingAccountID: account.ID,
+		Direction:        input.Direction,
+		Amount:           input.Amount,
+		Currency:         input.Currency,
+		Type:             ledgertransaction.TypeAdminAdjustment,
+		IdempotencyKey:   input.IdempotencyKey,
+		ReferenceType:    "billing_account",
+		ReferenceID:      fmt.Sprint(account.ID),
+		Memo:             input.Memo,
+		CreatedByType:    ledgertransaction.CreatedByTypeAdmin,
+		CreatedByID:      input.ActorID,
+	})
+}
+
 func (s *PaymentService) ConfirmManualPayment(ctx context.Context, input ConfirmManualPaymentInput) (*ent.PaymentOrder, error) {
 	if input.OrderNo == "" {
 		return nil, fmt.Errorf("order no is required")
@@ -664,4 +726,13 @@ func newPaymentOrderNo() (string, error) {
 	}
 
 	return fmt.Sprintf("pay_%d_%s", time.Now().UTC().UnixNano(), hex.EncodeToString(b[:])), nil
+}
+
+func randomHex(size int) (string, error) {
+	buf := make([]byte, size)
+	if _, err := rand.Read(buf); err != nil {
+		return "", fmt.Errorf("generate random hex: %w", err)
+	}
+
+	return hex.EncodeToString(buf), nil
 }
