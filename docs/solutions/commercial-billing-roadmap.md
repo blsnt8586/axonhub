@@ -316,33 +316,33 @@ Verification:
 
 ## Stage 10: Production Operations And Security Closure
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: close the operational and security gaps before production rollout.
 
 Backend scope:
 
-- [ ] Add audit records for pricing edits, provider edits, wallet controls, manual adjustments, make-up payments, order cancellation, redeem code operations, subscription operations, and affiliate overrides.
-- [ ] Encrypt payment provider secrets at rest.
-- [ ] Never return payment secrets through API responses.
-- [ ] Add commercial mode configuration: disabled, warn, enforce.
-- [ ] Add repeatable workers for order expiry, hold expiry, subscription expiry, subscription reset, rebate thawing, and failed billing retry.
-- [ ] Add migration safety checks and default commercial settings.
+- [x] Add audit records for pricing edits, provider edits, wallet controls, manual adjustments, make-up payments, order cancellation, redeem code operations, subscription operations, and affiliate overrides.
+- [x] Encrypt payment provider secrets at rest.
+- [x] Never return payment secrets through API responses.
+- [x] Add commercial mode configuration: disabled, warn, enforce.
+- [x] Add repeatable workers for order expiry, hold expiry, subscription expiry, subscription reset, rebate thawing, and failed billing retry.
+- [x] Add migration safety checks and default commercial settings.
 
 Frontend scope:
 
-- [ ] System settings page includes commercial billing mode and payment safety settings.
-- [ ] Sensitive provider secret fields are write-only.
-- [ ] Dangerous admin actions require confirmation and reason.
-- [ ] Admin audit table surfaces key commercial actions.
+- [x] System settings page includes commercial billing mode and payment safety settings.
+- [x] Sensitive provider secret fields are write-only.
+- [x] Dangerous admin actions require confirmation and reason.
+- [x] Admin audit table surfaces key commercial actions.
 
 Verification:
 
-- [ ] Permission tests cover all commercial admin APIs.
-- [ ] Secret fields are not returned by API.
-- [ ] Workers are idempotent.
-- [ ] Full selected backend tests and frontend build pass.
-- [ ] Commit completed stage.
+- [x] Permission tests cover all commercial admin APIs.
+- [x] Secret fields are not returned by API.
+- [x] Workers are idempotent.
+- [x] Full selected backend tests and frontend build pass.
+- [x] Commit completed stage.
 
 ## Suggested Stage Order
 
@@ -356,7 +356,7 @@ Verification:
 - [x] Stage 7: Promo Codes
 - [x] Stage 8: Affiliate And Rebates
 - [x] Stage 9: Billing Notifications
-- [ ] Stage 10: Production Operations And Security Closure
+- [x] Stage 10: Production Operations And Security Closure
 
 ## Completion Log
 
@@ -370,3 +370,4 @@ Append one line per completed stage.
 | Stage 2 | `bf4368b5` | 2026-07-08 | Hardened payment order lifecycle with expiry, cancel, admin make-up, callback audit, read-only return page, event payload summaries, and refund reserve fields. |
 | Stage 3 | `482fad12` | 2026-07-08 | Added owner-only commercial reports, ledger-backed reconciliation totals, ranked model/project/user tables, CSV exports, admin report dashboard, and frontend verification. |
 | Stage 9 | current stage commit | 2026-07-09 | Added station billing notifications, user preferences, admin notification settings and logs, event-key deduplication, business triggers, and frontend verification. |
+| Stage 10 | current stage commit | 2026-07-09 | Added production commercial settings, billing audit logs, secret encryption checks, manual maintenance controls, idempotent worker closure, and frontend operations UI verification. |

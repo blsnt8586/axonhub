@@ -526,6 +526,41 @@ func (s *AffiliateService) TransferAvailable(ctx context.Context, input Transfer
 	return result, nil
 }
 
+func (s *AffiliateService) ThawDueRebates(ctx context.Context, now time.Time, limit int) (int, error) {
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	if limit <= 0 {
+		limit = 100
+	}
+	rebates, err := s.entFromContext(ctx).AffiliateRebate.Query().
+		Where(
+			affiliaterebate.StatusEQ(affiliaterebate.StatusFrozen),
+			affiliaterebate.FreezeUntilLTE(now),
+		).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to load thawable affiliate rebates: %w", err)
+	}
+
+	thawed := 0
+	for _, rebate := range rebates {
+		updated, err := s.entFromContext(ctx).AffiliateRebate.Update().
+			Where(
+				affiliaterebate.IDEQ(rebate.ID),
+				affiliaterebate.StatusEQ(affiliaterebate.StatusFrozen),
+			).
+			SetStatus(affiliaterebate.StatusAvailable).
+			Save(ctx)
+		if err != nil {
+			return thawed, fmt.Errorf("failed to thaw affiliate rebate %d: %w", rebate.ID, err)
+		}
+		thawed += updated
+	}
+	return thawed, nil
+}
+
 func (s *AffiliateService) Summary(ctx context.Context, userID int, now time.Time) (AffiliateSummary, error) {
 	if userID <= 0 {
 		return AffiliateSummary{}, fmt.Errorf("user id is required")

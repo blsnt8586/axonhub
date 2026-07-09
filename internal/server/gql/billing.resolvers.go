@@ -17,6 +17,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
@@ -66,9 +67,14 @@ func (r *mutationResolver) CancelPaymentOrder(ctx context.Context, input biz.Can
 	}
 	input.ActorID = fmt.Sprint(actor.ID)
 
-	return authz.RunWithSystemBypass(ctx, "billing-cancel-payment-order", func(ctx context.Context) (*ent.PaymentOrder, error) {
+	order, err := authz.RunWithSystemBypass(ctx, "billing-cancel-payment-order", func(ctx context.Context) (*ent.PaymentOrder, error) {
 		return r.paymentService.CancelPaymentOrder(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "payment_order.cancel", TargetType: "payment_order", TargetID: input.OrderNo, Reason: input.Reason})
+	return order, nil
 }
 
 // MakeUpPaymentOrder is the resolver for the makeUpPaymentOrder field.
@@ -79,9 +85,14 @@ func (r *mutationResolver) MakeUpPaymentOrder(ctx context.Context, input biz.Mak
 	}
 	input.ActorID = fmt.Sprint(actor.ID)
 
-	return authz.RunWithSystemBypass(ctx, "billing-makeup-payment-order", func(ctx context.Context) (*ent.PaymentOrder, error) {
+	order, err := authz.RunWithSystemBypass(ctx, "billing-makeup-payment-order", func(ctx context.Context) (*ent.PaymentOrder, error) {
 		return r.paymentService.MakeUpPaymentOrder(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "payment_order.make_up", TargetType: "payment_order", TargetID: input.OrderNo, Reason: input.Reason})
+	return order, nil
 }
 
 // CreateSimulatedEPayRechargeCheckout is the resolver for the createSimulatedEPayRechargeCheckout field.
@@ -117,7 +128,7 @@ func (r *mutationResolver) UpsertEPayPaymentProvider(ctx context.Context, input 
 		return nil, err
 	}
 
-	return r.paymentService.UpsertEPayProvider(ctx, biz.UpsertEPayProviderInput{
+	provider, err := r.paymentService.UpsertEPayProvider(ctx, biz.UpsertEPayProviderInput{
 		Name:       input.Name,
 		Status:     paymentProviderStatusValue(input.Status),
 		Currency:   stringValue(input.Currency),
@@ -129,6 +140,16 @@ func (r *mutationResolver) UpsertEPayPaymentProvider(ctx context.Context, input 
 		Type:       stringValue(input.Type),
 		SiteName:   stringValue(input.SiteName),
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:     "payment_provider.upsert",
+		TargetType: "payment_provider_instance",
+		TargetID:   biz.AuditTargetID(provider.ID),
+		Reason:     "payment provider configuration changed",
+	})
+	return provider, nil
 }
 
 // CreateMyEPayRechargeCheckout is the resolver for the createMyEPayRechargeCheckout field.
@@ -176,9 +197,20 @@ func (r *mutationResolver) AdjustUserBalance(ctx context.Context, input biz.Adju
 	}
 
 	input.ActorID = fmt.Sprint(actor.ID)
-	return authz.RunWithSystemBypass(ctx, "billing-adjust-user-balance", func(ctx context.Context) (*ent.LedgerTransaction, error) {
+	tx, err := authz.RunWithSystemBypass(ctx, "billing-adjust-user-balance", func(ctx context.Context) (*ent.LedgerTransaction, error) {
 		return r.paymentService.AdjustUserBalance(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:       "wallet.adjust_balance",
+		TargetType:   "ledger_transaction",
+		TargetID:     biz.AuditTargetID(tx.ID),
+		TargetUserID: &input.UserID,
+		Reason:       input.Memo,
+	})
+	return tx, nil
 }
 
 // UpdateUserBillingAccount is the resolver for the updateUserBillingAccount field.
@@ -187,9 +219,20 @@ func (r *mutationResolver) UpdateUserBillingAccount(ctx context.Context, input b
 		return nil, err
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-update-user-account", func(ctx context.Context) (*ent.BillingAccount, error) {
+	account, err := authz.RunWithSystemBypass(ctx, "billing-update-user-account", func(ctx context.Context) (*ent.BillingAccount, error) {
 		return r.paymentService.UpdateUserBillingAccount(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:       "wallet.update_account",
+		TargetType:   "billing_account",
+		TargetID:     biz.AuditTargetID(account.ID),
+		TargetUserID: &input.UserID,
+		Reason:       "billing account controls changed",
+	})
+	return account, nil
 }
 
 // RedeemCode is the resolver for the redeemCode field.
@@ -213,9 +256,14 @@ func (r *mutationResolver) CreateRedeemCodes(ctx context.Context, input biz.Crea
 	}
 	input.ActorID = fmt.Sprint(actor.ID)
 
-	return authz.RunWithSystemBypass(ctx, "billing-create-redeem-codes", func(ctx context.Context) ([]*ent.RedeemCode, error) {
+	codes, err := authz.RunWithSystemBypass(ctx, "billing-create-redeem-codes", func(ctx context.Context) ([]*ent.RedeemCode, error) {
 		return r.redeemCodeService.CreateRedeemCodes(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "redeem_code.batch_create", TargetType: "redeem_code", Reason: input.Notes})
+	return codes, nil
 }
 
 // AdminCreateAndRedeemCode is the resolver for the adminCreateAndRedeemCode field.
@@ -226,9 +274,20 @@ func (r *mutationResolver) AdminCreateAndRedeemCode(ctx context.Context, input b
 	}
 	input.ActorID = fmt.Sprint(actor.ID)
 
-	return authz.RunWithSystemBypass(ctx, "billing-admin-create-and-redeem-code", func(ctx context.Context) (*ent.RedeemCode, error) {
+	code, err := authz.RunWithSystemBypass(ctx, "billing-admin-create-and-redeem-code", func(ctx context.Context) (*ent.RedeemCode, error) {
 		return r.redeemCodeService.AdminCreateAndRedeem(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:       "redeem_code.create_and_redeem",
+		TargetType:   "redeem_code",
+		TargetID:     biz.AuditTargetID(code.ID),
+		TargetUserID: &input.UserID,
+		Reason:       input.Notes,
+	})
+	return code, nil
 }
 
 // UpdateRedeemCodeStatus is the resolver for the updateRedeemCodeStatus field.
@@ -237,9 +296,19 @@ func (r *mutationResolver) UpdateRedeemCodeStatus(ctx context.Context, input biz
 		return nil, err
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-update-redeem-code-status", func(ctx context.Context) (*ent.RedeemCode, error) {
+	code, err := authz.RunWithSystemBypass(ctx, "billing-update-redeem-code-status", func(ctx context.Context) (*ent.RedeemCode, error) {
 		return r.redeemCodeService.UpdateStatus(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:     "redeem_code.update_status",
+		TargetType: "redeem_code",
+		TargetID:   biz.AuditTargetID(code.ID),
+		Reason:     input.Notes,
+	})
+	return code, nil
 }
 
 // DeleteRedeemCode is the resolver for the deleteRedeemCode field.
@@ -251,13 +320,18 @@ func (r *mutationResolver) DeleteRedeemCode(ctx context.Context, id objects.GUID
 		return false, fmt.Errorf("id must be a RedeemCode ID")
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-delete-redeem-code", func(ctx context.Context) (bool, error) {
+	deleted, err := authz.RunWithSystemBypass(ctx, "billing-delete-redeem-code", func(ctx context.Context) (bool, error) {
 		if err := r.redeemCodeService.Delete(ctx, id.ID); err != nil {
 			return false, err
 		}
 
 		return true, nil
 	})
+	if err != nil {
+		return false, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "redeem_code.delete", TargetType: "redeem_code", TargetID: biz.AuditTargetID(id.ID), Reason: "redeem code deleted"})
+	return deleted, nil
 }
 
 // SavePromoCode is the resolver for the savePromoCode field.
@@ -268,9 +342,14 @@ func (r *mutationResolver) SavePromoCode(ctx context.Context, input biz.SaveProm
 	}
 	input.ActorID = fmt.Sprint(actor.ID)
 
-	return authz.RunWithSystemBypass(ctx, "billing-save-promo-code", func(ctx context.Context) (*ent.PromoCode, error) {
+	code, err := authz.RunWithSystemBypass(ctx, "billing-save-promo-code", func(ctx context.Context) (*ent.PromoCode, error) {
 		return r.promoCodeService.Save(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "promo_code.save", TargetType: "promo_code", TargetID: biz.AuditTargetID(code.ID), Reason: input.Notes})
+	return code, nil
 }
 
 // UpdatePromoCodeStatus is the resolver for the updatePromoCodeStatus field.
@@ -279,9 +358,14 @@ func (r *mutationResolver) UpdatePromoCodeStatus(ctx context.Context, input biz.
 		return nil, err
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-update-promo-code-status", func(ctx context.Context) (*ent.PromoCode, error) {
+	code, err := authz.RunWithSystemBypass(ctx, "billing-update-promo-code-status", func(ctx context.Context) (*ent.PromoCode, error) {
 		return r.promoCodeService.UpdateStatus(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "promo_code.update_status", TargetType: "promo_code", TargetID: biz.AuditTargetID(code.ID), Reason: input.Notes})
+	return code, nil
 }
 
 // DeletePromoCode is the resolver for the deletePromoCode field.
@@ -293,12 +377,17 @@ func (r *mutationResolver) DeletePromoCode(ctx context.Context, id objects.GUID)
 		return false, fmt.Errorf("id must be a PromoCode ID")
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-delete-promo-code", func(ctx context.Context) (bool, error) {
+	deleted, err := authz.RunWithSystemBypass(ctx, "billing-delete-promo-code", func(ctx context.Context) (bool, error) {
 		if err := r.promoCodeService.Delete(ctx, id.ID); err != nil {
 			return false, err
 		}
 		return true, nil
 	})
+	if err != nil {
+		return false, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "promo_code.delete", TargetType: "promo_code", TargetID: biz.AuditTargetID(id.ID), Reason: "promo code deleted or disabled"})
+	return deleted, nil
 }
 
 // SaveSubscriptionPlan is the resolver for the saveSubscriptionPlan field.
@@ -310,9 +399,14 @@ func (r *mutationResolver) SaveSubscriptionPlan(ctx context.Context, input biz.S
 		return nil, fmt.Errorf("subscription service is not configured")
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-save-subscription-plan", func(ctx context.Context) (*ent.SubscriptionPlan, error) {
+	plan, err := authz.RunWithSystemBypass(ctx, "billing-save-subscription-plan", func(ctx context.Context) (*ent.SubscriptionPlan, error) {
 		return r.subscriptionService.SavePlan(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "subscription_plan.save", TargetType: "subscription_plan", TargetID: biz.AuditTargetID(plan.ID), Reason: "subscription plan saved"})
+	return plan, nil
 }
 
 // DeleteSubscriptionPlan is the resolver for the deleteSubscriptionPlan field.
@@ -324,7 +418,7 @@ func (r *mutationResolver) DeleteSubscriptionPlan(ctx context.Context, id object
 		return false, fmt.Errorf("id must be a SubscriptionPlan ID")
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-delete-subscription-plan", func(ctx context.Context) (bool, error) {
+	deleted, err := authz.RunWithSystemBypass(ctx, "billing-delete-subscription-plan", func(ctx context.Context) (bool, error) {
 		count, err := r.client.UserSubscription.Query().Where(usersubscription.PlanIDEQ(id.ID)).Count(ctx)
 		if err != nil {
 			return false, err
@@ -341,6 +435,11 @@ func (r *mutationResolver) DeleteSubscriptionPlan(ctx context.Context, id object
 		}
 		return true, nil
 	})
+	if err != nil {
+		return false, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "subscription_plan.delete", TargetType: "subscription_plan", TargetID: biz.AuditTargetID(id.ID), Reason: "subscription plan deleted or archived"})
+	return deleted, nil
 }
 
 // PurchaseSubscriptionPlan is the resolver for the purchaseSubscriptionPlan field.
@@ -370,9 +469,20 @@ func (r *mutationResolver) AdminAssignSubscription(ctx context.Context, input bi
 	}
 	input.ActorID = fmt.Sprint(actor.ID)
 
-	return authz.RunWithSystemBypass(ctx, "billing-admin-assign-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
+	subscription, err := authz.RunWithSystemBypass(ctx, "billing-admin-assign-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
 		return r.subscriptionService.AdminAssign(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:       "user_subscription.assign",
+		TargetType:   "user_subscription",
+		TargetID:     biz.AuditTargetID(subscription.ID),
+		TargetUserID: &input.UserID,
+		Reason:       input.Notes,
+	})
+	return subscription, nil
 }
 
 // ExtendUserSubscription is the resolver for the extendUserSubscription field.
@@ -384,9 +494,20 @@ func (r *mutationResolver) ExtendUserSubscription(ctx context.Context, input biz
 		return nil, fmt.Errorf("subscription service is not configured")
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-extend-user-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
+	subscription, err := authz.RunWithSystemBypass(ctx, "billing-extend-user-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
 		return r.subscriptionService.Extend(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:       "user_subscription.extend",
+		TargetType:   "user_subscription",
+		TargetID:     biz.AuditTargetID(subscription.ID),
+		TargetUserID: &subscription.UserID,
+		Reason:       input.Notes,
+	})
+	return subscription, nil
 }
 
 // RevokeUserSubscription is the resolver for the revokeUserSubscription field.
@@ -401,9 +522,20 @@ func (r *mutationResolver) RevokeUserSubscription(ctx context.Context, id object
 		return nil, fmt.Errorf("subscription service is not configured")
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-revoke-user-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
+	subscription, err := authz.RunWithSystemBypass(ctx, "billing-revoke-user-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
 		return r.subscriptionService.Revoke(ctx, id.ID, stringValue(reason))
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:       "user_subscription.revoke",
+		TargetType:   "user_subscription",
+		TargetID:     biz.AuditTargetID(subscription.ID),
+		TargetUserID: &subscription.UserID,
+		Reason:       stringValue(reason),
+	})
+	return subscription, nil
 }
 
 // RestoreUserSubscription is the resolver for the restoreUserSubscription field.
@@ -418,9 +550,20 @@ func (r *mutationResolver) RestoreUserSubscription(ctx context.Context, id objec
 		return nil, fmt.Errorf("subscription service is not configured")
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-restore-user-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
+	subscription, err := authz.RunWithSystemBypass(ctx, "billing-restore-user-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
 		return r.subscriptionService.Restore(ctx, id.ID)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:       "user_subscription.restore",
+		TargetType:   "user_subscription",
+		TargetID:     biz.AuditTargetID(subscription.ID),
+		TargetUserID: &subscription.UserID,
+		Reason:       "subscription restored",
+	})
+	return subscription, nil
 }
 
 // ResetUserSubscriptionUsage is the resolver for the resetUserSubscriptionUsage field.
@@ -435,9 +578,20 @@ func (r *mutationResolver) ResetUserSubscriptionUsage(ctx context.Context, id ob
 		return nil, fmt.Errorf("subscription service is not configured")
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-reset-user-subscription-usage", func(ctx context.Context) (*ent.UserSubscription, error) {
+	subscription, err := authz.RunWithSystemBypass(ctx, "billing-reset-user-subscription-usage", func(ctx context.Context) (*ent.UserSubscription, error) {
 		return r.subscriptionService.ResetUsage(ctx, id.ID, time.Now().UTC())
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:       "user_subscription.reset_usage",
+		TargetType:   "user_subscription",
+		TargetID:     biz.AuditTargetID(subscription.ID),
+		TargetUserID: &subscription.UserID,
+		Reason:       "subscription usage reset",
+	})
+	return subscription, nil
 }
 
 // BindAffiliateInvite is the resolver for the bindAffiliateInvite field.
@@ -483,9 +637,14 @@ func (r *mutationResolver) SaveAffiliateSetting(ctx context.Context, input biz.S
 	if r.affiliateService == nil {
 		return nil, fmt.Errorf("affiliate service is not configured")
 	}
-	return authz.RunWithSystemBypass(ctx, "billing-save-affiliate-setting", func(ctx context.Context) (*ent.AffiliateSetting, error) {
+	setting, err := authz.RunWithSystemBypass(ctx, "billing-save-affiliate-setting", func(ctx context.Context) (*ent.AffiliateSetting, error) {
 		return r.affiliateService.SaveSetting(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "affiliate_setting.save", TargetType: "affiliate_setting", TargetID: biz.AuditTargetID(setting.ID), Reason: "affiliate setting saved"})
+	return setting, nil
 }
 
 // SaveAffiliateProfile is the resolver for the saveAffiliateProfile field.
@@ -496,9 +655,20 @@ func (r *mutationResolver) SaveAffiliateProfile(ctx context.Context, input biz.S
 	if r.affiliateService == nil {
 		return nil, fmt.Errorf("affiliate service is not configured")
 	}
-	return authz.RunWithSystemBypass(ctx, "billing-save-affiliate-profile", func(ctx context.Context) (*ent.AffiliateProfile, error) {
+	profile, err := authz.RunWithSystemBypass(ctx, "billing-save-affiliate-profile", func(ctx context.Context) (*ent.AffiliateProfile, error) {
 		return r.affiliateService.SaveProfile(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{
+		Action:       "affiliate_profile.save",
+		TargetType:   "affiliate_profile",
+		TargetID:     biz.AuditTargetID(profile.ID),
+		TargetUserID: &input.UserID,
+		Reason:       input.Notes,
+	})
+	return profile, nil
 }
 
 // SaveMyBillingNotificationPreference is the resolver for the saveMyBillingNotificationPreference field.
@@ -543,9 +713,49 @@ func (r *mutationResolver) SaveBillingNotificationSetting(ctx context.Context, i
 	if err := requireOwner(ctx); err != nil {
 		return nil, err
 	}
-	return authz.RunWithSystemBypass(ctx, "billing-save-notification-setting", func(ctx context.Context) (*ent.BillingNotificationSetting, error) {
+	setting, err := authz.RunWithSystemBypass(ctx, "billing-save-notification-setting", func(ctx context.Context) (*ent.BillingNotificationSetting, error) {
 		return r.billingNotificationService.SaveSetting(ctx, input)
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "billing_notification_setting.save", TargetType: "billing_notification_setting", TargetID: biz.AuditTargetID(setting.ID), Reason: "notification setting saved"})
+	return setting, nil
+}
+
+// SaveCommercialSetting is the resolver for the saveCommercialSetting field.
+func (r *mutationResolver) SaveCommercialSetting(ctx context.Context, input biz.SaveCommercialSettingInput) (*ent.CommercialSetting, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if r.commercialOperationsService == nil {
+		return nil, fmt.Errorf("commercial operations service is not configured")
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-save-commercial-setting", func(ctx context.Context) (*ent.CommercialSetting, error) {
+		return r.commercialOperationsService.SaveSetting(ctx, input)
+	})
+}
+
+// RunCommercialMaintenance is the resolver for the runCommercialMaintenance field.
+func (r *mutationResolver) RunCommercialMaintenance(ctx context.Context, input RunCommercialMaintenanceInput) (*biz.CommercialMaintenanceRunResult, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(input.Reason) == "" {
+		return nil, fmt.Errorf("reason is required")
+	}
+	if r.commercialOperationsService == nil {
+		return nil, fmt.Errorf("commercial operations service is not configured")
+	}
+	result, err := r.commercialOperationsService.RunMaintenance(ctx, biz.CommercialMaintenanceRunInput{
+		Now:    timeValue(input.Now),
+		Limit:  intValue(input.Limit),
+		Reason: input.Reason,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
 // ReleaseBillingHold is the resolver for the releaseBillingHold field.
@@ -561,7 +771,7 @@ func (r *mutationResolver) ReleaseBillingHold(ctx context.Context, id objects.GU
 		return nil, fmt.Errorf("reason is required")
 	}
 
-	return authz.RunWithSystemBypass(ctx, "billing-release-hold", func(ctx context.Context) (*ent.BillingHold, error) {
+	hold, err := authz.RunWithSystemBypass(ctx, "billing-release-hold", func(ctx context.Context) (*ent.BillingHold, error) {
 		return r.billingHoldService.ReleaseHold(ctx, biz.ReleaseBillingHoldInput{
 			HoldID:         id.ID,
 			Reason:         reason,
@@ -569,6 +779,11 @@ func (r *mutationResolver) ReleaseBillingHold(ctx context.Context, id objects.GU
 			ReleasedByID:   fmt.Sprint(actor.ID),
 		})
 	})
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "billing_hold.release", TargetType: "billing_hold", TargetID: biz.AuditTargetID(hold.ID), Reason: reason})
+	return hold, nil
 }
 
 // SaveBillingPriceRule is the resolver for the saveBillingPriceRule field.
@@ -577,7 +792,12 @@ func (r *mutationResolver) SaveBillingPriceRule(ctx context.Context, input SaveB
 		return nil, err
 	}
 
-	return r.saveBillingPriceRule(ctx, input)
+	rule, err := r.saveBillingPriceRule(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "billing_price_rule.save", TargetType: "billing_price_rule", TargetID: biz.AuditTargetID(rule.ID), Reason: "billing price rule saved"})
+	return rule, nil
 }
 
 // DeleteBillingPriceRule is the resolver for the deleteBillingPriceRule field.
@@ -589,7 +809,12 @@ func (r *mutationResolver) DeleteBillingPriceRule(ctx context.Context, id object
 		return false, fmt.Errorf("id must be a BillingPriceRule ID")
 	}
 
-	return r.pricingService.DeleteBillingPriceRule(ctx, id.ID)
+	deleted, err := r.pricingService.DeleteBillingPriceRule(ctx, id.ID)
+	if err != nil {
+		return false, err
+	}
+	r.auditBillingAdminAction(ctx, biz.BillingAuditInput{Action: "billing_price_rule.delete", TargetType: "billing_price_rule", TargetID: biz.AuditTargetID(id.ID), Reason: "billing price rule deleted"})
+	return deleted, nil
 }
 
 // ProjectBillingAccount is the resolver for the projectBillingAccount field.
@@ -1146,6 +1371,56 @@ func (r *queryResolver) AdminBillingNotifications(ctx context.Context, filter *A
 			}
 		}
 		return query.Paginate(ctx, after, first, before, last, ent.WithBillingNotificationOrder(orderBy))
+	})
+}
+
+// AdminCommercialSetting is the resolver for the adminCommercialSetting field.
+func (r *queryResolver) AdminCommercialSetting(ctx context.Context) (*ent.CommercialSetting, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if r.commercialOperationsService == nil {
+		return nil, fmt.Errorf("commercial operations service is not configured")
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-admin-commercial-setting", func(ctx context.Context) (*ent.CommercialSetting, error) {
+		return r.commercialOperationsService.GetOrCreateSetting(ctx)
+	})
+}
+
+// AdminBillingAuditLogs is the resolver for the adminBillingAuditLogs field.
+func (r *queryResolver) AdminBillingAuditLogs(ctx context.Context, filter *AdminBillingAuditLogsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAuditLogOrder) (*ent.BillingAuditLogConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-admin-audit-logs", func(ctx context.Context) (*ent.BillingAuditLogConnection, error) {
+		query := r.client.BillingAuditLog.Query()
+		if filter != nil {
+			if filter.Action != nil && strings.TrimSpace(*filter.Action) != "" {
+				query.Where(billingauditlog.ActionContainsFold(strings.TrimSpace(*filter.Action)))
+			}
+			if filter.ActorUserID != nil {
+				query.Where(billingauditlog.ActorUserIDEQ(*filter.ActorUserID))
+			}
+			if filter.TargetType != nil && strings.TrimSpace(*filter.TargetType) != "" {
+				query.Where(billingauditlog.TargetTypeEQ(strings.TrimSpace(*filter.TargetType)))
+			}
+			if filter.TargetID != nil && strings.TrimSpace(*filter.TargetID) != "" {
+				query.Where(billingauditlog.TargetIDContainsFold(strings.TrimSpace(*filter.TargetID)))
+			}
+			if filter.TargetUserID != nil {
+				query.Where(billingauditlog.TargetUserIDEQ(*filter.TargetUserID))
+			}
+			if filter.From != nil {
+				query.Where(billingauditlog.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(billingauditlog.CreatedAtLTE(*filter.To))
+			}
+		}
+		return query.Paginate(ctx, after, first, before, last, ent.WithBillingAuditLogOrder(orderBy))
 	})
 }
 

@@ -39,6 +39,8 @@ export type BillingNotificationAudience = 'user' | 'operator';
 export type BillingNotificationCategory = 'low_balance' | 'payment' | 'subscription' | 'large_consumption' | 'operator_alert';
 export type BillingNotificationSeverity = 'info' | 'warning' | 'error';
 export type BillingNotificationStatus = 'unread' | 'read' | 'dismissed';
+export type CommercialSettingMode = 'disabled' | 'warn' | 'enforce';
+export type BillingAuditActorType = 'admin' | 'system';
 
 export interface BillingAccount {
   id: string;
@@ -369,6 +371,39 @@ export interface BillingNotification {
   readAt?: string | null;
 }
 
+export interface CommercialSetting {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  key: string;
+  mode: CommercialSettingMode;
+  requireAdminActionReason: boolean;
+  paymentProviderSecretsEncrypted: boolean;
+  workersEnabled: boolean;
+  orderExpiryWorkerEnabled: boolean;
+  holdExpiryWorkerEnabled: boolean;
+  subscriptionExpiryWorkerEnabled: boolean;
+  subscriptionResetWorkerEnabled: boolean;
+  affiliateRebateThawWorkerEnabled: boolean;
+  failedBillingRetryWorkerEnabled: boolean;
+  workerBatchSize: number;
+  currency: string;
+}
+
+export interface BillingAuditLog {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  action: string;
+  actorType: BillingAuditActorType;
+  actorUserID?: number | null;
+  targetType: string;
+  targetID: string;
+  targetUserID?: number | null;
+  reason: string;
+  metadata?: unknown;
+}
+
 export interface AdminLedgerTransactionsFilter {
   userId?: number;
   billingAccountId?: number;
@@ -504,6 +539,16 @@ export interface AdminBillingNotificationsFilter {
   to?: string;
 }
 
+export interface AdminBillingAuditLogsFilter {
+  action?: string;
+  actorUserId?: number;
+  targetType?: string;
+  targetId?: string;
+  targetUserId?: number;
+  from?: string;
+  to?: string;
+}
+
 export interface AdminBillingReportFilter {
   from?: string;
   to?: string;
@@ -573,6 +618,15 @@ export interface BillingCSVExportPayload {
   fileName: string;
   content: string;
   contentType: string;
+}
+
+export interface CommercialMaintenanceRunResult {
+  orderExpiryProcessed: number;
+  holdExpiryProcessed: number;
+  subscriptionExpiryProcessed: number;
+  subscriptionResetProcessed: number;
+  affiliateRebateThawProcessed: number;
+  failedBillingRetryProcessed: number;
 }
 
 type Connection<T> = {
@@ -1059,6 +1113,51 @@ const ADMIN_BILLING_NOTIFICATIONS_QUERY = `
   }
 `;
 
+const ADMIN_COMMERCIAL_SETTING_QUERY = `
+  query AdminCommercialSetting {
+    adminCommercialSetting {
+      id
+      createdAt
+      updatedAt
+      key
+      mode
+      requireAdminActionReason
+      paymentProviderSecretsEncrypted
+      workersEnabled
+      orderExpiryWorkerEnabled
+      holdExpiryWorkerEnabled
+      subscriptionExpiryWorkerEnabled
+      subscriptionResetWorkerEnabled
+      affiliateRebateThawWorkerEnabled
+      failedBillingRetryWorkerEnabled
+      workerBatchSize
+      currency
+    }
+  }
+`;
+
+const ADMIN_BILLING_AUDIT_LOGS_QUERY = `
+  query AdminBillingAuditLogs($filter: AdminBillingAuditLogsFilter, $first: Int!) {
+    adminBillingAuditLogs(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          action
+          actorType
+          actorUserID
+          targetType
+          targetID
+          targetUserID
+          reason
+          metadata
+        }
+      }
+    }
+  }
+`;
+
 const ADMIN_SUBSCRIPTION_PLANS_QUERY = `
   query AdminSubscriptionPlans($first: Int!) {
     subscriptionPlans(first: $first, orderBy: { field: CREATED_AT, direction: ASC }) {
@@ -1451,6 +1550,42 @@ const SAVE_BILLING_NOTIFICATION_SETTING_MUTATION = `
   }
 `;
 
+const SAVE_COMMERCIAL_SETTING_MUTATION = `
+  mutation SaveCommercialSetting($input: SaveCommercialSettingInput!) {
+    saveCommercialSetting(input: $input) {
+      id
+      createdAt
+      updatedAt
+      key
+      mode
+      requireAdminActionReason
+      paymentProviderSecretsEncrypted
+      workersEnabled
+      orderExpiryWorkerEnabled
+      holdExpiryWorkerEnabled
+      subscriptionExpiryWorkerEnabled
+      subscriptionResetWorkerEnabled
+      affiliateRebateThawWorkerEnabled
+      failedBillingRetryWorkerEnabled
+      workerBatchSize
+      currency
+    }
+  }
+`;
+
+const RUN_COMMERCIAL_MAINTENANCE_MUTATION = `
+  mutation RunCommercialMaintenance($input: RunCommercialMaintenanceInput!) {
+    runCommercialMaintenance(input: $input) {
+      orderExpiryProcessed
+      holdExpiryProcessed
+      subscriptionExpiryProcessed
+      subscriptionResetProcessed
+      affiliateRebateThawProcessed
+      failedBillingRetryProcessed
+    }
+  }
+`;
+
 const SAVE_SUBSCRIPTION_PLAN_MUTATION = `
   mutation SaveSubscriptionPlan($input: SaveSubscriptionPlanInput!) {
     saveSubscriptionPlan(input: $input) {
@@ -1720,6 +1855,29 @@ export function useAdminBillingNotifications(filter: AdminBillingNotificationsFi
     queryFn: async () => {
       const data = await graphqlRequest<{ adminBillingNotifications: Connection<BillingNotification> }>(ADMIN_BILLING_NOTIFICATIONS_QUERY, { filter, first });
       return nodes(data.adminBillingNotifications);
+    },
+  });
+}
+
+export function useAdminCommercialSetting() {
+  return useQuery({
+    queryKey: ['admin-billing', 'commercial-setting'],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminCommercialSetting: CommercialSetting }>(ADMIN_COMMERCIAL_SETTING_QUERY);
+      return data.adminCommercialSetting;
+    },
+  });
+}
+
+export function useAdminBillingAuditLogs(filter: AdminBillingAuditLogsFilter = {}, first = 50) {
+  return useQuery({
+    queryKey: ['admin-billing', 'audit-logs', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminBillingAuditLogs: Connection<BillingAuditLog> }>(ADMIN_BILLING_AUDIT_LOGS_QUERY, {
+        filter,
+        first,
+      });
+      return nodes(data.adminBillingAuditLogs);
     },
   });
 }
@@ -2099,6 +2257,51 @@ export function useSaveBillingNotificationSetting() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'notification-setting'] });
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'notifications'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useSaveCommercialSetting() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      mode: CommercialSettingMode;
+      requireAdminActionReason: boolean;
+      paymentProviderSecretsEncrypted: boolean;
+      workersEnabled: boolean;
+      orderExpiryWorkerEnabled: boolean;
+      holdExpiryWorkerEnabled: boolean;
+      subscriptionExpiryWorkerEnabled: boolean;
+      subscriptionResetWorkerEnabled: boolean;
+      affiliateRebateThawWorkerEnabled: boolean;
+      failedBillingRetryWorkerEnabled: boolean;
+      workerBatchSize: number;
+      currency?: string;
+      reason?: string;
+    }) => {
+      const data = await graphqlRequest<{ saveCommercialSetting: CommercialSetting }>(SAVE_COMMERCIAL_SETTING_MUTATION, { input });
+      return data.saveCommercialSetting;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
+    },
+  });
+}
+
+export function useRunCommercialMaintenance() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { now?: string; limit?: number; reason: string }) => {
+      const data = await graphqlRequest<{ runCommercialMaintenance: CommercialMaintenanceRunResult }>(RUN_COMMERCIAL_MAINTENANCE_MUTATION, {
+        input,
+      });
+      return data.runCommercialMaintenance;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing'] });
       void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
     },
   });

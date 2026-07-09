@@ -30,6 +30,9 @@ type BillingAccount func(*sql.Selector)
 // BillingAccountBinding is the predicate function for billingaccountbinding builders.
 type BillingAccountBinding func(*sql.Selector)
 
+// BillingAuditLog is the predicate function for billingauditlog builders.
+type BillingAuditLog func(*sql.Selector)
+
 // BillingHold is the predicate function for billinghold builders.
 type BillingHold func(*sql.Selector)
 
@@ -62,6 +65,9 @@ type ChannelOverrideTemplate func(*sql.Selector)
 
 // ChannelProbe is the predicate function for channelprobe builders.
 type ChannelProbe func(*sql.Selector)
+
+// CommercialSetting is the predicate function for commercialsetting builders.
+type CommercialSetting func(*sql.Selector)
 
 // DataStorage is the predicate function for datastorage builders.
 type DataStorage func(*sql.Selector)

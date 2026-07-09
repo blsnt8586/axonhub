@@ -47,6 +47,8 @@ type Resolver struct {
 	promptProtectionRuleService    *biz.PromptProtectionRuleService
 	providerQuotaService           *biz.ProviderQuotaService
 	billingAccountService          *biz.BillingAccountService
+	billingAuditService            *biz.BillingAuditService
+	commercialOperationsService    *biz.CommercialOperationsService
 	billingHoldService             *biz.BillingHoldService
 	billingNotificationService     *biz.BillingNotificationService
 	paymentService                 *biz.PaymentService
@@ -91,6 +93,8 @@ func NewSchema(
 	promptProtectionRuleService *biz.PromptProtectionRuleService,
 	providerQuotaService *biz.ProviderQuotaService,
 	billingAccountService *biz.BillingAccountService,
+	billingAuditService *biz.BillingAuditService,
+	commercialOperationsService *biz.CommercialOperationsService,
 	billingHoldService *biz.BillingHoldService,
 	billingNotificationService *biz.BillingNotificationService,
 	paymentService *biz.PaymentService,
@@ -134,6 +138,8 @@ func NewSchema(
 			promptProtectionRuleService:    promptProtectionRuleService,
 			providerQuotaService:           providerQuotaService,
 			billingAccountService:          billingAccountService,
+			billingAuditService:            billingAuditService,
+			commercialOperationsService:    commercialOperationsService,
 			billingHoldService:             billingHoldService,
 			billingNotificationService:     billingNotificationService,
 			paymentService:                 paymentService,

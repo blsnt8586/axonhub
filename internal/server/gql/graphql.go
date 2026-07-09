@@ -79,6 +79,8 @@ type Dependencies struct {
 	PromptProtectionRuleService    *biz.PromptProtectionRuleService
 	ProviderQuotaService           *biz.ProviderQuotaService
 	BillingAccountService          *biz.BillingAccountService
+	BillingAuditService            *biz.BillingAuditService
+	CommercialOperationsService    *biz.CommercialOperationsService
 	BillingHoldService             *biz.BillingHoldService
 	BillingNotificationService     *biz.BillingNotificationService
 	PaymentService                 *biz.PaymentService
@@ -128,6 +130,8 @@ func NewGraphqlHandlers(deps Dependencies) *GraphqlHandler {
 			deps.PromptProtectionRuleService,
 			deps.ProviderQuotaService,
 			deps.BillingAccountService,
+			deps.BillingAuditService,
+			deps.CommercialOperationsService,
 			deps.BillingHoldService,
 			deps.BillingNotificationService,
 			deps.PaymentService,

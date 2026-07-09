@@ -23,6 +23,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
@@ -34,6 +35,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -85,6 +87,8 @@ type Client struct {
 	BillingAccount *BillingAccountClient
 	// BillingAccountBinding is the client for interacting with the BillingAccountBinding builders.
 	BillingAccountBinding *BillingAccountBindingClient
+	// BillingAuditLog is the client for interacting with the BillingAuditLog builders.
+	BillingAuditLog *BillingAuditLogClient
 	// BillingHold is the client for interacting with the BillingHold builders.
 	BillingHold *BillingHoldClient
 	// BillingNotification is the client for interacting with the BillingNotification builders.
@@ -107,6 +111,8 @@ type Client struct {
 	ChannelOverrideTemplate *ChannelOverrideTemplateClient
 	// ChannelProbe is the client for interacting with the ChannelProbe builders.
 	ChannelProbe *ChannelProbeClient
+	// CommercialSetting is the client for interacting with the CommercialSetting builders.
+	CommercialSetting *CommercialSettingClient
 	// DataStorage is the client for interacting with the DataStorage builders.
 	DataStorage *DataStorageClient
 	// LedgerEntry is the client for interacting with the LedgerEntry builders.
@@ -184,6 +190,7 @@ func (c *Client) init() {
 	c.AffiliateSetting = NewAffiliateSettingClient(c.config)
 	c.BillingAccount = NewBillingAccountClient(c.config)
 	c.BillingAccountBinding = NewBillingAccountBindingClient(c.config)
+	c.BillingAuditLog = NewBillingAuditLogClient(c.config)
 	c.BillingHold = NewBillingHoldClient(c.config)
 	c.BillingNotification = NewBillingNotificationClient(c.config)
 	c.BillingNotificationPreference = NewBillingNotificationPreferenceClient(c.config)
@@ -195,6 +202,7 @@ func (c *Client) init() {
 	c.ChannelModelPriceVersion = NewChannelModelPriceVersionClient(c.config)
 	c.ChannelOverrideTemplate = NewChannelOverrideTemplateClient(c.config)
 	c.ChannelProbe = NewChannelProbeClient(c.config)
+	c.CommercialSetting = NewCommercialSettingClient(c.config)
 	c.DataStorage = NewDataStorageClient(c.config)
 	c.LedgerEntry = NewLedgerEntryClient(c.config)
 	c.LedgerTransaction = NewLedgerTransactionClient(c.config)
@@ -323,6 +331,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AffiliateSetting:              NewAffiliateSettingClient(cfg),
 		BillingAccount:                NewBillingAccountClient(cfg),
 		BillingAccountBinding:         NewBillingAccountBindingClient(cfg),
+		BillingAuditLog:               NewBillingAuditLogClient(cfg),
 		BillingHold:                   NewBillingHoldClient(cfg),
 		BillingNotification:           NewBillingNotificationClient(cfg),
 		BillingNotificationPreference: NewBillingNotificationPreferenceClient(cfg),
@@ -334,6 +343,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ChannelModelPriceVersion:      NewChannelModelPriceVersionClient(cfg),
 		ChannelOverrideTemplate:       NewChannelOverrideTemplateClient(cfg),
 		ChannelProbe:                  NewChannelProbeClient(cfg),
+		CommercialSetting:             NewCommercialSettingClient(cfg),
 		DataStorage:                   NewDataStorageClient(cfg),
 		LedgerEntry:                   NewLedgerEntryClient(cfg),
 		LedgerTransaction:             NewLedgerTransactionClient(cfg),
@@ -389,6 +399,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AffiliateSetting:              NewAffiliateSettingClient(cfg),
 		BillingAccount:                NewBillingAccountClient(cfg),
 		BillingAccountBinding:         NewBillingAccountBindingClient(cfg),
+		BillingAuditLog:               NewBillingAuditLogClient(cfg),
 		BillingHold:                   NewBillingHoldClient(cfg),
 		BillingNotification:           NewBillingNotificationClient(cfg),
 		BillingNotificationPreference: NewBillingNotificationPreferenceClient(cfg),
@@ -400,6 +411,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ChannelModelPriceVersion:      NewChannelModelPriceVersionClient(cfg),
 		ChannelOverrideTemplate:       NewChannelOverrideTemplateClient(cfg),
 		ChannelProbe:                  NewChannelProbeClient(cfg),
+		CommercialSetting:             NewCommercialSettingClient(cfg),
 		DataStorage:                   NewDataStorageClient(cfg),
 		LedgerEntry:                   NewLedgerEntryClient(cfg),
 		LedgerTransaction:             NewLedgerTransactionClient(cfg),
@@ -459,10 +471,11 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.AffiliateInvitation, c.AffiliateProfile,
 		c.AffiliateRebate, c.AffiliateSetting, c.BillingAccount,
-		c.BillingAccountBinding, c.BillingHold, c.BillingNotification,
-		c.BillingNotificationPreference, c.BillingNotificationSetting, c.BillingOutbox,
-		c.BillingPriceRule, c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
-		c.ChannelOverrideTemplate, c.ChannelProbe, c.DataStorage, c.LedgerEntry,
+		c.BillingAccountBinding, c.BillingAuditLog, c.BillingHold,
+		c.BillingNotification, c.BillingNotificationPreference,
+		c.BillingNotificationSetting, c.BillingOutbox, c.BillingPriceRule, c.Channel,
+		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
+		c.ChannelProbe, c.CommercialSetting, c.DataStorage, c.LedgerEntry,
 		c.LedgerTransaction, c.Model, c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder,
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
@@ -480,10 +493,11 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.AffiliateInvitation, c.AffiliateProfile,
 		c.AffiliateRebate, c.AffiliateSetting, c.BillingAccount,
-		c.BillingAccountBinding, c.BillingHold, c.BillingNotification,
-		c.BillingNotificationPreference, c.BillingNotificationSetting, c.BillingOutbox,
-		c.BillingPriceRule, c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
-		c.ChannelOverrideTemplate, c.ChannelProbe, c.DataStorage, c.LedgerEntry,
+		c.BillingAccountBinding, c.BillingAuditLog, c.BillingHold,
+		c.BillingNotification, c.BillingNotificationPreference,
+		c.BillingNotificationSetting, c.BillingOutbox, c.BillingPriceRule, c.Channel,
+		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
+		c.ChannelProbe, c.CommercialSetting, c.DataStorage, c.LedgerEntry,
 		c.LedgerTransaction, c.Model, c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder,
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
@@ -514,6 +528,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.BillingAccount.mutate(ctx, m)
 	case *BillingAccountBindingMutation:
 		return c.BillingAccountBinding.mutate(ctx, m)
+	case *BillingAuditLogMutation:
+		return c.BillingAuditLog.mutate(ctx, m)
 	case *BillingHoldMutation:
 		return c.BillingHold.mutate(ctx, m)
 	case *BillingNotificationMutation:
@@ -536,6 +552,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ChannelOverrideTemplate.mutate(ctx, m)
 	case *ChannelProbeMutation:
 		return c.ChannelProbe.mutate(ctx, m)
+	case *CommercialSettingMutation:
+		return c.CommercialSetting.mutate(ctx, m)
 	case *DataStorageMutation:
 		return c.DataStorage.mutate(ctx, m)
 	case *LedgerEntryMutation:
@@ -2020,6 +2038,140 @@ func (c *BillingAccountBindingClient) mutate(ctx context.Context, m *BillingAcco
 		return (&BillingAccountBindingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown BillingAccountBinding mutation op: %q", m.Op())
+	}
+}
+
+// BillingAuditLogClient is a client for the BillingAuditLog schema.
+type BillingAuditLogClient struct {
+	config
+}
+
+// NewBillingAuditLogClient returns a client for the BillingAuditLog from the given config.
+func NewBillingAuditLogClient(c config) *BillingAuditLogClient {
+	return &BillingAuditLogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `billingauditlog.Hooks(f(g(h())))`.
+func (c *BillingAuditLogClient) Use(hooks ...Hook) {
+	c.hooks.BillingAuditLog = append(c.hooks.BillingAuditLog, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `billingauditlog.Intercept(f(g(h())))`.
+func (c *BillingAuditLogClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BillingAuditLog = append(c.inters.BillingAuditLog, interceptors...)
+}
+
+// Create returns a builder for creating a BillingAuditLog entity.
+func (c *BillingAuditLogClient) Create() *BillingAuditLogCreate {
+	mutation := newBillingAuditLogMutation(c.config, OpCreate)
+	return &BillingAuditLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BillingAuditLog entities.
+func (c *BillingAuditLogClient) CreateBulk(builders ...*BillingAuditLogCreate) *BillingAuditLogCreateBulk {
+	return &BillingAuditLogCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BillingAuditLogClient) MapCreateBulk(slice any, setFunc func(*BillingAuditLogCreate, int)) *BillingAuditLogCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BillingAuditLogCreateBulk{err: fmt.Errorf("calling to BillingAuditLogClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BillingAuditLogCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BillingAuditLogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BillingAuditLog.
+func (c *BillingAuditLogClient) Update() *BillingAuditLogUpdate {
+	mutation := newBillingAuditLogMutation(c.config, OpUpdate)
+	return &BillingAuditLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BillingAuditLogClient) UpdateOne(_m *BillingAuditLog) *BillingAuditLogUpdateOne {
+	mutation := newBillingAuditLogMutation(c.config, OpUpdateOne, withBillingAuditLog(_m))
+	return &BillingAuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BillingAuditLogClient) UpdateOneID(id int) *BillingAuditLogUpdateOne {
+	mutation := newBillingAuditLogMutation(c.config, OpUpdateOne, withBillingAuditLogID(id))
+	return &BillingAuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BillingAuditLog.
+func (c *BillingAuditLogClient) Delete() *BillingAuditLogDelete {
+	mutation := newBillingAuditLogMutation(c.config, OpDelete)
+	return &BillingAuditLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BillingAuditLogClient) DeleteOne(_m *BillingAuditLog) *BillingAuditLogDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BillingAuditLogClient) DeleteOneID(id int) *BillingAuditLogDeleteOne {
+	builder := c.Delete().Where(billingauditlog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BillingAuditLogDeleteOne{builder}
+}
+
+// Query returns a query builder for BillingAuditLog.
+func (c *BillingAuditLogClient) Query() *BillingAuditLogQuery {
+	return &BillingAuditLogQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBillingAuditLog},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BillingAuditLog entity by its id.
+func (c *BillingAuditLogClient) Get(ctx context.Context, id int) (*BillingAuditLog, error) {
+	return c.Query().Where(billingauditlog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BillingAuditLogClient) GetX(ctx context.Context, id int) *BillingAuditLog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BillingAuditLogClient) Hooks() []Hook {
+	hooks := c.hooks.BillingAuditLog
+	return append(hooks[:len(hooks):len(hooks)], billingauditlog.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BillingAuditLogClient) Interceptors() []Interceptor {
+	return c.inters.BillingAuditLog
+}
+
+func (c *BillingAuditLogClient) mutate(ctx context.Context, m *BillingAuditLogMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BillingAuditLogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BillingAuditLogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BillingAuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BillingAuditLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BillingAuditLog mutation op: %q", m.Op())
 	}
 }
 
@@ -3832,6 +3984,140 @@ func (c *ChannelProbeClient) mutate(ctx context.Context, m *ChannelProbeMutation
 		return (&ChannelProbeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ChannelProbe mutation op: %q", m.Op())
+	}
+}
+
+// CommercialSettingClient is a client for the CommercialSetting schema.
+type CommercialSettingClient struct {
+	config
+}
+
+// NewCommercialSettingClient returns a client for the CommercialSetting from the given config.
+func NewCommercialSettingClient(c config) *CommercialSettingClient {
+	return &CommercialSettingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `commercialsetting.Hooks(f(g(h())))`.
+func (c *CommercialSettingClient) Use(hooks ...Hook) {
+	c.hooks.CommercialSetting = append(c.hooks.CommercialSetting, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `commercialsetting.Intercept(f(g(h())))`.
+func (c *CommercialSettingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CommercialSetting = append(c.inters.CommercialSetting, interceptors...)
+}
+
+// Create returns a builder for creating a CommercialSetting entity.
+func (c *CommercialSettingClient) Create() *CommercialSettingCreate {
+	mutation := newCommercialSettingMutation(c.config, OpCreate)
+	return &CommercialSettingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CommercialSetting entities.
+func (c *CommercialSettingClient) CreateBulk(builders ...*CommercialSettingCreate) *CommercialSettingCreateBulk {
+	return &CommercialSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CommercialSettingClient) MapCreateBulk(slice any, setFunc func(*CommercialSettingCreate, int)) *CommercialSettingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CommercialSettingCreateBulk{err: fmt.Errorf("calling to CommercialSettingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CommercialSettingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CommercialSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CommercialSetting.
+func (c *CommercialSettingClient) Update() *CommercialSettingUpdate {
+	mutation := newCommercialSettingMutation(c.config, OpUpdate)
+	return &CommercialSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CommercialSettingClient) UpdateOne(_m *CommercialSetting) *CommercialSettingUpdateOne {
+	mutation := newCommercialSettingMutation(c.config, OpUpdateOne, withCommercialSetting(_m))
+	return &CommercialSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CommercialSettingClient) UpdateOneID(id int) *CommercialSettingUpdateOne {
+	mutation := newCommercialSettingMutation(c.config, OpUpdateOne, withCommercialSettingID(id))
+	return &CommercialSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CommercialSetting.
+func (c *CommercialSettingClient) Delete() *CommercialSettingDelete {
+	mutation := newCommercialSettingMutation(c.config, OpDelete)
+	return &CommercialSettingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CommercialSettingClient) DeleteOne(_m *CommercialSetting) *CommercialSettingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CommercialSettingClient) DeleteOneID(id int) *CommercialSettingDeleteOne {
+	builder := c.Delete().Where(commercialsetting.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CommercialSettingDeleteOne{builder}
+}
+
+// Query returns a query builder for CommercialSetting.
+func (c *CommercialSettingClient) Query() *CommercialSettingQuery {
+	return &CommercialSettingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCommercialSetting},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CommercialSetting entity by its id.
+func (c *CommercialSettingClient) Get(ctx context.Context, id int) (*CommercialSetting, error) {
+	return c.Query().Where(commercialsetting.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CommercialSettingClient) GetX(ctx context.Context, id int) *CommercialSetting {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CommercialSettingClient) Hooks() []Hook {
+	hooks := c.hooks.CommercialSetting
+	return append(hooks[:len(hooks):len(hooks)], commercialsetting.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CommercialSettingClient) Interceptors() []Interceptor {
+	return c.inters.CommercialSetting
+}
+
+func (c *CommercialSettingClient) mutate(ctx context.Context, m *CommercialSettingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CommercialSettingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CommercialSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CommercialSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CommercialSettingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CommercialSetting mutation op: %q", m.Op())
 	}
 }
 
@@ -9376,26 +9662,28 @@ type (
 	hooks struct {
 		APIKey, APIKeyProfileTemplate, AffiliateInvitation, AffiliateProfile,
 		AffiliateRebate, AffiliateSetting, BillingAccount, BillingAccountBinding,
-		BillingHold, BillingNotification, BillingNotificationPreference,
-		BillingNotificationSetting, BillingOutbox, BillingPriceRule, Channel,
-		ChannelModelPrice, ChannelModelPriceVersion, ChannelOverrideTemplate,
-		ChannelProbe, DataStorage, LedgerEntry, LedgerTransaction, Model, OIDCIdentity,
-		PaymentEvent, PaymentOrder, PaymentProviderInstance, Project, PromoCode,
-		PromoUsage, Prompt, PromptProtectionRule, ProviderQuotaStatus, RedeemCode,
-		Request, RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
+		BillingAuditLog, BillingHold, BillingNotification,
+		BillingNotificationPreference, BillingNotificationSetting, BillingOutbox,
+		BillingPriceRule, Channel, ChannelModelPrice, ChannelModelPriceVersion,
+		ChannelOverrideTemplate, ChannelProbe, CommercialSetting, DataStorage,
+		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
+		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
+		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
+		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
 		UsageBillingRecord, UsageLog, User, UserProject, UserRole,
 		UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, AffiliateInvitation, AffiliateProfile,
 		AffiliateRebate, AffiliateSetting, BillingAccount, BillingAccountBinding,
-		BillingHold, BillingNotification, BillingNotificationPreference,
-		BillingNotificationSetting, BillingOutbox, BillingPriceRule, Channel,
-		ChannelModelPrice, ChannelModelPriceVersion, ChannelOverrideTemplate,
-		ChannelProbe, DataStorage, LedgerEntry, LedgerTransaction, Model, OIDCIdentity,
-		PaymentEvent, PaymentOrder, PaymentProviderInstance, Project, PromoCode,
-		PromoUsage, Prompt, PromptProtectionRule, ProviderQuotaStatus, RedeemCode,
-		Request, RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
+		BillingAuditLog, BillingHold, BillingNotification,
+		BillingNotificationPreference, BillingNotificationSetting, BillingOutbox,
+		BillingPriceRule, Channel, ChannelModelPrice, ChannelModelPriceVersion,
+		ChannelOverrideTemplate, ChannelProbe, CommercialSetting, DataStorage,
+		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
+		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
+		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
+		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
 		UsageBillingRecord, UsageLog, User, UserProject, UserRole,
 		UserSubscription []ent.Interceptor
 	}

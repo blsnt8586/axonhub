@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
@@ -27,6 +28,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -330,6 +332,33 @@ func (f TraverseBillingAccountBinding) Traverse(ctx context.Context, q ent.Query
 	return fmt.Errorf("unexpected query type %T. expect *ent.BillingAccountBindingQuery", q)
 }
 
+// The BillingAuditLogFunc type is an adapter to allow the use of ordinary function as a Querier.
+type BillingAuditLogFunc func(context.Context, *ent.BillingAuditLogQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f BillingAuditLogFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.BillingAuditLogQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.BillingAuditLogQuery", q)
+}
+
+// The TraverseBillingAuditLog type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseBillingAuditLog func(context.Context, *ent.BillingAuditLogQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseBillingAuditLog) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseBillingAuditLog) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingAuditLogQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.BillingAuditLogQuery", q)
+}
+
 // The BillingHoldFunc type is an adapter to allow the use of ordinary function as a Querier.
 type BillingHoldFunc func(context.Context, *ent.BillingHoldQuery) (ent.Value, error)
 
@@ -625,6 +654,33 @@ func (f TraverseChannelProbe) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.ChannelProbeQuery", q)
+}
+
+// The CommercialSettingFunc type is an adapter to allow the use of ordinary function as a Querier.
+type CommercialSettingFunc func(context.Context, *ent.CommercialSettingQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f CommercialSettingFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.CommercialSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.CommercialSettingQuery", q)
+}
+
+// The TraverseCommercialSetting type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseCommercialSetting func(context.Context, *ent.CommercialSettingQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseCommercialSetting) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseCommercialSetting) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.CommercialSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.CommercialSettingQuery", q)
 }
 
 // The DataStorageFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -1402,6 +1458,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.BillingAccountQuery, predicate.BillingAccount, billingaccount.OrderOption]{typ: ent.TypeBillingAccount, tq: q}, nil
 	case *ent.BillingAccountBindingQuery:
 		return &query[*ent.BillingAccountBindingQuery, predicate.BillingAccountBinding, billingaccountbinding.OrderOption]{typ: ent.TypeBillingAccountBinding, tq: q}, nil
+	case *ent.BillingAuditLogQuery:
+		return &query[*ent.BillingAuditLogQuery, predicate.BillingAuditLog, billingauditlog.OrderOption]{typ: ent.TypeBillingAuditLog, tq: q}, nil
 	case *ent.BillingHoldQuery:
 		return &query[*ent.BillingHoldQuery, predicate.BillingHold, billinghold.OrderOption]{typ: ent.TypeBillingHold, tq: q}, nil
 	case *ent.BillingNotificationQuery:
@@ -1424,6 +1482,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.ChannelOverrideTemplateQuery, predicate.ChannelOverrideTemplate, channeloverridetemplate.OrderOption]{typ: ent.TypeChannelOverrideTemplate, tq: q}, nil
 	case *ent.ChannelProbeQuery:
 		return &query[*ent.ChannelProbeQuery, predicate.ChannelProbe, channelprobe.OrderOption]{typ: ent.TypeChannelProbe, tq: q}, nil
+	case *ent.CommercialSettingQuery:
+		return &query[*ent.CommercialSettingQuery, predicate.CommercialSetting, commercialsetting.OrderOption]{typ: ent.TypeCommercialSetting, tq: q}, nil
 	case *ent.DataStorageQuery:
 		return &query[*ent.DataStorageQuery, predicate.DataStorage, datastorage.OrderOption]{typ: ent.TypeDataStorage, tq: q}, nil
 	case *ent.LedgerEntryQuery:

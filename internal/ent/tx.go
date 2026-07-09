@@ -28,6 +28,8 @@ type Tx struct {
 	BillingAccount *BillingAccountClient
 	// BillingAccountBinding is the client for interacting with the BillingAccountBinding builders.
 	BillingAccountBinding *BillingAccountBindingClient
+	// BillingAuditLog is the client for interacting with the BillingAuditLog builders.
+	BillingAuditLog *BillingAuditLogClient
 	// BillingHold is the client for interacting with the BillingHold builders.
 	BillingHold *BillingHoldClient
 	// BillingNotification is the client for interacting with the BillingNotification builders.
@@ -50,6 +52,8 @@ type Tx struct {
 	ChannelOverrideTemplate *ChannelOverrideTemplateClient
 	// ChannelProbe is the client for interacting with the ChannelProbe builders.
 	ChannelProbe *ChannelProbeClient
+	// CommercialSetting is the client for interacting with the CommercialSetting builders.
+	CommercialSetting *CommercialSettingClient
 	// DataStorage is the client for interacting with the DataStorage builders.
 	DataStorage *DataStorageClient
 	// LedgerEntry is the client for interacting with the LedgerEntry builders.
@@ -245,6 +249,7 @@ func (tx *Tx) init() {
 	tx.AffiliateSetting = NewAffiliateSettingClient(tx.config)
 	tx.BillingAccount = NewBillingAccountClient(tx.config)
 	tx.BillingAccountBinding = NewBillingAccountBindingClient(tx.config)
+	tx.BillingAuditLog = NewBillingAuditLogClient(tx.config)
 	tx.BillingHold = NewBillingHoldClient(tx.config)
 	tx.BillingNotification = NewBillingNotificationClient(tx.config)
 	tx.BillingNotificationPreference = NewBillingNotificationPreferenceClient(tx.config)
@@ -256,6 +261,7 @@ func (tx *Tx) init() {
 	tx.ChannelModelPriceVersion = NewChannelModelPriceVersionClient(tx.config)
 	tx.ChannelOverrideTemplate = NewChannelOverrideTemplateClient(tx.config)
 	tx.ChannelProbe = NewChannelProbeClient(tx.config)
+	tx.CommercialSetting = NewCommercialSettingClient(tx.config)
 	tx.DataStorage = NewDataStorageClient(tx.config)
 	tx.LedgerEntry = NewLedgerEntryClient(tx.config)
 	tx.LedgerTransaction = NewLedgerTransactionClient(tx.config)

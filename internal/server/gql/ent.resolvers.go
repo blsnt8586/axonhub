@@ -161,6 +161,11 @@ func (r *billingAccountBindingResolver) BillingAccountID(ctx context.Context, ob
 }
 
 // ID is the resolver for the id field.
+func (r *billingAuditLogResolver) ID(ctx context.Context, obj *ent.BillingAuditLog) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ID is the resolver for the id field.
 func (r *billingHoldResolver) ID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
 	panic(fmt.Errorf("not implemented: ID - id"))
 }
@@ -381,6 +386,11 @@ func (r *channelProbeResolver) ChannelID(ctx context.Context, obj *ent.ChannelPr
 		Type: ent.TypeChannel,
 		ID:   obj.ChannelID,
 	}, nil
+}
+
+// ID is the resolver for the id field.
+func (r *commercialSettingResolver) ID(ctx context.Context, obj *ent.CommercialSetting) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
 }
 
 // ID is the resolver for the id field.
@@ -750,6 +760,11 @@ func (r *queryResolver) BillingAccountBindings(ctx context.Context, after *entgq
 	)
 }
 
+// BillingAuditLogs is the resolver for the billingAuditLogs field.
+func (r *queryResolver) BillingAuditLogs(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAuditLogOrder, where *ent.BillingAuditLogWhereInput) (*ent.BillingAuditLogConnection, error) {
+	panic(fmt.Errorf("not implemented: BillingAuditLogs - billingAuditLogs"))
+}
+
 // BillingHolds is the resolver for the billingHolds field.
 func (r *queryResolver) BillingHolds(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) (*ent.BillingHoldConnection, error) {
 	panic(fmt.Errorf("not implemented: BillingHolds - billingHolds"))
@@ -838,6 +853,11 @@ func (r *queryResolver) ChannelOverrideTemplates(ctx context.Context, after *ent
 		ent.WithChannelOverrideTemplateOrder(orderBy),
 		ent.WithChannelOverrideTemplateFilter(where.Filter),
 	)
+}
+
+// CommercialSettings is the resolver for the commercialSettings field.
+func (r *queryResolver) CommercialSettings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.CommercialSettingOrder, where *ent.CommercialSettingWhereInput) (*ent.CommercialSettingConnection, error) {
+	panic(fmt.Errorf("not implemented: CommercialSettings - commercialSettings"))
 }
 
 // DataStorages is the resolver for the dataStorages field.
@@ -1722,6 +1742,9 @@ func (r *Resolver) BillingAccountBinding() BillingAccountBindingResolver {
 	return &billingAccountBindingResolver{r}
 }
 
+// BillingAuditLog returns BillingAuditLogResolver implementation.
+func (r *Resolver) BillingAuditLog() BillingAuditLogResolver { return &billingAuditLogResolver{r} }
+
 // BillingHold returns BillingHoldResolver implementation.
 func (r *Resolver) BillingHold() BillingHoldResolver { return &billingHoldResolver{r} }
 
@@ -1766,6 +1789,11 @@ func (r *Resolver) ChannelOverrideTemplate() ChannelOverrideTemplateResolver {
 
 // ChannelProbe returns ChannelProbeResolver implementation.
 func (r *Resolver) ChannelProbe() ChannelProbeResolver { return &channelProbeResolver{r} }
+
+// CommercialSetting returns CommercialSettingResolver implementation.
+func (r *Resolver) CommercialSetting() CommercialSettingResolver {
+	return &commercialSettingResolver{r}
+}
 
 // DataStorage returns DataStorageResolver implementation.
 func (r *Resolver) DataStorage() DataStorageResolver { return &dataStorageResolver{r} }
@@ -1872,6 +1900,7 @@ type affiliateRebateResolver struct{ *Resolver }
 type affiliateSettingResolver struct{ *Resolver }
 type billingAccountResolver struct{ *Resolver }
 type billingAccountBindingResolver struct{ *Resolver }
+type billingAuditLogResolver struct{ *Resolver }
 type billingHoldResolver struct{ *Resolver }
 type billingNotificationResolver struct{ *Resolver }
 type billingNotificationPreferenceResolver struct{ *Resolver }
@@ -1883,6 +1912,7 @@ type channelModelPriceResolver struct{ *Resolver }
 type channelModelPriceVersionResolver struct{ *Resolver }
 type channelOverrideTemplateResolver struct{ *Resolver }
 type channelProbeResolver struct{ *Resolver }
+type commercialSettingResolver struct{ *Resolver }
 type dataStorageResolver struct{ *Resolver }
 type ledgerEntryResolver struct{ *Resolver }
 type ledgerTransactionResolver struct{ *Resolver }

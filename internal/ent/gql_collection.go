@@ -18,6 +18,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
@@ -29,6 +30,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -2093,6 +2095,140 @@ func newBillingAccountBindingPaginateArgs(rv map[string]any) *billingaccountbind
 }
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *BillingAuditLogQuery) CollectFields(ctx context.Context, satisfies ...string) (*BillingAuditLogQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *BillingAuditLogQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(billingauditlog.Columns))
+		selectedFields = []string{billingauditlog.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+		case "createdAt":
+			if _, ok := fieldSeen[billingauditlog.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldCreatedAt)
+				fieldSeen[billingauditlog.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[billingauditlog.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldUpdatedAt)
+				fieldSeen[billingauditlog.FieldUpdatedAt] = struct{}{}
+			}
+		case "action":
+			if _, ok := fieldSeen[billingauditlog.FieldAction]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldAction)
+				fieldSeen[billingauditlog.FieldAction] = struct{}{}
+			}
+		case "actorType":
+			if _, ok := fieldSeen[billingauditlog.FieldActorType]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldActorType)
+				fieldSeen[billingauditlog.FieldActorType] = struct{}{}
+			}
+		case "actorUserID":
+			if _, ok := fieldSeen[billingauditlog.FieldActorUserID]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldActorUserID)
+				fieldSeen[billingauditlog.FieldActorUserID] = struct{}{}
+			}
+		case "targetType":
+			if _, ok := fieldSeen[billingauditlog.FieldTargetType]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldTargetType)
+				fieldSeen[billingauditlog.FieldTargetType] = struct{}{}
+			}
+		case "targetID":
+			if _, ok := fieldSeen[billingauditlog.FieldTargetID]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldTargetID)
+				fieldSeen[billingauditlog.FieldTargetID] = struct{}{}
+			}
+		case "targetUserID":
+			if _, ok := fieldSeen[billingauditlog.FieldTargetUserID]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldTargetUserID)
+				fieldSeen[billingauditlog.FieldTargetUserID] = struct{}{}
+			}
+		case "reason":
+			if _, ok := fieldSeen[billingauditlog.FieldReason]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldReason)
+				fieldSeen[billingauditlog.FieldReason] = struct{}{}
+			}
+		case "metadata":
+			if _, ok := fieldSeen[billingauditlog.FieldMetadata]; !ok {
+				selectedFields = append(selectedFields, billingauditlog.FieldMetadata)
+				fieldSeen[billingauditlog.FieldMetadata] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type billingauditlogPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []BillingAuditLogPaginateOption
+}
+
+func newBillingAuditLogPaginateArgs(rv map[string]any) *billingauditlogPaginateArgs {
+	args := &billingauditlogPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &BillingAuditLogOrder{Field: &BillingAuditLogOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithBillingAuditLogOrder(order))
+			}
+		case *BillingAuditLogOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithBillingAuditLogOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*BillingAuditLogWhereInput); ok {
+		args.opts = append(args.opts, WithBillingAuditLogFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (_q *BillingHoldQuery) CollectFields(ctx context.Context, satisfies ...string) (*BillingHoldQuery, error) {
 	fc := graphql.GetFieldContext(ctx)
 	if fc == nil {
@@ -4152,6 +4288,165 @@ func newChannelProbePaginateArgs(rv map[string]any) *channelprobePaginateArgs {
 	}
 	if v, ok := rv[whereField].(*ChannelProbeWhereInput); ok {
 		args.opts = append(args.opts, WithChannelProbeFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *CommercialSettingQuery) CollectFields(ctx context.Context, satisfies ...string) (*CommercialSettingQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *CommercialSettingQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(commercialsetting.Columns))
+		selectedFields = []string{commercialsetting.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+		case "createdAt":
+			if _, ok := fieldSeen[commercialsetting.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldCreatedAt)
+				fieldSeen[commercialsetting.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[commercialsetting.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldUpdatedAt)
+				fieldSeen[commercialsetting.FieldUpdatedAt] = struct{}{}
+			}
+		case "key":
+			if _, ok := fieldSeen[commercialsetting.FieldKey]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldKey)
+				fieldSeen[commercialsetting.FieldKey] = struct{}{}
+			}
+		case "mode":
+			if _, ok := fieldSeen[commercialsetting.FieldMode]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldMode)
+				fieldSeen[commercialsetting.FieldMode] = struct{}{}
+			}
+		case "requireAdminActionReason":
+			if _, ok := fieldSeen[commercialsetting.FieldRequireAdminActionReason]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldRequireAdminActionReason)
+				fieldSeen[commercialsetting.FieldRequireAdminActionReason] = struct{}{}
+			}
+		case "paymentProviderSecretsEncrypted":
+			if _, ok := fieldSeen[commercialsetting.FieldPaymentProviderSecretsEncrypted]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldPaymentProviderSecretsEncrypted)
+				fieldSeen[commercialsetting.FieldPaymentProviderSecretsEncrypted] = struct{}{}
+			}
+		case "workersEnabled":
+			if _, ok := fieldSeen[commercialsetting.FieldWorkersEnabled]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldWorkersEnabled)
+				fieldSeen[commercialsetting.FieldWorkersEnabled] = struct{}{}
+			}
+		case "orderExpiryWorkerEnabled":
+			if _, ok := fieldSeen[commercialsetting.FieldOrderExpiryWorkerEnabled]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldOrderExpiryWorkerEnabled)
+				fieldSeen[commercialsetting.FieldOrderExpiryWorkerEnabled] = struct{}{}
+			}
+		case "holdExpiryWorkerEnabled":
+			if _, ok := fieldSeen[commercialsetting.FieldHoldExpiryWorkerEnabled]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldHoldExpiryWorkerEnabled)
+				fieldSeen[commercialsetting.FieldHoldExpiryWorkerEnabled] = struct{}{}
+			}
+		case "subscriptionExpiryWorkerEnabled":
+			if _, ok := fieldSeen[commercialsetting.FieldSubscriptionExpiryWorkerEnabled]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldSubscriptionExpiryWorkerEnabled)
+				fieldSeen[commercialsetting.FieldSubscriptionExpiryWorkerEnabled] = struct{}{}
+			}
+		case "subscriptionResetWorkerEnabled":
+			if _, ok := fieldSeen[commercialsetting.FieldSubscriptionResetWorkerEnabled]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldSubscriptionResetWorkerEnabled)
+				fieldSeen[commercialsetting.FieldSubscriptionResetWorkerEnabled] = struct{}{}
+			}
+		case "affiliateRebateThawWorkerEnabled":
+			if _, ok := fieldSeen[commercialsetting.FieldAffiliateRebateThawWorkerEnabled]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldAffiliateRebateThawWorkerEnabled)
+				fieldSeen[commercialsetting.FieldAffiliateRebateThawWorkerEnabled] = struct{}{}
+			}
+		case "failedBillingRetryWorkerEnabled":
+			if _, ok := fieldSeen[commercialsetting.FieldFailedBillingRetryWorkerEnabled]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldFailedBillingRetryWorkerEnabled)
+				fieldSeen[commercialsetting.FieldFailedBillingRetryWorkerEnabled] = struct{}{}
+			}
+		case "workerBatchSize":
+			if _, ok := fieldSeen[commercialsetting.FieldWorkerBatchSize]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldWorkerBatchSize)
+				fieldSeen[commercialsetting.FieldWorkerBatchSize] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[commercialsetting.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, commercialsetting.FieldCurrency)
+				fieldSeen[commercialsetting.FieldCurrency] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type commercialsettingPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []CommercialSettingPaginateOption
+}
+
+func newCommercialSettingPaginateArgs(rv map[string]any) *commercialsettingPaginateArgs {
+	args := &commercialsettingPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &CommercialSettingOrder{Field: &CommercialSettingOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithCommercialSettingOrder(order))
+			}
+		case *CommercialSettingOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithCommercialSettingOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*CommercialSettingWhereInput); ok {
+		args.opts = append(args.opts, WithCommercialSettingFilter(v.Filter))
 	}
 	return args
 }

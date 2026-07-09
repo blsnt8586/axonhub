@@ -22,6 +22,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
@@ -33,6 +34,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -2651,6 +2653,320 @@ func (_m *BillingAccountBinding) ToEdge(order *BillingAccountBindingOrder) *Bill
 		order = DefaultBillingAccountBindingOrder
 	}
 	return &BillingAccountBindingEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// BillingAuditLogEdge is the edge representation of BillingAuditLog.
+type BillingAuditLogEdge struct {
+	Node   *BillingAuditLog `json:"node"`
+	Cursor Cursor           `json:"cursor"`
+}
+
+// BillingAuditLogConnection is the connection containing edges to BillingAuditLog.
+type BillingAuditLogConnection struct {
+	Edges      []*BillingAuditLogEdge `json:"edges"`
+	PageInfo   PageInfo               `json:"pageInfo"`
+	TotalCount int                    `json:"totalCount"`
+}
+
+func (c *BillingAuditLogConnection) build(nodes []*BillingAuditLog, pager *billingauditlogPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *BillingAuditLog
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *BillingAuditLog {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *BillingAuditLog {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*BillingAuditLogEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &BillingAuditLogEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// BillingAuditLogPaginateOption enables pagination customization.
+type BillingAuditLogPaginateOption func(*billingauditlogPager) error
+
+// WithBillingAuditLogOrder configures pagination ordering.
+func WithBillingAuditLogOrder(order *BillingAuditLogOrder) BillingAuditLogPaginateOption {
+	if order == nil {
+		order = DefaultBillingAuditLogOrder
+	}
+	o := *order
+	return func(pager *billingauditlogPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultBillingAuditLogOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithBillingAuditLogFilter configures pagination filter.
+func WithBillingAuditLogFilter(filter func(*BillingAuditLogQuery) (*BillingAuditLogQuery, error)) BillingAuditLogPaginateOption {
+	return func(pager *billingauditlogPager) error {
+		if filter == nil {
+			return errors.New("BillingAuditLogQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type billingauditlogPager struct {
+	reverse bool
+	order   *BillingAuditLogOrder
+	filter  func(*BillingAuditLogQuery) (*BillingAuditLogQuery, error)
+}
+
+func newBillingAuditLogPager(opts []BillingAuditLogPaginateOption, reverse bool) (*billingauditlogPager, error) {
+	pager := &billingauditlogPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultBillingAuditLogOrder
+	}
+	return pager, nil
+}
+
+func (p *billingauditlogPager) applyFilter(query *BillingAuditLogQuery) (*BillingAuditLogQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *billingauditlogPager) toCursor(_m *BillingAuditLog) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *billingauditlogPager) applyCursors(query *BillingAuditLogQuery, after, before *Cursor) (*BillingAuditLogQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultBillingAuditLogOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *billingauditlogPager) applyOrder(query *BillingAuditLogQuery) *BillingAuditLogQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultBillingAuditLogOrder.Field {
+		query = query.Order(DefaultBillingAuditLogOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *billingauditlogPager) orderExpr(query *BillingAuditLogQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultBillingAuditLogOrder.Field {
+			b.Comma().Ident(DefaultBillingAuditLogOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to BillingAuditLog.
+func (_m *BillingAuditLogQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...BillingAuditLogPaginateOption,
+) (*BillingAuditLogConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newBillingAuditLogPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &BillingAuditLogConnection{Edges: []*BillingAuditLogEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// BillingAuditLogOrderFieldCreatedAt orders BillingAuditLog by created_at.
+	BillingAuditLogOrderFieldCreatedAt = &BillingAuditLogOrderField{
+		Value: func(_m *BillingAuditLog) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: billingauditlog.FieldCreatedAt,
+		toTerm: billingauditlog.ByCreatedAt,
+		toCursor: func(_m *BillingAuditLog) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// BillingAuditLogOrderFieldUpdatedAt orders BillingAuditLog by updated_at.
+	BillingAuditLogOrderFieldUpdatedAt = &BillingAuditLogOrderField{
+		Value: func(_m *BillingAuditLog) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: billingauditlog.FieldUpdatedAt,
+		toTerm: billingauditlog.ByUpdatedAt,
+		toCursor: func(_m *BillingAuditLog) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f BillingAuditLogOrderField) String() string {
+	var str string
+	switch f.column {
+	case BillingAuditLogOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case BillingAuditLogOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f BillingAuditLogOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *BillingAuditLogOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("BillingAuditLogOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *BillingAuditLogOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *BillingAuditLogOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid BillingAuditLogOrderField", str)
+	}
+	return nil
+}
+
+// BillingAuditLogOrderField defines the ordering field of BillingAuditLog.
+type BillingAuditLogOrderField struct {
+	// Value extracts the ordering value from the given BillingAuditLog.
+	Value    func(*BillingAuditLog) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) billingauditlog.OrderOption
+	toCursor func(*BillingAuditLog) Cursor
+}
+
+// BillingAuditLogOrder defines the ordering of BillingAuditLog.
+type BillingAuditLogOrder struct {
+	Direction OrderDirection             `json:"direction"`
+	Field     *BillingAuditLogOrderField `json:"field"`
+}
+
+// DefaultBillingAuditLogOrder is the default ordering of BillingAuditLog.
+var DefaultBillingAuditLogOrder = &BillingAuditLogOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &BillingAuditLogOrderField{
+		Value: func(_m *BillingAuditLog) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: billingauditlog.FieldID,
+		toTerm: billingauditlog.ByID,
+		toCursor: func(_m *BillingAuditLog) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts BillingAuditLog into BillingAuditLogEdge.
+func (_m *BillingAuditLog) ToEdge(order *BillingAuditLogOrder) *BillingAuditLogEdge {
+	if order == nil {
+		order = DefaultBillingAuditLogOrder
+	}
+	return &BillingAuditLogEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}
@@ -6112,6 +6428,320 @@ func (_m *ChannelProbe) ToEdge(order *ChannelProbeOrder) *ChannelProbeEdge {
 		order = DefaultChannelProbeOrder
 	}
 	return &ChannelProbeEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// CommercialSettingEdge is the edge representation of CommercialSetting.
+type CommercialSettingEdge struct {
+	Node   *CommercialSetting `json:"node"`
+	Cursor Cursor             `json:"cursor"`
+}
+
+// CommercialSettingConnection is the connection containing edges to CommercialSetting.
+type CommercialSettingConnection struct {
+	Edges      []*CommercialSettingEdge `json:"edges"`
+	PageInfo   PageInfo                 `json:"pageInfo"`
+	TotalCount int                      `json:"totalCount"`
+}
+
+func (c *CommercialSettingConnection) build(nodes []*CommercialSetting, pager *commercialsettingPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *CommercialSetting
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *CommercialSetting {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *CommercialSetting {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*CommercialSettingEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &CommercialSettingEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// CommercialSettingPaginateOption enables pagination customization.
+type CommercialSettingPaginateOption func(*commercialsettingPager) error
+
+// WithCommercialSettingOrder configures pagination ordering.
+func WithCommercialSettingOrder(order *CommercialSettingOrder) CommercialSettingPaginateOption {
+	if order == nil {
+		order = DefaultCommercialSettingOrder
+	}
+	o := *order
+	return func(pager *commercialsettingPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultCommercialSettingOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithCommercialSettingFilter configures pagination filter.
+func WithCommercialSettingFilter(filter func(*CommercialSettingQuery) (*CommercialSettingQuery, error)) CommercialSettingPaginateOption {
+	return func(pager *commercialsettingPager) error {
+		if filter == nil {
+			return errors.New("CommercialSettingQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type commercialsettingPager struct {
+	reverse bool
+	order   *CommercialSettingOrder
+	filter  func(*CommercialSettingQuery) (*CommercialSettingQuery, error)
+}
+
+func newCommercialSettingPager(opts []CommercialSettingPaginateOption, reverse bool) (*commercialsettingPager, error) {
+	pager := &commercialsettingPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultCommercialSettingOrder
+	}
+	return pager, nil
+}
+
+func (p *commercialsettingPager) applyFilter(query *CommercialSettingQuery) (*CommercialSettingQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *commercialsettingPager) toCursor(_m *CommercialSetting) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *commercialsettingPager) applyCursors(query *CommercialSettingQuery, after, before *Cursor) (*CommercialSettingQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultCommercialSettingOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *commercialsettingPager) applyOrder(query *CommercialSettingQuery) *CommercialSettingQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultCommercialSettingOrder.Field {
+		query = query.Order(DefaultCommercialSettingOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *commercialsettingPager) orderExpr(query *CommercialSettingQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultCommercialSettingOrder.Field {
+			b.Comma().Ident(DefaultCommercialSettingOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to CommercialSetting.
+func (_m *CommercialSettingQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...CommercialSettingPaginateOption,
+) (*CommercialSettingConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newCommercialSettingPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &CommercialSettingConnection{Edges: []*CommercialSettingEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// CommercialSettingOrderFieldCreatedAt orders CommercialSetting by created_at.
+	CommercialSettingOrderFieldCreatedAt = &CommercialSettingOrderField{
+		Value: func(_m *CommercialSetting) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: commercialsetting.FieldCreatedAt,
+		toTerm: commercialsetting.ByCreatedAt,
+		toCursor: func(_m *CommercialSetting) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// CommercialSettingOrderFieldUpdatedAt orders CommercialSetting by updated_at.
+	CommercialSettingOrderFieldUpdatedAt = &CommercialSettingOrderField{
+		Value: func(_m *CommercialSetting) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: commercialsetting.FieldUpdatedAt,
+		toTerm: commercialsetting.ByUpdatedAt,
+		toCursor: func(_m *CommercialSetting) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f CommercialSettingOrderField) String() string {
+	var str string
+	switch f.column {
+	case CommercialSettingOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case CommercialSettingOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f CommercialSettingOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *CommercialSettingOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("CommercialSettingOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *CommercialSettingOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *CommercialSettingOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid CommercialSettingOrderField", str)
+	}
+	return nil
+}
+
+// CommercialSettingOrderField defines the ordering field of CommercialSetting.
+type CommercialSettingOrderField struct {
+	// Value extracts the ordering value from the given CommercialSetting.
+	Value    func(*CommercialSetting) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) commercialsetting.OrderOption
+	toCursor func(*CommercialSetting) Cursor
+}
+
+// CommercialSettingOrder defines the ordering of CommercialSetting.
+type CommercialSettingOrder struct {
+	Direction OrderDirection               `json:"direction"`
+	Field     *CommercialSettingOrderField `json:"field"`
+}
+
+// DefaultCommercialSettingOrder is the default ordering of CommercialSetting.
+var DefaultCommercialSettingOrder = &CommercialSettingOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &CommercialSettingOrderField{
+		Value: func(_m *CommercialSetting) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: commercialsetting.FieldID,
+		toTerm: commercialsetting.ByID,
+		toCursor: func(_m *CommercialSetting) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts CommercialSetting into CommercialSettingEdge.
+func (_m *CommercialSetting) ToEdge(order *CommercialSettingOrder) *CommercialSettingEdge {
+	if order == nil {
+		order = DefaultCommercialSettingOrder
+	}
+	return &CommercialSettingEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

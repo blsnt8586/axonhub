@@ -478,6 +478,7 @@ func TestPaymentServiceUpsertEPayProviderCreatesAndPreservesKeyOnUpdate(t *testi
 	require.Equal(t, paymentproviderinstance.ProviderTypeEpay, provider.ProviderType)
 	require.Equal(t, paymentproviderinstance.StatusEnabled, provider.Status)
 	require.Equal(t, "CNY", provider.Currency)
+	require.NotContains(t, string(provider.Config), "secret-key-v1")
 
 	cfg, err := parseEPayConfig(provider.Config)
 	require.NoError(t, err)

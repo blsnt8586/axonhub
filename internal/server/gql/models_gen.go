@@ -109,6 +109,16 @@ type AdminAffiliateRebatesFilter struct {
 	TransferableBefore *time.Time                  `json:"transferableBefore,omitempty"`
 }
 
+type AdminBillingAuditLogsFilter struct {
+	Action       *string    `json:"action,omitempty"`
+	ActorUserID  *int       `json:"actorUserId,omitempty"`
+	TargetType   *string    `json:"targetType,omitempty"`
+	TargetID     *string    `json:"targetId,omitempty"`
+	TargetUserID *int       `json:"targetUserId,omitempty"`
+	From         *time.Time `json:"from,omitempty"`
+	To           *time.Time `json:"to,omitempty"`
+}
+
 type AdminBillingHoldsFilter struct {
 	UserID           *int                `json:"userId,omitempty"`
 	ProjectID        *int                `json:"projectId,omitempty"`
@@ -590,6 +600,12 @@ type RequestStatsByModel struct {
 type RestorePayload struct {
 	Success bool    `json:"success"`
 	Message *string `json:"message,omitempty"`
+}
+
+type RunCommercialMaintenanceInput struct {
+	Now    *time.Time `json:"now,omitempty"`
+	Limit  *int       `json:"limit,omitempty"`
+	Reason string     `json:"reason"`
 }
 
 type SaveBillingPriceRuleForm struct {

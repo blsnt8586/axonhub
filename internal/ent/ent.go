@@ -20,6 +20,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
@@ -31,6 +32,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -127,6 +129,7 @@ func checkColumn(t, c string) error {
 			affiliatesetting.Table:              affiliatesetting.ValidColumn,
 			billingaccount.Table:                billingaccount.ValidColumn,
 			billingaccountbinding.Table:         billingaccountbinding.ValidColumn,
+			billingauditlog.Table:               billingauditlog.ValidColumn,
 			billinghold.Table:                   billinghold.ValidColumn,
 			billingnotification.Table:           billingnotification.ValidColumn,
 			billingnotificationpreference.Table: billingnotificationpreference.ValidColumn,
@@ -138,6 +141,7 @@ func checkColumn(t, c string) error {
 			channelmodelpriceversion.Table:      channelmodelpriceversion.ValidColumn,
 			channeloverridetemplate.Table:       channeloverridetemplate.ValidColumn,
 			channelprobe.Table:                  channelprobe.ValidColumn,
+			commercialsetting.Table:             commercialsetting.ValidColumn,
 			datastorage.Table:                   datastorage.ValidColumn,
 			ledgerentry.Table:                   ledgerentry.ValidColumn,
 			ledgertransaction.Table:             ledgertransaction.ValidColumn,

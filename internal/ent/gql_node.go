@@ -22,6 +22,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
@@ -33,6 +34,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -110,6 +112,11 @@ var billingaccountbindingImplementors = []string{"BillingAccountBinding", "Node"
 // IsNode implements the Node interface check for GQLGen.
 func (*BillingAccountBinding) IsNode() {}
 
+var billingauditlogImplementors = []string{"BillingAuditLog", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*BillingAuditLog) IsNode() {}
+
 var billingholdImplementors = []string{"BillingHold", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
@@ -164,6 +171,11 @@ var channelprobeImplementors = []string{"ChannelProbe", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*ChannelProbe) IsNode() {}
+
+var commercialsettingImplementors = []string{"CommercialSetting", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*CommercialSetting) IsNode() {}
 
 var datastorageImplementors = []string{"DataStorage", "Node"}
 
@@ -435,6 +447,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			}
 		}
 		return query.Only(ctx)
+	case billingauditlog.Table:
+		query := c.BillingAuditLog.Query().
+			Where(billingauditlog.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, billingauditlogImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
 	case billinghold.Table:
 		query := c.BillingHold.Query().
 			Where(billinghold.ID(id))
@@ -530,6 +551,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(channelprobe.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, channelprobeImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case commercialsetting.Table:
+		query := c.CommercialSetting.Query().
+			Where(commercialsetting.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, commercialsettingImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -987,6 +1017,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 				*noder = node
 			}
 		}
+	case billingauditlog.Table:
+		query := c.BillingAuditLog.Query().
+			Where(billingauditlog.IDIn(ids...))
+		query, err := query.CollectFields(ctx, billingauditlogImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
 	case billinghold.Table:
 		query := c.BillingHold.Query().
 			Where(billinghold.IDIn(ids...))
@@ -1151,6 +1197,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.ChannelProbe.Query().
 			Where(channelprobe.IDIn(ids...))
 		query, err := query.CollectFields(ctx, channelprobeImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case commercialsetting.Table:
+		query := c.CommercialSetting.Query().
+			Where(commercialsetting.IDIn(ids...))
+		query, err := query.CollectFields(ctx, commercialsettingImplementors...)
 		if err != nil {
 			return nil, err
 		}

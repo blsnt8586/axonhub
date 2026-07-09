@@ -358,6 +358,38 @@ input AdminBillingNotificationsFilter {
   to: Time
 }
 
+input SaveCommercialSettingInput {
+  mode: CommercialSettingMode!
+  requireAdminActionReason: Boolean!
+  paymentProviderSecretsEncrypted: Boolean!
+  workersEnabled: Boolean!
+  orderExpiryWorkerEnabled: Boolean!
+  holdExpiryWorkerEnabled: Boolean!
+  subscriptionExpiryWorkerEnabled: Boolean!
+  subscriptionResetWorkerEnabled: Boolean!
+  affiliateRebateThawWorkerEnabled: Boolean!
+  failedBillingRetryWorkerEnabled: Boolean!
+  workerBatchSize: Int!
+  currency: String
+  reason: String
+}
+
+input RunCommercialMaintenanceInput {
+  now: Time
+  limit: Int
+  reason: String!
+}
+
+input AdminBillingAuditLogsFilter {
+  action: String
+  actorUserId: Int
+  targetType: String
+  targetId: String
+  targetUserId: Int
+  from: Time
+  to: Time
+}
+
 input AdminBillingReportFilter {
   from: Time
   to: Time
@@ -467,6 +499,15 @@ type AffiliateTransferResult {
   ledgerTransactionIDs: [ID!]!
 }
 
+type CommercialMaintenanceRunResult {
+  orderExpiryProcessed: Int!
+  holdExpiryProcessed: Int!
+  subscriptionExpiryProcessed: Int!
+  subscriptionResetProcessed: Int!
+  affiliateRebateThawProcessed: Int!
+  failedBillingRetryProcessed: Int!
+}
+
 extend type Mutation {
   createManualRechargeOrder(input: CreateManualRechargeOrderInput!): PaymentOrder!
   confirmManualPayment(input: ConfirmManualPaymentInput!): PaymentOrder!
@@ -501,6 +542,8 @@ extend type Mutation {
   markBillingNotificationRead(id: ID!): BillingNotification!
   markAllBillingNotificationsRead: Int!
   saveBillingNotificationSetting(input: SaveBillingNotificationSettingInput!): BillingNotificationSetting!
+  saveCommercialSetting(input: SaveCommercialSettingInput!): CommercialSetting!
+  runCommercialMaintenance(input: RunCommercialMaintenanceInput!): CommercialMaintenanceRunResult!
   releaseBillingHold(id: ID!, reason: String!): BillingHold!
   saveBillingPriceRule(input: SaveBillingPriceRuleForm!): BillingPriceRule!
   deleteBillingPriceRule(id: ID!): Boolean!
@@ -540,6 +583,8 @@ extend type Query {
   adminAffiliateRebates(filter: AdminAffiliateRebatesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateRebateOrder): AffiliateRebateConnection!
   adminBillingNotificationSetting: BillingNotificationSetting!
   adminBillingNotifications(filter: AdminBillingNotificationsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: BillingNotificationOrder): BillingNotificationConnection!
+  adminCommercialSetting: CommercialSetting!
+  adminBillingAuditLogs(filter: AdminBillingAuditLogsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: BillingAuditLogOrder): BillingAuditLogConnection!
   adminUserSubscriptions(filter: AdminUserSubscriptionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UserSubscriptionOrder): UserSubscriptionConnection!
   adminBillingReport(filter: AdminBillingReportFilter): BillingCommercialReport!
   exportAdminBillingCSV(input: ExportAdminBillingCSVInput!): BillingCSVExportPayload!

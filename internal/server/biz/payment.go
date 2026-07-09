@@ -157,6 +157,10 @@ func (s *PaymentService) UpsertEPayProvider(ctx context.Context, input UpsertEPa
 	if err := validateEPayConfig(cfg); err != nil {
 		return nil, err
 	}
+	cfg, err = encryptEPayConfig(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt epay config: %w", err)
+	}
 	raw, err := json.Marshal(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal epay config: %w", err)
@@ -387,6 +391,14 @@ func (s *PaymentService) GetOrCreateSimulatedEPayProvider(ctx context.Context, p
 		SiteName:   "AxonHub Local",
 	}
 	raw, err := json.Marshal(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal simulated epay config: %w", err)
+	}
+	cfg, err = encryptEPayConfig(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt simulated epay config: %w", err)
+	}
+	raw, err = json.Marshal(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal simulated epay config: %w", err)
 	}

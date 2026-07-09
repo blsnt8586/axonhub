@@ -23,6 +23,7 @@ var Module = fx.Module("biz",
 	fx.Provide(NewProjectService),
 	fx.Provide(NewBillingAccountService),
 	fx.Provide(NewLedgerService),
+	fx.Provide(NewBillingAuditService),
 	fx.Provide(NewBillingHoldService),
 	fx.Provide(NewBillingNotificationService),
 	fx.Provide(NewAPIKeyCommercialLimitService),
@@ -36,6 +37,7 @@ var Module = fx.Module("biz",
 	fx.Provide(NewBillingOutboxWorker),
 	fx.Provide(NewPaymentProviderRegistry),
 	fx.Provide(NewPaymentService),
+	fx.Provide(NewCommercialOperationsService),
 	fx.Provide(NewRoleService),
 	fx.Provide(NewThreadService),
 	fx.Provide(NewTraceService),
@@ -147,6 +149,13 @@ var Module = fx.Module("biz",
 		lc.Append(fx.Hook{
 			OnStart: func(ctx context.Context) error {
 				return svc.RegisterScheduledTasks(ctx, s)
+			},
+		})
+	}),
+	fx.Invoke(func(lc fx.Lifecycle, svc *CommercialOperationsService) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				return svc.EnsureDefaults(ctx)
 			},
 		})
 	}),

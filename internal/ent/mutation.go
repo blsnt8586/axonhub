@@ -19,6 +19,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
@@ -30,6 +31,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -79,6 +81,7 @@ const (
 	TypeAffiliateSetting              = "AffiliateSetting"
 	TypeBillingAccount                = "BillingAccount"
 	TypeBillingAccountBinding         = "BillingAccountBinding"
+	TypeBillingAuditLog               = "BillingAuditLog"
 	TypeBillingHold                   = "BillingHold"
 	TypeBillingNotification           = "BillingNotification"
 	TypeBillingNotificationPreference = "BillingNotificationPreference"
@@ -90,6 +93,7 @@ const (
 	TypeChannelModelPriceVersion      = "ChannelModelPriceVersion"
 	TypeChannelOverrideTemplate       = "ChannelOverrideTemplate"
 	TypeChannelProbe                  = "ChannelProbe"
+	TypeCommercialSetting             = "CommercialSetting"
 	TypeDataStorage                   = "DataStorage"
 	TypeLedgerEntry                   = "LedgerEntry"
 	TypeLedgerTransaction             = "LedgerTransaction"
@@ -8542,6 +8546,966 @@ func (m *BillingAccountBindingMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown BillingAccountBinding edge %s", name)
+}
+
+// BillingAuditLogMutation represents an operation that mutates the BillingAuditLog nodes in the graph.
+type BillingAuditLogMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *int
+	created_at        *time.Time
+	updated_at        *time.Time
+	action            *string
+	actor_type        *billingauditlog.ActorType
+	actor_user_id     *int
+	addactor_user_id  *int
+	target_type       *string
+	target_id         *string
+	target_user_id    *int
+	addtarget_user_id *int
+	reason            *string
+	metadata          *objects.JSONRawMessage
+	appendmetadata    objects.JSONRawMessage
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*BillingAuditLog, error)
+	predicates        []predicate.BillingAuditLog
+}
+
+var _ ent.Mutation = (*BillingAuditLogMutation)(nil)
+
+// billingauditlogOption allows management of the mutation configuration using functional options.
+type billingauditlogOption func(*BillingAuditLogMutation)
+
+// newBillingAuditLogMutation creates new mutation for the BillingAuditLog entity.
+func newBillingAuditLogMutation(c config, op Op, opts ...billingauditlogOption) *BillingAuditLogMutation {
+	m := &BillingAuditLogMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBillingAuditLog,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBillingAuditLogID sets the ID field of the mutation.
+func withBillingAuditLogID(id int) billingauditlogOption {
+	return func(m *BillingAuditLogMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BillingAuditLog
+		)
+		m.oldValue = func(ctx context.Context) (*BillingAuditLog, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BillingAuditLog.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBillingAuditLog sets the old BillingAuditLog of the mutation.
+func withBillingAuditLog(node *BillingAuditLog) billingauditlogOption {
+	return func(m *BillingAuditLogMutation) {
+		m.oldValue = func(context.Context) (*BillingAuditLog, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BillingAuditLogMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BillingAuditLogMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BillingAuditLogMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BillingAuditLogMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BillingAuditLog.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BillingAuditLogMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BillingAuditLogMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BillingAuditLogMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BillingAuditLogMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BillingAuditLogMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BillingAuditLogMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetAction sets the "action" field.
+func (m *BillingAuditLogMutation) SetAction(s string) {
+	m.action = &s
+}
+
+// Action returns the value of the "action" field in the mutation.
+func (m *BillingAuditLogMutation) Action() (r string, exists bool) {
+	v := m.action
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAction returns the old "action" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldAction(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAction is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAction requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAction: %w", err)
+	}
+	return oldValue.Action, nil
+}
+
+// ResetAction resets all changes to the "action" field.
+func (m *BillingAuditLogMutation) ResetAction() {
+	m.action = nil
+}
+
+// SetActorType sets the "actor_type" field.
+func (m *BillingAuditLogMutation) SetActorType(bt billingauditlog.ActorType) {
+	m.actor_type = &bt
+}
+
+// ActorType returns the value of the "actor_type" field in the mutation.
+func (m *BillingAuditLogMutation) ActorType() (r billingauditlog.ActorType, exists bool) {
+	v := m.actor_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActorType returns the old "actor_type" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldActorType(ctx context.Context) (v billingauditlog.ActorType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActorType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActorType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActorType: %w", err)
+	}
+	return oldValue.ActorType, nil
+}
+
+// ResetActorType resets all changes to the "actor_type" field.
+func (m *BillingAuditLogMutation) ResetActorType() {
+	m.actor_type = nil
+}
+
+// SetActorUserID sets the "actor_user_id" field.
+func (m *BillingAuditLogMutation) SetActorUserID(i int) {
+	m.actor_user_id = &i
+	m.addactor_user_id = nil
+}
+
+// ActorUserID returns the value of the "actor_user_id" field in the mutation.
+func (m *BillingAuditLogMutation) ActorUserID() (r int, exists bool) {
+	v := m.actor_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActorUserID returns the old "actor_user_id" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldActorUserID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActorUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActorUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActorUserID: %w", err)
+	}
+	return oldValue.ActorUserID, nil
+}
+
+// AddActorUserID adds i to the "actor_user_id" field.
+func (m *BillingAuditLogMutation) AddActorUserID(i int) {
+	if m.addactor_user_id != nil {
+		*m.addactor_user_id += i
+	} else {
+		m.addactor_user_id = &i
+	}
+}
+
+// AddedActorUserID returns the value that was added to the "actor_user_id" field in this mutation.
+func (m *BillingAuditLogMutation) AddedActorUserID() (r int, exists bool) {
+	v := m.addactor_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearActorUserID clears the value of the "actor_user_id" field.
+func (m *BillingAuditLogMutation) ClearActorUserID() {
+	m.actor_user_id = nil
+	m.addactor_user_id = nil
+	m.clearedFields[billingauditlog.FieldActorUserID] = struct{}{}
+}
+
+// ActorUserIDCleared returns if the "actor_user_id" field was cleared in this mutation.
+func (m *BillingAuditLogMutation) ActorUserIDCleared() bool {
+	_, ok := m.clearedFields[billingauditlog.FieldActorUserID]
+	return ok
+}
+
+// ResetActorUserID resets all changes to the "actor_user_id" field.
+func (m *BillingAuditLogMutation) ResetActorUserID() {
+	m.actor_user_id = nil
+	m.addactor_user_id = nil
+	delete(m.clearedFields, billingauditlog.FieldActorUserID)
+}
+
+// SetTargetType sets the "target_type" field.
+func (m *BillingAuditLogMutation) SetTargetType(s string) {
+	m.target_type = &s
+}
+
+// TargetType returns the value of the "target_type" field in the mutation.
+func (m *BillingAuditLogMutation) TargetType() (r string, exists bool) {
+	v := m.target_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetType returns the old "target_type" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldTargetType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetType: %w", err)
+	}
+	return oldValue.TargetType, nil
+}
+
+// ResetTargetType resets all changes to the "target_type" field.
+func (m *BillingAuditLogMutation) ResetTargetType() {
+	m.target_type = nil
+}
+
+// SetTargetID sets the "target_id" field.
+func (m *BillingAuditLogMutation) SetTargetID(s string) {
+	m.target_id = &s
+}
+
+// TargetID returns the value of the "target_id" field in the mutation.
+func (m *BillingAuditLogMutation) TargetID() (r string, exists bool) {
+	v := m.target_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetID returns the old "target_id" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldTargetID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetID: %w", err)
+	}
+	return oldValue.TargetID, nil
+}
+
+// ResetTargetID resets all changes to the "target_id" field.
+func (m *BillingAuditLogMutation) ResetTargetID() {
+	m.target_id = nil
+}
+
+// SetTargetUserID sets the "target_user_id" field.
+func (m *BillingAuditLogMutation) SetTargetUserID(i int) {
+	m.target_user_id = &i
+	m.addtarget_user_id = nil
+}
+
+// TargetUserID returns the value of the "target_user_id" field in the mutation.
+func (m *BillingAuditLogMutation) TargetUserID() (r int, exists bool) {
+	v := m.target_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetUserID returns the old "target_user_id" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldTargetUserID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetUserID: %w", err)
+	}
+	return oldValue.TargetUserID, nil
+}
+
+// AddTargetUserID adds i to the "target_user_id" field.
+func (m *BillingAuditLogMutation) AddTargetUserID(i int) {
+	if m.addtarget_user_id != nil {
+		*m.addtarget_user_id += i
+	} else {
+		m.addtarget_user_id = &i
+	}
+}
+
+// AddedTargetUserID returns the value that was added to the "target_user_id" field in this mutation.
+func (m *BillingAuditLogMutation) AddedTargetUserID() (r int, exists bool) {
+	v := m.addtarget_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTargetUserID clears the value of the "target_user_id" field.
+func (m *BillingAuditLogMutation) ClearTargetUserID() {
+	m.target_user_id = nil
+	m.addtarget_user_id = nil
+	m.clearedFields[billingauditlog.FieldTargetUserID] = struct{}{}
+}
+
+// TargetUserIDCleared returns if the "target_user_id" field was cleared in this mutation.
+func (m *BillingAuditLogMutation) TargetUserIDCleared() bool {
+	_, ok := m.clearedFields[billingauditlog.FieldTargetUserID]
+	return ok
+}
+
+// ResetTargetUserID resets all changes to the "target_user_id" field.
+func (m *BillingAuditLogMutation) ResetTargetUserID() {
+	m.target_user_id = nil
+	m.addtarget_user_id = nil
+	delete(m.clearedFields, billingauditlog.FieldTargetUserID)
+}
+
+// SetReason sets the "reason" field.
+func (m *BillingAuditLogMutation) SetReason(s string) {
+	m.reason = &s
+}
+
+// Reason returns the value of the "reason" field in the mutation.
+func (m *BillingAuditLogMutation) Reason() (r string, exists bool) {
+	v := m.reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReason returns the old "reason" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReason: %w", err)
+	}
+	return oldValue.Reason, nil
+}
+
+// ResetReason resets all changes to the "reason" field.
+func (m *BillingAuditLogMutation) ResetReason() {
+	m.reason = nil
+}
+
+// SetMetadata sets the "metadata" field.
+func (m *BillingAuditLogMutation) SetMetadata(orm objects.JSONRawMessage) {
+	m.metadata = &orm
+	m.appendmetadata = nil
+}
+
+// Metadata returns the value of the "metadata" field in the mutation.
+func (m *BillingAuditLogMutation) Metadata() (r objects.JSONRawMessage, exists bool) {
+	v := m.metadata
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetadata returns the old "metadata" field's value of the BillingAuditLog entity.
+// If the BillingAuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BillingAuditLogMutation) OldMetadata(ctx context.Context) (v objects.JSONRawMessage, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetadata is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetadata requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetadata: %w", err)
+	}
+	return oldValue.Metadata, nil
+}
+
+// AppendMetadata adds orm to the "metadata" field.
+func (m *BillingAuditLogMutation) AppendMetadata(orm objects.JSONRawMessage) {
+	m.appendmetadata = append(m.appendmetadata, orm...)
+}
+
+// AppendedMetadata returns the list of values that were appended to the "metadata" field in this mutation.
+func (m *BillingAuditLogMutation) AppendedMetadata() (objects.JSONRawMessage, bool) {
+	if len(m.appendmetadata) == 0 {
+		return nil, false
+	}
+	return m.appendmetadata, true
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (m *BillingAuditLogMutation) ClearMetadata() {
+	m.metadata = nil
+	m.appendmetadata = nil
+	m.clearedFields[billingauditlog.FieldMetadata] = struct{}{}
+}
+
+// MetadataCleared returns if the "metadata" field was cleared in this mutation.
+func (m *BillingAuditLogMutation) MetadataCleared() bool {
+	_, ok := m.clearedFields[billingauditlog.FieldMetadata]
+	return ok
+}
+
+// ResetMetadata resets all changes to the "metadata" field.
+func (m *BillingAuditLogMutation) ResetMetadata() {
+	m.metadata = nil
+	m.appendmetadata = nil
+	delete(m.clearedFields, billingauditlog.FieldMetadata)
+}
+
+// Where appends a list predicates to the BillingAuditLogMutation builder.
+func (m *BillingAuditLogMutation) Where(ps ...predicate.BillingAuditLog) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BillingAuditLogMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BillingAuditLogMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BillingAuditLog, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BillingAuditLogMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BillingAuditLogMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BillingAuditLog).
+func (m *BillingAuditLogMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BillingAuditLogMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.created_at != nil {
+		fields = append(fields, billingauditlog.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, billingauditlog.FieldUpdatedAt)
+	}
+	if m.action != nil {
+		fields = append(fields, billingauditlog.FieldAction)
+	}
+	if m.actor_type != nil {
+		fields = append(fields, billingauditlog.FieldActorType)
+	}
+	if m.actor_user_id != nil {
+		fields = append(fields, billingauditlog.FieldActorUserID)
+	}
+	if m.target_type != nil {
+		fields = append(fields, billingauditlog.FieldTargetType)
+	}
+	if m.target_id != nil {
+		fields = append(fields, billingauditlog.FieldTargetID)
+	}
+	if m.target_user_id != nil {
+		fields = append(fields, billingauditlog.FieldTargetUserID)
+	}
+	if m.reason != nil {
+		fields = append(fields, billingauditlog.FieldReason)
+	}
+	if m.metadata != nil {
+		fields = append(fields, billingauditlog.FieldMetadata)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BillingAuditLogMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case billingauditlog.FieldCreatedAt:
+		return m.CreatedAt()
+	case billingauditlog.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case billingauditlog.FieldAction:
+		return m.Action()
+	case billingauditlog.FieldActorType:
+		return m.ActorType()
+	case billingauditlog.FieldActorUserID:
+		return m.ActorUserID()
+	case billingauditlog.FieldTargetType:
+		return m.TargetType()
+	case billingauditlog.FieldTargetID:
+		return m.TargetID()
+	case billingauditlog.FieldTargetUserID:
+		return m.TargetUserID()
+	case billingauditlog.FieldReason:
+		return m.Reason()
+	case billingauditlog.FieldMetadata:
+		return m.Metadata()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BillingAuditLogMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case billingauditlog.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case billingauditlog.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case billingauditlog.FieldAction:
+		return m.OldAction(ctx)
+	case billingauditlog.FieldActorType:
+		return m.OldActorType(ctx)
+	case billingauditlog.FieldActorUserID:
+		return m.OldActorUserID(ctx)
+	case billingauditlog.FieldTargetType:
+		return m.OldTargetType(ctx)
+	case billingauditlog.FieldTargetID:
+		return m.OldTargetID(ctx)
+	case billingauditlog.FieldTargetUserID:
+		return m.OldTargetUserID(ctx)
+	case billingauditlog.FieldReason:
+		return m.OldReason(ctx)
+	case billingauditlog.FieldMetadata:
+		return m.OldMetadata(ctx)
+	}
+	return nil, fmt.Errorf("unknown BillingAuditLog field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BillingAuditLogMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case billingauditlog.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case billingauditlog.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case billingauditlog.FieldAction:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAction(v)
+		return nil
+	case billingauditlog.FieldActorType:
+		v, ok := value.(billingauditlog.ActorType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActorType(v)
+		return nil
+	case billingauditlog.FieldActorUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActorUserID(v)
+		return nil
+	case billingauditlog.FieldTargetType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetType(v)
+		return nil
+	case billingauditlog.FieldTargetID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetID(v)
+		return nil
+	case billingauditlog.FieldTargetUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetUserID(v)
+		return nil
+	case billingauditlog.FieldReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReason(v)
+		return nil
+	case billingauditlog.FieldMetadata:
+		v, ok := value.(objects.JSONRawMessage)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetadata(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BillingAuditLog field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BillingAuditLogMutation) AddedFields() []string {
+	var fields []string
+	if m.addactor_user_id != nil {
+		fields = append(fields, billingauditlog.FieldActorUserID)
+	}
+	if m.addtarget_user_id != nil {
+		fields = append(fields, billingauditlog.FieldTargetUserID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BillingAuditLogMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case billingauditlog.FieldActorUserID:
+		return m.AddedActorUserID()
+	case billingauditlog.FieldTargetUserID:
+		return m.AddedTargetUserID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BillingAuditLogMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case billingauditlog.FieldActorUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddActorUserID(v)
+		return nil
+	case billingauditlog.FieldTargetUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTargetUserID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BillingAuditLog numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BillingAuditLogMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(billingauditlog.FieldActorUserID) {
+		fields = append(fields, billingauditlog.FieldActorUserID)
+	}
+	if m.FieldCleared(billingauditlog.FieldTargetUserID) {
+		fields = append(fields, billingauditlog.FieldTargetUserID)
+	}
+	if m.FieldCleared(billingauditlog.FieldMetadata) {
+		fields = append(fields, billingauditlog.FieldMetadata)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BillingAuditLogMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BillingAuditLogMutation) ClearField(name string) error {
+	switch name {
+	case billingauditlog.FieldActorUserID:
+		m.ClearActorUserID()
+		return nil
+	case billingauditlog.FieldTargetUserID:
+		m.ClearTargetUserID()
+		return nil
+	case billingauditlog.FieldMetadata:
+		m.ClearMetadata()
+		return nil
+	}
+	return fmt.Errorf("unknown BillingAuditLog nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BillingAuditLogMutation) ResetField(name string) error {
+	switch name {
+	case billingauditlog.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case billingauditlog.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case billingauditlog.FieldAction:
+		m.ResetAction()
+		return nil
+	case billingauditlog.FieldActorType:
+		m.ResetActorType()
+		return nil
+	case billingauditlog.FieldActorUserID:
+		m.ResetActorUserID()
+		return nil
+	case billingauditlog.FieldTargetType:
+		m.ResetTargetType()
+		return nil
+	case billingauditlog.FieldTargetID:
+		m.ResetTargetID()
+		return nil
+	case billingauditlog.FieldTargetUserID:
+		m.ResetTargetUserID()
+		return nil
+	case billingauditlog.FieldReason:
+		m.ResetReason()
+		return nil
+	case billingauditlog.FieldMetadata:
+		m.ResetMetadata()
+		return nil
+	}
+	return fmt.Errorf("unknown BillingAuditLog field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BillingAuditLogMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BillingAuditLogMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BillingAuditLogMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BillingAuditLogMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BillingAuditLogMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BillingAuditLogMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BillingAuditLogMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BillingAuditLog unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BillingAuditLogMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BillingAuditLog edge %s", name)
 }
 
 // BillingHoldMutation represents an operation that mutates the BillingHold nodes in the graph.
@@ -21550,6 +22514,1124 @@ func (m *ChannelProbeMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ChannelProbe edge %s", name)
+}
+
+// CommercialSettingMutation represents an operation that mutates the CommercialSetting nodes in the graph.
+type CommercialSettingMutation struct {
+	config
+	op                                   Op
+	typ                                  string
+	id                                   *int
+	created_at                           *time.Time
+	updated_at                           *time.Time
+	key                                  *string
+	mode                                 *commercialsetting.Mode
+	require_admin_action_reason          *bool
+	payment_provider_secrets_encrypted   *bool
+	workers_enabled                      *bool
+	order_expiry_worker_enabled          *bool
+	hold_expiry_worker_enabled           *bool
+	subscription_expiry_worker_enabled   *bool
+	subscription_reset_worker_enabled    *bool
+	affiliate_rebate_thaw_worker_enabled *bool
+	failed_billing_retry_worker_enabled  *bool
+	worker_batch_size                    *int
+	addworker_batch_size                 *int
+	currency                             *string
+	clearedFields                        map[string]struct{}
+	done                                 bool
+	oldValue                             func(context.Context) (*CommercialSetting, error)
+	predicates                           []predicate.CommercialSetting
+}
+
+var _ ent.Mutation = (*CommercialSettingMutation)(nil)
+
+// commercialsettingOption allows management of the mutation configuration using functional options.
+type commercialsettingOption func(*CommercialSettingMutation)
+
+// newCommercialSettingMutation creates new mutation for the CommercialSetting entity.
+func newCommercialSettingMutation(c config, op Op, opts ...commercialsettingOption) *CommercialSettingMutation {
+	m := &CommercialSettingMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCommercialSetting,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCommercialSettingID sets the ID field of the mutation.
+func withCommercialSettingID(id int) commercialsettingOption {
+	return func(m *CommercialSettingMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *CommercialSetting
+		)
+		m.oldValue = func(ctx context.Context) (*CommercialSetting, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().CommercialSetting.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCommercialSetting sets the old CommercialSetting of the mutation.
+func withCommercialSetting(node *CommercialSetting) commercialsettingOption {
+	return func(m *CommercialSettingMutation) {
+		m.oldValue = func(context.Context) (*CommercialSetting, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CommercialSettingMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CommercialSettingMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CommercialSettingMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CommercialSettingMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().CommercialSetting.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *CommercialSettingMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *CommercialSettingMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *CommercialSettingMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *CommercialSettingMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *CommercialSettingMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *CommercialSettingMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetKey sets the "key" field.
+func (m *CommercialSettingMutation) SetKey(s string) {
+	m.key = &s
+}
+
+// Key returns the value of the "key" field in the mutation.
+func (m *CommercialSettingMutation) Key() (r string, exists bool) {
+	v := m.key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKey returns the old "key" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKey: %w", err)
+	}
+	return oldValue.Key, nil
+}
+
+// ResetKey resets all changes to the "key" field.
+func (m *CommercialSettingMutation) ResetKey() {
+	m.key = nil
+}
+
+// SetMode sets the "mode" field.
+func (m *CommercialSettingMutation) SetMode(c commercialsetting.Mode) {
+	m.mode = &c
+}
+
+// Mode returns the value of the "mode" field in the mutation.
+func (m *CommercialSettingMutation) Mode() (r commercialsetting.Mode, exists bool) {
+	v := m.mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMode returns the old "mode" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldMode(ctx context.Context) (v commercialsetting.Mode, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMode: %w", err)
+	}
+	return oldValue.Mode, nil
+}
+
+// ResetMode resets all changes to the "mode" field.
+func (m *CommercialSettingMutation) ResetMode() {
+	m.mode = nil
+}
+
+// SetRequireAdminActionReason sets the "require_admin_action_reason" field.
+func (m *CommercialSettingMutation) SetRequireAdminActionReason(b bool) {
+	m.require_admin_action_reason = &b
+}
+
+// RequireAdminActionReason returns the value of the "require_admin_action_reason" field in the mutation.
+func (m *CommercialSettingMutation) RequireAdminActionReason() (r bool, exists bool) {
+	v := m.require_admin_action_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequireAdminActionReason returns the old "require_admin_action_reason" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldRequireAdminActionReason(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequireAdminActionReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequireAdminActionReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequireAdminActionReason: %w", err)
+	}
+	return oldValue.RequireAdminActionReason, nil
+}
+
+// ResetRequireAdminActionReason resets all changes to the "require_admin_action_reason" field.
+func (m *CommercialSettingMutation) ResetRequireAdminActionReason() {
+	m.require_admin_action_reason = nil
+}
+
+// SetPaymentProviderSecretsEncrypted sets the "payment_provider_secrets_encrypted" field.
+func (m *CommercialSettingMutation) SetPaymentProviderSecretsEncrypted(b bool) {
+	m.payment_provider_secrets_encrypted = &b
+}
+
+// PaymentProviderSecretsEncrypted returns the value of the "payment_provider_secrets_encrypted" field in the mutation.
+func (m *CommercialSettingMutation) PaymentProviderSecretsEncrypted() (r bool, exists bool) {
+	v := m.payment_provider_secrets_encrypted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPaymentProviderSecretsEncrypted returns the old "payment_provider_secrets_encrypted" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldPaymentProviderSecretsEncrypted(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPaymentProviderSecretsEncrypted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPaymentProviderSecretsEncrypted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPaymentProviderSecretsEncrypted: %w", err)
+	}
+	return oldValue.PaymentProviderSecretsEncrypted, nil
+}
+
+// ResetPaymentProviderSecretsEncrypted resets all changes to the "payment_provider_secrets_encrypted" field.
+func (m *CommercialSettingMutation) ResetPaymentProviderSecretsEncrypted() {
+	m.payment_provider_secrets_encrypted = nil
+}
+
+// SetWorkersEnabled sets the "workers_enabled" field.
+func (m *CommercialSettingMutation) SetWorkersEnabled(b bool) {
+	m.workers_enabled = &b
+}
+
+// WorkersEnabled returns the value of the "workers_enabled" field in the mutation.
+func (m *CommercialSettingMutation) WorkersEnabled() (r bool, exists bool) {
+	v := m.workers_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkersEnabled returns the old "workers_enabled" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldWorkersEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkersEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkersEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkersEnabled: %w", err)
+	}
+	return oldValue.WorkersEnabled, nil
+}
+
+// ResetWorkersEnabled resets all changes to the "workers_enabled" field.
+func (m *CommercialSettingMutation) ResetWorkersEnabled() {
+	m.workers_enabled = nil
+}
+
+// SetOrderExpiryWorkerEnabled sets the "order_expiry_worker_enabled" field.
+func (m *CommercialSettingMutation) SetOrderExpiryWorkerEnabled(b bool) {
+	m.order_expiry_worker_enabled = &b
+}
+
+// OrderExpiryWorkerEnabled returns the value of the "order_expiry_worker_enabled" field in the mutation.
+func (m *CommercialSettingMutation) OrderExpiryWorkerEnabled() (r bool, exists bool) {
+	v := m.order_expiry_worker_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOrderExpiryWorkerEnabled returns the old "order_expiry_worker_enabled" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldOrderExpiryWorkerEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOrderExpiryWorkerEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOrderExpiryWorkerEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOrderExpiryWorkerEnabled: %w", err)
+	}
+	return oldValue.OrderExpiryWorkerEnabled, nil
+}
+
+// ResetOrderExpiryWorkerEnabled resets all changes to the "order_expiry_worker_enabled" field.
+func (m *CommercialSettingMutation) ResetOrderExpiryWorkerEnabled() {
+	m.order_expiry_worker_enabled = nil
+}
+
+// SetHoldExpiryWorkerEnabled sets the "hold_expiry_worker_enabled" field.
+func (m *CommercialSettingMutation) SetHoldExpiryWorkerEnabled(b bool) {
+	m.hold_expiry_worker_enabled = &b
+}
+
+// HoldExpiryWorkerEnabled returns the value of the "hold_expiry_worker_enabled" field in the mutation.
+func (m *CommercialSettingMutation) HoldExpiryWorkerEnabled() (r bool, exists bool) {
+	v := m.hold_expiry_worker_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHoldExpiryWorkerEnabled returns the old "hold_expiry_worker_enabled" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldHoldExpiryWorkerEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHoldExpiryWorkerEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHoldExpiryWorkerEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHoldExpiryWorkerEnabled: %w", err)
+	}
+	return oldValue.HoldExpiryWorkerEnabled, nil
+}
+
+// ResetHoldExpiryWorkerEnabled resets all changes to the "hold_expiry_worker_enabled" field.
+func (m *CommercialSettingMutation) ResetHoldExpiryWorkerEnabled() {
+	m.hold_expiry_worker_enabled = nil
+}
+
+// SetSubscriptionExpiryWorkerEnabled sets the "subscription_expiry_worker_enabled" field.
+func (m *CommercialSettingMutation) SetSubscriptionExpiryWorkerEnabled(b bool) {
+	m.subscription_expiry_worker_enabled = &b
+}
+
+// SubscriptionExpiryWorkerEnabled returns the value of the "subscription_expiry_worker_enabled" field in the mutation.
+func (m *CommercialSettingMutation) SubscriptionExpiryWorkerEnabled() (r bool, exists bool) {
+	v := m.subscription_expiry_worker_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubscriptionExpiryWorkerEnabled returns the old "subscription_expiry_worker_enabled" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldSubscriptionExpiryWorkerEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubscriptionExpiryWorkerEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubscriptionExpiryWorkerEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubscriptionExpiryWorkerEnabled: %w", err)
+	}
+	return oldValue.SubscriptionExpiryWorkerEnabled, nil
+}
+
+// ResetSubscriptionExpiryWorkerEnabled resets all changes to the "subscription_expiry_worker_enabled" field.
+func (m *CommercialSettingMutation) ResetSubscriptionExpiryWorkerEnabled() {
+	m.subscription_expiry_worker_enabled = nil
+}
+
+// SetSubscriptionResetWorkerEnabled sets the "subscription_reset_worker_enabled" field.
+func (m *CommercialSettingMutation) SetSubscriptionResetWorkerEnabled(b bool) {
+	m.subscription_reset_worker_enabled = &b
+}
+
+// SubscriptionResetWorkerEnabled returns the value of the "subscription_reset_worker_enabled" field in the mutation.
+func (m *CommercialSettingMutation) SubscriptionResetWorkerEnabled() (r bool, exists bool) {
+	v := m.subscription_reset_worker_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubscriptionResetWorkerEnabled returns the old "subscription_reset_worker_enabled" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldSubscriptionResetWorkerEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubscriptionResetWorkerEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubscriptionResetWorkerEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubscriptionResetWorkerEnabled: %w", err)
+	}
+	return oldValue.SubscriptionResetWorkerEnabled, nil
+}
+
+// ResetSubscriptionResetWorkerEnabled resets all changes to the "subscription_reset_worker_enabled" field.
+func (m *CommercialSettingMutation) ResetSubscriptionResetWorkerEnabled() {
+	m.subscription_reset_worker_enabled = nil
+}
+
+// SetAffiliateRebateThawWorkerEnabled sets the "affiliate_rebate_thaw_worker_enabled" field.
+func (m *CommercialSettingMutation) SetAffiliateRebateThawWorkerEnabled(b bool) {
+	m.affiliate_rebate_thaw_worker_enabled = &b
+}
+
+// AffiliateRebateThawWorkerEnabled returns the value of the "affiliate_rebate_thaw_worker_enabled" field in the mutation.
+func (m *CommercialSettingMutation) AffiliateRebateThawWorkerEnabled() (r bool, exists bool) {
+	v := m.affiliate_rebate_thaw_worker_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAffiliateRebateThawWorkerEnabled returns the old "affiliate_rebate_thaw_worker_enabled" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldAffiliateRebateThawWorkerEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAffiliateRebateThawWorkerEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAffiliateRebateThawWorkerEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAffiliateRebateThawWorkerEnabled: %w", err)
+	}
+	return oldValue.AffiliateRebateThawWorkerEnabled, nil
+}
+
+// ResetAffiliateRebateThawWorkerEnabled resets all changes to the "affiliate_rebate_thaw_worker_enabled" field.
+func (m *CommercialSettingMutation) ResetAffiliateRebateThawWorkerEnabled() {
+	m.affiliate_rebate_thaw_worker_enabled = nil
+}
+
+// SetFailedBillingRetryWorkerEnabled sets the "failed_billing_retry_worker_enabled" field.
+func (m *CommercialSettingMutation) SetFailedBillingRetryWorkerEnabled(b bool) {
+	m.failed_billing_retry_worker_enabled = &b
+}
+
+// FailedBillingRetryWorkerEnabled returns the value of the "failed_billing_retry_worker_enabled" field in the mutation.
+func (m *CommercialSettingMutation) FailedBillingRetryWorkerEnabled() (r bool, exists bool) {
+	v := m.failed_billing_retry_worker_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFailedBillingRetryWorkerEnabled returns the old "failed_billing_retry_worker_enabled" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldFailedBillingRetryWorkerEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFailedBillingRetryWorkerEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFailedBillingRetryWorkerEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFailedBillingRetryWorkerEnabled: %w", err)
+	}
+	return oldValue.FailedBillingRetryWorkerEnabled, nil
+}
+
+// ResetFailedBillingRetryWorkerEnabled resets all changes to the "failed_billing_retry_worker_enabled" field.
+func (m *CommercialSettingMutation) ResetFailedBillingRetryWorkerEnabled() {
+	m.failed_billing_retry_worker_enabled = nil
+}
+
+// SetWorkerBatchSize sets the "worker_batch_size" field.
+func (m *CommercialSettingMutation) SetWorkerBatchSize(i int) {
+	m.worker_batch_size = &i
+	m.addworker_batch_size = nil
+}
+
+// WorkerBatchSize returns the value of the "worker_batch_size" field in the mutation.
+func (m *CommercialSettingMutation) WorkerBatchSize() (r int, exists bool) {
+	v := m.worker_batch_size
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkerBatchSize returns the old "worker_batch_size" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldWorkerBatchSize(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkerBatchSize is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkerBatchSize requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkerBatchSize: %w", err)
+	}
+	return oldValue.WorkerBatchSize, nil
+}
+
+// AddWorkerBatchSize adds i to the "worker_batch_size" field.
+func (m *CommercialSettingMutation) AddWorkerBatchSize(i int) {
+	if m.addworker_batch_size != nil {
+		*m.addworker_batch_size += i
+	} else {
+		m.addworker_batch_size = &i
+	}
+}
+
+// AddedWorkerBatchSize returns the value that was added to the "worker_batch_size" field in this mutation.
+func (m *CommercialSettingMutation) AddedWorkerBatchSize() (r int, exists bool) {
+	v := m.addworker_batch_size
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetWorkerBatchSize resets all changes to the "worker_batch_size" field.
+func (m *CommercialSettingMutation) ResetWorkerBatchSize() {
+	m.worker_batch_size = nil
+	m.addworker_batch_size = nil
+}
+
+// SetCurrency sets the "currency" field.
+func (m *CommercialSettingMutation) SetCurrency(s string) {
+	m.currency = &s
+}
+
+// Currency returns the value of the "currency" field in the mutation.
+func (m *CommercialSettingMutation) Currency() (r string, exists bool) {
+	v := m.currency
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrency returns the old "currency" field's value of the CommercialSetting entity.
+// If the CommercialSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommercialSettingMutation) OldCurrency(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrency is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrency requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrency: %w", err)
+	}
+	return oldValue.Currency, nil
+}
+
+// ResetCurrency resets all changes to the "currency" field.
+func (m *CommercialSettingMutation) ResetCurrency() {
+	m.currency = nil
+}
+
+// Where appends a list predicates to the CommercialSettingMutation builder.
+func (m *CommercialSettingMutation) Where(ps ...predicate.CommercialSetting) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CommercialSettingMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CommercialSettingMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.CommercialSetting, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CommercialSettingMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CommercialSettingMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (CommercialSetting).
+func (m *CommercialSettingMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CommercialSettingMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.created_at != nil {
+		fields = append(fields, commercialsetting.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, commercialsetting.FieldUpdatedAt)
+	}
+	if m.key != nil {
+		fields = append(fields, commercialsetting.FieldKey)
+	}
+	if m.mode != nil {
+		fields = append(fields, commercialsetting.FieldMode)
+	}
+	if m.require_admin_action_reason != nil {
+		fields = append(fields, commercialsetting.FieldRequireAdminActionReason)
+	}
+	if m.payment_provider_secrets_encrypted != nil {
+		fields = append(fields, commercialsetting.FieldPaymentProviderSecretsEncrypted)
+	}
+	if m.workers_enabled != nil {
+		fields = append(fields, commercialsetting.FieldWorkersEnabled)
+	}
+	if m.order_expiry_worker_enabled != nil {
+		fields = append(fields, commercialsetting.FieldOrderExpiryWorkerEnabled)
+	}
+	if m.hold_expiry_worker_enabled != nil {
+		fields = append(fields, commercialsetting.FieldHoldExpiryWorkerEnabled)
+	}
+	if m.subscription_expiry_worker_enabled != nil {
+		fields = append(fields, commercialsetting.FieldSubscriptionExpiryWorkerEnabled)
+	}
+	if m.subscription_reset_worker_enabled != nil {
+		fields = append(fields, commercialsetting.FieldSubscriptionResetWorkerEnabled)
+	}
+	if m.affiliate_rebate_thaw_worker_enabled != nil {
+		fields = append(fields, commercialsetting.FieldAffiliateRebateThawWorkerEnabled)
+	}
+	if m.failed_billing_retry_worker_enabled != nil {
+		fields = append(fields, commercialsetting.FieldFailedBillingRetryWorkerEnabled)
+	}
+	if m.worker_batch_size != nil {
+		fields = append(fields, commercialsetting.FieldWorkerBatchSize)
+	}
+	if m.currency != nil {
+		fields = append(fields, commercialsetting.FieldCurrency)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CommercialSettingMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case commercialsetting.FieldCreatedAt:
+		return m.CreatedAt()
+	case commercialsetting.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case commercialsetting.FieldKey:
+		return m.Key()
+	case commercialsetting.FieldMode:
+		return m.Mode()
+	case commercialsetting.FieldRequireAdminActionReason:
+		return m.RequireAdminActionReason()
+	case commercialsetting.FieldPaymentProviderSecretsEncrypted:
+		return m.PaymentProviderSecretsEncrypted()
+	case commercialsetting.FieldWorkersEnabled:
+		return m.WorkersEnabled()
+	case commercialsetting.FieldOrderExpiryWorkerEnabled:
+		return m.OrderExpiryWorkerEnabled()
+	case commercialsetting.FieldHoldExpiryWorkerEnabled:
+		return m.HoldExpiryWorkerEnabled()
+	case commercialsetting.FieldSubscriptionExpiryWorkerEnabled:
+		return m.SubscriptionExpiryWorkerEnabled()
+	case commercialsetting.FieldSubscriptionResetWorkerEnabled:
+		return m.SubscriptionResetWorkerEnabled()
+	case commercialsetting.FieldAffiliateRebateThawWorkerEnabled:
+		return m.AffiliateRebateThawWorkerEnabled()
+	case commercialsetting.FieldFailedBillingRetryWorkerEnabled:
+		return m.FailedBillingRetryWorkerEnabled()
+	case commercialsetting.FieldWorkerBatchSize:
+		return m.WorkerBatchSize()
+	case commercialsetting.FieldCurrency:
+		return m.Currency()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CommercialSettingMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case commercialsetting.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case commercialsetting.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case commercialsetting.FieldKey:
+		return m.OldKey(ctx)
+	case commercialsetting.FieldMode:
+		return m.OldMode(ctx)
+	case commercialsetting.FieldRequireAdminActionReason:
+		return m.OldRequireAdminActionReason(ctx)
+	case commercialsetting.FieldPaymentProviderSecretsEncrypted:
+		return m.OldPaymentProviderSecretsEncrypted(ctx)
+	case commercialsetting.FieldWorkersEnabled:
+		return m.OldWorkersEnabled(ctx)
+	case commercialsetting.FieldOrderExpiryWorkerEnabled:
+		return m.OldOrderExpiryWorkerEnabled(ctx)
+	case commercialsetting.FieldHoldExpiryWorkerEnabled:
+		return m.OldHoldExpiryWorkerEnabled(ctx)
+	case commercialsetting.FieldSubscriptionExpiryWorkerEnabled:
+		return m.OldSubscriptionExpiryWorkerEnabled(ctx)
+	case commercialsetting.FieldSubscriptionResetWorkerEnabled:
+		return m.OldSubscriptionResetWorkerEnabled(ctx)
+	case commercialsetting.FieldAffiliateRebateThawWorkerEnabled:
+		return m.OldAffiliateRebateThawWorkerEnabled(ctx)
+	case commercialsetting.FieldFailedBillingRetryWorkerEnabled:
+		return m.OldFailedBillingRetryWorkerEnabled(ctx)
+	case commercialsetting.FieldWorkerBatchSize:
+		return m.OldWorkerBatchSize(ctx)
+	case commercialsetting.FieldCurrency:
+		return m.OldCurrency(ctx)
+	}
+	return nil, fmt.Errorf("unknown CommercialSetting field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CommercialSettingMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case commercialsetting.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case commercialsetting.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case commercialsetting.FieldKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKey(v)
+		return nil
+	case commercialsetting.FieldMode:
+		v, ok := value.(commercialsetting.Mode)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMode(v)
+		return nil
+	case commercialsetting.FieldRequireAdminActionReason:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequireAdminActionReason(v)
+		return nil
+	case commercialsetting.FieldPaymentProviderSecretsEncrypted:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPaymentProviderSecretsEncrypted(v)
+		return nil
+	case commercialsetting.FieldWorkersEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkersEnabled(v)
+		return nil
+	case commercialsetting.FieldOrderExpiryWorkerEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOrderExpiryWorkerEnabled(v)
+		return nil
+	case commercialsetting.FieldHoldExpiryWorkerEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHoldExpiryWorkerEnabled(v)
+		return nil
+	case commercialsetting.FieldSubscriptionExpiryWorkerEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubscriptionExpiryWorkerEnabled(v)
+		return nil
+	case commercialsetting.FieldSubscriptionResetWorkerEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubscriptionResetWorkerEnabled(v)
+		return nil
+	case commercialsetting.FieldAffiliateRebateThawWorkerEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAffiliateRebateThawWorkerEnabled(v)
+		return nil
+	case commercialsetting.FieldFailedBillingRetryWorkerEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFailedBillingRetryWorkerEnabled(v)
+		return nil
+	case commercialsetting.FieldWorkerBatchSize:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkerBatchSize(v)
+		return nil
+	case commercialsetting.FieldCurrency:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrency(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CommercialSetting field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CommercialSettingMutation) AddedFields() []string {
+	var fields []string
+	if m.addworker_batch_size != nil {
+		fields = append(fields, commercialsetting.FieldWorkerBatchSize)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CommercialSettingMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case commercialsetting.FieldWorkerBatchSize:
+		return m.AddedWorkerBatchSize()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CommercialSettingMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case commercialsetting.FieldWorkerBatchSize:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddWorkerBatchSize(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CommercialSetting numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CommercialSettingMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CommercialSettingMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CommercialSettingMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown CommercialSetting nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CommercialSettingMutation) ResetField(name string) error {
+	switch name {
+	case commercialsetting.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case commercialsetting.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case commercialsetting.FieldKey:
+		m.ResetKey()
+		return nil
+	case commercialsetting.FieldMode:
+		m.ResetMode()
+		return nil
+	case commercialsetting.FieldRequireAdminActionReason:
+		m.ResetRequireAdminActionReason()
+		return nil
+	case commercialsetting.FieldPaymentProviderSecretsEncrypted:
+		m.ResetPaymentProviderSecretsEncrypted()
+		return nil
+	case commercialsetting.FieldWorkersEnabled:
+		m.ResetWorkersEnabled()
+		return nil
+	case commercialsetting.FieldOrderExpiryWorkerEnabled:
+		m.ResetOrderExpiryWorkerEnabled()
+		return nil
+	case commercialsetting.FieldHoldExpiryWorkerEnabled:
+		m.ResetHoldExpiryWorkerEnabled()
+		return nil
+	case commercialsetting.FieldSubscriptionExpiryWorkerEnabled:
+		m.ResetSubscriptionExpiryWorkerEnabled()
+		return nil
+	case commercialsetting.FieldSubscriptionResetWorkerEnabled:
+		m.ResetSubscriptionResetWorkerEnabled()
+		return nil
+	case commercialsetting.FieldAffiliateRebateThawWorkerEnabled:
+		m.ResetAffiliateRebateThawWorkerEnabled()
+		return nil
+	case commercialsetting.FieldFailedBillingRetryWorkerEnabled:
+		m.ResetFailedBillingRetryWorkerEnabled()
+		return nil
+	case commercialsetting.FieldWorkerBatchSize:
+		m.ResetWorkerBatchSize()
+		return nil
+	case commercialsetting.FieldCurrency:
+		m.ResetCurrency()
+		return nil
+	}
+	return fmt.Errorf("unknown CommercialSetting field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CommercialSettingMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CommercialSettingMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CommercialSettingMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CommercialSettingMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CommercialSettingMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CommercialSettingMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CommercialSettingMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown CommercialSetting unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CommercialSettingMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown CommercialSetting edge %s", name)
 }
 
 // DataStorageMutation represents an operation that mutates the DataStorage nodes in the graph.

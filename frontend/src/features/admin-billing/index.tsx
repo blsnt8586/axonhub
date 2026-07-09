@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Ban, BarChart3, Clock, Download, Loader2, PackageCheck, RefreshCw, RotateCcw, Save, Ticket, Trash2, Unlock, UserPlus, WalletCards } from 'lucide-react';
+import { AlertCircle, Ban, BarChart3, Clock, Download, Loader2, PackageCheck, RefreshCw, RotateCcw, Save, ShieldCheck, Ticket, Trash2, Unlock, UserPlus, WalletCards, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { extractNumberIDAsNumber } from '@/lib/utils';
@@ -28,9 +28,11 @@ import {
   type AdminAffiliateInvitationsFilter,
   type AdminAffiliateRebatesFilter,
   type AdminBillingNotificationsFilter,
+  type AdminBillingAuditLogsFilter,
   type AdminRedeemCodesFilter,
   type AdminUserSubscriptionsFilter,
   type AdminUsageBillingRecordsFilter,
+  type BillingAuditLog,
   type BillingCSVExportDataset,
   type BillingCommercialReport,
   type BillingHoldStatus,
@@ -56,6 +58,9 @@ import {
   type BillingNotificationSeverity,
   type BillingNotificationSetting,
   type BillingNotificationStatus,
+  type CommercialMaintenanceRunResult,
+  type CommercialSetting,
+  type CommercialSettingMode,
   type AffiliateProfile,
   type AffiliateProfileStatus,
   type AffiliateRebate,
@@ -87,6 +92,8 @@ import {
   useAdminAffiliateSetting,
   useAdminBillingNotifications,
   useAdminBillingNotificationSetting,
+  useAdminCommercialSetting,
+  useAdminBillingAuditLogs,
   useAdminRedeemCodes,
   useAdminSubscriptionPlans,
   useAdminUsageBillingRecords,
@@ -110,7 +117,9 @@ import {
   useSaveAffiliateProfile,
   useSaveAffiliateSetting,
   useSaveBillingNotificationSetting,
+  useSaveCommercialSetting,
   useSaveSubscriptionPlan,
+  useRunCommercialMaintenance,
   useUpdatePromoCodeStatus,
   useUpdateRedeemCodeStatus,
   useUpdateUserBillingAccount,
@@ -312,6 +321,38 @@ type NotificationSettingForm = {
   largeConsumptionThreshold: string;
   subscriptionExpiryWarningDays: string;
   currency: string;
+};
+
+type CommercialSettingForm = {
+  mode: CommercialSettingMode;
+  requireAdminActionReason: boolean;
+  paymentProviderSecretsEncrypted: boolean;
+  workersEnabled: boolean;
+  orderExpiryWorkerEnabled: boolean;
+  holdExpiryWorkerEnabled: boolean;
+  subscriptionExpiryWorkerEnabled: boolean;
+  subscriptionResetWorkerEnabled: boolean;
+  affiliateRebateThawWorkerEnabled: boolean;
+  failedBillingRetryWorkerEnabled: boolean;
+  workerBatchSize: string;
+  currency: string;
+  reason: string;
+};
+
+type MaintenanceForm = {
+  limit: string;
+  now: string;
+  reason: string;
+};
+
+type AuditFilterForm = {
+  action: string;
+  actorUserId: string;
+  targetType: string;
+  targetId: string;
+  targetUserId: string;
+  from: string;
+  to: string;
 };
 
 type ReportFilterForm = {
@@ -719,6 +760,50 @@ function notificationSettingFormFromSetting(setting: BillingNotificationSetting)
   };
 }
 
+function defaultCommercialSettingForm(): CommercialSettingForm {
+  return {
+    mode: 'enforce',
+    requireAdminActionReason: true,
+    paymentProviderSecretsEncrypted: true,
+    workersEnabled: true,
+    orderExpiryWorkerEnabled: true,
+    holdExpiryWorkerEnabled: true,
+    subscriptionExpiryWorkerEnabled: true,
+    subscriptionResetWorkerEnabled: true,
+    affiliateRebateThawWorkerEnabled: true,
+    failedBillingRetryWorkerEnabled: true,
+    workerBatchSize: '100',
+    currency: 'CNY',
+    reason: '',
+  };
+}
+
+function commercialSettingFormFromSetting(setting: CommercialSetting): CommercialSettingForm {
+  return {
+    mode: setting.mode,
+    requireAdminActionReason: setting.requireAdminActionReason,
+    paymentProviderSecretsEncrypted: setting.paymentProviderSecretsEncrypted,
+    workersEnabled: setting.workersEnabled,
+    orderExpiryWorkerEnabled: setting.orderExpiryWorkerEnabled,
+    holdExpiryWorkerEnabled: setting.holdExpiryWorkerEnabled,
+    subscriptionExpiryWorkerEnabled: setting.subscriptionExpiryWorkerEnabled,
+    subscriptionResetWorkerEnabled: setting.subscriptionResetWorkerEnabled,
+    affiliateRebateThawWorkerEnabled: setting.affiliateRebateThawWorkerEnabled,
+    failedBillingRetryWorkerEnabled: setting.failedBillingRetryWorkerEnabled,
+    workerBatchSize: String(setting.workerBatchSize),
+    currency: setting.currency,
+    reason: '',
+  };
+}
+
+function defaultMaintenanceForm(): MaintenanceForm {
+  return { limit: '100', now: '', reason: '' };
+}
+
+function defaultAuditFilter(): AuditFilterForm {
+  return { action: '', actorUserId: '', targetType: '', targetId: '', targetUserId: '', from: '', to: '' };
+}
+
 function defaultSubscriptionPlanForm(): SubscriptionPlanForm {
   return {
     name: '',
@@ -925,6 +1010,18 @@ function buildNotificationFilter(form: NotificationFilterForm): AdminBillingNoti
   };
 }
 
+function buildAuditFilter(form: AuditFilterForm): AdminBillingAuditLogsFilter {
+  return {
+    action: optionalText(form.action),
+    actorUserId: optionalInt(form.actorUserId),
+    targetType: optionalText(form.targetType),
+    targetId: optionalText(form.targetId),
+    targetUserId: optionalInt(form.targetUserId),
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+  };
+}
+
 function buildSubscriptionFilter(form: SubscriptionFilterForm): AdminUserSubscriptionsFilter {
   return {
     userId: optionalInt(form.userId),
@@ -999,6 +1096,10 @@ export default function AdminBillingPage() {
   const [affiliateRebateFilter, setAffiliateRebateFilter] = useState<AffiliateRebateFilterForm>(() => defaultAffiliateRebateFilter());
   const [notificationSettingForm, setNotificationSettingForm] = useState<NotificationSettingForm>(() => defaultNotificationSettingForm());
   const [notificationFilter, setNotificationFilter] = useState<NotificationFilterForm>(() => defaultNotificationFilter());
+  const [commercialSettingForm, setCommercialSettingForm] = useState<CommercialSettingForm>(() => defaultCommercialSettingForm());
+  const [maintenanceForm, setMaintenanceForm] = useState<MaintenanceForm>(() => defaultMaintenanceForm());
+  const [maintenanceResult, setMaintenanceResult] = useState<CommercialMaintenanceRunResult | null>(null);
+  const [auditFilter, setAuditFilter] = useState<AuditFilterForm>(() => defaultAuditFilter());
   const [subscriptionPlanForm, setSubscriptionPlanForm] = useState<SubscriptionPlanForm>(() => defaultSubscriptionPlanForm());
   const [subscriptionAssignForm, setSubscriptionAssignForm] = useState<SubscriptionAssignForm>(() => defaultSubscriptionAssignForm());
   const [subscriptionFilter, setSubscriptionFilter] = useState<SubscriptionFilterForm>(() => defaultSubscriptionFilter());
@@ -1015,6 +1116,7 @@ export default function AdminBillingPage() {
   const [appliedAffiliateInvitationFilter, setAppliedAffiliateInvitationFilter] = useState<AdminAffiliateInvitationsFilter>({});
   const [appliedAffiliateRebateFilter, setAppliedAffiliateRebateFilter] = useState<AdminAffiliateRebatesFilter>({});
   const [appliedNotificationFilter, setAppliedNotificationFilter] = useState<AdminBillingNotificationsFilter>({});
+  const [appliedAuditFilter, setAppliedAuditFilter] = useState<AdminBillingAuditLogsFilter>({});
   const [appliedSubscriptionFilter, setAppliedSubscriptionFilter] = useState<AdminUserSubscriptionsFilter>({});
   const [appliedReportFilter, setAppliedReportFilter] = useState<AdminBillingReportFilter>(() => buildReportFilter(defaultReportFilter()));
   const [holdReleaseReasons, setHoldReleaseReasons] = useState<Record<string, string>>({});
@@ -1050,6 +1152,8 @@ export default function AdminBillingPage() {
   const adminAffiliateRebates = useAdminAffiliateRebates(appliedAffiliateRebateFilter, 50);
   const adminNotificationSetting = useAdminBillingNotificationSetting();
   const adminNotifications = useAdminBillingNotifications(appliedNotificationFilter, 50);
+  const adminCommercialSetting = useAdminCommercialSetting();
+  const adminAuditLogs = useAdminBillingAuditLogs(appliedAuditFilter, 50);
   const adminSubscriptionPlans = useAdminSubscriptionPlans(100);
   const adminUserSubscriptions = useAdminUserSubscriptions(appliedSubscriptionFilter, 50);
   const adminReport = useAdminBillingReport(appliedReportFilter);
@@ -1069,6 +1173,8 @@ export default function AdminBillingPage() {
   const saveAffiliateSetting = useSaveAffiliateSetting();
   const saveAffiliateProfile = useSaveAffiliateProfile();
   const saveNotificationSetting = useSaveBillingNotificationSetting();
+  const saveCommercialSetting = useSaveCommercialSetting();
+  const runCommercialMaintenance = useRunCommercialMaintenance();
   const saveSubscriptionPlan = useSaveSubscriptionPlan();
   const deleteSubscriptionPlan = useDeleteSubscriptionPlan();
   const adminAssignSubscription = useAdminAssignSubscription();
@@ -1095,6 +1201,11 @@ export default function AdminBillingPage() {
     if (!adminNotificationSetting.data) return;
     setNotificationSettingForm(notificationSettingFormFromSetting(adminNotificationSetting.data));
   }, [adminNotificationSetting.data]);
+
+  useEffect(() => {
+    if (!adminCommercialSetting.data) return;
+    setCommercialSettingForm(commercialSettingFormFromSetting(adminCommercialSetting.data));
+  }, [adminCommercialSetting.data]);
 
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
   const currency = selectedUserBilling.data?.account.currency || data?.accounts[0]?.currency || 'CNY';
@@ -1128,6 +1239,10 @@ export default function AdminBillingPage() {
       adminAffiliateProfiles.refetch(),
       adminAffiliateInvitations.refetch(),
       adminAffiliateRebates.refetch(),
+      adminNotificationSetting.refetch(),
+      adminNotifications.refetch(),
+      adminCommercialSetting.refetch(),
+      adminAuditLogs.refetch(),
       adminSubscriptionPlans.refetch(),
       adminUserSubscriptions.refetch(),
       adminReport.refetch(),
@@ -1543,6 +1658,73 @@ export default function AdminBillingPage() {
     }
   }
 
+  async function handleSaveCommercialSetting(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const workerBatchSize = Number(commercialSettingForm.workerBatchSize);
+    if (!Number.isInteger(workerBatchSize) || workerBatchSize <= 0 || workerBatchSize > 1000) {
+      toast.error(t('adminBilling.operations.invalidSetting'));
+      return;
+    }
+    if (commercialSettingForm.requireAdminActionReason && !commercialSettingForm.reason.trim()) {
+      toast.error(t('adminBilling.operations.reasonRequired'));
+      return;
+    }
+    if (!window.confirm(t('adminBilling.operations.saveConfirm'))) {
+      return;
+    }
+
+    try {
+      await saveCommercialSetting.mutateAsync({
+        mode: commercialSettingForm.mode,
+        requireAdminActionReason: commercialSettingForm.requireAdminActionReason,
+        paymentProviderSecretsEncrypted: commercialSettingForm.paymentProviderSecretsEncrypted,
+        workersEnabled: commercialSettingForm.workersEnabled,
+        orderExpiryWorkerEnabled: commercialSettingForm.orderExpiryWorkerEnabled,
+        holdExpiryWorkerEnabled: commercialSettingForm.holdExpiryWorkerEnabled,
+        subscriptionExpiryWorkerEnabled: commercialSettingForm.subscriptionExpiryWorkerEnabled,
+        subscriptionResetWorkerEnabled: commercialSettingForm.subscriptionResetWorkerEnabled,
+        affiliateRebateThawWorkerEnabled: commercialSettingForm.affiliateRebateThawWorkerEnabled,
+        failedBillingRetryWorkerEnabled: commercialSettingForm.failedBillingRetryWorkerEnabled,
+        workerBatchSize,
+        currency: commercialSettingForm.currency.trim().toUpperCase() || 'CNY',
+        reason: optionalText(commercialSettingForm.reason),
+      });
+      toast.success(t('adminBilling.operations.settingSuccess'));
+      setCommercialSettingForm((prev) => ({ ...prev, reason: '' }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleRunCommercialMaintenance(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const limit = maintenanceForm.limit.trim() ? Number(maintenanceForm.limit) : undefined;
+    if (limit !== undefined && (!Number.isInteger(limit) || limit <= 0 || limit > 1000)) {
+      toast.error(t('adminBilling.operations.invalidMaintenance'));
+      return;
+    }
+    if (!maintenanceForm.reason.trim()) {
+      toast.error(t('adminBilling.operations.reasonRequired'));
+      return;
+    }
+    if (!window.confirm(t('adminBilling.operations.runConfirm'))) {
+      return;
+    }
+
+    try {
+      const result = await runCommercialMaintenance.mutateAsync({
+        limit,
+        now: optionalTime(maintenanceForm.now),
+        reason: maintenanceForm.reason.trim(),
+      });
+      setMaintenanceResult(result);
+      toast.success(t('adminBilling.operations.maintenanceSuccess'));
+      setMaintenanceForm((prev) => ({ ...prev, reason: '' }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
   async function handleSaveSubscriptionPlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const price = normalizeNonNegativeAmount(subscriptionPlanForm.price, 2);
@@ -1687,6 +1869,8 @@ export default function AdminBillingPage() {
               adminOrders.isFetching ||
               adminEvents.isFetching ||
               adminRedeemCodes.isFetching ||
+              adminCommercialSetting.isFetching ||
+              adminAuditLogs.isFetching ||
               adminSubscriptionPlans.isFetching ||
               adminUserSubscriptions.isFetching ||
               adminReport.isFetching
@@ -1699,6 +1883,8 @@ export default function AdminBillingPage() {
             adminOrders.isFetching ||
             adminEvents.isFetching ||
             adminRedeemCodes.isFetching ||
+            adminCommercialSetting.isFetching ||
+            adminAuditLogs.isFetching ||
             adminSubscriptionPlans.isFetching ||
             adminUserSubscriptions.isFetching ||
             adminReport.isFetching ? (
@@ -1721,6 +1907,8 @@ export default function AdminBillingPage() {
             adminOrders.error ||
             adminEvents.error ||
             adminRedeemCodes.error ||
+            adminCommercialSetting.error ||
+            adminAuditLogs.error ||
             adminSubscriptionPlans.error ||
             adminUserSubscriptions.error ||
             adminReport.error
@@ -1771,6 +1959,7 @@ export default function AdminBillingPage() {
             <TabsTrigger value='promoCodes'>{t('adminBilling.tabs.promoCodes')}</TabsTrigger>
             <TabsTrigger value='affiliate'>{t('adminBilling.tabs.affiliate')}</TabsTrigger>
             <TabsTrigger value='notifications'>{t('adminBilling.tabs.notifications')}</TabsTrigger>
+            <TabsTrigger value='operations'>{t('adminBilling.tabs.operations')}</TabsTrigger>
             <TabsTrigger value='subscriptions'>{t('adminBilling.tabs.subscriptions')}</TabsTrigger>
             <TabsTrigger value='pricing'>{t('adminBilling.tabs.pricing')}</TabsTrigger>
             <TabsTrigger value='providers'>{t('adminBilling.tabs.providers')}</TabsTrigger>
@@ -2726,6 +2915,35 @@ export default function AdminBillingPage() {
               }}
               isSavingSetting={saveNotificationSetting.isPending}
               formatMicros={formatMicros}
+              formatDate={formatDate}
+            />
+          </TabsContent>
+
+          <TabsContent value='operations' className='mt-0'>
+            <OperationsTab
+              setting={adminCommercialSetting.data}
+              auditLogs={adminAuditLogs.data ?? []}
+              auditLogsLoading={adminAuditLogs.isLoading}
+              settingForm={commercialSettingForm}
+              setSettingForm={setCommercialSettingForm}
+              maintenanceForm={maintenanceForm}
+              setMaintenanceForm={setMaintenanceForm}
+              maintenanceResult={maintenanceResult}
+              auditFilter={auditFilter}
+              setAuditFilter={setAuditFilter}
+              onSaveSetting={handleSaveCommercialSetting}
+              onRunMaintenance={handleRunCommercialMaintenance}
+              onApplyAuditFilter={(event) => {
+                event.preventDefault();
+                setAppliedAuditFilter(buildAuditFilter(auditFilter));
+              }}
+              onResetAuditFilter={() => {
+                const next = defaultAuditFilter();
+                setAuditFilter(next);
+                setAppliedAuditFilter({});
+              }}
+              isSavingSetting={saveCommercialSetting.isPending}
+              isRunningMaintenance={runCommercialMaintenance.isPending}
               formatDate={formatDate}
             />
           </TabsContent>
@@ -3700,6 +3918,219 @@ function NotificationsTab({
                   </TableCell>
                   <TableCell className='text-right font-mono'>
                     {typeof notification.amountMicros === 'number' ? formatMicros(notification.amountMicros, notification.currency) : '-'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function OperationsTab({
+  setting,
+  auditLogs,
+  auditLogsLoading,
+  settingForm,
+  setSettingForm,
+  maintenanceForm,
+  setMaintenanceForm,
+  maintenanceResult,
+  auditFilter,
+  setAuditFilter,
+  onSaveSetting,
+  onRunMaintenance,
+  onApplyAuditFilter,
+  onResetAuditFilter,
+  isSavingSetting,
+  isRunningMaintenance,
+  formatDate,
+}: {
+  setting?: CommercialSetting;
+  auditLogs: BillingAuditLog[];
+  auditLogsLoading: boolean;
+  settingForm: CommercialSettingForm;
+  setSettingForm: (value: CommercialSettingForm | ((prev: CommercialSettingForm) => CommercialSettingForm)) => void;
+  maintenanceForm: MaintenanceForm;
+  setMaintenanceForm: (value: MaintenanceForm | ((prev: MaintenanceForm) => MaintenanceForm)) => void;
+  maintenanceResult: CommercialMaintenanceRunResult | null;
+  auditFilter: AuditFilterForm;
+  setAuditFilter: (value: AuditFilterForm | ((prev: AuditFilterForm) => AuditFilterForm)) => void;
+  onSaveSetting: (event: FormEvent<HTMLFormElement>) => void;
+  onRunMaintenance: (event: FormEvent<HTMLFormElement>) => void;
+  onApplyAuditFilter: (event: FormEvent<HTMLFormElement>) => void;
+  onResetAuditFilter: () => void;
+  isSavingSetting: boolean;
+  isRunningMaintenance: boolean;
+  formatDate: (value?: string | null) => string;
+}) {
+  const { t } = useTranslation();
+  const workerSwitches: Array<{ key: keyof CommercialSettingForm; label: string }> = [
+    { key: 'orderExpiryWorkerEnabled', label: t('adminBilling.operations.orderExpiryWorker') },
+    { key: 'holdExpiryWorkerEnabled', label: t('adminBilling.operations.holdExpiryWorker') },
+    { key: 'subscriptionExpiryWorkerEnabled', label: t('adminBilling.operations.subscriptionExpiryWorker') },
+    { key: 'subscriptionResetWorkerEnabled', label: t('adminBilling.operations.subscriptionResetWorker') },
+    { key: 'affiliateRebateThawWorkerEnabled', label: t('adminBilling.operations.affiliateRebateThawWorker') },
+    { key: 'failedBillingRetryWorkerEnabled', label: t('adminBilling.operations.failedBillingRetryWorker') },
+  ];
+  const maintenanceRows = maintenanceResult
+    ? [
+        ['orderExpiryProcessed', maintenanceResult.orderExpiryProcessed],
+        ['holdExpiryProcessed', maintenanceResult.holdExpiryProcessed],
+        ['subscriptionExpiryProcessed', maintenanceResult.subscriptionExpiryProcessed],
+        ['subscriptionResetProcessed', maintenanceResult.subscriptionResetProcessed],
+        ['affiliateRebateThawProcessed', maintenanceResult.affiliateRebateThawProcessed],
+        ['failedBillingRetryProcessed', maintenanceResult.failedBillingRetryProcessed],
+      ]
+    : [];
+
+  return (
+    <div className='grid gap-4 xl:grid-cols-[440px_1fr]'>
+      <div className='space-y-4'>
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 text-base'>
+              <ShieldCheck className='size-4' />
+              {t('adminBilling.operations.settingTitle')}
+            </CardTitle>
+            <CardDescription>{t('adminBilling.operations.settingDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className='grid gap-3' onSubmit={onSaveSetting}>
+              <div className='space-y-2'>
+                <Label>{t('adminBilling.operations.mode')}</Label>
+                <Select value={settingForm.mode} onValueChange={(value) => setSettingForm((prev) => ({ ...prev, mode: value as CommercialSettingMode }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='disabled'>{t('adminBilling.operations.modeDisabled')}</SelectItem>
+                    <SelectItem value='warn'>{t('adminBilling.operations.modeWarn')}</SelectItem>
+                    <SelectItem value='enforce'>{t('adminBilling.operations.modeEnforce')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <label className='flex items-center gap-2 rounded-md border p-3 text-sm'>
+                <Switch checked={settingForm.requireAdminActionReason} onCheckedChange={(checked) => setSettingForm((prev) => ({ ...prev, requireAdminActionReason: checked }))} />
+                <span>{t('adminBilling.operations.requireReason')}</span>
+              </label>
+              <label className='flex items-center gap-2 rounded-md border p-3 text-sm'>
+                <Switch checked={settingForm.paymentProviderSecretsEncrypted} onCheckedChange={(checked) => setSettingForm((prev) => ({ ...prev, paymentProviderSecretsEncrypted: checked }))} />
+                <span>{t('adminBilling.operations.encryptSecrets')}</span>
+              </label>
+              <label className='flex items-center gap-2 rounded-md border p-3 text-sm'>
+                <Switch checked={settingForm.workersEnabled} onCheckedChange={(checked) => setSettingForm((prev) => ({ ...prev, workersEnabled: checked }))} />
+                <span>{t('adminBilling.operations.workersEnabled')}</span>
+              </label>
+              <div className='grid gap-2 sm:grid-cols-2'>
+                {workerSwitches.map((item) => (
+                  <label key={item.key} className='flex min-h-10 items-center gap-2 rounded-md border px-3 py-2 text-sm'>
+                    <Switch
+                      checked={Boolean(settingForm[item.key])}
+                      disabled={!settingForm.workersEnabled}
+                      onCheckedChange={(checked) => setSettingForm((prev) => ({ ...prev, [item.key]: checked }))}
+                    />
+                    <span>{item.label}</span>
+                  </label>
+                ))}
+              </div>
+              <div className='grid gap-3 sm:grid-cols-2'>
+                <FilterInput label={t('adminBilling.operations.workerBatchSize')} value={settingForm.workerBatchSize} onChange={(value) => setSettingForm((prev) => ({ ...prev, workerBatchSize: value }))} />
+                <FilterInput label={t('adminBilling.columns.currency')} value={settingForm.currency} onChange={(value) => setSettingForm((prev) => ({ ...prev, currency: value.toUpperCase() }))} />
+              </div>
+              <FilterInput label={t('adminBilling.columns.reason')} value={settingForm.reason} onChange={(value) => setSettingForm((prev) => ({ ...prev, reason: value }))} />
+              <Button type='submit' disabled={isSavingSetting}>
+                {isSavingSetting ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                {t('adminBilling.operations.saveSetting')}
+              </Button>
+              {setting && (
+                <div className='text-muted-foreground text-xs'>
+                  {t('adminBilling.columns.updatedAt')}: {formatDate(setting.updatedAt)}
+                </div>
+              )}
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 text-base'>
+              <Wrench className='size-4' />
+              {t('adminBilling.operations.maintenanceTitle')}
+            </CardTitle>
+            <CardDescription>{t('adminBilling.operations.maintenanceDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <form className='grid gap-3' onSubmit={onRunMaintenance}>
+              <div className='grid gap-3 sm:grid-cols-2'>
+                <FilterInput label={t('adminBilling.operations.limit')} value={maintenanceForm.limit} onChange={(value) => setMaintenanceForm((prev) => ({ ...prev, limit: value }))} />
+                <FilterInput label={t('adminBilling.operations.now')} type='datetime-local' value={maintenanceForm.now} onChange={(value) => setMaintenanceForm((prev) => ({ ...prev, now: value }))} />
+              </div>
+              <FilterInput label={t('adminBilling.columns.reason')} value={maintenanceForm.reason} onChange={(value) => setMaintenanceForm((prev) => ({ ...prev, reason: value }))} />
+              <Button type='submit' disabled={isRunningMaintenance}>
+                {isRunningMaintenance ? <Loader2 className='size-4 animate-spin' /> : <Wrench className='size-4' />}
+                {t('adminBilling.operations.runMaintenance')}
+              </Button>
+            </form>
+            {maintenanceRows.length > 0 && (
+              <div className='grid gap-2 sm:grid-cols-2'>
+                {maintenanceRows.map(([key, value]) => (
+                  <div key={key} className='rounded-md border p-3'>
+                    <div className='text-muted-foreground text-xs'>{t(`adminBilling.operations.result.${key}`)}</div>
+                    <div className='font-mono text-lg font-semibold'>{value}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className='rounded-lg'>
+        <CardHeader>
+          <CardTitle className='text-base'>{t('adminBilling.operations.auditTitle')}</CardTitle>
+          <CardDescription>{t('adminBilling.operations.auditDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4 overflow-auto'>
+          <form className='grid gap-3 md:grid-cols-4 xl:grid-cols-7' onSubmit={onApplyAuditFilter}>
+            <FilterInput label={t('adminBilling.operations.action')} value={auditFilter.action} onChange={(value) => setAuditFilter((prev) => ({ ...prev, action: value }))} />
+            <FilterInput label={t('adminBilling.operations.actorUserId')} value={auditFilter.actorUserId} onChange={(value) => setAuditFilter((prev) => ({ ...prev, actorUserId: value }))} />
+            <FilterInput label={t('adminBilling.operations.targetType')} value={auditFilter.targetType} onChange={(value) => setAuditFilter((prev) => ({ ...prev, targetType: value }))} />
+            <FilterInput label={t('adminBilling.operations.targetId')} value={auditFilter.targetId} onChange={(value) => setAuditFilter((prev) => ({ ...prev, targetId: value }))} />
+            <FilterInput label={t('adminBilling.operations.targetUserId')} value={auditFilter.targetUserId} onChange={(value) => setAuditFilter((prev) => ({ ...prev, targetUserId: value }))} />
+            <FilterInput label={t('adminBilling.filters.from')} type='datetime-local' value={auditFilter.from} onChange={(value) => setAuditFilter((prev) => ({ ...prev, from: value }))} />
+            <FilterInput label={t('adminBilling.filters.to')} type='datetime-local' value={auditFilter.to} onChange={(value) => setAuditFilter((prev) => ({ ...prev, to: value }))} />
+            <FilterActions onReset={onResetAuditFilter} />
+          </form>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                <TableHead>{t('adminBilling.operations.action')}</TableHead>
+                <TableHead>{t('adminBilling.operations.actor')}</TableHead>
+                <TableHead>{t('adminBilling.operations.target')}</TableHead>
+                <TableHead>{t('adminBilling.columns.reason')}</TableHead>
+                <TableHead>{t('adminBilling.columns.payload')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <DataStateRow colSpan={6} isLoading={auditLogsLoading} isEmpty={auditLogs.length === 0} />
+              {auditLogs.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell>{formatDate(log.createdAt)}</TableCell>
+                  <TableCell className='font-mono text-xs'>{log.action}</TableCell>
+                  <TableCell className='font-mono text-xs'>
+                    {log.actorType}
+                    {log.actorUserID ? `:${log.actorUserID}` : ''}
+                  </TableCell>
+                  <TableCell className='font-mono text-xs'>
+                    <div>{log.targetType || '-'}</div>
+                    <div className='text-muted-foreground max-w-[180px] truncate'>{log.targetID || log.targetUserID || '-'}</div>
+                  </TableCell>
+                  <TableCell className='max-w-[260px] truncate text-xs'>{log.reason || '-'}</TableCell>
+                  <TableCell className='max-w-[260px] truncate font-mono text-xs' title={summarizeJSONPayload(log.metadata)}>
+                    {summarizeJSONPayload(log.metadata)}
                   </TableCell>
                 </TableRow>
               ))}

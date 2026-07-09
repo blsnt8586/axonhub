@@ -3,6 +3,7 @@ package gql
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/objects"
@@ -40,6 +41,20 @@ func stringValue(value *string) string {
 		return ""
 	}
 
+	return *value
+}
+
+func intValue(value *int) int {
+	if value == nil {
+		return 0
+	}
+	return *value
+}
+
+func timeValue(value *time.Time) time.Time {
+	if value == nil {
+		return time.Time{}
+	}
 	return *value
 }
 

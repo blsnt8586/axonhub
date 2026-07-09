@@ -971,6 +971,98 @@ func (_m *BillingAccountBinding) Node(ctx context.Context) (node *Node, err erro
 }
 
 // Node implements Noder interface
+func (_m *BillingAuditLog) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "BillingAuditLog",
+		Fields: make([]*Field, 10),
+		Edges:  make([]*Edge, 0),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Action); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "action",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ActorType); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "billingauditlog.ActorType",
+		Name:  "actor_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ActorUserID); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "int",
+		Name:  "actor_user_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.TargetType); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "string",
+		Name:  "target_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.TargetID); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "string",
+		Name:  "target_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.TargetUserID); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "int",
+		Name:  "target_user_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Reason); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "string",
+		Name:  "reason",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Metadata); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "objects.JSONRawMessage",
+		Name:  "metadata",
+		Value: string(buf),
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
 func (_m *BillingHold) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
@@ -2340,6 +2432,138 @@ func (_m *ChannelProbe) Node(ctx context.Context) (node *Node, err error) {
 		Scan(ctx, &node.Edges[0].IDs)
 	if err != nil {
 		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *CommercialSetting) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "CommercialSetting",
+		Fields: make([]*Field, 15),
+		Edges:  make([]*Edge, 0),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Key); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "key",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Mode); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "commercialsetting.Mode",
+		Name:  "mode",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RequireAdminActionReason); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "bool",
+		Name:  "require_admin_action_reason",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.PaymentProviderSecretsEncrypted); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "bool",
+		Name:  "payment_provider_secrets_encrypted",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.WorkersEnabled); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "bool",
+		Name:  "workers_enabled",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.OrderExpiryWorkerEnabled); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "bool",
+		Name:  "order_expiry_worker_enabled",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.HoldExpiryWorkerEnabled); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "bool",
+		Name:  "hold_expiry_worker_enabled",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.SubscriptionExpiryWorkerEnabled); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "bool",
+		Name:  "subscription_expiry_worker_enabled",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.SubscriptionResetWorkerEnabled); err != nil {
+		return nil, err
+	}
+	node.Fields[10] = &Field{
+		Type:  "bool",
+		Name:  "subscription_reset_worker_enabled",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.AffiliateRebateThawWorkerEnabled); err != nil {
+		return nil, err
+	}
+	node.Fields[11] = &Field{
+		Type:  "bool",
+		Name:  "affiliate_rebate_thaw_worker_enabled",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.FailedBillingRetryWorkerEnabled); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
+		Type:  "bool",
+		Name:  "failed_billing_retry_worker_enabled",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.WorkerBatchSize); err != nil {
+		return nil, err
+	}
+	node.Fields[13] = &Field{
+		Type:  "int",
+		Name:  "worker_batch_size",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Currency); err != nil {
+		return nil, err
+	}
+	node.Fields[14] = &Field{
+		Type:  "string",
+		Name:  "currency",
+		Value: string(buf),
 	}
 	return node, nil
 }

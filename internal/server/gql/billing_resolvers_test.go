@@ -15,7 +15,9 @@ import (
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/enttest"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
@@ -118,7 +120,12 @@ func TestBillingResolversUpsertEPayPaymentProvider(t *testing.T) {
 
 	var cfg map[string]string
 	require.NoError(t, json.Unmarshal(provider.Config, &cfg))
-	require.Equal(t, "secret-key", cfg["key"])
+	require.NotEqual(t, "secret-key", cfg["key"])
+	require.NotContains(t, string(provider.Config), "secret-key")
+
+	parsed, err := biz.ParseEPayConfig(provider.Config)
+	require.NoError(t, err)
+	require.Equal(t, "secret-key", parsed.Key)
 }
 
 func TestBillingResolversUserCanCreateMyEPayRechargeCheckout(t *testing.T) {
@@ -529,6 +536,67 @@ func TestBillingResolversRejectsUserBillingAdminOperationsForNonOwner(t *testing
 	require.True(t, errors.Is(err, ErrNotOwner))
 	_, err = queryResolver.ExportAdminBillingCSV(userCtx, ExportAdminBillingCSVInput{Dataset: string(biz.BillingCSVExportDatasetLedgerTransactions)})
 	require.True(t, errors.Is(err, ErrNotOwner))
+	_, err = queryResolver.AdminCommercialSetting(userCtx)
+	require.True(t, errors.Is(err, ErrNotOwner))
+	_, err = queryResolver.AdminBillingAuditLogs(userCtx, nil, nil, &first, nil, nil, nil)
+	require.True(t, errors.Is(err, ErrNotOwner))
+	_, err = mutationResolver.SaveCommercialSetting(userCtx, biz.SaveCommercialSettingInput{Mode: commercialsetting.ModeEnforce})
+	require.True(t, errors.Is(err, ErrNotOwner))
+	_, err = mutationResolver.RunCommercialMaintenance(userCtx, RunCommercialMaintenanceInput{Reason: "non-owner maintenance"})
+	require.True(t, errors.Is(err, ErrNotOwner))
+}
+
+func TestBillingResolversOwnerCanManageCommercialOperations(t *testing.T) {
+	mutationResolver, queryResolver, ctx, client, owner, _ := setupBillingResolversTest(t, "billing_resolver_commercial_ops")
+	ownerCtx := contexts.WithUser(ctx, owner)
+
+	setting, err := queryResolver.AdminCommercialSetting(ownerCtx)
+	require.NoError(t, err)
+	require.Equal(t, commercialsetting.ModeEnforce, setting.Mode)
+
+	updated, err := mutationResolver.SaveCommercialSetting(ownerCtx, biz.SaveCommercialSettingInput{
+		Mode:                             commercialsetting.ModeWarn,
+		RequireAdminActionReason:         true,
+		PaymentProviderSecretsEncrypted:  true,
+		WorkersEnabled:                   false,
+		OrderExpiryWorkerEnabled:         true,
+		HoldExpiryWorkerEnabled:          true,
+		SubscriptionExpiryWorkerEnabled:  true,
+		SubscriptionResetWorkerEnabled:   true,
+		AffiliateRebateThawWorkerEnabled: true,
+		FailedBillingRetryWorkerEnabled:  true,
+		WorkerBatchSize:                  50,
+		Currency:                         "CNY",
+		Reason:                           "stage 10 production setting test",
+	})
+	require.NoError(t, err)
+	require.Equal(t, setting.ID, updated.ID)
+	require.Equal(t, commercialsetting.ModeWarn, updated.Mode)
+	require.False(t, updated.WorkersEnabled)
+
+	_, err = mutationResolver.RunCommercialMaintenance(ownerCtx, RunCommercialMaintenanceInput{})
+	require.ErrorContains(t, err, "reason is required")
+	result, err := mutationResolver.RunCommercialMaintenance(ownerCtx, RunCommercialMaintenanceInput{
+		Reason: "stage 10 manual maintenance test",
+	})
+	require.NoError(t, err)
+	require.Zero(t, result.OrderExpiryProcessed)
+	require.Zero(t, result.HoldExpiryProcessed)
+
+	first := 10
+	action := "commercial_setting.save"
+	logs, err := queryResolver.AdminBillingAuditLogs(ownerCtx, &AdminBillingAuditLogsFilter{Action: &action}, nil, &first, nil, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, logs.TotalCount)
+	require.Equal(t, billingauditlog.ActorTypeAdmin, logs.Edges[0].Node.ActorType)
+	require.Equal(t, owner.ID, *logs.Edges[0].Node.ActorUserID)
+	require.Equal(t, "stage 10 production setting test", logs.Edges[0].Node.Reason)
+
+	auditCount, err := client.BillingAuditLog.Query().
+		Where(billingauditlog.ActionEQ("commercial_maintenance.run")).
+		Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, auditCount)
 }
 
 func TestBillingResolversOwnerCanManageBillingPriceRules(t *testing.T) {
@@ -613,6 +681,7 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 	require.NoError(t, err)
 
 	billingAccountSvc := biz.NewBillingAccountService(biz.BillingAccountServiceParams{Ent: client})
+	billingAuditSvc := biz.NewBillingAuditService(biz.BillingAuditServiceParams{Ent: client})
 	ledgerSvc := biz.NewLedgerService(biz.LedgerServiceParams{Ent: client})
 	pricingSvc := biz.NewPricingService(biz.PricingServiceParams{Ent: client})
 	paymentSvc := biz.NewPaymentService(biz.PaymentServiceParams{
@@ -621,12 +690,19 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 		LedgerService:         ledgerSvc,
 		ProviderRegistry:      biz.NewPaymentProviderRegistry(),
 	})
+	commercialOperationsSvc := biz.NewCommercialOperationsService(biz.CommercialOperationsServiceParams{
+		Ent:                 client,
+		PaymentService:      paymentSvc,
+		BillingAuditService: billingAuditSvc,
+	})
 
 	resolver := &Resolver{
-		client:                client,
-		billingAccountService: billingAccountSvc,
-		paymentService:        paymentSvc,
-		pricingService:        pricingSvc,
+		client:                      client,
+		billingAccountService:       billingAccountSvc,
+		billingAuditService:         billingAuditSvc,
+		commercialOperationsService: commercialOperationsSvc,
+		paymentService:              paymentSvc,
+		pricingService:              pricingSvc,
 	}
 
 	return &mutationResolver{resolver}, &queryResolver{resolver}, ctx, client, owner, project

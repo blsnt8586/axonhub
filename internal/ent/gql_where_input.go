@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
@@ -26,6 +27,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -3848,6 +3850,516 @@ func (i *BillingAccountBindingWhereInput) P() (predicate.BillingAccountBinding, 
 		return predicates[0], nil
 	default:
 		return billingaccountbinding.And(predicates...), nil
+	}
+}
+
+// BillingAuditLogWhereInput represents a where input for filtering BillingAuditLog queries.
+type BillingAuditLogWhereInput struct {
+	Predicates []predicate.BillingAuditLog  `json:"-"`
+	Not        *BillingAuditLogWhereInput   `json:"not,omitempty"`
+	Or         []*BillingAuditLogWhereInput `json:"or,omitempty"`
+	And        []*BillingAuditLogWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "action" field predicates.
+	Action             *string  `json:"action,omitempty"`
+	ActionNEQ          *string  `json:"actionNEQ,omitempty"`
+	ActionIn           []string `json:"actionIn,omitempty"`
+	ActionNotIn        []string `json:"actionNotIn,omitempty"`
+	ActionGT           *string  `json:"actionGT,omitempty"`
+	ActionGTE          *string  `json:"actionGTE,omitempty"`
+	ActionLT           *string  `json:"actionLT,omitempty"`
+	ActionLTE          *string  `json:"actionLTE,omitempty"`
+	ActionContains     *string  `json:"actionContains,omitempty"`
+	ActionHasPrefix    *string  `json:"actionHasPrefix,omitempty"`
+	ActionHasSuffix    *string  `json:"actionHasSuffix,omitempty"`
+	ActionEqualFold    *string  `json:"actionEqualFold,omitempty"`
+	ActionContainsFold *string  `json:"actionContainsFold,omitempty"`
+
+	// "actor_type" field predicates.
+	ActorType      *billingauditlog.ActorType  `json:"actorType,omitempty"`
+	ActorTypeNEQ   *billingauditlog.ActorType  `json:"actorTypeNEQ,omitempty"`
+	ActorTypeIn    []billingauditlog.ActorType `json:"actorTypeIn,omitempty"`
+	ActorTypeNotIn []billingauditlog.ActorType `json:"actorTypeNotIn,omitempty"`
+
+	// "actor_user_id" field predicates.
+	ActorUserID       *int  `json:"actorUserID,omitempty"`
+	ActorUserIDNEQ    *int  `json:"actorUserIDNEQ,omitempty"`
+	ActorUserIDIn     []int `json:"actorUserIDIn,omitempty"`
+	ActorUserIDNotIn  []int `json:"actorUserIDNotIn,omitempty"`
+	ActorUserIDGT     *int  `json:"actorUserIDGT,omitempty"`
+	ActorUserIDGTE    *int  `json:"actorUserIDGTE,omitempty"`
+	ActorUserIDLT     *int  `json:"actorUserIDLT,omitempty"`
+	ActorUserIDLTE    *int  `json:"actorUserIDLTE,omitempty"`
+	ActorUserIDIsNil  bool  `json:"actorUserIDIsNil,omitempty"`
+	ActorUserIDNotNil bool  `json:"actorUserIDNotNil,omitempty"`
+
+	// "target_type" field predicates.
+	TargetType             *string  `json:"targetType,omitempty"`
+	TargetTypeNEQ          *string  `json:"targetTypeNEQ,omitempty"`
+	TargetTypeIn           []string `json:"targetTypeIn,omitempty"`
+	TargetTypeNotIn        []string `json:"targetTypeNotIn,omitempty"`
+	TargetTypeGT           *string  `json:"targetTypeGT,omitempty"`
+	TargetTypeGTE          *string  `json:"targetTypeGTE,omitempty"`
+	TargetTypeLT           *string  `json:"targetTypeLT,omitempty"`
+	TargetTypeLTE          *string  `json:"targetTypeLTE,omitempty"`
+	TargetTypeContains     *string  `json:"targetTypeContains,omitempty"`
+	TargetTypeHasPrefix    *string  `json:"targetTypeHasPrefix,omitempty"`
+	TargetTypeHasSuffix    *string  `json:"targetTypeHasSuffix,omitempty"`
+	TargetTypeEqualFold    *string  `json:"targetTypeEqualFold,omitempty"`
+	TargetTypeContainsFold *string  `json:"targetTypeContainsFold,omitempty"`
+
+	// "target_id" field predicates.
+	TargetID             *string  `json:"targetID,omitempty"`
+	TargetIDNEQ          *string  `json:"targetIDNEQ,omitempty"`
+	TargetIDIn           []string `json:"targetIDIn,omitempty"`
+	TargetIDNotIn        []string `json:"targetIDNotIn,omitempty"`
+	TargetIDGT           *string  `json:"targetIDGT,omitempty"`
+	TargetIDGTE          *string  `json:"targetIDGTE,omitempty"`
+	TargetIDLT           *string  `json:"targetIDLT,omitempty"`
+	TargetIDLTE          *string  `json:"targetIDLTE,omitempty"`
+	TargetIDContains     *string  `json:"targetIDContains,omitempty"`
+	TargetIDHasPrefix    *string  `json:"targetIDHasPrefix,omitempty"`
+	TargetIDHasSuffix    *string  `json:"targetIDHasSuffix,omitempty"`
+	TargetIDEqualFold    *string  `json:"targetIDEqualFold,omitempty"`
+	TargetIDContainsFold *string  `json:"targetIDContainsFold,omitempty"`
+
+	// "target_user_id" field predicates.
+	TargetUserID       *int  `json:"targetUserID,omitempty"`
+	TargetUserIDNEQ    *int  `json:"targetUserIDNEQ,omitempty"`
+	TargetUserIDIn     []int `json:"targetUserIDIn,omitempty"`
+	TargetUserIDNotIn  []int `json:"targetUserIDNotIn,omitempty"`
+	TargetUserIDGT     *int  `json:"targetUserIDGT,omitempty"`
+	TargetUserIDGTE    *int  `json:"targetUserIDGTE,omitempty"`
+	TargetUserIDLT     *int  `json:"targetUserIDLT,omitempty"`
+	TargetUserIDLTE    *int  `json:"targetUserIDLTE,omitempty"`
+	TargetUserIDIsNil  bool  `json:"targetUserIDIsNil,omitempty"`
+	TargetUserIDNotNil bool  `json:"targetUserIDNotNil,omitempty"`
+
+	// "reason" field predicates.
+	Reason             *string  `json:"reason,omitempty"`
+	ReasonNEQ          *string  `json:"reasonNEQ,omitempty"`
+	ReasonIn           []string `json:"reasonIn,omitempty"`
+	ReasonNotIn        []string `json:"reasonNotIn,omitempty"`
+	ReasonGT           *string  `json:"reasonGT,omitempty"`
+	ReasonGTE          *string  `json:"reasonGTE,omitempty"`
+	ReasonLT           *string  `json:"reasonLT,omitempty"`
+	ReasonLTE          *string  `json:"reasonLTE,omitempty"`
+	ReasonContains     *string  `json:"reasonContains,omitempty"`
+	ReasonHasPrefix    *string  `json:"reasonHasPrefix,omitempty"`
+	ReasonHasSuffix    *string  `json:"reasonHasSuffix,omitempty"`
+	ReasonEqualFold    *string  `json:"reasonEqualFold,omitempty"`
+	ReasonContainsFold *string  `json:"reasonContainsFold,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *BillingAuditLogWhereInput) AddPredicates(predicates ...predicate.BillingAuditLog) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the BillingAuditLogWhereInput filter on the BillingAuditLogQuery builder.
+func (i *BillingAuditLogWhereInput) Filter(q *BillingAuditLogQuery) (*BillingAuditLogQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyBillingAuditLogWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyBillingAuditLogWhereInput is returned in case the BillingAuditLogWhereInput is empty.
+var ErrEmptyBillingAuditLogWhereInput = errors.New("ent: empty predicate BillingAuditLogWhereInput")
+
+// P returns a predicate for filtering billingauditlogs.
+// An error is returned if the input is empty or invalid.
+func (i *BillingAuditLogWhereInput) P() (predicate.BillingAuditLog, error) {
+	var predicates []predicate.BillingAuditLog
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, billingauditlog.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.BillingAuditLog, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, billingauditlog.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.BillingAuditLog, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, billingauditlog.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, billingauditlog.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, billingauditlog.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, billingauditlog.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, billingauditlog.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, billingauditlog.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, billingauditlog.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, billingauditlog.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, billingauditlog.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, billingauditlog.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, billingauditlog.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, billingauditlog.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, billingauditlog.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, billingauditlog.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, billingauditlog.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, billingauditlog.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, billingauditlog.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, billingauditlog.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, billingauditlog.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, billingauditlog.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, billingauditlog.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, billingauditlog.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.Action != nil {
+		predicates = append(predicates, billingauditlog.ActionEQ(*i.Action))
+	}
+	if i.ActionNEQ != nil {
+		predicates = append(predicates, billingauditlog.ActionNEQ(*i.ActionNEQ))
+	}
+	if len(i.ActionIn) > 0 {
+		predicates = append(predicates, billingauditlog.ActionIn(i.ActionIn...))
+	}
+	if len(i.ActionNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.ActionNotIn(i.ActionNotIn...))
+	}
+	if i.ActionGT != nil {
+		predicates = append(predicates, billingauditlog.ActionGT(*i.ActionGT))
+	}
+	if i.ActionGTE != nil {
+		predicates = append(predicates, billingauditlog.ActionGTE(*i.ActionGTE))
+	}
+	if i.ActionLT != nil {
+		predicates = append(predicates, billingauditlog.ActionLT(*i.ActionLT))
+	}
+	if i.ActionLTE != nil {
+		predicates = append(predicates, billingauditlog.ActionLTE(*i.ActionLTE))
+	}
+	if i.ActionContains != nil {
+		predicates = append(predicates, billingauditlog.ActionContains(*i.ActionContains))
+	}
+	if i.ActionHasPrefix != nil {
+		predicates = append(predicates, billingauditlog.ActionHasPrefix(*i.ActionHasPrefix))
+	}
+	if i.ActionHasSuffix != nil {
+		predicates = append(predicates, billingauditlog.ActionHasSuffix(*i.ActionHasSuffix))
+	}
+	if i.ActionEqualFold != nil {
+		predicates = append(predicates, billingauditlog.ActionEqualFold(*i.ActionEqualFold))
+	}
+	if i.ActionContainsFold != nil {
+		predicates = append(predicates, billingauditlog.ActionContainsFold(*i.ActionContainsFold))
+	}
+	if i.ActorType != nil {
+		predicates = append(predicates, billingauditlog.ActorTypeEQ(*i.ActorType))
+	}
+	if i.ActorTypeNEQ != nil {
+		predicates = append(predicates, billingauditlog.ActorTypeNEQ(*i.ActorTypeNEQ))
+	}
+	if len(i.ActorTypeIn) > 0 {
+		predicates = append(predicates, billingauditlog.ActorTypeIn(i.ActorTypeIn...))
+	}
+	if len(i.ActorTypeNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.ActorTypeNotIn(i.ActorTypeNotIn...))
+	}
+	if i.ActorUserID != nil {
+		predicates = append(predicates, billingauditlog.ActorUserIDEQ(*i.ActorUserID))
+	}
+	if i.ActorUserIDNEQ != nil {
+		predicates = append(predicates, billingauditlog.ActorUserIDNEQ(*i.ActorUserIDNEQ))
+	}
+	if len(i.ActorUserIDIn) > 0 {
+		predicates = append(predicates, billingauditlog.ActorUserIDIn(i.ActorUserIDIn...))
+	}
+	if len(i.ActorUserIDNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.ActorUserIDNotIn(i.ActorUserIDNotIn...))
+	}
+	if i.ActorUserIDGT != nil {
+		predicates = append(predicates, billingauditlog.ActorUserIDGT(*i.ActorUserIDGT))
+	}
+	if i.ActorUserIDGTE != nil {
+		predicates = append(predicates, billingauditlog.ActorUserIDGTE(*i.ActorUserIDGTE))
+	}
+	if i.ActorUserIDLT != nil {
+		predicates = append(predicates, billingauditlog.ActorUserIDLT(*i.ActorUserIDLT))
+	}
+	if i.ActorUserIDLTE != nil {
+		predicates = append(predicates, billingauditlog.ActorUserIDLTE(*i.ActorUserIDLTE))
+	}
+	if i.ActorUserIDIsNil {
+		predicates = append(predicates, billingauditlog.ActorUserIDIsNil())
+	}
+	if i.ActorUserIDNotNil {
+		predicates = append(predicates, billingauditlog.ActorUserIDNotNil())
+	}
+	if i.TargetType != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeEQ(*i.TargetType))
+	}
+	if i.TargetTypeNEQ != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeNEQ(*i.TargetTypeNEQ))
+	}
+	if len(i.TargetTypeIn) > 0 {
+		predicates = append(predicates, billingauditlog.TargetTypeIn(i.TargetTypeIn...))
+	}
+	if len(i.TargetTypeNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.TargetTypeNotIn(i.TargetTypeNotIn...))
+	}
+	if i.TargetTypeGT != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeGT(*i.TargetTypeGT))
+	}
+	if i.TargetTypeGTE != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeGTE(*i.TargetTypeGTE))
+	}
+	if i.TargetTypeLT != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeLT(*i.TargetTypeLT))
+	}
+	if i.TargetTypeLTE != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeLTE(*i.TargetTypeLTE))
+	}
+	if i.TargetTypeContains != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeContains(*i.TargetTypeContains))
+	}
+	if i.TargetTypeHasPrefix != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeHasPrefix(*i.TargetTypeHasPrefix))
+	}
+	if i.TargetTypeHasSuffix != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeHasSuffix(*i.TargetTypeHasSuffix))
+	}
+	if i.TargetTypeEqualFold != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeEqualFold(*i.TargetTypeEqualFold))
+	}
+	if i.TargetTypeContainsFold != nil {
+		predicates = append(predicates, billingauditlog.TargetTypeContainsFold(*i.TargetTypeContainsFold))
+	}
+	if i.TargetID != nil {
+		predicates = append(predicates, billingauditlog.TargetIDEQ(*i.TargetID))
+	}
+	if i.TargetIDNEQ != nil {
+		predicates = append(predicates, billingauditlog.TargetIDNEQ(*i.TargetIDNEQ))
+	}
+	if len(i.TargetIDIn) > 0 {
+		predicates = append(predicates, billingauditlog.TargetIDIn(i.TargetIDIn...))
+	}
+	if len(i.TargetIDNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.TargetIDNotIn(i.TargetIDNotIn...))
+	}
+	if i.TargetIDGT != nil {
+		predicates = append(predicates, billingauditlog.TargetIDGT(*i.TargetIDGT))
+	}
+	if i.TargetIDGTE != nil {
+		predicates = append(predicates, billingauditlog.TargetIDGTE(*i.TargetIDGTE))
+	}
+	if i.TargetIDLT != nil {
+		predicates = append(predicates, billingauditlog.TargetIDLT(*i.TargetIDLT))
+	}
+	if i.TargetIDLTE != nil {
+		predicates = append(predicates, billingauditlog.TargetIDLTE(*i.TargetIDLTE))
+	}
+	if i.TargetIDContains != nil {
+		predicates = append(predicates, billingauditlog.TargetIDContains(*i.TargetIDContains))
+	}
+	if i.TargetIDHasPrefix != nil {
+		predicates = append(predicates, billingauditlog.TargetIDHasPrefix(*i.TargetIDHasPrefix))
+	}
+	if i.TargetIDHasSuffix != nil {
+		predicates = append(predicates, billingauditlog.TargetIDHasSuffix(*i.TargetIDHasSuffix))
+	}
+	if i.TargetIDEqualFold != nil {
+		predicates = append(predicates, billingauditlog.TargetIDEqualFold(*i.TargetIDEqualFold))
+	}
+	if i.TargetIDContainsFold != nil {
+		predicates = append(predicates, billingauditlog.TargetIDContainsFold(*i.TargetIDContainsFold))
+	}
+	if i.TargetUserID != nil {
+		predicates = append(predicates, billingauditlog.TargetUserIDEQ(*i.TargetUserID))
+	}
+	if i.TargetUserIDNEQ != nil {
+		predicates = append(predicates, billingauditlog.TargetUserIDNEQ(*i.TargetUserIDNEQ))
+	}
+	if len(i.TargetUserIDIn) > 0 {
+		predicates = append(predicates, billingauditlog.TargetUserIDIn(i.TargetUserIDIn...))
+	}
+	if len(i.TargetUserIDNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.TargetUserIDNotIn(i.TargetUserIDNotIn...))
+	}
+	if i.TargetUserIDGT != nil {
+		predicates = append(predicates, billingauditlog.TargetUserIDGT(*i.TargetUserIDGT))
+	}
+	if i.TargetUserIDGTE != nil {
+		predicates = append(predicates, billingauditlog.TargetUserIDGTE(*i.TargetUserIDGTE))
+	}
+	if i.TargetUserIDLT != nil {
+		predicates = append(predicates, billingauditlog.TargetUserIDLT(*i.TargetUserIDLT))
+	}
+	if i.TargetUserIDLTE != nil {
+		predicates = append(predicates, billingauditlog.TargetUserIDLTE(*i.TargetUserIDLTE))
+	}
+	if i.TargetUserIDIsNil {
+		predicates = append(predicates, billingauditlog.TargetUserIDIsNil())
+	}
+	if i.TargetUserIDNotNil {
+		predicates = append(predicates, billingauditlog.TargetUserIDNotNil())
+	}
+	if i.Reason != nil {
+		predicates = append(predicates, billingauditlog.ReasonEQ(*i.Reason))
+	}
+	if i.ReasonNEQ != nil {
+		predicates = append(predicates, billingauditlog.ReasonNEQ(*i.ReasonNEQ))
+	}
+	if len(i.ReasonIn) > 0 {
+		predicates = append(predicates, billingauditlog.ReasonIn(i.ReasonIn...))
+	}
+	if len(i.ReasonNotIn) > 0 {
+		predicates = append(predicates, billingauditlog.ReasonNotIn(i.ReasonNotIn...))
+	}
+	if i.ReasonGT != nil {
+		predicates = append(predicates, billingauditlog.ReasonGT(*i.ReasonGT))
+	}
+	if i.ReasonGTE != nil {
+		predicates = append(predicates, billingauditlog.ReasonGTE(*i.ReasonGTE))
+	}
+	if i.ReasonLT != nil {
+		predicates = append(predicates, billingauditlog.ReasonLT(*i.ReasonLT))
+	}
+	if i.ReasonLTE != nil {
+		predicates = append(predicates, billingauditlog.ReasonLTE(*i.ReasonLTE))
+	}
+	if i.ReasonContains != nil {
+		predicates = append(predicates, billingauditlog.ReasonContains(*i.ReasonContains))
+	}
+	if i.ReasonHasPrefix != nil {
+		predicates = append(predicates, billingauditlog.ReasonHasPrefix(*i.ReasonHasPrefix))
+	}
+	if i.ReasonHasSuffix != nil {
+		predicates = append(predicates, billingauditlog.ReasonHasSuffix(*i.ReasonHasSuffix))
+	}
+	if i.ReasonEqualFold != nil {
+		predicates = append(predicates, billingauditlog.ReasonEqualFold(*i.ReasonEqualFold))
+	}
+	if i.ReasonContainsFold != nil {
+		predicates = append(predicates, billingauditlog.ReasonContainsFold(*i.ReasonContainsFold))
+	}
+
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyBillingAuditLogWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return billingauditlog.And(predicates...), nil
 	}
 }
 
@@ -9680,6 +10192,448 @@ func (i *ChannelProbeWhereInput) P() (predicate.ChannelProbe, error) {
 		return predicates[0], nil
 	default:
 		return channelprobe.And(predicates...), nil
+	}
+}
+
+// CommercialSettingWhereInput represents a where input for filtering CommercialSetting queries.
+type CommercialSettingWhereInput struct {
+	Predicates []predicate.CommercialSetting  `json:"-"`
+	Not        *CommercialSettingWhereInput   `json:"not,omitempty"`
+	Or         []*CommercialSettingWhereInput `json:"or,omitempty"`
+	And        []*CommercialSettingWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "key" field predicates.
+	Key             *string  `json:"key,omitempty"`
+	KeyNEQ          *string  `json:"keyNEQ,omitempty"`
+	KeyIn           []string `json:"keyIn,omitempty"`
+	KeyNotIn        []string `json:"keyNotIn,omitempty"`
+	KeyGT           *string  `json:"keyGT,omitempty"`
+	KeyGTE          *string  `json:"keyGTE,omitempty"`
+	KeyLT           *string  `json:"keyLT,omitempty"`
+	KeyLTE          *string  `json:"keyLTE,omitempty"`
+	KeyContains     *string  `json:"keyContains,omitempty"`
+	KeyHasPrefix    *string  `json:"keyHasPrefix,omitempty"`
+	KeyHasSuffix    *string  `json:"keyHasSuffix,omitempty"`
+	KeyEqualFold    *string  `json:"keyEqualFold,omitempty"`
+	KeyContainsFold *string  `json:"keyContainsFold,omitempty"`
+
+	// "mode" field predicates.
+	Mode      *commercialsetting.Mode  `json:"mode,omitempty"`
+	ModeNEQ   *commercialsetting.Mode  `json:"modeNEQ,omitempty"`
+	ModeIn    []commercialsetting.Mode `json:"modeIn,omitempty"`
+	ModeNotIn []commercialsetting.Mode `json:"modeNotIn,omitempty"`
+
+	// "require_admin_action_reason" field predicates.
+	RequireAdminActionReason    *bool `json:"requireAdminActionReason,omitempty"`
+	RequireAdminActionReasonNEQ *bool `json:"requireAdminActionReasonNEQ,omitempty"`
+
+	// "payment_provider_secrets_encrypted" field predicates.
+	PaymentProviderSecretsEncrypted    *bool `json:"paymentProviderSecretsEncrypted,omitempty"`
+	PaymentProviderSecretsEncryptedNEQ *bool `json:"paymentProviderSecretsEncryptedNEQ,omitempty"`
+
+	// "workers_enabled" field predicates.
+	WorkersEnabled    *bool `json:"workersEnabled,omitempty"`
+	WorkersEnabledNEQ *bool `json:"workersEnabledNEQ,omitempty"`
+
+	// "order_expiry_worker_enabled" field predicates.
+	OrderExpiryWorkerEnabled    *bool `json:"orderExpiryWorkerEnabled,omitempty"`
+	OrderExpiryWorkerEnabledNEQ *bool `json:"orderExpiryWorkerEnabledNEQ,omitempty"`
+
+	// "hold_expiry_worker_enabled" field predicates.
+	HoldExpiryWorkerEnabled    *bool `json:"holdExpiryWorkerEnabled,omitempty"`
+	HoldExpiryWorkerEnabledNEQ *bool `json:"holdExpiryWorkerEnabledNEQ,omitempty"`
+
+	// "subscription_expiry_worker_enabled" field predicates.
+	SubscriptionExpiryWorkerEnabled    *bool `json:"subscriptionExpiryWorkerEnabled,omitempty"`
+	SubscriptionExpiryWorkerEnabledNEQ *bool `json:"subscriptionExpiryWorkerEnabledNEQ,omitempty"`
+
+	// "subscription_reset_worker_enabled" field predicates.
+	SubscriptionResetWorkerEnabled    *bool `json:"subscriptionResetWorkerEnabled,omitempty"`
+	SubscriptionResetWorkerEnabledNEQ *bool `json:"subscriptionResetWorkerEnabledNEQ,omitempty"`
+
+	// "affiliate_rebate_thaw_worker_enabled" field predicates.
+	AffiliateRebateThawWorkerEnabled    *bool `json:"affiliateRebateThawWorkerEnabled,omitempty"`
+	AffiliateRebateThawWorkerEnabledNEQ *bool `json:"affiliateRebateThawWorkerEnabledNEQ,omitempty"`
+
+	// "failed_billing_retry_worker_enabled" field predicates.
+	FailedBillingRetryWorkerEnabled    *bool `json:"failedBillingRetryWorkerEnabled,omitempty"`
+	FailedBillingRetryWorkerEnabledNEQ *bool `json:"failedBillingRetryWorkerEnabledNEQ,omitempty"`
+
+	// "worker_batch_size" field predicates.
+	WorkerBatchSize      *int  `json:"workerBatchSize,omitempty"`
+	WorkerBatchSizeNEQ   *int  `json:"workerBatchSizeNEQ,omitempty"`
+	WorkerBatchSizeIn    []int `json:"workerBatchSizeIn,omitempty"`
+	WorkerBatchSizeNotIn []int `json:"workerBatchSizeNotIn,omitempty"`
+	WorkerBatchSizeGT    *int  `json:"workerBatchSizeGT,omitempty"`
+	WorkerBatchSizeGTE   *int  `json:"workerBatchSizeGTE,omitempty"`
+	WorkerBatchSizeLT    *int  `json:"workerBatchSizeLT,omitempty"`
+	WorkerBatchSizeLTE   *int  `json:"workerBatchSizeLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *CommercialSettingWhereInput) AddPredicates(predicates ...predicate.CommercialSetting) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the CommercialSettingWhereInput filter on the CommercialSettingQuery builder.
+func (i *CommercialSettingWhereInput) Filter(q *CommercialSettingQuery) (*CommercialSettingQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyCommercialSettingWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyCommercialSettingWhereInput is returned in case the CommercialSettingWhereInput is empty.
+var ErrEmptyCommercialSettingWhereInput = errors.New("ent: empty predicate CommercialSettingWhereInput")
+
+// P returns a predicate for filtering commercialsettings.
+// An error is returned if the input is empty or invalid.
+func (i *CommercialSettingWhereInput) P() (predicate.CommercialSetting, error) {
+	var predicates []predicate.CommercialSetting
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, commercialsetting.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.CommercialSetting, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, commercialsetting.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.CommercialSetting, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, commercialsetting.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, commercialsetting.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, commercialsetting.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, commercialsetting.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, commercialsetting.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, commercialsetting.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, commercialsetting.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, commercialsetting.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, commercialsetting.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, commercialsetting.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, commercialsetting.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, commercialsetting.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, commercialsetting.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, commercialsetting.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, commercialsetting.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, commercialsetting.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, commercialsetting.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, commercialsetting.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, commercialsetting.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, commercialsetting.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, commercialsetting.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, commercialsetting.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, commercialsetting.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, commercialsetting.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, commercialsetting.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.Key != nil {
+		predicates = append(predicates, commercialsetting.KeyEQ(*i.Key))
+	}
+	if i.KeyNEQ != nil {
+		predicates = append(predicates, commercialsetting.KeyNEQ(*i.KeyNEQ))
+	}
+	if len(i.KeyIn) > 0 {
+		predicates = append(predicates, commercialsetting.KeyIn(i.KeyIn...))
+	}
+	if len(i.KeyNotIn) > 0 {
+		predicates = append(predicates, commercialsetting.KeyNotIn(i.KeyNotIn...))
+	}
+	if i.KeyGT != nil {
+		predicates = append(predicates, commercialsetting.KeyGT(*i.KeyGT))
+	}
+	if i.KeyGTE != nil {
+		predicates = append(predicates, commercialsetting.KeyGTE(*i.KeyGTE))
+	}
+	if i.KeyLT != nil {
+		predicates = append(predicates, commercialsetting.KeyLT(*i.KeyLT))
+	}
+	if i.KeyLTE != nil {
+		predicates = append(predicates, commercialsetting.KeyLTE(*i.KeyLTE))
+	}
+	if i.KeyContains != nil {
+		predicates = append(predicates, commercialsetting.KeyContains(*i.KeyContains))
+	}
+	if i.KeyHasPrefix != nil {
+		predicates = append(predicates, commercialsetting.KeyHasPrefix(*i.KeyHasPrefix))
+	}
+	if i.KeyHasSuffix != nil {
+		predicates = append(predicates, commercialsetting.KeyHasSuffix(*i.KeyHasSuffix))
+	}
+	if i.KeyEqualFold != nil {
+		predicates = append(predicates, commercialsetting.KeyEqualFold(*i.KeyEqualFold))
+	}
+	if i.KeyContainsFold != nil {
+		predicates = append(predicates, commercialsetting.KeyContainsFold(*i.KeyContainsFold))
+	}
+	if i.Mode != nil {
+		predicates = append(predicates, commercialsetting.ModeEQ(*i.Mode))
+	}
+	if i.ModeNEQ != nil {
+		predicates = append(predicates, commercialsetting.ModeNEQ(*i.ModeNEQ))
+	}
+	if len(i.ModeIn) > 0 {
+		predicates = append(predicates, commercialsetting.ModeIn(i.ModeIn...))
+	}
+	if len(i.ModeNotIn) > 0 {
+		predicates = append(predicates, commercialsetting.ModeNotIn(i.ModeNotIn...))
+	}
+	if i.RequireAdminActionReason != nil {
+		predicates = append(predicates, commercialsetting.RequireAdminActionReasonEQ(*i.RequireAdminActionReason))
+	}
+	if i.RequireAdminActionReasonNEQ != nil {
+		predicates = append(predicates, commercialsetting.RequireAdminActionReasonNEQ(*i.RequireAdminActionReasonNEQ))
+	}
+	if i.PaymentProviderSecretsEncrypted != nil {
+		predicates = append(predicates, commercialsetting.PaymentProviderSecretsEncryptedEQ(*i.PaymentProviderSecretsEncrypted))
+	}
+	if i.PaymentProviderSecretsEncryptedNEQ != nil {
+		predicates = append(predicates, commercialsetting.PaymentProviderSecretsEncryptedNEQ(*i.PaymentProviderSecretsEncryptedNEQ))
+	}
+	if i.WorkersEnabled != nil {
+		predicates = append(predicates, commercialsetting.WorkersEnabledEQ(*i.WorkersEnabled))
+	}
+	if i.WorkersEnabledNEQ != nil {
+		predicates = append(predicates, commercialsetting.WorkersEnabledNEQ(*i.WorkersEnabledNEQ))
+	}
+	if i.OrderExpiryWorkerEnabled != nil {
+		predicates = append(predicates, commercialsetting.OrderExpiryWorkerEnabledEQ(*i.OrderExpiryWorkerEnabled))
+	}
+	if i.OrderExpiryWorkerEnabledNEQ != nil {
+		predicates = append(predicates, commercialsetting.OrderExpiryWorkerEnabledNEQ(*i.OrderExpiryWorkerEnabledNEQ))
+	}
+	if i.HoldExpiryWorkerEnabled != nil {
+		predicates = append(predicates, commercialsetting.HoldExpiryWorkerEnabledEQ(*i.HoldExpiryWorkerEnabled))
+	}
+	if i.HoldExpiryWorkerEnabledNEQ != nil {
+		predicates = append(predicates, commercialsetting.HoldExpiryWorkerEnabledNEQ(*i.HoldExpiryWorkerEnabledNEQ))
+	}
+	if i.SubscriptionExpiryWorkerEnabled != nil {
+		predicates = append(predicates, commercialsetting.SubscriptionExpiryWorkerEnabledEQ(*i.SubscriptionExpiryWorkerEnabled))
+	}
+	if i.SubscriptionExpiryWorkerEnabledNEQ != nil {
+		predicates = append(predicates, commercialsetting.SubscriptionExpiryWorkerEnabledNEQ(*i.SubscriptionExpiryWorkerEnabledNEQ))
+	}
+	if i.SubscriptionResetWorkerEnabled != nil {
+		predicates = append(predicates, commercialsetting.SubscriptionResetWorkerEnabledEQ(*i.SubscriptionResetWorkerEnabled))
+	}
+	if i.SubscriptionResetWorkerEnabledNEQ != nil {
+		predicates = append(predicates, commercialsetting.SubscriptionResetWorkerEnabledNEQ(*i.SubscriptionResetWorkerEnabledNEQ))
+	}
+	if i.AffiliateRebateThawWorkerEnabled != nil {
+		predicates = append(predicates, commercialsetting.AffiliateRebateThawWorkerEnabledEQ(*i.AffiliateRebateThawWorkerEnabled))
+	}
+	if i.AffiliateRebateThawWorkerEnabledNEQ != nil {
+		predicates = append(predicates, commercialsetting.AffiliateRebateThawWorkerEnabledNEQ(*i.AffiliateRebateThawWorkerEnabledNEQ))
+	}
+	if i.FailedBillingRetryWorkerEnabled != nil {
+		predicates = append(predicates, commercialsetting.FailedBillingRetryWorkerEnabledEQ(*i.FailedBillingRetryWorkerEnabled))
+	}
+	if i.FailedBillingRetryWorkerEnabledNEQ != nil {
+		predicates = append(predicates, commercialsetting.FailedBillingRetryWorkerEnabledNEQ(*i.FailedBillingRetryWorkerEnabledNEQ))
+	}
+	if i.WorkerBatchSize != nil {
+		predicates = append(predicates, commercialsetting.WorkerBatchSizeEQ(*i.WorkerBatchSize))
+	}
+	if i.WorkerBatchSizeNEQ != nil {
+		predicates = append(predicates, commercialsetting.WorkerBatchSizeNEQ(*i.WorkerBatchSizeNEQ))
+	}
+	if len(i.WorkerBatchSizeIn) > 0 {
+		predicates = append(predicates, commercialsetting.WorkerBatchSizeIn(i.WorkerBatchSizeIn...))
+	}
+	if len(i.WorkerBatchSizeNotIn) > 0 {
+		predicates = append(predicates, commercialsetting.WorkerBatchSizeNotIn(i.WorkerBatchSizeNotIn...))
+	}
+	if i.WorkerBatchSizeGT != nil {
+		predicates = append(predicates, commercialsetting.WorkerBatchSizeGT(*i.WorkerBatchSizeGT))
+	}
+	if i.WorkerBatchSizeGTE != nil {
+		predicates = append(predicates, commercialsetting.WorkerBatchSizeGTE(*i.WorkerBatchSizeGTE))
+	}
+	if i.WorkerBatchSizeLT != nil {
+		predicates = append(predicates, commercialsetting.WorkerBatchSizeLT(*i.WorkerBatchSizeLT))
+	}
+	if i.WorkerBatchSizeLTE != nil {
+		predicates = append(predicates, commercialsetting.WorkerBatchSizeLTE(*i.WorkerBatchSizeLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, commercialsetting.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, commercialsetting.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, commercialsetting.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, commercialsetting.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, commercialsetting.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, commercialsetting.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, commercialsetting.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, commercialsetting.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, commercialsetting.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, commercialsetting.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, commercialsetting.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, commercialsetting.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, commercialsetting.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyCommercialSettingWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return commercialsetting.And(predicates...), nil
 	}
 }
 

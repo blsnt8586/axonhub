@@ -105,6 +105,18 @@ func (f BillingAccountBindingFunc) Mutate(ctx context.Context, m ent.Mutation) (
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingAccountBindingMutation", m)
 }
 
+// The BillingAuditLogFunc type is an adapter to allow the use of ordinary
+// function as BillingAuditLog mutator.
+type BillingAuditLogFunc func(context.Context, *ent.BillingAuditLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BillingAuditLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BillingAuditLogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingAuditLogMutation", m)
+}
+
 // The BillingHoldFunc type is an adapter to allow the use of ordinary
 // function as BillingHold mutator.
 type BillingHoldFunc func(context.Context, *ent.BillingHoldMutation) (ent.Value, error)
@@ -235,6 +247,18 @@ func (f ChannelProbeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChannelProbeMutation", m)
+}
+
+// The CommercialSettingFunc type is an adapter to allow the use of ordinary
+// function as CommercialSetting mutator.
+type CommercialSettingFunc func(context.Context, *ent.CommercialSettingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommercialSettingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CommercialSettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommercialSettingMutation", m)
 }
 
 // The DataStorageFunc type is an adapter to allow the use of ordinary

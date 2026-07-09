@@ -339,6 +339,43 @@ var (
 			},
 		},
 	}
+	// BillingAuditLogsColumns holds the columns for the "billing_audit_logs" table.
+	BillingAuditLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "action", Type: field.TypeString},
+		{Name: "actor_type", Type: field.TypeEnum, Enums: []string{"admin", "system"}, Default: "admin"},
+		{Name: "actor_user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "target_type", Type: field.TypeString, Default: ""},
+		{Name: "target_id", Type: field.TypeString, Default: ""},
+		{Name: "target_user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "reason", Type: field.TypeString, Default: ""},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+	}
+	// BillingAuditLogsTable holds the schema information for the "billing_audit_logs" table.
+	BillingAuditLogsTable = &schema.Table{
+		Name:       "billing_audit_logs",
+		Columns:    BillingAuditLogsColumns,
+		PrimaryKey: []*schema.Column{BillingAuditLogsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "billing_audit_logs_by_action",
+				Unique:  false,
+				Columns: []*schema.Column{BillingAuditLogsColumns[3]},
+			},
+			{
+				Name:    "billing_audit_logs_by_actor_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{BillingAuditLogsColumns[5]},
+			},
+			{
+				Name:    "billing_audit_logs_by_target",
+				Unique:  false,
+				Columns: []*schema.Column{BillingAuditLogsColumns[6], BillingAuditLogsColumns[7]},
+			},
+		},
+	}
 	// BillingHoldsColumns holds the columns for the "billing_holds" table.
 	BillingHoldsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -796,6 +833,38 @@ var (
 				Name:    "channel_probes_by_channel_id_timestamp",
 				Unique:  false,
 				Columns: []*schema.Column{ChannelProbesColumns[6], ChannelProbesColumns[5]},
+			},
+		},
+	}
+	// CommercialSettingsColumns holds the columns for the "commercial_settings" table.
+	CommercialSettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "key", Type: field.TypeString, Default: "default"},
+		{Name: "mode", Type: field.TypeEnum, Enums: []string{"disabled", "warn", "enforce"}, Default: "enforce"},
+		{Name: "require_admin_action_reason", Type: field.TypeBool, Default: true},
+		{Name: "payment_provider_secrets_encrypted", Type: field.TypeBool, Default: true},
+		{Name: "workers_enabled", Type: field.TypeBool, Default: true},
+		{Name: "order_expiry_worker_enabled", Type: field.TypeBool, Default: true},
+		{Name: "hold_expiry_worker_enabled", Type: field.TypeBool, Default: true},
+		{Name: "subscription_expiry_worker_enabled", Type: field.TypeBool, Default: true},
+		{Name: "subscription_reset_worker_enabled", Type: field.TypeBool, Default: true},
+		{Name: "affiliate_rebate_thaw_worker_enabled", Type: field.TypeBool, Default: true},
+		{Name: "failed_billing_retry_worker_enabled", Type: field.TypeBool, Default: true},
+		{Name: "worker_batch_size", Type: field.TypeInt, Default: 100},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+	}
+	// CommercialSettingsTable holds the schema information for the "commercial_settings" table.
+	CommercialSettingsTable = &schema.Table{
+		Name:       "commercial_settings",
+		Columns:    CommercialSettingsColumns,
+		PrimaryKey: []*schema.Column{CommercialSettingsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "commercial_settings_by_key",
+				Unique:  true,
+				Columns: []*schema.Column{CommercialSettingsColumns[3]},
 			},
 		},
 	}
@@ -2206,6 +2275,7 @@ var (
 		AffiliateSettingsTable,
 		BillingAccountsTable,
 		BillingAccountBindingsTable,
+		BillingAuditLogsTable,
 		BillingHoldsTable,
 		BillingNotificationsTable,
 		BillingNotificationPreferencesTable,
@@ -2217,6 +2287,7 @@ var (
 		ChannelModelPriceVersionsTable,
 		ChannelOverrideTemplatesTable,
 		ChannelProbesTable,
+		CommercialSettingsTable,
 		DataStoragesTable,
 		LedgerEntriesTable,
 		LedgerTransactionsTable,

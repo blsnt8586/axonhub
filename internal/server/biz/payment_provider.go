@@ -2,11 +2,18 @@ package biz
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/md5" //nolint:gosec // ePay uses MD5 signatures.
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
+	"os"
 	"sort"
 	"strings"
 
@@ -114,6 +121,8 @@ type EPayConfig struct {
 	SiteName   string `json:"site_name"`
 }
 
+const encryptedPaymentSecretPrefix = "enc:v1:"
+
 type EPayNotify struct {
 	PID         string `json:"pid"`
 	TradeNo     string `json:"trade_no"`
@@ -185,6 +194,10 @@ func paymentOrderPayableAmountMicros(order *ent.PaymentOrder) int64 {
 }
 
 func parseEPayConfig(raw objects.JSONRawMessage) (*EPayConfig, error) {
+	return ParseEPayConfig(raw)
+}
+
+func ParseEPayConfig(raw objects.JSONRawMessage) (*EPayConfig, error) {
 	if len(raw) == 0 {
 		return nil, fmt.Errorf("epay config is required")
 	}
@@ -202,6 +215,11 @@ func parseEPayConfig(raw objects.JSONRawMessage) (*EPayConfig, error) {
 	if cfg.Key == "" {
 		return nil, fmt.Errorf("epay key is required")
 	}
+	key, err := decryptPaymentSecret(cfg.Key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt epay key: %w", err)
+	}
+	cfg.Key = key
 	if cfg.NotifyURL == "" {
 		return nil, fmt.Errorf("epay notify_url is required")
 	}
@@ -210,6 +228,76 @@ func parseEPayConfig(raw objects.JSONRawMessage) (*EPayConfig, error) {
 	}
 
 	return &cfg, nil
+}
+
+func encryptEPayConfig(cfg EPayConfig) (EPayConfig, error) {
+	key, err := encryptPaymentSecret(cfg.Key)
+	if err != nil {
+		return cfg, err
+	}
+	cfg.Key = key
+	return cfg, nil
+}
+
+func encryptPaymentSecret(value string) (string, error) {
+	if value == "" || strings.HasPrefix(value, encryptedPaymentSecretPrefix) {
+		return value, nil
+	}
+	block, err := aes.NewCipher(paymentSecretEncryptionKey())
+	if err != nil {
+		return "", err
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", err
+	}
+	ciphertext := gcm.Seal(nil, nonce, []byte(value), nil)
+	payload := append(nonce, ciphertext...)
+	return encryptedPaymentSecretPrefix + base64.StdEncoding.EncodeToString(payload), nil
+}
+
+func decryptPaymentSecret(value string) (string, error) {
+	if value == "" || !strings.HasPrefix(value, encryptedPaymentSecretPrefix) {
+		return value, nil
+	}
+	payload, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(value, encryptedPaymentSecretPrefix))
+	if err != nil {
+		return "", err
+	}
+	block, err := aes.NewCipher(paymentSecretEncryptionKey())
+	if err != nil {
+		return "", err
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	if len(payload) < gcm.NonceSize() {
+		return "", fmt.Errorf("encrypted payment secret payload is too short")
+	}
+	nonce := payload[:gcm.NonceSize()]
+	ciphertext := payload[gcm.NonceSize():]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", err
+	}
+	return string(plaintext), nil
+}
+
+func paymentSecretEncryptionKey() []byte {
+	secret := os.Getenv("AXONHUB_PAYMENT_SECRET_KEY")
+	if secret == "" {
+		secret = os.Getenv("AXONHUB_SECRET_KEY")
+	}
+	if secret == "" {
+		secret = "axonhub-local-development-payment-secret"
+	}
+	sum := sha256.Sum256([]byte(secret))
+	return sum[:]
 }
 
 func SignEPayParams(params map[string]string, key string) string {

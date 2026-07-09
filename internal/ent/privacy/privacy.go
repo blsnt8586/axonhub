@@ -303,6 +303,30 @@ func (f BillingAccountBindingMutationRuleFunc) EvalMutation(ctx context.Context,
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.BillingAccountBindingMutation", m)
 }
 
+// The BillingAuditLogQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type BillingAuditLogQueryRuleFunc func(context.Context, *ent.BillingAuditLogQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f BillingAuditLogQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingAuditLogQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.BillingAuditLogQuery", q)
+}
+
+// The BillingAuditLogMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type BillingAuditLogMutationRuleFunc func(context.Context, *ent.BillingAuditLogMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f BillingAuditLogMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.BillingAuditLogMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.BillingAuditLogMutation", m)
+}
+
 // The BillingHoldQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type BillingHoldQueryRuleFunc func(context.Context, *ent.BillingHoldQuery) error
@@ -565,6 +589,30 @@ func (f ChannelProbeMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mu
 		return f(ctx, m)
 	}
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.ChannelProbeMutation", m)
+}
+
+// The CommercialSettingQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type CommercialSettingQueryRuleFunc func(context.Context, *ent.CommercialSettingQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f CommercialSettingQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.CommercialSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.CommercialSettingQuery", q)
+}
+
+// The CommercialSettingMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type CommercialSettingMutationRuleFunc func(context.Context, *ent.CommercialSettingMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f CommercialSettingMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.CommercialSettingMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.CommercialSettingMutation", m)
 }
 
 // The DataStorageQueryRuleFunc type is an adapter to allow the use of ordinary
@@ -1290,6 +1338,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.BillingAccountBindingQuery:
 		return q.Filter(), nil
+	case *ent.BillingAuditLogQuery:
+		return q.Filter(), nil
 	case *ent.BillingHoldQuery:
 		return q.Filter(), nil
 	case *ent.BillingNotificationQuery:
@@ -1311,6 +1361,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 	case *ent.ChannelOverrideTemplateQuery:
 		return q.Filter(), nil
 	case *ent.ChannelProbeQuery:
+		return q.Filter(), nil
+	case *ent.CommercialSettingQuery:
 		return q.Filter(), nil
 	case *ent.DataStorageQuery:
 		return q.Filter(), nil
@@ -1391,6 +1443,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 		return m.Filter(), nil
 	case *ent.BillingAccountBindingMutation:
 		return m.Filter(), nil
+	case *ent.BillingAuditLogMutation:
+		return m.Filter(), nil
 	case *ent.BillingHoldMutation:
 		return m.Filter(), nil
 	case *ent.BillingNotificationMutation:
@@ -1412,6 +1466,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.ChannelOverrideTemplateMutation:
 		return m.Filter(), nil
 	case *ent.ChannelProbeMutation:
+		return m.Filter(), nil
+	case *ent.CommercialSettingMutation:
 		return m.Filter(), nil
 	case *ent.DataStorageMutation:
 		return m.Filter(), nil

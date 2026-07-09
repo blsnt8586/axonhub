@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
+	"github.com/looplj/axonhub/internal/ent/billingauditlog"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
@@ -24,6 +25,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
 	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
+	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -383,6 +385,46 @@ func init() {
 	billingaccountbindingDescRelation := billingaccountbindingFields[3].Descriptor()
 	// billingaccountbinding.DefaultRelation holds the default value on creation for the relation field.
 	billingaccountbinding.DefaultRelation = billingaccountbindingDescRelation.Default.(string)
+	billingauditlogMixin := schema.BillingAuditLog{}.Mixin()
+	billingauditlog.Policy = privacy.NewPolicies(schema.BillingAuditLog{})
+	billingauditlog.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := billingauditlog.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	billingauditlogMixinFields0 := billingauditlogMixin[0].Fields()
+	_ = billingauditlogMixinFields0
+	billingauditlogFields := schema.BillingAuditLog{}.Fields()
+	_ = billingauditlogFields
+	// billingauditlogDescCreatedAt is the schema descriptor for created_at field.
+	billingauditlogDescCreatedAt := billingauditlogMixinFields0[0].Descriptor()
+	// billingauditlog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	billingauditlog.DefaultCreatedAt = billingauditlogDescCreatedAt.Default.(func() time.Time)
+	// billingauditlogDescUpdatedAt is the schema descriptor for updated_at field.
+	billingauditlogDescUpdatedAt := billingauditlogMixinFields0[1].Descriptor()
+	// billingauditlog.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	billingauditlog.DefaultUpdatedAt = billingauditlogDescUpdatedAt.Default.(func() time.Time)
+	// billingauditlog.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	billingauditlog.UpdateDefaultUpdatedAt = billingauditlogDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// billingauditlogDescAction is the schema descriptor for action field.
+	billingauditlogDescAction := billingauditlogFields[0].Descriptor()
+	// billingauditlog.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	billingauditlog.ActionValidator = billingauditlogDescAction.Validators[0].(func(string) error)
+	// billingauditlogDescTargetType is the schema descriptor for target_type field.
+	billingauditlogDescTargetType := billingauditlogFields[3].Descriptor()
+	// billingauditlog.DefaultTargetType holds the default value on creation for the target_type field.
+	billingauditlog.DefaultTargetType = billingauditlogDescTargetType.Default.(string)
+	// billingauditlogDescTargetID is the schema descriptor for target_id field.
+	billingauditlogDescTargetID := billingauditlogFields[4].Descriptor()
+	// billingauditlog.DefaultTargetID holds the default value on creation for the target_id field.
+	billingauditlog.DefaultTargetID = billingauditlogDescTargetID.Default.(string)
+	// billingauditlogDescReason is the schema descriptor for reason field.
+	billingauditlogDescReason := billingauditlogFields[6].Descriptor()
+	// billingauditlog.DefaultReason holds the default value on creation for the reason field.
+	billingauditlog.DefaultReason = billingauditlogDescReason.Default.(string)
 	billingholdMixin := schema.BillingHold{}.Mixin()
 	billinghold.Policy = privacy.NewPolicies(schema.BillingHold{})
 	billinghold.Hooks[0] = func(next ent.Mutator) ent.Mutator {
@@ -834,6 +876,80 @@ func init() {
 	channeloverridetemplateDescBodyOverrideOperations := channeloverridetemplateFields[6].Descriptor()
 	// channeloverridetemplate.DefaultBodyOverrideOperations holds the default value on creation for the body_override_operations field.
 	channeloverridetemplate.DefaultBodyOverrideOperations = channeloverridetemplateDescBodyOverrideOperations.Default.([]objects.OverrideOperation)
+	commercialsettingMixin := schema.CommercialSetting{}.Mixin()
+	commercialsetting.Policy = privacy.NewPolicies(schema.CommercialSetting{})
+	commercialsetting.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := commercialsetting.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	commercialsettingMixinFields0 := commercialsettingMixin[0].Fields()
+	_ = commercialsettingMixinFields0
+	commercialsettingFields := schema.CommercialSetting{}.Fields()
+	_ = commercialsettingFields
+	// commercialsettingDescCreatedAt is the schema descriptor for created_at field.
+	commercialsettingDescCreatedAt := commercialsettingMixinFields0[0].Descriptor()
+	// commercialsetting.DefaultCreatedAt holds the default value on creation for the created_at field.
+	commercialsetting.DefaultCreatedAt = commercialsettingDescCreatedAt.Default.(func() time.Time)
+	// commercialsettingDescUpdatedAt is the schema descriptor for updated_at field.
+	commercialsettingDescUpdatedAt := commercialsettingMixinFields0[1].Descriptor()
+	// commercialsetting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	commercialsetting.DefaultUpdatedAt = commercialsettingDescUpdatedAt.Default.(func() time.Time)
+	// commercialsetting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	commercialsetting.UpdateDefaultUpdatedAt = commercialsettingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// commercialsettingDescKey is the schema descriptor for key field.
+	commercialsettingDescKey := commercialsettingFields[0].Descriptor()
+	// commercialsetting.DefaultKey holds the default value on creation for the key field.
+	commercialsetting.DefaultKey = commercialsettingDescKey.Default.(string)
+	// commercialsettingDescRequireAdminActionReason is the schema descriptor for require_admin_action_reason field.
+	commercialsettingDescRequireAdminActionReason := commercialsettingFields[2].Descriptor()
+	// commercialsetting.DefaultRequireAdminActionReason holds the default value on creation for the require_admin_action_reason field.
+	commercialsetting.DefaultRequireAdminActionReason = commercialsettingDescRequireAdminActionReason.Default.(bool)
+	// commercialsettingDescPaymentProviderSecretsEncrypted is the schema descriptor for payment_provider_secrets_encrypted field.
+	commercialsettingDescPaymentProviderSecretsEncrypted := commercialsettingFields[3].Descriptor()
+	// commercialsetting.DefaultPaymentProviderSecretsEncrypted holds the default value on creation for the payment_provider_secrets_encrypted field.
+	commercialsetting.DefaultPaymentProviderSecretsEncrypted = commercialsettingDescPaymentProviderSecretsEncrypted.Default.(bool)
+	// commercialsettingDescWorkersEnabled is the schema descriptor for workers_enabled field.
+	commercialsettingDescWorkersEnabled := commercialsettingFields[4].Descriptor()
+	// commercialsetting.DefaultWorkersEnabled holds the default value on creation for the workers_enabled field.
+	commercialsetting.DefaultWorkersEnabled = commercialsettingDescWorkersEnabled.Default.(bool)
+	// commercialsettingDescOrderExpiryWorkerEnabled is the schema descriptor for order_expiry_worker_enabled field.
+	commercialsettingDescOrderExpiryWorkerEnabled := commercialsettingFields[5].Descriptor()
+	// commercialsetting.DefaultOrderExpiryWorkerEnabled holds the default value on creation for the order_expiry_worker_enabled field.
+	commercialsetting.DefaultOrderExpiryWorkerEnabled = commercialsettingDescOrderExpiryWorkerEnabled.Default.(bool)
+	// commercialsettingDescHoldExpiryWorkerEnabled is the schema descriptor for hold_expiry_worker_enabled field.
+	commercialsettingDescHoldExpiryWorkerEnabled := commercialsettingFields[6].Descriptor()
+	// commercialsetting.DefaultHoldExpiryWorkerEnabled holds the default value on creation for the hold_expiry_worker_enabled field.
+	commercialsetting.DefaultHoldExpiryWorkerEnabled = commercialsettingDescHoldExpiryWorkerEnabled.Default.(bool)
+	// commercialsettingDescSubscriptionExpiryWorkerEnabled is the schema descriptor for subscription_expiry_worker_enabled field.
+	commercialsettingDescSubscriptionExpiryWorkerEnabled := commercialsettingFields[7].Descriptor()
+	// commercialsetting.DefaultSubscriptionExpiryWorkerEnabled holds the default value on creation for the subscription_expiry_worker_enabled field.
+	commercialsetting.DefaultSubscriptionExpiryWorkerEnabled = commercialsettingDescSubscriptionExpiryWorkerEnabled.Default.(bool)
+	// commercialsettingDescSubscriptionResetWorkerEnabled is the schema descriptor for subscription_reset_worker_enabled field.
+	commercialsettingDescSubscriptionResetWorkerEnabled := commercialsettingFields[8].Descriptor()
+	// commercialsetting.DefaultSubscriptionResetWorkerEnabled holds the default value on creation for the subscription_reset_worker_enabled field.
+	commercialsetting.DefaultSubscriptionResetWorkerEnabled = commercialsettingDescSubscriptionResetWorkerEnabled.Default.(bool)
+	// commercialsettingDescAffiliateRebateThawWorkerEnabled is the schema descriptor for affiliate_rebate_thaw_worker_enabled field.
+	commercialsettingDescAffiliateRebateThawWorkerEnabled := commercialsettingFields[9].Descriptor()
+	// commercialsetting.DefaultAffiliateRebateThawWorkerEnabled holds the default value on creation for the affiliate_rebate_thaw_worker_enabled field.
+	commercialsetting.DefaultAffiliateRebateThawWorkerEnabled = commercialsettingDescAffiliateRebateThawWorkerEnabled.Default.(bool)
+	// commercialsettingDescFailedBillingRetryWorkerEnabled is the schema descriptor for failed_billing_retry_worker_enabled field.
+	commercialsettingDescFailedBillingRetryWorkerEnabled := commercialsettingFields[10].Descriptor()
+	// commercialsetting.DefaultFailedBillingRetryWorkerEnabled holds the default value on creation for the failed_billing_retry_worker_enabled field.
+	commercialsetting.DefaultFailedBillingRetryWorkerEnabled = commercialsettingDescFailedBillingRetryWorkerEnabled.Default.(bool)
+	// commercialsettingDescWorkerBatchSize is the schema descriptor for worker_batch_size field.
+	commercialsettingDescWorkerBatchSize := commercialsettingFields[11].Descriptor()
+	// commercialsetting.DefaultWorkerBatchSize holds the default value on creation for the worker_batch_size field.
+	commercialsetting.DefaultWorkerBatchSize = commercialsettingDescWorkerBatchSize.Default.(int)
+	// commercialsetting.WorkerBatchSizeValidator is a validator for the "worker_batch_size" field. It is called by the builders before save.
+	commercialsetting.WorkerBatchSizeValidator = commercialsettingDescWorkerBatchSize.Validators[0].(func(int) error)
+	// commercialsettingDescCurrency is the schema descriptor for currency field.
+	commercialsettingDescCurrency := commercialsettingFields[12].Descriptor()
+	// commercialsetting.DefaultCurrency holds the default value on creation for the currency field.
+	commercialsetting.DefaultCurrency = commercialsettingDescCurrency.Default.(string)
 	datastorageMixin := schema.DataStorage{}.Mixin()
 	datastorage.Policy = privacy.NewPolicies(schema.DataStorage{})
 	datastorage.Hooks[0] = func(next ent.Mutator) ent.Mutator {
