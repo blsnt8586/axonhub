@@ -180,6 +180,52 @@ func TestUsageBillingProcessorChargesUsageOnce(t *testing.T) {
 	require.Equal(t, int64(8_500_000), reloaded.BalanceMicros)
 }
 
+func TestUsageBillingProcessorStoresRequestTypeFromUsageLogFormat(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, processor, account := newUsageBillingTestProcessor(t, "usage_billing_request_type")
+	_, err := client.BillingPriceRule.Create().
+		SetScopeType(billingpricerule.ScopeTypeGlobal).
+		SetScopeID(0).
+		SetModelPattern("image-test").
+		SetPrice(testModelPrice("1")).
+		SetReferenceID("image-price").
+		Save(ctx)
+	require.NoError(t, err)
+	ledgerSvc := NewLedgerService(LedgerServiceParams{Ent: client})
+	_, err = ledgerSvc.Credit(ctx, account.ID, decimal.RequireFromString("10"), ledgertransaction.TypePaymentRecharge, "initial-credit")
+	require.NoError(t, err)
+
+	apiKey, err := client.APIKey.Query().
+		Where(apikey.ProjectIDEQ(account.OwnerID)).
+		First(ctx)
+	require.NoError(t, err)
+	req, err := client.Request.Create().
+		SetAPIKeyID(apiKey.ID).
+		SetProjectID(account.OwnerID).
+		SetModelID("image-test").
+		SetFormat("openai/images").
+		SetStatus(request.StatusCompleted).
+		SetRequestBody(objects.JSONRawMessage([]byte(`{}`))).
+		Save(ctx)
+	require.NoError(t, err)
+	usageLog, err := client.UsageLog.Create().
+		SetRequestID(req.ID).
+		SetAPIKeyID(apiKey.ID).
+		SetProjectID(account.OwnerID).
+		SetChannelID(1).
+		SetModelID("image-test").
+		SetFormat("openai/images").
+		SetPromptTokens(1_000_000).
+		SetTotalTokens(1_000_000).
+		Save(ctx)
+	require.NoError(t, err)
+
+	record, err := processor.BillUsage(ctx, usageLog.ID)
+	require.NoError(t, err)
+	require.Equal(t, usagebillingrecord.RequestTypeImage, record.RequestType)
+}
+
 func TestUsageBillingProcessorCapturesBillingHold(t *testing.T) {
 	t.Parallel()
 

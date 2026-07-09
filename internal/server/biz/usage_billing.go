@@ -253,6 +253,7 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 			SetNillableUserID(subjectUserID).
 			SetNillableAPIKeyID(usageLogAPIKeyIDPtr(usageLog)).
 			SetModelID(usageLog.ModelID).
+			SetRequestType(usagebillingrecord.RequestType(inferCommercialRequestType(usageLog.Format))).
 			SetUsageSnapshot(objects.JSONRawMessage(usageSnapshot)).
 			SetPriceSnapshot(priceRule.Price).
 			SetPriceReferenceID(priceRule.ReferenceID).

@@ -86,36 +86,36 @@ Verification:
 
 ## Stage 13: User Account Profile And Usage Console
 
-Status: [ ] Planned
+Status: [x] Completed
 
 Goal: provide `new-api`-style user commercial visibility without changing the
 existing AxonHub wallet or billing source of truth.
 
 Backend scope:
 
-- [ ] Add user account summary queries for balance, held amount, available amount,
+- [x] Add user account summary queries for balance, held amount, available amount,
   credit limit, total recharge, total consumption, today's consumption, current
   month consumption, request count, failure count, top models, top projects, and
   top API keys.
-- [ ] Build summaries from existing BillingAccount, LedgerTransaction,
+- [x] Build summaries from existing BillingAccount, LedgerTransaction,
   UsageBillingRecord, Request, and UsageLog data.
-- [ ] Enforce access rules: users can see only themselves; owner can inspect any
+- [x] Enforce access rules: users can see only themselves; owner can inspect any
   user.
-- [ ] Add filters by time range, project, API key, model, and request type.
+- [x] Add filters by time range, project, API key, model, and request type.
 
 Frontend scope:
 
-- [ ] Enhance the user wallet/account page with usage and billing summaries.
-- [ ] Add an owner user-detail commercial panel with wallet, ledger, usage
+- [x] Enhance the user wallet/account page with usage and billing summaries.
+- [x] Add an owner user-detail commercial panel with wallet, ledger, usage
   charges, API key spend, recent requests, and recent billing failures.
-- [ ] Add empty, loading, error, and permission-denied states.
+- [x] Add empty, loading, error, and permission-denied states.
 
 Verification:
 
-- [ ] User cannot read another user's profile.
-- [ ] Owner can inspect a selected user's commercial profile.
-- [ ] Summary totals reconcile with ledger and usage billing records.
-- [ ] Filters return stable results.
+- [x] User cannot read another user's profile.
+- [x] Owner can inspect a selected user's commercial profile.
+- [x] Summary totals reconcile with ledger and usage billing records.
+- [x] Filters return stable results.
 
 ## Stage 14: Usage Aggregation Tables
 

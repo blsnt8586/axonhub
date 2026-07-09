@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { AlertCircle, Bell, CreditCard, ExternalLink, Loader2, PackageCheck, RefreshCw, ShieldCheck, Ticket, UserPlus, Users, Wallet } from 'lucide-react';
+import { AlertCircle, BarChart3, Bell, CreditCard, ExternalLink, Loader2, PackageCheck, RefreshCw, ShieldCheck, Ticket, UserPlus, Users, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -28,6 +28,12 @@ import {
   useSaveMyBillingNotificationPreference,
   useTransferAffiliateRebates,
 } from './data/billing';
+import {
+  type CommercialProfile,
+  type CommercialProfileFilter,
+  type CommercialProfileRankedItem,
+  useMyCommercialProfile,
+} from './data/commercial-profile';
 
 function microsToAmount(value: number) {
   return value / 1_000_000;
@@ -98,6 +104,207 @@ function PromoQuoteSummary({
   );
 }
 
+function BillingCommercialProfilePanel({
+  profile,
+  filter,
+  onFilterChange,
+  isLoading,
+  formatCurrency,
+}: {
+  profile?: CommercialProfile;
+  filter: CommercialProfileFilter;
+  onFilterChange: (next: CommercialProfileFilter) => void;
+  isLoading: boolean;
+  formatCurrency: Intl.NumberFormat;
+}) {
+  const { t } = useTranslation();
+  const totals = profile?.totals;
+
+  return (
+    <Card className='rounded-lg'>
+      <CardHeader>
+        <CardTitle className='flex items-center gap-2 text-base'>
+          <BarChart3 className='size-4' />
+          {t('billing.commercial.title')}
+        </CardTitle>
+        <CardDescription>{t('billing.commercial.description')}</CardDescription>
+      </CardHeader>
+      <CardContent className='space-y-4'>
+        <div className='grid gap-3 md:grid-cols-3 xl:grid-cols-6'>
+          <CommercialFilterInput
+            label={t('billing.commercial.filters.from')}
+            type='date'
+            value={filter.from || ''}
+            onChange={(value) => onFilterChange({ ...filter, from: value })}
+          />
+          <CommercialFilterInput
+            label={t('billing.commercial.filters.to')}
+            type='date'
+            value={filter.to || ''}
+            onChange={(value) => onFilterChange({ ...filter, to: value })}
+          />
+          <CommercialFilterInput
+            label={t('billing.commercial.filters.projectId')}
+            value={String(filter.projectId || '')}
+            onChange={(value) => onFilterChange({ ...filter, projectId: value })}
+          />
+          <CommercialFilterInput
+            label={t('billing.commercial.filters.apiKeyId')}
+            value={String(filter.apiKeyId || '')}
+            onChange={(value) => onFilterChange({ ...filter, apiKeyId: value })}
+          />
+          <CommercialFilterInput
+            label={t('billing.commercial.filters.modelId')}
+            value={filter.modelId || ''}
+            onChange={(value) => onFilterChange({ ...filter, modelId: value })}
+          />
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>{t('billing.commercial.filters.requestType')}</label>
+            <select
+              className='border-input bg-background ring-offset-background focus-visible:ring-ring h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
+              value={filter.requestType || 'all'}
+              onChange={(event) => onFilterChange({ ...filter, requestType: event.target.value as CommercialProfileFilter['requestType'] })}
+            >
+              {['all', 'chat', 'image', 'video', 'embedding', 'audio', 'other'].map((value) => (
+                <option key={value} value={value}>
+                  {value === 'all' ? t('billing.commercial.filters.allTypes') : value}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className='grid gap-3 md:grid-cols-3 xl:grid-cols-6'>
+          <CommercialSummaryCard title={t('billing.commercial.totalRecharge')} value={formatMoneyOrLoading(totals?.totalRechargeMicros, isLoading, formatCurrency)} />
+          <CommercialSummaryCard title={t('billing.commercial.totalConsumption')} value={formatMoneyOrLoading(totals?.totalConsumptionMicros, isLoading, formatCurrency)} />
+          <CommercialSummaryCard title={t('billing.commercial.todayConsumption')} value={formatMoneyOrLoading(totals?.todayConsumptionMicros, isLoading, formatCurrency)} />
+          <CommercialSummaryCard title={t('billing.commercial.monthConsumption')} value={formatMoneyOrLoading(totals?.monthConsumptionMicros, isLoading, formatCurrency)} />
+          <CommercialSummaryCard title={t('billing.commercial.requestCount')} value={isLoading ? '-' : String(totals?.requestCount ?? 0)} />
+          <CommercialSummaryCard title={t('billing.commercial.failureCount')} value={isLoading ? '-' : String(totals?.failureCount ?? 0)} />
+        </div>
+
+        <div className='grid gap-4 xl:grid-cols-3'>
+          <CommercialRankList title={t('billing.commercial.topModels')} rows={profile?.topModels ?? []} isLoading={isLoading} formatCurrency={formatCurrency} />
+          <CommercialRankList title={t('billing.commercial.topProjects')} rows={profile?.topProjects ?? []} isLoading={isLoading} formatCurrency={formatCurrency} />
+          <CommercialRankList title={t('billing.commercial.topApiKeys')} rows={profile?.topApiKeys ?? []} isLoading={isLoading} formatCurrency={formatCurrency} />
+        </div>
+
+        <div className='overflow-auto rounded-md border'>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('billing.columns.time')}</TableHead>
+                <TableHead>{t('billing.columns.model')}</TableHead>
+                <TableHead>{t('billing.commercial.project')}</TableHead>
+                <TableHead>{t('billing.commercial.apiKey')}</TableHead>
+                <TableHead>{t('billing.columns.status')}</TableHead>
+                <TableHead className='text-right'>{t('billing.columns.amount')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <CommercialDataStateRow colSpan={6} isLoading={isLoading} isEmpty={(profile?.recentBillingFailures ?? []).length === 0} />
+              {profile?.recentBillingFailures.map((failure) => (
+                <TableRow key={failure.id}>
+                  <TableCell>{formatDate(failure.createdAt)}</TableCell>
+                  <TableCell className='font-mono text-xs'>{failure.modelId}</TableCell>
+                  <TableCell>{failure.projectName}</TableCell>
+                  <TableCell>{failure.apiKeyName || failure.apiKeyId || '-'}</TableCell>
+                  <TableCell>
+                    <Badge variant='destructive'>{failure.status}</Badge>
+                    {failure.error && <div className='text-muted-foreground mt-1 max-w-[280px] truncate text-xs'>{failure.error}</div>}
+                  </TableCell>
+                  <TableCell className='text-right font-mono'>{formatCurrency.format(microsToAmount(failure.chargeAmountMicros))}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CommercialFilterInput({
+  label,
+  value,
+  onChange,
+  type = 'text',
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <div className='space-y-2'>
+      <label className='text-sm font-medium'>{label}</label>
+      <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} />
+    </div>
+  );
+}
+
+function CommercialSummaryCard({ title, value }: { title: string; value: string }) {
+  return (
+    <div className='rounded-md border p-3'>
+      <div className='text-muted-foreground text-xs'>{title}</div>
+      <div className='mt-1 font-mono text-lg font-semibold tabular-nums'>{value}</div>
+    </div>
+  );
+}
+
+function CommercialRankList({
+  title,
+  rows,
+  isLoading,
+  formatCurrency,
+}: {
+  title: string;
+  rows: CommercialProfileRankedItem[];
+  isLoading: boolean;
+  formatCurrency: Intl.NumberFormat;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className='rounded-md border p-3'>
+      <div className='mb-2 text-sm font-medium'>{title}</div>
+      {isLoading ? (
+        <div className='text-muted-foreground text-sm'>{t('common.loading')}</div>
+      ) : rows.length === 0 ? (
+        <div className='text-muted-foreground text-sm'>{t('common.noData')}</div>
+      ) : (
+        <div className='space-y-2'>
+          {rows.map((row) => (
+            <div key={row.id} className='flex items-start justify-between gap-3 text-sm'>
+              <div className='min-w-0'>
+                <div className='truncate font-medium'>{row.name || row.id}</div>
+                <div className='text-muted-foreground text-xs'>{row.requestCount} {t('billing.commercial.requests')}</div>
+              </div>
+              <div className='font-mono text-xs tabular-nums'>{formatCurrency.format(microsToAmount(row.chargeAmountMicros))}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CommercialDataStateRow({ colSpan, isLoading, isEmpty }: { colSpan: number; isLoading: boolean; isEmpty: boolean }) {
+  const { t } = useTranslation();
+  if (!isLoading && !isEmpty) return null;
+  return (
+    <TableRow>
+      <TableCell colSpan={colSpan} className='text-muted-foreground h-20 text-center'>
+        {isLoading ? t('common.loading') : t('common.noData')}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function formatMoneyOrLoading(value: number | undefined, loading: boolean, formatCurrency: Intl.NumberFormat) {
+  if (loading) return '-';
+  return formatCurrency.format(microsToAmount(value ?? 0));
+}
+
 export default function BillingPage() {
   const { t, i18n } = useTranslation();
   const [amount, setAmount] = useState('20.00');
@@ -106,7 +313,9 @@ export default function BillingPage() {
   const [subscriptionPromoCode, setSubscriptionPromoCode] = useState('');
   const [redeemCode, setRedeemCode] = useState('');
   const [affiliateInviteCode, setAffiliateInviteCode] = useState('');
+  const [commercialFilter, setCommercialFilter] = useState<CommercialProfileFilter>({ requestType: 'all', limit: 10 });
   const { data, isLoading, isFetching, error, refetch } = useMyBillingOverview(10);
+  const commercialProfile = useMyCommercialProfile(commercialFilter);
   const createCheckout = useCreateMyEPayRechargeCheckout();
   const quoteRechargePromo = useQuoteRechargePromo();
   const quoteSubscriptionPromo = useQuoteSubscriptionPromo();
@@ -308,8 +517,16 @@ export default function BillingPage() {
             <h2 className='text-xl font-bold tracking-tight'>{t('billing.title')}</h2>
             <p className='text-muted-foreground text-sm'>{t('billing.description')}</p>
           </div>
-          <Button variant='outline' size='sm' onClick={() => void refetch()} disabled={isFetching}>
-            {isFetching ? <Loader2 className='size-4 animate-spin' /> : <RefreshCw className='size-4' />}
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => {
+              void refetch();
+              void commercialProfile.refetch();
+            }}
+            disabled={isFetching || commercialProfile.isFetching}
+          >
+            {isFetching || commercialProfile.isFetching ? <Loader2 className='size-4 animate-spin' /> : <RefreshCw className='size-4' />}
             {t('common.refresh')}
           </Button>
         </div>
@@ -321,6 +538,14 @@ export default function BillingPage() {
             <AlertCircle className='size-4' />
             <AlertTitle>{t('common.loadError')}</AlertTitle>
             <AlertDescription>{error instanceof Error ? error.message : t('common.errors.unknownError')}</AlertDescription>
+          </Alert>
+        )}
+
+        {commercialProfile.error && (
+          <Alert variant='destructive'>
+            <AlertCircle className='size-4' />
+            <AlertTitle>{t('common.loadError')}</AlertTitle>
+            <AlertDescription>{commercialProfile.error instanceof Error ? commercialProfile.error.message : t('common.errors.unknownError')}</AlertDescription>
           </Alert>
         )}
 
@@ -381,6 +606,14 @@ export default function BillingPage() {
             </CardContent>
           </Card>
         </div>
+
+        <BillingCommercialProfilePanel
+          profile={commercialProfile.data}
+          filter={commercialFilter}
+          onFilterChange={setCommercialFilter}
+          isLoading={commercialProfile.isLoading}
+          formatCurrency={formatCurrency}
+        />
 
         <div className='grid gap-4 lg:grid-cols-[360px_1fr]'>
           <div className='space-y-4'>

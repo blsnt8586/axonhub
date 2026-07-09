@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { useUsers } from '@/features/users/data/users';
+import { type CommercialProfile, useUserCommercialProfile } from '@/features/billing/data/commercial-profile';
 import {
   type AdminLedgerTransactionsFilter,
   type AdminBillingHoldsFilter,
@@ -1138,6 +1139,7 @@ export default function AdminBillingPage() {
   const selectedUser = users.find((user) => user.id === selectedUserID);
   const selectedUserNumericID = selectedUserID ? extractNumberIDAsNumber(selectedUserID) : 0;
   const selectedUserBilling = useAdminUserBillingDetail(selectedUserID || undefined, 10);
+  const selectedUserCommercialProfile = useUserCommercialProfile(selectedUserNumericID || undefined, { limit: 10 });
   const adminLedger = useAdminLedgerTransactions(appliedLedgerFilter, 50);
   const adminUsage = useAdminUsageBillingRecords(appliedUsageFilter, 50);
   const adminHolds = useAdminBillingHolds(appliedHoldFilter, 50);
@@ -1246,7 +1248,7 @@ export default function AdminBillingPage() {
       adminSubscriptionPlans.refetch(),
       adminUserSubscriptions.refetch(),
       adminReport.refetch(),
-      selectedUserBilling.refetch(),
+      ...(selectedUserID ? [selectedUserBilling.refetch(), selectedUserCommercialProfile.refetch()] : []),
     ]);
   }
 
@@ -1911,7 +1913,8 @@ export default function AdminBillingPage() {
             adminAuditLogs.error ||
             adminSubscriptionPlans.error ||
             adminUserSubscriptions.error ||
-            adminReport.error
+            adminReport.error ||
+            selectedUserCommercialProfile.error
           }
         />
 
@@ -2146,49 +2149,56 @@ export default function AdminBillingPage() {
                   <CardTitle className='text-base'>{t('adminBilling.userDetail.title')}</CardTitle>
                   <CardDescription>{selectedUser?.email || selectedUserNumericID}</CardDescription>
                 </CardHeader>
-                <CardContent className='grid gap-4 xl:grid-cols-3'>
-                  <MiniList
-                    title={t('adminBilling.tabs.ledger')}
-                    isLoading={selectedUserBilling.isLoading}
-                    empty={(selectedUserBilling.data?.ledgerTransactions ?? []).length === 0}
-                  >
-                    {selectedUserBilling.data?.ledgerTransactions.map((tx) => (
-                      <MiniRow
-                        key={tx.id}
-                        left={tx.type}
-                        right={`${tx.direction === 'debit' ? '-' : '+'}${formatMicros(tx.amountMicros, tx.currency)}`}
-                        sub={formatDate(tx.createdAt)}
-                      />
-                    ))}
-                  </MiniList>
-                  <MiniList
-                    title={t('adminBilling.tabs.orders')}
-                    isLoading={selectedUserBilling.isLoading}
-                    empty={(selectedUserBilling.data?.paymentOrders ?? []).length === 0}
-                  >
-                    {selectedUserBilling.data?.paymentOrders.map((order) => (
-                      <MiniRow
-                        key={order.id}
-                        left={order.orderNo}
-                        right={formatMicros(order.amountMicros, order.currency)}
-                        sub={order.status}
-                      />
-                    ))}
-                  </MiniList>
-                  <MiniList
-                    title={t('adminBilling.tabs.usage')}
-                    isLoading={selectedUserBilling.isLoading}
-                    empty={(selectedUserBilling.data?.usageBillingRecords ?? []).length === 0}
-                  >
-                    {selectedUserBilling.data?.usageBillingRecords.map((record) => (
-                      <MiniRow
-                        key={record.id}
-                        left={record.modelID}
-                        right={formatMicros(record.chargeAmountMicros, record.currency)}
-                        sub={record.error || record.status}
-                      />
-                    ))}
-                  </MiniList>
+                <CardContent className='space-y-4'>
+                  <AdminCommercialProfileSnapshot
+                    profile={selectedUserCommercialProfile.data}
+                    isLoading={selectedUserCommercialProfile.isLoading}
+                    formatMicros={formatMicros}
+                  />
+                  <div className='grid gap-4 xl:grid-cols-3'>
+                    <MiniList
+                      title={t('adminBilling.tabs.ledger')}
+                      isLoading={selectedUserBilling.isLoading}
+                      empty={(selectedUserBilling.data?.ledgerTransactions ?? []).length === 0}
+                    >
+                      {selectedUserBilling.data?.ledgerTransactions.map((tx) => (
+                        <MiniRow
+                          key={tx.id}
+                          left={tx.type}
+                          right={`${tx.direction === 'debit' ? '-' : '+'}${formatMicros(tx.amountMicros, tx.currency)}`}
+                          sub={formatDate(tx.createdAt)}
+                        />
+                      ))}
+                    </MiniList>
+                    <MiniList
+                      title={t('adminBilling.tabs.orders')}
+                      isLoading={selectedUserBilling.isLoading}
+                      empty={(selectedUserBilling.data?.paymentOrders ?? []).length === 0}
+                    >
+                      {selectedUserBilling.data?.paymentOrders.map((order) => (
+                        <MiniRow
+                          key={order.id}
+                          left={order.orderNo}
+                          right={formatMicros(order.amountMicros, order.currency)}
+                          sub={order.status}
+                        />
+                      ))}
+                    </MiniList>
+                    <MiniList
+                      title={t('adminBilling.tabs.usage')}
+                      isLoading={selectedUserBilling.isLoading}
+                      empty={(selectedUserBilling.data?.usageBillingRecords ?? []).length === 0}
+                    >
+                      {selectedUserBilling.data?.usageBillingRecords.map((record) => (
+                        <MiniRow
+                          key={record.id}
+                          left={record.modelID}
+                          right={formatMicros(record.chargeAmountMicros, record.currency)}
+                          sub={record.error || record.status}
+                        />
+                      ))}
+                    </MiniList>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -4787,6 +4797,82 @@ function UserSelect({
           ))}
         </SelectContent>
       </Select>
+    </div>
+  );
+}
+
+function AdminCommercialProfileSnapshot({
+  profile,
+  isLoading,
+  formatMicros,
+}: {
+  profile?: CommercialProfile;
+  isLoading: boolean;
+  formatMicros: (value: number, currency?: string, minimumFractionDigits?: number) => string;
+}) {
+  const { t } = useTranslation();
+  const currency = profile?.billingAccount.currency || 'CNY';
+  const totals = profile?.totals;
+
+  return (
+    <div className='space-y-3 rounded-md border p-3'>
+      <div className='flex items-center gap-2 text-sm font-medium'>
+        <BarChart3 className='size-4' />
+        {t('adminBilling.userDetail.commercialProfile')}
+      </div>
+      <div className='grid gap-3 md:grid-cols-3 xl:grid-cols-6'>
+        <CommercialSnapshotMetric title={t('adminBilling.userDetail.available')} value={isLoading ? '-' : formatMicros(profile?.billingAccount.availableMicros ?? 0, currency)} />
+        <CommercialSnapshotMetric title={t('adminBilling.userDetail.recharge')} value={isLoading ? '-' : formatMicros(totals?.totalRechargeMicros ?? 0, currency)} />
+        <CommercialSnapshotMetric title={t('adminBilling.userDetail.consumption')} value={isLoading ? '-' : formatMicros(totals?.totalConsumptionMicros ?? 0, currency)} />
+        <CommercialSnapshotMetric title={t('adminBilling.userDetail.today')} value={isLoading ? '-' : formatMicros(totals?.todayConsumptionMicros ?? 0, currency)} />
+        <CommercialSnapshotMetric title={t('adminBilling.userDetail.requests')} value={isLoading ? '-' : String(totals?.requestCount ?? 0)} />
+        <CommercialSnapshotMetric title={t('adminBilling.userDetail.failures')} value={isLoading ? '-' : String(totals?.failureCount ?? 0)} />
+      </div>
+      <div className='grid gap-3 xl:grid-cols-3'>
+        <MiniList title={t('adminBilling.userDetail.topModels')} isLoading={isLoading} empty={(profile?.topModels ?? []).length === 0}>
+          {profile?.topModels.map((row) => (
+            <MiniRow
+              key={row.id}
+              left={row.name || row.id}
+              right={formatMicros(row.chargeAmountMicros, currency)}
+              sub={`${row.requestCount} ${t('adminBilling.userDetail.requests')}`}
+            />
+          ))}
+        </MiniList>
+        <MiniList title={t('adminBilling.userDetail.topApiKeys')} isLoading={isLoading} empty={(profile?.topApiKeys ?? []).length === 0}>
+          {profile?.topApiKeys.map((row) => (
+            <MiniRow
+              key={row.id}
+              left={row.name || row.id}
+              right={formatMicros(row.chargeAmountMicros, currency)}
+              sub={`${row.requestCount} ${t('adminBilling.userDetail.requests')}`}
+            />
+          ))}
+        </MiniList>
+        <MiniList
+          title={t('adminBilling.userDetail.billingFailures')}
+          isLoading={isLoading}
+          empty={(profile?.recentBillingFailures ?? []).length === 0}
+        >
+          {profile?.recentBillingFailures.map((failure) => (
+            <MiniRow
+              key={failure.id}
+              left={failure.modelId}
+              right={formatMicros(failure.chargeAmountMicros, failure.currency)}
+              sub={failure.error || failure.status}
+            />
+          ))}
+        </MiniList>
+      </div>
+    </div>
+  );
+}
+
+function CommercialSnapshotMetric({ title, value }: { title: string; value: string }) {
+  return (
+    <div className='bg-muted/40 rounded-md border p-2'>
+      <div className='text-muted-foreground text-xs'>{title}</div>
+      <div className='mt-1 font-mono text-sm font-semibold tabular-nums'>{value}</div>
     </div>
   );
 }

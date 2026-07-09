@@ -18,25 +18,26 @@ import (
 type Handlers struct {
 	fx.In
 
-	Graphql        *gql.GraphqlHandler
-	OpenAPIGraphql *openapi.GraphqlHandler
-	OpenAI         *api.OpenAIHandlers
-	Doubao         *api.DoubaoHandlers
-	Anthropic      *api.AnthropicHandlers
-	Gemini         *api.GeminiHandlers
-	AiSDK          *api.AiSDKHandlers
-	Playground     *api.PlaygroundHandlers
-	System         *api.SystemHandlers
-	Auth           *api.AuthHandlers
-	Jina           *api.JinaHandlers
-	Codex          *api.CodexHandlers
-	ClaudeCode     *api.ClaudeCodeHandlers
-	Antigravity    *api.AntigravityHandlers
-	Copilot        *api.CopilotHandlers
-	RequestContent *api.RequestContentHandlers
-	OIDC           *api.OIDCHandlers
-	RequestPreview *api.RequestPreviewHandlers
-	Payment        *api.PaymentHandlers
+	Graphql           *gql.GraphqlHandler
+	OpenAPIGraphql    *openapi.GraphqlHandler
+	OpenAI            *api.OpenAIHandlers
+	Doubao            *api.DoubaoHandlers
+	Anthropic         *api.AnthropicHandlers
+	Gemini            *api.GeminiHandlers
+	AiSDK             *api.AiSDKHandlers
+	Playground        *api.PlaygroundHandlers
+	System            *api.SystemHandlers
+	Auth              *api.AuthHandlers
+	Jina              *api.JinaHandlers
+	Codex             *api.CodexHandlers
+	ClaudeCode        *api.ClaudeCodeHandlers
+	Antigravity       *api.AntigravityHandlers
+	Copilot           *api.CopilotHandlers
+	RequestContent    *api.RequestContentHandlers
+	OIDC              *api.OIDCHandlers
+	RequestPreview    *api.RequestPreviewHandlers
+	Payment           *api.PaymentHandlers
+	CommercialProfile *api.UserCommercialProfileHandlers
 }
 
 type Services struct {
@@ -135,6 +136,8 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 
 		adminGroup.GET("/system/registration", handlers.System.GetRegistrationSettings)
 		adminGroup.PUT("/system/registration", handlers.System.UpdateRegistrationSettings)
+		adminGroup.GET("/account/commercial-profile", handlers.CommercialProfile.GetMyProfile)
+		adminGroup.GET("/users/:user_id/commercial-profile", handlers.CommercialProfile.GetUserProfile)
 
 		// Playground API with channel specification support
 		adminGroup.POST(
