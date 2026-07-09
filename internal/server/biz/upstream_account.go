@@ -2,8 +2,12 @@ package biz
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"path"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/fx"
@@ -22,12 +26,69 @@ type UpstreamAccountServiceParams struct {
 
 type UpstreamAccountService struct {
 	*AbstractService
+
+	mu      sync.Mutex
+	runtime map[int]*upstreamAccountRuntime
 }
 
 func NewUpstreamAccountService(params UpstreamAccountServiceParams) *UpstreamAccountService {
 	return &UpstreamAccountService{
 		AbstractService: &AbstractService{db: params.Ent},
+		runtime:         make(map[int]*upstreamAccountRuntime),
 	}
+}
+
+const (
+	defaultAccountRateLimitCooldown = time.Minute
+	defaultAccountOverloadCooldown  = 30 * time.Second
+	defaultAccountNetworkCooldown   = 30 * time.Second
+)
+
+var ErrUpstreamAccountPoolExhausted = errors.New("upstream account pool exhausted")
+
+type UpstreamAccountPoolExhaustedError struct {
+	ChannelID int
+	ModelID   string
+	Reason    string
+}
+
+func (e *UpstreamAccountPoolExhaustedError) Error() string {
+	reason := strings.TrimSpace(e.Reason)
+	if reason == "" {
+		reason = "no eligible upstream account"
+	}
+
+	if e.ModelID == "" {
+		return fmt.Sprintf("%s for channel %d: %s", ErrUpstreamAccountPoolExhausted, e.ChannelID, reason)
+	}
+
+	return fmt.Sprintf("%s for channel %d model %s: %s", ErrUpstreamAccountPoolExhausted, e.ChannelID, e.ModelID, reason)
+}
+
+func (e *UpstreamAccountPoolExhaustedError) Unwrap() error {
+	return ErrUpstreamAccountPoolExhausted
+}
+
+type UpstreamAccountSelectionInput struct {
+	ChannelID         int
+	ModelID           string
+	ProjectID         int
+	ExcludeAccountIDs map[int]struct{}
+	Now               time.Time
+}
+
+type UpstreamAccountFailureInput struct {
+	AccountID  int
+	StatusCode int
+	Message    string
+	Now        time.Time
+}
+
+type upstreamAccountRuntime struct {
+	inFlight    int
+	successes   int
+	failures    int
+	latencyEWMA float64
 }
 
 type UpstreamAccountCredentialsInput struct {
@@ -201,6 +262,106 @@ func (s *UpstreamAccountService) ListAccounts(ctx context.Context, channelID int
 	}
 
 	return query.All(ctx)
+}
+
+func (s *UpstreamAccountService) SelectAccountForRequest(ctx context.Context, input UpstreamAccountSelectionInput) (*ent.UpstreamAccount, func(), error) {
+	now := input.Now
+	if now.IsZero() {
+		now = time.Now()
+	}
+
+	pools, err := s.entFromContext(ctx).UpstreamAccountPool.Query().
+		Where(
+			upstreamaccountpool.ChannelIDEQ(input.ChannelID),
+			upstreamaccountpool.StatusEQ(upstreamaccountpool.StatusEnabled),
+		).
+		Order(ent.Asc(upstreamaccountpool.FieldPriority), ent.Asc(upstreamaccountpool.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(pools) == 0 {
+		return nil, nil, nil
+	}
+
+	matchedPools := make([]*ent.UpstreamAccountPool, 0, len(pools))
+	for _, pool := range pools {
+		if upstreamAccountPoolMatches(pool, input.ModelID, input.ProjectID) {
+			matchedPools = append(matchedPools, pool)
+		}
+	}
+	if len(matchedPools) == 0 {
+		return nil, nil, nil
+	}
+
+	poolIDs := make([]int, 0, len(matchedPools))
+	for _, pool := range matchedPools {
+		poolIDs = append(poolIDs, pool.ID)
+	}
+
+	accounts, err := s.entFromContext(ctx).UpstreamAccount.Query().
+		Where(
+			upstreamaccount.ChannelIDEQ(input.ChannelID),
+			upstreamaccount.PoolIDIn(poolIDs...),
+			upstreamaccount.StatusNEQ(upstreamaccount.StatusArchived),
+		).
+		Order(ent.Asc(upstreamaccount.FieldPriority), ent.Desc(upstreamaccount.FieldWeight), ent.Asc(upstreamaccount.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	candidates := make([]*ent.UpstreamAccount, 0, len(accounts))
+	reasons := make([]string, 0, len(accounts))
+	for _, account := range accounts {
+		if _, excluded := input.ExcludeAccountIDs[account.ID]; excluded {
+			reasons = append(reasons, fmt.Sprintf("%s skipped after previous attempt", account.Name))
+			continue
+		}
+		if account.CredentialType != upstreamaccount.CredentialTypeAPIKey {
+			reasons = append(reasons, fmt.Sprintf("%s uses unsupported credential type %s", account.Name, account.CredentialType))
+			continue
+		}
+		if strings.TrimSpace(account.Credentials.APIKey) == "" {
+			reasons = append(reasons, fmt.Sprintf("%s has no api key credential", account.Name))
+			continue
+		}
+		if ok, reason := s.AccountEligibility(account, now); !ok {
+			reasons = append(reasons, fmt.Sprintf("%s: %s", account.Name, reason))
+			continue
+		}
+		if !s.accountHasCapacity(account) {
+			reasons = append(reasons, fmt.Sprintf("%s concurrency limit reached", account.Name))
+			continue
+		}
+		candidates = append(candidates, account)
+	}
+
+	if len(candidates) == 0 {
+		reason := "no eligible upstream account"
+		if len(reasons) > 0 {
+			reason = strings.Join(reasons, "; ")
+		}
+
+		return nil, nil, &UpstreamAccountPoolExhaustedError{
+			ChannelID: input.ChannelID,
+			ModelID:   input.ModelID,
+			Reason:    reason,
+		}
+	}
+
+	sort.SliceStable(candidates, func(i, j int) bool {
+		return s.compareAccountCandidates(candidates[i], candidates[j])
+	})
+
+	selected := candidates[0]
+	release := s.acquireAccount(selected)
+	if err := s.entFromContext(ctx).UpstreamAccount.UpdateOneID(selected.ID).SetLastUsedAt(now).Exec(ctx); err != nil {
+		release()
+		return nil, nil, err
+	}
+
+	return selected, release, nil
 }
 
 func (s *UpstreamAccountService) CreatePool(ctx context.Context, input CreateUpstreamAccountPoolParams) (*ent.UpstreamAccountPool, error) {
@@ -458,11 +619,168 @@ func (s *UpstreamAccountService) AccountEligibility(account *ent.UpstreamAccount
 	return true, ""
 }
 
+func (s *UpstreamAccountService) MarkAccountSuccess(ctx context.Context, accountID int, latencyMs int64) error {
+	if accountID <= 0 {
+		return nil
+	}
+
+	s.mu.Lock()
+	rt := s.runtimeForLocked(accountID)
+	rt.successes++
+	if latencyMs > 0 {
+		if rt.latencyEWMA <= 0 {
+			rt.latencyEWMA = float64(latencyMs)
+		} else {
+			rt.latencyEWMA = rt.latencyEWMA*0.8 + float64(latencyMs)*0.2
+		}
+	}
+	s.mu.Unlock()
+
+	return s.entFromContext(ctx).UpstreamAccount.UpdateOneID(accountID).
+		ClearErrorMessage().
+		ClearCooldownReason().
+		ClearRateLimitResetAt().
+		ClearOverloadUntil().
+		ClearCooldownUntil().
+		Exec(ctx)
+}
+
+func (s *UpstreamAccountService) MarkAccountFailure(ctx context.Context, input UpstreamAccountFailureInput) error {
+	if input.AccountID <= 0 {
+		return nil
+	}
+
+	now := input.Now
+	if now.IsZero() {
+		now = time.Now()
+	}
+	message := strings.TrimSpace(input.Message)
+	if message == "" {
+		message = fmt.Sprintf("upstream account request failed with status %d", input.StatusCode)
+	}
+
+	s.mu.Lock()
+	rt := s.runtimeForLocked(input.AccountID)
+	rt.failures++
+	s.mu.Unlock()
+
+	update := s.entFromContext(ctx).UpstreamAccount.UpdateOneID(input.AccountID).
+		SetErrorMessage(message)
+
+	switch {
+	case input.StatusCode == 401 || input.StatusCode == 403:
+		update.SetStatus(upstreamaccount.StatusError).
+			SetSchedulable(false).
+			SetCooldownUntil(now.Add(24 * time.Hour)).
+			SetCooldownReason("authentication failed")
+	case input.StatusCode == 429:
+		update.SetRateLimitResetAt(now.Add(defaultAccountRateLimitCooldown)).
+			SetCooldownReason("rate limited")
+	case input.StatusCode == 529 || (input.StatusCode >= 500 && input.StatusCode <= 599):
+		update.SetOverloadUntil(now.Add(defaultAccountOverloadCooldown)).
+			SetCooldownReason("provider overloaded")
+	default:
+		update.SetCooldownUntil(now.Add(defaultAccountNetworkCooldown)).
+			SetCooldownReason("network or transport error")
+	}
+
+	return update.Exec(ctx)
+}
+
+func (s *UpstreamAccountService) accountHasCapacity(account *ent.UpstreamAccount) bool {
+	if account == nil || account.ConcurrencyLimit <= 0 {
+		return true
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.runtimeForLocked(account.ID).inFlight < account.ConcurrencyLimit
+}
+
+func (s *UpstreamAccountService) acquireAccount(account *ent.UpstreamAccount) func() {
+	if account == nil {
+		return func() {}
+	}
+
+	s.mu.Lock()
+	rt := s.runtimeForLocked(account.ID)
+	rt.inFlight++
+	s.mu.Unlock()
+
+	var once sync.Once
+	return func() {
+		once.Do(func() {
+			s.mu.Lock()
+			defer s.mu.Unlock()
+			rt := s.runtimeForLocked(account.ID)
+			if rt.inFlight > 0 {
+				rt.inFlight--
+			}
+		})
+	}
+}
+
+func (s *UpstreamAccountService) compareAccountCandidates(left, right *ent.UpstreamAccount) bool {
+	if left.Priority != right.Priority {
+		return left.Priority < right.Priority
+	}
+
+	leftLoad, leftErrorRate, leftLatency := s.accountRuntimeSnapshot(left.ID)
+	rightLoad, rightErrorRate, rightLatency := s.accountRuntimeSnapshot(right.ID)
+
+	if leftLoad != rightLoad {
+		return leftLoad < rightLoad
+	}
+	if leftErrorRate != rightErrorRate {
+		return leftErrorRate < rightErrorRate
+	}
+	if leftLatency != rightLatency {
+		return leftLatency < rightLatency
+	}
+	if left.Weight != right.Weight {
+		return left.Weight > right.Weight
+	}
+	if left.LastUsedAt == nil && right.LastUsedAt != nil {
+		return true
+	}
+	if left.LastUsedAt != nil && right.LastUsedAt == nil {
+		return false
+	}
+	if left.LastUsedAt != nil && right.LastUsedAt != nil && !left.LastUsedAt.Equal(*right.LastUsedAt) {
+		return left.LastUsedAt.Before(*right.LastUsedAt)
+	}
+
+	return left.ID < right.ID
+}
+
+func (s *UpstreamAccountService) accountRuntimeSnapshot(accountID int) (load int, errorRate float64, latency float64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	rt := s.runtimeForLocked(accountID)
+	total := rt.successes + rt.failures
+	if total > 0 {
+		errorRate = float64(rt.failures) / float64(total)
+	}
+
+	return rt.inFlight, errorRate, rt.latencyEWMA
+}
+
+func (s *UpstreamAccountService) runtimeForLocked(accountID int) *upstreamAccountRuntime {
+	rt := s.runtime[accountID]
+	if rt == nil {
+		rt = &upstreamAccountRuntime{}
+		s.runtime[accountID] = rt
+	}
+	return rt
+}
+
 func (s *UpstreamAccountService) ChannelUsesCredentialFallback(ctx context.Context, channelID int) (bool, error) {
 	count, err := s.entFromContext(ctx).UpstreamAccountPool.Query().
 		Where(
 			upstreamaccountpool.ChannelIDEQ(channelID),
-			upstreamaccountpool.StatusNEQ(upstreamaccountpool.StatusArchived),
+			upstreamaccountpool.StatusEQ(upstreamaccountpool.StatusEnabled),
 		).
 		Count(ctx)
 	if err != nil {
@@ -470,6 +788,52 @@ func (s *UpstreamAccountService) ChannelUsesCredentialFallback(ctx context.Conte
 	}
 
 	return count == 0, nil
+}
+
+func upstreamAccountPoolMatches(pool *ent.UpstreamAccountPool, modelID string, projectID int) bool {
+	if pool == nil {
+		return false
+	}
+
+	if len(pool.ProjectIds) > 0 {
+		if projectID <= 0 {
+			return false
+		}
+		projectMatched := false
+		for _, id := range pool.ProjectIds {
+			if id == projectID {
+				projectMatched = true
+				break
+			}
+		}
+		if !projectMatched {
+			return false
+		}
+	}
+
+	if len(pool.ModelPatterns) == 0 {
+		return true
+	}
+
+	modelID = strings.TrimSpace(modelID)
+	if modelID == "" {
+		return false
+	}
+
+	for _, pattern := range pool.ModelPatterns {
+		pattern = strings.TrimSpace(pattern)
+		if pattern == "" {
+			continue
+		}
+		if pattern == "*" || strings.EqualFold(pattern, modelID) {
+			return true
+		}
+		if matched, err := path.Match(pattern, modelID); err == nil && matched {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *UpstreamAccountService) TestAccount(ctx context.Context, id int) (*UpstreamAccountTestResult, error) {

@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -84,6 +85,34 @@ func (_c *RequestExecutionCreate) SetChannelID(v int) *RequestExecutionCreate {
 func (_c *RequestExecutionCreate) SetNillableChannelID(v *int) *RequestExecutionCreate {
 	if v != nil {
 		_c.SetChannelID(*v)
+	}
+	return _c
+}
+
+// SetUpstreamAccountID sets the "upstream_account_id" field.
+func (_c *RequestExecutionCreate) SetUpstreamAccountID(v int) *RequestExecutionCreate {
+	_c.mutation.SetUpstreamAccountID(v)
+	return _c
+}
+
+// SetNillableUpstreamAccountID sets the "upstream_account_id" field if the given value is not nil.
+func (_c *RequestExecutionCreate) SetNillableUpstreamAccountID(v *int) *RequestExecutionCreate {
+	if v != nil {
+		_c.SetUpstreamAccountID(*v)
+	}
+	return _c
+}
+
+// SetUpstreamAccountRetryCount sets the "upstream_account_retry_count" field.
+func (_c *RequestExecutionCreate) SetUpstreamAccountRetryCount(v int) *RequestExecutionCreate {
+	_c.mutation.SetUpstreamAccountRetryCount(v)
+	return _c
+}
+
+// SetNillableUpstreamAccountRetryCount sets the "upstream_account_retry_count" field if the given value is not nil.
+func (_c *RequestExecutionCreate) SetNillableUpstreamAccountRetryCount(v *int) *RequestExecutionCreate {
+	if v != nil {
+		_c.SetUpstreamAccountRetryCount(*v)
 	}
 	return _c
 }
@@ -293,6 +322,11 @@ func (_c *RequestExecutionCreate) SetDataStorage(v *DataStorage) *RequestExecuti
 	return _c.SetDataStorageID(v.ID)
 }
 
+// SetUpstreamAccount sets the "upstream_account" edge to the UpstreamAccount entity.
+func (_c *RequestExecutionCreate) SetUpstreamAccount(v *UpstreamAccount) *RequestExecutionCreate {
+	return _c.SetUpstreamAccountID(v.ID)
+}
+
 // Mutation returns the RequestExecutionMutation object of the builder.
 func (_c *RequestExecutionCreate) Mutation() *RequestExecutionMutation {
 	return _c.mutation
@@ -340,6 +374,10 @@ func (_c *RequestExecutionCreate) defaults() {
 		v := requestexecution.DefaultProjectID
 		_c.mutation.SetProjectID(v)
 	}
+	if _, ok := _c.mutation.UpstreamAccountRetryCount(); !ok {
+		v := requestexecution.DefaultUpstreamAccountRetryCount
+		_c.mutation.SetUpstreamAccountRetryCount(v)
+	}
 	if _, ok := _c.mutation.Format(); !ok {
 		v := requestexecution.DefaultFormat
 		_c.mutation.SetFormat(v)
@@ -361,6 +399,9 @@ func (_c *RequestExecutionCreate) check() error {
 	}
 	if _, ok := _c.mutation.RequestID(); !ok {
 		return &ValidationError{Name: "request_id", err: errors.New(`ent: missing required field "RequestExecution.request_id"`)}
+	}
+	if _, ok := _c.mutation.UpstreamAccountRetryCount(); !ok {
+		return &ValidationError{Name: "upstream_account_retry_count", err: errors.New(`ent: missing required field "RequestExecution.upstream_account_retry_count"`)}
 	}
 	if v, ok := _c.mutation.ExternalID(); ok {
 		if err := requestexecution.ExternalIDValidator(v); err != nil {
@@ -431,6 +472,10 @@ func (_c *RequestExecutionCreate) createSpec() (*RequestExecution, *sqlgraph.Cre
 	if value, ok := _c.mutation.ProjectID(); ok {
 		_spec.SetField(requestexecution.FieldProjectID, field.TypeInt, value)
 		_node.ProjectID = value
+	}
+	if value, ok := _c.mutation.UpstreamAccountRetryCount(); ok {
+		_spec.SetField(requestexecution.FieldUpstreamAccountRetryCount, field.TypeInt, value)
+		_node.UpstreamAccountRetryCount = value
 	}
 	if value, ok := _c.mutation.ExternalID(); ok {
 		_spec.SetField(requestexecution.FieldExternalID, field.TypeString, value)
@@ -545,6 +590,23 @@ func (_c *RequestExecutionCreate) createSpec() (*RequestExecution, *sqlgraph.Cre
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.DataStorageID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UpstreamAccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   requestexecution.UpstreamAccountTable,
+			Columns: []string{requestexecution.UpstreamAccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.UpstreamAccountID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -861,6 +923,12 @@ func (u *RequestExecutionUpsertOne) UpdateNewValues() *RequestExecutionUpsertOne
 		}
 		if _, exists := u.create.mutation.ChannelID(); exists {
 			s.SetIgnore(requestexecution.FieldChannelID)
+		}
+		if _, exists := u.create.mutation.UpstreamAccountID(); exists {
+			s.SetIgnore(requestexecution.FieldUpstreamAccountID)
+		}
+		if _, exists := u.create.mutation.UpstreamAccountRetryCount(); exists {
+			s.SetIgnore(requestexecution.FieldUpstreamAccountRetryCount)
 		}
 		if _, exists := u.create.mutation.DataStorageID(); exists {
 			s.SetIgnore(requestexecution.FieldDataStorageID)
@@ -1375,6 +1443,12 @@ func (u *RequestExecutionUpsertBulk) UpdateNewValues() *RequestExecutionUpsertBu
 			}
 			if _, exists := b.mutation.ChannelID(); exists {
 				s.SetIgnore(requestexecution.FieldChannelID)
+			}
+			if _, exists := b.mutation.UpstreamAccountID(); exists {
+				s.SetIgnore(requestexecution.FieldUpstreamAccountID)
+			}
+			if _, exists := b.mutation.UpstreamAccountRetryCount(); exists {
+				s.SetIgnore(requestexecution.FieldUpstreamAccountRetryCount)
 			}
 			if _, exists := b.mutation.DataStorageID(); exists {
 				s.SetIgnore(requestexecution.FieldDataStorageID)

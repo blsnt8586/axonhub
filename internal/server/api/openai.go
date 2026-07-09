@@ -30,6 +30,7 @@ type OpenAIHandlersParams struct {
 
 	VideoService                *biz.VideoService
 	ChannelService              *biz.ChannelService
+	UpstreamAccountService      *biz.UpstreamAccountService
 	ModelService                *biz.ModelService
 	DefaultSelector             *orchestrator.DefaultSelector
 	RequestService              *biz.RequestService
@@ -95,6 +96,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		CompletionHandlers: &ChatCompletionHandlers{
@@ -113,6 +115,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		ResponseCompletionHandlers: &ChatCompletionHandlers{
@@ -131,6 +134,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		CompactHandlers: &ChatCompletionHandlers{
@@ -149,6 +153,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		EmbeddingHandlers: &ChatCompletionHandlers{
@@ -167,6 +172,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		ImageGenerationHandlers: &ChatCompletionHandlers{
@@ -185,6 +191,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		ImageEditHandlers: &ChatCompletionHandlers{
@@ -203,6 +210,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		ImageVariationHandlers: &ChatCompletionHandlers{
@@ -221,6 +229,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		VideoHandlers: &ChatCompletionHandlers{
@@ -239,6 +248,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		VideoInboundTransformer: videoInbound,
@@ -263,6 +273,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		SpeechInboundTransformer: speechInbound,
@@ -282,6 +293,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		TranslationHandlers: &ChatCompletionHandlers{
@@ -300,6 +312,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 	}

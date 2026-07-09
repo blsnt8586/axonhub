@@ -10195,6 +10195,21 @@ func (_q *RequestExecutionQuery) collectField(ctx context.Context, oneNode bool,
 				selectedFields = append(selectedFields, requestexecution.FieldDataStorageID)
 				fieldSeen[requestexecution.FieldDataStorageID] = struct{}{}
 			}
+
+		case "upstreamAccount":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, upstreamaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.withUpstreamAccount = query
+			if _, ok := fieldSeen[requestexecution.FieldUpstreamAccountID]; !ok {
+				selectedFields = append(selectedFields, requestexecution.FieldUpstreamAccountID)
+				fieldSeen[requestexecution.FieldUpstreamAccountID] = struct{}{}
+			}
 		case "createdAt":
 			if _, ok := fieldSeen[requestexecution.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, requestexecution.FieldCreatedAt)
@@ -10219,6 +10234,16 @@ func (_q *RequestExecutionQuery) collectField(ctx context.Context, oneNode bool,
 			if _, ok := fieldSeen[requestexecution.FieldChannelID]; !ok {
 				selectedFields = append(selectedFields, requestexecution.FieldChannelID)
 				fieldSeen[requestexecution.FieldChannelID] = struct{}{}
+			}
+		case "upstreamAccountID":
+			if _, ok := fieldSeen[requestexecution.FieldUpstreamAccountID]; !ok {
+				selectedFields = append(selectedFields, requestexecution.FieldUpstreamAccountID)
+				fieldSeen[requestexecution.FieldUpstreamAccountID] = struct{}{}
+			}
+		case "upstreamAccountRetryCount":
+			if _, ok := fieldSeen[requestexecution.FieldUpstreamAccountRetryCount]; !ok {
+				selectedFields = append(selectedFields, requestexecution.FieldUpstreamAccountRetryCount)
+				fieldSeen[requestexecution.FieldUpstreamAccountRetryCount] = struct{}{}
 			}
 		case "dataStorageID":
 			if _, ok := fieldSeen[requestexecution.FieldDataStorageID]; !ok {
@@ -11523,6 +11548,95 @@ func (_q *UpstreamAccountQuery) collectField(ctx context.Context, oneNode bool, 
 				selectedFields = append(selectedFields, upstreamaccount.FieldPoolID)
 				fieldSeen[upstreamaccount.FieldPoolID] = struct{}{}
 			}
+
+		case "executions":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&RequestExecutionClient{config: _q.config}).Query()
+			)
+			args := newRequestExecutionPaginateArgs(fieldArgs(ctx, new(RequestExecutionWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newRequestExecutionPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UpstreamAccount) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"upstream_account_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(upstreamaccount.ExecutionsColumn), ids...))
+						})
+						if err := query.GroupBy(upstreamaccount.ExecutionsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[2] == nil {
+								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[2][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UpstreamAccount) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.Executions)
+							if nodes[i].Edges.totalCount[2] == nil {
+								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[2][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, requestexecutionImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(upstreamaccount.ExecutionsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedExecutions(alias, func(wq *RequestExecutionQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[upstreamaccount.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, upstreamaccount.FieldCreatedAt)

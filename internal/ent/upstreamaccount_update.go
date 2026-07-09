@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/objects"
@@ -432,6 +433,21 @@ func (_u *UpstreamAccountUpdate) SetPool(v *UpstreamAccountPool) *UpstreamAccoun
 	return _u.SetPoolID(v.ID)
 }
 
+// AddExecutionIDs adds the "executions" edge to the RequestExecution entity by IDs.
+func (_u *UpstreamAccountUpdate) AddExecutionIDs(ids ...int) *UpstreamAccountUpdate {
+	_u.mutation.AddExecutionIDs(ids...)
+	return _u
+}
+
+// AddExecutions adds the "executions" edges to the RequestExecution entity.
+func (_u *UpstreamAccountUpdate) AddExecutions(v ...*RequestExecution) *UpstreamAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddExecutionIDs(ids...)
+}
+
 // Mutation returns the UpstreamAccountMutation object of the builder.
 func (_u *UpstreamAccountUpdate) Mutation() *UpstreamAccountMutation {
 	return _u.mutation
@@ -441,6 +457,27 @@ func (_u *UpstreamAccountUpdate) Mutation() *UpstreamAccountMutation {
 func (_u *UpstreamAccountUpdate) ClearPool() *UpstreamAccountUpdate {
 	_u.mutation.ClearPool()
 	return _u
+}
+
+// ClearExecutions clears all "executions" edges to the RequestExecution entity.
+func (_u *UpstreamAccountUpdate) ClearExecutions() *UpstreamAccountUpdate {
+	_u.mutation.ClearExecutions()
+	return _u
+}
+
+// RemoveExecutionIDs removes the "executions" edge to RequestExecution entities by IDs.
+func (_u *UpstreamAccountUpdate) RemoveExecutionIDs(ids ...int) *UpstreamAccountUpdate {
+	_u.mutation.RemoveExecutionIDs(ids...)
+	return _u
+}
+
+// RemoveExecutions removes "executions" edges to RequestExecution entities.
+func (_u *UpstreamAccountUpdate) RemoveExecutions(v ...*RequestExecution) *UpstreamAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveExecutionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -656,6 +693,51 @@ func (_u *UpstreamAccountUpdate) sqlSave(ctx context.Context) (_node int, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountpool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ExecutionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.ExecutionsTable,
+			Columns: []string{upstreamaccount.ExecutionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(requestexecution.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedExecutionsIDs(); len(nodes) > 0 && !_u.mutation.ExecutionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.ExecutionsTable,
+			Columns: []string{upstreamaccount.ExecutionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(requestexecution.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ExecutionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.ExecutionsTable,
+			Columns: []string{upstreamaccount.ExecutionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(requestexecution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1085,6 +1167,21 @@ func (_u *UpstreamAccountUpdateOne) SetPool(v *UpstreamAccountPool) *UpstreamAcc
 	return _u.SetPoolID(v.ID)
 }
 
+// AddExecutionIDs adds the "executions" edge to the RequestExecution entity by IDs.
+func (_u *UpstreamAccountUpdateOne) AddExecutionIDs(ids ...int) *UpstreamAccountUpdateOne {
+	_u.mutation.AddExecutionIDs(ids...)
+	return _u
+}
+
+// AddExecutions adds the "executions" edges to the RequestExecution entity.
+func (_u *UpstreamAccountUpdateOne) AddExecutions(v ...*RequestExecution) *UpstreamAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddExecutionIDs(ids...)
+}
+
 // Mutation returns the UpstreamAccountMutation object of the builder.
 func (_u *UpstreamAccountUpdateOne) Mutation() *UpstreamAccountMutation {
 	return _u.mutation
@@ -1094,6 +1191,27 @@ func (_u *UpstreamAccountUpdateOne) Mutation() *UpstreamAccountMutation {
 func (_u *UpstreamAccountUpdateOne) ClearPool() *UpstreamAccountUpdateOne {
 	_u.mutation.ClearPool()
 	return _u
+}
+
+// ClearExecutions clears all "executions" edges to the RequestExecution entity.
+func (_u *UpstreamAccountUpdateOne) ClearExecutions() *UpstreamAccountUpdateOne {
+	_u.mutation.ClearExecutions()
+	return _u
+}
+
+// RemoveExecutionIDs removes the "executions" edge to RequestExecution entities by IDs.
+func (_u *UpstreamAccountUpdateOne) RemoveExecutionIDs(ids ...int) *UpstreamAccountUpdateOne {
+	_u.mutation.RemoveExecutionIDs(ids...)
+	return _u
+}
+
+// RemoveExecutions removes "executions" edges to RequestExecution entities.
+func (_u *UpstreamAccountUpdateOne) RemoveExecutions(v ...*RequestExecution) *UpstreamAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveExecutionIDs(ids...)
 }
 
 // Where appends a list predicates to the UpstreamAccountUpdate builder.
@@ -1339,6 +1457,51 @@ func (_u *UpstreamAccountUpdateOne) sqlSave(ctx context.Context) (_node *Upstrea
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountpool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ExecutionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.ExecutionsTable,
+			Columns: []string{upstreamaccount.ExecutionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(requestexecution.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedExecutionsIDs(); len(nodes) > 0 && !_u.mutation.ExecutionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.ExecutionsTable,
+			Columns: []string{upstreamaccount.ExecutionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(requestexecution.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ExecutionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.ExecutionsTable,
+			Columns: []string{upstreamaccount.ExecutionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(requestexecution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

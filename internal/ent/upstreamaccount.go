@@ -82,11 +82,15 @@ type UpstreamAccountEdges struct {
 	Channel *Channel `json:"channel,omitempty"`
 	// Pool holds the value of the pool edge.
 	Pool *UpstreamAccountPool `json:"pool,omitempty"`
+	// Executions holds the value of the executions edge.
+	Executions []*RequestExecution `json:"executions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 	// totalCount holds the count of the edges above.
-	totalCount [2]map[string]int
+	totalCount [3]map[string]int
+
+	namedExecutions map[string][]*RequestExecution
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -109,6 +113,15 @@ func (e UpstreamAccountEdges) PoolOrErr() (*UpstreamAccountPool, error) {
 		return nil, &NotFoundError{label: upstreamaccountpool.Label}
 	}
 	return nil, &NotLoadedError{edge: "pool"}
+}
+
+// ExecutionsOrErr returns the Executions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UpstreamAccountEdges) ExecutionsOrErr() ([]*RequestExecution, error) {
+	if e.loadedTypes[2] {
+		return e.Executions, nil
+	}
+	return nil, &NotLoadedError{edge: "executions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -328,6 +341,11 @@ func (_m *UpstreamAccount) QueryPool() *UpstreamAccountPoolQuery {
 	return NewUpstreamAccountClient(_m.config).QueryPool(_m)
 }
 
+// QueryExecutions queries the "executions" edge of the UpstreamAccount entity.
+func (_m *UpstreamAccount) QueryExecutions() *RequestExecutionQuery {
+	return NewUpstreamAccountClient(_m.config).QueryExecutions(_m)
+}
+
 // Update returns a builder for updating this UpstreamAccount.
 // Note that you need to call UpstreamAccount.Unwrap() before calling this method if this UpstreamAccount
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -439,6 +457,30 @@ func (_m *UpstreamAccount) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.QuotaUsedMicros))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedExecutions returns the Executions named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UpstreamAccount) NamedExecutions(name string) ([]*RequestExecution, error) {
+	if _m.Edges.namedExecutions == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedExecutions[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UpstreamAccount) appendNamedExecutions(name string, edges ...*RequestExecution) {
+	if _m.Edges.namedExecutions == nil {
+		_m.Edges.namedExecutions = make(map[string][]*RequestExecution)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedExecutions[name] = []*RequestExecution{}
+	} else {
+		_m.Edges.namedExecutions[name] = append(_m.Edges.namedExecutions[name], edges...)
+	}
 }
 
 // UpstreamAccounts is a parsable slice of UpstreamAccount.

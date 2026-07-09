@@ -7406,6 +7406,22 @@ func (c *RequestExecutionClient) QueryDataStorage(_m *RequestExecution) *DataSto
 	return query
 }
 
+// QueryUpstreamAccount queries the upstream_account edge of a RequestExecution.
+func (c *RequestExecutionClient) QueryUpstreamAccount(_m *RequestExecution) *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(requestexecution.Table, requestexecution.FieldID, id),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, requestexecution.UpstreamAccountTable, requestexecution.UpstreamAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *RequestExecutionClient) Hooks() []Hook {
 	return c.hooks.RequestExecution
@@ -8380,6 +8396,22 @@ func (c *UpstreamAccountClient) QueryPool(_m *UpstreamAccount) *UpstreamAccountP
 			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, id),
 			sqlgraph.To(upstreamaccountpool.Table, upstreamaccountpool.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccount.PoolTable, upstreamaccount.PoolColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryExecutions queries the executions edge of a UpstreamAccount.
+func (c *UpstreamAccountClient) QueryExecutions(_m *UpstreamAccount) *RequestExecutionQuery {
+	query := (&RequestExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, id),
+			sqlgraph.To(requestexecution.Table, requestexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, upstreamaccount.ExecutionsTable, upstreamaccount.ExecutionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

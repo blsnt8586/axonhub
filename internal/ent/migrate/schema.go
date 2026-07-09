@@ -1640,6 +1640,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "project_id", Type: field.TypeInt, Default: 1},
+		{Name: "upstream_account_retry_count", Type: field.TypeInt, Default: 0},
 		{Name: "external_id", Type: field.TypeString, Nullable: true, Size: 512},
 		{Name: "model_id", Type: field.TypeString},
 		{Name: "format", Type: field.TypeString, Default: "openai/chat_completions"},
@@ -1659,6 +1660,7 @@ var (
 		{Name: "channel_id", Type: field.TypeInt, Nullable: true},
 		{Name: "data_storage_id", Type: field.TypeInt, Nullable: true},
 		{Name: "request_id", Type: field.TypeInt},
+		{Name: "upstream_account_id", Type: field.TypeInt, Nullable: true},
 	}
 	// RequestExecutionsTable holds the schema information for the "request_executions" table.
 	RequestExecutionsTable = &schema.Table{
@@ -1668,38 +1670,49 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "request_executions_channels_executions",
-				Columns:    []*schema.Column{RequestExecutionsColumns[20]},
+				Columns:    []*schema.Column{RequestExecutionsColumns[21]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "request_executions_data_storages_executions",
-				Columns:    []*schema.Column{RequestExecutionsColumns[21]},
+				Columns:    []*schema.Column{RequestExecutionsColumns[22]},
 				RefColumns: []*schema.Column{DataStoragesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "request_executions_requests_executions",
-				Columns:    []*schema.Column{RequestExecutionsColumns[22]},
+				Columns:    []*schema.Column{RequestExecutionsColumns[23]},
 				RefColumns: []*schema.Column{RequestsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "request_executions_upstream_accounts_executions",
+				Columns:    []*schema.Column{RequestExecutionsColumns[24]},
+				RefColumns: []*schema.Column{UpstreamAccountsColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "request_executions_by_request_id_status_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{RequestExecutionsColumns[22], RequestExecutionsColumns[12], RequestExecutionsColumns[1]},
+				Columns: []*schema.Column{RequestExecutionsColumns[23], RequestExecutionsColumns[13], RequestExecutionsColumns[1]},
 			},
 			{
 				Name:    "request_executions_by_request_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{RequestExecutionsColumns[22], RequestExecutionsColumns[1]},
+				Columns: []*schema.Column{RequestExecutionsColumns[23], RequestExecutionsColumns[1]},
 			},
 			{
 				Name:    "request_executions_by_channel_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{RequestExecutionsColumns[20], RequestExecutionsColumns[1]},
+				Columns: []*schema.Column{RequestExecutionsColumns[21], RequestExecutionsColumns[1]},
+			},
+			{
+				Name:    "request_executions_by_upstream_account_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{RequestExecutionsColumns[24], RequestExecutionsColumns[1]},
 			},
 		},
 	}
@@ -2620,6 +2633,7 @@ func init() {
 	RequestExecutionsTable.ForeignKeys[0].RefTable = ChannelsTable
 	RequestExecutionsTable.ForeignKeys[1].RefTable = DataStoragesTable
 	RequestExecutionsTable.ForeignKeys[2].RefTable = RequestsTable
+	RequestExecutionsTable.ForeignKeys[3].RefTable = UpstreamAccountsTable
 	RolesTable.ForeignKeys[0].RefTable = ProjectsTable
 	ThreadsTable.ForeignKeys[0].RefTable = ProjectsTable
 	TracesTable.ForeignKeys[0].RefTable = ProjectsTable

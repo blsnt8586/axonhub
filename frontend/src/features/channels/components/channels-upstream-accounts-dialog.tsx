@@ -198,6 +198,16 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
   const pools = poolsQuery.data || [];
   const accounts = accountsQuery.data || [];
   const accountPoolName = useMemo(() => new Map(pools.map((pool) => [pool.id, pool.name])), [pools]);
+  const accountHealth = useMemo(
+    () => ({
+      total: accounts.length,
+      eligible: accounts.filter((account) => account.eligibleNow).length,
+      cooling: accounts.filter((account) => account.cooldownUntil || account.rateLimitResetAt || account.overloadUntil).length,
+      error: accounts.filter((account) => account.status === 'error').length,
+      disabled: accounts.filter((account) => account.status === 'disabled' || !account.schedulable).length,
+    }),
+    [accounts]
+  );
   const busy =
     createPool.isPending ||
     updatePool.isPending ||
@@ -283,6 +293,21 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
     setAccountForm(emptyAccountForm);
   };
 
+  const handleRecoverAccount = async (account: UpstreamAccount) => {
+    await updateAccount.mutateAsync({
+      id: account.id,
+      input: {
+        status: 'active',
+        schedulable: true,
+        clearErrorMessage: true,
+        clearRateLimitResetAt: true,
+        clearOverloadUntil: true,
+        clearCooldownUntil: true,
+        clearCooldownReason: true,
+      },
+    });
+  };
+
   if (!currentRow) return null;
 
   return (
@@ -306,6 +331,14 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
             </TabsList>
 
             <TabsContent value='accounts' className='mt-4 space-y-4'>
+              <div className='grid gap-3 md:grid-cols-5'>
+                <HealthMetric label='Total' value={accountHealth.total} />
+                <HealthMetric label='Eligible' value={accountHealth.eligible} tone='good' />
+                <HealthMetric label='Cooling' value={accountHealth.cooling} tone='warning' />
+                <HealthMetric label='Error' value={accountHealth.error} tone='danger' />
+                <HealthMetric label='Disabled' value={accountHealth.disabled} />
+              </div>
+
               <Card>
                 <CardHeader className='gap-1 px-4 py-3'>
                   <CardTitle className='text-sm'>Account inventory</CardTitle>
@@ -369,6 +402,14 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                                   </Button>
                                   <Button variant='outline' size='sm' onClick={() => testAccount.mutateAsync(account.id)} disabled={busy}>
                                     <IconPlayerPlay className='h-3.5 w-3.5' />
+                                  </Button>
+                                  <Button
+                                    variant='outline'
+                                    size='sm'
+                                    onClick={() => handleRecoverAccount(account)}
+                                    disabled={busy || (account.status === 'active' && account.schedulable && account.eligibleNow)}
+                                  >
+                                    <IconRefresh className='h-3.5 w-3.5' />
                                   </Button>
                                   <Button
                                     variant='outline'
@@ -653,6 +694,24 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
     <div className='grid gap-1.5'>
       <Label className='text-xs'>{label}</Label>
       {children}
+    </div>
+  );
+}
+
+function HealthMetric({ label, value, tone }: { label: string; value: number; tone?: 'good' | 'warning' | 'danger' }) {
+  const valueClass =
+    tone === 'good'
+      ? 'text-emerald-700'
+      : tone === 'warning'
+        ? 'text-amber-700'
+        : tone === 'danger'
+          ? 'text-red-700'
+          : 'text-foreground';
+
+  return (
+    <div className='bg-background rounded-md border px-3 py-2'>
+      <div className='text-muted-foreground text-xs'>{label}</div>
+      <div className={`mt-1 text-xl font-semibold ${valueClass}`}>{value}</div>
     </div>
   );
 }

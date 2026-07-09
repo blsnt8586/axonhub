@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/datastorage"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -32,6 +33,10 @@ type RequestExecution struct {
 	RequestID int `json:"request_id,omitempty"`
 	// ChannelID holds the value of the "channel_id" field.
 	ChannelID int `json:"channel_id,omitempty"`
+	// Selected upstream account for this execution attempt.
+	UpstreamAccountID *int `json:"upstream_account_id,omitempty"`
+	// Number of prior account-level retries before this execution attempt.
+	UpstreamAccountRetryCount int `json:"upstream_account_retry_count,omitempty"`
 	// Data Storage ID that this request belongs to
 	DataStorageID int `json:"data_storage_id,omitempty"`
 	// ExternalID holds the value of the "external_id" field.
@@ -80,11 +85,13 @@ type RequestExecutionEdges struct {
 	Channel *Channel `json:"channel,omitempty"`
 	// DataStorage holds the value of the data_storage edge.
 	DataStorage *DataStorage `json:"data_storage,omitempty"`
+	// UpstreamAccount holds the value of the upstream_account edge.
+	UpstreamAccount *UpstreamAccount `json:"upstream_account,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 	// totalCount holds the count of the edges above.
-	totalCount [3]map[string]int
+	totalCount [4]map[string]int
 }
 
 // RequestOrErr returns the Request value or an error if the edge
@@ -120,6 +127,17 @@ func (e RequestExecutionEdges) DataStorageOrErr() (*DataStorage, error) {
 	return nil, &NotLoadedError{edge: "data_storage"}
 }
 
+// UpstreamAccountOrErr returns the UpstreamAccount value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RequestExecutionEdges) UpstreamAccountOrErr() (*UpstreamAccount, error) {
+	if e.UpstreamAccount != nil {
+		return e.UpstreamAccount, nil
+	} else if e.loadedTypes[3] {
+		return nil, &NotFoundError{label: upstreamaccount.Label}
+	}
+	return nil, &NotLoadedError{edge: "upstream_account"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*RequestExecution) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -129,7 +147,7 @@ func (*RequestExecution) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case requestexecution.FieldStream, requestexecution.FieldPassThroughApplied:
 			values[i] = new(sql.NullBool)
-		case requestexecution.FieldID, requestexecution.FieldProjectID, requestexecution.FieldRequestID, requestexecution.FieldChannelID, requestexecution.FieldDataStorageID, requestexecution.FieldResponseStatusCode, requestexecution.FieldMetricsLatencyMs, requestexecution.FieldMetricsFirstTokenLatencyMs, requestexecution.FieldMetricsReasoningDurationMs:
+		case requestexecution.FieldID, requestexecution.FieldProjectID, requestexecution.FieldRequestID, requestexecution.FieldChannelID, requestexecution.FieldUpstreamAccountID, requestexecution.FieldUpstreamAccountRetryCount, requestexecution.FieldDataStorageID, requestexecution.FieldResponseStatusCode, requestexecution.FieldMetricsLatencyMs, requestexecution.FieldMetricsFirstTokenLatencyMs, requestexecution.FieldMetricsReasoningDurationMs:
 			values[i] = new(sql.NullInt64)
 		case requestexecution.FieldExternalID, requestexecution.FieldModelID, requestexecution.FieldFormat, requestexecution.FieldErrorMessage, requestexecution.FieldStatus, requestexecution.FieldRequestURL:
 			values[i] = new(sql.NullString)
@@ -185,6 +203,19 @@ func (_m *RequestExecution) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field channel_id", values[i])
 			} else if value.Valid {
 				_m.ChannelID = int(value.Int64)
+			}
+		case requestexecution.FieldUpstreamAccountID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field upstream_account_id", values[i])
+			} else if value.Valid {
+				_m.UpstreamAccountID = new(int)
+				*_m.UpstreamAccountID = int(value.Int64)
+			}
+		case requestexecution.FieldUpstreamAccountRetryCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field upstream_account_retry_count", values[i])
+			} else if value.Valid {
+				_m.UpstreamAccountRetryCount = int(value.Int64)
 			}
 		case requestexecution.FieldDataStorageID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -328,6 +359,11 @@ func (_m *RequestExecution) QueryDataStorage() *DataStorageQuery {
 	return NewRequestExecutionClient(_m.config).QueryDataStorage(_m)
 }
 
+// QueryUpstreamAccount queries the "upstream_account" edge of the RequestExecution entity.
+func (_m *RequestExecution) QueryUpstreamAccount() *UpstreamAccountQuery {
+	return NewRequestExecutionClient(_m.config).QueryUpstreamAccount(_m)
+}
+
 // Update returns a builder for updating this RequestExecution.
 // Note that you need to call RequestExecution.Unwrap() before calling this method if this RequestExecution
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -365,6 +401,14 @@ func (_m *RequestExecution) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("channel_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ChannelID))
+	builder.WriteString(", ")
+	if v := _m.UpstreamAccountID; v != nil {
+		builder.WriteString("upstream_account_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("upstream_account_retry_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UpstreamAccountRetryCount))
 	builder.WriteString(", ")
 	builder.WriteString("data_storage_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.DataStorageID))

@@ -14,6 +14,7 @@ type JinaHandlersParams struct {
 	fx.In
 
 	ChannelService              *biz.ChannelService
+	UpstreamAccountService      *biz.UpstreamAccountService
 	ModelService                *biz.ModelService
 	DefaultSelector             *orchestrator.DefaultSelector
 	RequestService              *biz.RequestService
@@ -49,6 +50,7 @@ func NewJinaHandlers(params JinaHandlersParams) *JinaHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 		EmbeddingHandlers: &ChatCompletionHandlers{
@@ -67,6 +69,7 @@ func NewJinaHandlers(params JinaHandlersParams) *JinaHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 		},
 	}

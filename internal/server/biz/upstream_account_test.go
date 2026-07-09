@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -173,6 +174,145 @@ func TestUpstreamAccountServicePreservesCredentialsOnEmptyUpdate(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "renamed", updated.Name)
 	require.Equal(t, "sk-original", updated.Credentials.APIKey)
+}
+
+func TestUpstreamAccountServiceSelectAccountSkipsFailedAttempt(t *testing.T) {
+	ctx, client, svc, ch := setupUpstreamAccountServiceTest(t, "upstream_account_select_retry")
+	defer client.Close()
+
+	pool, err := svc.CreatePool(ctx, CreateUpstreamAccountPoolParams{
+		ChannelID:     ch.ID,
+		Name:          "gpt pool",
+		ModelPatterns: []string{"gpt-*"},
+	})
+	require.NoError(t, err)
+
+	first, err := svc.CreateAccount(ctx, CreateUpstreamAccountParams{
+		ChannelID:      ch.ID,
+		PoolID:         &pool.ID,
+		Name:           "first",
+		Credentials:    objects.UpstreamAccountCredentials{APIKey: "sk-first"},
+		Status:         upstreamaccount.StatusActive,
+		Schedulable:    true,
+		Priority:       0,
+		Weight:         100,
+		RateMultiplier: 1,
+	})
+	require.NoError(t, err)
+
+	second, err := svc.CreateAccount(ctx, CreateUpstreamAccountParams{
+		ChannelID:      ch.ID,
+		PoolID:         &pool.ID,
+		Name:           "second",
+		Credentials:    objects.UpstreamAccountCredentials{APIKey: "sk-second"},
+		Status:         upstreamaccount.StatusActive,
+		Schedulable:    true,
+		Priority:       0,
+		Weight:         100,
+		RateMultiplier: 1,
+	})
+	require.NoError(t, err)
+
+	selected, release, err := svc.SelectAccountForRequest(ctx, UpstreamAccountSelectionInput{
+		ChannelID: ch.ID,
+		ModelID:   "gpt-test",
+		Now:       time.Now(),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, selected)
+	require.Equal(t, first.ID, selected.ID)
+	require.NotNil(t, release)
+	release()
+
+	err = svc.MarkAccountFailure(ctx, UpstreamAccountFailureInput{
+		AccountID:  first.ID,
+		StatusCode: 429,
+		Message:    "rate limited",
+		Now:        time.Now(),
+	})
+	require.NoError(t, err)
+
+	selected, release, err = svc.SelectAccountForRequest(ctx, UpstreamAccountSelectionInput{
+		ChannelID:         ch.ID,
+		ModelID:           "gpt-test",
+		ExcludeAccountIDs: map[int]struct{}{first.ID: {}},
+		Now:               time.Now(),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, selected)
+	require.Equal(t, second.ID, selected.ID)
+	release()
+
+	reloaded, err := client.UpstreamAccount.Get(ctx, first.ID)
+	require.NoError(t, err)
+	require.NotNil(t, reloaded.RateLimitResetAt)
+	require.True(t, reloaded.RateLimitResetAt.After(time.Now()))
+}
+
+func TestUpstreamAccountServiceAuthFailureDisablesAccount(t *testing.T) {
+	ctx, client, svc, ch := setupUpstreamAccountServiceTest(t, "upstream_account_auth_failure")
+	defer client.Close()
+
+	account, err := svc.CreateAccount(ctx, CreateUpstreamAccountParams{
+		ChannelID:      ch.ID,
+		Name:           "bad-key",
+		Credentials:    objects.UpstreamAccountCredentials{APIKey: "sk-bad"},
+		Status:         upstreamaccount.StatusActive,
+		Schedulable:    true,
+		RateMultiplier: 1,
+	})
+	require.NoError(t, err)
+
+	err = svc.MarkAccountFailure(ctx, UpstreamAccountFailureInput{
+		AccountID:  account.ID,
+		StatusCode: 401,
+		Message:    "invalid api key",
+		Now:        time.Now(),
+	})
+	require.NoError(t, err)
+
+	reloaded, err := client.UpstreamAccount.Get(ctx, account.ID)
+	require.NoError(t, err)
+	require.Equal(t, upstreamaccount.StatusError, reloaded.Status)
+	require.False(t, reloaded.Schedulable)
+	require.NotNil(t, reloaded.CooldownUntil)
+	require.Contains(t, *reloaded.ErrorMessage, "invalid api key")
+}
+
+func TestUpstreamAccountServiceSelectAccountReportsExhaustion(t *testing.T) {
+	ctx, client, svc, ch := setupUpstreamAccountServiceTest(t, "upstream_account_exhaustion")
+	defer client.Close()
+
+	pool, err := svc.CreatePool(ctx, CreateUpstreamAccountPoolParams{
+		ChannelID:     ch.ID,
+		Name:          "gpt pool",
+		ModelPatterns: []string{"gpt-*"},
+	})
+	require.NoError(t, err)
+
+	_, err = svc.CreateAccount(ctx, CreateUpstreamAccountParams{
+		ChannelID:      ch.ID,
+		PoolID:         &pool.ID,
+		Name:           "cooling",
+		Credentials:    objects.UpstreamAccountCredentials{APIKey: "sk-cooling"},
+		Status:         upstreamaccount.StatusActive,
+		Schedulable:    true,
+		RateMultiplier: 1,
+		CooldownUntil:  ptrTime(time.Now().Add(time.Hour)),
+		CooldownReason: ptrString("temporary network error"),
+	})
+	require.NoError(t, err)
+
+	selected, release, err := svc.SelectAccountForRequest(ctx, UpstreamAccountSelectionInput{
+		ChannelID: ch.ID,
+		ModelID:   "gpt-test",
+		Now:       time.Now(),
+	})
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrUpstreamAccountPoolExhausted))
+	require.Nil(t, selected)
+	require.Nil(t, release)
+	require.Contains(t, err.Error(), "temporary network error")
 }
 
 func ptrTime(value time.Time) *time.Time {

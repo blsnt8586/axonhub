@@ -218,6 +218,14 @@ function buildRequestExecutionsQuery(permissions: { canViewChannels: boolean }) 
                   name
                   type
                   baseURL
+              }
+              upstreamAccount {
+                  id
+                  name
+                  status
+                  schedulable
+                  eligibleNow
+                  ineligibleReason
               }`
     : '';
 
@@ -252,6 +260,7 @@ function buildRequestExecutionsQuery(permissions: { canViewChannels: boolean }) 
                 stream
                 requestURL
                 passThroughApplied
+                upstreamAccountRetryCount
                 metricsFirstTokenLatencyMs
                 metricsReasoningDurationMs
               }

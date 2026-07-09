@@ -262,6 +262,8 @@ func (s *RequestService) CreateRequestExecution(
 	channelRequest httpclient.Request,
 	format llm.APIFormat,
 	passThroughApplied bool,
+	upstreamAccountID *int,
+	upstreamAccountRetryCount int,
 ) (*ent.RequestExecution, error) {
 	// Decide whether to store the channel request body
 	storeRequestBody := true
@@ -330,7 +332,12 @@ func (s *RequestService) CreateRequestExecution(
 		SetStatus(requestexecution.StatusProcessing).
 		SetStream(request.Stream).
 		SetRequestHeaders(requestHeadersBytes).
-		SetPassThroughApplied(passThroughApplied)
+		SetPassThroughApplied(passThroughApplied).
+		SetUpstreamAccountRetryCount(upstreamAccountRetryCount)
+
+	if upstreamAccountID != nil && *upstreamAccountID > 0 {
+		mut = mut.SetUpstreamAccountID(*upstreamAccountID)
+	}
 
 	if channelRequest.URL != "" {
 		mut = mut.SetRequestURL(channelRequest.URL)

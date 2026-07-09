@@ -21,6 +21,7 @@ type DoubaoHandlersParams struct {
 
 	VideoService                *biz.VideoService
 	ChannelService              *biz.ChannelService
+	UpstreamAccountService      *biz.UpstreamAccountService
 	ModelService                *biz.ModelService
 	DefaultSelector             *orchestrator.DefaultSelector
 	RequestService              *biz.RequestService
@@ -64,6 +65,7 @@ func NewDoubaoHandlers(params DoubaoHandlersParams) *DoubaoHandlers {
 			params.ChannelLimiterManager,
 			params.ProviderQuotaStatusProvider,
 			orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+			orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 		),
 		InboundTransformer: inbound,
 	}

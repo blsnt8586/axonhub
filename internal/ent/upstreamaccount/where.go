@@ -1136,6 +1136,29 @@ func HasPoolWith(preds ...predicate.UpstreamAccountPool) predicate.UpstreamAccou
 	})
 }
 
+// HasExecutions applies the HasEdge predicate on the "executions" edge.
+func HasExecutions() predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ExecutionsTable, ExecutionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasExecutionsWith applies the HasEdge predicate on the "executions" edge with a given conditions (other predicates).
+func HasExecutionsWith(preds ...predicate.RequestExecution) predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := newExecutionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.UpstreamAccount) predicate.UpstreamAccount {
 	return predicate.UpstreamAccount(sql.AndPredicates(predicates...))

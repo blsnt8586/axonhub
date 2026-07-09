@@ -1453,6 +1453,14 @@ func (_m *RequestExecution) DataStorage(ctx context.Context) (*DataStorage, erro
 	return result, MaskNotFound(err)
 }
 
+func (_m *RequestExecution) UpstreamAccount(ctx context.Context) (*UpstreamAccount, error) {
+	result, err := _m.Edges.UpstreamAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUpstreamAccount().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
 func (_m *Role) Users(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserOrder, where *UserWhereInput,
 ) (*UserConnection, error) {
@@ -1604,6 +1612,27 @@ func (_m *UpstreamAccount) Pool(ctx context.Context) (*UpstreamAccountPool, erro
 		result, err = _m.QueryPool().Only(ctx)
 	}
 	return result, MaskNotFound(err)
+}
+
+func (_m *UpstreamAccount) Executions(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *RequestExecutionOrder, where *RequestExecutionWhereInput,
+) (*RequestExecutionConnection, error) {
+	opts := []RequestExecutionPaginateOption{
+		WithRequestExecutionOrder(orderBy),
+		WithRequestExecutionFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[2][alias]
+	if nodes, err := _m.NamedExecutions(alias); err == nil || hasTotalCount {
+		pager, err := newRequestExecutionPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &RequestExecutionConnection{Edges: []*RequestExecutionEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryExecutions().Paginate(ctx, after, first, before, last, opts...)
 }
 
 func (_m *UpstreamAccountPool) Channel(ctx context.Context) (*Channel, error) {

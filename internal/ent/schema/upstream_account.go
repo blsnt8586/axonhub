@@ -77,6 +77,8 @@ func (UpstreamAccount) Edges() []ent.Edge {
 			Ref("accounts").
 			Field("pool_id").
 			Unique(),
+		edge.To("executions", RequestExecution.Type).
+			Annotations(entgql.RelayConnection()),
 	}
 }
 

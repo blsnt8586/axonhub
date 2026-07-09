@@ -20744,6 +20744,24 @@ type RequestExecutionWhereInput struct {
 	ChannelIDIsNil  bool  `json:"channelIDIsNil,omitempty"`
 	ChannelIDNotNil bool  `json:"channelIDNotNil,omitempty"`
 
+	// "upstream_account_id" field predicates.
+	UpstreamAccountID       *int  `json:"upstreamAccountID,omitempty"`
+	UpstreamAccountIDNEQ    *int  `json:"upstreamAccountIDNEQ,omitempty"`
+	UpstreamAccountIDIn     []int `json:"upstreamAccountIDIn,omitempty"`
+	UpstreamAccountIDNotIn  []int `json:"upstreamAccountIDNotIn,omitempty"`
+	UpstreamAccountIDIsNil  bool  `json:"upstreamAccountIDIsNil,omitempty"`
+	UpstreamAccountIDNotNil bool  `json:"upstreamAccountIDNotNil,omitempty"`
+
+	// "upstream_account_retry_count" field predicates.
+	UpstreamAccountRetryCount      *int  `json:"upstreamAccountRetryCount,omitempty"`
+	UpstreamAccountRetryCountNEQ   *int  `json:"upstreamAccountRetryCountNEQ,omitempty"`
+	UpstreamAccountRetryCountIn    []int `json:"upstreamAccountRetryCountIn,omitempty"`
+	UpstreamAccountRetryCountNotIn []int `json:"upstreamAccountRetryCountNotIn,omitempty"`
+	UpstreamAccountRetryCountGT    *int  `json:"upstreamAccountRetryCountGT,omitempty"`
+	UpstreamAccountRetryCountGTE   *int  `json:"upstreamAccountRetryCountGTE,omitempty"`
+	UpstreamAccountRetryCountLT    *int  `json:"upstreamAccountRetryCountLT,omitempty"`
+	UpstreamAccountRetryCountLTE   *int  `json:"upstreamAccountRetryCountLTE,omitempty"`
+
 	// "data_storage_id" field predicates.
 	DataStorageID       *int  `json:"dataStorageID,omitempty"`
 	DataStorageIDNEQ    *int  `json:"dataStorageIDNEQ,omitempty"`
@@ -20906,6 +20924,10 @@ type RequestExecutionWhereInput struct {
 	// "data_storage" edge predicates.
 	HasDataStorage     *bool                    `json:"hasDataStorage,omitempty"`
 	HasDataStorageWith []*DataStorageWhereInput `json:"hasDataStorageWith,omitempty"`
+
+	// "upstream_account" edge predicates.
+	HasUpstreamAccount     *bool                        `json:"hasUpstreamAccount,omitempty"`
+	HasUpstreamAccountWith []*UpstreamAccountWhereInput `json:"hasUpstreamAccountWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -21104,6 +21126,48 @@ func (i *RequestExecutionWhereInput) P() (predicate.RequestExecution, error) {
 	}
 	if i.ChannelIDNotNil {
 		predicates = append(predicates, requestexecution.ChannelIDNotNil())
+	}
+	if i.UpstreamAccountID != nil {
+		predicates = append(predicates, requestexecution.UpstreamAccountIDEQ(*i.UpstreamAccountID))
+	}
+	if i.UpstreamAccountIDNEQ != nil {
+		predicates = append(predicates, requestexecution.UpstreamAccountIDNEQ(*i.UpstreamAccountIDNEQ))
+	}
+	if len(i.UpstreamAccountIDIn) > 0 {
+		predicates = append(predicates, requestexecution.UpstreamAccountIDIn(i.UpstreamAccountIDIn...))
+	}
+	if len(i.UpstreamAccountIDNotIn) > 0 {
+		predicates = append(predicates, requestexecution.UpstreamAccountIDNotIn(i.UpstreamAccountIDNotIn...))
+	}
+	if i.UpstreamAccountIDIsNil {
+		predicates = append(predicates, requestexecution.UpstreamAccountIDIsNil())
+	}
+	if i.UpstreamAccountIDNotNil {
+		predicates = append(predicates, requestexecution.UpstreamAccountIDNotNil())
+	}
+	if i.UpstreamAccountRetryCount != nil {
+		predicates = append(predicates, requestexecution.UpstreamAccountRetryCountEQ(*i.UpstreamAccountRetryCount))
+	}
+	if i.UpstreamAccountRetryCountNEQ != nil {
+		predicates = append(predicates, requestexecution.UpstreamAccountRetryCountNEQ(*i.UpstreamAccountRetryCountNEQ))
+	}
+	if len(i.UpstreamAccountRetryCountIn) > 0 {
+		predicates = append(predicates, requestexecution.UpstreamAccountRetryCountIn(i.UpstreamAccountRetryCountIn...))
+	}
+	if len(i.UpstreamAccountRetryCountNotIn) > 0 {
+		predicates = append(predicates, requestexecution.UpstreamAccountRetryCountNotIn(i.UpstreamAccountRetryCountNotIn...))
+	}
+	if i.UpstreamAccountRetryCountGT != nil {
+		predicates = append(predicates, requestexecution.UpstreamAccountRetryCountGT(*i.UpstreamAccountRetryCountGT))
+	}
+	if i.UpstreamAccountRetryCountGTE != nil {
+		predicates = append(predicates, requestexecution.UpstreamAccountRetryCountGTE(*i.UpstreamAccountRetryCountGTE))
+	}
+	if i.UpstreamAccountRetryCountLT != nil {
+		predicates = append(predicates, requestexecution.UpstreamAccountRetryCountLT(*i.UpstreamAccountRetryCountLT))
+	}
+	if i.UpstreamAccountRetryCountLTE != nil {
+		predicates = append(predicates, requestexecution.UpstreamAccountRetryCountLTE(*i.UpstreamAccountRetryCountLTE))
 	}
 	if i.DataStorageID != nil {
 		predicates = append(predicates, requestexecution.DataStorageIDEQ(*i.DataStorageID))
@@ -21534,6 +21598,24 @@ func (i *RequestExecutionWhereInput) P() (predicate.RequestExecution, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, requestexecution.HasDataStorageWith(with...))
+	}
+	if i.HasUpstreamAccount != nil {
+		p := requestexecution.HasUpstreamAccount()
+		if !*i.HasUpstreamAccount {
+			p = requestexecution.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUpstreamAccountWith) > 0 {
+		with := make([]predicate.UpstreamAccount, 0, len(i.HasUpstreamAccountWith))
+		for _, w := range i.HasUpstreamAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUpstreamAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, requestexecution.HasUpstreamAccountWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -23666,6 +23748,10 @@ type UpstreamAccountWhereInput struct {
 	// "pool" edge predicates.
 	HasPool     *bool                            `json:"hasPool,omitempty"`
 	HasPoolWith []*UpstreamAccountPoolWhereInput `json:"hasPoolWith,omitempty"`
+
+	// "executions" edge predicates.
+	HasExecutions     *bool                         `json:"hasExecutions,omitempty"`
+	HasExecutionsWith []*RequestExecutionWhereInput `json:"hasExecutionsWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -24330,6 +24416,24 @@ func (i *UpstreamAccountWhereInput) P() (predicate.UpstreamAccount, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, upstreamaccount.HasPoolWith(with...))
+	}
+	if i.HasExecutions != nil {
+		p := upstreamaccount.HasExecutions()
+		if !*i.HasExecutions {
+			p = upstreamaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasExecutionsWith) > 0 {
+		with := make([]predicate.RequestExecution, 0, len(i.HasExecutionsWith))
+		for _, w := range i.HasExecutionsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasExecutionsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccount.HasExecutionsWith(with...))
 	}
 	switch len(predicates) {
 	case 0:

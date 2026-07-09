@@ -190,44 +190,51 @@ Verification:
 
 ## Stage 16: Account-Level Scheduling And Circuit Breaker Integration
 
-Status: [ ] Planned
+Status: [x] Completed
 
 Goal: combine AxonHub's existing Channel-level routing and circuit breaker with
 finer account-level retry and health behavior.
 
 Backend scope:
 
-- [ ] Keep existing Channel selection unchanged.
-- [ ] After Channel selection, choose an UpstreamAccount only when the Channel has
+- [x] Keep existing Channel selection unchanged.
+- [x] After Channel selection, choose an UpstreamAccount only when the Channel has
   an enabled account pool.
-- [ ] Filter accounts by active status, schedulable flag, expiry, cooldown,
+- [x] Filter accounts by active status, schedulable flag, expiry, cooldown,
   overload, rate-limit reset, quota, and concurrency.
-- [ ] Score candidates by priority, weight, current load, recent error rate, and
+- [x] Score candidates by priority, weight, current load, recent error rate, and
   recent latency.
-- [ ] On account-level failure, classify errors:
+- [x] On account-level failure, classify errors:
   - 401/403: disable account or apply long cooldown.
   - 429: set rate_limit_reset_at.
   - 5xx/529: set overload_until or short cooldown.
   - network/proxy errors: set cooldown_until and cooldown_reason.
-- [ ] Retry the same request on another eligible account in the same Channel
+- [x] Retry the same request on another eligible account in the same Channel
   where the request semantics allow retry.
-- [ ] If all accounts fail, return a clear account-pool exhaustion error and let
+- [x] If all accounts fail, return a clear account-pool exhaustion error and let
   existing Channel-level failure handling continue.
 
 Frontend scope:
 
-- [ ] Show account selected, account retry count, and account-level failure reason
+- [x] Show account selected, account retry count, and account-level failure reason
   on request and trace detail views.
-- [ ] Show Channel-level account-pool health summaries.
-- [ ] Add owner actions to manually recover, disable, or test cooling accounts.
+- [x] Show Channel-level account-pool health summaries.
+- [x] Add owner actions to manually recover, disable, or test cooling accounts.
+
+Implementation note:
+
+- Request execution detail now shows selected upstream account and account retry
+  count. Trace pages currently render trace/span metadata without a direct
+  request-execution relation; upstream account trace metadata is deferred to Stage
+  17 switch history / account usage monitoring to avoid showing inferred data.
 
 Verification:
 
-- [ ] 429 on one account switches to another eligible account.
-- [ ] 401/403 removes the account from future scheduling.
-- [ ] All-account exhaustion is reported clearly.
-- [ ] Channels without account pools still pass existing orchestrator tests.
-- [ ] Account-level changes do not regress Channel-level circuit breaker behavior.
+- [x] 429 on one account switches to another eligible account.
+- [x] 401/403 removes the account from future scheduling.
+- [x] All-account exhaustion is reported clearly.
+- [x] Channels without account pools still pass existing orchestrator tests.
+- [x] Account-level changes do not regress Channel-level circuit breaker behavior.
 
 ## Stage 17: Account Usage Monitoring And Switch History
 

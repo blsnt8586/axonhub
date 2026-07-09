@@ -31,6 +31,8 @@ func (RequestExecution) Indexes() []ent.Index {
 			StorageKey("request_executions_by_request_id_created_at"),
 		index.Fields("channel_id", "created_at").
 			StorageKey("request_executions_by_channel_id_created_at"),
+		index.Fields("upstream_account_id", "created_at").
+			StorageKey("request_executions_by_upstream_account_id_created_at"),
 	}
 }
 
@@ -39,6 +41,15 @@ func (RequestExecution) Fields() []ent.Field {
 		field.Int("project_id").Immutable().Default(1),
 		field.Int("request_id").Immutable(),
 		field.Int("channel_id").Immutable().Optional(), // Optional for deleted channel, this field is not null.
+		field.Int("upstream_account_id").
+			Optional().
+			Nillable().
+			Immutable().
+			Comment("Selected upstream account for this execution attempt."),
+		field.Int("upstream_account_retry_count").
+			Default(0).
+			Immutable().
+			Comment("Number of prior account-level retries before this execution attempt."),
 		field.Int("data_storage_id").
 			Optional().
 			Immutable().
@@ -112,6 +123,14 @@ func (RequestExecution) Edges() []ent.Edge {
 		edge.From("data_storage", DataStorage.Type).
 			Ref("executions").
 			Field("data_storage_id").
+			Immutable().
+			Unique(),
+		edge.From("upstream_account", UpstreamAccount.Type).
+			Ref("executions").
+			Field("upstream_account_id").
+			Annotations(
+				entgql.Directives(forceResolver()),
+			).
 			Immutable().
 			Unique(),
 	}

@@ -16,6 +16,7 @@ type AiSdkHandlersParams struct {
 	fx.In
 
 	ChannelService              *biz.ChannelService
+	UpstreamAccountService      *biz.UpstreamAccountService
 	ModelService                *biz.ModelService
 	DefaultSelector             *orchestrator.DefaultSelector
 	RequestService              *biz.RequestService
@@ -55,6 +56,7 @@ func NewAiSDKHandlers(params AiSdkHandlersParams) *AiSDKHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 				orchestrator.WithCommercialBilling(params.AdmissionService, params.UsageBillingProcessor, params.BillingHoldService),
+				orchestrator.WithUpstreamAccounts(params.UpstreamAccountService),
 			),
 			StreamWriter: WriteJSONStream,
 		},

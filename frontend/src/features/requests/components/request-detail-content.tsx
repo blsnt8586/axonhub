@@ -749,7 +749,7 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
                           </div>
                         </CardHeader>
                         <CardContent className='space-y-6'>
-                          <div className='grid grid-cols-1 gap-4 sm:grid-cols-5'>
+                          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6'>
                             <div className='bg-background space-y-2 rounded-lg border p-3'>
                               <span className='flex items-center gap-2 text-sm font-medium'>
                                 <Database className='text-primary h-4 w-4' />
@@ -758,6 +758,22 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
                               <p className='text-muted-foreground font-mono text-sm'>
                                 {execution.channel?.name || t('requests.columns.unknown')}
                               </p>
+                            </div>
+                            <div className='bg-background space-y-2 rounded-lg border p-3'>
+                              <span className='flex items-center gap-2 text-sm font-medium'>
+                                <Key className='text-primary h-4 w-4' />
+                                Upstream account
+                              </span>
+                              <div className='space-y-1'>
+                                <p className='text-muted-foreground font-mono text-sm'>
+                                  {execution.upstreamAccount?.name || '-'}
+                                </p>
+                                {typeof execution.upstreamAccountRetryCount === 'number' && execution.upstreamAccountRetryCount > 0 && (
+                                  <Badge variant='outline' className='border-amber-200 bg-amber-50 text-amber-700'>
+                                    retry {execution.upstreamAccountRetryCount}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                             <div className='bg-background space-y-2 rounded-lg border p-3'>
                               <span className='flex items-center gap-2 text-sm font-medium'>

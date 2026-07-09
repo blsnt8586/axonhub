@@ -1388,6 +1388,11 @@ func (r *requestExecutionResolver) ChannelID(ctx context.Context, obj *ent.Reque
 	}, nil
 }
 
+// UpstreamAccountID is the resolver for the upstreamAccountID field.
+func (r *requestExecutionResolver) UpstreamAccountID(ctx context.Context, obj *ent.RequestExecution) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: UpstreamAccountID - upstreamAccountID"))
+}
+
 // DataStorageID is the resolver for the dataStorageID field.
 func (r *requestExecutionResolver) DataStorageID(ctx context.Context, obj *ent.RequestExecution) (*objects.GUID, error) {
 	if obj.DataStorageID == 0 {
@@ -1441,6 +1446,11 @@ func (r *requestExecutionResolver) ResponseChunks(ctx context.Context, obj *ent.
 // Channel is the resolver for the channel field.
 func (r *requestExecutionResolver) Channel(ctx context.Context, obj *ent.RequestExecution) (*ent.Channel, error) {
 	return getNilableChannel(ctx, r.client, obj.ChannelID)
+}
+
+// UpstreamAccount is the resolver for the upstreamAccount field.
+func (r *requestExecutionResolver) UpstreamAccount(ctx context.Context, obj *ent.RequestExecution) (*ent.UpstreamAccount, error) {
+	panic(fmt.Errorf("not implemented: UpstreamAccount - upstreamAccount"))
 }
 
 // ID is the resolver for the id field.

@@ -97,6 +97,8 @@ func (m *persistRequestExecutionMiddleware) OnOutboundRawRequest(ctx context.Con
 		*request,
 		format,
 		state.PassThroughApplied,
+		currentUpstreamAccountID(state),
+		state.UpstreamAccountRetryCount,
 	)
 	if err != nil {
 		return nil, err
@@ -183,6 +185,8 @@ func (m *persistRequestExecutionMiddleware) OnOutboundLlmResponse(ctx context.Co
 		log.Warn(persistCtx, "Failed to update request execution status to completed", log.Cause(err))
 	}
 
+	releaseAndRecordUpstreamAccountAttempt(persistCtx, state, nil, true)
+
 	return llmResp, nil
 }
 
@@ -226,6 +230,17 @@ func (m *persistRequestExecutionMiddleware) OnOutboundRawError(ctx context.Conte
 	if updateErr != nil {
 		log.Warn(persistCtx, "Failed to update request execution status to failed", log.Cause(updateErr))
 	}
+
+	releaseAndRecordUpstreamAccountAttempt(persistCtx, state, err, false)
+}
+
+func currentUpstreamAccountID(state *PersistenceState) *int {
+	if state == nil || state.CurrentUpstreamAccount == nil {
+		return nil
+	}
+
+	id := state.CurrentUpstreamAccount.ID
+	return &id
 }
 
 // ExtractErrorInfo extracts HTTP status code and sanitized response body from error.

@@ -70,6 +70,8 @@ const (
 	EdgeChannel = "channel"
 	// EdgePool holds the string denoting the pool edge name in mutations.
 	EdgePool = "pool"
+	// EdgeExecutions holds the string denoting the executions edge name in mutations.
+	EdgeExecutions = "executions"
 	// Table holds the table name of the upstreamaccount in the database.
 	Table = "upstream_accounts"
 	// ChannelTable is the table that holds the channel relation/edge.
@@ -86,6 +88,13 @@ const (
 	PoolInverseTable = "upstream_account_pools"
 	// PoolColumn is the table column denoting the pool relation/edge.
 	PoolColumn = "pool_id"
+	// ExecutionsTable is the table that holds the executions relation/edge.
+	ExecutionsTable = "request_executions"
+	// ExecutionsInverseTable is the table name for the RequestExecution entity.
+	// It exists in this package in order to avoid circular dependency with the "requestexecution" package.
+	ExecutionsInverseTable = "request_executions"
+	// ExecutionsColumn is the table column denoting the executions relation/edge.
+	ExecutionsColumn = "upstream_account_id"
 )
 
 // Columns holds all SQL columns for upstreamaccount fields.
@@ -348,6 +357,20 @@ func ByPoolField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPoolStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByExecutionsCount orders the results by executions count.
+func ByExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newExecutionsStep(), opts...)
+	}
+}
+
+// ByExecutions orders the results by executions terms.
+func ByExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newChannelStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -360,6 +383,13 @@ func newPoolStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PoolInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, PoolTable, PoolColumn),
+	)
+}
+func newExecutionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ExecutionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ExecutionsTable, ExecutionsColumn),
 	)
 }
 

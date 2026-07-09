@@ -103,6 +103,19 @@ func (ts *OutboundPersistentStream) Close() error {
 	}
 
 	ts.closed = true
+	defer func() {
+		var attemptErr error
+		if ts.state == nil || !ts.state.StreamCompleted {
+			attemptErr = ts.stream.Err()
+			if attemptErr == nil {
+				attemptErr = ts.ctx.Err()
+			}
+			if attemptErr == nil {
+				attemptErr = errors.New("stream ended without terminal event or completed response")
+			}
+		}
+		releaseAndRecordUpstreamAccountAttempt(ctxWithoutNil(ts.ctx), ts.state, attemptErr, ts.state != nil && ts.state.StreamCompleted)
+	}()
 	ctx := ts.ctx
 
 	log.Debug(ctx, "Closing persistent stream", log.Int("chunk_count", len(ts.responseChunks)), log.Bool("received_done", ts.state.StreamCompleted))
@@ -370,25 +383,37 @@ func (p *PersistentOutboundTransformer) TransformRequest(ctx context.Context, ll
 	candidate := p.state.ChannelModelsCandidates[p.state.CurrentCandidateIndex]
 	entry := candidate.Models[p.state.CurrentModelIndex]
 
-	p.state.CurrentCandidate = candidate
+	p.state.CurrentBaseChannel = candidate.Channel
+	p.state.CurrentUpstreamAccount = nil
+	p.state.CurrentUpstreamAccountProxy = nil
+	p.releaseUpstreamAccountAttempt()
+
+	currentCandidate := candidate
+	if accountCandidate, err := p.selectAccountForCandidate(ctx, candidate, entry.ActualModel); err != nil {
+		return nil, err
+	} else if accountCandidate != nil {
+		currentCandidate = accountCandidate
+	}
+
+	p.state.CurrentCandidate = currentCandidate
 	p.state.StreamCompleted = false
 
-	p.wrapped = selectOutboundForCandidate(candidate)
+	p.wrapped = selectOutboundForCandidate(currentCandidate)
 
 	log.Debug(ctx, "using candidate",
-		log.String("channel", candidate.Channel.Name),
+		log.String("channel", currentCandidate.Channel.Name),
 		log.String("request_model", p.state.OriginalModel),
 		log.String("actual_model", entry.ActualModel),
-		log.String("api_format", candidate.APIFormat),
+		log.String("api_format", currentCandidate.APIFormat),
 	)
 
 	llmRequest.Model = entry.ActualModel
 
 	// Apply channel transform options to create a new request
-	llmRequest = applyTransformOptions(llmRequest, candidate.Channel.Settings)
+	llmRequest = applyTransformOptions(llmRequest, currentCandidate.Channel.Settings)
 	llmRequest = filterResponseCustomToolMessagesForNonResponsesOutbound(llmRequest, p.wrapped.APIFormat())
 
-	if shouldForceStreamingForCandidate(candidate, llmRequest) {
+	if shouldForceStreamingForCandidate(currentCandidate, llmRequest) {
 		streamPtr := lo.ToPtr(true)
 		llmRequest.Stream = streamPtr
 		if llmRequest.StreamOptions == nil {
@@ -405,6 +430,139 @@ func (p *PersistentOutboundTransformer) TransformRequest(ctx context.Context, ll
 	}
 
 	return p.wrapped.TransformRequest(ctx, llmRequest)
+}
+
+func (p *PersistentOutboundTransformer) selectAccountForCandidate(ctx context.Context, candidate *ChannelModelsCandidate, modelID string) (*ChannelModelsCandidate, error) {
+	if p.state == nil || p.state.UpstreamAccountService == nil || p.state.ChannelService == nil || candidate == nil || candidate.Channel == nil {
+		return nil, nil
+	}
+
+	if p.state.TriedUpstreamAccountIDs == nil {
+		p.state.TriedUpstreamAccountIDs = make(map[int]struct{})
+	}
+
+	account, release, err := p.state.UpstreamAccountService.SelectAccountForRequest(ctx, biz.UpstreamAccountSelectionInput{
+		ChannelID:         candidate.Channel.ID,
+		ModelID:           modelID,
+		ProjectID:         projectIDFromState(p.state),
+		ExcludeAccountIDs: p.state.TriedUpstreamAccountIDs,
+		Now:               time.Now(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	if account == nil {
+		return nil, nil
+	}
+
+	overrideChannel, err := p.state.ChannelService.GetChannelWithKey(ctx, candidate.Channel.ID, account.Credentials.APIKey)
+	if err != nil {
+		if release != nil {
+			release()
+		}
+		return nil, err
+	}
+
+	p.state.CurrentUpstreamAccount = account
+	p.state.TriedUpstreamAccountIDs[account.ID] = struct{}{}
+	p.state.ReleaseUpstreamAccountAttempt = release
+	if account.ProxyConfig != nil {
+		p.state.CurrentUpstreamAccountProxy = account.ProxyConfig
+	}
+
+	accountCandidate := *candidate
+	accountCandidate.Channel = overrideChannel
+
+	log.Debug(ctx, "selected upstream account",
+		log.Int("channel_id", candidate.Channel.ID),
+		log.Int("upstream_account_id", account.ID),
+		log.String("upstream_account_name", account.Name),
+		log.Int("account_retry_count", p.state.UpstreamAccountRetryCount),
+	)
+
+	return &accountCandidate, nil
+}
+
+func projectIDFromState(state *PersistenceState) int {
+	if state == nil || state.APIKey == nil {
+		return 0
+	}
+	if state.APIKey.ProjectID != 0 {
+		return state.APIKey.ProjectID
+	}
+	if state.APIKey.Edges.Project != nil {
+		return state.APIKey.Edges.Project.ID
+	}
+
+	return 0
+}
+
+func (p *PersistentOutboundTransformer) releaseUpstreamAccountAttempt() {
+	if p == nil || p.state == nil || p.state.ReleaseUpstreamAccountAttempt == nil {
+		return
+	}
+
+	p.state.ReleaseUpstreamAccountAttempt()
+	p.state.ReleaseUpstreamAccountAttempt = nil
+}
+
+func isRetryableAccountError(err error) bool {
+	if err == nil || errors.Is(err, biz.ErrUpstreamAccountPoolExhausted) {
+		return false
+	}
+
+	statusCode := ExtractStatusCodeFromError(err)
+	return statusCode == 0 ||
+		statusCode == 401 ||
+		statusCode == 403 ||
+		statusCode == 429 ||
+		statusCode == 529 ||
+		(statusCode >= 500 && statusCode <= 599)
+}
+
+func ctxWithoutNil(ctx context.Context) context.Context {
+	if ctx == nil {
+		return context.Background()
+	}
+
+	return ctx
+}
+
+func releaseAndRecordUpstreamAccountAttempt(ctx context.Context, state *PersistenceState, err error, success bool) {
+	if state == nil || state.UpstreamAccountService == nil || state.CurrentUpstreamAccount == nil {
+		return
+	}
+
+	accountID := state.CurrentUpstreamAccount.ID
+	if state.ReleaseUpstreamAccountAttempt != nil {
+		state.ReleaseUpstreamAccountAttempt()
+		state.ReleaseUpstreamAccountAttempt = nil
+	}
+
+	persistCtx, cancel := xcontext.DetachWithTimeout(ctxWithoutNil(ctx), 10*time.Second)
+	defer cancel()
+
+	if success {
+		var latencyMs int64
+		if state.Perf != nil {
+			_, latencyMs, _ = state.Perf.Calculate()
+		}
+		if markErr := state.UpstreamAccountService.MarkAccountSuccess(persistCtx, accountID, latencyMs); markErr != nil {
+			log.Warn(persistCtx, "Failed to mark upstream account success", log.Int("upstream_account_id", accountID), log.Cause(markErr))
+		}
+		return
+	}
+
+	if err != nil {
+		if markErr := state.UpstreamAccountService.MarkAccountFailure(persistCtx, biz.UpstreamAccountFailureInput{
+			AccountID:  accountID,
+			StatusCode: ExtractStatusCodeFromError(err),
+			Message:    ExtractErrorMessage(err),
+			Now:        time.Now(),
+		}); markErr != nil {
+			log.Warn(persistCtx, "Failed to mark upstream account failure", log.Int("upstream_account_id", accountID), log.Cause(markErr))
+		}
+	}
 }
 
 func filterResponseCustomToolMessagesForNonResponsesOutbound(
@@ -538,6 +696,12 @@ func (p *PersistentOutboundTransformer) NextChannel(ctx context.Context) error {
 	// Reset request execution for the new candidate
 	p.state.RequestExec = nil
 	p.state.PassThroughApplied = false
+	p.state.CurrentUpstreamAccount = nil
+	p.state.CurrentBaseChannel = nil
+	p.state.CurrentUpstreamAccountProxy = nil
+	p.state.TriedUpstreamAccountIDs = nil
+	p.state.UpstreamAccountRetryCount = 0
+	p.releaseUpstreamAccountAttempt()
 
 	candidate := p.state.ChannelModelsCandidates[p.state.CurrentCandidateIndex]
 	p.state.CurrentCandidate = candidate
@@ -562,6 +726,10 @@ func (p *PersistentOutboundTransformer) NextChannel(ctx context.Context) error {
 func (p *PersistentOutboundTransformer) CanRetry(err error) bool {
 	if p.state.CurrentCandidate == nil {
 		return false
+	}
+
+	if p.state.UpstreamAccountService != nil && p.state.CurrentUpstreamAccount != nil && isRetryableAccountError(err) {
+		return true
 	}
 
 	if errors.Is(err, errSkipCandidateByCircuitBreaker) {
@@ -619,6 +787,10 @@ func (p *PersistentOutboundTransformer) PrepareForRetry(ctx context.Context) err
 	// Reset request execution for the same channel.
 	p.state.RequestExec = nil
 	p.state.PassThroughApplied = false
+	p.state.CurrentUpstreamAccount = nil
+	p.state.CurrentUpstreamAccountProxy = nil
+	p.state.UpstreamAccountRetryCount++
+	p.releaseUpstreamAccountAttempt()
 
 	// Cancel any in-flight pass-through stream goroutine from the previous attempt
 	// so it exits promptly and releases its upstream HTTP connection.
@@ -681,6 +853,12 @@ func (p *PersistentOutboundTransformer) CustomizeExecutor(executor pipeline.Exec
 			customizedExecutor = channel.HTTPClient.WithProxy(p.state.Proxy)
 		} else {
 			customizedExecutor = httpclient.NewHttpClientWithProxy(p.state.Proxy)
+		}
+	} else if p.state.CurrentUpstreamAccountProxy != nil {
+		if channel.HTTPClient != nil {
+			customizedExecutor = channel.HTTPClient.WithProxy(p.state.CurrentUpstreamAccountProxy)
+		} else {
+			customizedExecutor = httpclient.NewHttpClientWithProxy(p.state.CurrentUpstreamAccountProxy)
 		}
 	} else if channel.HTTPClient != nil {
 		// Use the channel's own HTTP client, which is pre-configured with its proxy settings.

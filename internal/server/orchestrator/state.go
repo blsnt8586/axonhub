@@ -14,17 +14,18 @@ import (
 type PersistenceState struct {
 	APIKey *ent.APIKey
 
-	RequestService        *biz.RequestService
-	UsageLogService       *biz.UsageLogService
-	UsageBillingProcessor *biz.UsageBillingProcessor
-	BillingHoldService    *biz.BillingHoldService
-	ChannelService        *biz.ChannelService
-	PromptProvider        PromptProvider
-	PromptProtecter       PromptProtecter
-	RetryPolicyProvider   RetryPolicyProvider
-	CandidateSelector     CandidateSelector
-	LoadBalancer          *LoadBalancer
-	AdmissionService      *biz.AdmissionService
+	RequestService         *biz.RequestService
+	UsageLogService        *biz.UsageLogService
+	UsageBillingProcessor  *biz.UsageBillingProcessor
+	BillingHoldService     *biz.BillingHoldService
+	ChannelService         *biz.ChannelService
+	UpstreamAccountService *biz.UpstreamAccountService
+	PromptProvider         PromptProvider
+	PromptProtecter        PromptProtecter
+	RetryPolicyProvider    RetryPolicyProvider
+	CandidateSelector      CandidateSelector
+	LoadBalancer           *LoadBalancer
+	AdmissionService       *biz.AdmissionService
 
 	// Request state
 	ModelMapper *ModelMapper
@@ -53,6 +54,19 @@ type PersistenceState struct {
 	CurrentCandidate *ChannelModelsCandidate
 	// CurrentModelIndex is the current model index in CurrentCandidate.Models
 	CurrentModelIndex int
+
+	// CurrentBaseChannel is the selected Channel before account-level credential override.
+	CurrentBaseChannel *biz.Channel
+	// CurrentUpstreamAccount is the selected account for the current outbound attempt.
+	CurrentUpstreamAccount *ent.UpstreamAccount
+	// TriedUpstreamAccountIDs records account attempts within the current channel candidate.
+	TriedUpstreamAccountIDs map[int]struct{}
+	// ReleaseUpstreamAccountAttempt releases the current account-level concurrency slot.
+	ReleaseUpstreamAccountAttempt func()
+	// UpstreamAccountRetryCount is the number of prior account-level retries for this request.
+	UpstreamAccountRetryCount int
+	// CurrentUpstreamAccountProxy overrides the channel proxy for the current account attempt.
+	CurrentUpstreamAccountProxy *httpclient.ProxyConfig
 
 	// Perf is the performance record for the current request.
 	Perf *biz.PerformanceRecord

@@ -45476,6 +45476,8 @@ type RequestExecutionMutation struct {
 	updated_at                        *time.Time
 	project_id                        *int
 	addproject_id                     *int
+	upstream_account_retry_count      *int
+	addupstream_account_retry_count   *int
 	external_id                       *string
 	model_id                          *string
 	format                            *string
@@ -45507,6 +45509,8 @@ type RequestExecutionMutation struct {
 	clearedchannel                    bool
 	data_storage                      *int
 	cleareddata_storage               bool
+	upstream_account                  *int
+	clearedupstream_account           bool
 	done                              bool
 	oldValue                          func(context.Context) (*RequestExecution, error)
 	predicates                        []predicate.RequestExecution
@@ -45821,6 +45825,111 @@ func (m *RequestExecutionMutation) ChannelIDCleared() bool {
 func (m *RequestExecutionMutation) ResetChannelID() {
 	m.channel = nil
 	delete(m.clearedFields, requestexecution.FieldChannelID)
+}
+
+// SetUpstreamAccountID sets the "upstream_account_id" field.
+func (m *RequestExecutionMutation) SetUpstreamAccountID(i int) {
+	m.upstream_account = &i
+}
+
+// UpstreamAccountID returns the value of the "upstream_account_id" field in the mutation.
+func (m *RequestExecutionMutation) UpstreamAccountID() (r int, exists bool) {
+	v := m.upstream_account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamAccountID returns the old "upstream_account_id" field's value of the RequestExecution entity.
+// If the RequestExecution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RequestExecutionMutation) OldUpstreamAccountID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamAccountID: %w", err)
+	}
+	return oldValue.UpstreamAccountID, nil
+}
+
+// ClearUpstreamAccountID clears the value of the "upstream_account_id" field.
+func (m *RequestExecutionMutation) ClearUpstreamAccountID() {
+	m.upstream_account = nil
+	m.clearedFields[requestexecution.FieldUpstreamAccountID] = struct{}{}
+}
+
+// UpstreamAccountIDCleared returns if the "upstream_account_id" field was cleared in this mutation.
+func (m *RequestExecutionMutation) UpstreamAccountIDCleared() bool {
+	_, ok := m.clearedFields[requestexecution.FieldUpstreamAccountID]
+	return ok
+}
+
+// ResetUpstreamAccountID resets all changes to the "upstream_account_id" field.
+func (m *RequestExecutionMutation) ResetUpstreamAccountID() {
+	m.upstream_account = nil
+	delete(m.clearedFields, requestexecution.FieldUpstreamAccountID)
+}
+
+// SetUpstreamAccountRetryCount sets the "upstream_account_retry_count" field.
+func (m *RequestExecutionMutation) SetUpstreamAccountRetryCount(i int) {
+	m.upstream_account_retry_count = &i
+	m.addupstream_account_retry_count = nil
+}
+
+// UpstreamAccountRetryCount returns the value of the "upstream_account_retry_count" field in the mutation.
+func (m *RequestExecutionMutation) UpstreamAccountRetryCount() (r int, exists bool) {
+	v := m.upstream_account_retry_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamAccountRetryCount returns the old "upstream_account_retry_count" field's value of the RequestExecution entity.
+// If the RequestExecution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RequestExecutionMutation) OldUpstreamAccountRetryCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamAccountRetryCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamAccountRetryCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamAccountRetryCount: %w", err)
+	}
+	return oldValue.UpstreamAccountRetryCount, nil
+}
+
+// AddUpstreamAccountRetryCount adds i to the "upstream_account_retry_count" field.
+func (m *RequestExecutionMutation) AddUpstreamAccountRetryCount(i int) {
+	if m.addupstream_account_retry_count != nil {
+		*m.addupstream_account_retry_count += i
+	} else {
+		m.addupstream_account_retry_count = &i
+	}
+}
+
+// AddedUpstreamAccountRetryCount returns the value that was added to the "upstream_account_retry_count" field in this mutation.
+func (m *RequestExecutionMutation) AddedUpstreamAccountRetryCount() (r int, exists bool) {
+	v := m.addupstream_account_retry_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUpstreamAccountRetryCount resets all changes to the "upstream_account_retry_count" field.
+func (m *RequestExecutionMutation) ResetUpstreamAccountRetryCount() {
+	m.upstream_account_retry_count = nil
+	m.addupstream_account_retry_count = nil
 }
 
 // SetDataStorageID sets the "data_storage_id" field.
@@ -46806,6 +46915,33 @@ func (m *RequestExecutionMutation) ResetDataStorage() {
 	m.cleareddata_storage = false
 }
 
+// ClearUpstreamAccount clears the "upstream_account" edge to the UpstreamAccount entity.
+func (m *RequestExecutionMutation) ClearUpstreamAccount() {
+	m.clearedupstream_account = true
+	m.clearedFields[requestexecution.FieldUpstreamAccountID] = struct{}{}
+}
+
+// UpstreamAccountCleared reports if the "upstream_account" edge to the UpstreamAccount entity was cleared.
+func (m *RequestExecutionMutation) UpstreamAccountCleared() bool {
+	return m.UpstreamAccountIDCleared() || m.clearedupstream_account
+}
+
+// UpstreamAccountIDs returns the "upstream_account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UpstreamAccountID instead. It exists only for internal usage by the builders.
+func (m *RequestExecutionMutation) UpstreamAccountIDs() (ids []int) {
+	if id := m.upstream_account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUpstreamAccount resets all changes to the "upstream_account" edge.
+func (m *RequestExecutionMutation) ResetUpstreamAccount() {
+	m.upstream_account = nil
+	m.clearedupstream_account = false
+}
+
 // Where appends a list predicates to the RequestExecutionMutation builder.
 func (m *RequestExecutionMutation) Where(ps ...predicate.RequestExecution) {
 	m.predicates = append(m.predicates, ps...)
@@ -46840,7 +46976,7 @@ func (m *RequestExecutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RequestExecutionMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 24)
 	if m.created_at != nil {
 		fields = append(fields, requestexecution.FieldCreatedAt)
 	}
@@ -46855,6 +46991,12 @@ func (m *RequestExecutionMutation) Fields() []string {
 	}
 	if m.channel != nil {
 		fields = append(fields, requestexecution.FieldChannelID)
+	}
+	if m.upstream_account != nil {
+		fields = append(fields, requestexecution.FieldUpstreamAccountID)
+	}
+	if m.upstream_account_retry_count != nil {
+		fields = append(fields, requestexecution.FieldUpstreamAccountRetryCount)
 	}
 	if m.data_storage != nil {
 		fields = append(fields, requestexecution.FieldDataStorageID)
@@ -46925,6 +47067,10 @@ func (m *RequestExecutionMutation) Field(name string) (ent.Value, bool) {
 		return m.RequestID()
 	case requestexecution.FieldChannelID:
 		return m.ChannelID()
+	case requestexecution.FieldUpstreamAccountID:
+		return m.UpstreamAccountID()
+	case requestexecution.FieldUpstreamAccountRetryCount:
+		return m.UpstreamAccountRetryCount()
 	case requestexecution.FieldDataStorageID:
 		return m.DataStorageID()
 	case requestexecution.FieldExternalID:
@@ -46978,6 +47124,10 @@ func (m *RequestExecutionMutation) OldField(ctx context.Context, name string) (e
 		return m.OldRequestID(ctx)
 	case requestexecution.FieldChannelID:
 		return m.OldChannelID(ctx)
+	case requestexecution.FieldUpstreamAccountID:
+		return m.OldUpstreamAccountID(ctx)
+	case requestexecution.FieldUpstreamAccountRetryCount:
+		return m.OldUpstreamAccountRetryCount(ctx)
 	case requestexecution.FieldDataStorageID:
 		return m.OldDataStorageID(ctx)
 	case requestexecution.FieldExternalID:
@@ -47055,6 +47205,20 @@ func (m *RequestExecutionMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetChannelID(v)
+		return nil
+	case requestexecution.FieldUpstreamAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamAccountID(v)
+		return nil
+	case requestexecution.FieldUpstreamAccountRetryCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamAccountRetryCount(v)
 		return nil
 	case requestexecution.FieldDataStorageID:
 		v, ok := value.(int)
@@ -47186,6 +47350,9 @@ func (m *RequestExecutionMutation) AddedFields() []string {
 	if m.addproject_id != nil {
 		fields = append(fields, requestexecution.FieldProjectID)
 	}
+	if m.addupstream_account_retry_count != nil {
+		fields = append(fields, requestexecution.FieldUpstreamAccountRetryCount)
+	}
 	if m.addresponse_status_code != nil {
 		fields = append(fields, requestexecution.FieldResponseStatusCode)
 	}
@@ -47208,6 +47375,8 @@ func (m *RequestExecutionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case requestexecution.FieldProjectID:
 		return m.AddedProjectID()
+	case requestexecution.FieldUpstreamAccountRetryCount:
+		return m.AddedUpstreamAccountRetryCount()
 	case requestexecution.FieldResponseStatusCode:
 		return m.AddedResponseStatusCode()
 	case requestexecution.FieldMetricsLatencyMs:
@@ -47231,6 +47400,13 @@ func (m *RequestExecutionMutation) AddField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddProjectID(v)
+		return nil
+	case requestexecution.FieldUpstreamAccountRetryCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUpstreamAccountRetryCount(v)
 		return nil
 	case requestexecution.FieldResponseStatusCode:
 		v, ok := value.(int)
@@ -47270,6 +47446,9 @@ func (m *RequestExecutionMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(requestexecution.FieldChannelID) {
 		fields = append(fields, requestexecution.FieldChannelID)
+	}
+	if m.FieldCleared(requestexecution.FieldUpstreamAccountID) {
+		fields = append(fields, requestexecution.FieldUpstreamAccountID)
 	}
 	if m.FieldCleared(requestexecution.FieldDataStorageID) {
 		fields = append(fields, requestexecution.FieldDataStorageID)
@@ -47320,6 +47499,9 @@ func (m *RequestExecutionMutation) ClearField(name string) error {
 	switch name {
 	case requestexecution.FieldChannelID:
 		m.ClearChannelID()
+		return nil
+	case requestexecution.FieldUpstreamAccountID:
+		m.ClearUpstreamAccountID()
 		return nil
 	case requestexecution.FieldDataStorageID:
 		m.ClearDataStorageID()
@@ -47376,6 +47558,12 @@ func (m *RequestExecutionMutation) ResetField(name string) error {
 		return nil
 	case requestexecution.FieldChannelID:
 		m.ResetChannelID()
+		return nil
+	case requestexecution.FieldUpstreamAccountID:
+		m.ResetUpstreamAccountID()
+		return nil
+	case requestexecution.FieldUpstreamAccountRetryCount:
+		m.ResetUpstreamAccountRetryCount()
 		return nil
 	case requestexecution.FieldDataStorageID:
 		m.ResetDataStorageID()
@@ -47434,7 +47622,7 @@ func (m *RequestExecutionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RequestExecutionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.request != nil {
 		edges = append(edges, requestexecution.EdgeRequest)
 	}
@@ -47443,6 +47631,9 @@ func (m *RequestExecutionMutation) AddedEdges() []string {
 	}
 	if m.data_storage != nil {
 		edges = append(edges, requestexecution.EdgeDataStorage)
+	}
+	if m.upstream_account != nil {
+		edges = append(edges, requestexecution.EdgeUpstreamAccount)
 	}
 	return edges
 }
@@ -47463,13 +47654,17 @@ func (m *RequestExecutionMutation) AddedIDs(name string) []ent.Value {
 		if id := m.data_storage; id != nil {
 			return []ent.Value{*id}
 		}
+	case requestexecution.EdgeUpstreamAccount:
+		if id := m.upstream_account; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RequestExecutionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	return edges
 }
 
@@ -47481,7 +47676,7 @@ func (m *RequestExecutionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RequestExecutionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedrequest {
 		edges = append(edges, requestexecution.EdgeRequest)
 	}
@@ -47490,6 +47685,9 @@ func (m *RequestExecutionMutation) ClearedEdges() []string {
 	}
 	if m.cleareddata_storage {
 		edges = append(edges, requestexecution.EdgeDataStorage)
+	}
+	if m.clearedupstream_account {
+		edges = append(edges, requestexecution.EdgeUpstreamAccount)
 	}
 	return edges
 }
@@ -47504,6 +47702,8 @@ func (m *RequestExecutionMutation) EdgeCleared(name string) bool {
 		return m.clearedchannel
 	case requestexecution.EdgeDataStorage:
 		return m.cleareddata_storage
+	case requestexecution.EdgeUpstreamAccount:
+		return m.clearedupstream_account
 	}
 	return false
 }
@@ -47521,6 +47721,9 @@ func (m *RequestExecutionMutation) ClearEdge(name string) error {
 	case requestexecution.EdgeDataStorage:
 		m.ClearDataStorage()
 		return nil
+	case requestexecution.EdgeUpstreamAccount:
+		m.ClearUpstreamAccount()
+		return nil
 	}
 	return fmt.Errorf("unknown RequestExecution unique edge %s", name)
 }
@@ -47537,6 +47740,9 @@ func (m *RequestExecutionMutation) ResetEdge(name string) error {
 		return nil
 	case requestexecution.EdgeDataStorage:
 		m.ResetDataStorage()
+		return nil
+	case requestexecution.EdgeUpstreamAccount:
+		m.ResetUpstreamAccount()
 		return nil
 	}
 	return fmt.Errorf("unknown RequestExecution edge %s", name)
@@ -51959,6 +52165,9 @@ type UpstreamAccountMutation struct {
 	clearedchannel        bool
 	pool                  *int
 	clearedpool           bool
+	executions            map[int]struct{}
+	removedexecutions     map[int]struct{}
+	clearedexecutions     bool
 	done                  bool
 	oldValue              func(context.Context) (*UpstreamAccount, error)
 	predicates            []predicate.UpstreamAccount
@@ -53237,6 +53446,60 @@ func (m *UpstreamAccountMutation) ResetPool() {
 	m.clearedpool = false
 }
 
+// AddExecutionIDs adds the "executions" edge to the RequestExecution entity by ids.
+func (m *UpstreamAccountMutation) AddExecutionIDs(ids ...int) {
+	if m.executions == nil {
+		m.executions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.executions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearExecutions clears the "executions" edge to the RequestExecution entity.
+func (m *UpstreamAccountMutation) ClearExecutions() {
+	m.clearedexecutions = true
+}
+
+// ExecutionsCleared reports if the "executions" edge to the RequestExecution entity was cleared.
+func (m *UpstreamAccountMutation) ExecutionsCleared() bool {
+	return m.clearedexecutions
+}
+
+// RemoveExecutionIDs removes the "executions" edge to the RequestExecution entity by IDs.
+func (m *UpstreamAccountMutation) RemoveExecutionIDs(ids ...int) {
+	if m.removedexecutions == nil {
+		m.removedexecutions = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.executions, ids[i])
+		m.removedexecutions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedExecutions returns the removed IDs of the "executions" edge to the RequestExecution entity.
+func (m *UpstreamAccountMutation) RemovedExecutionsIDs() (ids []int) {
+	for id := range m.removedexecutions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ExecutionsIDs returns the "executions" edge IDs in the mutation.
+func (m *UpstreamAccountMutation) ExecutionsIDs() (ids []int) {
+	for id := range m.executions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetExecutions resets all changes to the "executions" edge.
+func (m *UpstreamAccountMutation) ResetExecutions() {
+	m.executions = nil
+	m.clearedexecutions = false
+	m.removedexecutions = nil
+}
+
 // Where appends a list predicates to the UpstreamAccountMutation builder.
 func (m *UpstreamAccountMutation) Where(ps ...predicate.UpstreamAccount) {
 	m.predicates = append(m.predicates, ps...)
@@ -53905,12 +54168,15 @@ func (m *UpstreamAccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UpstreamAccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.channel != nil {
 		edges = append(edges, upstreamaccount.EdgeChannel)
 	}
 	if m.pool != nil {
 		edges = append(edges, upstreamaccount.EdgePool)
+	}
+	if m.executions != nil {
+		edges = append(edges, upstreamaccount.EdgeExecutions)
 	}
 	return edges
 }
@@ -53927,30 +54193,50 @@ func (m *UpstreamAccountMutation) AddedIDs(name string) []ent.Value {
 		if id := m.pool; id != nil {
 			return []ent.Value{*id}
 		}
+	case upstreamaccount.EdgeExecutions:
+		ids := make([]ent.Value, 0, len(m.executions))
+		for id := range m.executions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UpstreamAccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.removedexecutions != nil {
+		edges = append(edges, upstreamaccount.EdgeExecutions)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *UpstreamAccountMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case upstreamaccount.EdgeExecutions:
+		ids := make([]ent.Value, 0, len(m.removedexecutions))
+		for id := range m.removedexecutions {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UpstreamAccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedchannel {
 		edges = append(edges, upstreamaccount.EdgeChannel)
 	}
 	if m.clearedpool {
 		edges = append(edges, upstreamaccount.EdgePool)
+	}
+	if m.clearedexecutions {
+		edges = append(edges, upstreamaccount.EdgeExecutions)
 	}
 	return edges
 }
@@ -53963,6 +54249,8 @@ func (m *UpstreamAccountMutation) EdgeCleared(name string) bool {
 		return m.clearedchannel
 	case upstreamaccount.EdgePool:
 		return m.clearedpool
+	case upstreamaccount.EdgeExecutions:
+		return m.clearedexecutions
 	}
 	return false
 }
@@ -53990,6 +54278,9 @@ func (m *UpstreamAccountMutation) ResetEdge(name string) error {
 		return nil
 	case upstreamaccount.EdgePool:
 		m.ResetPool()
+		return nil
+	case upstreamaccount.EdgeExecutions:
+		m.ResetExecutions()
 		return nil
 	}
 	return fmt.Errorf("unknown UpstreamAccount edge %s", name)

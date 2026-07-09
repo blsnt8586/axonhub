@@ -27,6 +27,10 @@ const (
 	FieldRequestID = "request_id"
 	// FieldChannelID holds the string denoting the channel_id field in the database.
 	FieldChannelID = "channel_id"
+	// FieldUpstreamAccountID holds the string denoting the upstream_account_id field in the database.
+	FieldUpstreamAccountID = "upstream_account_id"
+	// FieldUpstreamAccountRetryCount holds the string denoting the upstream_account_retry_count field in the database.
+	FieldUpstreamAccountRetryCount = "upstream_account_retry_count"
 	// FieldDataStorageID holds the string denoting the data_storage_id field in the database.
 	FieldDataStorageID = "data_storage_id"
 	// FieldExternalID holds the string denoting the external_id field in the database.
@@ -67,6 +71,8 @@ const (
 	EdgeChannel = "channel"
 	// EdgeDataStorage holds the string denoting the data_storage edge name in mutations.
 	EdgeDataStorage = "data_storage"
+	// EdgeUpstreamAccount holds the string denoting the upstream_account edge name in mutations.
+	EdgeUpstreamAccount = "upstream_account"
 	// Table holds the table name of the requestexecution in the database.
 	Table = "request_executions"
 	// RequestTable is the table that holds the request relation/edge.
@@ -90,6 +96,13 @@ const (
 	DataStorageInverseTable = "data_storages"
 	// DataStorageColumn is the table column denoting the data_storage relation/edge.
 	DataStorageColumn = "data_storage_id"
+	// UpstreamAccountTable is the table that holds the upstream_account relation/edge.
+	UpstreamAccountTable = "request_executions"
+	// UpstreamAccountInverseTable is the table name for the UpstreamAccount entity.
+	// It exists in this package in order to avoid circular dependency with the "upstreamaccount" package.
+	UpstreamAccountInverseTable = "upstream_accounts"
+	// UpstreamAccountColumn is the table column denoting the upstream_account relation/edge.
+	UpstreamAccountColumn = "upstream_account_id"
 )
 
 // Columns holds all SQL columns for requestexecution fields.
@@ -100,6 +113,8 @@ var Columns = []string{
 	FieldProjectID,
 	FieldRequestID,
 	FieldChannelID,
+	FieldUpstreamAccountID,
+	FieldUpstreamAccountRetryCount,
 	FieldDataStorageID,
 	FieldExternalID,
 	FieldModelID,
@@ -138,6 +153,8 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultProjectID holds the default value on creation for the "project_id" field.
 	DefaultProjectID int
+	// DefaultUpstreamAccountRetryCount holds the default value on creation for the "upstream_account_retry_count" field.
+	DefaultUpstreamAccountRetryCount int
 	// ExternalIDValidator is a validator for the "external_id" field. It is called by the builders before save.
 	ExternalIDValidator func(string) error
 	// DefaultFormat holds the default value on creation for the "format" field.
@@ -205,6 +222,16 @@ func ByRequestID(opts ...sql.OrderTermOption) OrderOption {
 // ByChannelID orders the results by the channel_id field.
 func ByChannelID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldChannelID, opts...).ToFunc()
+}
+
+// ByUpstreamAccountID orders the results by the upstream_account_id field.
+func ByUpstreamAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpstreamAccountID, opts...).ToFunc()
+}
+
+// ByUpstreamAccountRetryCount orders the results by the upstream_account_retry_count field.
+func ByUpstreamAccountRetryCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpstreamAccountRetryCount, opts...).ToFunc()
 }
 
 // ByDataStorageID orders the results by the data_storage_id field.
@@ -292,6 +319,13 @@ func ByDataStorageField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newDataStorageStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByUpstreamAccountField orders the results by upstream_account field.
+func ByUpstreamAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUpstreamAccountStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newRequestStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -311,6 +345,13 @@ func newDataStorageStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DataStorageInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, DataStorageTable, DataStorageColumn),
+	)
+}
+func newUpstreamAccountStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UpstreamAccountInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, UpstreamAccountTable, UpstreamAccountColumn),
 	)
 }
 

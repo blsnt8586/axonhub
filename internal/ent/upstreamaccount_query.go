@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -14,6 +15,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 )
@@ -21,14 +23,16 @@ import (
 // UpstreamAccountQuery is the builder for querying UpstreamAccount entities.
 type UpstreamAccountQuery struct {
 	config
-	ctx         *QueryContext
-	order       []upstreamaccount.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.UpstreamAccount
-	withChannel *ChannelQuery
-	withPool    *UpstreamAccountPoolQuery
-	loadTotal   []func(context.Context, []*UpstreamAccount) error
-	modifiers   []func(*sql.Selector)
+	ctx                 *QueryContext
+	order               []upstreamaccount.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.UpstreamAccount
+	withChannel         *ChannelQuery
+	withPool            *UpstreamAccountPoolQuery
+	withExecutions      *RequestExecutionQuery
+	loadTotal           []func(context.Context, []*UpstreamAccount) error
+	modifiers           []func(*sql.Selector)
+	withNamedExecutions map[string]*RequestExecutionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -102,6 +106,28 @@ func (_q *UpstreamAccountQuery) QueryPool() *UpstreamAccountPoolQuery {
 			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, selector),
 			sqlgraph.To(upstreamaccountpool.Table, upstreamaccountpool.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccount.PoolTable, upstreamaccount.PoolColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryExecutions chains the current query on the "executions" edge.
+func (_q *UpstreamAccountQuery) QueryExecutions() *RequestExecutionQuery {
+	query := (&RequestExecutionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, selector),
+			sqlgraph.To(requestexecution.Table, requestexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, upstreamaccount.ExecutionsTable, upstreamaccount.ExecutionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -296,13 +322,14 @@ func (_q *UpstreamAccountQuery) Clone() *UpstreamAccountQuery {
 		return nil
 	}
 	return &UpstreamAccountQuery{
-		config:      _q.config,
-		ctx:         _q.ctx.Clone(),
-		order:       append([]upstreamaccount.OrderOption{}, _q.order...),
-		inters:      append([]Interceptor{}, _q.inters...),
-		predicates:  append([]predicate.UpstreamAccount{}, _q.predicates...),
-		withChannel: _q.withChannel.Clone(),
-		withPool:    _q.withPool.Clone(),
+		config:         _q.config,
+		ctx:            _q.ctx.Clone(),
+		order:          append([]upstreamaccount.OrderOption{}, _q.order...),
+		inters:         append([]Interceptor{}, _q.inters...),
+		predicates:     append([]predicate.UpstreamAccount{}, _q.predicates...),
+		withChannel:    _q.withChannel.Clone(),
+		withPool:       _q.withPool.Clone(),
+		withExecutions: _q.withExecutions.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -329,6 +356,17 @@ func (_q *UpstreamAccountQuery) WithPool(opts ...func(*UpstreamAccountPoolQuery)
 		opt(query)
 	}
 	_q.withPool = query
+	return _q
+}
+
+// WithExecutions tells the query-builder to eager-load the nodes that are connected to
+// the "executions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UpstreamAccountQuery) WithExecutions(opts ...func(*RequestExecutionQuery)) *UpstreamAccountQuery {
+	query := (&RequestExecutionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withExecutions = query
 	return _q
 }
 
@@ -416,9 +454,10 @@ func (_q *UpstreamAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	var (
 		nodes       = []*UpstreamAccount{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withChannel != nil,
 			_q.withPool != nil,
+			_q.withExecutions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -451,6 +490,20 @@ func (_q *UpstreamAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	if query := _q.withPool; query != nil {
 		if err := _q.loadPool(ctx, query, nodes, nil,
 			func(n *UpstreamAccount, e *UpstreamAccountPool) { n.Edges.Pool = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withExecutions; query != nil {
+		if err := _q.loadExecutions(ctx, query, nodes,
+			func(n *UpstreamAccount) { n.Edges.Executions = []*RequestExecution{} },
+			func(n *UpstreamAccount, e *RequestExecution) { n.Edges.Executions = append(n.Edges.Executions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedExecutions {
+		if err := _q.loadExecutions(ctx, query, nodes,
+			func(n *UpstreamAccount) { n.appendNamedExecutions(name) },
+			func(n *UpstreamAccount, e *RequestExecution) { n.appendNamedExecutions(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -520,6 +573,39 @@ func (_q *UpstreamAccountQuery) loadPool(ctx context.Context, query *UpstreamAcc
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (_q *UpstreamAccountQuery) loadExecutions(ctx context.Context, query *RequestExecutionQuery, nodes []*UpstreamAccount, init func(*UpstreamAccount), assign func(*UpstreamAccount, *RequestExecution)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*UpstreamAccount)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(requestexecution.FieldUpstreamAccountID)
+	}
+	query.Where(predicate.RequestExecution(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(upstreamaccount.ExecutionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UpstreamAccountID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "upstream_account_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "upstream_account_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -621,6 +707,20 @@ func (_q *UpstreamAccountQuery) sqlQuery(ctx context.Context) *sql.Selector {
 func (_q *UpstreamAccountQuery) Modify(modifiers ...func(s *sql.Selector)) *UpstreamAccountSelect {
 	_q.modifiers = append(_q.modifiers, modifiers...)
 	return _q.Select()
+}
+
+// WithNamedExecutions tells the query-builder to eager-load the nodes that are connected to the "executions"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UpstreamAccountQuery) WithNamedExecutions(name string, opts ...func(*RequestExecutionQuery)) *UpstreamAccountQuery {
+	query := (&RequestExecutionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedExecutions == nil {
+		_q.withNamedExecutions = make(map[string]*RequestExecutionQuery)
+	}
+	_q.withNamedExecutions[name] = query
+	return _q
 }
 
 // UpstreamAccountGroupBy is the group-by builder for UpstreamAccount entities.

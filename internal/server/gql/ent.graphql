@@ -11840,6 +11840,14 @@ type RequestExecution implements Node {
   requestID: ID!
   channelID: ID
   """
+  Selected upstream account for this execution attempt.
+  """
+  upstreamAccountID: ID
+  """
+  Number of prior account-level retries before this execution attempt.
+  """
+  upstreamAccountRetryCount: Int!
+  """
   Data Storage ID that this request belongs to
   """
   dataStorageID: ID
@@ -11877,6 +11885,7 @@ type RequestExecution implements Node {
   request: Request!
   channel: Channel @goField(forceResolver: true)
   dataStorage: DataStorage
+  upstreamAccount: UpstreamAccount @goField(forceResolver: true)
 }
 """
 A connection to a list of items.
@@ -12006,6 +12015,26 @@ input RequestExecutionWhereInput {
   channelIDNotIn: [ID!]
   channelIDIsNil: Boolean
   channelIDNotNil: Boolean
+  """
+  upstream_account_id field predicates
+  """
+  upstreamAccountID: ID
+  upstreamAccountIDNEQ: ID
+  upstreamAccountIDIn: [ID!]
+  upstreamAccountIDNotIn: [ID!]
+  upstreamAccountIDIsNil: Boolean
+  upstreamAccountIDNotNil: Boolean
+  """
+  upstream_account_retry_count field predicates
+  """
+  upstreamAccountRetryCount: Int
+  upstreamAccountRetryCountNEQ: Int
+  upstreamAccountRetryCountIn: [Int!]
+  upstreamAccountRetryCountNotIn: [Int!]
+  upstreamAccountRetryCountGT: Int
+  upstreamAccountRetryCountGTE: Int
+  upstreamAccountRetryCountLT: Int
+  upstreamAccountRetryCountLTE: Int
   """
   data_storage_id field predicates
   """
@@ -12185,6 +12214,11 @@ input RequestExecutionWhereInput {
   """
   hasDataStorage: Boolean
   hasDataStorageWith: [DataStorageWhereInput!]
+  """
+  upstream_account edge predicates
+  """
+  hasUpstreamAccount: Boolean
+  hasUpstreamAccountWith: [UpstreamAccountWhereInput!]
 }
 """
 Ordering options for Request connections
@@ -14041,6 +14075,37 @@ type UpstreamAccount implements Node {
   quotaUsedMicros: Int!
   channel: Channel!
   pool: UpstreamAccountPool
+  executions(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: Cursor
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: Cursor
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Ordering options for RequestExecutions returned from the connection.
+    """
+    orderBy: RequestExecutionOrder
+
+    """
+    Filtering options for RequestExecutions returned from the connection.
+    """
+    where: RequestExecutionWhereInput
+  ): RequestExecutionConnection!
 }
 """
 A connection to a list of items.
@@ -14561,6 +14626,11 @@ input UpstreamAccountWhereInput {
   """
   hasPool: Boolean
   hasPoolWith: [UpstreamAccountPoolWhereInput!]
+  """
+  executions edge predicates
+  """
+  hasExecutions: Boolean
+  hasExecutionsWith: [RequestExecutionWhereInput!]
 }
 type UsageBillingRecord implements Node {
   id: ID!

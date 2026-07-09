@@ -1003,6 +1003,8 @@ var schemaGraph = func() *sqlgraph.Schema {
 			requestexecution.FieldProjectID:                  {Type: field.TypeInt, Column: requestexecution.FieldProjectID},
 			requestexecution.FieldRequestID:                  {Type: field.TypeInt, Column: requestexecution.FieldRequestID},
 			requestexecution.FieldChannelID:                  {Type: field.TypeInt, Column: requestexecution.FieldChannelID},
+			requestexecution.FieldUpstreamAccountID:          {Type: field.TypeInt, Column: requestexecution.FieldUpstreamAccountID},
+			requestexecution.FieldUpstreamAccountRetryCount:  {Type: field.TypeInt, Column: requestexecution.FieldUpstreamAccountRetryCount},
 			requestexecution.FieldDataStorageID:              {Type: field.TypeInt, Column: requestexecution.FieldDataStorageID},
 			requestexecution.FieldExternalID:                 {Type: field.TypeString, Column: requestexecution.FieldExternalID},
 			requestexecution.FieldModelID:                    {Type: field.TypeString, Column: requestexecution.FieldModelID},
@@ -2685,6 +2687,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"DataStorage",
 	)
 	graph.MustAddE(
+		"upstream_account",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   requestexecution.UpstreamAccountTable,
+			Columns: []string{requestexecution.UpstreamAccountColumn},
+			Bidi:    false,
+		},
+		"RequestExecution",
+		"UpstreamAccount",
+	)
+	graph.MustAddE(
 		"users",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -2815,6 +2829,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"UpstreamAccount",
 		"UpstreamAccountPool",
+	)
+	graph.MustAddE(
+		"executions",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.ExecutionsTable,
+			Columns: []string{upstreamaccount.ExecutionsColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccount",
+		"RequestExecution",
 	)
 	graph.MustAddE(
 		"channel",
@@ -8521,6 +8547,16 @@ func (f *RequestExecutionFilter) WhereChannelID(p entql.IntP) {
 	f.Where(p.Field(requestexecution.FieldChannelID))
 }
 
+// WhereUpstreamAccountID applies the entql int predicate on the upstream_account_id field.
+func (f *RequestExecutionFilter) WhereUpstreamAccountID(p entql.IntP) {
+	f.Where(p.Field(requestexecution.FieldUpstreamAccountID))
+}
+
+// WhereUpstreamAccountRetryCount applies the entql int predicate on the upstream_account_retry_count field.
+func (f *RequestExecutionFilter) WhereUpstreamAccountRetryCount(p entql.IntP) {
+	f.Where(p.Field(requestexecution.FieldUpstreamAccountRetryCount))
+}
+
 // WhereDataStorageID applies the entql int predicate on the data_storage_id field.
 func (f *RequestExecutionFilter) WhereDataStorageID(p entql.IntP) {
 	f.Where(p.Field(requestexecution.FieldDataStorageID))
@@ -8642,6 +8678,20 @@ func (f *RequestExecutionFilter) WhereHasDataStorage() {
 // WhereHasDataStorageWith applies a predicate to check if query has an edge data_storage with a given conditions (other predicates).
 func (f *RequestExecutionFilter) WhereHasDataStorageWith(preds ...predicate.DataStorage) {
 	f.Where(entql.HasEdgeWith("data_storage", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUpstreamAccount applies a predicate to check if query has an edge upstream_account.
+func (f *RequestExecutionFilter) WhereHasUpstreamAccount() {
+	f.Where(entql.HasEdge("upstream_account"))
+}
+
+// WhereHasUpstreamAccountWith applies a predicate to check if query has an edge upstream_account with a given conditions (other predicates).
+func (f *RequestExecutionFilter) WhereHasUpstreamAccountWith(preds ...predicate.UpstreamAccount) {
+	f.Where(entql.HasEdgeWith("upstream_account", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -9341,6 +9391,20 @@ func (f *UpstreamAccountFilter) WhereHasPool() {
 // WhereHasPoolWith applies a predicate to check if query has an edge pool with a given conditions (other predicates).
 func (f *UpstreamAccountFilter) WhereHasPoolWith(preds ...predicate.UpstreamAccountPool) {
 	f.Where(entql.HasEdgeWith("pool", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasExecutions applies a predicate to check if query has an edge executions.
+func (f *UpstreamAccountFilter) WhereHasExecutions() {
+	f.Where(entql.HasEdge("executions"))
+}
+
+// WhereHasExecutionsWith applies a predicate to check if query has an edge executions with a given conditions (other predicates).
+func (f *UpstreamAccountFilter) WhereHasExecutionsWith(preds ...predicate.RequestExecution) {
+	f.Where(entql.HasEdgeWith("executions", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}

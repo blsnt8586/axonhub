@@ -120,22 +120,29 @@ func WithCommercialBilling(admissionService *biz.AdmissionService, usageBillingP
 	}
 }
 
+func WithUpstreamAccounts(upstreamAccountService *biz.UpstreamAccountService) ChatCompletionOrchestratorOption {
+	return func(processor *ChatCompletionOrchestrator) {
+		processor.UpstreamAccountService = upstreamAccountService
+	}
+}
+
 type ChatCompletionOrchestrator struct {
-	Inbound               transformer.Inbound
-	RequestService        *biz.RequestService
-	ChannelService        *biz.ChannelService
-	SystemService         *biz.SystemService
-	UsageLogService       *biz.UsageLogService
-	UsageBillingProcessor *biz.UsageBillingProcessor
-	BillingHoldService    *biz.BillingHoldService
-	QuotaService          *biz.QuotaService
-	LiveStreamRegistry    *biz.LiveStreamRegistry
-	PromptProvider        PromptProvider
-	PromptProtecter       PromptProtecter
-	Middlewares           []pipeline.Middleware
-	PipelineFactory       *pipeline.Factory
-	ModelMapper           *ModelMapper
-	AdmissionService      *biz.AdmissionService
+	Inbound                transformer.Inbound
+	RequestService         *biz.RequestService
+	ChannelService         *biz.ChannelService
+	UpstreamAccountService *biz.UpstreamAccountService
+	SystemService          *biz.SystemService
+	UsageLogService        *biz.UsageLogService
+	UsageBillingProcessor  *biz.UsageBillingProcessor
+	BillingHoldService     *biz.BillingHoldService
+	QuotaService           *biz.QuotaService
+	LiveStreamRegistry     *biz.LiveStreamRegistry
+	PromptProvider         PromptProvider
+	PromptProtecter        PromptProtecter
+	Middlewares            []pipeline.Middleware
+	PipelineFactory        *pipeline.Factory
+	ModelMapper            *ModelMapper
+	AdmissionService       *biz.AdmissionService
 
 	// The runtime fields.
 
@@ -226,21 +233,22 @@ func (processor *ChatCompletionOrchestrator) Process(ctx context.Context, reques
 	}
 
 	state := &PersistenceState{
-		APIKey:                apiKey,
-		RequestService:        processor.RequestService,
-		UsageLogService:       processor.UsageLogService,
-		UsageBillingProcessor: processor.UsageBillingProcessor,
-		BillingHoldService:    processor.BillingHoldService,
-		ChannelService:        processor.ChannelService,
-		PromptProvider:        processor.PromptProvider,
-		PromptProtecter:       processor.PromptProtecter,
-		RetryPolicyProvider:   processor.SystemService,
-		CandidateSelector:     processor.channelSelector,
-		LoadBalancer:          loadBalancer,
-		AdmissionService:      processor.AdmissionService,
-		ModelMapper:           processor.ModelMapper,
-		Proxy:                 processor.proxy,
-		CurrentCandidateIndex: 0,
+		APIKey:                 apiKey,
+		RequestService:         processor.RequestService,
+		UsageLogService:        processor.UsageLogService,
+		UsageBillingProcessor:  processor.UsageBillingProcessor,
+		BillingHoldService:     processor.BillingHoldService,
+		ChannelService:         processor.ChannelService,
+		UpstreamAccountService: processor.UpstreamAccountService,
+		PromptProvider:         processor.PromptProvider,
+		PromptProtecter:        processor.PromptProtecter,
+		RetryPolicyProvider:    processor.SystemService,
+		CandidateSelector:      processor.channelSelector,
+		LoadBalancer:           loadBalancer,
+		AdmissionService:       processor.AdmissionService,
+		ModelMapper:            processor.ModelMapper,
+		Proxy:                  processor.proxy,
+		CurrentCandidateIndex:  0,
 	}
 
 	var pipelineOpts []pipeline.Option

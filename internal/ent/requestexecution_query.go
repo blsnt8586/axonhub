@@ -16,20 +16,22 @@ import (
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 )
 
 // RequestExecutionQuery is the builder for querying RequestExecution entities.
 type RequestExecutionQuery struct {
 	config
-	ctx             *QueryContext
-	order           []requestexecution.OrderOption
-	inters          []Interceptor
-	predicates      []predicate.RequestExecution
-	withRequest     *RequestQuery
-	withChannel     *ChannelQuery
-	withDataStorage *DataStorageQuery
-	loadTotal       []func(context.Context, []*RequestExecution) error
-	modifiers       []func(*sql.Selector)
+	ctx                 *QueryContext
+	order               []requestexecution.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.RequestExecution
+	withRequest         *RequestQuery
+	withChannel         *ChannelQuery
+	withDataStorage     *DataStorageQuery
+	withUpstreamAccount *UpstreamAccountQuery
+	loadTotal           []func(context.Context, []*RequestExecution) error
+	modifiers           []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -125,6 +127,28 @@ func (_q *RequestExecutionQuery) QueryDataStorage() *DataStorageQuery {
 			sqlgraph.From(requestexecution.Table, requestexecution.FieldID, selector),
 			sqlgraph.To(datastorage.Table, datastorage.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, requestexecution.DataStorageTable, requestexecution.DataStorageColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccount chains the current query on the "upstream_account" edge.
+func (_q *RequestExecutionQuery) QueryUpstreamAccount() *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(requestexecution.Table, requestexecution.FieldID, selector),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, requestexecution.UpstreamAccountTable, requestexecution.UpstreamAccountColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -319,14 +343,15 @@ func (_q *RequestExecutionQuery) Clone() *RequestExecutionQuery {
 		return nil
 	}
 	return &RequestExecutionQuery{
-		config:          _q.config,
-		ctx:             _q.ctx.Clone(),
-		order:           append([]requestexecution.OrderOption{}, _q.order...),
-		inters:          append([]Interceptor{}, _q.inters...),
-		predicates:      append([]predicate.RequestExecution{}, _q.predicates...),
-		withRequest:     _q.withRequest.Clone(),
-		withChannel:     _q.withChannel.Clone(),
-		withDataStorage: _q.withDataStorage.Clone(),
+		config:              _q.config,
+		ctx:                 _q.ctx.Clone(),
+		order:               append([]requestexecution.OrderOption{}, _q.order...),
+		inters:              append([]Interceptor{}, _q.inters...),
+		predicates:          append([]predicate.RequestExecution{}, _q.predicates...),
+		withRequest:         _q.withRequest.Clone(),
+		withChannel:         _q.withChannel.Clone(),
+		withDataStorage:     _q.withDataStorage.Clone(),
+		withUpstreamAccount: _q.withUpstreamAccount.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -364,6 +389,17 @@ func (_q *RequestExecutionQuery) WithDataStorage(opts ...func(*DataStorageQuery)
 		opt(query)
 	}
 	_q.withDataStorage = query
+	return _q
+}
+
+// WithUpstreamAccount tells the query-builder to eager-load the nodes that are connected to
+// the "upstream_account" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RequestExecutionQuery) WithUpstreamAccount(opts ...func(*UpstreamAccountQuery)) *RequestExecutionQuery {
+	query := (&UpstreamAccountClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUpstreamAccount = query
 	return _q
 }
 
@@ -445,10 +481,11 @@ func (_q *RequestExecutionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	var (
 		nodes       = []*RequestExecution{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withRequest != nil,
 			_q.withChannel != nil,
 			_q.withDataStorage != nil,
+			_q.withUpstreamAccount != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -487,6 +524,12 @@ func (_q *RequestExecutionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	if query := _q.withDataStorage; query != nil {
 		if err := _q.loadDataStorage(ctx, query, nodes, nil,
 			func(n *RequestExecution, e *DataStorage) { n.Edges.DataStorage = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUpstreamAccount; query != nil {
+		if err := _q.loadUpstreamAccount(ctx, query, nodes, nil,
+			func(n *RequestExecution, e *UpstreamAccount) { n.Edges.UpstreamAccount = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -585,6 +628,38 @@ func (_q *RequestExecutionQuery) loadDataStorage(ctx context.Context, query *Dat
 	}
 	return nil
 }
+func (_q *RequestExecutionQuery) loadUpstreamAccount(ctx context.Context, query *UpstreamAccountQuery, nodes []*RequestExecution, init func(*RequestExecution), assign func(*RequestExecution, *UpstreamAccount)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*RequestExecution)
+	for i := range nodes {
+		if nodes[i].UpstreamAccountID == nil {
+			continue
+		}
+		fk := *nodes[i].UpstreamAccountID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(upstreamaccount.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "upstream_account_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (_q *RequestExecutionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -622,6 +697,9 @@ func (_q *RequestExecutionQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withDataStorage != nil {
 			_spec.Node.AddColumnOnce(requestexecution.FieldDataStorageID)
+		}
+		if _q.withUpstreamAccount != nil {
+			_spec.Node.AddColumnOnce(requestexecution.FieldUpstreamAccountID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { pageInfoSchema } from '@/gql/pagination';
 import { apiKeySchema } from '@/features/apikeys/data/schema';
-import { channelSchema } from '@/features/channels/data';
+import { channelSchema, upstreamAccountSchema } from '@/features/channels/data';
 import { usageLogSchema } from './usage-logs-schema';
 
 // Request Status
@@ -25,6 +25,8 @@ export const requestExecutionSchema = z.object({
   // requestID: z.string(),
   // channelID: z.number(),
   channel: channelSchema.partial().nullable().optional(),
+  upstreamAccount: upstreamAccountSchema.partial().nullable().optional(),
+  upstreamAccountRetryCount: z.number().optional(),
   modelID: z.string(),
   requestHeaders: z.any().nullable().optional(),
   requestBody: z.any(), // JSONRawMessage

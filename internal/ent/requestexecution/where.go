@@ -80,6 +80,16 @@ func ChannelID(v int) predicate.RequestExecution {
 	return predicate.RequestExecution(sql.FieldEQ(FieldChannelID, v))
 }
 
+// UpstreamAccountID applies equality check predicate on the "upstream_account_id" field. It's identical to UpstreamAccountIDEQ.
+func UpstreamAccountID(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldEQ(FieldUpstreamAccountID, v))
+}
+
+// UpstreamAccountRetryCount applies equality check predicate on the "upstream_account_retry_count" field. It's identical to UpstreamAccountRetryCountEQ.
+func UpstreamAccountRetryCount(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldEQ(FieldUpstreamAccountRetryCount, v))
+}
+
 // DataStorageID applies equality check predicate on the "data_storage_id" field. It's identical to DataStorageIDEQ.
 func DataStorageID(v int) predicate.RequestExecution {
 	return predicate.RequestExecution(sql.FieldEQ(FieldDataStorageID, v))
@@ -308,6 +318,76 @@ func ChannelIDIsNil() predicate.RequestExecution {
 // ChannelIDNotNil applies the NotNil predicate on the "channel_id" field.
 func ChannelIDNotNil() predicate.RequestExecution {
 	return predicate.RequestExecution(sql.FieldNotNull(FieldChannelID))
+}
+
+// UpstreamAccountIDEQ applies the EQ predicate on the "upstream_account_id" field.
+func UpstreamAccountIDEQ(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldEQ(FieldUpstreamAccountID, v))
+}
+
+// UpstreamAccountIDNEQ applies the NEQ predicate on the "upstream_account_id" field.
+func UpstreamAccountIDNEQ(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldNEQ(FieldUpstreamAccountID, v))
+}
+
+// UpstreamAccountIDIn applies the In predicate on the "upstream_account_id" field.
+func UpstreamAccountIDIn(vs ...int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldIn(FieldUpstreamAccountID, vs...))
+}
+
+// UpstreamAccountIDNotIn applies the NotIn predicate on the "upstream_account_id" field.
+func UpstreamAccountIDNotIn(vs ...int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldNotIn(FieldUpstreamAccountID, vs...))
+}
+
+// UpstreamAccountIDIsNil applies the IsNil predicate on the "upstream_account_id" field.
+func UpstreamAccountIDIsNil() predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldIsNull(FieldUpstreamAccountID))
+}
+
+// UpstreamAccountIDNotNil applies the NotNil predicate on the "upstream_account_id" field.
+func UpstreamAccountIDNotNil() predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldNotNull(FieldUpstreamAccountID))
+}
+
+// UpstreamAccountRetryCountEQ applies the EQ predicate on the "upstream_account_retry_count" field.
+func UpstreamAccountRetryCountEQ(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldEQ(FieldUpstreamAccountRetryCount, v))
+}
+
+// UpstreamAccountRetryCountNEQ applies the NEQ predicate on the "upstream_account_retry_count" field.
+func UpstreamAccountRetryCountNEQ(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldNEQ(FieldUpstreamAccountRetryCount, v))
+}
+
+// UpstreamAccountRetryCountIn applies the In predicate on the "upstream_account_retry_count" field.
+func UpstreamAccountRetryCountIn(vs ...int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldIn(FieldUpstreamAccountRetryCount, vs...))
+}
+
+// UpstreamAccountRetryCountNotIn applies the NotIn predicate on the "upstream_account_retry_count" field.
+func UpstreamAccountRetryCountNotIn(vs ...int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldNotIn(FieldUpstreamAccountRetryCount, vs...))
+}
+
+// UpstreamAccountRetryCountGT applies the GT predicate on the "upstream_account_retry_count" field.
+func UpstreamAccountRetryCountGT(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldGT(FieldUpstreamAccountRetryCount, v))
+}
+
+// UpstreamAccountRetryCountGTE applies the GTE predicate on the "upstream_account_retry_count" field.
+func UpstreamAccountRetryCountGTE(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldGTE(FieldUpstreamAccountRetryCount, v))
+}
+
+// UpstreamAccountRetryCountLT applies the LT predicate on the "upstream_account_retry_count" field.
+func UpstreamAccountRetryCountLT(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldLT(FieldUpstreamAccountRetryCount, v))
+}
+
+// UpstreamAccountRetryCountLTE applies the LTE predicate on the "upstream_account_retry_count" field.
+func UpstreamAccountRetryCountLTE(v int) predicate.RequestExecution {
+	return predicate.RequestExecution(sql.FieldLTE(FieldUpstreamAccountRetryCount, v))
 }
 
 // DataStorageIDEQ applies the EQ predicate on the "data_storage_id" field.
@@ -1026,6 +1106,29 @@ func HasDataStorage() predicate.RequestExecution {
 func HasDataStorageWith(preds ...predicate.DataStorage) predicate.RequestExecution {
 	return predicate.RequestExecution(func(s *sql.Selector) {
 		step := newDataStorageStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUpstreamAccount applies the HasEdge predicate on the "upstream_account" edge.
+func HasUpstreamAccount() predicate.RequestExecution {
+	return predicate.RequestExecution(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UpstreamAccountTable, UpstreamAccountColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUpstreamAccountWith applies the HasEdge predicate on the "upstream_account" edge with a given conditions (other predicates).
+func HasUpstreamAccountWith(preds ...predicate.UpstreamAccount) predicate.RequestExecution {
+	return predicate.RequestExecution(func(s *sql.Selector) {
+		step := newUpstreamAccountStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
