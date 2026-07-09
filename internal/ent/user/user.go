@@ -56,6 +56,10 @@ const (
 	EdgeCreatedRedeemCodes = "created_redeem_codes"
 	// EdgeUsedRedeemCodes holds the string denoting the used_redeem_codes edge name in mutations.
 	EdgeUsedRedeemCodes = "used_redeem_codes"
+	// EdgeUserSubscriptions holds the string denoting the user_subscriptions edge name in mutations.
+	EdgeUserSubscriptions = "user_subscriptions"
+	// EdgeAssignedUserSubscriptions holds the string denoting the assigned_user_subscriptions edge name in mutations.
+	EdgeAssignedUserSubscriptions = "assigned_user_subscriptions"
 	// EdgeProjectUsers holds the string denoting the project_users edge name in mutations.
 	EdgeProjectUsers = "project_users"
 	// EdgeUserRoles holds the string denoting the user_roles edge name in mutations.
@@ -107,6 +111,20 @@ const (
 	UsedRedeemCodesInverseTable = "redeem_codes"
 	// UsedRedeemCodesColumn is the table column denoting the used_redeem_codes relation/edge.
 	UsedRedeemCodesColumn = "used_by_id"
+	// UserSubscriptionsTable is the table that holds the user_subscriptions relation/edge.
+	UserSubscriptionsTable = "user_subscriptions"
+	// UserSubscriptionsInverseTable is the table name for the UserSubscription entity.
+	// It exists in this package in order to avoid circular dependency with the "usersubscription" package.
+	UserSubscriptionsInverseTable = "user_subscriptions"
+	// UserSubscriptionsColumn is the table column denoting the user_subscriptions relation/edge.
+	UserSubscriptionsColumn = "user_id"
+	// AssignedUserSubscriptionsTable is the table that holds the assigned_user_subscriptions relation/edge.
+	AssignedUserSubscriptionsTable = "user_subscriptions"
+	// AssignedUserSubscriptionsInverseTable is the table name for the UserSubscription entity.
+	// It exists in this package in order to avoid circular dependency with the "usersubscription" package.
+	AssignedUserSubscriptionsInverseTable = "user_subscriptions"
+	// AssignedUserSubscriptionsColumn is the table column denoting the assigned_user_subscriptions relation/edge.
+	AssignedUserSubscriptionsColumn = "assigned_by_id"
 	// ProjectUsersTable is the table that holds the project_users relation/edge.
 	ProjectUsersTable = "user_projects"
 	// ProjectUsersInverseTable is the table name for the UserProject entity.
@@ -375,6 +393,34 @@ func ByUsedRedeemCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByUserSubscriptionsCount orders the results by user_subscriptions count.
+func ByUserSubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserSubscriptionsStep(), opts...)
+	}
+}
+
+// ByUserSubscriptions orders the results by user_subscriptions terms.
+func ByUserSubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAssignedUserSubscriptionsCount orders the results by assigned_user_subscriptions count.
+func ByAssignedUserSubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAssignedUserSubscriptionsStep(), opts...)
+	}
+}
+
+// ByAssignedUserSubscriptions orders the results by assigned_user_subscriptions terms.
+func ByAssignedUserSubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAssignedUserSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProjectUsersCount orders the results by project_users count.
 func ByProjectUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -449,6 +495,20 @@ func newUsedRedeemCodesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsedRedeemCodesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UsedRedeemCodesTable, UsedRedeemCodesColumn),
+	)
+}
+func newUserSubscriptionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserSubscriptionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserSubscriptionsTable, UserSubscriptionsColumn),
+	)
+}
+func newAssignedUserSubscriptionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AssignedUserSubscriptionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AssignedUserSubscriptionsTable, AssignedUserSubscriptionsColumn),
 	)
 }
 func newProjectUsersStep() *sqlgraph.Step {

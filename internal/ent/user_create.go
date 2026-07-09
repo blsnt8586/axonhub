@@ -20,6 +20,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
 	"github.com/looplj/axonhub/internal/ent/userrole"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -277,6 +278,36 @@ func (_c *UserCreate) AddUsedRedeemCodes(v ...*RedeemCode) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddUsedRedeemCodeIDs(ids...)
+}
+
+// AddUserSubscriptionIDs adds the "user_subscriptions" edge to the UserSubscription entity by IDs.
+func (_c *UserCreate) AddUserSubscriptionIDs(ids ...int) *UserCreate {
+	_c.mutation.AddUserSubscriptionIDs(ids...)
+	return _c
+}
+
+// AddUserSubscriptions adds the "user_subscriptions" edges to the UserSubscription entity.
+func (_c *UserCreate) AddUserSubscriptions(v ...*UserSubscription) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUserSubscriptionIDs(ids...)
+}
+
+// AddAssignedUserSubscriptionIDs adds the "assigned_user_subscriptions" edge to the UserSubscription entity by IDs.
+func (_c *UserCreate) AddAssignedUserSubscriptionIDs(ids ...int) *UserCreate {
+	_c.mutation.AddAssignedUserSubscriptionIDs(ids...)
+	return _c
+}
+
+// AddAssignedUserSubscriptions adds the "assigned_user_subscriptions" edges to the UserSubscription entity.
+func (_c *UserCreate) AddAssignedUserSubscriptions(v ...*UserSubscription) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAssignedUserSubscriptionIDs(ids...)
 }
 
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
@@ -610,6 +641,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UserSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserSubscriptionsTable,
+			Columns: []string{user.UserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AssignedUserSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedUserSubscriptionsTable,
+			Columns: []string{user.AssignedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

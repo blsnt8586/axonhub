@@ -38,6 +38,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
+	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
@@ -46,6 +47,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
 	"github.com/looplj/axonhub/internal/ent/userrole"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
@@ -3595,6 +3597,95 @@ func (_q *LedgerTransactionQuery) collectField(ctx context.Context, oneNode bool
 				query = pager.applyOrder(query)
 			}
 			_q.WithNamedRedeemCodes(alias, func(wq *RedeemCodeQuery) {
+				*wq = *query
+			})
+
+		case "purchasedUserSubscriptions":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserSubscriptionClient{config: _q.config}).Query()
+			)
+			args := newUserSubscriptionPaginateArgs(fieldArgs(ctx, new(UserSubscriptionWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUserSubscriptionPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*LedgerTransaction) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"purchase_ledger_transaction_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(ledgertransaction.PurchasedUserSubscriptionsColumn), ids...))
+						})
+						if err := query.GroupBy(ledgertransaction.PurchasedUserSubscriptionsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[6][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*LedgerTransaction) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.PurchasedUserSubscriptions)
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[6][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, usersubscriptionImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(ledgertransaction.PurchasedUserSubscriptionsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedPurchasedUserSubscriptions(alias, func(wq *UserSubscriptionQuery) {
 				*wq = *query
 			})
 		case "createdAt":
@@ -7610,6 +7701,259 @@ func newRolePaginateArgs(rv map[string]any) *rolePaginateArgs {
 }
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *SubscriptionPlanQuery) CollectFields(ctx context.Context, satisfies ...string) (*SubscriptionPlanQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *SubscriptionPlanQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(subscriptionplan.Columns))
+		selectedFields = []string{subscriptionplan.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "userSubscriptions":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserSubscriptionClient{config: _q.config}).Query()
+			)
+			args := newUserSubscriptionPaginateArgs(fieldArgs(ctx, new(UserSubscriptionWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUserSubscriptionPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*SubscriptionPlan) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"plan_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(subscriptionplan.UserSubscriptionsColumn), ids...))
+						})
+						if err := query.GroupBy(subscriptionplan.UserSubscriptionsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[0] == nil {
+								nodes[i].Edges.totalCount[0] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[0][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*SubscriptionPlan) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.UserSubscriptions)
+							if nodes[i].Edges.totalCount[0] == nil {
+								nodes[i].Edges.totalCount[0] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[0][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, usersubscriptionImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(subscriptionplan.UserSubscriptionsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUserSubscriptions(alias, func(wq *UserSubscriptionQuery) {
+				*wq = *query
+			})
+		case "createdAt":
+			if _, ok := fieldSeen[subscriptionplan.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldCreatedAt)
+				fieldSeen[subscriptionplan.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[subscriptionplan.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldUpdatedAt)
+				fieldSeen[subscriptionplan.FieldUpdatedAt] = struct{}{}
+			}
+		case "name":
+			if _, ok := fieldSeen[subscriptionplan.FieldName]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldName)
+				fieldSeen[subscriptionplan.FieldName] = struct{}{}
+			}
+		case "description":
+			if _, ok := fieldSeen[subscriptionplan.FieldDescription]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldDescription)
+				fieldSeen[subscriptionplan.FieldDescription] = struct{}{}
+			}
+		case "period":
+			if _, ok := fieldSeen[subscriptionplan.FieldPeriod]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldPeriod)
+				fieldSeen[subscriptionplan.FieldPeriod] = struct{}{}
+			}
+		case "periodDays":
+			if _, ok := fieldSeen[subscriptionplan.FieldPeriodDays]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldPeriodDays)
+				fieldSeen[subscriptionplan.FieldPeriodDays] = struct{}{}
+			}
+		case "priceMicros":
+			if _, ok := fieldSeen[subscriptionplan.FieldPriceMicros]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldPriceMicros)
+				fieldSeen[subscriptionplan.FieldPriceMicros] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[subscriptionplan.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldCurrency)
+				fieldSeen[subscriptionplan.FieldCurrency] = struct{}{}
+			}
+		case "includedAmountMicros":
+			if _, ok := fieldSeen[subscriptionplan.FieldIncludedAmountMicros]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldIncludedAmountMicros)
+				fieldSeen[subscriptionplan.FieldIncludedAmountMicros] = struct{}{}
+			}
+		case "supportedModelIds":
+			if _, ok := fieldSeen[subscriptionplan.FieldSupportedModelIds]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldSupportedModelIds)
+				fieldSeen[subscriptionplan.FieldSupportedModelIds] = struct{}{}
+			}
+		case "supportedProjectIds":
+			if _, ok := fieldSeen[subscriptionplan.FieldSupportedProjectIds]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldSupportedProjectIds)
+				fieldSeen[subscriptionplan.FieldSupportedProjectIds] = struct{}{}
+			}
+		case "supportedGroupIds":
+			if _, ok := fieldSeen[subscriptionplan.FieldSupportedGroupIds]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldSupportedGroupIds)
+				fieldSeen[subscriptionplan.FieldSupportedGroupIds] = struct{}{}
+			}
+		case "allowWalletFallback":
+			if _, ok := fieldSeen[subscriptionplan.FieldAllowWalletFallback]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldAllowWalletFallback)
+				fieldSeen[subscriptionplan.FieldAllowWalletFallback] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[subscriptionplan.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldStatus)
+				fieldSeen[subscriptionplan.FieldStatus] = struct{}{}
+			}
+		case "sortOrder":
+			if _, ok := fieldSeen[subscriptionplan.FieldSortOrder]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldSortOrder)
+				fieldSeen[subscriptionplan.FieldSortOrder] = struct{}{}
+			}
+		case "metadata":
+			if _, ok := fieldSeen[subscriptionplan.FieldMetadata]; !ok {
+				selectedFields = append(selectedFields, subscriptionplan.FieldMetadata)
+				fieldSeen[subscriptionplan.FieldMetadata] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type subscriptionplanPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []SubscriptionPlanPaginateOption
+}
+
+func newSubscriptionPlanPaginateArgs(rv map[string]any) *subscriptionplanPaginateArgs {
+	args := &subscriptionplanPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &SubscriptionPlanOrder{Field: &SubscriptionPlanOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithSubscriptionPlanOrder(order))
+			}
+		case *SubscriptionPlanOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithSubscriptionPlanOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*SubscriptionPlanWhereInput); ok {
+		args.opts = append(args.opts, WithSubscriptionPlanFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (_q *SystemQuery) CollectFields(ctx context.Context, satisfies ...string) (*SystemQuery, error) {
 	fc := graphql.GetFieldContext(ctx)
 	if fc == nil {
@@ -8215,6 +8559,21 @@ func (_q *UsageBillingRecordQuery) collectField(ctx context.Context, oneNode boo
 				selectedFields = append(selectedFields, usagebillingrecord.FieldLedgerTransactionID)
 				fieldSeen[usagebillingrecord.FieldLedgerTransactionID] = struct{}{}
 			}
+
+		case "userSubscription":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserSubscriptionClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, usersubscriptionImplementors)...); err != nil {
+				return err
+			}
+			_q.withUserSubscription = query
+			if _, ok := fieldSeen[usagebillingrecord.FieldUserSubscriptionID]; !ok {
+				selectedFields = append(selectedFields, usagebillingrecord.FieldUserSubscriptionID)
+				fieldSeen[usagebillingrecord.FieldUserSubscriptionID] = struct{}{}
+			}
 		case "createdAt":
 			if _, ok := fieldSeen[usagebillingrecord.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, usagebillingrecord.FieldCreatedAt)
@@ -8304,6 +8663,11 @@ func (_q *UsageBillingRecordQuery) collectField(ctx context.Context, oneNode boo
 			if _, ok := fieldSeen[usagebillingrecord.FieldLedgerTransactionID]; !ok {
 				selectedFields = append(selectedFields, usagebillingrecord.FieldLedgerTransactionID)
 				fieldSeen[usagebillingrecord.FieldLedgerTransactionID] = struct{}{}
+			}
+		case "userSubscriptionID":
+			if _, ok := fieldSeen[usagebillingrecord.FieldUserSubscriptionID]; !ok {
+				selectedFields = append(selectedFields, usagebillingrecord.FieldUserSubscriptionID)
+				fieldSeen[usagebillingrecord.FieldUserSubscriptionID] = struct{}{}
 			}
 		case "idempotencyKey":
 			if _, ok := fieldSeen[usagebillingrecord.FieldIdempotencyKey]; !ok {
@@ -9458,6 +9822,184 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				*wq = *query
 			})
 
+		case "userSubscriptions":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserSubscriptionClient{config: _q.config}).Query()
+			)
+			args := newUserSubscriptionPaginateArgs(fieldArgs(ctx, new(UserSubscriptionWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUserSubscriptionPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"user_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.UserSubscriptionsColumn), ids...))
+						})
+						if err := query.GroupBy(user.UserSubscriptionsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.UserSubscriptions)
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, usersubscriptionImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.UserSubscriptionsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUserSubscriptions(alias, func(wq *UserSubscriptionQuery) {
+				*wq = *query
+			})
+
+		case "assignedUserSubscriptions":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserSubscriptionClient{config: _q.config}).Query()
+			)
+			args := newUserSubscriptionPaginateArgs(fieldArgs(ctx, new(UserSubscriptionWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUserSubscriptionPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"assigned_by_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.AssignedUserSubscriptionsColumn), ids...))
+						})
+						if err := query.GroupBy(user.AssignedUserSubscriptionsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[8][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.AssignedUserSubscriptions)
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[8][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, usersubscriptionImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.AssignedUserSubscriptionsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedAssignedUserSubscriptions(alias, func(wq *UserSubscriptionQuery) {
+				*wq = *query
+			})
+
 		case "projectUsers":
 			var (
 				alias = field.Alias
@@ -9501,10 +10043,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[7] == nil {
-								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							if nodes[i].Edges.totalCount[9] == nil {
+								nodes[i].Edges.totalCount[9] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[7][alias] = n
+							nodes[i].Edges.totalCount[9][alias] = n
 						}
 						return nil
 					})
@@ -9512,10 +10054,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.ProjectUsers)
-							if nodes[i].Edges.totalCount[7] == nil {
-								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							if nodes[i].Edges.totalCount[9] == nil {
+								nodes[i].Edges.totalCount[9] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[7][alias] = n
+							nodes[i].Edges.totalCount[9][alias] = n
 						}
 						return nil
 					})
@@ -9590,10 +10132,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[8] == nil {
-								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							if nodes[i].Edges.totalCount[10] == nil {
+								nodes[i].Edges.totalCount[10] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[8][alias] = n
+							nodes[i].Edges.totalCount[10][alias] = n
 						}
 						return nil
 					})
@@ -9601,10 +10143,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UserRoles)
-							if nodes[i].Edges.totalCount[8] == nil {
-								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							if nodes[i].Edges.totalCount[10] == nil {
+								nodes[i].Edges.totalCount[10] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[8][alias] = n
+							nodes[i].Edges.totalCount[10][alias] = n
 						}
 						return nil
 					})
@@ -10022,6 +10564,354 @@ func newUserRolePaginateArgs(rv map[string]any) *userrolePaginateArgs {
 	}
 	if v, ok := rv[whereField].(*UserRoleWhereInput); ok {
 		args.opts = append(args.opts, WithUserRoleFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *UserSubscriptionQuery) CollectFields(ctx context.Context, satisfies ...string) (*UserSubscriptionQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *UserSubscriptionQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(usersubscription.Columns))
+		selectedFields = []string{usersubscription.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "user":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withUser = query
+			if _, ok := fieldSeen[usersubscription.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldUserID)
+				fieldSeen[usersubscription.FieldUserID] = struct{}{}
+			}
+
+		case "plan":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&SubscriptionPlanClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, subscriptionplanImplementors)...); err != nil {
+				return err
+			}
+			_q.withPlan = query
+			if _, ok := fieldSeen[usersubscription.FieldPlanID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldPlanID)
+				fieldSeen[usersubscription.FieldPlanID] = struct{}{}
+			}
+
+		case "assignedBy":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withAssignedBy = query
+			if _, ok := fieldSeen[usersubscription.FieldAssignedByID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldAssignedByID)
+				fieldSeen[usersubscription.FieldAssignedByID] = struct{}{}
+			}
+
+		case "purchaseLedgerTransaction":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&LedgerTransactionClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, ledgertransactionImplementors)...); err != nil {
+				return err
+			}
+			_q.withPurchaseLedgerTransaction = query
+			if _, ok := fieldSeen[usersubscription.FieldPurchaseLedgerTransactionID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldPurchaseLedgerTransactionID)
+				fieldSeen[usersubscription.FieldPurchaseLedgerTransactionID] = struct{}{}
+			}
+
+		case "usageBillingRecords":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UsageBillingRecordClient{config: _q.config}).Query()
+			)
+			args := newUsageBillingRecordPaginateArgs(fieldArgs(ctx, new(UsageBillingRecordWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUsageBillingRecordPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UserSubscription) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"user_subscription_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(usersubscription.UsageBillingRecordsColumn), ids...))
+						})
+						if err := query.GroupBy(usersubscription.UsageBillingRecordsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UserSubscription) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.UsageBillingRecords)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, usagebillingrecordImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(usersubscription.UsageBillingRecordsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUsageBillingRecords(alias, func(wq *UsageBillingRecordQuery) {
+				*wq = *query
+			})
+		case "createdAt":
+			if _, ok := fieldSeen[usersubscription.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldCreatedAt)
+				fieldSeen[usersubscription.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[usersubscription.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldUpdatedAt)
+				fieldSeen[usersubscription.FieldUpdatedAt] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[usersubscription.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldUserID)
+				fieldSeen[usersubscription.FieldUserID] = struct{}{}
+			}
+		case "planID":
+			if _, ok := fieldSeen[usersubscription.FieldPlanID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldPlanID)
+				fieldSeen[usersubscription.FieldPlanID] = struct{}{}
+			}
+		case "planSnapshot":
+			if _, ok := fieldSeen[usersubscription.FieldPlanSnapshot]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldPlanSnapshot)
+				fieldSeen[usersubscription.FieldPlanSnapshot] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[usersubscription.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldStatus)
+				fieldSeen[usersubscription.FieldStatus] = struct{}{}
+			}
+		case "startsAt":
+			if _, ok := fieldSeen[usersubscription.FieldStartsAt]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldStartsAt)
+				fieldSeen[usersubscription.FieldStartsAt] = struct{}{}
+			}
+		case "expiresAt":
+			if _, ok := fieldSeen[usersubscription.FieldExpiresAt]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldExpiresAt)
+				fieldSeen[usersubscription.FieldExpiresAt] = struct{}{}
+			}
+		case "currentPeriodStart":
+			if _, ok := fieldSeen[usersubscription.FieldCurrentPeriodStart]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldCurrentPeriodStart)
+				fieldSeen[usersubscription.FieldCurrentPeriodStart] = struct{}{}
+			}
+		case "currentPeriodEnd":
+			if _, ok := fieldSeen[usersubscription.FieldCurrentPeriodEnd]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldCurrentPeriodEnd)
+				fieldSeen[usersubscription.FieldCurrentPeriodEnd] = struct{}{}
+			}
+		case "resetAt":
+			if _, ok := fieldSeen[usersubscription.FieldResetAt]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldResetAt)
+				fieldSeen[usersubscription.FieldResetAt] = struct{}{}
+			}
+		case "periodDays":
+			if _, ok := fieldSeen[usersubscription.FieldPeriodDays]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldPeriodDays)
+				fieldSeen[usersubscription.FieldPeriodDays] = struct{}{}
+			}
+		case "includedAmountMicros":
+			if _, ok := fieldSeen[usersubscription.FieldIncludedAmountMicros]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldIncludedAmountMicros)
+				fieldSeen[usersubscription.FieldIncludedAmountMicros] = struct{}{}
+			}
+		case "usedAmountMicros":
+			if _, ok := fieldSeen[usersubscription.FieldUsedAmountMicros]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldUsedAmountMicros)
+				fieldSeen[usersubscription.FieldUsedAmountMicros] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[usersubscription.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldCurrency)
+				fieldSeen[usersubscription.FieldCurrency] = struct{}{}
+			}
+		case "supportedModelIds":
+			if _, ok := fieldSeen[usersubscription.FieldSupportedModelIds]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldSupportedModelIds)
+				fieldSeen[usersubscription.FieldSupportedModelIds] = struct{}{}
+			}
+		case "supportedProjectIds":
+			if _, ok := fieldSeen[usersubscription.FieldSupportedProjectIds]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldSupportedProjectIds)
+				fieldSeen[usersubscription.FieldSupportedProjectIds] = struct{}{}
+			}
+		case "supportedGroupIds":
+			if _, ok := fieldSeen[usersubscription.FieldSupportedGroupIds]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldSupportedGroupIds)
+				fieldSeen[usersubscription.FieldSupportedGroupIds] = struct{}{}
+			}
+		case "allowWalletFallback":
+			if _, ok := fieldSeen[usersubscription.FieldAllowWalletFallback]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldAllowWalletFallback)
+				fieldSeen[usersubscription.FieldAllowWalletFallback] = struct{}{}
+			}
+		case "assignedByID":
+			if _, ok := fieldSeen[usersubscription.FieldAssignedByID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldAssignedByID)
+				fieldSeen[usersubscription.FieldAssignedByID] = struct{}{}
+			}
+		case "purchaseLedgerTransactionID":
+			if _, ok := fieldSeen[usersubscription.FieldPurchaseLedgerTransactionID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldPurchaseLedgerTransactionID)
+				fieldSeen[usersubscription.FieldPurchaseLedgerTransactionID] = struct{}{}
+			}
+		case "notes":
+			if _, ok := fieldSeen[usersubscription.FieldNotes]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldNotes)
+				fieldSeen[usersubscription.FieldNotes] = struct{}{}
+			}
+		case "revokeReason":
+			if _, ok := fieldSeen[usersubscription.FieldRevokeReason]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldRevokeReason)
+				fieldSeen[usersubscription.FieldRevokeReason] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type usersubscriptionPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []UserSubscriptionPaginateOption
+}
+
+func newUserSubscriptionPaginateArgs(rv map[string]any) *usersubscriptionPaginateArgs {
+	args := &usersubscriptionPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &UserSubscriptionOrder{Field: &UserSubscriptionOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithUserSubscriptionOrder(order))
+			}
+		case *UserSubscriptionOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithUserSubscriptionOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*UserSubscriptionWhereInput); ok {
+		args.opts = append(args.opts, WithUserSubscriptionFilter(v.Filter))
 	}
 	return args
 }

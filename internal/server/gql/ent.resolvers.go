@@ -775,6 +775,21 @@ func (r *queryResolver) Roles(ctx context.Context, after *entgql.Cursor[int], fi
 	)
 }
 
+// SubscriptionPlans is the resolver for the subscriptionPlans field.
+func (r *queryResolver) SubscriptionPlans(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SubscriptionPlanOrder, where *ent.SubscriptionPlanWhereInput) (*ent.SubscriptionPlanConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.SubscriptionPlan.Query().Paginate(ctx, after, first, before, last,
+		ent.WithSubscriptionPlanOrder(orderBy),
+		ent.WithSubscriptionPlanFilter(where.Filter),
+	)
+}
+
 // Systems is the resolver for the systems field.
 func (r *queryResolver) Systems(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SystemOrder, where *ent.SystemWhereInput) (*ent.SystemConnection, error) {
 	if err := validatePaginationArgs(first, last); err != nil {
@@ -860,6 +875,21 @@ func (r *queryResolver) Users(ctx context.Context, after *entgql.Cursor[int], fi
 	return r.client.User.Query().Paginate(ctx, after, first, before, last,
 		ent.WithUserOrder(orderBy),
 		ent.WithUserFilter(where.Filter),
+	)
+}
+
+// UserSubscriptions is the resolver for the userSubscriptions field.
+func (r *queryResolver) UserSubscriptions(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) (*ent.UserSubscriptionConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.UserSubscription.Query().Paginate(ctx, after, first, before, last,
+		ent.WithUserSubscriptionOrder(orderBy),
+		ent.WithUserSubscriptionFilter(where.Filter),
 	)
 }
 
@@ -1115,6 +1145,14 @@ func (r *roleResolver) UserRoles(ctx context.Context, obj *ent.Role) ([]*ent.Use
 }
 
 // ID is the resolver for the id field.
+func (r *subscriptionPlanResolver) ID(ctx context.Context, obj *ent.SubscriptionPlan) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeSubscriptionPlan,
+		ID:   obj.ID,
+	}, nil
+}
+
+// ID is the resolver for the id field.
 func (r *systemResolver) ID(ctx context.Context, obj *ent.System) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeSystem,
@@ -1195,6 +1233,18 @@ func (r *usageBillingRecordResolver) LedgerTransactionID(ctx context.Context, ob
 	return &objects.GUID{
 		Type: ent.TypeLedgerTransaction,
 		ID:   obj.LedgerTransactionID,
+	}, nil
+}
+
+// UserSubscriptionID is the resolver for the userSubscriptionID field.
+func (r *usageBillingRecordResolver) UserSubscriptionID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
+	if obj.UserSubscriptionID == 0 {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypeUserSubscription,
+		ID:   obj.UserSubscriptionID,
 	}, nil
 }
 
@@ -1298,6 +1348,58 @@ func (r *userRoleResolver) RoleID(ctx context.Context, obj *ent.UserRole) (*obje
 	return &objects.GUID{
 		Type: ent.TypeRole,
 		ID:   obj.RoleID,
+	}, nil
+}
+
+// ID is the resolver for the id field.
+func (r *userSubscriptionResolver) ID(ctx context.Context, obj *ent.UserSubscription) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeUserSubscription,
+		ID:   obj.ID,
+	}, nil
+}
+
+// UserID is the resolver for the userID field.
+func (r *userSubscriptionResolver) UserID(ctx context.Context, obj *ent.UserSubscription) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeUser,
+		ID:   obj.UserID,
+	}, nil
+}
+
+// PlanID is the resolver for the planID field.
+func (r *userSubscriptionResolver) PlanID(ctx context.Context, obj *ent.UserSubscription) (*objects.GUID, error) {
+	if obj.PlanID == 0 {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypeSubscriptionPlan,
+		ID:   obj.PlanID,
+	}, nil
+}
+
+// AssignedByID is the resolver for the assignedByID field.
+func (r *userSubscriptionResolver) AssignedByID(ctx context.Context, obj *ent.UserSubscription) (*objects.GUID, error) {
+	if obj.AssignedByID == 0 {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypeUser,
+		ID:   obj.AssignedByID,
+	}, nil
+}
+
+// PurchaseLedgerTransactionID is the resolver for the purchaseLedgerTransactionID field.
+func (r *userSubscriptionResolver) PurchaseLedgerTransactionID(ctx context.Context, obj *ent.UserSubscription) (*objects.GUID, error) {
+	if obj.PurchaseLedgerTransactionID == 0 {
+		return nil, nil
+	}
+
+	return &objects.GUID{
+		Type: ent.TypeLedgerTransaction,
+		ID:   obj.PurchaseLedgerTransactionID,
 	}, nil
 }
 
@@ -1406,6 +1508,9 @@ func (r *Resolver) RequestExecution() RequestExecutionResolver { return &request
 // Role returns RoleResolver implementation.
 func (r *Resolver) Role() RoleResolver { return &roleResolver{r} }
 
+// SubscriptionPlan returns SubscriptionPlanResolver implementation.
+func (r *Resolver) SubscriptionPlan() SubscriptionPlanResolver { return &subscriptionPlanResolver{r} }
+
 // System returns SystemResolver implementation.
 func (r *Resolver) System() SystemResolver { return &systemResolver{r} }
 
@@ -1431,6 +1536,9 @@ func (r *Resolver) UserProject() UserProjectResolver { return &userProjectResolv
 
 // UserRole returns UserRoleResolver implementation.
 func (r *Resolver) UserRole() UserRoleResolver { return &userRoleResolver{r} }
+
+// UserSubscription returns UserSubscriptionResolver implementation.
+func (r *Resolver) UserSubscription() UserSubscriptionResolver { return &userSubscriptionResolver{r} }
 
 type aPIKeyResolver struct{ *Resolver }
 type aPIKeyProfileTemplateResolver struct{ *Resolver }
@@ -1461,6 +1569,7 @@ type redeemCodeResolver struct{ *Resolver }
 type requestResolver struct{ *Resolver }
 type requestExecutionResolver struct{ *Resolver }
 type roleResolver struct{ *Resolver }
+type subscriptionPlanResolver struct{ *Resolver }
 type systemResolver struct{ *Resolver }
 type threadResolver struct{ *Resolver }
 type traceResolver struct{ *Resolver }
@@ -1469,3 +1578,4 @@ type usageLogResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
 type userProjectResolver struct{ *Resolver }
 type userRoleResolver struct{ *Resolver }
+type userSubscriptionResolver struct{ *Resolver }

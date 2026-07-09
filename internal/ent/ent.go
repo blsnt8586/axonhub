@@ -40,6 +40,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
+	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
@@ -48,6 +49,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
 	"github.com/looplj/axonhub/internal/ent/userrole"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -136,6 +138,7 @@ func checkColumn(t, c string) error {
 			request.Table:                  request.ValidColumn,
 			requestexecution.Table:         requestexecution.ValidColumn,
 			role.Table:                     role.ValidColumn,
+			subscriptionplan.Table:         subscriptionplan.ValidColumn,
 			system.Table:                   system.ValidColumn,
 			thread.Table:                   thread.ValidColumn,
 			trace.Table:                    trace.ValidColumn,
@@ -144,6 +147,7 @@ func checkColumn(t, c string) error {
 			user.Table:                     user.ValidColumn,
 			userproject.Table:              userproject.ValidColumn,
 			userrole.Table:                 userrole.ValidColumn,
+			usersubscription.Table:         usersubscription.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

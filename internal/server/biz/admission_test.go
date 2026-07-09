@@ -11,6 +11,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/enttest"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
+	entuser "github.com/looplj/axonhub/internal/ent/user"
 )
 
 func newAdmissionTestServices(t *testing.T, name string, cfg BillingConfig) (*AdmissionService, *BillingAccountService, *LedgerService, context.Context) {
@@ -89,6 +90,110 @@ func TestAdmissionEnforceAllowsPositiveBalance(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, decision.Allowed)
 	require.Equal(t, AdmissionCodeAllowed, decision.Code)
+}
+
+func TestAdmissionEnforceAllowsActiveSubscriptionBeforeWalletFallback(t *testing.T) {
+	t.Parallel()
+
+	svc, accountSvc, ledgerSvc, ctx := newAdmissionTestServices(t, "admission_subscription_cover", BillingConfig{Mode: AdmissionModeEnforce})
+	client := accountSvc.entFromContext(ctx)
+	password, err := HashPassword("test-password")
+	require.NoError(t, err)
+	user, err := client.User.Create().
+		SetEmail("subscription-admission@example.com").
+		SetPassword(password).
+		SetFirstName("Subscription").
+		SetLastName("Admission").
+		SetStatus(entuser.StatusActivated).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = accountSvc.GetOrCreateForSubject(ctx, UserBillingSubject(user.ID))
+	require.NoError(t, err)
+
+	subscriptionSvc := NewSubscriptionService(SubscriptionServiceParams{
+		Ent:                   client,
+		BillingAccountService: accountSvc,
+		LedgerService:         ledgerSvc,
+	})
+	plan, err := subscriptionSvc.SavePlan(ctx, SaveSubscriptionPlanInput{
+		Name:           "Admission plan",
+		PeriodDays:     30,
+		IncludedAmount: decimal.RequireFromString("2"),
+		Currency:       "CNY",
+	})
+	require.NoError(t, err)
+	_, err = subscriptionSvc.AdminAssign(ctx, AdminAssignSubscriptionInput{
+		UserID: user.ID,
+		PlanID: plan.ID,
+	})
+	require.NoError(t, err)
+	svc.subscriptionService = subscriptionSvc
+
+	decision, err := svc.Check(ctx, AdmissionCheckInput{
+		Subject:               UserBillingSubject(user.ID),
+		ProjectID:             1,
+		ModelID:               "gpt-test",
+		EstimatedChargeMicros: 1_000_000,
+	})
+	require.NoError(t, err)
+	require.True(t, decision.Allowed)
+	require.True(t, decision.SubscriptionCovered)
+	require.Equal(t, AdmissionCodeAllowed, decision.Code)
+	require.NotZero(t, decision.UserSubscriptionID)
+}
+
+func TestAdmissionEnforceRejectsExhaustedSubscriptionWhenWalletFallbackDisabled(t *testing.T) {
+	t.Parallel()
+
+	svc, accountSvc, ledgerSvc, ctx := newAdmissionTestServices(t, "admission_subscription_no_fallback", BillingConfig{Mode: AdmissionModeEnforce})
+	client := accountSvc.entFromContext(ctx)
+	password, err := HashPassword("test-password")
+	require.NoError(t, err)
+	user, err := client.User.Create().
+		SetEmail("subscription-no-fallback@example.com").
+		SetPassword(password).
+		SetFirstName("Subscription").
+		SetLastName("NoFallback").
+		SetStatus(entuser.StatusActivated).
+		Save(ctx)
+	require.NoError(t, err)
+	account, err := accountSvc.GetOrCreateForSubject(ctx, UserBillingSubject(user.ID))
+	require.NoError(t, err)
+	_, err = ledgerSvc.Credit(ctx, account.ID, decimal.RequireFromString("100"), ledgertransaction.TypePaymentRecharge, "wallet-funded")
+	require.NoError(t, err)
+
+	subscriptionSvc := NewSubscriptionService(SubscriptionServiceParams{
+		Ent:                   client,
+		BillingAccountService: accountSvc,
+		LedgerService:         ledgerSvc,
+	})
+	allowFallback := false
+	plan, err := subscriptionSvc.SavePlan(ctx, SaveSubscriptionPlanInput{
+		Name:                "No fallback plan",
+		PeriodDays:          30,
+		IncludedAmount:      decimal.RequireFromString("1"),
+		Currency:            "CNY",
+		AllowWalletFallback: &allowFallback,
+	})
+	require.NoError(t, err)
+	_, err = subscriptionSvc.AdminAssign(ctx, AdminAssignSubscriptionInput{
+		UserID: user.ID,
+		PlanID: plan.ID,
+	})
+	require.NoError(t, err)
+	svc.subscriptionService = subscriptionSvc
+
+	decision, err := svc.Check(ctx, AdmissionCheckInput{
+		Subject:               UserBillingSubject(user.ID),
+		ProjectID:             1,
+		ModelID:               "gpt-test",
+		EstimatedChargeMicros: 2_000_000,
+	})
+	require.ErrorIs(t, err, ErrInsufficientBalance)
+	require.False(t, decision.Allowed)
+	require.Equal(t, AdmissionCodeSubscriptionExhausted, decision.Code)
+	require.False(t, decision.SubscriptionCovered)
+	require.NotZero(t, decision.UserSubscriptionID)
 }
 
 func TestAdmissionEnforceAllowsCreditLimit(t *testing.T) {

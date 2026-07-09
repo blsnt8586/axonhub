@@ -98,6 +98,43 @@ input UpdateRedeemCodeStatusInput {
   notes: String
 }
 
+input SaveSubscriptionPlanInput {
+  id: ID
+  name: String!
+  description: String
+  period: SubscriptionPlanPeriod
+  periodDays: Int
+  price: DecimalInput!
+  currency: String
+  includedAmount: DecimalInput!
+  supportedModelIDs: [String!]
+  supportedProjectIDs: [Int!]
+  supportedGroupIDs: [Int!]
+  allowWalletFallback: Boolean
+  status: SubscriptionPlanStatus
+  sortOrder: Int
+  metadata: JSONRawMessageInput
+}
+
+input PurchaseSubscriptionPlanInput {
+  planId: ID!
+}
+
+input AdminAssignSubscriptionInput {
+  userId: ID!
+  planId: ID!
+  startsAt: Time
+  expiresAt: Time
+  notes: String
+}
+
+input ExtendUserSubscriptionInput {
+  subscriptionId: ID!
+  days: Int
+  expiresAt: Time
+  notes: String
+}
+
 input SaveBillingPriceRuleForm {
   id: ID
   scopeType: BillingPriceRuleScopeType!
@@ -174,6 +211,15 @@ input AdminRedeemCodesFilter {
   type: RedeemCodeType
   code: String
   batchId: String
+  from: Time
+  to: Time
+  expiresBefore: Time
+}
+
+input AdminUserSubscriptionsFilter {
+  userId: Int
+  planId: Int
+  status: UserSubscriptionStatus
   from: Time
   to: Time
   expiresBefore: Time
@@ -277,6 +323,14 @@ extend type Mutation {
   adminCreateAndRedeemCode(input: AdminCreateAndRedeemCodeInput!): RedeemCode!
   updateRedeemCodeStatus(input: UpdateRedeemCodeStatusInput!): RedeemCode!
   deleteRedeemCode(id: ID!): Boolean!
+  saveSubscriptionPlan(input: SaveSubscriptionPlanInput!): SubscriptionPlan!
+  deleteSubscriptionPlan(id: ID!): Boolean!
+  purchaseSubscriptionPlan(input: PurchaseSubscriptionPlanInput!): UserSubscription!
+  adminAssignSubscription(input: AdminAssignSubscriptionInput!): UserSubscription!
+  extendUserSubscription(input: ExtendUserSubscriptionInput!): UserSubscription!
+  revokeUserSubscription(id: ID!, reason: String): UserSubscription!
+  restoreUserSubscription(id: ID!): UserSubscription!
+  resetUserSubscriptionUsage(id: ID!): UserSubscription!
   releaseBillingHold(id: ID!, reason: String!): BillingHold!
   saveBillingPriceRule(input: SaveBillingPriceRuleForm!): BillingPriceRule!
   deleteBillingPriceRule(id: ID!): Boolean!
@@ -293,12 +347,15 @@ extend type Query {
   myLedgerTransactions(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   userLedgerTransactions(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   myRedeemCodes(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: RedeemCodeOrder): RedeemCodeConnection!
+  availableSubscriptionPlans(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: SubscriptionPlanOrder): SubscriptionPlanConnection!
+  myUserSubscriptions(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UserSubscriptionOrder): UserSubscriptionConnection!
   adminLedgerTransactions(filter: AdminLedgerTransactionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   adminUsageBillingRecords(filter: AdminUsageBillingRecordsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UsageBillingRecordOrder): UsageBillingRecordConnection!
   adminBillingHolds(filter: AdminBillingHoldsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: BillingHoldOrder): BillingHoldConnection!
   adminPaymentOrders(filter: AdminPaymentOrdersFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentOrderOrder): PaymentOrderConnection!
   adminPaymentEvents(filter: AdminPaymentEventsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentEventOrder): PaymentEventConnection!
   adminRedeemCodes(filter: AdminRedeemCodesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: RedeemCodeOrder): RedeemCodeConnection!
+  adminUserSubscriptions(filter: AdminUserSubscriptionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UserSubscriptionOrder): UserSubscriptionConnection!
   adminBillingReport(filter: AdminBillingReportFilter): BillingCommercialReport!
   exportAdminBillingCSV(input: ExportAdminBillingCSVInput!): BillingCSVExportPayload!
 }

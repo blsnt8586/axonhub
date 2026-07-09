@@ -36,6 +36,8 @@ func (UsageBillingRecord) Indexes() []ent.Index {
 		index.Fields("idempotency_key").
 			StorageKey("usage_billing_records_by_idempotency_key").
 			Unique(),
+		index.Fields("user_subscription_id", "created_at").
+			StorageKey("usage_billing_records_by_subscription_created_at"),
 	}
 }
 
@@ -82,6 +84,8 @@ func (UsageBillingRecord) Fields() []ent.Field {
 			Default("pending"),
 		field.Int("ledger_transaction_id").
 			Optional(),
+		field.Int("user_subscription_id").
+			Optional(),
 		field.String("idempotency_key").
 			Immutable(),
 		field.String("error").
@@ -106,6 +110,10 @@ func (UsageBillingRecord) Edges() []ent.Edge {
 		edge.From("ledger_transaction", LedgerTransaction.Type).
 			Ref("usage_billing_records").
 			Field("ledger_transaction_id").
+			Unique(),
+		edge.From("user_subscription", UserSubscription.Type).
+			Ref("usage_billing_records").
+			Field("user_subscription_id").
 			Unique(),
 	}
 }

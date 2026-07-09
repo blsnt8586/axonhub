@@ -55,6 +55,8 @@ const (
 	FieldStatus = "status"
 	// FieldLedgerTransactionID holds the string denoting the ledger_transaction_id field in the database.
 	FieldLedgerTransactionID = "ledger_transaction_id"
+	// FieldUserSubscriptionID holds the string denoting the user_subscription_id field in the database.
+	FieldUserSubscriptionID = "user_subscription_id"
 	// FieldIdempotencyKey holds the string denoting the idempotency_key field in the database.
 	FieldIdempotencyKey = "idempotency_key"
 	// FieldError holds the string denoting the error field in the database.
@@ -65,6 +67,8 @@ const (
 	EdgeBillingAccount = "billing_account"
 	// EdgeLedgerTransaction holds the string denoting the ledger_transaction edge name in mutations.
 	EdgeLedgerTransaction = "ledger_transaction"
+	// EdgeUserSubscription holds the string denoting the user_subscription edge name in mutations.
+	EdgeUserSubscription = "user_subscription"
 	// Table holds the table name of the usagebillingrecord in the database.
 	Table = "usage_billing_records"
 	// UsageLogTable is the table that holds the usage_log relation/edge.
@@ -88,6 +92,13 @@ const (
 	LedgerTransactionInverseTable = "ledger_transactions"
 	// LedgerTransactionColumn is the table column denoting the ledger_transaction relation/edge.
 	LedgerTransactionColumn = "ledger_transaction_id"
+	// UserSubscriptionTable is the table that holds the user_subscription relation/edge.
+	UserSubscriptionTable = "usage_billing_records"
+	// UserSubscriptionInverseTable is the table name for the UserSubscription entity.
+	// It exists in this package in order to avoid circular dependency with the "usersubscription" package.
+	UserSubscriptionInverseTable = "user_subscriptions"
+	// UserSubscriptionColumn is the table column denoting the user_subscription relation/edge.
+	UserSubscriptionColumn = "user_subscription_id"
 )
 
 // Columns holds all SQL columns for usagebillingrecord fields.
@@ -111,6 +122,7 @@ var Columns = []string{
 	FieldCurrency,
 	FieldStatus,
 	FieldLedgerTransactionID,
+	FieldUserSubscriptionID,
 	FieldIdempotencyKey,
 	FieldError,
 }
@@ -291,6 +303,11 @@ func ByLedgerTransactionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLedgerTransactionID, opts...).ToFunc()
 }
 
+// ByUserSubscriptionID orders the results by the user_subscription_id field.
+func ByUserSubscriptionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserSubscriptionID, opts...).ToFunc()
+}
+
 // ByIdempotencyKey orders the results by the idempotency_key field.
 func ByIdempotencyKey(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIdempotencyKey, opts...).ToFunc()
@@ -321,6 +338,13 @@ func ByLedgerTransactionField(field string, opts ...sql.OrderTermOption) OrderOp
 		sqlgraph.OrderByNeighborTerms(s, newLedgerTransactionStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByUserSubscriptionField orders the results by user_subscription field.
+func ByUserSubscriptionField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserSubscriptionStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newUsageLogStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -340,6 +364,13 @@ func newLedgerTransactionStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LedgerTransactionInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, LedgerTransactionTable, LedgerTransactionColumn),
+	)
+}
+func newUserSubscriptionStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserSubscriptionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, UserSubscriptionTable, UserSubscriptionColumn),
 	)
 }
 

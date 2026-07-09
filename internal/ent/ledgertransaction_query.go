@@ -21,28 +21,31 @@ import (
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // LedgerTransactionQuery is the builder for querying LedgerTransaction entities.
 type LedgerTransactionQuery struct {
 	config
-	ctx                          *QueryContext
-	order                        []ledgertransaction.OrderOption
-	inters                       []Interceptor
-	predicates                   []predicate.LedgerTransaction
-	withBillingAccount           *BillingAccountQuery
-	withEntries                  *LedgerEntryQuery
-	withUsageBillingRecords      *UsageBillingRecordQuery
-	withBillingHolds             *BillingHoldQuery
-	withPaymentOrders            *PaymentOrderQuery
-	withRedeemCodes              *RedeemCodeQuery
-	loadTotal                    []func(context.Context, []*LedgerTransaction) error
-	modifiers                    []func(*sql.Selector)
-	withNamedEntries             map[string]*LedgerEntryQuery
-	withNamedUsageBillingRecords map[string]*UsageBillingRecordQuery
-	withNamedBillingHolds        map[string]*BillingHoldQuery
-	withNamedPaymentOrders       map[string]*PaymentOrderQuery
-	withNamedRedeemCodes         map[string]*RedeemCodeQuery
+	ctx                                 *QueryContext
+	order                               []ledgertransaction.OrderOption
+	inters                              []Interceptor
+	predicates                          []predicate.LedgerTransaction
+	withBillingAccount                  *BillingAccountQuery
+	withEntries                         *LedgerEntryQuery
+	withUsageBillingRecords             *UsageBillingRecordQuery
+	withBillingHolds                    *BillingHoldQuery
+	withPaymentOrders                   *PaymentOrderQuery
+	withRedeemCodes                     *RedeemCodeQuery
+	withPurchasedUserSubscriptions      *UserSubscriptionQuery
+	loadTotal                           []func(context.Context, []*LedgerTransaction) error
+	modifiers                           []func(*sql.Selector)
+	withNamedEntries                    map[string]*LedgerEntryQuery
+	withNamedUsageBillingRecords        map[string]*UsageBillingRecordQuery
+	withNamedBillingHolds               map[string]*BillingHoldQuery
+	withNamedPaymentOrders              map[string]*PaymentOrderQuery
+	withNamedRedeemCodes                map[string]*RedeemCodeQuery
+	withNamedPurchasedUserSubscriptions map[string]*UserSubscriptionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -204,6 +207,28 @@ func (_q *LedgerTransactionQuery) QueryRedeemCodes() *RedeemCodeQuery {
 			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, selector),
 			sqlgraph.To(redeemcode.Table, redeemcode.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.RedeemCodesTable, ledgertransaction.RedeemCodesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPurchasedUserSubscriptions chains the current query on the "purchased_user_subscriptions" edge.
+func (_q *LedgerTransactionQuery) QueryPurchasedUserSubscriptions() *UserSubscriptionQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, selector),
+			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.PurchasedUserSubscriptionsTable, ledgertransaction.PurchasedUserSubscriptionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -398,17 +423,18 @@ func (_q *LedgerTransactionQuery) Clone() *LedgerTransactionQuery {
 		return nil
 	}
 	return &LedgerTransactionQuery{
-		config:                  _q.config,
-		ctx:                     _q.ctx.Clone(),
-		order:                   append([]ledgertransaction.OrderOption{}, _q.order...),
-		inters:                  append([]Interceptor{}, _q.inters...),
-		predicates:              append([]predicate.LedgerTransaction{}, _q.predicates...),
-		withBillingAccount:      _q.withBillingAccount.Clone(),
-		withEntries:             _q.withEntries.Clone(),
-		withUsageBillingRecords: _q.withUsageBillingRecords.Clone(),
-		withBillingHolds:        _q.withBillingHolds.Clone(),
-		withPaymentOrders:       _q.withPaymentOrders.Clone(),
-		withRedeemCodes:         _q.withRedeemCodes.Clone(),
+		config:                         _q.config,
+		ctx:                            _q.ctx.Clone(),
+		order:                          append([]ledgertransaction.OrderOption{}, _q.order...),
+		inters:                         append([]Interceptor{}, _q.inters...),
+		predicates:                     append([]predicate.LedgerTransaction{}, _q.predicates...),
+		withBillingAccount:             _q.withBillingAccount.Clone(),
+		withEntries:                    _q.withEntries.Clone(),
+		withUsageBillingRecords:        _q.withUsageBillingRecords.Clone(),
+		withBillingHolds:               _q.withBillingHolds.Clone(),
+		withPaymentOrders:              _q.withPaymentOrders.Clone(),
+		withRedeemCodes:                _q.withRedeemCodes.Clone(),
+		withPurchasedUserSubscriptions: _q.withPurchasedUserSubscriptions.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -479,6 +505,17 @@ func (_q *LedgerTransactionQuery) WithRedeemCodes(opts ...func(*RedeemCodeQuery)
 		opt(query)
 	}
 	_q.withRedeemCodes = query
+	return _q
+}
+
+// WithPurchasedUserSubscriptions tells the query-builder to eager-load the nodes that are connected to
+// the "purchased_user_subscriptions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerTransactionQuery) WithPurchasedUserSubscriptions(opts ...func(*UserSubscriptionQuery)) *LedgerTransactionQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPurchasedUserSubscriptions = query
 	return _q
 }
 
@@ -566,13 +603,14 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	var (
 		nodes       = []*LedgerTransaction{}
 		_spec       = _q.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [7]bool{
 			_q.withBillingAccount != nil,
 			_q.withEntries != nil,
 			_q.withUsageBillingRecords != nil,
 			_q.withBillingHolds != nil,
 			_q.withPaymentOrders != nil,
 			_q.withRedeemCodes != nil,
+			_q.withPurchasedUserSubscriptions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -639,6 +677,15 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 			return nil, err
 		}
 	}
+	if query := _q.withPurchasedUserSubscriptions; query != nil {
+		if err := _q.loadPurchasedUserSubscriptions(ctx, query, nodes,
+			func(n *LedgerTransaction) { n.Edges.PurchasedUserSubscriptions = []*UserSubscription{} },
+			func(n *LedgerTransaction, e *UserSubscription) {
+				n.Edges.PurchasedUserSubscriptions = append(n.Edges.PurchasedUserSubscriptions, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedEntries {
 		if err := _q.loadEntries(ctx, query, nodes,
 			func(n *LedgerTransaction) { n.appendNamedEntries(name) },
@@ -671,6 +718,13 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 		if err := _q.loadRedeemCodes(ctx, query, nodes,
 			func(n *LedgerTransaction) { n.appendNamedRedeemCodes(name) },
 			func(n *LedgerTransaction, e *RedeemCode) { n.appendNamedRedeemCodes(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedPurchasedUserSubscriptions {
+		if err := _q.loadPurchasedUserSubscriptions(ctx, query, nodes,
+			func(n *LedgerTransaction) { n.appendNamedPurchasedUserSubscriptions(name) },
+			func(n *LedgerTransaction, e *UserSubscription) { n.appendNamedPurchasedUserSubscriptions(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -867,6 +921,36 @@ func (_q *LedgerTransactionQuery) loadRedeemCodes(ctx context.Context, query *Re
 	}
 	return nil
 }
+func (_q *LedgerTransactionQuery) loadPurchasedUserSubscriptions(ctx context.Context, query *UserSubscriptionQuery, nodes []*LedgerTransaction, init func(*LedgerTransaction), assign func(*LedgerTransaction, *UserSubscription)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*LedgerTransaction)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usersubscription.FieldPurchaseLedgerTransactionID)
+	}
+	query.Where(predicate.UserSubscription(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ledgertransaction.PurchasedUserSubscriptionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.PurchaseLedgerTransactionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "purchase_ledger_transaction_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *LedgerTransactionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1031,6 +1115,20 @@ func (_q *LedgerTransactionQuery) WithNamedRedeemCodes(name string, opts ...func
 		_q.withNamedRedeemCodes = make(map[string]*RedeemCodeQuery)
 	}
 	_q.withNamedRedeemCodes[name] = query
+	return _q
+}
+
+// WithNamedPurchasedUserSubscriptions tells the query-builder to eager-load the nodes that are connected to the "purchased_user_subscriptions"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerTransactionQuery) WithNamedPurchasedUserSubscriptions(name string, opts ...func(*UserSubscriptionQuery)) *LedgerTransactionQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedPurchasedUserSubscriptions == nil {
+		_q.withNamedPurchasedUserSubscriptions = make(map[string]*UserSubscriptionQuery)
+	}
+	_q.withNamedPurchasedUserSubscriptions[name] = query
 	return _q
 }
 

@@ -64,25 +64,31 @@ type UserEdges struct {
 	CreatedRedeemCodes []*RedeemCode `json:"created_redeem_codes,omitempty"`
 	// UsedRedeemCodes holds the value of the used_redeem_codes edge.
 	UsedRedeemCodes []*RedeemCode `json:"used_redeem_codes,omitempty"`
+	// UserSubscriptions holds the value of the user_subscriptions edge.
+	UserSubscriptions []*UserSubscription `json:"user_subscriptions,omitempty"`
+	// AssignedUserSubscriptions holds the value of the assigned_user_subscriptions edge.
+	AssignedUserSubscriptions []*UserSubscription `json:"assigned_user_subscriptions,omitempty"`
 	// ProjectUsers holds the value of the project_users edge.
 	ProjectUsers []*UserProject `json:"project_users,omitempty"`
 	// UserRoles holds the value of the user_roles edge.
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [9]bool
+	loadedTypes [11]bool
 	// totalCount holds the count of the edges above.
-	totalCount [9]map[string]int
+	totalCount [11]map[string]int
 
-	namedProjects                 map[string][]*Project
-	namedAPIKeys                  map[string][]*APIKey
-	namedRoles                    map[string][]*Role
-	namedChannelOverrideTemplates map[string][]*ChannelOverrideTemplate
-	namedOidcIdentities           map[string][]*OIDCIdentity
-	namedCreatedRedeemCodes       map[string][]*RedeemCode
-	namedUsedRedeemCodes          map[string][]*RedeemCode
-	namedProjectUsers             map[string][]*UserProject
-	namedUserRoles                map[string][]*UserRole
+	namedProjects                  map[string][]*Project
+	namedAPIKeys                   map[string][]*APIKey
+	namedRoles                     map[string][]*Role
+	namedChannelOverrideTemplates  map[string][]*ChannelOverrideTemplate
+	namedOidcIdentities            map[string][]*OIDCIdentity
+	namedCreatedRedeemCodes        map[string][]*RedeemCode
+	namedUsedRedeemCodes           map[string][]*RedeemCode
+	namedUserSubscriptions         map[string][]*UserSubscription
+	namedAssignedUserSubscriptions map[string][]*UserSubscription
+	namedProjectUsers              map[string][]*UserProject
+	namedUserRoles                 map[string][]*UserRole
 }
 
 // ProjectsOrErr returns the Projects value or an error if the edge
@@ -148,10 +154,28 @@ func (e UserEdges) UsedRedeemCodesOrErr() ([]*RedeemCode, error) {
 	return nil, &NotLoadedError{edge: "used_redeem_codes"}
 }
 
+// UserSubscriptionsOrErr returns the UserSubscriptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UserSubscriptionsOrErr() ([]*UserSubscription, error) {
+	if e.loadedTypes[7] {
+		return e.UserSubscriptions, nil
+	}
+	return nil, &NotLoadedError{edge: "user_subscriptions"}
+}
+
+// AssignedUserSubscriptionsOrErr returns the AssignedUserSubscriptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AssignedUserSubscriptionsOrErr() ([]*UserSubscription, error) {
+	if e.loadedTypes[8] {
+		return e.AssignedUserSubscriptions, nil
+	}
+	return nil, &NotLoadedError{edge: "assigned_user_subscriptions"}
+}
+
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[9] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -160,7 +184,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[10] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -322,6 +346,16 @@ func (_m *User) QueryCreatedRedeemCodes() *RedeemCodeQuery {
 // QueryUsedRedeemCodes queries the "used_redeem_codes" edge of the User entity.
 func (_m *User) QueryUsedRedeemCodes() *RedeemCodeQuery {
 	return NewUserClient(_m.config).QueryUsedRedeemCodes(_m)
+}
+
+// QueryUserSubscriptions queries the "user_subscriptions" edge of the User entity.
+func (_m *User) QueryUserSubscriptions() *UserSubscriptionQuery {
+	return NewUserClient(_m.config).QueryUserSubscriptions(_m)
+}
+
+// QueryAssignedUserSubscriptions queries the "assigned_user_subscriptions" edge of the User entity.
+func (_m *User) QueryAssignedUserSubscriptions() *UserSubscriptionQuery {
+	return NewUserClient(_m.config).QueryAssignedUserSubscriptions(_m)
 }
 
 // QueryProjectUsers queries the "project_users" edge of the User entity.
@@ -560,6 +594,54 @@ func (_m *User) appendNamedUsedRedeemCodes(name string, edges ...*RedeemCode) {
 		_m.Edges.namedUsedRedeemCodes[name] = []*RedeemCode{}
 	} else {
 		_m.Edges.namedUsedRedeemCodes[name] = append(_m.Edges.namedUsedRedeemCodes[name], edges...)
+	}
+}
+
+// NamedUserSubscriptions returns the UserSubscriptions named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedUserSubscriptions(name string) ([]*UserSubscription, error) {
+	if _m.Edges.namedUserSubscriptions == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUserSubscriptions[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedUserSubscriptions(name string, edges ...*UserSubscription) {
+	if _m.Edges.namedUserSubscriptions == nil {
+		_m.Edges.namedUserSubscriptions = make(map[string][]*UserSubscription)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUserSubscriptions[name] = []*UserSubscription{}
+	} else {
+		_m.Edges.namedUserSubscriptions[name] = append(_m.Edges.namedUserSubscriptions[name], edges...)
+	}
+}
+
+// NamedAssignedUserSubscriptions returns the AssignedUserSubscriptions named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedAssignedUserSubscriptions(name string) ([]*UserSubscription, error) {
+	if _m.Edges.namedAssignedUserSubscriptions == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAssignedUserSubscriptions[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedAssignedUserSubscriptions(name string, edges ...*UserSubscription) {
+	if _m.Edges.namedAssignedUserSubscriptions == nil {
+		_m.Edges.namedAssignedUserSubscriptions = make(map[string][]*UserSubscription)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAssignedUserSubscriptions[name] = []*UserSubscription{}
+	} else {
+		_m.Edges.namedAssignedUserSubscriptions[name] = append(_m.Edges.namedAssignedUserSubscriptions[name], edges...)
 	}
 }
 

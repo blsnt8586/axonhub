@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // UsageBillingRecordUpdate is the builder for updating UsageBillingRecord entities.
@@ -70,6 +71,26 @@ func (_u *UsageBillingRecordUpdate) ClearLedgerTransactionID() *UsageBillingReco
 	return _u
 }
 
+// SetUserSubscriptionID sets the "user_subscription_id" field.
+func (_u *UsageBillingRecordUpdate) SetUserSubscriptionID(v int) *UsageBillingRecordUpdate {
+	_u.mutation.SetUserSubscriptionID(v)
+	return _u
+}
+
+// SetNillableUserSubscriptionID sets the "user_subscription_id" field if the given value is not nil.
+func (_u *UsageBillingRecordUpdate) SetNillableUserSubscriptionID(v *int) *UsageBillingRecordUpdate {
+	if v != nil {
+		_u.SetUserSubscriptionID(*v)
+	}
+	return _u
+}
+
+// ClearUserSubscriptionID clears the value of the "user_subscription_id" field.
+func (_u *UsageBillingRecordUpdate) ClearUserSubscriptionID() *UsageBillingRecordUpdate {
+	_u.mutation.ClearUserSubscriptionID()
+	return _u
+}
+
 // SetError sets the "error" field.
 func (_u *UsageBillingRecordUpdate) SetError(v string) *UsageBillingRecordUpdate {
 	_u.mutation.SetError(v)
@@ -89,6 +110,11 @@ func (_u *UsageBillingRecordUpdate) SetLedgerTransaction(v *LedgerTransaction) *
 	return _u.SetLedgerTransactionID(v.ID)
 }
 
+// SetUserSubscription sets the "user_subscription" edge to the UserSubscription entity.
+func (_u *UsageBillingRecordUpdate) SetUserSubscription(v *UserSubscription) *UsageBillingRecordUpdate {
+	return _u.SetUserSubscriptionID(v.ID)
+}
+
 // Mutation returns the UsageBillingRecordMutation object of the builder.
 func (_u *UsageBillingRecordUpdate) Mutation() *UsageBillingRecordMutation {
 	return _u.mutation
@@ -97,6 +123,12 @@ func (_u *UsageBillingRecordUpdate) Mutation() *UsageBillingRecordMutation {
 // ClearLedgerTransaction clears the "ledger_transaction" edge to the LedgerTransaction entity.
 func (_u *UsageBillingRecordUpdate) ClearLedgerTransaction() *UsageBillingRecordUpdate {
 	_u.mutation.ClearLedgerTransaction()
+	return _u
+}
+
+// ClearUserSubscription clears the "user_subscription" edge to the UserSubscription entity.
+func (_u *UsageBillingRecordUpdate) ClearUserSubscription() *UsageBillingRecordUpdate {
+	_u.mutation.ClearUserSubscription()
 	return _u
 }
 
@@ -223,6 +255,35 @@ func (_u *UsageBillingRecordUpdate) sqlSave(ctx context.Context) (_node int, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.UserSubscriptionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagebillingrecord.UserSubscriptionTable,
+			Columns: []string{usagebillingrecord.UserSubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserSubscriptionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagebillingrecord.UserSubscriptionTable,
+			Columns: []string{usagebillingrecord.UserSubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -285,6 +346,26 @@ func (_u *UsageBillingRecordUpdateOne) ClearLedgerTransactionID() *UsageBillingR
 	return _u
 }
 
+// SetUserSubscriptionID sets the "user_subscription_id" field.
+func (_u *UsageBillingRecordUpdateOne) SetUserSubscriptionID(v int) *UsageBillingRecordUpdateOne {
+	_u.mutation.SetUserSubscriptionID(v)
+	return _u
+}
+
+// SetNillableUserSubscriptionID sets the "user_subscription_id" field if the given value is not nil.
+func (_u *UsageBillingRecordUpdateOne) SetNillableUserSubscriptionID(v *int) *UsageBillingRecordUpdateOne {
+	if v != nil {
+		_u.SetUserSubscriptionID(*v)
+	}
+	return _u
+}
+
+// ClearUserSubscriptionID clears the value of the "user_subscription_id" field.
+func (_u *UsageBillingRecordUpdateOne) ClearUserSubscriptionID() *UsageBillingRecordUpdateOne {
+	_u.mutation.ClearUserSubscriptionID()
+	return _u
+}
+
 // SetError sets the "error" field.
 func (_u *UsageBillingRecordUpdateOne) SetError(v string) *UsageBillingRecordUpdateOne {
 	_u.mutation.SetError(v)
@@ -304,6 +385,11 @@ func (_u *UsageBillingRecordUpdateOne) SetLedgerTransaction(v *LedgerTransaction
 	return _u.SetLedgerTransactionID(v.ID)
 }
 
+// SetUserSubscription sets the "user_subscription" edge to the UserSubscription entity.
+func (_u *UsageBillingRecordUpdateOne) SetUserSubscription(v *UserSubscription) *UsageBillingRecordUpdateOne {
+	return _u.SetUserSubscriptionID(v.ID)
+}
+
 // Mutation returns the UsageBillingRecordMutation object of the builder.
 func (_u *UsageBillingRecordUpdateOne) Mutation() *UsageBillingRecordMutation {
 	return _u.mutation
@@ -312,6 +398,12 @@ func (_u *UsageBillingRecordUpdateOne) Mutation() *UsageBillingRecordMutation {
 // ClearLedgerTransaction clears the "ledger_transaction" edge to the LedgerTransaction entity.
 func (_u *UsageBillingRecordUpdateOne) ClearLedgerTransaction() *UsageBillingRecordUpdateOne {
 	_u.mutation.ClearLedgerTransaction()
+	return _u
+}
+
+// ClearUserSubscription clears the "user_subscription" edge to the UserSubscription entity.
+func (_u *UsageBillingRecordUpdateOne) ClearUserSubscription() *UsageBillingRecordUpdateOne {
+	_u.mutation.ClearUserSubscription()
 	return _u
 }
 
@@ -461,6 +553,35 @@ func (_u *UsageBillingRecordUpdateOne) sqlSave(ctx context.Context) (_node *Usag
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgertransaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UserSubscriptionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagebillingrecord.UserSubscriptionTable,
+			Columns: []string{usagebillingrecord.UserSubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserSubscriptionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagebillingrecord.UserSubscriptionTable,
+			Columns: []string{usagebillingrecord.UserSubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -205,32 +205,32 @@ Verification:
 
 ## Stage 6: Subscription Plans
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: sell plans and memberships in addition to pay-as-you-go wallet billing.
 
 Backend scope:
 
-- [ ] Add subscription plan entity with name, price, period, included quota, supported models/projects/groups, and enabled status.
-- [ ] Add user subscription entity with user, plan snapshot, status, starts_at, expires_at, usage counters, and reset window.
-- [ ] API admission checks active subscription before wallet fallback according to configured strategy.
-- [ ] Support balance purchase of subscription plans.
-- [ ] Support admin assign, extend, revoke, restore, and reset usage.
-- [ ] Add expiry and periodic reset workers.
+- [x] Add subscription plan entity with name, price, period, included quota, supported models/projects/groups, and enabled status.
+- [x] Add user subscription entity with user, plan snapshot, status, starts_at, expires_at, usage counters, and reset window.
+- [x] API admission checks active subscription before wallet fallback according to configured strategy.
+- [x] Support balance purchase of subscription plans.
+- [x] Support admin assign, extend, revoke, restore, and reset usage.
+- [x] Add expiry and periodic reset workers.
 
 Frontend scope:
 
-- [ ] User plan list, purchase flow, active subscriptions, and usage progress.
-- [ ] Admin plan management.
-- [ ] Admin user subscription management.
+- [x] User plan list, purchase flow, active subscriptions, and usage progress.
+- [x] Admin plan management.
+- [x] Admin user subscription management.
 
 Verification:
 
-- [ ] Active subscription can cover matching usage.
-- [ ] Expired subscription is rejected or falls back to wallet according to policy.
-- [ ] Usage reset works for supported periods.
-- [ ] Balance purchase posts ledger debit.
-- [ ] Commit completed stage.
+- [x] Active subscription can cover matching usage.
+- [x] Expired subscription is rejected or falls back to wallet according to policy.
+- [x] Usage reset works for supported periods.
+- [x] Balance purchase posts ledger debit.
+- [x] Commit completed stage.
 
 ## Stage 7: Promo Codes
 

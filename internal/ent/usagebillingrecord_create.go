@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -206,6 +207,20 @@ func (_c *UsageBillingRecordCreate) SetNillableLedgerTransactionID(v *int) *Usag
 	return _c
 }
 
+// SetUserSubscriptionID sets the "user_subscription_id" field.
+func (_c *UsageBillingRecordCreate) SetUserSubscriptionID(v int) *UsageBillingRecordCreate {
+	_c.mutation.SetUserSubscriptionID(v)
+	return _c
+}
+
+// SetNillableUserSubscriptionID sets the "user_subscription_id" field if the given value is not nil.
+func (_c *UsageBillingRecordCreate) SetNillableUserSubscriptionID(v *int) *UsageBillingRecordCreate {
+	if v != nil {
+		_c.SetUserSubscriptionID(*v)
+	}
+	return _c
+}
+
 // SetIdempotencyKey sets the "idempotency_key" field.
 func (_c *UsageBillingRecordCreate) SetIdempotencyKey(v string) *UsageBillingRecordCreate {
 	_c.mutation.SetIdempotencyKey(v)
@@ -239,6 +254,11 @@ func (_c *UsageBillingRecordCreate) SetBillingAccount(v *BillingAccount) *UsageB
 // SetLedgerTransaction sets the "ledger_transaction" edge to the LedgerTransaction entity.
 func (_c *UsageBillingRecordCreate) SetLedgerTransaction(v *LedgerTransaction) *UsageBillingRecordCreate {
 	return _c.SetLedgerTransactionID(v.ID)
+}
+
+// SetUserSubscription sets the "user_subscription" edge to the UserSubscription entity.
+func (_c *UsageBillingRecordCreate) SetUserSubscription(v *UserSubscription) *UsageBillingRecordCreate {
+	return _c.SetUserSubscriptionID(v.ID)
 }
 
 // Mutation returns the UsageBillingRecordMutation object of the builder.
@@ -530,6 +550,23 @@ func (_c *UsageBillingRecordCreate) createSpec() (*UsageBillingRecord, *sqlgraph
 		_node.LedgerTransactionID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := _c.mutation.UserSubscriptionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagebillingrecord.UserSubscriptionTable,
+			Columns: []string{usagebillingrecord.UserSubscriptionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.UserSubscriptionID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -621,6 +658,24 @@ func (u *UsageBillingRecordUpsert) UpdateLedgerTransactionID() *UsageBillingReco
 // ClearLedgerTransactionID clears the value of the "ledger_transaction_id" field.
 func (u *UsageBillingRecordUpsert) ClearLedgerTransactionID() *UsageBillingRecordUpsert {
 	u.SetNull(usagebillingrecord.FieldLedgerTransactionID)
+	return u
+}
+
+// SetUserSubscriptionID sets the "user_subscription_id" field.
+func (u *UsageBillingRecordUpsert) SetUserSubscriptionID(v int) *UsageBillingRecordUpsert {
+	u.Set(usagebillingrecord.FieldUserSubscriptionID, v)
+	return u
+}
+
+// UpdateUserSubscriptionID sets the "user_subscription_id" field to the value that was provided on create.
+func (u *UsageBillingRecordUpsert) UpdateUserSubscriptionID() *UsageBillingRecordUpsert {
+	u.SetExcluded(usagebillingrecord.FieldUserSubscriptionID)
+	return u
+}
+
+// ClearUserSubscriptionID clears the value of the "user_subscription_id" field.
+func (u *UsageBillingRecordUpsert) ClearUserSubscriptionID() *UsageBillingRecordUpsert {
+	u.SetNull(usagebillingrecord.FieldUserSubscriptionID)
 	return u
 }
 
@@ -772,6 +827,27 @@ func (u *UsageBillingRecordUpsertOne) UpdateLedgerTransactionID() *UsageBillingR
 func (u *UsageBillingRecordUpsertOne) ClearLedgerTransactionID() *UsageBillingRecordUpsertOne {
 	return u.Update(func(s *UsageBillingRecordUpsert) {
 		s.ClearLedgerTransactionID()
+	})
+}
+
+// SetUserSubscriptionID sets the "user_subscription_id" field.
+func (u *UsageBillingRecordUpsertOne) SetUserSubscriptionID(v int) *UsageBillingRecordUpsertOne {
+	return u.Update(func(s *UsageBillingRecordUpsert) {
+		s.SetUserSubscriptionID(v)
+	})
+}
+
+// UpdateUserSubscriptionID sets the "user_subscription_id" field to the value that was provided on create.
+func (u *UsageBillingRecordUpsertOne) UpdateUserSubscriptionID() *UsageBillingRecordUpsertOne {
+	return u.Update(func(s *UsageBillingRecordUpsert) {
+		s.UpdateUserSubscriptionID()
+	})
+}
+
+// ClearUserSubscriptionID clears the value of the "user_subscription_id" field.
+func (u *UsageBillingRecordUpsertOne) ClearUserSubscriptionID() *UsageBillingRecordUpsertOne {
+	return u.Update(func(s *UsageBillingRecordUpsert) {
+		s.ClearUserSubscriptionID()
 	})
 }
 
@@ -1091,6 +1167,27 @@ func (u *UsageBillingRecordUpsertBulk) UpdateLedgerTransactionID() *UsageBilling
 func (u *UsageBillingRecordUpsertBulk) ClearLedgerTransactionID() *UsageBillingRecordUpsertBulk {
 	return u.Update(func(s *UsageBillingRecordUpsert) {
 		s.ClearLedgerTransactionID()
+	})
+}
+
+// SetUserSubscriptionID sets the "user_subscription_id" field.
+func (u *UsageBillingRecordUpsertBulk) SetUserSubscriptionID(v int) *UsageBillingRecordUpsertBulk {
+	return u.Update(func(s *UsageBillingRecordUpsert) {
+		s.SetUserSubscriptionID(v)
+	})
+}
+
+// UpdateUserSubscriptionID sets the "user_subscription_id" field to the value that was provided on create.
+func (u *UsageBillingRecordUpsertBulk) UpdateUserSubscriptionID() *UsageBillingRecordUpsertBulk {
+	return u.Update(func(s *UsageBillingRecordUpsert) {
+		s.UpdateUserSubscriptionID()
+	})
+}
+
+// ClearUserSubscriptionID clears the value of the "user_subscription_id" field.
+func (u *UsageBillingRecordUpsertBulk) ClearUserSubscriptionID() *UsageBillingRecordUpsertBulk {
+	return u.Update(func(s *UsageBillingRecordUpsert) {
+		s.ClearUserSubscriptionID()
 	})
 }
 

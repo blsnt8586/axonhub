@@ -18,6 +18,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // LedgerTransactionCreate is the builder for creating a LedgerTransaction entity.
@@ -262,6 +263,21 @@ func (_c *LedgerTransactionCreate) AddRedeemCodes(v ...*RedeemCode) *LedgerTrans
 		ids[i] = v[i].ID
 	}
 	return _c.AddRedeemCodeIDs(ids...)
+}
+
+// AddPurchasedUserSubscriptionIDs adds the "purchased_user_subscriptions" edge to the UserSubscription entity by IDs.
+func (_c *LedgerTransactionCreate) AddPurchasedUserSubscriptionIDs(ids ...int) *LedgerTransactionCreate {
+	_c.mutation.AddPurchasedUserSubscriptionIDs(ids...)
+	return _c
+}
+
+// AddPurchasedUserSubscriptions adds the "purchased_user_subscriptions" edges to the UserSubscription entity.
+func (_c *LedgerTransactionCreate) AddPurchasedUserSubscriptions(v ...*UserSubscription) *LedgerTransactionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPurchasedUserSubscriptionIDs(ids...)
 }
 
 // Mutation returns the LedgerTransactionMutation object of the builder.
@@ -581,6 +597,22 @@ func (_c *LedgerTransactionCreate) createSpec() (*LedgerTransaction, *sqlgraph.C
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PurchasedUserSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PurchasedUserSubscriptionsTable,
+			Columns: []string{ledgertransaction.PurchasedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

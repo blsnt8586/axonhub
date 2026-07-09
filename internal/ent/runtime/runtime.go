@@ -34,6 +34,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
 	"github.com/looplj/axonhub/internal/ent/schema"
+	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
@@ -42,6 +43,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
 	"github.com/looplj/axonhub/internal/ent/userrole"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"github.com/looplj/axonhub/internal/objects"
 
 	"entgo.io/ent"
@@ -1142,6 +1144,70 @@ func init() {
 	roleDescScopes := roleFields[3].Descriptor()
 	// role.DefaultScopes holds the default value on creation for the scopes field.
 	role.DefaultScopes = roleDescScopes.Default.([]string)
+	subscriptionplanMixin := schema.SubscriptionPlan{}.Mixin()
+	subscriptionplan.Policy = privacy.NewPolicies(schema.SubscriptionPlan{})
+	subscriptionplan.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := subscriptionplan.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	subscriptionplanMixinFields0 := subscriptionplanMixin[0].Fields()
+	_ = subscriptionplanMixinFields0
+	subscriptionplanFields := schema.SubscriptionPlan{}.Fields()
+	_ = subscriptionplanFields
+	// subscriptionplanDescCreatedAt is the schema descriptor for created_at field.
+	subscriptionplanDescCreatedAt := subscriptionplanMixinFields0[0].Descriptor()
+	// subscriptionplan.DefaultCreatedAt holds the default value on creation for the created_at field.
+	subscriptionplan.DefaultCreatedAt = subscriptionplanDescCreatedAt.Default.(func() time.Time)
+	// subscriptionplanDescUpdatedAt is the schema descriptor for updated_at field.
+	subscriptionplanDescUpdatedAt := subscriptionplanMixinFields0[1].Descriptor()
+	// subscriptionplan.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	subscriptionplan.DefaultUpdatedAt = subscriptionplanDescUpdatedAt.Default.(func() time.Time)
+	// subscriptionplan.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	subscriptionplan.UpdateDefaultUpdatedAt = subscriptionplanDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// subscriptionplanDescDescription is the schema descriptor for description field.
+	subscriptionplanDescDescription := subscriptionplanFields[1].Descriptor()
+	// subscriptionplan.DefaultDescription holds the default value on creation for the description field.
+	subscriptionplan.DefaultDescription = subscriptionplanDescDescription.Default.(string)
+	// subscriptionplanDescPeriodDays is the schema descriptor for period_days field.
+	subscriptionplanDescPeriodDays := subscriptionplanFields[3].Descriptor()
+	// subscriptionplan.DefaultPeriodDays holds the default value on creation for the period_days field.
+	subscriptionplan.DefaultPeriodDays = subscriptionplanDescPeriodDays.Default.(int)
+	// subscriptionplanDescPriceMicros is the schema descriptor for price_micros field.
+	subscriptionplanDescPriceMicros := subscriptionplanFields[4].Descriptor()
+	// subscriptionplan.DefaultPriceMicros holds the default value on creation for the price_micros field.
+	subscriptionplan.DefaultPriceMicros = subscriptionplanDescPriceMicros.Default.(int64)
+	// subscriptionplanDescCurrency is the schema descriptor for currency field.
+	subscriptionplanDescCurrency := subscriptionplanFields[5].Descriptor()
+	// subscriptionplan.DefaultCurrency holds the default value on creation for the currency field.
+	subscriptionplan.DefaultCurrency = subscriptionplanDescCurrency.Default.(string)
+	// subscriptionplanDescIncludedAmountMicros is the schema descriptor for included_amount_micros field.
+	subscriptionplanDescIncludedAmountMicros := subscriptionplanFields[6].Descriptor()
+	// subscriptionplan.DefaultIncludedAmountMicros holds the default value on creation for the included_amount_micros field.
+	subscriptionplan.DefaultIncludedAmountMicros = subscriptionplanDescIncludedAmountMicros.Default.(int64)
+	// subscriptionplanDescSupportedModelIds is the schema descriptor for supported_model_ids field.
+	subscriptionplanDescSupportedModelIds := subscriptionplanFields[7].Descriptor()
+	// subscriptionplan.DefaultSupportedModelIds holds the default value on creation for the supported_model_ids field.
+	subscriptionplan.DefaultSupportedModelIds = subscriptionplanDescSupportedModelIds.Default.([]string)
+	// subscriptionplanDescSupportedProjectIds is the schema descriptor for supported_project_ids field.
+	subscriptionplanDescSupportedProjectIds := subscriptionplanFields[8].Descriptor()
+	// subscriptionplan.DefaultSupportedProjectIds holds the default value on creation for the supported_project_ids field.
+	subscriptionplan.DefaultSupportedProjectIds = subscriptionplanDescSupportedProjectIds.Default.([]int)
+	// subscriptionplanDescSupportedGroupIds is the schema descriptor for supported_group_ids field.
+	subscriptionplanDescSupportedGroupIds := subscriptionplanFields[9].Descriptor()
+	// subscriptionplan.DefaultSupportedGroupIds holds the default value on creation for the supported_group_ids field.
+	subscriptionplan.DefaultSupportedGroupIds = subscriptionplanDescSupportedGroupIds.Default.([]int)
+	// subscriptionplanDescAllowWalletFallback is the schema descriptor for allow_wallet_fallback field.
+	subscriptionplanDescAllowWalletFallback := subscriptionplanFields[10].Descriptor()
+	// subscriptionplan.DefaultAllowWalletFallback holds the default value on creation for the allow_wallet_fallback field.
+	subscriptionplan.DefaultAllowWalletFallback = subscriptionplanDescAllowWalletFallback.Default.(bool)
+	// subscriptionplanDescSortOrder is the schema descriptor for sort_order field.
+	subscriptionplanDescSortOrder := subscriptionplanFields[12].Descriptor()
+	// subscriptionplan.DefaultSortOrder holds the default value on creation for the sort_order field.
+	subscriptionplan.DefaultSortOrder = subscriptionplanDescSortOrder.Default.(int)
 	systemMixin := schema.System{}.Mixin()
 	system.Policy = privacy.NewPolicies(schema.System{})
 	system.Hooks[0] = func(next ent.Mutator) ent.Mutator {
@@ -1262,7 +1328,7 @@ func init() {
 	// usagebillingrecord.DefaultCurrency holds the default value on creation for the currency field.
 	usagebillingrecord.DefaultCurrency = usagebillingrecordDescCurrency.Default.(string)
 	// usagebillingrecordDescError is the schema descriptor for error field.
-	usagebillingrecordDescError := usagebillingrecordFields[17].Descriptor()
+	usagebillingrecordDescError := usagebillingrecordFields[18].Descriptor()
 	// usagebillingrecord.DefaultError holds the default value on creation for the error field.
 	usagebillingrecord.DefaultError = usagebillingrecordDescError.Default.(string)
 	usagelogMixin := schema.UsageLog{}.Mixin()
@@ -1448,6 +1514,70 @@ func init() {
 	userrole.DefaultUpdatedAt = userroleDescUpdatedAt.Default.(func() time.Time)
 	// userrole.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	userrole.UpdateDefaultUpdatedAt = userroleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	usersubscriptionMixin := schema.UserSubscription{}.Mixin()
+	usersubscription.Policy = privacy.NewPolicies(schema.UserSubscription{})
+	usersubscription.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := usersubscription.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	usersubscriptionMixinFields0 := usersubscriptionMixin[0].Fields()
+	_ = usersubscriptionMixinFields0
+	usersubscriptionFields := schema.UserSubscription{}.Fields()
+	_ = usersubscriptionFields
+	// usersubscriptionDescCreatedAt is the schema descriptor for created_at field.
+	usersubscriptionDescCreatedAt := usersubscriptionMixinFields0[0].Descriptor()
+	// usersubscription.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usersubscription.DefaultCreatedAt = usersubscriptionDescCreatedAt.Default.(func() time.Time)
+	// usersubscriptionDescUpdatedAt is the schema descriptor for updated_at field.
+	usersubscriptionDescUpdatedAt := usersubscriptionMixinFields0[1].Descriptor()
+	// usersubscription.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usersubscription.DefaultUpdatedAt = usersubscriptionDescUpdatedAt.Default.(func() time.Time)
+	// usersubscription.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usersubscription.UpdateDefaultUpdatedAt = usersubscriptionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// usersubscriptionDescPeriodDays is the schema descriptor for period_days field.
+	usersubscriptionDescPeriodDays := usersubscriptionFields[9].Descriptor()
+	// usersubscription.DefaultPeriodDays holds the default value on creation for the period_days field.
+	usersubscription.DefaultPeriodDays = usersubscriptionDescPeriodDays.Default.(int)
+	// usersubscriptionDescIncludedAmountMicros is the schema descriptor for included_amount_micros field.
+	usersubscriptionDescIncludedAmountMicros := usersubscriptionFields[10].Descriptor()
+	// usersubscription.DefaultIncludedAmountMicros holds the default value on creation for the included_amount_micros field.
+	usersubscription.DefaultIncludedAmountMicros = usersubscriptionDescIncludedAmountMicros.Default.(int64)
+	// usersubscriptionDescUsedAmountMicros is the schema descriptor for used_amount_micros field.
+	usersubscriptionDescUsedAmountMicros := usersubscriptionFields[11].Descriptor()
+	// usersubscription.DefaultUsedAmountMicros holds the default value on creation for the used_amount_micros field.
+	usersubscription.DefaultUsedAmountMicros = usersubscriptionDescUsedAmountMicros.Default.(int64)
+	// usersubscriptionDescCurrency is the schema descriptor for currency field.
+	usersubscriptionDescCurrency := usersubscriptionFields[12].Descriptor()
+	// usersubscription.DefaultCurrency holds the default value on creation for the currency field.
+	usersubscription.DefaultCurrency = usersubscriptionDescCurrency.Default.(string)
+	// usersubscriptionDescSupportedModelIds is the schema descriptor for supported_model_ids field.
+	usersubscriptionDescSupportedModelIds := usersubscriptionFields[13].Descriptor()
+	// usersubscription.DefaultSupportedModelIds holds the default value on creation for the supported_model_ids field.
+	usersubscription.DefaultSupportedModelIds = usersubscriptionDescSupportedModelIds.Default.([]string)
+	// usersubscriptionDescSupportedProjectIds is the schema descriptor for supported_project_ids field.
+	usersubscriptionDescSupportedProjectIds := usersubscriptionFields[14].Descriptor()
+	// usersubscription.DefaultSupportedProjectIds holds the default value on creation for the supported_project_ids field.
+	usersubscription.DefaultSupportedProjectIds = usersubscriptionDescSupportedProjectIds.Default.([]int)
+	// usersubscriptionDescSupportedGroupIds is the schema descriptor for supported_group_ids field.
+	usersubscriptionDescSupportedGroupIds := usersubscriptionFields[15].Descriptor()
+	// usersubscription.DefaultSupportedGroupIds holds the default value on creation for the supported_group_ids field.
+	usersubscription.DefaultSupportedGroupIds = usersubscriptionDescSupportedGroupIds.Default.([]int)
+	// usersubscriptionDescAllowWalletFallback is the schema descriptor for allow_wallet_fallback field.
+	usersubscriptionDescAllowWalletFallback := usersubscriptionFields[16].Descriptor()
+	// usersubscription.DefaultAllowWalletFallback holds the default value on creation for the allow_wallet_fallback field.
+	usersubscription.DefaultAllowWalletFallback = usersubscriptionDescAllowWalletFallback.Default.(bool)
+	// usersubscriptionDescNotes is the schema descriptor for notes field.
+	usersubscriptionDescNotes := usersubscriptionFields[19].Descriptor()
+	// usersubscription.DefaultNotes holds the default value on creation for the notes field.
+	usersubscription.DefaultNotes = usersubscriptionDescNotes.Default.(string)
+	// usersubscriptionDescRevokeReason is the schema descriptor for revoke_reason field.
+	usersubscriptionDescRevokeReason := usersubscriptionFields[20].Descriptor()
+	// usersubscription.DefaultRevokeReason holds the default value on creation for the revoke_reason field.
+	usersubscription.DefaultRevokeReason = usersubscriptionDescRevokeReason.Default.(string)
 }
 
 const (

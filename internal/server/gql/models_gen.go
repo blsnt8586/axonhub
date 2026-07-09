@@ -19,6 +19,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
 	"github.com/looplj/axonhub/llm/httpclient"
@@ -158,6 +159,15 @@ type AdminUsageBillingRecordsFilter struct {
 	Status           *usagebillingrecord.Status `json:"status,omitempty"`
 	From             *time.Time                 `json:"from,omitempty"`
 	To               *time.Time                 `json:"to,omitempty"`
+}
+
+type AdminUserSubscriptionsFilter struct {
+	UserID        *int                     `json:"userId,omitempty"`
+	PlanID        *int                     `json:"planId,omitempty"`
+	Status        *usersubscription.Status `json:"status,omitempty"`
+	From          *time.Time               `json:"from,omitempty"`
+	To            *time.Time               `json:"to,omitempty"`
+	ExpiresBefore *time.Time               `json:"expiresBefore,omitempty"`
 }
 
 type ApplyChannelOverrideTemplateInput struct {

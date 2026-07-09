@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { AlertCircle, CreditCard, ExternalLink, Loader2, RefreshCw, Ticket, Wallet } from 'lucide-react';
+import { AlertCircle, CreditCard, ExternalLink, Loader2, PackageCheck, RefreshCw, ShieldCheck, Ticket, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -7,10 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
-import { useCreateMyEPayRechargeCheckout, useMyBillingOverview, useRedeemCode } from './data/billing';
+import { type SubscriptionPlan, type UserSubscription, useCreateMyEPayRechargeCheckout, useMyBillingOverview, usePurchaseSubscriptionPlan, useRedeemCode } from './data/billing';
 
 function microsToAmount(value: number) {
   return value / 1_000_000;
@@ -41,6 +42,13 @@ function normalizeAmount(value: string) {
   return amount.toFixed(2);
 }
 
+function usagePercent(subscription: UserSubscription) {
+  if (subscription.includedAmountMicros <= 0) {
+    return 0;
+  }
+  return Math.min(100, Math.round((subscription.usedAmountMicros / subscription.includedAmountMicros) * 100));
+}
+
 export default function BillingPage() {
   const { t, i18n } = useTranslation();
   const [amount, setAmount] = useState('20.00');
@@ -48,6 +56,7 @@ export default function BillingPage() {
   const { data, isLoading, isFetching, error, refetch } = useMyBillingOverview(10);
   const createCheckout = useCreateMyEPayRechargeCheckout();
   const redeemCodeMutation = useRedeemCode();
+  const purchaseSubscriptionPlan = usePurchaseSubscriptionPlan();
 
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
   const currency = data?.account.currency || 'CNY';
@@ -105,6 +114,20 @@ export default function BillingPage() {
       await redeemCodeMutation.mutateAsync({ code });
       toast.success(t('billing.redeem.success'));
       setRedeemCode('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('common.errors.unknownError');
+      toast.error(message);
+    }
+  }
+
+  async function handlePurchasePlan(plan: SubscriptionPlan) {
+    if (!window.confirm(t('billing.subscriptions.purchaseConfirm', { name: plan.name, amount: formatCurrency.format(microsToAmount(plan.priceMicros)) }))) {
+      return;
+    }
+
+    try {
+      await purchaseSubscriptionPlan.mutateAsync({ planId: plan.id });
+      toast.success(t('billing.subscriptions.purchaseSuccess'));
     } catch (err) {
       const message = err instanceof Error ? err.message : t('common.errors.unknownError');
       toast.error(message);
@@ -294,6 +317,100 @@ export default function BillingPage() {
                   )}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className='grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,520px)]'>
+          <Card className='rounded-lg'>
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2 text-base'>
+                <PackageCheck className='size-4' />
+                {t('billing.subscriptions.plansTitle')}
+              </CardTitle>
+              <CardDescription>{t('billing.subscriptions.plansDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className='grid gap-3 md:grid-cols-2 xl:grid-cols-3'>
+              {(data?.availableSubscriptionPlans ?? []).length === 0 ? (
+                <div className='text-muted-foreground rounded-md border p-6 text-center text-sm md:col-span-2 xl:col-span-3'>
+                  {isLoading ? t('common.loading') : t('common.noData')}
+                </div>
+              ) : (
+                data?.availableSubscriptionPlans.map((plan) => (
+                  <div key={plan.id} className='flex min-h-[220px] flex-col rounded-md border p-4'>
+                    <div className='flex items-start justify-between gap-3'>
+                      <div className='min-w-0'>
+                        <div className='truncate text-base font-semibold'>{plan.name}</div>
+                        <div className='text-muted-foreground mt-1 line-clamp-2 text-sm'>{plan.description || t('billing.subscriptions.noDescription')}</div>
+                      </div>
+                      <Badge variant='secondary'>{plan.period}</Badge>
+                    </div>
+                    <div className='mt-4 font-mono text-2xl font-semibold'>{formatCurrency.format(microsToAmount(plan.priceMicros))}</div>
+                    <div className='text-muted-foreground mt-1 text-xs'>
+                      {t('billing.subscriptions.periodDays', { days: plan.periodDays })}
+                    </div>
+                    <div className='mt-4 space-y-2 text-sm'>
+                      <div className='flex justify-between gap-3'>
+                        <span className='text-muted-foreground'>{t('billing.subscriptions.included')}</span>
+                        <span className='font-mono'>
+                          {plan.includedAmountMicros > 0 ? formatCurrency.format(microsToAmount(plan.includedAmountMicros)) : t('billing.subscriptions.unlimited')}
+                        </span>
+                      </div>
+                      <div className='flex justify-between gap-3'>
+                        <span className='text-muted-foreground'>{t('billing.subscriptions.scope')}</span>
+                        <span className='max-w-[150px] truncate text-right font-mono text-xs'>
+                          {plan.supportedModelIds.length > 0 ? plan.supportedModelIds.join(', ') : t('billing.subscriptions.allModels')}
+                        </span>
+                      </div>
+                    </div>
+                    <Button className='mt-auto w-full' onClick={() => void handlePurchasePlan(plan)} disabled={purchaseSubscriptionPlan.isPending}>
+                      {purchaseSubscriptionPlan.isPending ? <Loader2 className='size-4 animate-spin' /> : <ShieldCheck className='size-4' />}
+                      {t('billing.subscriptions.purchase')}
+                    </Button>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className='rounded-lg'>
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2 text-base'>
+                <ShieldCheck className='size-4' />
+                {t('billing.subscriptions.activeTitle')}
+              </CardTitle>
+              <CardDescription>{t('billing.subscriptions.activeDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-3'>
+              {(data?.userSubscriptions ?? []).length === 0 ? (
+                <div className='text-muted-foreground rounded-md border p-6 text-center text-sm'>{isLoading ? t('common.loading') : t('common.noData')}</div>
+              ) : (
+                data?.userSubscriptions.map((subscription) => (
+                  <div key={subscription.id} className='rounded-md border p-4'>
+                    <div className='flex items-start justify-between gap-3'>
+                      <div className='min-w-0'>
+                        <div className='truncate font-medium'>{subscription.plan?.name || t('billing.subscriptions.planSnapshot')}</div>
+                        <div className='text-muted-foreground text-xs'>{formatDate(subscription.startsAt)} - {formatDate(subscription.expiresAt)}</div>
+                      </div>
+                      <Badge variant={subscription.status === 'active' ? 'default' : 'secondary'}>{subscription.status}</Badge>
+                    </div>
+                    <div className='mt-4 space-y-2'>
+                      <div className='flex justify-between text-sm'>
+                        <span className='text-muted-foreground'>{t('billing.subscriptions.used')}</span>
+                        <span className='font-mono'>
+                          {formatCurrency.format(microsToAmount(subscription.usedAmountMicros))} /{' '}
+                          {subscription.includedAmountMicros > 0 ? formatCurrency.format(microsToAmount(subscription.includedAmountMicros)) : t('billing.subscriptions.unlimited')}
+                        </span>
+                      </div>
+                      <Progress value={usagePercent(subscription)} />
+                      <div className='text-muted-foreground flex justify-between gap-3 text-xs'>
+                        <span>{t('billing.subscriptions.resetAt')}: {formatDate(subscription.resetAt)}</span>
+                        <span>{subscription.allowWalletFallback ? t('billing.subscriptions.walletFallbackOn') : t('billing.subscriptions.walletFallbackOff')}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

@@ -783,6 +783,30 @@ func (f RoleMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) 
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.RoleMutation", m)
 }
 
+// The SubscriptionPlanQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type SubscriptionPlanQueryRuleFunc func(context.Context, *ent.SubscriptionPlanQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f SubscriptionPlanQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.SubscriptionPlanQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.SubscriptionPlanQuery", q)
+}
+
+// The SubscriptionPlanMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type SubscriptionPlanMutationRuleFunc func(context.Context, *ent.SubscriptionPlanMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f SubscriptionPlanMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.SubscriptionPlanMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.SubscriptionPlanMutation", m)
+}
+
 // The SystemQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type SystemQueryRuleFunc func(context.Context, *ent.SystemQuery) error
@@ -975,6 +999,30 @@ func (f UserRoleMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutati
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UserRoleMutation", m)
 }
 
+// The UserSubscriptionQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type UserSubscriptionQueryRuleFunc func(context.Context, *ent.UserSubscriptionQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f UserSubscriptionQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UserSubscriptionQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.UserSubscriptionQuery", q)
+}
+
+// The UserSubscriptionMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type UserSubscriptionMutationRuleFunc func(context.Context, *ent.UserSubscriptionMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f UserSubscriptionMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.UserSubscriptionMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UserSubscriptionMutation", m)
+}
+
 type (
 	// Filter is the interface that wraps the Where function
 	// for filtering nodes in queries and mutations.
@@ -1066,6 +1114,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.RoleQuery:
 		return q.Filter(), nil
+	case *ent.SubscriptionPlanQuery:
+		return q.Filter(), nil
 	case *ent.SystemQuery:
 		return q.Filter(), nil
 	case *ent.ThreadQuery:
@@ -1081,6 +1131,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 	case *ent.UserProjectQuery:
 		return q.Filter(), nil
 	case *ent.UserRoleQuery:
+		return q.Filter(), nil
+	case *ent.UserSubscriptionQuery:
 		return q.Filter(), nil
 	default:
 		return nil, Denyf("ent/privacy: unexpected query type %T for query filter", q)
@@ -1145,6 +1197,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 		return m.Filter(), nil
 	case *ent.RoleMutation:
 		return m.Filter(), nil
+	case *ent.SubscriptionPlanMutation:
+		return m.Filter(), nil
 	case *ent.SystemMutation:
 		return m.Filter(), nil
 	case *ent.ThreadMutation:
@@ -1160,6 +1214,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.UserProjectMutation:
 		return m.Filter(), nil
 	case *ent.UserRoleMutation:
+		return m.Filter(), nil
+	case *ent.UserSubscriptionMutation:
 		return m.Filter(), nil
 	default:
 		return nil, Denyf("ent/privacy: unexpected mutation type %T for mutation filter", m)

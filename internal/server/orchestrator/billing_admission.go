@@ -34,12 +34,13 @@ func enforceBillingAdmission(inbound *PersistentInboundTransformer) pipeline.Mid
 		}
 
 		decision, err := state.AdmissionService.Check(ctx, biz.AdmissionCheckInput{
-			Subject: subject,
-			ModelID: llmRequest.Model,
-			APIKey:  state.APIKey,
+			Subject:   subject,
+			ProjectID: projectID,
+			ModelID:   llmRequest.Model,
+			APIKey:    state.APIKey,
 		})
 		if decision.Allowed {
-			if decision.Code == biz.AdmissionCodeAllowed && state.BillingHoldService != nil {
+			if decision.Code == biz.AdmissionCodeAllowed && !decision.SubscriptionCovered && state.BillingHoldService != nil {
 				if state.Request == nil {
 					request, err := state.RequestService.CreateRequest(
 						ctx,

@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Ban, BarChart3, Clock, Download, Loader2, RefreshCw, Save, Ticket, Trash2, Unlock, WalletCards } from 'lucide-react';
+import { AlertCircle, Ban, BarChart3, Clock, Download, Loader2, PackageCheck, RefreshCw, RotateCcw, Save, Ticket, Trash2, Unlock, WalletCards } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { extractNumberIDAsNumber } from '@/lib/utils';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,6 +24,7 @@ import {
   type AdminPaymentEventsFilter,
   type AdminPaymentOrdersFilter,
   type AdminRedeemCodesFilter,
+  type AdminUserSubscriptionsFilter,
   type AdminUsageBillingRecordsFilter,
   type BillingCSVExportDataset,
   type BillingCommercialReport,
@@ -37,7 +39,13 @@ import {
   type RedeemCode,
   type RedeemCodeStatus,
   type RedeemCodeType,
+  type SubscriptionPlan,
+  type SubscriptionPlanPeriod,
+  type SubscriptionPlanStatus,
   type UsageBillingRecordStatus,
+  type UserSubscription,
+  type UserSubscriptionStatus,
+  useAdminAssignSubscription,
   useAdjustUserBalance,
   useAdminBillingOverview,
   useAdminBillingReport,
@@ -46,16 +54,24 @@ import {
   useAdminPaymentEvents,
   useAdminPaymentOrders,
   useAdminRedeemCodes,
+  useAdminSubscriptionPlans,
   useAdminUsageBillingRecords,
+  useAdminUserSubscriptions,
   useAdminUserBillingDetail,
   useAdminCreateAndRedeemCode,
   useCancelPaymentOrder,
   useCreateRedeemCodes,
   useDeleteRedeemCode,
+  useDeleteSubscriptionPlan,
+  useExtendUserSubscription,
   useExportAdminBillingCSV,
   useReleaseBillingHold,
+  useResetUserSubscriptionUsage,
+  useRestoreUserSubscription,
+  useRevokeUserSubscription,
   useMakeUpPaymentOrder,
   useSaveBillingPriceRule,
+  useSaveSubscriptionPlan,
   useUpdateRedeemCodeStatus,
   useUpdateUserBillingAccount,
   useUpsertEPayPaymentProvider,
@@ -177,6 +193,47 @@ type EPayProviderForm = {
   returnUrl: string;
   type: string;
   siteName: string;
+};
+
+type SubscriptionPlanForm = {
+  id?: string;
+  name: string;
+  description: string;
+  period: SubscriptionPlanPeriod;
+  periodDays: string;
+  price: string;
+  currency: string;
+  includedAmount: string;
+  supportedModelIDs: string;
+  supportedProjectIDs: string;
+  supportedGroupIDs: string;
+  allowWalletFallback: boolean;
+  status: SubscriptionPlanStatus;
+  sortOrder: string;
+};
+
+type SubscriptionAssignForm = {
+  userId: string;
+  planId: string;
+  startsAt: string;
+  expiresAt: string;
+  notes: string;
+};
+
+type SubscriptionFilterForm = {
+  userId: string;
+  planId: string;
+  status: 'all' | UserSubscriptionStatus;
+  from: string;
+  to: string;
+  expiresBefore: string;
+};
+
+type SubscriptionActionForm = {
+  days: string;
+  expiresAt: string;
+  reason: string;
+  notes: string;
 };
 
 function microsToAmount(value: number) {
@@ -385,6 +442,55 @@ function defaultRedeemGrantForm(): RedeemGrantForm {
   };
 }
 
+function defaultSubscriptionPlanForm(): SubscriptionPlanForm {
+  return {
+    name: '',
+    description: '',
+    period: 'month',
+    periodDays: '30',
+    price: '29.00',
+    currency: 'CNY',
+    includedAmount: '100.00',
+    supportedModelIDs: '',
+    supportedProjectIDs: '',
+    supportedGroupIDs: '',
+    allowWalletFallback: true,
+    status: 'enabled',
+    sortOrder: '100',
+  };
+}
+
+function subscriptionPlanFormFromPlan(plan: SubscriptionPlan): SubscriptionPlanForm {
+  return {
+    id: plan.id,
+    name: plan.name,
+    description: plan.description,
+    period: plan.period,
+    periodDays: String(plan.periodDays),
+    price: microsToAmount(plan.priceMicros).toFixed(2),
+    currency: plan.currency,
+    includedAmount: microsToAmount(plan.includedAmountMicros).toFixed(2),
+    supportedModelIDs: plan.supportedModelIds.join(', '),
+    supportedProjectIDs: plan.supportedProjectIds.join(', '),
+    supportedGroupIDs: plan.supportedGroupIds.join(', '),
+    allowWalletFallback: plan.allowWalletFallback,
+    status: plan.status,
+    sortOrder: String(plan.sortOrder),
+  };
+}
+
+function defaultSubscriptionAssignForm(): SubscriptionAssignForm {
+  return { userId: '', planId: '', startsAt: '', expiresAt: '', notes: '' };
+}
+
+function defaultSubscriptionFilter(): SubscriptionFilterForm {
+  return { userId: '', planId: '', status: 'all', from: '', to: '', expiresBefore: '' };
+}
+
+function defaultSubscriptionActionForm(): SubscriptionActionForm {
+  return { days: '30', expiresAt: '', reason: '', notes: '' };
+}
+
 function buildReportFilter(form: ReportFilterForm): AdminBillingReportFilter {
   return {
     from: optionalTime(form.from),
@@ -475,6 +581,35 @@ function buildRedeemFilter(form: RedeemFilterForm): AdminRedeemCodesFilter {
   };
 }
 
+function buildSubscriptionFilter(form: SubscriptionFilterForm): AdminUserSubscriptionsFilter {
+  return {
+    userId: optionalInt(form.userId),
+    planId: optionalInt(form.planId),
+    status: form.status === 'all' ? undefined : form.status,
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+    expiresBefore: optionalTime(form.expiresBefore),
+  };
+}
+
+function splitCSVText(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function splitCSVInts(value: string) {
+  return splitCSVText(value)
+    .map((item) => Number(item))
+    .filter((item) => Number.isInteger(item) && item > 0);
+}
+
+function usagePercent(subscription: UserSubscription) {
+  if (subscription.includedAmountMicros <= 0) return 0;
+  return Math.min(100, Math.round((subscription.usedAmountMicros / subscription.includedAmountMicros) * 100));
+}
+
 function csvCell(value: unknown) {
   const text = value === null || value === undefined ? '' : String(value);
   return `"${text.replace(/"/g, '""')}"`;
@@ -511,6 +646,10 @@ export default function AdminBillingPage() {
   const [redeemFilter, setRedeemFilter] = useState<RedeemFilterForm>(() => defaultRedeemFilter());
   const [redeemGenerateForm, setRedeemGenerateForm] = useState<RedeemGenerateForm>(() => defaultRedeemGenerateForm());
   const [redeemGrantForm, setRedeemGrantForm] = useState<RedeemGrantForm>(() => defaultRedeemGrantForm());
+  const [subscriptionPlanForm, setSubscriptionPlanForm] = useState<SubscriptionPlanForm>(() => defaultSubscriptionPlanForm());
+  const [subscriptionAssignForm, setSubscriptionAssignForm] = useState<SubscriptionAssignForm>(() => defaultSubscriptionAssignForm());
+  const [subscriptionFilter, setSubscriptionFilter] = useState<SubscriptionFilterForm>(() => defaultSubscriptionFilter());
+  const [subscriptionActions, setSubscriptionActions] = useState<Record<string, SubscriptionActionForm>>({});
   const [reportFilter, setReportFilter] = useState<ReportFilterForm>(() => defaultReportFilter());
   const [appliedLedgerFilter, setAppliedLedgerFilter] = useState<AdminLedgerTransactionsFilter>({});
   const [appliedUsageFilter, setAppliedUsageFilter] = useState<AdminUsageBillingRecordsFilter>({});
@@ -518,6 +657,7 @@ export default function AdminBillingPage() {
   const [appliedOrderFilter, setAppliedOrderFilter] = useState<AdminPaymentOrdersFilter>({});
   const [appliedEventFilter, setAppliedEventFilter] = useState<AdminPaymentEventsFilter>({});
   const [appliedRedeemFilter, setAppliedRedeemFilter] = useState<AdminRedeemCodesFilter>({});
+  const [appliedSubscriptionFilter, setAppliedSubscriptionFilter] = useState<AdminUserSubscriptionsFilter>({});
   const [appliedReportFilter, setAppliedReportFilter] = useState<AdminBillingReportFilter>(() => buildReportFilter(defaultReportFilter()));
   const [holdReleaseReasons, setHoldReleaseReasons] = useState<Record<string, string>>({});
   const [orderReasons, setOrderReasons] = useState<Record<string, string>>({});
@@ -544,6 +684,8 @@ export default function AdminBillingPage() {
   const adminOrders = useAdminPaymentOrders(appliedOrderFilter, 50);
   const adminEvents = useAdminPaymentEvents(appliedEventFilter, 50);
   const adminRedeemCodes = useAdminRedeemCodes(appliedRedeemFilter, 50);
+  const adminSubscriptionPlans = useAdminSubscriptionPlans(100);
+  const adminUserSubscriptions = useAdminUserSubscriptions(appliedSubscriptionFilter, 50);
   const adminReport = useAdminBillingReport(appliedReportFilter);
   const adjustBalance = useAdjustUserBalance();
   const updateAccount = useUpdateUserBillingAccount();
@@ -555,6 +697,13 @@ export default function AdminBillingPage() {
   const adminCreateAndRedeemCode = useAdminCreateAndRedeemCode();
   const updateRedeemCodeStatus = useUpdateRedeemCodeStatus();
   const deleteRedeemCode = useDeleteRedeemCode();
+  const saveSubscriptionPlan = useSaveSubscriptionPlan();
+  const deleteSubscriptionPlan = useDeleteSubscriptionPlan();
+  const adminAssignSubscription = useAdminAssignSubscription();
+  const extendUserSubscription = useExtendUserSubscription();
+  const revokeUserSubscription = useRevokeUserSubscription();
+  const restoreUserSubscription = useRestoreUserSubscription();
+  const resetUserSubscriptionUsage = useResetUserSubscriptionUsage();
   const savePriceRule = useSaveBillingPriceRule();
   const upsertEPay = useUpsertEPayPaymentProvider();
 
@@ -591,6 +740,8 @@ export default function AdminBillingPage() {
       adminOrders.refetch(),
       adminEvents.refetch(),
       adminRedeemCodes.refetch(),
+      adminSubscriptionPlans.refetch(),
+      adminUserSubscriptions.refetch(),
       adminReport.refetch(),
       selectedUserBilling.refetch(),
     ]);
@@ -872,6 +1023,130 @@ export default function AdminBillingPage() {
     toast.success(t('adminBilling.redeem.exportSuccess'));
   }
 
+  async function handleSaveSubscriptionPlan(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const price = normalizeNonNegativeAmount(subscriptionPlanForm.price, 2);
+    const includedAmount = normalizeNonNegativeAmount(subscriptionPlanForm.includedAmount, 2);
+    const periodDays = Number(subscriptionPlanForm.periodDays);
+    const sortOrder = Number(subscriptionPlanForm.sortOrder);
+    if (!subscriptionPlanForm.name.trim()) {
+      toast.error(t('adminBilling.subscriptions.planNameRequired'));
+      return;
+    }
+    if (!price || !includedAmount || !Number.isInteger(periodDays) || periodDays <= 0 || !Number.isInteger(sortOrder)) {
+      toast.error(t('adminBilling.subscriptions.invalidPlan'));
+      return;
+    }
+
+    try {
+      await saveSubscriptionPlan.mutateAsync({
+        id: subscriptionPlanForm.id,
+        name: subscriptionPlanForm.name.trim(),
+        description: optionalText(subscriptionPlanForm.description),
+        period: subscriptionPlanForm.period,
+        periodDays,
+        price,
+        currency: subscriptionPlanForm.currency.trim().toUpperCase() || 'CNY',
+        includedAmount,
+        supportedModelIDs: splitCSVText(subscriptionPlanForm.supportedModelIDs),
+        supportedProjectIDs: splitCSVInts(subscriptionPlanForm.supportedProjectIDs),
+        supportedGroupIDs: splitCSVInts(subscriptionPlanForm.supportedGroupIDs),
+        allowWalletFallback: subscriptionPlanForm.allowWalletFallback,
+        status: subscriptionPlanForm.status,
+        sortOrder,
+      });
+      toast.success(t('adminBilling.subscriptions.planSaveSuccess'));
+      setSubscriptionPlanForm(defaultSubscriptionPlanForm());
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleDeleteSubscriptionPlan(plan: SubscriptionPlan) {
+    if (!window.confirm(t('adminBilling.subscriptions.deletePlanConfirm'))) return;
+    try {
+      await deleteSubscriptionPlan.mutateAsync(plan.id);
+      toast.success(t('adminBilling.subscriptions.deletePlanSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleAssignSubscription(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!subscriptionAssignForm.userId || !subscriptionAssignForm.planId) {
+      toast.error(t('adminBilling.subscriptions.selectUserAndPlan'));
+      return;
+    }
+
+    try {
+      await adminAssignSubscription.mutateAsync({
+        userId: subscriptionAssignForm.userId,
+        planId: subscriptionAssignForm.planId,
+        startsAt: optionalTime(subscriptionAssignForm.startsAt),
+        expiresAt: optionalTime(subscriptionAssignForm.expiresAt),
+        notes: optionalText(subscriptionAssignForm.notes),
+      });
+      toast.success(t('adminBilling.subscriptions.assignSuccess'));
+      setSubscriptionAssignForm(defaultSubscriptionAssignForm());
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  function subscriptionActionValue(subscriptionID: string) {
+    return subscriptionActions[subscriptionID] ?? defaultSubscriptionActionForm();
+  }
+
+  async function handleExtendSubscription(subscription: UserSubscription) {
+    const action = subscriptionActionValue(subscription.id);
+    const days = Number(action.days);
+    const expiresAt = optionalTime(action.expiresAt);
+    if (!expiresAt && (!Number.isInteger(days) || days <= 0)) {
+      toast.error(t('adminBilling.subscriptions.invalidExtend'));
+      return;
+    }
+    try {
+      await extendUserSubscription.mutateAsync({
+        subscriptionId: subscription.id,
+        days: expiresAt ? undefined : days,
+        expiresAt,
+        notes: optionalText(action.notes),
+      });
+      toast.success(t('adminBilling.subscriptions.extendSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleRevokeSubscription(subscription: UserSubscription) {
+    const action = subscriptionActionValue(subscription.id);
+    try {
+      await revokeUserSubscription.mutateAsync({ id: subscription.id, reason: optionalText(action.reason) });
+      toast.success(t('adminBilling.subscriptions.revokeSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleRestoreSubscription(subscription: UserSubscription) {
+    try {
+      await restoreUserSubscription.mutateAsync(subscription.id);
+      toast.success(t('adminBilling.subscriptions.restoreSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleResetSubscriptionUsage(subscription: UserSubscription) {
+    try {
+      await resetUserSubscriptionUsage.mutateAsync(subscription.id);
+      toast.success(t('adminBilling.subscriptions.resetSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
       <Header fixed>
@@ -892,6 +1167,8 @@ export default function AdminBillingPage() {
               adminOrders.isFetching ||
               adminEvents.isFetching ||
               adminRedeemCodes.isFetching ||
+              adminSubscriptionPlans.isFetching ||
+              adminUserSubscriptions.isFetching ||
               adminReport.isFetching
             }
           >
@@ -902,6 +1179,8 @@ export default function AdminBillingPage() {
             adminOrders.isFetching ||
             adminEvents.isFetching ||
             adminRedeemCodes.isFetching ||
+            adminSubscriptionPlans.isFetching ||
+            adminUserSubscriptions.isFetching ||
             adminReport.isFetching ? (
               <Loader2 className='size-4 animate-spin' />
             ) : (
@@ -922,11 +1201,13 @@ export default function AdminBillingPage() {
             adminOrders.error ||
             adminEvents.error ||
             adminRedeemCodes.error ||
+            adminSubscriptionPlans.error ||
+            adminUserSubscriptions.error ||
             adminReport.error
           }
         />
 
-        <div className='grid gap-4 md:grid-cols-4 xl:grid-cols-7'>
+        <div className='grid gap-4 md:grid-cols-4 xl:grid-cols-8'>
           <MetricCard title={t('adminBilling.metrics.accounts')} value={String(data?.accounts.length ?? 0)} loading={isLoading} />
           <MetricCard
             title={t('adminBilling.metrics.ledger')}
@@ -950,6 +1231,11 @@ export default function AdminBillingPage() {
             value={String(adminRedeemCodes.data?.length ?? 0)}
             loading={adminRedeemCodes.isLoading}
           />
+          <MetricCard
+            title={t('adminBilling.metrics.subscriptions')}
+            value={String(adminUserSubscriptions.data?.length ?? 0)}
+            loading={adminUserSubscriptions.isLoading}
+          />
         </div>
 
         <Tabs defaultValue='reports' className='gap-4'>
@@ -962,6 +1248,7 @@ export default function AdminBillingPage() {
             <TabsTrigger value='orders'>{t('adminBilling.tabs.orders')}</TabsTrigger>
             <TabsTrigger value='events'>{t('adminBilling.tabs.events')}</TabsTrigger>
             <TabsTrigger value='redeemCodes'>{t('adminBilling.tabs.redeemCodes')}</TabsTrigger>
+            <TabsTrigger value='subscriptions'>{t('adminBilling.tabs.subscriptions')}</TabsTrigger>
             <TabsTrigger value='pricing'>{t('adminBilling.tabs.pricing')}</TabsTrigger>
             <TabsTrigger value='providers'>{t('adminBilling.tabs.providers')}</TabsTrigger>
           </TabsList>
@@ -1816,6 +2103,50 @@ export default function AdminBillingPage() {
             />
           </TabsContent>
 
+          <TabsContent value='subscriptions' className='mt-0'>
+            <SubscriptionsTab
+              users={users}
+              plans={adminSubscriptionPlans.data ?? []}
+              subscriptions={adminUserSubscriptions.data ?? []}
+              plansLoading={adminSubscriptionPlans.isLoading}
+              subscriptionsLoading={adminUserSubscriptions.isLoading}
+              planForm={subscriptionPlanForm}
+              setPlanForm={setSubscriptionPlanForm}
+              onSavePlan={handleSaveSubscriptionPlan}
+              savePlanPending={saveSubscriptionPlan.isPending}
+              onDeletePlan={handleDeleteSubscriptionPlan}
+              deletePlanPending={deleteSubscriptionPlan.isPending}
+              assignForm={subscriptionAssignForm}
+              setAssignForm={setSubscriptionAssignForm}
+              onAssign={handleAssignSubscription}
+              assignPending={adminAssignSubscription.isPending}
+              filter={subscriptionFilter}
+              setFilter={setSubscriptionFilter}
+              onApplyFilter={(event) => {
+                event.preventDefault();
+                setAppliedSubscriptionFilter(buildSubscriptionFilter(subscriptionFilter));
+              }}
+              onResetFilter={() => {
+                const next = defaultSubscriptionFilter();
+                setSubscriptionFilter(next);
+                setAppliedSubscriptionFilter({});
+              }}
+              actionValues={subscriptionActions}
+              setActionValues={setSubscriptionActions}
+              onExtend={handleExtendSubscription}
+              onRevoke={handleRevokeSubscription}
+              onRestore={handleRestoreSubscription}
+              onResetUsage={handleResetSubscriptionUsage}
+              actionPending={
+                extendUserSubscription.isPending ||
+                revokeUserSubscription.isPending ||
+                restoreUserSubscription.isPending ||
+                resetUserSubscriptionUsage.isPending
+              }
+              formatMicros={formatMicros}
+            />
+          </TabsContent>
+
           <TabsContent value='pricing' className='mt-0'>
             <PricingCard
               data={data?.priceRules ?? []}
@@ -2394,6 +2725,280 @@ function RedeemCodesTab({
                   </TableCell>
                 </TableRow>
               ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SubscriptionsTab({
+  users,
+  plans,
+  subscriptions,
+  plansLoading,
+  subscriptionsLoading,
+  planForm,
+  setPlanForm,
+  onSavePlan,
+  savePlanPending,
+  onDeletePlan,
+  deletePlanPending,
+  assignForm,
+  setAssignForm,
+  onAssign,
+  assignPending,
+  filter,
+  setFilter,
+  onApplyFilter,
+  onResetFilter,
+  actionValues,
+  setActionValues,
+  onExtend,
+  onRevoke,
+  onRestore,
+  onResetUsage,
+  actionPending,
+  formatMicros,
+}: {
+  users: Array<{ id: string; email: string }>;
+  plans: SubscriptionPlan[];
+  subscriptions: UserSubscription[];
+  plansLoading: boolean;
+  subscriptionsLoading: boolean;
+  planForm: SubscriptionPlanForm;
+  setPlanForm: (value: SubscriptionPlanForm | ((prev: SubscriptionPlanForm) => SubscriptionPlanForm)) => void;
+  onSavePlan: (event: FormEvent<HTMLFormElement>) => void;
+  savePlanPending: boolean;
+  onDeletePlan: (plan: SubscriptionPlan) => void;
+  deletePlanPending: boolean;
+  assignForm: SubscriptionAssignForm;
+  setAssignForm: (value: SubscriptionAssignForm | ((prev: SubscriptionAssignForm) => SubscriptionAssignForm)) => void;
+  onAssign: (event: FormEvent<HTMLFormElement>) => void;
+  assignPending: boolean;
+  filter: SubscriptionFilterForm;
+  setFilter: (value: SubscriptionFilterForm | ((prev: SubscriptionFilterForm) => SubscriptionFilterForm)) => void;
+  onApplyFilter: (event: FormEvent<HTMLFormElement>) => void;
+  onResetFilter: () => void;
+  actionValues: Record<string, SubscriptionActionForm>;
+  setActionValues: (value: Record<string, SubscriptionActionForm> | ((prev: Record<string, SubscriptionActionForm>) => Record<string, SubscriptionActionForm>)) => void;
+  onExtend: (subscription: UserSubscription) => void;
+  onRevoke: (subscription: UserSubscription) => void;
+  onRestore: (subscription: UserSubscription) => void;
+  onResetUsage: (subscription: UserSubscription) => void;
+  actionPending: boolean;
+  formatMicros: (value: number, valueCurrency?: string, minimumFractionDigits?: number) => string;
+}) {
+  const { t } = useTranslation();
+  const updateAction = (subscriptionID: string, patch: Partial<SubscriptionActionForm>) => {
+    setActionValues((prev) => ({
+      ...prev,
+      [subscriptionID]: { ...defaultSubscriptionActionForm(), ...(prev[subscriptionID] ?? {}), ...patch },
+    }));
+  };
+
+  return (
+    <div className='space-y-4'>
+      <div className='grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]'>
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 text-base'>
+              <PackageCheck className='size-4' />
+              {t('adminBilling.subscriptions.plansTitle')}
+            </CardTitle>
+            <CardDescription>{t('adminBilling.subscriptions.plansDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <form className='grid gap-3 md:grid-cols-3 xl:grid-cols-6' onSubmit={onSavePlan}>
+              <FilterInput label={t('adminBilling.subscriptions.planName')} value={planForm.name} onChange={(value) => setPlanForm((prev) => ({ ...prev, name: value }))} />
+              <FilterInput label={t('adminBilling.subscriptions.description')} value={planForm.description} onChange={(value) => setPlanForm((prev) => ({ ...prev, description: value }))} />
+              <FilterSelect label={t('adminBilling.subscriptions.period')} value={planForm.period} onChange={(value) => setPlanForm((prev) => ({ ...prev, period: value as SubscriptionPlanPeriod }))} options={['day', 'month', 'year', 'custom']} />
+              <FilterInput label={t('adminBilling.subscriptions.periodDays')} value={planForm.periodDays} onChange={(value) => setPlanForm((prev) => ({ ...prev, periodDays: value }))} />
+              <FilterInput label={t('adminBilling.subscriptions.price')} value={planForm.price} onChange={(value) => setPlanForm((prev) => ({ ...prev, price: value }))} />
+              <FilterInput label={t('adminBilling.columns.currency')} value={planForm.currency} onChange={(value) => setPlanForm((prev) => ({ ...prev, currency: value }))} />
+              <FilterInput label={t('adminBilling.subscriptions.includedAmount')} value={planForm.includedAmount} onChange={(value) => setPlanForm((prev) => ({ ...prev, includedAmount: value }))} />
+              <FilterInput label={t('adminBilling.subscriptions.modelsCSV')} value={planForm.supportedModelIDs} onChange={(value) => setPlanForm((prev) => ({ ...prev, supportedModelIDs: value }))} />
+              <FilterInput label={t('adminBilling.subscriptions.projectsCSV')} value={planForm.supportedProjectIDs} onChange={(value) => setPlanForm((prev) => ({ ...prev, supportedProjectIDs: value }))} />
+              <FilterInput label={t('adminBilling.subscriptions.groupsCSV')} value={planForm.supportedGroupIDs} onChange={(value) => setPlanForm((prev) => ({ ...prev, supportedGroupIDs: value }))} />
+              <FilterSelect label={t('adminBilling.columns.status')} value={planForm.status} onChange={(value) => setPlanForm((prev) => ({ ...prev, status: value as SubscriptionPlanStatus }))} options={['enabled', 'disabled', 'archived']} />
+              <FilterInput label={t('adminBilling.subscriptions.sortOrder')} value={planForm.sortOrder} onChange={(value) => setPlanForm((prev) => ({ ...prev, sortOrder: value }))} />
+              <div className='flex items-end gap-2 md:col-span-3 xl:col-span-6'>
+                <div className='flex h-10 items-center gap-2 rounded-md border px-3'>
+                  <Switch checked={planForm.allowWalletFallback} onCheckedChange={(checked) => setPlanForm((prev) => ({ ...prev, allowWalletFallback: checked }))} />
+                  <span className='text-sm'>{t('adminBilling.subscriptions.allowWalletFallback')}</span>
+                </div>
+                <Button type='submit' disabled={savePlanPending}>
+                  {savePlanPending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                  {planForm.id ? t('adminBilling.subscriptions.updatePlan') : t('adminBilling.subscriptions.createPlan')}
+                </Button>
+                <Button type='button' variant='outline' onClick={() => setPlanForm(defaultSubscriptionPlanForm())}>
+                  {t('adminBilling.subscriptions.newPlan')}
+                </Button>
+              </div>
+            </form>
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.subscriptions.planName')}</TableHead>
+                  <TableHead>{t('adminBilling.subscriptions.period')}</TableHead>
+                  <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                  <TableHead>{t('adminBilling.subscriptions.scope')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.subscriptions.price')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.subscriptions.includedAmount')}</TableHead>
+                  <TableHead>{t('adminBilling.columns.action')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <DataStateRow colSpan={7} isLoading={plansLoading} isEmpty={plans.length === 0} />
+                {plans.map((plan) => (
+                  <TableRow key={plan.id}>
+                    <TableCell>
+                      <div className='font-medium'>{plan.name}</div>
+                      <div className='text-muted-foreground max-w-[240px] truncate text-xs'>{plan.description || '-'}</div>
+                    </TableCell>
+                    <TableCell>{plan.period} / {plan.periodDays}d</TableCell>
+                    <TableCell><StatusBadge value={plan.status} positive={plan.status === 'enabled'} /></TableCell>
+                    <TableCell className='max-w-[240px] truncate text-xs'>
+                      {plan.supportedModelIds.length > 0 ? plan.supportedModelIds.join(', ') : t('adminBilling.subscriptions.allModels')}
+                    </TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(plan.priceMicros, plan.currency)}</TableCell>
+                    <TableCell className='text-right font-mono'>
+                      {plan.includedAmountMicros > 0 ? formatMicros(plan.includedAmountMicros, plan.currency) : t('adminBilling.subscriptions.unlimited')}
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex gap-2'>
+                        <Button type='button' size='sm' variant='outline' onClick={() => setPlanForm(subscriptionPlanFormFromPlan(plan))}>
+                          {t('adminBilling.subscriptions.edit')}
+                        </Button>
+                        <Button type='button' size='sm' variant='destructive' disabled={deletePlanPending} onClick={() => onDeletePlan(plan)}>
+                          {deletePlanPending ? <Loader2 className='size-4 animate-spin' /> : <Trash2 className='size-4' />}
+                          {t('adminBilling.subscriptions.delete')}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.subscriptions.assignTitle')}</CardTitle>
+            <CardDescription>{t('adminBilling.subscriptions.assignDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className='space-y-4' onSubmit={onAssign}>
+              <UserSelect users={users} value={assignForm.userId} onChange={(value) => setAssignForm((prev) => ({ ...prev, userId: value }))} label={t('adminBilling.adjust.user')} placeholder={t('adminBilling.adjust.userPlaceholder')} />
+              <div className='space-y-2'>
+                <Label>{t('adminBilling.subscriptions.plan')}</Label>
+                <Select value={assignForm.planId} onValueChange={(value) => setAssignForm((prev) => ({ ...prev, planId: value }))}>
+                  <SelectTrigger><SelectValue placeholder={t('adminBilling.subscriptions.planPlaceholder')} /></SelectTrigger>
+                  <SelectContent>
+                    {plans.map((plan) => <SelectItem key={plan.id} value={plan.id}>{plan.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='grid grid-cols-2 gap-3'>
+                <FilterInput label={t('adminBilling.subscriptions.startsAt')} type='datetime-local' value={assignForm.startsAt} onChange={(value) => setAssignForm((prev) => ({ ...prev, startsAt: value }))} />
+                <FilterInput label={t('adminBilling.columns.expiresAt')} type='datetime-local' value={assignForm.expiresAt} onChange={(value) => setAssignForm((prev) => ({ ...prev, expiresAt: value }))} />
+              </div>
+              <FilterInput label={t('adminBilling.redeem.notes')} value={assignForm.notes} onChange={(value) => setAssignForm((prev) => ({ ...prev, notes: value }))} />
+              <Button className='w-full' type='submit' disabled={assignPending}>
+                {assignPending ? <Loader2 className='size-4 animate-spin' /> : <PackageCheck className='size-4' />}
+                {t('adminBilling.subscriptions.assign')}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className='rounded-lg'>
+        <CardHeader>
+          <CardTitle className='text-base'>{t('adminBilling.subscriptions.usersTitle')}</CardTitle>
+          <CardDescription>{t('adminBilling.subscriptions.usersDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4 overflow-auto'>
+          <form className='grid gap-3 md:grid-cols-4 xl:grid-cols-7' onSubmit={onApplyFilter}>
+            <FilterInput label={t('adminBilling.filters.userId')} value={filter.userId} onChange={(value) => setFilter((prev) => ({ ...prev, userId: value }))} />
+            <FilterInput label={t('adminBilling.subscriptions.planId')} value={filter.planId} onChange={(value) => setFilter((prev) => ({ ...prev, planId: value }))} />
+            <FilterSelect label={t('adminBilling.columns.status')} value={filter.status} onChange={(value) => setFilter((prev) => ({ ...prev, status: value as SubscriptionFilterForm['status'] }))} options={['all', 'active', 'expired', 'revoked', 'canceled']} />
+            <FilterInput label={t('adminBilling.filters.from')} type='datetime-local' value={filter.from} onChange={(value) => setFilter((prev) => ({ ...prev, from: value }))} />
+            <FilterInput label={t('adminBilling.filters.to')} type='datetime-local' value={filter.to} onChange={(value) => setFilter((prev) => ({ ...prev, to: value }))} />
+            <FilterInput label={t('adminBilling.filters.expiresBefore')} type='datetime-local' value={filter.expiresBefore} onChange={(value) => setFilter((prev) => ({ ...prev, expiresBefore: value }))} />
+            <FilterActions onReset={onResetFilter} />
+          </form>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('adminBilling.columns.user')}</TableHead>
+                <TableHead>{t('adminBilling.subscriptions.plan')}</TableHead>
+                <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                <TableHead>{t('adminBilling.subscriptions.usage')}</TableHead>
+                <TableHead>{t('adminBilling.columns.expiresAt')}</TableHead>
+                <TableHead>{t('adminBilling.columns.action')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <DataStateRow colSpan={6} isLoading={subscriptionsLoading} isEmpty={subscriptions.length === 0} />
+              {subscriptions.map((subscription) => {
+                const action = actionValues[subscription.id] ?? defaultSubscriptionActionForm();
+                return (
+                  <TableRow key={subscription.id}>
+                    <TableCell className='font-mono text-xs'>{subscription.userID}</TableCell>
+                    <TableCell>
+                      <div className='font-medium'>{subscription.plan?.name || '-'}</div>
+                      <div className='text-muted-foreground text-xs'>{subscription.planID || '-'}</div>
+                    </TableCell>
+                    <TableCell><StatusBadge value={subscription.status} positive={subscription.status === 'active'} /></TableCell>
+                    <TableCell className='min-w-[220px]'>
+                      <div className='mb-1 flex justify-between gap-3 text-xs'>
+                        <span className='font-mono'>{formatMicros(subscription.usedAmountMicros, subscription.currency)}</span>
+                        <span className='text-muted-foreground'>
+                          {subscription.includedAmountMicros > 0 ? formatMicros(subscription.includedAmountMicros, subscription.currency) : t('adminBilling.subscriptions.unlimited')}
+                        </span>
+                      </div>
+                      <Progress value={usagePercent(subscription)} />
+                    </TableCell>
+                    <TableCell>
+                      <div>{formatDate(subscription.expiresAt)}</div>
+                      <div className='text-muted-foreground text-xs'>{t('adminBilling.subscriptions.resetAt')}: {formatDate(subscription.resetAt)}</div>
+                    </TableCell>
+                    <TableCell className='min-w-[520px]'>
+                      <div className='grid gap-2 md:grid-cols-[80px_170px_150px_1fr]'>
+                        <Input className='h-8' value={action.days} onChange={(event) => updateAction(subscription.id, { days: event.target.value })} placeholder={t('adminBilling.subscriptions.days')} />
+                        <Input className='h-8' type='datetime-local' value={action.expiresAt} onChange={(event) => updateAction(subscription.id, { expiresAt: event.target.value })} />
+                        <Input className='h-8' value={action.reason} onChange={(event) => updateAction(subscription.id, { reason: event.target.value })} placeholder={t('adminBilling.columns.reason')} />
+                        <div className='flex flex-wrap gap-2'>
+                          <Button type='button' size='sm' variant='outline' disabled={actionPending} onClick={() => onExtend(subscription)}>
+                            {actionPending ? <Loader2 className='size-4 animate-spin' /> : <Clock className='size-4' />}
+                            {t('adminBilling.subscriptions.extend')}
+                          </Button>
+                          <Button type='button' size='sm' variant='outline' disabled={actionPending} onClick={() => onResetUsage(subscription)}>
+                            <RotateCcw className='size-4' />
+                            {t('adminBilling.subscriptions.resetUsage')}
+                          </Button>
+                          {subscription.status === 'revoked' ? (
+                            <Button type='button' size='sm' disabled={actionPending} onClick={() => onRestore(subscription)}>
+                              <Unlock className='size-4' />
+                              {t('adminBilling.subscriptions.restore')}
+                            </Button>
+                          ) : (
+                            <Button type='button' size='sm' variant='destructive' disabled={actionPending} onClick={() => onRevoke(subscription)}>
+                              <Ban className='size-4' />
+                              {t('adminBilling.subscriptions.revoke')}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

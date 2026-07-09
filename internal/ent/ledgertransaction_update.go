@@ -18,6 +18,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // LedgerTransactionUpdate is the builder for updating LedgerTransaction entities.
@@ -129,6 +130,21 @@ func (_u *LedgerTransactionUpdate) AddRedeemCodes(v ...*RedeemCode) *LedgerTrans
 	return _u.AddRedeemCodeIDs(ids...)
 }
 
+// AddPurchasedUserSubscriptionIDs adds the "purchased_user_subscriptions" edge to the UserSubscription entity by IDs.
+func (_u *LedgerTransactionUpdate) AddPurchasedUserSubscriptionIDs(ids ...int) *LedgerTransactionUpdate {
+	_u.mutation.AddPurchasedUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddPurchasedUserSubscriptions adds the "purchased_user_subscriptions" edges to the UserSubscription entity.
+func (_u *LedgerTransactionUpdate) AddPurchasedUserSubscriptions(v ...*UserSubscription) *LedgerTransactionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPurchasedUserSubscriptionIDs(ids...)
+}
+
 // Mutation returns the LedgerTransactionMutation object of the builder.
 func (_u *LedgerTransactionUpdate) Mutation() *LedgerTransactionMutation {
 	return _u.mutation
@@ -237,6 +253,27 @@ func (_u *LedgerTransactionUpdate) RemoveRedeemCodes(v ...*RedeemCode) *LedgerTr
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRedeemCodeIDs(ids...)
+}
+
+// ClearPurchasedUserSubscriptions clears all "purchased_user_subscriptions" edges to the UserSubscription entity.
+func (_u *LedgerTransactionUpdate) ClearPurchasedUserSubscriptions() *LedgerTransactionUpdate {
+	_u.mutation.ClearPurchasedUserSubscriptions()
+	return _u
+}
+
+// RemovePurchasedUserSubscriptionIDs removes the "purchased_user_subscriptions" edge to UserSubscription entities by IDs.
+func (_u *LedgerTransactionUpdate) RemovePurchasedUserSubscriptionIDs(ids ...int) *LedgerTransactionUpdate {
+	_u.mutation.RemovePurchasedUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemovePurchasedUserSubscriptions removes "purchased_user_subscriptions" edges to UserSubscription entities.
+func (_u *LedgerTransactionUpdate) RemovePurchasedUserSubscriptions(v ...*UserSubscription) *LedgerTransactionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePurchasedUserSubscriptionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -543,6 +580,51 @@ func (_u *LedgerTransactionUpdate) sqlSave(ctx context.Context) (_node int, err 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.PurchasedUserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PurchasedUserSubscriptionsTable,
+			Columns: []string{ledgertransaction.PurchasedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPurchasedUserSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.PurchasedUserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PurchasedUserSubscriptionsTable,
+			Columns: []string{ledgertransaction.PurchasedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PurchasedUserSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PurchasedUserSubscriptionsTable,
+			Columns: []string{ledgertransaction.PurchasedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -660,6 +742,21 @@ func (_u *LedgerTransactionUpdateOne) AddRedeemCodes(v ...*RedeemCode) *LedgerTr
 	return _u.AddRedeemCodeIDs(ids...)
 }
 
+// AddPurchasedUserSubscriptionIDs adds the "purchased_user_subscriptions" edge to the UserSubscription entity by IDs.
+func (_u *LedgerTransactionUpdateOne) AddPurchasedUserSubscriptionIDs(ids ...int) *LedgerTransactionUpdateOne {
+	_u.mutation.AddPurchasedUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddPurchasedUserSubscriptions adds the "purchased_user_subscriptions" edges to the UserSubscription entity.
+func (_u *LedgerTransactionUpdateOne) AddPurchasedUserSubscriptions(v ...*UserSubscription) *LedgerTransactionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPurchasedUserSubscriptionIDs(ids...)
+}
+
 // Mutation returns the LedgerTransactionMutation object of the builder.
 func (_u *LedgerTransactionUpdateOne) Mutation() *LedgerTransactionMutation {
 	return _u.mutation
@@ -768,6 +865,27 @@ func (_u *LedgerTransactionUpdateOne) RemoveRedeemCodes(v ...*RedeemCode) *Ledge
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRedeemCodeIDs(ids...)
+}
+
+// ClearPurchasedUserSubscriptions clears all "purchased_user_subscriptions" edges to the UserSubscription entity.
+func (_u *LedgerTransactionUpdateOne) ClearPurchasedUserSubscriptions() *LedgerTransactionUpdateOne {
+	_u.mutation.ClearPurchasedUserSubscriptions()
+	return _u
+}
+
+// RemovePurchasedUserSubscriptionIDs removes the "purchased_user_subscriptions" edge to UserSubscription entities by IDs.
+func (_u *LedgerTransactionUpdateOne) RemovePurchasedUserSubscriptionIDs(ids ...int) *LedgerTransactionUpdateOne {
+	_u.mutation.RemovePurchasedUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemovePurchasedUserSubscriptions removes "purchased_user_subscriptions" edges to UserSubscription entities.
+func (_u *LedgerTransactionUpdateOne) RemovePurchasedUserSubscriptions(v ...*UserSubscription) *LedgerTransactionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePurchasedUserSubscriptionIDs(ids...)
 }
 
 // Where appends a list predicates to the LedgerTransactionUpdate builder.
@@ -1097,6 +1215,51 @@ func (_u *LedgerTransactionUpdateOne) sqlSave(ctx context.Context) (_node *Ledge
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PurchasedUserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PurchasedUserSubscriptionsTable,
+			Columns: []string{ledgertransaction.PurchasedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPurchasedUserSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.PurchasedUserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PurchasedUserSubscriptionsTable,
+			Columns: []string{ledgertransaction.PurchasedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PurchasedUserSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PurchasedUserSubscriptionsTable,
+			Columns: []string{ledgertransaction.PurchasedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

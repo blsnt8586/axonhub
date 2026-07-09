@@ -17,6 +17,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // UsageBillingRecordQuery is the builder for querying UsageBillingRecord entities.
@@ -29,6 +30,7 @@ type UsageBillingRecordQuery struct {
 	withUsageLog          *UsageLogQuery
 	withBillingAccount    *BillingAccountQuery
 	withLedgerTransaction *LedgerTransactionQuery
+	withUserSubscription  *UserSubscriptionQuery
 	loadTotal             []func(context.Context, []*UsageBillingRecord) error
 	modifiers             []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
@@ -126,6 +128,28 @@ func (_q *UsageBillingRecordQuery) QueryLedgerTransaction() *LedgerTransactionQu
 			sqlgraph.From(usagebillingrecord.Table, usagebillingrecord.FieldID, selector),
 			sqlgraph.To(ledgertransaction.Table, ledgertransaction.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usagebillingrecord.LedgerTransactionTable, usagebillingrecord.LedgerTransactionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserSubscription chains the current query on the "user_subscription" edge.
+func (_q *UsageBillingRecordQuery) QueryUserSubscription() *UserSubscriptionQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagebillingrecord.Table, usagebillingrecord.FieldID, selector),
+			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usagebillingrecord.UserSubscriptionTable, usagebillingrecord.UserSubscriptionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -328,6 +352,7 @@ func (_q *UsageBillingRecordQuery) Clone() *UsageBillingRecordQuery {
 		withUsageLog:          _q.withUsageLog.Clone(),
 		withBillingAccount:    _q.withBillingAccount.Clone(),
 		withLedgerTransaction: _q.withLedgerTransaction.Clone(),
+		withUserSubscription:  _q.withUserSubscription.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -365,6 +390,17 @@ func (_q *UsageBillingRecordQuery) WithLedgerTransaction(opts ...func(*LedgerTra
 		opt(query)
 	}
 	_q.withLedgerTransaction = query
+	return _q
+}
+
+// WithUserSubscription tells the query-builder to eager-load the nodes that are connected to
+// the "user_subscription" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UsageBillingRecordQuery) WithUserSubscription(opts ...func(*UserSubscriptionQuery)) *UsageBillingRecordQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUserSubscription = query
 	return _q
 }
 
@@ -452,10 +488,11 @@ func (_q *UsageBillingRecordQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	var (
 		nodes       = []*UsageBillingRecord{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withUsageLog != nil,
 			_q.withBillingAccount != nil,
 			_q.withLedgerTransaction != nil,
+			_q.withUserSubscription != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -494,6 +531,12 @@ func (_q *UsageBillingRecordQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	if query := _q.withLedgerTransaction; query != nil {
 		if err := _q.loadLedgerTransaction(ctx, query, nodes, nil,
 			func(n *UsageBillingRecord, e *LedgerTransaction) { n.Edges.LedgerTransaction = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUserSubscription; query != nil {
+		if err := _q.loadUserSubscription(ctx, query, nodes, nil,
+			func(n *UsageBillingRecord, e *UserSubscription) { n.Edges.UserSubscription = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -592,6 +635,35 @@ func (_q *UsageBillingRecordQuery) loadLedgerTransaction(ctx context.Context, qu
 	}
 	return nil
 }
+func (_q *UsageBillingRecordQuery) loadUserSubscription(ctx context.Context, query *UserSubscriptionQuery, nodes []*UsageBillingRecord, init func(*UsageBillingRecord), assign func(*UsageBillingRecord, *UserSubscription)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*UsageBillingRecord)
+	for i := range nodes {
+		fk := nodes[i].UserSubscriptionID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(usersubscription.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_subscription_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (_q *UsageBillingRecordQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -629,6 +701,9 @@ func (_q *UsageBillingRecordQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withLedgerTransaction != nil {
 			_spec.Node.AddColumnOnce(usagebillingrecord.FieldLedgerTransactionID)
+		}
+		if _q.withUserSubscription != nil {
+			_spec.Node.AddColumnOnce(usagebillingrecord.FieldUserSubscriptionID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

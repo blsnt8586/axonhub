@@ -22,6 +22,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
 	"github.com/looplj/axonhub/internal/ent/userrole"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // UserUpdate is the builder for updating User entities.
@@ -306,6 +307,36 @@ func (_u *UserUpdate) AddUsedRedeemCodes(v ...*RedeemCode) *UserUpdate {
 	return _u.AddUsedRedeemCodeIDs(ids...)
 }
 
+// AddUserSubscriptionIDs adds the "user_subscriptions" edge to the UserSubscription entity by IDs.
+func (_u *UserUpdate) AddUserSubscriptionIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddUserSubscriptions adds the "user_subscriptions" edges to the UserSubscription entity.
+func (_u *UserUpdate) AddUserSubscriptions(v ...*UserSubscription) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUserSubscriptionIDs(ids...)
+}
+
+// AddAssignedUserSubscriptionIDs adds the "assigned_user_subscriptions" edge to the UserSubscription entity by IDs.
+func (_u *UserUpdate) AddAssignedUserSubscriptionIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddAssignedUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddAssignedUserSubscriptions adds the "assigned_user_subscriptions" edges to the UserSubscription entity.
+func (_u *UserUpdate) AddAssignedUserSubscriptions(v ...*UserSubscription) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAssignedUserSubscriptionIDs(ids...)
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
 func (_u *UserUpdate) AddProjectUserIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddProjectUserIDs(ids...)
@@ -486,6 +517,48 @@ func (_u *UserUpdate) RemoveUsedRedeemCodes(v ...*RedeemCode) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsedRedeemCodeIDs(ids...)
+}
+
+// ClearUserSubscriptions clears all "user_subscriptions" edges to the UserSubscription entity.
+func (_u *UserUpdate) ClearUserSubscriptions() *UserUpdate {
+	_u.mutation.ClearUserSubscriptions()
+	return _u
+}
+
+// RemoveUserSubscriptionIDs removes the "user_subscriptions" edge to UserSubscription entities by IDs.
+func (_u *UserUpdate) RemoveUserSubscriptionIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemoveUserSubscriptions removes "user_subscriptions" edges to UserSubscription entities.
+func (_u *UserUpdate) RemoveUserSubscriptions(v ...*UserSubscription) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUserSubscriptionIDs(ids...)
+}
+
+// ClearAssignedUserSubscriptions clears all "assigned_user_subscriptions" edges to the UserSubscription entity.
+func (_u *UserUpdate) ClearAssignedUserSubscriptions() *UserUpdate {
+	_u.mutation.ClearAssignedUserSubscriptions()
+	return _u
+}
+
+// RemoveAssignedUserSubscriptionIDs removes the "assigned_user_subscriptions" edge to UserSubscription entities by IDs.
+func (_u *UserUpdate) RemoveAssignedUserSubscriptionIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveAssignedUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemoveAssignedUserSubscriptions removes "assigned_user_subscriptions" edges to UserSubscription entities.
+func (_u *UserUpdate) RemoveAssignedUserSubscriptions(v ...*UserSubscription) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAssignedUserSubscriptionIDs(ids...)
 }
 
 // ClearProjectUsers clears all "project_users" edges to the UserProject entity.
@@ -986,6 +1059,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.UserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserSubscriptionsTable,
+			Columns: []string{user.UserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUserSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.UserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserSubscriptionsTable,
+			Columns: []string{user.UserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserSubscriptionsTable,
+			Columns: []string{user.UserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AssignedUserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedUserSubscriptionsTable,
+			Columns: []string{user.AssignedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAssignedUserSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.AssignedUserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedUserSubscriptionsTable,
+			Columns: []string{user.AssignedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AssignedUserSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedUserSubscriptionsTable,
+			Columns: []string{user.AssignedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.ProjectUsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1366,6 +1529,36 @@ func (_u *UserUpdateOne) AddUsedRedeemCodes(v ...*RedeemCode) *UserUpdateOne {
 	return _u.AddUsedRedeemCodeIDs(ids...)
 }
 
+// AddUserSubscriptionIDs adds the "user_subscriptions" edge to the UserSubscription entity by IDs.
+func (_u *UserUpdateOne) AddUserSubscriptionIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddUserSubscriptions adds the "user_subscriptions" edges to the UserSubscription entity.
+func (_u *UserUpdateOne) AddUserSubscriptions(v ...*UserSubscription) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUserSubscriptionIDs(ids...)
+}
+
+// AddAssignedUserSubscriptionIDs adds the "assigned_user_subscriptions" edge to the UserSubscription entity by IDs.
+func (_u *UserUpdateOne) AddAssignedUserSubscriptionIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddAssignedUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddAssignedUserSubscriptions adds the "assigned_user_subscriptions" edges to the UserSubscription entity.
+func (_u *UserUpdateOne) AddAssignedUserSubscriptions(v ...*UserSubscription) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAssignedUserSubscriptionIDs(ids...)
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
 func (_u *UserUpdateOne) AddProjectUserIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddProjectUserIDs(ids...)
@@ -1546,6 +1739,48 @@ func (_u *UserUpdateOne) RemoveUsedRedeemCodes(v ...*RedeemCode) *UserUpdateOne 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsedRedeemCodeIDs(ids...)
+}
+
+// ClearUserSubscriptions clears all "user_subscriptions" edges to the UserSubscription entity.
+func (_u *UserUpdateOne) ClearUserSubscriptions() *UserUpdateOne {
+	_u.mutation.ClearUserSubscriptions()
+	return _u
+}
+
+// RemoveUserSubscriptionIDs removes the "user_subscriptions" edge to UserSubscription entities by IDs.
+func (_u *UserUpdateOne) RemoveUserSubscriptionIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemoveUserSubscriptions removes "user_subscriptions" edges to UserSubscription entities.
+func (_u *UserUpdateOne) RemoveUserSubscriptions(v ...*UserSubscription) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUserSubscriptionIDs(ids...)
+}
+
+// ClearAssignedUserSubscriptions clears all "assigned_user_subscriptions" edges to the UserSubscription entity.
+func (_u *UserUpdateOne) ClearAssignedUserSubscriptions() *UserUpdateOne {
+	_u.mutation.ClearAssignedUserSubscriptions()
+	return _u
+}
+
+// RemoveAssignedUserSubscriptionIDs removes the "assigned_user_subscriptions" edge to UserSubscription entities by IDs.
+func (_u *UserUpdateOne) RemoveAssignedUserSubscriptionIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveAssignedUserSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemoveAssignedUserSubscriptions removes "assigned_user_subscriptions" edges to UserSubscription entities.
+func (_u *UserUpdateOne) RemoveAssignedUserSubscriptions(v ...*UserSubscription) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAssignedUserSubscriptionIDs(ids...)
 }
 
 // ClearProjectUsers clears all "project_users" edges to the UserProject entity.
@@ -2069,6 +2304,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserSubscriptionsTable,
+			Columns: []string{user.UserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUserSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.UserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserSubscriptionsTable,
+			Columns: []string{user.UserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserSubscriptionsTable,
+			Columns: []string{user.UserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AssignedUserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedUserSubscriptionsTable,
+			Columns: []string{user.AssignedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAssignedUserSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.AssignedUserSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedUserSubscriptionsTable,
+			Columns: []string{user.AssignedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AssignedUserSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedUserSubscriptionsTable,
+			Columns: []string{user.AssignedUserSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

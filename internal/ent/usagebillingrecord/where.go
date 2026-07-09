@@ -120,6 +120,11 @@ func LedgerTransactionID(v int) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldEQ(FieldLedgerTransactionID, v))
 }
 
+// UserSubscriptionID applies equality check predicate on the "user_subscription_id" field. It's identical to UserSubscriptionIDEQ.
+func UserSubscriptionID(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldEQ(FieldUserSubscriptionID, v))
+}
+
 // IdempotencyKey applies equality check predicate on the "idempotency_key" field. It's identical to IdempotencyKeyEQ.
 func IdempotencyKey(v string) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldEQ(FieldIdempotencyKey, v))
@@ -745,6 +750,36 @@ func LedgerTransactionIDNotNil() predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldNotNull(FieldLedgerTransactionID))
 }
 
+// UserSubscriptionIDEQ applies the EQ predicate on the "user_subscription_id" field.
+func UserSubscriptionIDEQ(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldEQ(FieldUserSubscriptionID, v))
+}
+
+// UserSubscriptionIDNEQ applies the NEQ predicate on the "user_subscription_id" field.
+func UserSubscriptionIDNEQ(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldNEQ(FieldUserSubscriptionID, v))
+}
+
+// UserSubscriptionIDIn applies the In predicate on the "user_subscription_id" field.
+func UserSubscriptionIDIn(vs ...int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldIn(FieldUserSubscriptionID, vs...))
+}
+
+// UserSubscriptionIDNotIn applies the NotIn predicate on the "user_subscription_id" field.
+func UserSubscriptionIDNotIn(vs ...int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldNotIn(FieldUserSubscriptionID, vs...))
+}
+
+// UserSubscriptionIDIsNil applies the IsNil predicate on the "user_subscription_id" field.
+func UserSubscriptionIDIsNil() predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldIsNull(FieldUserSubscriptionID))
+}
+
+// UserSubscriptionIDNotNil applies the NotNil predicate on the "user_subscription_id" field.
+func UserSubscriptionIDNotNil() predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldNotNull(FieldUserSubscriptionID))
+}
+
 // IdempotencyKeyEQ applies the EQ predicate on the "idempotency_key" field.
 func IdempotencyKeyEQ(v string) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldEQ(FieldIdempotencyKey, v))
@@ -936,6 +971,29 @@ func HasLedgerTransaction() predicate.UsageBillingRecord {
 func HasLedgerTransactionWith(preds ...predicate.LedgerTransaction) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(func(s *sql.Selector) {
 		step := newLedgerTransactionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUserSubscription applies the HasEdge predicate on the "user_subscription" edge.
+func HasUserSubscription() predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserSubscriptionTable, UserSubscriptionColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserSubscriptionWith applies the HasEdge predicate on the "user_subscription" edge with a given conditions (other predicates).
+func HasUserSubscriptionWith(preds ...predicate.UserSubscription) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(func(s *sql.Selector) {
+		step := newUserSubscriptionStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

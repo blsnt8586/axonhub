@@ -23,35 +23,40 @@ import (
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
 	"github.com/looplj/axonhub/internal/ent/userrole"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 )
 
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                               *QueryContext
-	order                             []user.OrderOption
-	inters                            []Interceptor
-	predicates                        []predicate.User
-	withProjects                      *ProjectQuery
-	withAPIKeys                       *APIKeyQuery
-	withRoles                         *RoleQuery
-	withChannelOverrideTemplates      *ChannelOverrideTemplateQuery
-	withOidcIdentities                *OIDCIdentityQuery
-	withCreatedRedeemCodes            *RedeemCodeQuery
-	withUsedRedeemCodes               *RedeemCodeQuery
-	withProjectUsers                  *UserProjectQuery
-	withUserRoles                     *UserRoleQuery
-	loadTotal                         []func(context.Context, []*User) error
-	modifiers                         []func(*sql.Selector)
-	withNamedProjects                 map[string]*ProjectQuery
-	withNamedAPIKeys                  map[string]*APIKeyQuery
-	withNamedRoles                    map[string]*RoleQuery
-	withNamedChannelOverrideTemplates map[string]*ChannelOverrideTemplateQuery
-	withNamedOidcIdentities           map[string]*OIDCIdentityQuery
-	withNamedCreatedRedeemCodes       map[string]*RedeemCodeQuery
-	withNamedUsedRedeemCodes          map[string]*RedeemCodeQuery
-	withNamedProjectUsers             map[string]*UserProjectQuery
-	withNamedUserRoles                map[string]*UserRoleQuery
+	ctx                                *QueryContext
+	order                              []user.OrderOption
+	inters                             []Interceptor
+	predicates                         []predicate.User
+	withProjects                       *ProjectQuery
+	withAPIKeys                        *APIKeyQuery
+	withRoles                          *RoleQuery
+	withChannelOverrideTemplates       *ChannelOverrideTemplateQuery
+	withOidcIdentities                 *OIDCIdentityQuery
+	withCreatedRedeemCodes             *RedeemCodeQuery
+	withUsedRedeemCodes                *RedeemCodeQuery
+	withUserSubscriptions              *UserSubscriptionQuery
+	withAssignedUserSubscriptions      *UserSubscriptionQuery
+	withProjectUsers                   *UserProjectQuery
+	withUserRoles                      *UserRoleQuery
+	loadTotal                          []func(context.Context, []*User) error
+	modifiers                          []func(*sql.Selector)
+	withNamedProjects                  map[string]*ProjectQuery
+	withNamedAPIKeys                   map[string]*APIKeyQuery
+	withNamedRoles                     map[string]*RoleQuery
+	withNamedChannelOverrideTemplates  map[string]*ChannelOverrideTemplateQuery
+	withNamedOidcIdentities            map[string]*OIDCIdentityQuery
+	withNamedCreatedRedeemCodes        map[string]*RedeemCodeQuery
+	withNamedUsedRedeemCodes           map[string]*RedeemCodeQuery
+	withNamedUserSubscriptions         map[string]*UserSubscriptionQuery
+	withNamedAssignedUserSubscriptions map[string]*UserSubscriptionQuery
+	withNamedProjectUsers              map[string]*UserProjectQuery
+	withNamedUserRoles                 map[string]*UserRoleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -235,6 +240,50 @@ func (_q *UserQuery) QueryUsedRedeemCodes() *RedeemCodeQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(redeemcode.Table, redeemcode.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.UsedRedeemCodesTable, user.UsedRedeemCodesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserSubscriptions chains the current query on the "user_subscriptions" edge.
+func (_q *UserQuery) QueryUserSubscriptions() *UserSubscriptionQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserSubscriptionsTable, user.UserSubscriptionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAssignedUserSubscriptions chains the current query on the "assigned_user_subscriptions" edge.
+func (_q *UserQuery) QueryAssignedUserSubscriptions() *UserSubscriptionQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AssignedUserSubscriptionsTable, user.AssignedUserSubscriptionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -473,20 +522,22 @@ func (_q *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:                       _q.config,
-		ctx:                          _q.ctx.Clone(),
-		order:                        append([]user.OrderOption{}, _q.order...),
-		inters:                       append([]Interceptor{}, _q.inters...),
-		predicates:                   append([]predicate.User{}, _q.predicates...),
-		withProjects:                 _q.withProjects.Clone(),
-		withAPIKeys:                  _q.withAPIKeys.Clone(),
-		withRoles:                    _q.withRoles.Clone(),
-		withChannelOverrideTemplates: _q.withChannelOverrideTemplates.Clone(),
-		withOidcIdentities:           _q.withOidcIdentities.Clone(),
-		withCreatedRedeemCodes:       _q.withCreatedRedeemCodes.Clone(),
-		withUsedRedeemCodes:          _q.withUsedRedeemCodes.Clone(),
-		withProjectUsers:             _q.withProjectUsers.Clone(),
-		withUserRoles:                _q.withUserRoles.Clone(),
+		config:                        _q.config,
+		ctx:                           _q.ctx.Clone(),
+		order:                         append([]user.OrderOption{}, _q.order...),
+		inters:                        append([]Interceptor{}, _q.inters...),
+		predicates:                    append([]predicate.User{}, _q.predicates...),
+		withProjects:                  _q.withProjects.Clone(),
+		withAPIKeys:                   _q.withAPIKeys.Clone(),
+		withRoles:                     _q.withRoles.Clone(),
+		withChannelOverrideTemplates:  _q.withChannelOverrideTemplates.Clone(),
+		withOidcIdentities:            _q.withOidcIdentities.Clone(),
+		withCreatedRedeemCodes:        _q.withCreatedRedeemCodes.Clone(),
+		withUsedRedeemCodes:           _q.withUsedRedeemCodes.Clone(),
+		withUserSubscriptions:         _q.withUserSubscriptions.Clone(),
+		withAssignedUserSubscriptions: _q.withAssignedUserSubscriptions.Clone(),
+		withProjectUsers:              _q.withProjectUsers.Clone(),
+		withUserRoles:                 _q.withUserRoles.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -568,6 +619,28 @@ func (_q *UserQuery) WithUsedRedeemCodes(opts ...func(*RedeemCodeQuery)) *UserQu
 		opt(query)
 	}
 	_q.withUsedRedeemCodes = query
+	return _q
+}
+
+// WithUserSubscriptions tells the query-builder to eager-load the nodes that are connected to
+// the "user_subscriptions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithUserSubscriptions(opts ...func(*UserSubscriptionQuery)) *UserQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUserSubscriptions = query
+	return _q
+}
+
+// WithAssignedUserSubscriptions tells the query-builder to eager-load the nodes that are connected to
+// the "assigned_user_subscriptions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithAssignedUserSubscriptions(opts ...func(*UserSubscriptionQuery)) *UserQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAssignedUserSubscriptions = query
 	return _q
 }
 
@@ -677,7 +750,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [9]bool{
+		loadedTypes = [11]bool{
 			_q.withProjects != nil,
 			_q.withAPIKeys != nil,
 			_q.withRoles != nil,
@@ -685,6 +758,8 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withOidcIdentities != nil,
 			_q.withCreatedRedeemCodes != nil,
 			_q.withUsedRedeemCodes != nil,
+			_q.withUserSubscriptions != nil,
+			_q.withAssignedUserSubscriptions != nil,
 			_q.withProjectUsers != nil,
 			_q.withUserRoles != nil,
 		}
@@ -761,6 +836,22 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withUserSubscriptions; query != nil {
+		if err := _q.loadUserSubscriptions(ctx, query, nodes,
+			func(n *User) { n.Edges.UserSubscriptions = []*UserSubscription{} },
+			func(n *User, e *UserSubscription) { n.Edges.UserSubscriptions = append(n.Edges.UserSubscriptions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAssignedUserSubscriptions; query != nil {
+		if err := _q.loadAssignedUserSubscriptions(ctx, query, nodes,
+			func(n *User) { n.Edges.AssignedUserSubscriptions = []*UserSubscription{} },
+			func(n *User, e *UserSubscription) {
+				n.Edges.AssignedUserSubscriptions = append(n.Edges.AssignedUserSubscriptions, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withProjectUsers; query != nil {
 		if err := _q.loadProjectUsers(ctx, query, nodes,
 			func(n *User) { n.Edges.ProjectUsers = []*UserProject{} },
@@ -821,6 +912,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadUsedRedeemCodes(ctx, query, nodes,
 			func(n *User) { n.appendNamedUsedRedeemCodes(name) },
 			func(n *User, e *RedeemCode) { n.appendNamedUsedRedeemCodes(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedUserSubscriptions {
+		if err := _q.loadUserSubscriptions(ctx, query, nodes,
+			func(n *User) { n.appendNamedUserSubscriptions(name) },
+			func(n *User, e *UserSubscription) { n.appendNamedUserSubscriptions(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAssignedUserSubscriptions {
+		if err := _q.loadAssignedUserSubscriptions(ctx, query, nodes,
+			func(n *User) { n.appendNamedAssignedUserSubscriptions(name) },
+			func(n *User, e *UserSubscription) { n.appendNamedAssignedUserSubscriptions(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1124,6 +1229,66 @@ func (_q *UserQuery) loadUsedRedeemCodes(ctx context.Context, query *RedeemCodeQ
 	}
 	return nil
 }
+func (_q *UserQuery) loadUserSubscriptions(ctx context.Context, query *UserSubscriptionQuery, nodes []*User, init func(*User), assign func(*User, *UserSubscription)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usersubscription.FieldUserID)
+	}
+	query.Where(predicate.UserSubscription(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UserSubscriptionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadAssignedUserSubscriptions(ctx context.Context, query *UserSubscriptionQuery, nodes []*User, init func(*User), assign func(*User, *UserSubscription)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usersubscription.FieldAssignedByID)
+	}
+	query.Where(predicate.UserSubscription(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AssignedUserSubscriptionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AssignedByID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "assigned_by_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *UserQuery) loadProjectUsers(ctx context.Context, query *UserProjectQuery, nodes []*User, init func(*User), assign func(*User, *UserProject)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -1373,6 +1538,34 @@ func (_q *UserQuery) WithNamedUsedRedeemCodes(name string, opts ...func(*RedeemC
 		_q.withNamedUsedRedeemCodes = make(map[string]*RedeemCodeQuery)
 	}
 	_q.withNamedUsedRedeemCodes[name] = query
+	return _q
+}
+
+// WithNamedUserSubscriptions tells the query-builder to eager-load the nodes that are connected to the "user_subscriptions"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedUserSubscriptions(name string, opts ...func(*UserSubscriptionQuery)) *UserQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedUserSubscriptions == nil {
+		_q.withNamedUserSubscriptions = make(map[string]*UserSubscriptionQuery)
+	}
+	_q.withNamedUserSubscriptions[name] = query
+	return _q
+}
+
+// WithNamedAssignedUserSubscriptions tells the query-builder to eager-load the nodes that are connected to the "assigned_user_subscriptions"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedAssignedUserSubscriptions(name string, opts ...func(*UserSubscriptionQuery)) *UserQuery {
+	query := (&UserSubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAssignedUserSubscriptions == nil {
+		_q.withNamedAssignedUserSubscriptions = make(map[string]*UserSubscriptionQuery)
+	}
+	_q.withNamedAssignedUserSubscriptions[name] = query
 	return _q
 }
 

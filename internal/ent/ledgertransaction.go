@@ -66,17 +66,20 @@ type LedgerTransactionEdges struct {
 	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
 	// RedeemCodes holds the value of the redeem_codes edge.
 	RedeemCodes []*RedeemCode `json:"redeem_codes,omitempty"`
+	// PurchasedUserSubscriptions holds the value of the purchased_user_subscriptions edge.
+	PurchasedUserSubscriptions []*UserSubscription `json:"purchased_user_subscriptions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 	// totalCount holds the count of the edges above.
-	totalCount [6]map[string]int
+	totalCount [7]map[string]int
 
-	namedEntries             map[string][]*LedgerEntry
-	namedUsageBillingRecords map[string][]*UsageBillingRecord
-	namedBillingHolds        map[string][]*BillingHold
-	namedPaymentOrders       map[string][]*PaymentOrder
-	namedRedeemCodes         map[string][]*RedeemCode
+	namedEntries                    map[string][]*LedgerEntry
+	namedUsageBillingRecords        map[string][]*UsageBillingRecord
+	namedBillingHolds               map[string][]*BillingHold
+	namedPaymentOrders              map[string][]*PaymentOrder
+	namedRedeemCodes                map[string][]*RedeemCode
+	namedPurchasedUserSubscriptions map[string][]*UserSubscription
 }
 
 // BillingAccountOrErr returns the BillingAccount value or an error if the edge
@@ -133,6 +136,15 @@ func (e LedgerTransactionEdges) RedeemCodesOrErr() ([]*RedeemCode, error) {
 		return e.RedeemCodes, nil
 	}
 	return nil, &NotLoadedError{edge: "redeem_codes"}
+}
+
+// PurchasedUserSubscriptionsOrErr returns the PurchasedUserSubscriptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e LedgerTransactionEdges) PurchasedUserSubscriptionsOrErr() ([]*UserSubscription, error) {
+	if e.loadedTypes[6] {
+		return e.PurchasedUserSubscriptions, nil
+	}
+	return nil, &NotLoadedError{edge: "purchased_user_subscriptions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -292,6 +304,11 @@ func (_m *LedgerTransaction) QueryPaymentOrders() *PaymentOrderQuery {
 // QueryRedeemCodes queries the "redeem_codes" edge of the LedgerTransaction entity.
 func (_m *LedgerTransaction) QueryRedeemCodes() *RedeemCodeQuery {
 	return NewLedgerTransactionClient(_m.config).QueryRedeemCodes(_m)
+}
+
+// QueryPurchasedUserSubscriptions queries the "purchased_user_subscriptions" edge of the LedgerTransaction entity.
+func (_m *LedgerTransaction) QueryPurchasedUserSubscriptions() *UserSubscriptionQuery {
+	return NewLedgerTransactionClient(_m.config).QueryPurchasedUserSubscriptions(_m)
 }
 
 // Update returns a builder for updating this LedgerTransaction.
@@ -479,6 +496,30 @@ func (_m *LedgerTransaction) appendNamedRedeemCodes(name string, edges ...*Redee
 		_m.Edges.namedRedeemCodes[name] = []*RedeemCode{}
 	} else {
 		_m.Edges.namedRedeemCodes[name] = append(_m.Edges.namedRedeemCodes[name], edges...)
+	}
+}
+
+// NamedPurchasedUserSubscriptions returns the PurchasedUserSubscriptions named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *LedgerTransaction) NamedPurchasedUserSubscriptions(name string) ([]*UserSubscription, error) {
+	if _m.Edges.namedPurchasedUserSubscriptions == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedPurchasedUserSubscriptions[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *LedgerTransaction) appendNamedPurchasedUserSubscriptions(name string, edges ...*UserSubscription) {
+	if _m.Edges.namedPurchasedUserSubscriptions == nil {
+		_m.Edges.namedPurchasedUserSubscriptions = make(map[string][]*UserSubscription)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedPurchasedUserSubscriptions[name] = []*UserSubscription{}
+	} else {
+		_m.Edges.namedPurchasedUserSubscriptions[name] = append(_m.Edges.namedPurchasedUserSubscriptions[name], edges...)
 	}
 }
 

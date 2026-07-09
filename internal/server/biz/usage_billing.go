@@ -28,6 +28,7 @@ type UsageBillingProcessorParams struct {
 	LedgerService          *LedgerService
 	BillingHoldService     *BillingHoldService
 	CommercialLimitService *APIKeyCommercialLimitService
+	SubscriptionService    *SubscriptionService
 }
 
 type UsageBillingProcessor struct {
@@ -39,6 +40,7 @@ type UsageBillingProcessor struct {
 	ledgerService          *LedgerService
 	billingHoldService     *BillingHoldService
 	commercialLimitService *APIKeyCommercialLimitService
+	subscriptionService    *SubscriptionService
 }
 
 func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingProcessor {
@@ -50,6 +52,7 @@ func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingP
 		ledgerService:          params.LedgerService,
 		billingHoldService:     params.BillingHoldService,
 		commercialLimitService: params.CommercialLimitService,
+		subscriptionService:    params.SubscriptionService,
 	}
 }
 
@@ -206,6 +209,28 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 	err = p.RunInTransaction(ctx, func(ctx context.Context) error {
 		client := p.entFromContext(ctx)
 
+		var coveredSubscription *ent.UserSubscription
+		if subject.Type == BillingSubjectTypeUser && p.subscriptionService != nil && chargeMicros > 0 {
+			coverage, err := p.subscriptionService.CoverUsage(ctx, SubscriptionCoverageInput{
+				UserID:       subject.ID,
+				ProjectID:    usageLog.ProjectID,
+				ModelID:      usageLog.ModelID,
+				AmountMicros: chargeMicros,
+			})
+			if err != nil {
+				return err
+			}
+			if coverage.Covered {
+				coveredSubscription = coverage.Subscription
+			}
+			if coverage.WalletFallbackDenied {
+				if coverage.DenyReason != "" {
+					return errors.New(coverage.DenyReason)
+				}
+				return errors.New("subscription quota exhausted and wallet fallback is disabled")
+			}
+		}
+
 		create := client.UsageBillingRecord.Create().
 			SetUsageLogID(usageLog.ID).
 			SetBillingAccountID(account.ID).
@@ -221,7 +246,10 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 			SetChargeAmountMicros(chargeMicros).
 			SetCurrency(priceRule.Currency).
 			SetIdempotencyKey(idempotencyKey)
-		if chargeMicros == 0 {
+		if coveredSubscription != nil {
+			create.SetStatus(usagebillingrecord.StatusSkipped).
+				SetUserSubscriptionID(coveredSubscription.ID)
+		} else if chargeMicros == 0 {
 			create.SetStatus(usagebillingrecord.StatusSkipped)
 		} else {
 			create.SetStatus(usagebillingrecord.StatusPending)
@@ -233,7 +261,9 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 		}
 
 		var ledgerTransactionID int
-		if holdID > 0 {
+		if coveredSubscription != nil {
+			ledgerTransactionID = 0
+		} else if holdID > 0 {
 			if p.billingHoldService == nil {
 				return fmt.Errorf("billing hold service is required to capture hold %d", holdID)
 			}
@@ -272,7 +302,7 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 		}
 
 		update := client.UsageBillingRecord.UpdateOneID(pending.ID)
-		if chargeMicros > 0 {
+		if chargeMicros > 0 && coveredSubscription == nil {
 			update.SetStatus(usagebillingrecord.StatusCharged)
 		}
 		if ledgerTransactionID > 0 {

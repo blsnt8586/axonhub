@@ -4,9 +4,12 @@ import { graphqlRequest } from '@/gql/graphql';
 export type BillingAccountStatus = 'active' | 'frozen' | 'closed';
 export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
 export type LedgerTransactionDirection = 'credit' | 'debit';
-export type UsageBillingRecordStatus = 'pending' | 'charged' | 'failed';
+export type UsageBillingRecordStatus = 'pending' | 'charged' | 'skipped' | 'failed' | 'refunded';
 export type RedeemCodeStatus = 'active' | 'used' | 'disabled' | 'expired';
 export type RedeemCodeType = 'balance' | 'credit' | 'subscription';
+export type SubscriptionPlanPeriod = 'day' | 'month' | 'year' | 'custom';
+export type SubscriptionPlanStatus = 'enabled' | 'disabled' | 'archived';
+export type UserSubscriptionStatus = 'active' | 'expired' | 'revoked' | 'canceled';
 
 export interface BillingAccount {
   id: string;
@@ -60,6 +63,43 @@ export interface UsageBillingRecord {
   currency: string;
   status: UsageBillingRecordStatus;
   error: string;
+  userSubscriptionID?: string | null;
+}
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description: string;
+  period: SubscriptionPlanPeriod;
+  periodDays: number;
+  priceMicros: number;
+  currency: string;
+  includedAmountMicros: number;
+  supportedModelIds: string[];
+  supportedProjectIds: number[];
+  allowWalletFallback: boolean;
+  status: SubscriptionPlanStatus;
+}
+
+export interface UserSubscription {
+  id: string;
+  createdAt: string;
+  status: UserSubscriptionStatus;
+  startsAt: string;
+  expiresAt: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  resetAt: string;
+  periodDays: number;
+  includedAmountMicros: number;
+  usedAmountMicros: number;
+  currency: string;
+  supportedModelIds: string[];
+  supportedProjectIds: number[];
+  allowWalletFallback: boolean;
+  notes: string;
+  revokeReason: string;
+  plan?: Pick<SubscriptionPlan, 'id' | 'name' | 'period' | 'priceMicros' | 'currency'> | null;
 }
 
 export interface RedeemCode {
@@ -93,6 +133,8 @@ export interface BillingOverview {
   ledgerTransactions: LedgerTransaction[];
   usageBillingRecords: UsageBillingRecord[];
   redeemCodes: RedeemCode[];
+  availableSubscriptionPlans: SubscriptionPlan[];
+  userSubscriptions: UserSubscription[];
 }
 
 const BILLING_OVERVIEW_QUERY = `
@@ -156,6 +198,7 @@ const BILLING_OVERVIEW_QUERY = `
           currency
           status
           error
+          userSubscriptionID
         }
       }
     }
@@ -175,6 +218,54 @@ const BILLING_OVERVIEW_QUERY = `
           notes
           ledgerTransactionID
           batchID
+        }
+      }
+    }
+    availableSubscriptionPlans(first: 20, orderBy: { field: CREATED_AT, direction: ASC }) {
+      edges {
+        node {
+          id
+          name
+          description
+          period
+          periodDays
+          priceMicros
+          currency
+          includedAmountMicros
+          supportedModelIds
+          supportedProjectIds
+          allowWalletFallback
+          status
+        }
+      }
+    }
+    myUserSubscriptions(first: 20, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          status
+          startsAt
+          expiresAt
+          currentPeriodStart
+          currentPeriodEnd
+          resetAt
+          periodDays
+          includedAmountMicros
+          usedAmountMicros
+          currency
+          supportedModelIds
+          supportedProjectIds
+          allowWalletFallback
+          notes
+          revokeReason
+          plan {
+            id
+            name
+            period
+            priceMicros
+            currency
+          }
         }
       }
     }
@@ -214,6 +305,27 @@ const REDEEM_CODE_MUTATION = `
   }
 `;
 
+const PURCHASE_SUBSCRIPTION_PLAN_MUTATION = `
+  mutation PurchaseSubscriptionPlan($input: PurchaseSubscriptionPlanInput!) {
+    purchaseSubscriptionPlan(input: $input) {
+      id
+      status
+      startsAt
+      expiresAt
+      includedAmountMicros
+      usedAmountMicros
+      currency
+      plan {
+        id
+        name
+        period
+        priceMicros
+        currency
+      }
+    }
+  }
+`;
+
 type Connection<T> = {
   edges?: Array<{ node?: T | null } | null> | null;
 };
@@ -232,6 +344,8 @@ export function useMyBillingOverview(first = 10) {
         myLedgerTransactions: Connection<LedgerTransaction>;
         myUsageBillingRecords: Connection<UsageBillingRecord>;
         myRedeemCodes: Connection<RedeemCode>;
+        availableSubscriptionPlans: Connection<SubscriptionPlan>;
+        myUserSubscriptions: Connection<UserSubscription>;
       }>(BILLING_OVERVIEW_QUERY, { first });
 
       return {
@@ -240,6 +354,8 @@ export function useMyBillingOverview(first = 10) {
         ledgerTransactions: nodes(data.myLedgerTransactions),
         usageBillingRecords: nodes(data.myUsageBillingRecords),
         redeemCodes: nodes(data.myRedeemCodes),
+        availableSubscriptionPlans: nodes(data.availableSubscriptionPlans),
+        userSubscriptions: nodes(data.myUserSubscriptions),
       } satisfies BillingOverview;
     },
   });
@@ -268,6 +384,20 @@ export function useRedeemCode() {
     mutationFn: async (input: { code: string }) => {
       const data = await graphqlRequest<{ redeemCode: RedeemCode }>(REDEEM_CODE_MUTATION, { input });
       return data.redeemCode;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function usePurchaseSubscriptionPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { planId: string }) => {
+      const data = await graphqlRequest<{ purchaseSubscriptionPlan: UserSubscription }>(PURCHASE_SUBSCRIPTION_PLAN_MUTATION, { input });
+      return data.purchaseSubscriptionPlan;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });

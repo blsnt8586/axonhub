@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/contrib/entgql"
 	"github.com/looplj/axonhub/internal/authz"
@@ -16,6 +17,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
 )
@@ -243,6 +246,145 @@ func (r *mutationResolver) DeleteRedeemCode(ctx context.Context, id objects.GUID
 	})
 }
 
+// SaveSubscriptionPlan is the resolver for the saveSubscriptionPlan field.
+func (r *mutationResolver) SaveSubscriptionPlan(ctx context.Context, input biz.SaveSubscriptionPlanInput) (*ent.SubscriptionPlan, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if r.subscriptionService == nil {
+		return nil, fmt.Errorf("subscription service is not configured")
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-save-subscription-plan", func(ctx context.Context) (*ent.SubscriptionPlan, error) {
+		return r.subscriptionService.SavePlan(ctx, input)
+	})
+}
+
+// DeleteSubscriptionPlan is the resolver for the deleteSubscriptionPlan field.
+func (r *mutationResolver) DeleteSubscriptionPlan(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := requireOwner(ctx); err != nil {
+		return false, err
+	}
+	if id.Type != ent.TypeSubscriptionPlan {
+		return false, fmt.Errorf("id must be a SubscriptionPlan ID")
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-delete-subscription-plan", func(ctx context.Context) (bool, error) {
+		count, err := r.client.UserSubscription.Query().Where(usersubscription.PlanIDEQ(id.ID)).Count(ctx)
+		if err != nil {
+			return false, err
+		}
+		if count > 0 {
+			_, err := r.client.SubscriptionPlan.UpdateOneID(id.ID).SetStatus(subscriptionplan.StatusArchived).Save(ctx)
+			return err == nil, err
+		}
+		if err := r.client.SubscriptionPlan.DeleteOneID(id.ID).Exec(ctx); err != nil {
+			if ent.IsNotFound(err) {
+				return false, nil
+			}
+			return false, err
+		}
+		return true, nil
+	})
+}
+
+// PurchaseSubscriptionPlan is the resolver for the purchaseSubscriptionPlan field.
+func (r *mutationResolver) PurchaseSubscriptionPlan(ctx context.Context, input biz.PurchaseSubscriptionPlanInput) (*ent.UserSubscription, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if r.subscriptionService == nil {
+		return nil, fmt.Errorf("subscription service is not configured")
+	}
+	input.UserID = user.ID
+
+	return authz.RunWithSystemBypass(ctx, "billing-purchase-subscription-plan", func(ctx context.Context) (*ent.UserSubscription, error) {
+		return r.subscriptionService.PurchasePlan(ctx, input)
+	})
+}
+
+// AdminAssignSubscription is the resolver for the adminAssignSubscription field.
+func (r *mutationResolver) AdminAssignSubscription(ctx context.Context, input biz.AdminAssignSubscriptionInput) (*ent.UserSubscription, error) {
+	actor, err := requireOwnerUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if r.subscriptionService == nil {
+		return nil, fmt.Errorf("subscription service is not configured")
+	}
+	input.ActorID = fmt.Sprint(actor.ID)
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-assign-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
+		return r.subscriptionService.AdminAssign(ctx, input)
+	})
+}
+
+// ExtendUserSubscription is the resolver for the extendUserSubscription field.
+func (r *mutationResolver) ExtendUserSubscription(ctx context.Context, input biz.ExtendUserSubscriptionInput) (*ent.UserSubscription, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if r.subscriptionService == nil {
+		return nil, fmt.Errorf("subscription service is not configured")
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-extend-user-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
+		return r.subscriptionService.Extend(ctx, input)
+	})
+}
+
+// RevokeUserSubscription is the resolver for the revokeUserSubscription field.
+func (r *mutationResolver) RevokeUserSubscription(ctx context.Context, id objects.GUID, reason *string) (*ent.UserSubscription, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if id.Type != ent.TypeUserSubscription {
+		return nil, fmt.Errorf("id must be a UserSubscription ID")
+	}
+	if r.subscriptionService == nil {
+		return nil, fmt.Errorf("subscription service is not configured")
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-revoke-user-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
+		return r.subscriptionService.Revoke(ctx, id.ID, stringValue(reason))
+	})
+}
+
+// RestoreUserSubscription is the resolver for the restoreUserSubscription field.
+func (r *mutationResolver) RestoreUserSubscription(ctx context.Context, id objects.GUID) (*ent.UserSubscription, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if id.Type != ent.TypeUserSubscription {
+		return nil, fmt.Errorf("id must be a UserSubscription ID")
+	}
+	if r.subscriptionService == nil {
+		return nil, fmt.Errorf("subscription service is not configured")
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-restore-user-subscription", func(ctx context.Context) (*ent.UserSubscription, error) {
+		return r.subscriptionService.Restore(ctx, id.ID)
+	})
+}
+
+// ResetUserSubscriptionUsage is the resolver for the resetUserSubscriptionUsage field.
+func (r *mutationResolver) ResetUserSubscriptionUsage(ctx context.Context, id objects.GUID) (*ent.UserSubscription, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if id.Type != ent.TypeUserSubscription {
+		return nil, fmt.Errorf("id must be a UserSubscription ID")
+	}
+	if r.subscriptionService == nil {
+		return nil, fmt.Errorf("subscription service is not configured")
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-reset-user-subscription-usage", func(ctx context.Context) (*ent.UserSubscription, error) {
+		return r.subscriptionService.ResetUsage(ctx, id.ID, time.Now().UTC())
+	})
+}
+
 // ReleaseBillingHold is the resolver for the releaseBillingHold field.
 func (r *mutationResolver) ReleaseBillingHold(ctx context.Context, id objects.GUID, reason string) (*ent.BillingHold, error) {
 	actor, err := requireOwnerUser(ctx)
@@ -402,6 +544,39 @@ func (r *queryResolver) MyRedeemCodes(ctx context.Context, after *entgql.Cursor[
 	return r.userRedeemCodes(ctx, user.ID, after, first, before, last, orderBy)
 }
 
+// AvailableSubscriptionPlans is the resolver for the availableSubscriptionPlans field.
+func (r *queryResolver) AvailableSubscriptionPlans(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SubscriptionPlanOrder) (*ent.SubscriptionPlanConnection, error) {
+	if _, err := requireBillingUser(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-available-subscription-plans", func(ctx context.Context) (*ent.SubscriptionPlanConnection, error) {
+		return r.client.SubscriptionPlan.Query().
+			Where(subscriptionplan.StatusEQ(subscriptionplan.StatusEnabled)).
+			Paginate(ctx, after, first, before, last, ent.WithSubscriptionPlanOrder(orderBy))
+	})
+}
+
+// MyUserSubscriptions is the resolver for the myUserSubscriptions field.
+func (r *queryResolver) MyUserSubscriptions(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) (*ent.UserSubscriptionConnection, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-my-user-subscriptions", func(ctx context.Context) (*ent.UserSubscriptionConnection, error) {
+		return r.client.UserSubscription.Query().
+			Where(usersubscription.UserIDEQ(user.ID)).
+			Paginate(ctx, after, first, before, last, ent.WithUserSubscriptionOrder(orderBy))
+	})
+}
+
 // AdminLedgerTransactions is the resolver for the adminLedgerTransactions field.
 func (r *queryResolver) AdminLedgerTransactions(ctx context.Context, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error) {
 	if err := requireOwner(ctx); err != nil {
@@ -454,6 +629,42 @@ func (r *queryResolver) AdminRedeemCodes(ctx context.Context, filter *AdminRedee
 	}
 
 	return r.adminRedeemCodes(ctx, filter, after, first, before, last, orderBy)
+}
+
+// AdminUserSubscriptions is the resolver for the adminUserSubscriptions field.
+func (r *queryResolver) AdminUserSubscriptions(ctx context.Context, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) (*ent.UserSubscriptionConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-user-subscriptions", func(ctx context.Context) (*ent.UserSubscriptionConnection, error) {
+		query := r.client.UserSubscription.Query()
+		if filter != nil {
+			if filter.UserID != nil {
+				query.Where(usersubscription.UserIDEQ(*filter.UserID))
+			}
+			if filter.PlanID != nil {
+				query.Where(usersubscription.PlanIDEQ(*filter.PlanID))
+			}
+			if filter.Status != nil {
+				query.Where(usersubscription.StatusEQ(*filter.Status))
+			}
+			if filter.From != nil {
+				query.Where(usersubscription.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(usersubscription.CreatedAtLTE(*filter.To))
+			}
+			if filter.ExpiresBefore != nil {
+				query.Where(usersubscription.ExpiresAtLTE(*filter.ExpiresBefore))
+			}
+		}
+
+		return query.Paginate(ctx, after, first, before, last, ent.WithUserSubscriptionOrder(orderBy))
+	})
 }
 
 // AdminBillingReport is the resolver for the adminBillingReport field.

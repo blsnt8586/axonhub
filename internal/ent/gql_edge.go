@@ -500,6 +500,27 @@ func (_m *LedgerTransaction) RedeemCodes(
 	return _m.QueryRedeemCodes().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *LedgerTransaction) PurchasedUserSubscriptions(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserSubscriptionOrder, where *UserSubscriptionWhereInput,
+) (*UserSubscriptionConnection, error) {
+	opts := []UserSubscriptionPaginateOption{
+		WithUserSubscriptionOrder(orderBy),
+		WithUserSubscriptionFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[6][alias]
+	if nodes, err := _m.NamedPurchasedUserSubscriptions(alias); err == nil || hasTotalCount {
+		pager, err := newUserSubscriptionPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UserSubscriptionConnection{Edges: []*UserSubscriptionEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPurchasedUserSubscriptions().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *OIDCIdentity) User(ctx context.Context) (*User, error) {
 	result, err := _m.Edges.UserOrErr()
 	if IsNotLoaded(err) {
@@ -1051,6 +1072,27 @@ func (_m *Role) UserRoles(
 	return _m.QueryUserRoles().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *SubscriptionPlan) UserSubscriptions(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserSubscriptionOrder, where *UserSubscriptionWhereInput,
+) (*UserSubscriptionConnection, error) {
+	opts := []UserSubscriptionPaginateOption{
+		WithUserSubscriptionOrder(orderBy),
+		WithUserSubscriptionFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[0][alias]
+	if nodes, err := _m.NamedUserSubscriptions(alias); err == nil || hasTotalCount {
+		pager, err := newUserSubscriptionPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UserSubscriptionConnection{Edges: []*UserSubscriptionEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUserSubscriptions().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *Thread) Project(ctx context.Context) (*Project, error) {
 	result, err := _m.Edges.ProjectOrErr()
 	if IsNotLoaded(err) {
@@ -1137,6 +1179,14 @@ func (_m *UsageBillingRecord) LedgerTransaction(ctx context.Context) (*LedgerTra
 	result, err := _m.Edges.LedgerTransactionOrErr()
 	if IsNotLoaded(err) {
 		result, err = _m.QueryLedgerTransaction().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UsageBillingRecord) UserSubscription(ctx context.Context) (*UserSubscription, error) {
+	result, err := _m.Edges.UserSubscriptionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUserSubscription().Only(ctx)
 	}
 	return result, MaskNotFound(err)
 }
@@ -1354,6 +1404,48 @@ func (_m *User) UsedRedeemCodes(
 	return _m.QueryUsedRedeemCodes().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *User) UserSubscriptions(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserSubscriptionOrder, where *UserSubscriptionWhereInput,
+) (*UserSubscriptionConnection, error) {
+	opts := []UserSubscriptionPaginateOption{
+		WithUserSubscriptionOrder(orderBy),
+		WithUserSubscriptionFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
+	if nodes, err := _m.NamedUserSubscriptions(alias); err == nil || hasTotalCount {
+		pager, err := newUserSubscriptionPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UserSubscriptionConnection{Edges: []*UserSubscriptionEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUserSubscriptions().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *User) AssignedUserSubscriptions(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserSubscriptionOrder, where *UserSubscriptionWhereInput,
+) (*UserSubscriptionConnection, error) {
+	opts := []UserSubscriptionPaginateOption{
+		WithUserSubscriptionOrder(orderBy),
+		WithUserSubscriptionFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[8][alias]
+	if nodes, err := _m.NamedAssignedUserSubscriptions(alias); err == nil || hasTotalCount {
+		pager, err := newUserSubscriptionPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UserSubscriptionConnection{Edges: []*UserSubscriptionEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryAssignedUserSubscriptions().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *User) ProjectUsers(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserProjectOrder, where *UserProjectWhereInput,
 ) (*UserProjectConnection, error) {
@@ -1362,7 +1454,7 @@ func (_m *User) ProjectUsers(
 		WithUserProjectFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[9][alias]
 	if nodes, err := _m.NamedProjectUsers(alias); err == nil || hasTotalCount {
 		pager, err := newUserProjectPager(opts, last != nil)
 		if err != nil {
@@ -1383,7 +1475,7 @@ func (_m *User) UserRoles(
 		WithUserRoleFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[8][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[10][alias]
 	if nodes, err := _m.NamedUserRoles(alias); err == nil || hasTotalCount {
 		pager, err := newUserRolePager(opts, last != nil)
 		if err != nil {
@@ -1426,4 +1518,57 @@ func (_m *UserRole) Role(ctx context.Context) (*Role, error) {
 		result, err = _m.QueryRole().Only(ctx)
 	}
 	return result, err
+}
+
+func (_m *UserSubscription) User(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.UserOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUser().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *UserSubscription) Plan(ctx context.Context) (*SubscriptionPlan, error) {
+	result, err := _m.Edges.PlanOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPlan().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UserSubscription) AssignedBy(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.AssignedByOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryAssignedBy().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UserSubscription) PurchaseLedgerTransaction(ctx context.Context) (*LedgerTransaction, error) {
+	result, err := _m.Edges.PurchaseLedgerTransactionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPurchaseLedgerTransaction().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UserSubscription) UsageBillingRecords(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UsageBillingRecordOrder, where *UsageBillingRecordWhereInput,
+) (*UsageBillingRecordConnection, error) {
+	opts := []UsageBillingRecordPaginateOption{
+		WithUsageBillingRecordOrder(orderBy),
+		WithUsageBillingRecordFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	if nodes, err := _m.NamedUsageBillingRecords(alias); err == nil || hasTotalCount {
+		pager, err := newUsageBillingRecordPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UsageBillingRecordConnection{Edges: []*UsageBillingRecordEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUsageBillingRecords().Paginate(ctx, after, first, before, last, opts...)
 }

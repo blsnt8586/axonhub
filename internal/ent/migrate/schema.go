@@ -1178,6 +1178,39 @@ var (
 			},
 		},
 	}
+	// SubscriptionPlansColumns holds the columns for the "subscription_plans" table.
+	SubscriptionPlansColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Default: ""},
+		{Name: "period", Type: field.TypeEnum, Enums: []string{"day", "month", "year", "custom"}, Default: "month"},
+		{Name: "period_days", Type: field.TypeInt, Default: 30},
+		{Name: "price_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "included_amount_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "supported_model_ids", Type: field.TypeJSON},
+		{Name: "supported_project_ids", Type: field.TypeJSON},
+		{Name: "supported_group_ids", Type: field.TypeJSON},
+		{Name: "allow_wallet_fallback", Type: field.TypeBool, Default: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"enabled", "disabled", "archived"}, Default: "enabled"},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+	}
+	// SubscriptionPlansTable holds the schema information for the "subscription_plans" table.
+	SubscriptionPlansTable = &schema.Table{
+		Name:       "subscription_plans",
+		Columns:    SubscriptionPlansColumns,
+		PrimaryKey: []*schema.Column{SubscriptionPlansColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "subscription_plans_by_status_sort",
+				Unique:  false,
+				Columns: []*schema.Column{SubscriptionPlansColumns[14], SubscriptionPlansColumns[15]},
+			},
+		},
+	}
 	// SystemsColumns holds the columns for the "systems" table.
 	SystemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1296,6 +1329,7 @@ var (
 		{Name: "billing_account_id", Type: field.TypeInt},
 		{Name: "ledger_transaction_id", Type: field.TypeInt, Nullable: true},
 		{Name: "usage_log_id", Type: field.TypeInt},
+		{Name: "user_subscription_id", Type: field.TypeInt, Nullable: true},
 	}
 	// UsageBillingRecordsTable holds the schema information for the "usage_billing_records" table.
 	UsageBillingRecordsTable = &schema.Table{
@@ -1320,6 +1354,12 @@ var (
 				Columns:    []*schema.Column{UsageBillingRecordsColumns[20]},
 				RefColumns: []*schema.Column{UsageLogsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "usage_billing_records_user_subscriptions_usage_billing_records",
+				Columns:    []*schema.Column{UsageBillingRecordsColumns[21]},
+				RefColumns: []*schema.Column{UserSubscriptionsColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
@@ -1347,6 +1387,11 @@ var (
 				Name:    "usage_billing_records_by_idempotency_key",
 				Unique:  true,
 				Columns: []*schema.Column{UsageBillingRecordsColumns[16]},
+			},
+			{
+				Name:    "usage_billing_records_by_subscription_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsageBillingRecordsColumns[21], UsageBillingRecordsColumns[1]},
 			},
 		},
 	}
@@ -1547,6 +1592,82 @@ var (
 			},
 		},
 	}
+	// UserSubscriptionsColumns holds the columns for the "user_subscriptions" table.
+	UserSubscriptionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "plan_snapshot", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "expired", "revoked", "canceled"}, Default: "active"},
+		{Name: "starts_at", Type: field.TypeTime},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "current_period_start", Type: field.TypeTime},
+		{Name: "current_period_end", Type: field.TypeTime},
+		{Name: "reset_at", Type: field.TypeTime},
+		{Name: "period_days", Type: field.TypeInt, Default: 30},
+		{Name: "included_amount_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "used_amount_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "supported_model_ids", Type: field.TypeJSON},
+		{Name: "supported_project_ids", Type: field.TypeJSON},
+		{Name: "supported_group_ids", Type: field.TypeJSON},
+		{Name: "allow_wallet_fallback", Type: field.TypeBool, Default: true},
+		{Name: "notes", Type: field.TypeString, Default: ""},
+		{Name: "revoke_reason", Type: field.TypeString, Default: ""},
+		{Name: "purchase_ledger_transaction_id", Type: field.TypeInt, Nullable: true},
+		{Name: "plan_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "assigned_by_id", Type: field.TypeInt, Nullable: true},
+	}
+	// UserSubscriptionsTable holds the schema information for the "user_subscriptions" table.
+	UserSubscriptionsTable = &schema.Table{
+		Name:       "user_subscriptions",
+		Columns:    UserSubscriptionsColumns,
+		PrimaryKey: []*schema.Column{UserSubscriptionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_subscriptions_ledger_transactions_purchased_user_subscriptions",
+				Columns:    []*schema.Column{UserSubscriptionsColumns[20]},
+				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "user_subscriptions_subscription_plans_user_subscriptions",
+				Columns:    []*schema.Column{UserSubscriptionsColumns[21]},
+				RefColumns: []*schema.Column{SubscriptionPlansColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "user_subscriptions_users_user_subscriptions",
+				Columns:    []*schema.Column{UserSubscriptionsColumns[22]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "user_subscriptions_users_assigned_user_subscriptions",
+				Columns:    []*schema.Column{UserSubscriptionsColumns[23]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_subscriptions_by_user_status_expiry",
+				Unique:  false,
+				Columns: []*schema.Column{UserSubscriptionsColumns[22], UserSubscriptionsColumns[4], UserSubscriptionsColumns[6]},
+			},
+			{
+				Name:    "user_subscriptions_by_plan_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserSubscriptionsColumns[21], UserSubscriptionsColumns[1]},
+			},
+			{
+				Name:    "user_subscriptions_by_reset_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserSubscriptionsColumns[9]},
+			},
+		},
+	}
 	// ProjectPromptsColumns holds the columns for the "project_prompts" table.
 	ProjectPromptsColumns = []*schema.Column{
 		{Name: "project_id", Type: field.TypeInt},
@@ -1602,6 +1723,7 @@ var (
 		RequestsTable,
 		RequestExecutionsTable,
 		RolesTable,
+		SubscriptionPlansTable,
 		SystemsTable,
 		ThreadsTable,
 		TracesTable,
@@ -1610,6 +1732,7 @@ var (
 		UsersTable,
 		UserProjectsTable,
 		UserRolesTable,
+		UserSubscriptionsTable,
 		ProjectPromptsTable,
 	}
 )
@@ -1654,6 +1777,7 @@ func init() {
 	UsageBillingRecordsTable.ForeignKeys[0].RefTable = BillingAccountsTable
 	UsageBillingRecordsTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
 	UsageBillingRecordsTable.ForeignKeys[2].RefTable = UsageLogsTable
+	UsageBillingRecordsTable.ForeignKeys[3].RefTable = UserSubscriptionsTable
 	UsageLogsTable.ForeignKeys[0].RefTable = ChannelsTable
 	UsageLogsTable.ForeignKeys[1].RefTable = ProjectsTable
 	UsageLogsTable.ForeignKeys[2].RefTable = RequestsTable
@@ -1661,6 +1785,10 @@ func init() {
 	UserProjectsTable.ForeignKeys[1].RefTable = ProjectsTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable
 	UserRolesTable.ForeignKeys[1].RefTable = RolesTable
+	UserSubscriptionsTable.ForeignKeys[0].RefTable = LedgerTransactionsTable
+	UserSubscriptionsTable.ForeignKeys[1].RefTable = SubscriptionPlansTable
+	UserSubscriptionsTable.ForeignKeys[2].RefTable = UsersTable
+	UserSubscriptionsTable.ForeignKeys[3].RefTable = UsersTable
 	ProjectPromptsTable.ForeignKeys[0].RefTable = ProjectsTable
 	ProjectPromptsTable.ForeignKeys[1].RefTable = PromptsTable
 }

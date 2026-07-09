@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -58,6 +59,8 @@ type UsageBillingRecord struct {
 	Status usagebillingrecord.Status `json:"status,omitempty"`
 	// LedgerTransactionID holds the value of the "ledger_transaction_id" field.
 	LedgerTransactionID int `json:"ledger_transaction_id,omitempty"`
+	// UserSubscriptionID holds the value of the "user_subscription_id" field.
+	UserSubscriptionID int `json:"user_subscription_id,omitempty"`
 	// IdempotencyKey holds the value of the "idempotency_key" field.
 	IdempotencyKey string `json:"idempotency_key,omitempty"`
 	// Error holds the value of the "error" field.
@@ -76,11 +79,13 @@ type UsageBillingRecordEdges struct {
 	BillingAccount *BillingAccount `json:"billing_account,omitempty"`
 	// LedgerTransaction holds the value of the ledger_transaction edge.
 	LedgerTransaction *LedgerTransaction `json:"ledger_transaction,omitempty"`
+	// UserSubscription holds the value of the user_subscription edge.
+	UserSubscription *UserSubscription `json:"user_subscription,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 	// totalCount holds the count of the edges above.
-	totalCount [3]map[string]int
+	totalCount [4]map[string]int
 }
 
 // UsageLogOrErr returns the UsageLog value or an error if the edge
@@ -116,6 +121,17 @@ func (e UsageBillingRecordEdges) LedgerTransactionOrErr() (*LedgerTransaction, e
 	return nil, &NotLoadedError{edge: "ledger_transaction"}
 }
 
+// UserSubscriptionOrErr returns the UserSubscription value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UsageBillingRecordEdges) UserSubscriptionOrErr() (*UserSubscription, error) {
+	if e.UserSubscription != nil {
+		return e.UserSubscription, nil
+	} else if e.loadedTypes[3] {
+		return nil, &NotFoundError{label: usersubscription.Label}
+	}
+	return nil, &NotLoadedError{edge: "user_subscription"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*UsageBillingRecord) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -123,7 +139,7 @@ func (*UsageBillingRecord) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case usagebillingrecord.FieldUsageSnapshot, usagebillingrecord.FieldPriceSnapshot, usagebillingrecord.FieldChargeItems:
 			values[i] = new([]byte)
-		case usagebillingrecord.FieldID, usagebillingrecord.FieldUsageLogID, usagebillingrecord.FieldBillingAccountID, usagebillingrecord.FieldProjectID, usagebillingrecord.FieldUserID, usagebillingrecord.FieldAPIKeyID, usagebillingrecord.FieldCostAmountMicros, usagebillingrecord.FieldChargeAmountMicros, usagebillingrecord.FieldLedgerTransactionID:
+		case usagebillingrecord.FieldID, usagebillingrecord.FieldUsageLogID, usagebillingrecord.FieldBillingAccountID, usagebillingrecord.FieldProjectID, usagebillingrecord.FieldUserID, usagebillingrecord.FieldAPIKeyID, usagebillingrecord.FieldCostAmountMicros, usagebillingrecord.FieldChargeAmountMicros, usagebillingrecord.FieldLedgerTransactionID, usagebillingrecord.FieldUserSubscriptionID:
 			values[i] = new(sql.NullInt64)
 		case usagebillingrecord.FieldModelID, usagebillingrecord.FieldRequestType, usagebillingrecord.FieldPriceReferenceID, usagebillingrecord.FieldCurrency, usagebillingrecord.FieldStatus, usagebillingrecord.FieldIdempotencyKey, usagebillingrecord.FieldError:
 			values[i] = new(sql.NullString)
@@ -264,6 +280,12 @@ func (_m *UsageBillingRecord) assignValues(columns []string, values []any) error
 			} else if value.Valid {
 				_m.LedgerTransactionID = int(value.Int64)
 			}
+		case usagebillingrecord.FieldUserSubscriptionID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field user_subscription_id", values[i])
+			} else if value.Valid {
+				_m.UserSubscriptionID = int(value.Int64)
+			}
 		case usagebillingrecord.FieldIdempotencyKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field idempotency_key", values[i])
@@ -302,6 +324,11 @@ func (_m *UsageBillingRecord) QueryBillingAccount() *BillingAccountQuery {
 // QueryLedgerTransaction queries the "ledger_transaction" edge of the UsageBillingRecord entity.
 func (_m *UsageBillingRecord) QueryLedgerTransaction() *LedgerTransactionQuery {
 	return NewUsageBillingRecordClient(_m.config).QueryLedgerTransaction(_m)
+}
+
+// QueryUserSubscription queries the "user_subscription" edge of the UsageBillingRecord entity.
+func (_m *UsageBillingRecord) QueryUserSubscription() *UserSubscriptionQuery {
+	return NewUsageBillingRecordClient(_m.config).QueryUserSubscription(_m)
 }
 
 // Update returns a builder for updating this UsageBillingRecord.
@@ -380,6 +407,9 @@ func (_m *UsageBillingRecord) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("ledger_transaction_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.LedgerTransactionID))
+	builder.WriteString(", ")
+	builder.WriteString("user_subscription_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UserSubscriptionID))
 	builder.WriteString(", ")
 	builder.WriteString("idempotency_key=")
 	builder.WriteString(_m.IdempotencyKey)

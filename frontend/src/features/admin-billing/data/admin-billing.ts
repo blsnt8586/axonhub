@@ -22,6 +22,9 @@ export type PaymentEventStatus = 'received' | 'processed' | 'failed' | 'ignored'
 export type BillingHoldStatus = 'held' | 'captured' | 'released' | 'expired';
 export type RedeemCodeStatus = 'active' | 'used' | 'disabled' | 'expired';
 export type RedeemCodeType = 'balance' | 'credit' | 'subscription';
+export type SubscriptionPlanPeriod = 'day' | 'month' | 'year' | 'custom';
+export type SubscriptionPlanStatus = 'enabled' | 'disabled' | 'archived';
+export type UserSubscriptionStatus = 'active' | 'expired' | 'revoked' | 'canceled';
 
 export interface BillingAccount {
   id: string;
@@ -178,6 +181,52 @@ export interface RedeemCode {
   batchID: string;
 }
 
+export interface SubscriptionPlan {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  description: string;
+  period: SubscriptionPlanPeriod;
+  periodDays: number;
+  priceMicros: number;
+  currency: string;
+  includedAmountMicros: number;
+  supportedModelIds: string[];
+  supportedProjectIds: number[];
+  supportedGroupIds: number[];
+  allowWalletFallback: boolean;
+  status: SubscriptionPlanStatus;
+  sortOrder: number;
+}
+
+export interface UserSubscription {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  userID: string;
+  planID?: string | null;
+  status: UserSubscriptionStatus;
+  startsAt: string;
+  expiresAt: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  resetAt: string;
+  periodDays: number;
+  includedAmountMicros: number;
+  usedAmountMicros: number;
+  currency: string;
+  supportedModelIds: string[];
+  supportedProjectIds: number[];
+  supportedGroupIds: number[];
+  allowWalletFallback: boolean;
+  assignedByID?: string | null;
+  purchaseLedgerTransactionID?: string | null;
+  notes: string;
+  revokeReason: string;
+  plan?: Pick<SubscriptionPlan, 'id' | 'name' | 'period' | 'priceMicros' | 'currency'> | null;
+}
+
 export interface AdminLedgerTransactionsFilter {
   userId?: number;
   billingAccountId?: number;
@@ -242,6 +291,15 @@ export interface AdminRedeemCodesFilter {
   type?: RedeemCodeType;
   code?: string;
   batchId?: string;
+  from?: string;
+  to?: string;
+  expiresBefore?: string;
+}
+
+export interface AdminUserSubscriptionsFilter {
+  userId?: number;
+  planId?: number;
+  status?: UserSubscriptionStatus;
   from?: string;
   to?: string;
   expiresBefore?: string;
@@ -618,6 +676,74 @@ const ADMIN_REDEEM_CODES_QUERY = `
   }
 `;
 
+const ADMIN_SUBSCRIPTION_PLANS_QUERY = `
+  query AdminSubscriptionPlans($first: Int!) {
+    subscriptionPlans(first: $first, orderBy: { field: CREATED_AT, direction: ASC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          name
+          description
+          period
+          periodDays
+          priceMicros
+          currency
+          includedAmountMicros
+          supportedModelIds
+          supportedProjectIds
+          supportedGroupIds
+          allowWalletFallback
+          status
+          sortOrder
+        }
+      }
+    }
+  }
+`;
+
+const ADMIN_USER_SUBSCRIPTIONS_QUERY = `
+  query AdminUserSubscriptions($filter: AdminUserSubscriptionsFilter, $first: Int!) {
+    adminUserSubscriptions(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          userID
+          planID
+          status
+          startsAt
+          expiresAt
+          currentPeriodStart
+          currentPeriodEnd
+          resetAt
+          periodDays
+          includedAmountMicros
+          usedAmountMicros
+          currency
+          supportedModelIds
+          supportedProjectIds
+          supportedGroupIds
+          allowWalletFallback
+          assignedByID
+          purchaseLedgerTransactionID
+          notes
+          revokeReason
+          plan {
+            id
+            name
+            period
+            priceMicros
+            currency
+          }
+        }
+      }
+    }
+  }
+`;
+
 const ADMIN_BILLING_REPORT_QUERY = `
   query AdminBillingReport($filter: AdminBillingReportFilter) {
     adminBillingReport(filter: $filter) {
@@ -854,6 +980,92 @@ const DELETE_REDEEM_CODE_MUTATION = `
   }
 `;
 
+const SAVE_SUBSCRIPTION_PLAN_MUTATION = `
+  mutation SaveSubscriptionPlan($input: SaveSubscriptionPlanInput!) {
+    saveSubscriptionPlan(input: $input) {
+      id
+      createdAt
+      updatedAt
+      name
+      description
+      period
+      periodDays
+      priceMicros
+      currency
+      includedAmountMicros
+      supportedModelIds
+      supportedProjectIds
+      supportedGroupIds
+      allowWalletFallback
+      status
+      sortOrder
+    }
+  }
+`;
+
+const DELETE_SUBSCRIPTION_PLAN_MUTATION = `
+  mutation DeleteSubscriptionPlan($id: ID!) {
+    deleteSubscriptionPlan(id: $id)
+  }
+`;
+
+const ADMIN_ASSIGN_SUBSCRIPTION_MUTATION = `
+  mutation AdminAssignSubscription($input: AdminAssignSubscriptionInput!) {
+    adminAssignSubscription(input: $input) {
+      id
+      status
+      userID
+      planID
+      startsAt
+      expiresAt
+      notes
+    }
+  }
+`;
+
+const EXTEND_USER_SUBSCRIPTION_MUTATION = `
+  mutation ExtendUserSubscription($input: ExtendUserSubscriptionInput!) {
+    extendUserSubscription(input: $input) {
+      id
+      status
+      expiresAt
+      notes
+    }
+  }
+`;
+
+const REVOKE_USER_SUBSCRIPTION_MUTATION = `
+  mutation RevokeUserSubscription($id: ID!, $reason: String) {
+    revokeUserSubscription(id: $id, reason: $reason) {
+      id
+      status
+      revokeReason
+    }
+  }
+`;
+
+const RESTORE_USER_SUBSCRIPTION_MUTATION = `
+  mutation RestoreUserSubscription($id: ID!) {
+    restoreUserSubscription(id: $id) {
+      id
+      status
+      revokeReason
+    }
+  }
+`;
+
+const RESET_USER_SUBSCRIPTION_USAGE_MUTATION = `
+  mutation ResetUserSubscriptionUsage($id: ID!) {
+    resetUserSubscriptionUsage(id: $id) {
+      id
+      usedAmountMicros
+      currentPeriodStart
+      currentPeriodEnd
+      resetAt
+    }
+  }
+`;
+
 export function useAdminBillingOverview(first = 20) {
   return useQuery({
     queryKey: ['admin-billing', 'overview', first],
@@ -957,6 +1169,29 @@ export function useAdminRedeemCodes(filter: AdminRedeemCodesFilter = {}, first =
     queryFn: async () => {
       const data = await graphqlRequest<{ adminRedeemCodes: Connection<RedeemCode> }>(ADMIN_REDEEM_CODES_QUERY, { filter, first });
       return nodes(data.adminRedeemCodes);
+    },
+  });
+}
+
+export function useAdminSubscriptionPlans(first = 100) {
+  return useQuery({
+    queryKey: ['admin-billing', 'subscription-plans', first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ subscriptionPlans: Connection<SubscriptionPlan> }>(ADMIN_SUBSCRIPTION_PLANS_QUERY, { first });
+      return nodes(data.subscriptionPlans);
+    },
+  });
+}
+
+export function useAdminUserSubscriptions(filter: AdminUserSubscriptionsFilter = {}, first = 50) {
+  return useQuery({
+    queryKey: ['admin-billing', 'user-subscriptions', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminUserSubscriptions: Connection<UserSubscription> }>(ADMIN_USER_SUBSCRIPTIONS_QUERY, {
+        filter,
+        first,
+      });
+      return nodes(data.adminUserSubscriptions);
     },
   });
 }
@@ -1187,6 +1422,126 @@ export function useDeleteRedeemCode() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'redeem-codes'] });
+    },
+  });
+}
+
+export function useSaveSubscriptionPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      id?: string;
+      name: string;
+      description?: string;
+      period?: SubscriptionPlanPeriod;
+      periodDays?: number;
+      price: string;
+      currency?: string;
+      includedAmount: string;
+      supportedModelIDs?: string[];
+      supportedProjectIDs?: number[];
+      supportedGroupIDs?: number[];
+      allowWalletFallback?: boolean;
+      status?: SubscriptionPlanStatus;
+      sortOrder?: number;
+    }) => {
+      const data = await graphqlRequest<{ saveSubscriptionPlan: SubscriptionPlan }>(SAVE_SUBSCRIPTION_PLAN_MUTATION, { input });
+      return data.saveSubscriptionPlan;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'subscription-plans'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useDeleteSubscriptionPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const data = await graphqlRequest<{ deleteSubscriptionPlan: boolean }>(DELETE_SUBSCRIPTION_PLAN_MUTATION, { id });
+      return data.deleteSubscriptionPlan;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'subscription-plans'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useAdminAssignSubscription() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { userId: string; planId: string; startsAt?: string; expiresAt?: string; notes?: string }) => {
+      const data = await graphqlRequest<{ adminAssignSubscription: UserSubscription }>(ADMIN_ASSIGN_SUBSCRIPTION_MUTATION, { input });
+      return data.adminAssignSubscription;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'user-subscriptions'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useExtendUserSubscription() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { subscriptionId: string; days?: number; expiresAt?: string; notes?: string }) => {
+      const data = await graphqlRequest<{ extendUserSubscription: UserSubscription }>(EXTEND_USER_SUBSCRIPTION_MUTATION, { input });
+      return data.extendUserSubscription;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'user-subscriptions'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useRevokeUserSubscription() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { id: string; reason?: string }) => {
+      const data = await graphqlRequest<{ revokeUserSubscription: UserSubscription }>(REVOKE_USER_SUBSCRIPTION_MUTATION, input);
+      return data.revokeUserSubscription;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'user-subscriptions'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useRestoreUserSubscription() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const data = await graphqlRequest<{ restoreUserSubscription: UserSubscription }>(RESTORE_USER_SUBSCRIPTION_MUTATION, { id });
+      return data.restoreUserSubscription;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'user-subscriptions'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useResetUserSubscriptionUsage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const data = await graphqlRequest<{ resetUserSubscriptionUsage: UserSubscription }>(RESET_USER_SUBSCRIPTION_USAGE_MUTATION, { id });
+      return data.resetUserSubscriptionUsage;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'user-subscriptions'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
     },
   });
 }

@@ -42,6 +42,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
+	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
@@ -50,6 +51,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
 	"github.com/looplj/axonhub/internal/ent/userrole"
+	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -199,6 +201,11 @@ var roleImplementors = []string{"Role", "Node"}
 // IsNode implements the Node interface check for GQLGen.
 func (*Role) IsNode() {}
 
+var subscriptionplanImplementors = []string{"SubscriptionPlan", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*SubscriptionPlan) IsNode() {}
+
 var systemImplementors = []string{"System", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
@@ -238,6 +245,11 @@ var userroleImplementors = []string{"UserRole", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*UserRole) IsNode() {}
+
+var usersubscriptionImplementors = []string{"UserSubscription", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*UserSubscription) IsNode() {}
 
 var errNodeInvalidID = &NotFoundError{"node"}
 
@@ -549,6 +561,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			}
 		}
 		return query.Only(ctx)
+	case subscriptionplan.Table:
+		query := c.SubscriptionPlan.Query().
+			Where(subscriptionplan.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, subscriptionplanImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
 	case system.Table:
 		query := c.System.Query().
 			Where(system.ID(id))
@@ -617,6 +638,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(userrole.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, userroleImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case usersubscription.Table:
+		query := c.UserSubscription.Query().
+			Where(usersubscription.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, usersubscriptionImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -1142,6 +1172,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 				*noder = node
 			}
 		}
+	case subscriptionplan.Table:
+		query := c.SubscriptionPlan.Query().
+			Where(subscriptionplan.IDIn(ids...))
+		query, err := query.CollectFields(ctx, subscriptionplanImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
 	case system.Table:
 		query := c.System.Query().
 			Where(system.IDIn(ids...))
@@ -1258,6 +1304,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.UserRole.Query().
 			Where(userrole.IDIn(ids...))
 		query, err := query.CollectFields(ctx, userroleImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case usersubscription.Table:
+		query := c.UserSubscription.Query().
+			Where(usersubscription.IDIn(ids...))
+		query, err := query.CollectFields(ctx, usersubscriptionImplementors...)
 		if err != nil {
 			return nil, err
 		}

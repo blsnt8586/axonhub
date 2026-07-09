@@ -32,6 +32,7 @@ const (
 	AdmissionCodeInvalidMinimumBalance AdmissionCode = "invalid_minimum_balance"
 	AdmissionCodeInsufficientBalance   AdmissionCode = "insufficient_billing_balance"
 	AdmissionCodeAPIKeyBudgetExceeded  AdmissionCode = "api_key_budget_exceeded"
+	AdmissionCodeSubscriptionExhausted AdmissionCode = "subscription_quota_exhausted"
 )
 
 type BillingConfig struct {
@@ -88,12 +89,14 @@ type AdmissionServiceParams struct {
 	Config                 BillingConfig
 	BillingAccountService  *BillingAccountService
 	CommercialLimitService *APIKeyCommercialLimitService
+	SubscriptionService    *SubscriptionService
 }
 
 type AdmissionService struct {
 	config                 BillingConfig
 	billingAccountService  *BillingAccountService
 	commercialLimitService *APIKeyCommercialLimitService
+	subscriptionService    *SubscriptionService
 }
 
 func NewAdmissionService(params AdmissionServiceParams) *AdmissionService {
@@ -101,6 +104,7 @@ func NewAdmissionService(params AdmissionServiceParams) *AdmissionService {
 		config:                 params.Config.normalized(),
 		billingAccountService:  params.BillingAccountService,
 		commercialLimitService: params.CommercialLimitService,
+		subscriptionService:    params.SubscriptionService,
 	}
 }
 
@@ -127,16 +131,19 @@ func (s *AdmissionService) BillingSubjectForAPIKey(apiKey *ent.APIKey, projectID
 
 type AdmissionCheckInput struct {
 	Subject               BillingSubject
+	ProjectID             int
 	ModelID               string
 	APIKey                *ent.APIKey
 	EstimatedChargeMicros int64
 }
 
 type AdmissionDecision struct {
-	Allowed bool
-	Mode    AdmissionMode
-	Code    AdmissionCode
-	Reason  string
+	Allowed             bool
+	Mode                AdmissionMode
+	Code                AdmissionCode
+	Reason              string
+	SubscriptionCovered bool
+	UserSubscriptionID  int
 }
 
 func (s *AdmissionService) Check(ctx context.Context, input AdmissionCheckInput) (AdmissionDecision, error) {
@@ -174,6 +181,46 @@ func (s *AdmissionService) Check(ctx context.Context, input AdmissionCheckInput)
 			}
 			decision.Allowed = false
 			return decision, err
+		}
+	}
+
+	if input.Subject.Type == BillingSubjectTypeUser && s.subscriptionService != nil {
+		estimatedChargeMicros := input.EstimatedChargeMicros
+		if estimatedChargeMicros == 0 {
+			if micros, err := decimalToMicros(cfg.HoldDefaultAmount); err == nil {
+				estimatedChargeMicros = micros
+			}
+		}
+		coverage, err := s.subscriptionService.CheckCoverage(ctx, SubscriptionCoverageInput{
+			UserID:       input.Subject.ID,
+			ProjectID:    input.ProjectID,
+			ModelID:      input.ModelID,
+			AmountMicros: estimatedChargeMicros,
+		})
+		if err != nil {
+			return AdmissionDecision{}, err
+		}
+		if coverage.Covered {
+			decision.Code = AdmissionCodeAllowed
+			decision.Reason = "subscription covered"
+			decision.SubscriptionCovered = true
+			decision.UserSubscriptionID = coverage.Subscription.ID
+			return decision, nil
+		}
+		if coverage.WalletFallbackDenied {
+			decision.Code = AdmissionCodeSubscriptionExhausted
+			decision.Reason = coverage.DenyReason
+			if decision.Reason == "" {
+				decision.Reason = "subscription quota exhausted and wallet fallback is disabled"
+			}
+			if coverage.Subscription != nil {
+				decision.UserSubscriptionID = coverage.Subscription.ID
+			}
+			if cfg.Mode == AdmissionModeWarn {
+				return decision, nil
+			}
+			decision.Allowed = false
+			return decision, ErrInsufficientBalance
 		}
 	}
 
