@@ -84,6 +84,20 @@ type UpstreamAccountFailureInput struct {
 	Now        time.Time
 }
 
+type UpstreamAccountSwitchHistoryInput struct {
+	ProjectID          int
+	RequestID          *int
+	RequestExecutionID *int
+	ChannelID          int
+	FromAccountID      *int
+	ToAccountID        *int
+	ModelID            string
+	Reason             string
+	ErrorCode          *int
+	ErrorMessage       string
+	LatencyMs          *int64
+}
+
 type upstreamAccountRuntime struct {
 	inFlight    int
 	successes   int
@@ -362,6 +376,37 @@ func (s *UpstreamAccountService) SelectAccountForRequest(ctx context.Context, in
 	}
 
 	return selected, release, nil
+}
+
+func (s *UpstreamAccountService) RecordSwitchHistory(ctx context.Context, input UpstreamAccountSwitchHistoryInput) error {
+	if input.ChannelID <= 0 {
+		return fmt.Errorf("channel id is required")
+	}
+
+	reason := strings.TrimSpace(input.Reason)
+	if reason == "" {
+		reason = "account_selection"
+	}
+
+	create := s.entFromContext(ctx).UpstreamAccountSwitchHistory.Create().
+		SetProjectID(nonNegativeInt(input.ProjectID)).
+		SetNillableRequestID(input.RequestID).
+		SetNillableRequestExecutionID(input.RequestExecutionID).
+		SetChannelID(input.ChannelID).
+		SetNillableFromAccountID(input.FromAccountID).
+		SetNillableToAccountID(input.ToAccountID).
+		SetModelID(strings.TrimSpace(input.ModelID)).
+		SetReason(reason).
+		SetErrorMessage(strings.TrimSpace(input.ErrorMessage)).
+		SetNillableErrorCode(input.ErrorCode).
+		SetNillableLatencyMs(input.LatencyMs)
+
+	_, err := create.Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create upstream account switch history: %w", err)
+	}
+
+	return nil
 }
 
 func (s *UpstreamAccountService) CreatePool(ctx context.Context, input CreateUpstreamAccountPoolParams) (*ent.UpstreamAccountPool, error) {

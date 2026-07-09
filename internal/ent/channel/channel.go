@@ -75,6 +75,8 @@ const (
 	EdgeUpstreamAccountPools = "upstream_account_pools"
 	// EdgeUpstreamAccounts holds the string denoting the upstream_accounts edge name in mutations.
 	EdgeUpstreamAccounts = "upstream_accounts"
+	// EdgeUpstreamAccountSwitchHistories holds the string denoting the upstream_account_switch_histories edge name in mutations.
+	EdgeUpstreamAccountSwitchHistories = "upstream_account_switch_histories"
 	// EdgeProviderQuotaStatus holds the string denoting the provider_quota_status edge name in mutations.
 	EdgeProviderQuotaStatus = "provider_quota_status"
 	// Table holds the table name of the channel in the database.
@@ -128,6 +130,13 @@ const (
 	UpstreamAccountsInverseTable = "upstream_accounts"
 	// UpstreamAccountsColumn is the table column denoting the upstream_accounts relation/edge.
 	UpstreamAccountsColumn = "channel_id"
+	// UpstreamAccountSwitchHistoriesTable is the table that holds the upstream_account_switch_histories relation/edge.
+	UpstreamAccountSwitchHistoriesTable = "upstream_account_switch_histories"
+	// UpstreamAccountSwitchHistoriesInverseTable is the table name for the UpstreamAccountSwitchHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "upstreamaccountswitchhistory" package.
+	UpstreamAccountSwitchHistoriesInverseTable = "upstream_account_switch_histories"
+	// UpstreamAccountSwitchHistoriesColumn is the table column denoting the upstream_account_switch_histories relation/edge.
+	UpstreamAccountSwitchHistoriesColumn = "channel_id"
 	// ProviderQuotaStatusTable is the table that holds the provider_quota_status relation/edge.
 	ProviderQuotaStatusTable = "provider_quota_status"
 	// ProviderQuotaStatusInverseTable is the table name for the ProviderQuotaStatus entity.
@@ -488,6 +497,20 @@ func ByUpstreamAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption 
 	}
 }
 
+// ByUpstreamAccountSwitchHistoriesCount orders the results by upstream_account_switch_histories count.
+func ByUpstreamAccountSwitchHistoriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUpstreamAccountSwitchHistoriesStep(), opts...)
+	}
+}
+
+// ByUpstreamAccountSwitchHistories orders the results by upstream_account_switch_histories terms.
+func ByUpstreamAccountSwitchHistories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUpstreamAccountSwitchHistoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProviderQuotaStatusField orders the results by provider_quota_status field.
 func ByProviderQuotaStatusField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -541,6 +564,13 @@ func newUpstreamAccountsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UpstreamAccountsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountsTable, UpstreamAccountsColumn),
+	)
+}
+func newUpstreamAccountSwitchHistoriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UpstreamAccountSwitchHistoriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountSwitchHistoriesTable, UpstreamAccountSwitchHistoriesColumn),
 	)
 }
 func newProviderQuotaStatusStep() *sqlgraph.Step {

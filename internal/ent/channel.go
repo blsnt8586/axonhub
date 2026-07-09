@@ -84,21 +84,24 @@ type ChannelEdges struct {
 	UpstreamAccountPools []*UpstreamAccountPool `json:"upstream_account_pools,omitempty"`
 	// UpstreamAccounts holds the value of the upstream_accounts edge.
 	UpstreamAccounts []*UpstreamAccount `json:"upstream_accounts,omitempty"`
+	// UpstreamAccountSwitchHistories holds the value of the upstream_account_switch_histories edge.
+	UpstreamAccountSwitchHistories []*UpstreamAccountSwitchHistory `json:"upstream_account_switch_histories,omitempty"`
 	// ProviderQuotaStatus holds the value of the provider_quota_status edge.
 	ProviderQuotaStatus *ProviderQuotaStatus `json:"provider_quota_status,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [9]bool
 	// totalCount holds the count of the edges above.
-	totalCount [8]map[string]int
+	totalCount [9]map[string]int
 
-	namedRequests             map[string][]*Request
-	namedExecutions           map[string][]*RequestExecution
-	namedUsageLogs            map[string][]*UsageLog
-	namedChannelProbes        map[string][]*ChannelProbe
-	namedChannelModelPrices   map[string][]*ChannelModelPrice
-	namedUpstreamAccountPools map[string][]*UpstreamAccountPool
-	namedUpstreamAccounts     map[string][]*UpstreamAccount
+	namedRequests                       map[string][]*Request
+	namedExecutions                     map[string][]*RequestExecution
+	namedUsageLogs                      map[string][]*UsageLog
+	namedChannelProbes                  map[string][]*ChannelProbe
+	namedChannelModelPrices             map[string][]*ChannelModelPrice
+	namedUpstreamAccountPools           map[string][]*UpstreamAccountPool
+	namedUpstreamAccounts               map[string][]*UpstreamAccount
+	namedUpstreamAccountSwitchHistories map[string][]*UpstreamAccountSwitchHistory
 }
 
 // RequestsOrErr returns the Requests value or an error if the edge
@@ -164,12 +167,21 @@ func (e ChannelEdges) UpstreamAccountsOrErr() ([]*UpstreamAccount, error) {
 	return nil, &NotLoadedError{edge: "upstream_accounts"}
 }
 
+// UpstreamAccountSwitchHistoriesOrErr returns the UpstreamAccountSwitchHistories value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChannelEdges) UpstreamAccountSwitchHistoriesOrErr() ([]*UpstreamAccountSwitchHistory, error) {
+	if e.loadedTypes[7] {
+		return e.UpstreamAccountSwitchHistories, nil
+	}
+	return nil, &NotLoadedError{edge: "upstream_account_switch_histories"}
+}
+
 // ProviderQuotaStatusOrErr returns the ProviderQuotaStatus value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e ChannelEdges) ProviderQuotaStatusOrErr() (*ProviderQuotaStatus, error) {
 	if e.ProviderQuotaStatus != nil {
 		return e.ProviderQuotaStatus, nil
-	} else if e.loadedTypes[7] {
+	} else if e.loadedTypes[8] {
 		return nil, &NotFoundError{label: providerquotastatus.Label}
 	}
 	return nil, &NotLoadedError{edge: "provider_quota_status"}
@@ -401,6 +413,11 @@ func (_m *Channel) QueryUpstreamAccountPools() *UpstreamAccountPoolQuery {
 // QueryUpstreamAccounts queries the "upstream_accounts" edge of the Channel entity.
 func (_m *Channel) QueryUpstreamAccounts() *UpstreamAccountQuery {
 	return NewChannelClient(_m.config).QueryUpstreamAccounts(_m)
+}
+
+// QueryUpstreamAccountSwitchHistories queries the "upstream_account_switch_histories" edge of the Channel entity.
+func (_m *Channel) QueryUpstreamAccountSwitchHistories() *UpstreamAccountSwitchHistoryQuery {
+	return NewChannelClient(_m.config).QueryUpstreamAccountSwitchHistories(_m)
 }
 
 // QueryProviderQuotaStatus queries the "provider_quota_status" edge of the Channel entity.
@@ -664,6 +681,30 @@ func (_m *Channel) appendNamedUpstreamAccounts(name string, edges ...*UpstreamAc
 		_m.Edges.namedUpstreamAccounts[name] = []*UpstreamAccount{}
 	} else {
 		_m.Edges.namedUpstreamAccounts[name] = append(_m.Edges.namedUpstreamAccounts[name], edges...)
+	}
+}
+
+// NamedUpstreamAccountSwitchHistories returns the UpstreamAccountSwitchHistories named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Channel) NamedUpstreamAccountSwitchHistories(name string) ([]*UpstreamAccountSwitchHistory, error) {
+	if _m.Edges.namedUpstreamAccountSwitchHistories == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUpstreamAccountSwitchHistories[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Channel) appendNamedUpstreamAccountSwitchHistories(name string, edges ...*UpstreamAccountSwitchHistory) {
+	if _m.Edges.namedUpstreamAccountSwitchHistories == nil {
+		_m.Edges.namedUpstreamAccountSwitchHistories = make(map[string][]*UpstreamAccountSwitchHistory)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUpstreamAccountSwitchHistories[name] = []*UpstreamAccountSwitchHistory{}
+	} else {
+		_m.Edges.namedUpstreamAccountSwitchHistories[name] = append(_m.Edges.namedUpstreamAccountSwitchHistories[name], edges...)
 	}
 }
 

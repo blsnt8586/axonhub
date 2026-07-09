@@ -492,6 +492,27 @@ func (_m *Channel) UpstreamAccounts(ctx context.Context) (result []*UpstreamAcco
 	return result, err
 }
 
+func (_m *Channel) UpstreamAccountSwitchHistories(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UpstreamAccountSwitchHistoryOrder, where *UpstreamAccountSwitchHistoryWhereInput,
+) (*UpstreamAccountSwitchHistoryConnection, error) {
+	opts := []UpstreamAccountSwitchHistoryPaginateOption{
+		WithUpstreamAccountSwitchHistoryOrder(orderBy),
+		WithUpstreamAccountSwitchHistoryFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
+	if nodes, err := _m.NamedUpstreamAccountSwitchHistories(alias); err == nil || hasTotalCount {
+		pager, err := newUpstreamAccountSwitchHistoryPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UpstreamAccountSwitchHistoryConnection{Edges: []*UpstreamAccountSwitchHistoryEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUpstreamAccountSwitchHistories().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *Channel) ProviderQuotaStatus(ctx context.Context) (*ProviderQuotaStatus, error) {
 	result, err := _m.Edges.ProviderQuotaStatusOrErr()
 	if IsNotLoaded(err) {
@@ -1408,6 +1429,27 @@ func (_m *Request) UsageLogs(
 	return _m.QueryUsageLogs().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *Request) UpstreamAccountSwitchHistories(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UpstreamAccountSwitchHistoryOrder, where *UpstreamAccountSwitchHistoryWhereInput,
+) (*UpstreamAccountSwitchHistoryConnection, error) {
+	opts := []UpstreamAccountSwitchHistoryPaginateOption{
+		WithUpstreamAccountSwitchHistoryOrder(orderBy),
+		WithUpstreamAccountSwitchHistoryFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
+	if nodes, err := _m.NamedUpstreamAccountSwitchHistories(alias); err == nil || hasTotalCount {
+		pager, err := newUpstreamAccountSwitchHistoryPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UpstreamAccountSwitchHistoryConnection{Edges: []*UpstreamAccountSwitchHistoryEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUpstreamAccountSwitchHistories().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *Request) BillingHolds(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingHoldOrder, where *BillingHoldWhereInput,
 ) (*BillingHoldConnection, error) {
@@ -1416,7 +1458,7 @@ func (_m *Request) BillingHolds(
 		WithBillingHoldFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[8][alias]
 	if nodes, err := _m.NamedBillingHolds(alias); err == nil || hasTotalCount {
 		pager, err := newBillingHoldPager(opts, last != nil)
 		if err != nil {
@@ -1459,6 +1501,27 @@ func (_m *RequestExecution) UpstreamAccount(ctx context.Context) (*UpstreamAccou
 		result, err = _m.QueryUpstreamAccount().Only(ctx)
 	}
 	return result, MaskNotFound(err)
+}
+
+func (_m *RequestExecution) UpstreamAccountSwitchHistories(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UpstreamAccountSwitchHistoryOrder, where *UpstreamAccountSwitchHistoryWhereInput,
+) (*UpstreamAccountSwitchHistoryConnection, error) {
+	opts := []UpstreamAccountSwitchHistoryPaginateOption{
+		WithUpstreamAccountSwitchHistoryOrder(orderBy),
+		WithUpstreamAccountSwitchHistoryFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	if nodes, err := _m.NamedUpstreamAccountSwitchHistories(alias); err == nil || hasTotalCount {
+		pager, err := newUpstreamAccountSwitchHistoryPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UpstreamAccountSwitchHistoryConnection{Edges: []*UpstreamAccountSwitchHistoryEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUpstreamAccountSwitchHistories().Paginate(ctx, after, first, before, last, opts...)
 }
 
 func (_m *Role) Users(
@@ -1635,6 +1698,90 @@ func (_m *UpstreamAccount) Executions(
 	return _m.QueryExecutions().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *UpstreamAccount) UsageLogs(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UsageLogOrder, where *UsageLogWhereInput,
+) (*UsageLogConnection, error) {
+	opts := []UsageLogPaginateOption{
+		WithUsageLogOrder(orderBy),
+		WithUsageLogFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	if nodes, err := _m.NamedUsageLogs(alias); err == nil || hasTotalCount {
+		pager, err := newUsageLogPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UsageLogConnection{Edges: []*UsageLogEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUsageLogs().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *UpstreamAccount) UsageBillingRecords(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UsageBillingRecordOrder, where *UsageBillingRecordWhereInput,
+) (*UsageBillingRecordConnection, error) {
+	opts := []UsageBillingRecordPaginateOption{
+		WithUsageBillingRecordOrder(orderBy),
+		WithUsageBillingRecordFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	if nodes, err := _m.NamedUsageBillingRecords(alias); err == nil || hasTotalCount {
+		pager, err := newUsageBillingRecordPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UsageBillingRecordConnection{Edges: []*UsageBillingRecordEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUsageBillingRecords().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *UpstreamAccount) SwitchHistoriesFrom(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UpstreamAccountSwitchHistoryOrder, where *UpstreamAccountSwitchHistoryWhereInput,
+) (*UpstreamAccountSwitchHistoryConnection, error) {
+	opts := []UpstreamAccountSwitchHistoryPaginateOption{
+		WithUpstreamAccountSwitchHistoryOrder(orderBy),
+		WithUpstreamAccountSwitchHistoryFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
+	if nodes, err := _m.NamedSwitchHistoriesFrom(alias); err == nil || hasTotalCount {
+		pager, err := newUpstreamAccountSwitchHistoryPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UpstreamAccountSwitchHistoryConnection{Edges: []*UpstreamAccountSwitchHistoryEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QuerySwitchHistoriesFrom().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *UpstreamAccount) SwitchHistoriesTo(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UpstreamAccountSwitchHistoryOrder, where *UpstreamAccountSwitchHistoryWhereInput,
+) (*UpstreamAccountSwitchHistoryConnection, error) {
+	opts := []UpstreamAccountSwitchHistoryPaginateOption{
+		WithUpstreamAccountSwitchHistoryOrder(orderBy),
+		WithUpstreamAccountSwitchHistoryFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[6][alias]
+	if nodes, err := _m.NamedSwitchHistoriesTo(alias); err == nil || hasTotalCount {
+		pager, err := newUpstreamAccountSwitchHistoryPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UpstreamAccountSwitchHistoryConnection{Edges: []*UpstreamAccountSwitchHistoryEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QuerySwitchHistoriesTo().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *UpstreamAccountPool) Channel(ctx context.Context) (*Channel, error) {
 	result, err := _m.Edges.ChannelOrErr()
 	if IsNotLoaded(err) {
@@ -1653,6 +1800,46 @@ func (_m *UpstreamAccountPool) Accounts(ctx context.Context) (result []*Upstream
 		result, err = _m.QueryAccounts().All(ctx)
 	}
 	return result, err
+}
+
+func (_m *UpstreamAccountSwitchHistory) Request(ctx context.Context) (*Request, error) {
+	result, err := _m.Edges.RequestOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryRequest().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UpstreamAccountSwitchHistory) RequestExecution(ctx context.Context) (*RequestExecution, error) {
+	result, err := _m.Edges.RequestExecutionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryRequestExecution().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UpstreamAccountSwitchHistory) Channel(ctx context.Context) (*Channel, error) {
+	result, err := _m.Edges.ChannelOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryChannel().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *UpstreamAccountSwitchHistory) FromAccount(ctx context.Context) (*UpstreamAccount, error) {
+	result, err := _m.Edges.FromAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryFromAccount().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UpstreamAccountSwitchHistory) ToAccount(ctx context.Context) (*UpstreamAccount, error) {
+	result, err := _m.Edges.ToAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryToAccount().Only(ctx)
+	}
+	return result, MaskNotFound(err)
 }
 
 func (_m *UsageBillingRecord) UsageLog(ctx context.Context) (*UsageLog, error) {
@@ -1687,6 +1874,14 @@ func (_m *UsageBillingRecord) UserSubscription(ctx context.Context) (*UserSubscr
 	return result, MaskNotFound(err)
 }
 
+func (_m *UsageBillingRecord) UpstreamAccount(ctx context.Context) (*UpstreamAccount, error) {
+	result, err := _m.Edges.UpstreamAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUpstreamAccount().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
 func (_m *UsageBillingRecord) BillingNotifications(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingNotificationOrder, where *BillingNotificationWhereInput,
 ) (*BillingNotificationConnection, error) {
@@ -1695,7 +1890,7 @@ func (_m *UsageBillingRecord) BillingNotifications(
 		WithBillingNotificationFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
 	if nodes, err := _m.NamedBillingNotifications(alias); err == nil || hasTotalCount {
 		pager, err := newBillingNotificationPager(opts, last != nil)
 		if err != nil {
@@ -1732,6 +1927,14 @@ func (_m *UsageLog) Channel(ctx context.Context) (*Channel, error) {
 	return result, MaskNotFound(err)
 }
 
+func (_m *UsageLog) UpstreamAccount(ctx context.Context) (*UpstreamAccount, error) {
+	result, err := _m.Edges.UpstreamAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUpstreamAccount().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
 func (_m *UsageLog) UsageBillingRecords(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UsageBillingRecordOrder, where *UsageBillingRecordWhereInput,
 ) (*UsageBillingRecordConnection, error) {
@@ -1740,7 +1943,7 @@ func (_m *UsageLog) UsageBillingRecords(
 		WithUsageBillingRecordFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
 	if nodes, err := _m.NamedUsageBillingRecords(alias); err == nil || hasTotalCount {
 		pager, err := newUsageBillingRecordPager(opts, last != nil)
 		if err != nil {
@@ -1761,7 +1964,7 @@ func (_m *UsageLog) BillingHolds(
 		WithBillingHoldFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
 	if nodes, err := _m.NamedBillingHolds(alias); err == nil || hasTotalCount {
 		pager, err := newBillingHoldPager(opts, last != nil)
 		if err != nil {

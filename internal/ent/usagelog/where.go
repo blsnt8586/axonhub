@@ -85,6 +85,11 @@ func ChannelID(v int) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldChannelID, v))
 }
 
+// UpstreamAccountID applies equality check predicate on the "upstream_account_id" field. It's identical to UpstreamAccountIDEQ.
+func UpstreamAccountID(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldUpstreamAccountID, v))
+}
+
 // ModelID applies equality check predicate on the "model_id" field. It's identical to ModelIDEQ.
 func ModelID(v string) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldModelID, v))
@@ -363,6 +368,36 @@ func ChannelIDIsNil() predicate.UsageLog {
 // ChannelIDNotNil applies the NotNil predicate on the "channel_id" field.
 func ChannelIDNotNil() predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldNotNull(FieldChannelID))
+}
+
+// UpstreamAccountIDEQ applies the EQ predicate on the "upstream_account_id" field.
+func UpstreamAccountIDEQ(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldUpstreamAccountID, v))
+}
+
+// UpstreamAccountIDNEQ applies the NEQ predicate on the "upstream_account_id" field.
+func UpstreamAccountIDNEQ(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldUpstreamAccountID, v))
+}
+
+// UpstreamAccountIDIn applies the In predicate on the "upstream_account_id" field.
+func UpstreamAccountIDIn(vs ...int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldUpstreamAccountID, vs...))
+}
+
+// UpstreamAccountIDNotIn applies the NotIn predicate on the "upstream_account_id" field.
+func UpstreamAccountIDNotIn(vs ...int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldUpstreamAccountID, vs...))
+}
+
+// UpstreamAccountIDIsNil applies the IsNil predicate on the "upstream_account_id" field.
+func UpstreamAccountIDIsNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIsNull(FieldUpstreamAccountID))
+}
+
+// UpstreamAccountIDNotNil applies the NotNil predicate on the "upstream_account_id" field.
+func UpstreamAccountIDNotNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotNull(FieldUpstreamAccountID))
 }
 
 // ModelIDEQ applies the EQ predicate on the "model_id" field.
@@ -1281,6 +1316,29 @@ func HasChannel() predicate.UsageLog {
 func HasChannelWith(preds ...predicate.Channel) predicate.UsageLog {
 	return predicate.UsageLog(func(s *sql.Selector) {
 		step := newChannelStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUpstreamAccount applies the HasEdge predicate on the "upstream_account" edge.
+func HasUpstreamAccount() predicate.UsageLog {
+	return predicate.UsageLog(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UpstreamAccountTable, UpstreamAccountColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUpstreamAccountWith applies the HasEdge predicate on the "upstream_account" edge with a given conditions (other predicates).
+func HasUpstreamAccountWith(preds ...predicate.UpstreamAccount) predicate.UsageLog {
+	return predicate.UsageLog(func(s *sql.Selector) {
+		step := newUpstreamAccountStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

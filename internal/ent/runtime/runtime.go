@@ -51,6 +51,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -1960,6 +1961,46 @@ func init() {
 	upstreamaccountpoolDescProjectIds := upstreamaccountpoolFields[5].Descriptor()
 	// upstreamaccountpool.DefaultProjectIds holds the default value on creation for the project_ids field.
 	upstreamaccountpool.DefaultProjectIds = upstreamaccountpoolDescProjectIds.Default.([]int)
+	upstreamaccountswitchhistoryMixin := schema.UpstreamAccountSwitchHistory{}.Mixin()
+	upstreamaccountswitchhistory.Policy = privacy.NewPolicies(schema.UpstreamAccountSwitchHistory{})
+	upstreamaccountswitchhistory.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := upstreamaccountswitchhistory.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	upstreamaccountswitchhistoryMixinFields0 := upstreamaccountswitchhistoryMixin[0].Fields()
+	_ = upstreamaccountswitchhistoryMixinFields0
+	upstreamaccountswitchhistoryFields := schema.UpstreamAccountSwitchHistory{}.Fields()
+	_ = upstreamaccountswitchhistoryFields
+	// upstreamaccountswitchhistoryDescCreatedAt is the schema descriptor for created_at field.
+	upstreamaccountswitchhistoryDescCreatedAt := upstreamaccountswitchhistoryMixinFields0[0].Descriptor()
+	// upstreamaccountswitchhistory.DefaultCreatedAt holds the default value on creation for the created_at field.
+	upstreamaccountswitchhistory.DefaultCreatedAt = upstreamaccountswitchhistoryDescCreatedAt.Default.(func() time.Time)
+	// upstreamaccountswitchhistoryDescUpdatedAt is the schema descriptor for updated_at field.
+	upstreamaccountswitchhistoryDescUpdatedAt := upstreamaccountswitchhistoryMixinFields0[1].Descriptor()
+	// upstreamaccountswitchhistory.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	upstreamaccountswitchhistory.DefaultUpdatedAt = upstreamaccountswitchhistoryDescUpdatedAt.Default.(func() time.Time)
+	// upstreamaccountswitchhistory.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	upstreamaccountswitchhistory.UpdateDefaultUpdatedAt = upstreamaccountswitchhistoryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// upstreamaccountswitchhistoryDescProjectID is the schema descriptor for project_id field.
+	upstreamaccountswitchhistoryDescProjectID := upstreamaccountswitchhistoryFields[0].Descriptor()
+	// upstreamaccountswitchhistory.DefaultProjectID holds the default value on creation for the project_id field.
+	upstreamaccountswitchhistory.DefaultProjectID = upstreamaccountswitchhistoryDescProjectID.Default.(int)
+	// upstreamaccountswitchhistoryDescModelID is the schema descriptor for model_id field.
+	upstreamaccountswitchhistoryDescModelID := upstreamaccountswitchhistoryFields[6].Descriptor()
+	// upstreamaccountswitchhistory.DefaultModelID holds the default value on creation for the model_id field.
+	upstreamaccountswitchhistory.DefaultModelID = upstreamaccountswitchhistoryDescModelID.Default.(string)
+	// upstreamaccountswitchhistoryDescReason is the schema descriptor for reason field.
+	upstreamaccountswitchhistoryDescReason := upstreamaccountswitchhistoryFields[7].Descriptor()
+	// upstreamaccountswitchhistory.DefaultReason holds the default value on creation for the reason field.
+	upstreamaccountswitchhistory.DefaultReason = upstreamaccountswitchhistoryDescReason.Default.(string)
+	// upstreamaccountswitchhistoryDescErrorMessage is the schema descriptor for error_message field.
+	upstreamaccountswitchhistoryDescErrorMessage := upstreamaccountswitchhistoryFields[9].Descriptor()
+	// upstreamaccountswitchhistory.DefaultErrorMessage holds the default value on creation for the error_message field.
+	upstreamaccountswitchhistory.DefaultErrorMessage = upstreamaccountswitchhistoryDescErrorMessage.Default.(string)
 	usagebillingrecordMixin := schema.UsageBillingRecord{}.Mixin()
 	usagebillingrecord.Policy = privacy.NewPolicies(schema.UsageBillingRecord{})
 	usagebillingrecord.Hooks[0] = func(next ent.Mutator) ent.Mutator {
@@ -1985,19 +2026,19 @@ func init() {
 	// usagebillingrecord.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	usagebillingrecord.UpdateDefaultUpdatedAt = usagebillingrecordDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// usagebillingrecordDescChargeItems is the schema descriptor for charge_items field.
-	usagebillingrecordDescChargeItems := usagebillingrecordFields[10].Descriptor()
+	usagebillingrecordDescChargeItems := usagebillingrecordFields[11].Descriptor()
 	// usagebillingrecord.DefaultChargeItems holds the default value on creation for the charge_items field.
 	usagebillingrecord.DefaultChargeItems = usagebillingrecordDescChargeItems.Default.([]objects.CostItem)
 	// usagebillingrecordDescCostAmountMicros is the schema descriptor for cost_amount_micros field.
-	usagebillingrecordDescCostAmountMicros := usagebillingrecordFields[11].Descriptor()
+	usagebillingrecordDescCostAmountMicros := usagebillingrecordFields[12].Descriptor()
 	// usagebillingrecord.DefaultCostAmountMicros holds the default value on creation for the cost_amount_micros field.
 	usagebillingrecord.DefaultCostAmountMicros = usagebillingrecordDescCostAmountMicros.Default.(int64)
 	// usagebillingrecordDescCurrency is the schema descriptor for currency field.
-	usagebillingrecordDescCurrency := usagebillingrecordFields[13].Descriptor()
+	usagebillingrecordDescCurrency := usagebillingrecordFields[14].Descriptor()
 	// usagebillingrecord.DefaultCurrency holds the default value on creation for the currency field.
 	usagebillingrecord.DefaultCurrency = usagebillingrecordDescCurrency.Default.(string)
 	// usagebillingrecordDescError is the schema descriptor for error field.
-	usagebillingrecordDescError := usagebillingrecordFields[18].Descriptor()
+	usagebillingrecordDescError := usagebillingrecordFields[19].Descriptor()
 	// usagebillingrecord.DefaultError holds the default value on creation for the error field.
 	usagebillingrecord.DefaultError = usagebillingrecordDescError.Default.(string)
 	usagedailyaggregateMixin := schema.UsageDailyAggregate{}.Mixin()
@@ -2205,59 +2246,59 @@ func init() {
 	// usagelog.DefaultProjectID holds the default value on creation for the project_id field.
 	usagelog.DefaultProjectID = usagelogDescProjectID.Default.(int)
 	// usagelogDescPromptTokens is the schema descriptor for prompt_tokens field.
-	usagelogDescPromptTokens := usagelogFields[5].Descriptor()
+	usagelogDescPromptTokens := usagelogFields[6].Descriptor()
 	// usagelog.DefaultPromptTokens holds the default value on creation for the prompt_tokens field.
 	usagelog.DefaultPromptTokens = usagelogDescPromptTokens.Default.(int64)
 	// usagelogDescCompletionTokens is the schema descriptor for completion_tokens field.
-	usagelogDescCompletionTokens := usagelogFields[6].Descriptor()
+	usagelogDescCompletionTokens := usagelogFields[7].Descriptor()
 	// usagelog.DefaultCompletionTokens holds the default value on creation for the completion_tokens field.
 	usagelog.DefaultCompletionTokens = usagelogDescCompletionTokens.Default.(int64)
 	// usagelogDescTotalTokens is the schema descriptor for total_tokens field.
-	usagelogDescTotalTokens := usagelogFields[7].Descriptor()
+	usagelogDescTotalTokens := usagelogFields[8].Descriptor()
 	// usagelog.DefaultTotalTokens holds the default value on creation for the total_tokens field.
 	usagelog.DefaultTotalTokens = usagelogDescTotalTokens.Default.(int64)
 	// usagelogDescPromptAudioTokens is the schema descriptor for prompt_audio_tokens field.
-	usagelogDescPromptAudioTokens := usagelogFields[8].Descriptor()
+	usagelogDescPromptAudioTokens := usagelogFields[9].Descriptor()
 	// usagelog.DefaultPromptAudioTokens holds the default value on creation for the prompt_audio_tokens field.
 	usagelog.DefaultPromptAudioTokens = usagelogDescPromptAudioTokens.Default.(int64)
 	// usagelogDescPromptCachedTokens is the schema descriptor for prompt_cached_tokens field.
-	usagelogDescPromptCachedTokens := usagelogFields[9].Descriptor()
+	usagelogDescPromptCachedTokens := usagelogFields[10].Descriptor()
 	// usagelog.DefaultPromptCachedTokens holds the default value on creation for the prompt_cached_tokens field.
 	usagelog.DefaultPromptCachedTokens = usagelogDescPromptCachedTokens.Default.(int64)
 	// usagelogDescPromptWriteCachedTokens is the schema descriptor for prompt_write_cached_tokens field.
-	usagelogDescPromptWriteCachedTokens := usagelogFields[10].Descriptor()
+	usagelogDescPromptWriteCachedTokens := usagelogFields[11].Descriptor()
 	// usagelog.DefaultPromptWriteCachedTokens holds the default value on creation for the prompt_write_cached_tokens field.
 	usagelog.DefaultPromptWriteCachedTokens = usagelogDescPromptWriteCachedTokens.Default.(int64)
 	// usagelogDescPromptWriteCachedTokens5m is the schema descriptor for prompt_write_cached_tokens_5m field.
-	usagelogDescPromptWriteCachedTokens5m := usagelogFields[11].Descriptor()
+	usagelogDescPromptWriteCachedTokens5m := usagelogFields[12].Descriptor()
 	// usagelog.DefaultPromptWriteCachedTokens5m holds the default value on creation for the prompt_write_cached_tokens_5m field.
 	usagelog.DefaultPromptWriteCachedTokens5m = usagelogDescPromptWriteCachedTokens5m.Default.(int64)
 	// usagelogDescPromptWriteCachedTokens1h is the schema descriptor for prompt_write_cached_tokens_1h field.
-	usagelogDescPromptWriteCachedTokens1h := usagelogFields[12].Descriptor()
+	usagelogDescPromptWriteCachedTokens1h := usagelogFields[13].Descriptor()
 	// usagelog.DefaultPromptWriteCachedTokens1h holds the default value on creation for the prompt_write_cached_tokens_1h field.
 	usagelog.DefaultPromptWriteCachedTokens1h = usagelogDescPromptWriteCachedTokens1h.Default.(int64)
 	// usagelogDescCompletionAudioTokens is the schema descriptor for completion_audio_tokens field.
-	usagelogDescCompletionAudioTokens := usagelogFields[13].Descriptor()
+	usagelogDescCompletionAudioTokens := usagelogFields[14].Descriptor()
 	// usagelog.DefaultCompletionAudioTokens holds the default value on creation for the completion_audio_tokens field.
 	usagelog.DefaultCompletionAudioTokens = usagelogDescCompletionAudioTokens.Default.(int64)
 	// usagelogDescCompletionReasoningTokens is the schema descriptor for completion_reasoning_tokens field.
-	usagelogDescCompletionReasoningTokens := usagelogFields[14].Descriptor()
+	usagelogDescCompletionReasoningTokens := usagelogFields[15].Descriptor()
 	// usagelog.DefaultCompletionReasoningTokens holds the default value on creation for the completion_reasoning_tokens field.
 	usagelog.DefaultCompletionReasoningTokens = usagelogDescCompletionReasoningTokens.Default.(int64)
 	// usagelogDescCompletionAcceptedPredictionTokens is the schema descriptor for completion_accepted_prediction_tokens field.
-	usagelogDescCompletionAcceptedPredictionTokens := usagelogFields[15].Descriptor()
+	usagelogDescCompletionAcceptedPredictionTokens := usagelogFields[16].Descriptor()
 	// usagelog.DefaultCompletionAcceptedPredictionTokens holds the default value on creation for the completion_accepted_prediction_tokens field.
 	usagelog.DefaultCompletionAcceptedPredictionTokens = usagelogDescCompletionAcceptedPredictionTokens.Default.(int64)
 	// usagelogDescCompletionRejectedPredictionTokens is the schema descriptor for completion_rejected_prediction_tokens field.
-	usagelogDescCompletionRejectedPredictionTokens := usagelogFields[16].Descriptor()
+	usagelogDescCompletionRejectedPredictionTokens := usagelogFields[17].Descriptor()
 	// usagelog.DefaultCompletionRejectedPredictionTokens holds the default value on creation for the completion_rejected_prediction_tokens field.
 	usagelog.DefaultCompletionRejectedPredictionTokens = usagelogDescCompletionRejectedPredictionTokens.Default.(int64)
 	// usagelogDescFormat is the schema descriptor for format field.
-	usagelogDescFormat := usagelogFields[18].Descriptor()
+	usagelogDescFormat := usagelogFields[19].Descriptor()
 	// usagelog.DefaultFormat holds the default value on creation for the format field.
 	usagelog.DefaultFormat = usagelogDescFormat.Default.(string)
 	// usagelogDescCostItems is the schema descriptor for cost_items field.
-	usagelogDescCostItems := usagelogFields[20].Descriptor()
+	usagelogDescCostItems := usagelogFields[21].Descriptor()
 	// usagelog.DefaultCostItems holds the default value on creation for the cost_items field.
 	usagelog.DefaultCostItems = usagelogDescCostItems.Default.([]objects.CostItem)
 	userMixin := schema.User{}.Mixin()

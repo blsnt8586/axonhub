@@ -73,6 +73,8 @@ const (
 	EdgeDataStorage = "data_storage"
 	// EdgeUpstreamAccount holds the string denoting the upstream_account edge name in mutations.
 	EdgeUpstreamAccount = "upstream_account"
+	// EdgeUpstreamAccountSwitchHistories holds the string denoting the upstream_account_switch_histories edge name in mutations.
+	EdgeUpstreamAccountSwitchHistories = "upstream_account_switch_histories"
 	// Table holds the table name of the requestexecution in the database.
 	Table = "request_executions"
 	// RequestTable is the table that holds the request relation/edge.
@@ -103,6 +105,13 @@ const (
 	UpstreamAccountInverseTable = "upstream_accounts"
 	// UpstreamAccountColumn is the table column denoting the upstream_account relation/edge.
 	UpstreamAccountColumn = "upstream_account_id"
+	// UpstreamAccountSwitchHistoriesTable is the table that holds the upstream_account_switch_histories relation/edge.
+	UpstreamAccountSwitchHistoriesTable = "upstream_account_switch_histories"
+	// UpstreamAccountSwitchHistoriesInverseTable is the table name for the UpstreamAccountSwitchHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "upstreamaccountswitchhistory" package.
+	UpstreamAccountSwitchHistoriesInverseTable = "upstream_account_switch_histories"
+	// UpstreamAccountSwitchHistoriesColumn is the table column denoting the upstream_account_switch_histories relation/edge.
+	UpstreamAccountSwitchHistoriesColumn = "request_execution_id"
 )
 
 // Columns holds all SQL columns for requestexecution fields.
@@ -326,6 +335,20 @@ func ByUpstreamAccountField(field string, opts ...sql.OrderTermOption) OrderOpti
 		sqlgraph.OrderByNeighborTerms(s, newUpstreamAccountStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByUpstreamAccountSwitchHistoriesCount orders the results by upstream_account_switch_histories count.
+func ByUpstreamAccountSwitchHistoriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUpstreamAccountSwitchHistoriesStep(), opts...)
+	}
+}
+
+// ByUpstreamAccountSwitchHistories orders the results by upstream_account_switch_histories terms.
+func ByUpstreamAccountSwitchHistories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUpstreamAccountSwitchHistoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRequestStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -352,6 +375,13 @@ func newUpstreamAccountStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UpstreamAccountInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, UpstreamAccountTable, UpstreamAccountColumn),
+	)
+}
+func newUpstreamAccountSwitchHistoriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UpstreamAccountSwitchHistoriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountSwitchHistoriesTable, UpstreamAccountSwitchHistoriesColumn),
 	)
 }
 

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
@@ -33,6 +34,8 @@ type UsageBillingRecord struct {
 	BillingAccountID int `json:"billing_account_id,omitempty"`
 	// ProjectID holds the value of the "project_id" field.
 	ProjectID int `json:"project_id,omitempty"`
+	// UpstreamAccountID holds the value of the "upstream_account_id" field.
+	UpstreamAccountID *int `json:"upstream_account_id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID int `json:"user_id,omitempty"`
 	// APIKeyID holds the value of the "api_key_id" field.
@@ -81,13 +84,15 @@ type UsageBillingRecordEdges struct {
 	LedgerTransaction *LedgerTransaction `json:"ledger_transaction,omitempty"`
 	// UserSubscription holds the value of the user_subscription edge.
 	UserSubscription *UserSubscription `json:"user_subscription,omitempty"`
+	// UpstreamAccount holds the value of the upstream_account edge.
+	UpstreamAccount *UpstreamAccount `json:"upstream_account,omitempty"`
 	// BillingNotifications holds the value of the billing_notifications edge.
 	BillingNotifications []*BillingNotification `json:"billing_notifications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 	// totalCount holds the count of the edges above.
-	totalCount [5]map[string]int
+	totalCount [6]map[string]int
 
 	namedBillingNotifications map[string][]*BillingNotification
 }
@@ -136,10 +141,21 @@ func (e UsageBillingRecordEdges) UserSubscriptionOrErr() (*UserSubscription, err
 	return nil, &NotLoadedError{edge: "user_subscription"}
 }
 
+// UpstreamAccountOrErr returns the UpstreamAccount value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UsageBillingRecordEdges) UpstreamAccountOrErr() (*UpstreamAccount, error) {
+	if e.UpstreamAccount != nil {
+		return e.UpstreamAccount, nil
+	} else if e.loadedTypes[4] {
+		return nil, &NotFoundError{label: upstreamaccount.Label}
+	}
+	return nil, &NotLoadedError{edge: "upstream_account"}
+}
+
 // BillingNotificationsOrErr returns the BillingNotifications value or an error if the edge
 // was not loaded in eager-loading.
 func (e UsageBillingRecordEdges) BillingNotificationsOrErr() ([]*BillingNotification, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.BillingNotifications, nil
 	}
 	return nil, &NotLoadedError{edge: "billing_notifications"}
@@ -152,7 +168,7 @@ func (*UsageBillingRecord) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case usagebillingrecord.FieldUsageSnapshot, usagebillingrecord.FieldPriceSnapshot, usagebillingrecord.FieldChargeItems:
 			values[i] = new([]byte)
-		case usagebillingrecord.FieldID, usagebillingrecord.FieldUsageLogID, usagebillingrecord.FieldBillingAccountID, usagebillingrecord.FieldProjectID, usagebillingrecord.FieldUserID, usagebillingrecord.FieldAPIKeyID, usagebillingrecord.FieldCostAmountMicros, usagebillingrecord.FieldChargeAmountMicros, usagebillingrecord.FieldLedgerTransactionID, usagebillingrecord.FieldUserSubscriptionID:
+		case usagebillingrecord.FieldID, usagebillingrecord.FieldUsageLogID, usagebillingrecord.FieldBillingAccountID, usagebillingrecord.FieldProjectID, usagebillingrecord.FieldUpstreamAccountID, usagebillingrecord.FieldUserID, usagebillingrecord.FieldAPIKeyID, usagebillingrecord.FieldCostAmountMicros, usagebillingrecord.FieldChargeAmountMicros, usagebillingrecord.FieldLedgerTransactionID, usagebillingrecord.FieldUserSubscriptionID:
 			values[i] = new(sql.NullInt64)
 		case usagebillingrecord.FieldModelID, usagebillingrecord.FieldRequestType, usagebillingrecord.FieldPriceReferenceID, usagebillingrecord.FieldCurrency, usagebillingrecord.FieldStatus, usagebillingrecord.FieldIdempotencyKey, usagebillingrecord.FieldError:
 			values[i] = new(sql.NullString)
@@ -208,6 +224,13 @@ func (_m *UsageBillingRecord) assignValues(columns []string, values []any) error
 				return fmt.Errorf("unexpected type %T for field project_id", values[i])
 			} else if value.Valid {
 				_m.ProjectID = int(value.Int64)
+			}
+		case usagebillingrecord.FieldUpstreamAccountID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field upstream_account_id", values[i])
+			} else if value.Valid {
+				_m.UpstreamAccountID = new(int)
+				*_m.UpstreamAccountID = int(value.Int64)
 			}
 		case usagebillingrecord.FieldUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -344,6 +367,11 @@ func (_m *UsageBillingRecord) QueryUserSubscription() *UserSubscriptionQuery {
 	return NewUsageBillingRecordClient(_m.config).QueryUserSubscription(_m)
 }
 
+// QueryUpstreamAccount queries the "upstream_account" edge of the UsageBillingRecord entity.
+func (_m *UsageBillingRecord) QueryUpstreamAccount() *UpstreamAccountQuery {
+	return NewUsageBillingRecordClient(_m.config).QueryUpstreamAccount(_m)
+}
+
 // QueryBillingNotifications queries the "billing_notifications" edge of the UsageBillingRecord entity.
 func (_m *UsageBillingRecord) QueryBillingNotifications() *BillingNotificationQuery {
 	return NewUsageBillingRecordClient(_m.config).QueryBillingNotifications(_m)
@@ -386,6 +414,11 @@ func (_m *UsageBillingRecord) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("project_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ProjectID))
+	builder.WriteString(", ")
+	if v := _m.UpstreamAccountID; v != nil {
+		builder.WriteString("upstream_account_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.UserID))

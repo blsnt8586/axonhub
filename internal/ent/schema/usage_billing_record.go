@@ -31,6 +31,8 @@ func (UsageBillingRecord) Indexes() []ent.Index {
 			StorageKey("usage_billing_records_by_account_created_at"),
 		index.Fields("project_id", "created_at").
 			StorageKey("usage_billing_records_by_project_created_at"),
+		index.Fields("upstream_account_id", "created_at").
+			StorageKey("usage_billing_records_by_upstream_account_created_at"),
 		index.Fields("user_id", "created_at").
 			StorageKey("usage_billing_records_by_user_created_at"),
 		index.Fields("idempotency_key").
@@ -48,6 +50,10 @@ func (UsageBillingRecord) Fields() []ent.Field {
 		field.Int("billing_account_id").
 			Immutable(),
 		field.Int("project_id").
+			Immutable(),
+		field.Int("upstream_account_id").
+			Optional().
+			Nillable().
 			Immutable(),
 		field.Int("user_id").
 			Optional().
@@ -114,6 +120,11 @@ func (UsageBillingRecord) Edges() []ent.Edge {
 		edge.From("user_subscription", UserSubscription.Type).
 			Ref("usage_billing_records").
 			Field("user_subscription_id").
+			Unique(),
+		edge.From("upstream_account", UpstreamAccount.Type).
+			Ref("usage_billing_records").
+			Field("upstream_account_id").
+			Immutable().
 			Unique(),
 		edge.To("billing_notifications", BillingNotification.Type).
 			Annotations(

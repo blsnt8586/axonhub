@@ -265,6 +265,9 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 			SetChargeAmountMicros(chargeMicros).
 			SetCurrency(priceRule.Currency).
 			SetIdempotencyKey(idempotencyKey)
+		if usageLog.UpstreamAccountID != nil && *usageLog.UpstreamAccountID > 0 {
+			create.SetUpstreamAccountID(*usageLog.UpstreamAccountID)
+		}
 		if coveredSubscription != nil {
 			create.SetStatus(usagebillingrecord.StatusSkipped).
 				SetUserSubscriptionID(coveredSubscription.ID)

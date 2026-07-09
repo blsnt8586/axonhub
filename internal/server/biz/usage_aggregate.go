@@ -254,6 +254,9 @@ func usageAggregatePointFromRecord(record *ent.UsageBillingRecord) usageAggregat
 	}
 	if usageLog != nil {
 		point.ChannelID = usageLog.ChannelID
+		if usageLog.UpstreamAccountID != nil {
+			point.UpstreamAccountID = *usageLog.UpstreamAccountID
+		}
 		point.PromptTokens = usageLog.PromptTokens
 		point.CompletionTokens = usageLog.CompletionTokens
 		point.TotalTokens = usageLog.TotalTokens

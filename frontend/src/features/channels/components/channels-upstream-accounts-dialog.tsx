@@ -1,25 +1,11 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import {
-  IconArchive,
-  IconCheck,
-  IconPlayerPlay,
-  IconPlus,
-  IconRefresh,
-  IconServer,
-  IconShieldLock,
-} from '@tabler/icons-react';
+import { Link } from '@tanstack/react-router';
+import { IconArchive, IconCheck, IconPlayerPlay, IconPlus, IconRefresh, IconServer, IconShieldLock } from '@tabler/icons-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -249,7 +235,8 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
     const credentials =
       credentialValue.length > 0
         ? {
-            [accountForm.credentialType === 'api_key' ? 'apiKey' : accountForm.credentialType === 'oauth' ? 'oauth' : 'rawJson']: credentialValue,
+            [accountForm.credentialType === 'api_key' ? 'apiKey' : accountForm.credentialType === 'oauth' ? 'oauth' : 'rawJson']:
+              credentialValue,
           }
         : undefined;
 
@@ -376,14 +363,28 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                         <TableBody>
                           {accounts.map((account) => (
                             <TableRow key={account.id}>
-                              <TableCell className='font-medium'>{account.name}</TableCell>
+                              <TableCell className='font-medium'>
+                                <Button asChild variant='link' className='h-auto p-0 font-medium'>
+                                  <Link to='/channels/accounts/$accountId' params={{ accountId: account.id }}>
+                                    {account.name}
+                                  </Link>
+                                </Button>
+                              </TableCell>
                               <TableCell>{account.poolID ? accountPoolName.get(account.poolID) || account.poolID : 'Fallback'}</TableCell>
                               <TableCell>
                                 <Badge variant='outline' className={statusBadgeClass(account.status)}>
                                   {account.status}
                                 </Badge>
                               </TableCell>
-                              <TableCell>{account.eligibleNow ? <IconCheck className='h-4 w-4 text-emerald-600' /> : account.schedulable ? 'No' : 'Paused'}</TableCell>
+                              <TableCell>
+                                {account.eligibleNow ? (
+                                  <IconCheck className='h-4 w-4 text-emerald-600' />
+                                ) : account.schedulable ? (
+                                  'No'
+                                ) : (
+                                  'Paused'
+                                )}
+                              </TableCell>
                               <TableCell>{account.priority}</TableCell>
                               <TableCell>{account.weight}</TableCell>
                               <TableCell>{account.concurrencyLimit || 'Unlimited'}</TableCell>
@@ -394,7 +395,9 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                               </TableCell>
                               <TableCell>{account.cooldownUntil || account.rateLimitResetAt || account.overloadUntil || '-'}</TableCell>
                               <TableCell>{account.lastUsedAt || '-'}</TableCell>
-                              <TableCell className='max-w-[180px] truncate'>{account.ineligibleReason || account.errorMessage || '-'}</TableCell>
+                              <TableCell className='max-w-[180px] truncate'>
+                                {account.ineligibleReason || account.errorMessage || '-'}
+                              </TableCell>
                               <TableCell>
                                 <div className='flex justify-end gap-1'>
                                   <Button variant='outline' size='sm' onClick={() => setAccountForm(accountFormFromAccount(account))}>
@@ -417,7 +420,10 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                                     onClick={() =>
                                       updateAccount.mutateAsync({
                                         id: account.id,
-                                        input: { status: account.status === 'active' ? 'disabled' : 'active', schedulable: account.status !== 'active' },
+                                        input: {
+                                          status: account.status === 'active' ? 'disabled' : 'active',
+                                          schedulable: account.status !== 'active',
+                                        },
                                       })
                                     }
                                     disabled={busy}
@@ -446,7 +452,9 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
               <Card>
                 <CardHeader className='gap-1 px-4 py-3'>
                   <CardTitle className='text-sm'>{accountForm.id ? 'Edit account' : 'Add account'}</CardTitle>
-                  <CardDescription>Credential fields are write-only. Leave credential blank while editing to keep the existing secret.</CardDescription>
+                  <CardDescription>
+                    Credential fields are write-only. Leave credential blank while editing to keep the existing secret.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className='grid gap-3 px-4 pb-4 md:grid-cols-4'>
                   <Field label='Name'>
@@ -491,7 +499,10 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                     />
                   </Field>
                   <Field label='Status'>
-                    <Select value={accountForm.status} onValueChange={(value: AccountForm['status']) => setAccountForm({ ...accountForm, status: value })}>
+                    <Select
+                      value={accountForm.status}
+                      onValueChange={(value: AccountForm['status']) => setAccountForm({ ...accountForm, status: value })}
+                    >
                       <SelectTrigger className='w-full'>
                         <SelectValue />
                       </SelectTrigger>
@@ -504,10 +515,16 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                     </Select>
                   </Field>
                   <Field label='Priority'>
-                    <Input value={accountForm.priority} onChange={(event) => setAccountForm({ ...accountForm, priority: event.target.value })} />
+                    <Input
+                      value={accountForm.priority}
+                      onChange={(event) => setAccountForm({ ...accountForm, priority: event.target.value })}
+                    />
                   </Field>
                   <Field label='Weight'>
-                    <Input value={accountForm.weight} onChange={(event) => setAccountForm({ ...accountForm, weight: event.target.value })} />
+                    <Input
+                      value={accountForm.weight}
+                      onChange={(event) => setAccountForm({ ...accountForm, weight: event.target.value })}
+                    />
                   </Field>
                   <Field label='Concurrency'>
                     <Input
@@ -516,7 +533,10 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                     />
                   </Field>
                   <Field label='Rate multiplier'>
-                    <Input value={accountForm.rateMultiplier} onChange={(event) => setAccountForm({ ...accountForm, rateMultiplier: event.target.value })} />
+                    <Input
+                      value={accountForm.rateMultiplier}
+                      onChange={(event) => setAccountForm({ ...accountForm, rateMultiplier: event.target.value })}
+                    />
                   </Field>
                   <Field label='Quota limit micros'>
                     <Input
@@ -538,7 +558,10 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                     <Label>Schedulable</Label>
                   </div>
                   <Field label='Expires at'>
-                    <Input value={accountForm.expiresAt} onChange={(event) => setAccountForm({ ...accountForm, expiresAt: event.target.value })} />
+                    <Input
+                      value={accountForm.expiresAt}
+                      onChange={(event) => setAccountForm({ ...accountForm, expiresAt: event.target.value })}
+                    />
                   </Field>
                   <Field label='Rate limit reset'>
                     <Input
@@ -547,10 +570,16 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                     />
                   </Field>
                   <Field label='Overload until'>
-                    <Input value={accountForm.overloadUntil} onChange={(event) => setAccountForm({ ...accountForm, overloadUntil: event.target.value })} />
+                    <Input
+                      value={accountForm.overloadUntil}
+                      onChange={(event) => setAccountForm({ ...accountForm, overloadUntil: event.target.value })}
+                    />
                   </Field>
                   <Field label='Cooldown until'>
-                    <Input value={accountForm.cooldownUntil} onChange={(event) => setAccountForm({ ...accountForm, cooldownUntil: event.target.value })} />
+                    <Input
+                      value={accountForm.cooldownUntil}
+                      onChange={(event) => setAccountForm({ ...accountForm, cooldownUntil: event.target.value })}
+                    />
                   </Field>
                   <div className='md:col-span-4'>
                     <Field label='Cooldown reason'>
@@ -561,7 +590,10 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                     </Field>
                   </div>
                   <div className='flex gap-2 md:col-span-4'>
-                    <Button onClick={handleSaveAccount} disabled={busy || !accountForm.name.trim() || (!accountForm.id && !accountForm.credential.trim())}>
+                    <Button
+                      onClick={handleSaveAccount}
+                      disabled={busy || !accountForm.name.trim() || (!accountForm.id && !accountForm.credential.trim())}
+                    >
                       <IconPlus className='mr-1 h-4 w-4' />
                       {accountForm.id ? 'Save account' : 'Create account'}
                     </Button>
@@ -579,7 +611,9 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
               <Card>
                 <CardHeader className='gap-1 px-4 py-3'>
                   <CardTitle className='text-sm'>Pool targeting</CardTitle>
-                  <CardDescription>Use pools to target model patterns or project IDs when a channel needs more than one account group.</CardDescription>
+                  <CardDescription>
+                    Use pools to target model patterns or project IDs when a channel needs more than one account group.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className='px-4 pb-4'>
                   {poolsQuery.isLoading ? (
@@ -589,7 +623,10 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                   ) : (
                     <div className='grid gap-2'>
                       {pools.map((pool) => (
-                        <div key={pool.id} className='flex flex-col gap-2 rounded-md border p-3 md:flex-row md:items-center md:justify-between'>
+                        <div
+                          key={pool.id}
+                          className='flex flex-col gap-2 rounded-md border p-3 md:flex-row md:items-center md:justify-between'
+                        >
                           <div className='min-w-0'>
                             <div className='flex items-center gap-2'>
                               <span className='font-medium'>{pool.name}</span>
@@ -606,7 +643,12 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                             <Button variant='outline' size='sm' onClick={() => setPoolForm(poolFormFromPool(pool))}>
                               Edit
                             </Button>
-                            <Button variant='outline' size='sm' onClick={() => archivePool.mutateAsync({ id: pool.id, channelID })} disabled={busy}>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => archivePool.mutateAsync({ id: pool.id, channelID })}
+                              disabled={busy}
+                            >
                               <IconArchive className='h-3.5 w-3.5' />
                             </Button>
                           </div>
@@ -627,7 +669,10 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                     <Input value={poolForm.name} onChange={(event) => setPoolForm({ ...poolForm, name: event.target.value })} />
                   </Field>
                   <Field label='Status'>
-                    <Select value={poolForm.status} onValueChange={(value: PoolForm['status']) => setPoolForm({ ...poolForm, status: value })}>
+                    <Select
+                      value={poolForm.status}
+                      onValueChange={(value: PoolForm['status']) => setPoolForm({ ...poolForm, status: value })}
+                    >
                       <SelectTrigger className='w-full'>
                         <SelectValue />
                       </SelectTrigger>
@@ -642,7 +687,10 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                     <Input value={poolForm.priority} onChange={(event) => setPoolForm({ ...poolForm, priority: event.target.value })} />
                   </Field>
                   <Field label='Model patterns'>
-                    <Input value={poolForm.modelPatterns} onChange={(event) => setPoolForm({ ...poolForm, modelPatterns: event.target.value })} />
+                    <Input
+                      value={poolForm.modelPatterns}
+                      onChange={(event) => setPoolForm({ ...poolForm, modelPatterns: event.target.value })}
+                    />
                   </Field>
                   <Field label='Project IDs'>
                     <Input value={poolForm.projectIDs} onChange={(event) => setPoolForm({ ...poolForm, projectIDs: event.target.value })} />
@@ -700,13 +748,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function HealthMetric({ label, value, tone }: { label: string; value: number; tone?: 'good' | 'warning' | 'danger' }) {
   const valueClass =
-    tone === 'good'
-      ? 'text-emerald-700'
-      : tone === 'warning'
-        ? 'text-amber-700'
-        : tone === 'danger'
-          ? 'text-red-700'
-          : 'text-foreground';
+    tone === 'good' ? 'text-emerald-700' : tone === 'warning' ? 'text-amber-700' : tone === 'danger' ? 'text-red-700' : 'text-foreground';
 
   return (
     <div className='bg-background rounded-md border px-3 py-2'>

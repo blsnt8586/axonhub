@@ -238,36 +238,36 @@ Verification:
 
 ## Stage 17: Account Usage Monitoring And Switch History
 
-Status: [ ] Planned
+Status: [x] Completed
 
 Goal: make upstream account health, cost, margin, and switching behavior visible
 to operators.
 
 Backend scope:
 
-- [ ] Add upstream account ID to usage detail and aggregate records for requests
+- [x] Add upstream account ID to usage detail and aggregate records for requests
   that use account pools.
-- [ ] Add account switch history records with request ID, Channel ID, from account,
+- [x] Add account switch history records with request ID, Channel ID, from account,
   to account, reason, error code, latency, and timestamp.
-- [ ] Add account monitoring queries for request count, success rate, error rate,
+- [x] Add account monitoring queries for request count, success rate, error rate,
   429 count, 5xx count, average latency, first-token latency, user charge,
   upstream cost, gross margin, quota usage, and recent errors.
-- [ ] Add filters by time range, Channel, provider type, status, model, and
+- [x] Add filters by time range, Channel, provider type, status, model, and
   account.
 
 Frontend scope:
 
-- [ ] Add an owner account-pool monitoring page.
-- [ ] Add single-account detail views with usage trend, error trend, cost/margin,
+- [x] Add an owner account-pool monitoring page.
+- [x] Add single-account detail views with usage trend, error trend, cost/margin,
   recent requests, recent switch history, and quota status.
-- [ ] Add account health summary badges in Channel management.
+- [x] Add account health summary badges in Channel management.
 
 Verification:
 
-- [ ] Requests using account pools are linked to final account ID.
-- [ ] Account switch history is complete and queryable.
-- [ ] Aggregates by account reconcile with detail rows.
-- [ ] Ordinary users cannot view upstream account secrets or operator-only
+- [x] Requests using account pools are linked to final account ID.
+- [x] Account switch history is complete and queryable.
+- [x] Aggregates by account reconcile with detail rows.
+- [x] Ordinary users cannot view upstream account secrets or operator-only
   account diagnostics.
 
 ## Stage 18: Commercial Operations Final Acceptance
@@ -314,3 +314,4 @@ Append one line per completed enhancement stage.
 | Stage | Commit | Date | Notes |
 | --- | --- | --- | --- |
 | Stage 12 | this commit | 2026-07-09 | Added public registration settings, real sign-up API/UI, user wallet initialization, optional default project/API key, signup grant, rate limiting, audit log, and focused tests. |
+| Stage 17 | this commit | 2026-07-09 | Added upstream-account usage dimensions, switch history, owner monitoring/detail pages, and focused backend/frontend verification. |

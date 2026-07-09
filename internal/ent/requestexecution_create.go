@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -327,6 +328,21 @@ func (_c *RequestExecutionCreate) SetUpstreamAccount(v *UpstreamAccount) *Reques
 	return _c.SetUpstreamAccountID(v.ID)
 }
 
+// AddUpstreamAccountSwitchHistoryIDs adds the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (_c *RequestExecutionCreate) AddUpstreamAccountSwitchHistoryIDs(ids ...int) *RequestExecutionCreate {
+	_c.mutation.AddUpstreamAccountSwitchHistoryIDs(ids...)
+	return _c
+}
+
+// AddUpstreamAccountSwitchHistories adds the "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_c *RequestExecutionCreate) AddUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *RequestExecutionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUpstreamAccountSwitchHistoryIDs(ids...)
+}
+
 // Mutation returns the RequestExecutionMutation object of the builder.
 func (_c *RequestExecutionCreate) Mutation() *RequestExecutionMutation {
 	return _c.mutation
@@ -607,6 +623,22 @@ func (_c *RequestExecutionCreate) createSpec() (*RequestExecution, *sqlgraph.Cre
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UpstreamAccountID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   requestexecution.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{requestexecution.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

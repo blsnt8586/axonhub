@@ -60,6 +60,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -165,6 +166,8 @@ type Client struct {
 	UpstreamAccount *UpstreamAccountClient
 	// UpstreamAccountPool is the client for interacting with the UpstreamAccountPool builders.
 	UpstreamAccountPool *UpstreamAccountPoolClient
+	// UpstreamAccountSwitchHistory is the client for interacting with the UpstreamAccountSwitchHistory builders.
+	UpstreamAccountSwitchHistory *UpstreamAccountSwitchHistoryClient
 	// UsageBillingRecord is the client for interacting with the UsageBillingRecord builders.
 	UsageBillingRecord *UsageBillingRecordClient
 	// UsageDailyAggregate is the client for interacting with the UsageDailyAggregate builders.
@@ -239,6 +242,7 @@ func (c *Client) init() {
 	c.Trace = NewTraceClient(c.config)
 	c.UpstreamAccount = NewUpstreamAccountClient(c.config)
 	c.UpstreamAccountPool = NewUpstreamAccountPoolClient(c.config)
+	c.UpstreamAccountSwitchHistory = NewUpstreamAccountSwitchHistoryClient(c.config)
 	c.UsageBillingRecord = NewUsageBillingRecordClient(c.config)
 	c.UsageDailyAggregate = NewUsageDailyAggregateClient(c.config)
 	c.UsageHourlyAggregate = NewUsageHourlyAggregateClient(c.config)
@@ -384,6 +388,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Trace:                         NewTraceClient(cfg),
 		UpstreamAccount:               NewUpstreamAccountClient(cfg),
 		UpstreamAccountPool:           NewUpstreamAccountPoolClient(cfg),
+		UpstreamAccountSwitchHistory:  NewUpstreamAccountSwitchHistoryClient(cfg),
 		UsageBillingRecord:            NewUsageBillingRecordClient(cfg),
 		UsageDailyAggregate:           NewUsageDailyAggregateClient(cfg),
 		UsageHourlyAggregate:          NewUsageHourlyAggregateClient(cfg),
@@ -456,6 +461,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Trace:                         NewTraceClient(cfg),
 		UpstreamAccount:               NewUpstreamAccountClient(cfg),
 		UpstreamAccountPool:           NewUpstreamAccountPoolClient(cfg),
+		UpstreamAccountSwitchHistory:  NewUpstreamAccountSwitchHistoryClient(cfg),
 		UsageBillingRecord:            NewUsageBillingRecordClient(cfg),
 		UsageDailyAggregate:           NewUsageDailyAggregateClient(cfg),
 		UsageHourlyAggregate:          NewUsageHourlyAggregateClient(cfg),
@@ -504,9 +510,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
 		c.RequestExecution, c.Role, c.SubscriptionPlan, c.System, c.Thread, c.Trace,
-		c.UpstreamAccount, c.UpstreamAccountPool, c.UsageBillingRecord,
-		c.UsageDailyAggregate, c.UsageHourlyAggregate, c.UsageLog, c.User,
-		c.UserProject, c.UserRole, c.UserSubscription,
+		c.UpstreamAccount, c.UpstreamAccountPool, c.UpstreamAccountSwitchHistory,
+		c.UsageBillingRecord, c.UsageDailyAggregate, c.UsageHourlyAggregate,
+		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -527,9 +533,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
 		c.RequestExecution, c.Role, c.SubscriptionPlan, c.System, c.Thread, c.Trace,
-		c.UpstreamAccount, c.UpstreamAccountPool, c.UsageBillingRecord,
-		c.UsageDailyAggregate, c.UsageHourlyAggregate, c.UsageLog, c.User,
-		c.UserProject, c.UserRole, c.UserSubscription,
+		c.UpstreamAccount, c.UpstreamAccountPool, c.UpstreamAccountSwitchHistory,
+		c.UsageBillingRecord, c.UsageDailyAggregate, c.UsageHourlyAggregate,
+		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -628,6 +634,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.UpstreamAccount.mutate(ctx, m)
 	case *UpstreamAccountPoolMutation:
 		return c.UpstreamAccountPool.mutate(ctx, m)
+	case *UpstreamAccountSwitchHistoryMutation:
+		return c.UpstreamAccountSwitchHistory.mutate(ctx, m)
 	case *UsageBillingRecordMutation:
 		return c.UsageBillingRecord.mutate(ctx, m)
 	case *UsageDailyAggregateMutation:
@@ -3386,6 +3394,22 @@ func (c *ChannelClient) QueryUpstreamAccounts(_m *Channel) *UpstreamAccountQuery
 			sqlgraph.From(channel.Table, channel.FieldID, id),
 			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, channel.UpstreamAccountsTable, channel.UpstreamAccountsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccountSwitchHistories queries the upstream_account_switch_histories edge of a Channel.
+func (c *ChannelClient) QueryUpstreamAccountSwitchHistories(_m *Channel) *UpstreamAccountSwitchHistoryQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.UpstreamAccountSwitchHistoriesTable, channel.UpstreamAccountSwitchHistoriesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -7208,6 +7232,22 @@ func (c *RequestClient) QueryUsageLogs(_m *Request) *UsageLogQuery {
 	return query
 }
 
+// QueryUpstreamAccountSwitchHistories queries the upstream_account_switch_histories edge of a Request.
+func (c *RequestClient) QueryUpstreamAccountSwitchHistories(_m *Request) *UpstreamAccountSwitchHistoryQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(request.Table, request.FieldID, id),
+			sqlgraph.To(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, request.UpstreamAccountSwitchHistoriesTable, request.UpstreamAccountSwitchHistoriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryBillingHolds queries the billing_holds edge of a Request.
 func (c *RequestClient) QueryBillingHolds(_m *Request) *BillingHoldQuery {
 	query := (&BillingHoldClient{config: c.config}).Query()
@@ -7415,6 +7455,22 @@ func (c *RequestExecutionClient) QueryUpstreamAccount(_m *RequestExecution) *Ups
 			sqlgraph.From(requestexecution.Table, requestexecution.FieldID, id),
 			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, requestexecution.UpstreamAccountTable, requestexecution.UpstreamAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccountSwitchHistories queries the upstream_account_switch_histories edge of a RequestExecution.
+func (c *RequestExecutionClient) QueryUpstreamAccountSwitchHistories(_m *RequestExecution) *UpstreamAccountSwitchHistoryQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(requestexecution.Table, requestexecution.FieldID, id),
+			sqlgraph.To(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, requestexecution.UpstreamAccountSwitchHistoriesTable, requestexecution.UpstreamAccountSwitchHistoriesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -8419,6 +8475,70 @@ func (c *UpstreamAccountClient) QueryExecutions(_m *UpstreamAccount) *RequestExe
 	return query
 }
 
+// QueryUsageLogs queries the usage_logs edge of a UpstreamAccount.
+func (c *UpstreamAccountClient) QueryUsageLogs(_m *UpstreamAccount) *UsageLogQuery {
+	query := (&UsageLogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, id),
+			sqlgraph.To(usagelog.Table, usagelog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, upstreamaccount.UsageLogsTable, upstreamaccount.UsageLogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsageBillingRecords queries the usage_billing_records edge of a UpstreamAccount.
+func (c *UpstreamAccountClient) QueryUsageBillingRecords(_m *UpstreamAccount) *UsageBillingRecordQuery {
+	query := (&UsageBillingRecordClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, id),
+			sqlgraph.To(usagebillingrecord.Table, usagebillingrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, upstreamaccount.UsageBillingRecordsTable, upstreamaccount.UsageBillingRecordsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySwitchHistoriesFrom queries the switch_histories_from edge of a UpstreamAccount.
+func (c *UpstreamAccountClient) QuerySwitchHistoriesFrom(_m *UpstreamAccount) *UpstreamAccountSwitchHistoryQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, id),
+			sqlgraph.To(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, upstreamaccount.SwitchHistoriesFromTable, upstreamaccount.SwitchHistoriesFromColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySwitchHistoriesTo queries the switch_histories_to edge of a UpstreamAccount.
+func (c *UpstreamAccountClient) QuerySwitchHistoriesTo(_m *UpstreamAccount) *UpstreamAccountSwitchHistoryQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, id),
+			sqlgraph.To(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, upstreamaccount.SwitchHistoriesToTable, upstreamaccount.SwitchHistoriesToColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UpstreamAccountClient) Hooks() []Hook {
 	hooks := c.hooks.UpstreamAccount
@@ -8613,6 +8733,220 @@ func (c *UpstreamAccountPoolClient) mutate(ctx context.Context, m *UpstreamAccou
 	}
 }
 
+// UpstreamAccountSwitchHistoryClient is a client for the UpstreamAccountSwitchHistory schema.
+type UpstreamAccountSwitchHistoryClient struct {
+	config
+}
+
+// NewUpstreamAccountSwitchHistoryClient returns a client for the UpstreamAccountSwitchHistory from the given config.
+func NewUpstreamAccountSwitchHistoryClient(c config) *UpstreamAccountSwitchHistoryClient {
+	return &UpstreamAccountSwitchHistoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `upstreamaccountswitchhistory.Hooks(f(g(h())))`.
+func (c *UpstreamAccountSwitchHistoryClient) Use(hooks ...Hook) {
+	c.hooks.UpstreamAccountSwitchHistory = append(c.hooks.UpstreamAccountSwitchHistory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `upstreamaccountswitchhistory.Intercept(f(g(h())))`.
+func (c *UpstreamAccountSwitchHistoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UpstreamAccountSwitchHistory = append(c.inters.UpstreamAccountSwitchHistory, interceptors...)
+}
+
+// Create returns a builder for creating a UpstreamAccountSwitchHistory entity.
+func (c *UpstreamAccountSwitchHistoryClient) Create() *UpstreamAccountSwitchHistoryCreate {
+	mutation := newUpstreamAccountSwitchHistoryMutation(c.config, OpCreate)
+	return &UpstreamAccountSwitchHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UpstreamAccountSwitchHistory entities.
+func (c *UpstreamAccountSwitchHistoryClient) CreateBulk(builders ...*UpstreamAccountSwitchHistoryCreate) *UpstreamAccountSwitchHistoryCreateBulk {
+	return &UpstreamAccountSwitchHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UpstreamAccountSwitchHistoryClient) MapCreateBulk(slice any, setFunc func(*UpstreamAccountSwitchHistoryCreate, int)) *UpstreamAccountSwitchHistoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UpstreamAccountSwitchHistoryCreateBulk{err: fmt.Errorf("calling to UpstreamAccountSwitchHistoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UpstreamAccountSwitchHistoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UpstreamAccountSwitchHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UpstreamAccountSwitchHistory.
+func (c *UpstreamAccountSwitchHistoryClient) Update() *UpstreamAccountSwitchHistoryUpdate {
+	mutation := newUpstreamAccountSwitchHistoryMutation(c.config, OpUpdate)
+	return &UpstreamAccountSwitchHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UpstreamAccountSwitchHistoryClient) UpdateOne(_m *UpstreamAccountSwitchHistory) *UpstreamAccountSwitchHistoryUpdateOne {
+	mutation := newUpstreamAccountSwitchHistoryMutation(c.config, OpUpdateOne, withUpstreamAccountSwitchHistory(_m))
+	return &UpstreamAccountSwitchHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UpstreamAccountSwitchHistoryClient) UpdateOneID(id int) *UpstreamAccountSwitchHistoryUpdateOne {
+	mutation := newUpstreamAccountSwitchHistoryMutation(c.config, OpUpdateOne, withUpstreamAccountSwitchHistoryID(id))
+	return &UpstreamAccountSwitchHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UpstreamAccountSwitchHistory.
+func (c *UpstreamAccountSwitchHistoryClient) Delete() *UpstreamAccountSwitchHistoryDelete {
+	mutation := newUpstreamAccountSwitchHistoryMutation(c.config, OpDelete)
+	return &UpstreamAccountSwitchHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UpstreamAccountSwitchHistoryClient) DeleteOne(_m *UpstreamAccountSwitchHistory) *UpstreamAccountSwitchHistoryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UpstreamAccountSwitchHistoryClient) DeleteOneID(id int) *UpstreamAccountSwitchHistoryDeleteOne {
+	builder := c.Delete().Where(upstreamaccountswitchhistory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UpstreamAccountSwitchHistoryDeleteOne{builder}
+}
+
+// Query returns a query builder for UpstreamAccountSwitchHistory.
+func (c *UpstreamAccountSwitchHistoryClient) Query() *UpstreamAccountSwitchHistoryQuery {
+	return &UpstreamAccountSwitchHistoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUpstreamAccountSwitchHistory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UpstreamAccountSwitchHistory entity by its id.
+func (c *UpstreamAccountSwitchHistoryClient) Get(ctx context.Context, id int) (*UpstreamAccountSwitchHistory, error) {
+	return c.Query().Where(upstreamaccountswitchhistory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UpstreamAccountSwitchHistoryClient) GetX(ctx context.Context, id int) *UpstreamAccountSwitchHistory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRequest queries the request edge of a UpstreamAccountSwitchHistory.
+func (c *UpstreamAccountSwitchHistoryClient) QueryRequest(_m *UpstreamAccountSwitchHistory) *RequestQuery {
+	query := (&RequestClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID, id),
+			sqlgraph.To(request.Table, request.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccountswitchhistory.RequestTable, upstreamaccountswitchhistory.RequestColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRequestExecution queries the request_execution edge of a UpstreamAccountSwitchHistory.
+func (c *UpstreamAccountSwitchHistoryClient) QueryRequestExecution(_m *UpstreamAccountSwitchHistory) *RequestExecutionQuery {
+	query := (&RequestExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID, id),
+			sqlgraph.To(requestexecution.Table, requestexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccountswitchhistory.RequestExecutionTable, upstreamaccountswitchhistory.RequestExecutionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChannel queries the channel edge of a UpstreamAccountSwitchHistory.
+func (c *UpstreamAccountSwitchHistoryClient) QueryChannel(_m *UpstreamAccountSwitchHistory) *ChannelQuery {
+	query := (&ChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID, id),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccountswitchhistory.ChannelTable, upstreamaccountswitchhistory.ChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryFromAccount queries the from_account edge of a UpstreamAccountSwitchHistory.
+func (c *UpstreamAccountSwitchHistoryClient) QueryFromAccount(_m *UpstreamAccountSwitchHistory) *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID, id),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccountswitchhistory.FromAccountTable, upstreamaccountswitchhistory.FromAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryToAccount queries the to_account edge of a UpstreamAccountSwitchHistory.
+func (c *UpstreamAccountSwitchHistoryClient) QueryToAccount(_m *UpstreamAccountSwitchHistory) *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID, id),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccountswitchhistory.ToAccountTable, upstreamaccountswitchhistory.ToAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UpstreamAccountSwitchHistoryClient) Hooks() []Hook {
+	hooks := c.hooks.UpstreamAccountSwitchHistory
+	return append(hooks[:len(hooks):len(hooks)], upstreamaccountswitchhistory.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *UpstreamAccountSwitchHistoryClient) Interceptors() []Interceptor {
+	return c.inters.UpstreamAccountSwitchHistory
+}
+
+func (c *UpstreamAccountSwitchHistoryClient) mutate(ctx context.Context, m *UpstreamAccountSwitchHistoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UpstreamAccountSwitchHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UpstreamAccountSwitchHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UpstreamAccountSwitchHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UpstreamAccountSwitchHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UpstreamAccountSwitchHistory mutation op: %q", m.Op())
+	}
+}
+
 // UsageBillingRecordClient is a client for the UsageBillingRecord schema.
 type UsageBillingRecordClient struct {
 	config
@@ -8778,6 +9112,22 @@ func (c *UsageBillingRecordClient) QueryUserSubscription(_m *UsageBillingRecord)
 			sqlgraph.From(usagebillingrecord.Table, usagebillingrecord.FieldID, id),
 			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usagebillingrecord.UserSubscriptionTable, usagebillingrecord.UserSubscriptionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccount queries the upstream_account edge of a UsageBillingRecord.
+func (c *UsageBillingRecordClient) QueryUpstreamAccount(_m *UsageBillingRecord) *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagebillingrecord.Table, usagebillingrecord.FieldID, id),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usagebillingrecord.UpstreamAccountTable, usagebillingrecord.UpstreamAccountColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -9244,6 +9594,22 @@ func (c *UsageLogClient) QueryChannel(_m *UsageLog) *ChannelQuery {
 			sqlgraph.From(usagelog.Table, usagelog.FieldID, id),
 			sqlgraph.To(channel.Table, channel.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usagelog.ChannelTable, usagelog.ChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccount queries the upstream_account edge of a UsageLog.
+func (c *UsageLogClient) QueryUpstreamAccount(_m *UsageLog) *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagelog.Table, usagelog.FieldID, id),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usagelog.UpstreamAccountTable, usagelog.UpstreamAccountColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -10370,9 +10736,9 @@ type (
 		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
 		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
 		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
-		UpstreamAccount, UpstreamAccountPool, UsageBillingRecord, UsageDailyAggregate,
-		UsageHourlyAggregate, UsageLog, User, UserProject, UserRole,
-		UserSubscription []ent.Hook
+		UpstreamAccount, UpstreamAccountPool, UpstreamAccountSwitchHistory,
+		UsageBillingRecord, UsageDailyAggregate, UsageHourlyAggregate, UsageLog, User,
+		UserProject, UserRole, UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, AffiliateInvitation, AffiliateProfile,
@@ -10385,8 +10751,8 @@ type (
 		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
 		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
 		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
-		UpstreamAccount, UpstreamAccountPool, UsageBillingRecord, UsageDailyAggregate,
-		UsageHourlyAggregate, UsageLog, User, UserProject, UserRole,
-		UserSubscription []ent.Interceptor
+		UpstreamAccount, UpstreamAccountPool, UpstreamAccountSwitchHistory,
+		UsageBillingRecord, UsageDailyAggregate, UsageHourlyAggregate, UsageLog, User,
+		UserProject, UserRole, UserSubscription []ent.Interceptor
 	}
 )

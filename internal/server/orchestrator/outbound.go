@@ -469,6 +469,7 @@ func (p *PersistentOutboundTransformer) selectAccountForCandidate(ctx context.Co
 	if account.ProxyConfig != nil {
 		p.state.CurrentUpstreamAccountProxy = account.ProxyConfig
 	}
+	p.recordAccountSwitch(ctx, candidate.Channel.ID, account.ID, modelID)
 
 	accountCandidate := *candidate
 	accountCandidate.Channel = overrideChannel
@@ -481,6 +482,39 @@ func (p *PersistentOutboundTransformer) selectAccountForCandidate(ctx context.Co
 	)
 
 	return &accountCandidate, nil
+}
+
+func (p *PersistentOutboundTransformer) recordAccountSwitch(ctx context.Context, channelID, accountID int, modelID string) {
+	if p.state == nil || p.state.UpstreamAccountService == nil || p.state.Request == nil {
+		return
+	}
+
+	reason := "initial_selection"
+	if p.state.LastUpstreamAccountID != nil {
+		reason = "retry_after_failure"
+	}
+
+	if err := p.state.UpstreamAccountService.RecordSwitchHistory(ctx, biz.UpstreamAccountSwitchHistoryInput{
+		ProjectID:          p.state.Request.ProjectID,
+		RequestID:          &p.state.Request.ID,
+		RequestExecutionID: p.state.LastUpstreamAccountExecutionID,
+		ChannelID:          channelID,
+		FromAccountID:      p.state.LastUpstreamAccountID,
+		ToAccountID:        &accountID,
+		ModelID:            modelID,
+		Reason:             reason,
+		ErrorCode:          p.state.LastUpstreamAccountErrorCode,
+		ErrorMessage:       p.state.LastUpstreamAccountErrorMessage,
+		LatencyMs:          p.state.LastUpstreamAccountLatencyMs,
+	}); err != nil {
+		log.Warn(ctx, "Failed to record upstream account switch history", log.Int("upstream_account_id", accountID), log.Cause(err))
+	}
+
+	p.state.LastUpstreamAccountID = nil
+	p.state.LastUpstreamAccountExecutionID = nil
+	p.state.LastUpstreamAccountErrorCode = nil
+	p.state.LastUpstreamAccountErrorMessage = ""
+	p.state.LastUpstreamAccountLatencyMs = nil
 }
 
 func projectIDFromState(state *PersistenceState) int {
@@ -701,6 +735,11 @@ func (p *PersistentOutboundTransformer) NextChannel(ctx context.Context) error {
 	p.state.CurrentUpstreamAccountProxy = nil
 	p.state.TriedUpstreamAccountIDs = nil
 	p.state.UpstreamAccountRetryCount = 0
+	p.state.LastUpstreamAccountID = nil
+	p.state.LastUpstreamAccountExecutionID = nil
+	p.state.LastUpstreamAccountErrorCode = nil
+	p.state.LastUpstreamAccountErrorMessage = ""
+	p.state.LastUpstreamAccountLatencyMs = nil
 	p.releaseUpstreamAccountAttempt()
 
 	candidate := p.state.ChannelModelsCandidates[p.state.CurrentCandidateIndex]
@@ -729,6 +768,7 @@ func (p *PersistentOutboundTransformer) CanRetry(err error) bool {
 	}
 
 	if p.state.UpstreamAccountService != nil && p.state.CurrentUpstreamAccount != nil && isRetryableAccountError(err) {
+		p.captureAccountRetryContext(err)
 		return true
 	}
 
@@ -776,6 +816,26 @@ func (p *PersistentOutboundTransformer) CanRetry(err error) bool {
 
 	// otherwise check if the error is retryable for the current channel.
 	return isRetryableErrorForChannel(err, p.state.CurrentCandidate.Channel)
+}
+
+func (p *PersistentOutboundTransformer) captureAccountRetryContext(err error) {
+	if p.state == nil || p.state.CurrentUpstreamAccount == nil {
+		return
+	}
+
+	accountID := p.state.CurrentUpstreamAccount.ID
+	p.state.LastUpstreamAccountID = &accountID
+	if p.state.RequestExec != nil {
+		executionID := p.state.RequestExec.ID
+		p.state.LastUpstreamAccountExecutionID = &executionID
+	}
+	statusCode := ExtractStatusCodeFromError(err)
+	p.state.LastUpstreamAccountErrorCode = &statusCode
+	p.state.LastUpstreamAccountErrorMessage = ExtractErrorMessage(err)
+	if p.state.Perf != nil && !p.state.Perf.StartTime.IsZero() {
+		latencyMs := time.Since(p.state.Perf.StartTime).Milliseconds()
+		p.state.LastUpstreamAccountLatencyMs = &latencyMs
+	}
 }
 
 // PrepareForRetry implements the pipeline.ChannelRetryable interface.

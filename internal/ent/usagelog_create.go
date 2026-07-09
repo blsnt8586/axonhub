@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/request"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/objects"
@@ -100,6 +101,20 @@ func (_c *UsageLogCreate) SetChannelID(v int) *UsageLogCreate {
 func (_c *UsageLogCreate) SetNillableChannelID(v *int) *UsageLogCreate {
 	if v != nil {
 		_c.SetChannelID(*v)
+	}
+	return _c
+}
+
+// SetUpstreamAccountID sets the "upstream_account_id" field.
+func (_c *UsageLogCreate) SetUpstreamAccountID(v int) *UsageLogCreate {
+	_c.mutation.SetUpstreamAccountID(v)
+	return _c
+}
+
+// SetNillableUpstreamAccountID sets the "upstream_account_id" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableUpstreamAccountID(v *int) *UsageLogCreate {
+	if v != nil {
+		_c.SetUpstreamAccountID(*v)
 	}
 	return _c
 }
@@ -353,6 +368,11 @@ func (_c *UsageLogCreate) SetProject(v *Project) *UsageLogCreate {
 // SetChannel sets the "channel" edge to the Channel entity.
 func (_c *UsageLogCreate) SetChannel(v *Channel) *UsageLogCreate {
 	return _c.SetChannelID(v.ID)
+}
+
+// SetUpstreamAccount sets the "upstream_account" edge to the UpstreamAccount entity.
+func (_c *UsageLogCreate) SetUpstreamAccount(v *UpstreamAccount) *UsageLogCreate {
+	return _c.SetUpstreamAccountID(v.ID)
 }
 
 // AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
@@ -700,6 +720,23 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.ChannelID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UpstreamAccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagelog.UpstreamAccountTable,
+			Columns: []string{usagelog.UpstreamAccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.UpstreamAccountID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.UsageBillingRecordsIDs(); len(nodes) > 0 {
@@ -1153,6 +1190,9 @@ func (u *UsageLogUpsertOne) UpdateNewValues() *UsageLogUpsertOne {
 		}
 		if _, exists := u.create.mutation.ChannelID(); exists {
 			s.SetIgnore(usagelog.FieldChannelID)
+		}
+		if _, exists := u.create.mutation.UpstreamAccountID(); exists {
+			s.SetIgnore(usagelog.FieldUpstreamAccountID)
 		}
 		if _, exists := u.create.mutation.ModelID(); exists {
 			s.SetIgnore(usagelog.FieldModelID)
@@ -1783,6 +1823,9 @@ func (u *UsageLogUpsertBulk) UpdateNewValues() *UsageLogUpsertBulk {
 			}
 			if _, exists := b.mutation.ChannelID(); exists {
 				s.SetIgnore(usagelog.FieldChannelID)
+			}
+			if _, exists := b.mutation.UpstreamAccountID(); exists {
+				s.SetIgnore(usagelog.FieldUpstreamAccountID)
 			}
 			if _, exists := b.mutation.ModelID(); exists {
 				s.SetIgnore(usagelog.FieldModelID)

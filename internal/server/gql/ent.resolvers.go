@@ -1159,6 +1159,18 @@ func (r *queryResolver) Traces(ctx context.Context, after *entgql.Cursor[int], f
 	)
 }
 
+// UpstreamAccountSwitchHistories is the resolver for the upstreamAccountSwitchHistories field.
+func (r *queryResolver) UpstreamAccountSwitchHistories(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UpstreamAccountSwitchHistoryOrder, where *ent.UpstreamAccountSwitchHistoryWhereInput) (*ent.UpstreamAccountSwitchHistoryConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.UpstreamAccountSwitchHistory.Query().Paginate(ctx, after, first, before, last,
+		ent.WithUpstreamAccountSwitchHistoryOrder(orderBy),
+		ent.WithUpstreamAccountSwitchHistoryFilter(where.Filter),
+	)
+}
+
 // UsageBillingRecords is the resolver for the usageBillingRecords field.
 func (r *queryResolver) UsageBillingRecords(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder, where *ent.UsageBillingRecordWhereInput) (*ent.UsageBillingRecordConnection, error) {
 	if err := validatePaginationArgs(first, last); err != nil {
@@ -1390,7 +1402,11 @@ func (r *requestExecutionResolver) ChannelID(ctx context.Context, obj *ent.Reque
 
 // UpstreamAccountID is the resolver for the upstreamAccountID field.
 func (r *requestExecutionResolver) UpstreamAccountID(ctx context.Context, obj *ent.RequestExecution) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: UpstreamAccountID - upstreamAccountID"))
+	if obj.UpstreamAccountID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{Type: ent.TypeUpstreamAccount, ID: *obj.UpstreamAccountID}, nil
 }
 
 // DataStorageID is the resolver for the dataStorageID field.
@@ -1450,7 +1466,11 @@ func (r *requestExecutionResolver) Channel(ctx context.Context, obj *ent.Request
 
 // UpstreamAccount is the resolver for the upstreamAccount field.
 func (r *requestExecutionResolver) UpstreamAccount(ctx context.Context, obj *ent.RequestExecution) (*ent.UpstreamAccount, error) {
-	panic(fmt.Errorf("not implemented: UpstreamAccount - upstreamAccount"))
+	if obj.UpstreamAccountID == nil {
+		return nil, nil
+	}
+
+	return r.client.UpstreamAccount.Get(ctx, *obj.UpstreamAccountID)
 }
 
 // ID is the resolver for the id field.
@@ -1579,6 +1599,52 @@ func (r *upstreamAccountPoolResolver) ChannelID(ctx context.Context, obj *ent.Up
 }
 
 // ID is the resolver for the id field.
+func (r *upstreamAccountSwitchHistoryResolver) ID(ctx context.Context, obj *ent.UpstreamAccountSwitchHistory) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUpstreamAccountSwitchHistory, ID: obj.ID}, nil
+}
+
+// RequestID is the resolver for the requestID field.
+func (r *upstreamAccountSwitchHistoryResolver) RequestID(ctx context.Context, obj *ent.UpstreamAccountSwitchHistory) (*objects.GUID, error) {
+	if obj.RequestID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{Type: ent.TypeRequest, ID: *obj.RequestID}, nil
+}
+
+// RequestExecutionID is the resolver for the requestExecutionID field.
+func (r *upstreamAccountSwitchHistoryResolver) RequestExecutionID(ctx context.Context, obj *ent.UpstreamAccountSwitchHistory) (*objects.GUID, error) {
+	if obj.RequestExecutionID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{Type: ent.TypeRequestExecution, ID: *obj.RequestExecutionID}, nil
+}
+
+// ChannelID is the resolver for the channelID field.
+func (r *upstreamAccountSwitchHistoryResolver) ChannelID(ctx context.Context, obj *ent.UpstreamAccountSwitchHistory) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeChannel, ID: obj.ChannelID}, nil
+}
+
+// FromAccountID is the resolver for the fromAccountID field.
+func (r *upstreamAccountSwitchHistoryResolver) FromAccountID(ctx context.Context, obj *ent.UpstreamAccountSwitchHistory) (*objects.GUID, error) {
+	if obj.FromAccountID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{Type: ent.TypeUpstreamAccount, ID: *obj.FromAccountID}, nil
+}
+
+// ToAccountID is the resolver for the toAccountID field.
+func (r *upstreamAccountSwitchHistoryResolver) ToAccountID(ctx context.Context, obj *ent.UpstreamAccountSwitchHistory) (*objects.GUID, error) {
+	if obj.ToAccountID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{Type: ent.TypeUpstreamAccount, ID: *obj.ToAccountID}, nil
+}
+
+// ID is the resolver for the id field.
 func (r *usageBillingRecordResolver) ID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeUsageBillingRecord,
@@ -1600,6 +1666,15 @@ func (r *usageBillingRecordResolver) BillingAccountID(ctx context.Context, obj *
 		Type: ent.TypeBillingAccount,
 		ID:   obj.BillingAccountID,
 	}, nil
+}
+
+// UpstreamAccountID is the resolver for the upstreamAccountID field.
+func (r *usageBillingRecordResolver) UpstreamAccountID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
+	if obj.UpstreamAccountID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{Type: ent.TypeUpstreamAccount, ID: *obj.UpstreamAccountID}, nil
 }
 
 // LedgerTransactionID is the resolver for the ledgerTransactionID field.
@@ -1668,9 +1743,27 @@ func (r *usageLogResolver) ChannelID(ctx context.Context, obj *ent.UsageLog) (*o
 	}, nil
 }
 
+// UpstreamAccountID is the resolver for the upstreamAccountID field.
+func (r *usageLogResolver) UpstreamAccountID(ctx context.Context, obj *ent.UsageLog) (*objects.GUID, error) {
+	if obj.UpstreamAccountID == nil {
+		return nil, nil
+	}
+
+	return &objects.GUID{Type: ent.TypeUpstreamAccount, ID: *obj.UpstreamAccountID}, nil
+}
+
 // Channel is the resolver for the channel field.
 func (r *usageLogResolver) Channel(ctx context.Context, obj *ent.UsageLog) (*ent.Channel, error) {
 	return getNilableChannel(ctx, r.client, obj.ChannelID)
+}
+
+// UpstreamAccount is the resolver for the upstreamAccount field.
+func (r *usageLogResolver) UpstreamAccount(ctx context.Context, obj *ent.UsageLog) (*ent.UpstreamAccount, error) {
+	if obj.UpstreamAccountID == nil {
+		return nil, nil
+	}
+
+	return r.client.UpstreamAccount.Get(ctx, *obj.UpstreamAccountID)
 }
 
 // ID is the resolver for the id field.
@@ -1967,6 +2060,11 @@ func (r *Resolver) UpstreamAccountPool() UpstreamAccountPoolResolver {
 	return &upstreamAccountPoolResolver{r}
 }
 
+// UpstreamAccountSwitchHistory returns UpstreamAccountSwitchHistoryResolver implementation.
+func (r *Resolver) UpstreamAccountSwitchHistory() UpstreamAccountSwitchHistoryResolver {
+	return &upstreamAccountSwitchHistoryResolver{r}
+}
+
 // UsageBillingRecord returns UsageBillingRecordResolver implementation.
 func (r *Resolver) UsageBillingRecord() UsageBillingRecordResolver {
 	return &usageBillingRecordResolver{r}
@@ -2043,6 +2141,7 @@ type threadResolver struct{ *Resolver }
 type traceResolver struct{ *Resolver }
 type upstreamAccountResolver struct{ *Resolver }
 type upstreamAccountPoolResolver struct{ *Resolver }
+type upstreamAccountSwitchHistoryResolver struct{ *Resolver }
 type usageBillingRecordResolver struct{ *Resolver }
 type usageDailyAggregateResolver struct{ *Resolver }
 type usageHourlyAggregateResolver struct{ *Resolver }

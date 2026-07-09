@@ -22,33 +22,36 @@ import (
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 )
 
 // ChannelQuery is the builder for querying Channel entities.
 type ChannelQuery struct {
 	config
-	ctx                           *QueryContext
-	order                         []channel.OrderOption
-	inters                        []Interceptor
-	predicates                    []predicate.Channel
-	withRequests                  *RequestQuery
-	withExecutions                *RequestExecutionQuery
-	withUsageLogs                 *UsageLogQuery
-	withChannelProbes             *ChannelProbeQuery
-	withChannelModelPrices        *ChannelModelPriceQuery
-	withUpstreamAccountPools      *UpstreamAccountPoolQuery
-	withUpstreamAccounts          *UpstreamAccountQuery
-	withProviderQuotaStatus       *ProviderQuotaStatusQuery
-	loadTotal                     []func(context.Context, []*Channel) error
-	modifiers                     []func(*sql.Selector)
-	withNamedRequests             map[string]*RequestQuery
-	withNamedExecutions           map[string]*RequestExecutionQuery
-	withNamedUsageLogs            map[string]*UsageLogQuery
-	withNamedChannelProbes        map[string]*ChannelProbeQuery
-	withNamedChannelModelPrices   map[string]*ChannelModelPriceQuery
-	withNamedUpstreamAccountPools map[string]*UpstreamAccountPoolQuery
-	withNamedUpstreamAccounts     map[string]*UpstreamAccountQuery
+	ctx                                     *QueryContext
+	order                                   []channel.OrderOption
+	inters                                  []Interceptor
+	predicates                              []predicate.Channel
+	withRequests                            *RequestQuery
+	withExecutions                          *RequestExecutionQuery
+	withUsageLogs                           *UsageLogQuery
+	withChannelProbes                       *ChannelProbeQuery
+	withChannelModelPrices                  *ChannelModelPriceQuery
+	withUpstreamAccountPools                *UpstreamAccountPoolQuery
+	withUpstreamAccounts                    *UpstreamAccountQuery
+	withUpstreamAccountSwitchHistories      *UpstreamAccountSwitchHistoryQuery
+	withProviderQuotaStatus                 *ProviderQuotaStatusQuery
+	loadTotal                               []func(context.Context, []*Channel) error
+	modifiers                               []func(*sql.Selector)
+	withNamedRequests                       map[string]*RequestQuery
+	withNamedExecutions                     map[string]*RequestExecutionQuery
+	withNamedUsageLogs                      map[string]*UsageLogQuery
+	withNamedChannelProbes                  map[string]*ChannelProbeQuery
+	withNamedChannelModelPrices             map[string]*ChannelModelPriceQuery
+	withNamedUpstreamAccountPools           map[string]*UpstreamAccountPoolQuery
+	withNamedUpstreamAccounts               map[string]*UpstreamAccountQuery
+	withNamedUpstreamAccountSwitchHistories map[string]*UpstreamAccountSwitchHistoryQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -232,6 +235,28 @@ func (_q *ChannelQuery) QueryUpstreamAccounts() *UpstreamAccountQuery {
 			sqlgraph.From(channel.Table, channel.FieldID, selector),
 			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, channel.UpstreamAccountsTable, channel.UpstreamAccountsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccountSwitchHistories chains the current query on the "upstream_account_switch_histories" edge.
+func (_q *ChannelQuery) QueryUpstreamAccountSwitchHistories() *UpstreamAccountSwitchHistoryQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, selector),
+			sqlgraph.To(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.UpstreamAccountSwitchHistoriesTable, channel.UpstreamAccountSwitchHistoriesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -448,19 +473,20 @@ func (_q *ChannelQuery) Clone() *ChannelQuery {
 		return nil
 	}
 	return &ChannelQuery{
-		config:                   _q.config,
-		ctx:                      _q.ctx.Clone(),
-		order:                    append([]channel.OrderOption{}, _q.order...),
-		inters:                   append([]Interceptor{}, _q.inters...),
-		predicates:               append([]predicate.Channel{}, _q.predicates...),
-		withRequests:             _q.withRequests.Clone(),
-		withExecutions:           _q.withExecutions.Clone(),
-		withUsageLogs:            _q.withUsageLogs.Clone(),
-		withChannelProbes:        _q.withChannelProbes.Clone(),
-		withChannelModelPrices:   _q.withChannelModelPrices.Clone(),
-		withUpstreamAccountPools: _q.withUpstreamAccountPools.Clone(),
-		withUpstreamAccounts:     _q.withUpstreamAccounts.Clone(),
-		withProviderQuotaStatus:  _q.withProviderQuotaStatus.Clone(),
+		config:                             _q.config,
+		ctx:                                _q.ctx.Clone(),
+		order:                              append([]channel.OrderOption{}, _q.order...),
+		inters:                             append([]Interceptor{}, _q.inters...),
+		predicates:                         append([]predicate.Channel{}, _q.predicates...),
+		withRequests:                       _q.withRequests.Clone(),
+		withExecutions:                     _q.withExecutions.Clone(),
+		withUsageLogs:                      _q.withUsageLogs.Clone(),
+		withChannelProbes:                  _q.withChannelProbes.Clone(),
+		withChannelModelPrices:             _q.withChannelModelPrices.Clone(),
+		withUpstreamAccountPools:           _q.withUpstreamAccountPools.Clone(),
+		withUpstreamAccounts:               _q.withUpstreamAccounts.Clone(),
+		withUpstreamAccountSwitchHistories: _q.withUpstreamAccountSwitchHistories.Clone(),
+		withProviderQuotaStatus:            _q.withProviderQuotaStatus.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -542,6 +568,17 @@ func (_q *ChannelQuery) WithUpstreamAccounts(opts ...func(*UpstreamAccountQuery)
 		opt(query)
 	}
 	_q.withUpstreamAccounts = query
+	return _q
+}
+
+// WithUpstreamAccountSwitchHistories tells the query-builder to eager-load the nodes that are connected to
+// the "upstream_account_switch_histories" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChannelQuery) WithUpstreamAccountSwitchHistories(opts ...func(*UpstreamAccountSwitchHistoryQuery)) *ChannelQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUpstreamAccountSwitchHistories = query
 	return _q
 }
 
@@ -640,7 +677,7 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 	var (
 		nodes       = []*Channel{}
 		_spec       = _q.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [9]bool{
 			_q.withRequests != nil,
 			_q.withExecutions != nil,
 			_q.withUsageLogs != nil,
@@ -648,6 +685,7 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 			_q.withChannelModelPrices != nil,
 			_q.withUpstreamAccountPools != nil,
 			_q.withUpstreamAccounts != nil,
+			_q.withUpstreamAccountSwitchHistories != nil,
 			_q.withProviderQuotaStatus != nil,
 		}
 	)
@@ -725,6 +763,15 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 			return nil, err
 		}
 	}
+	if query := _q.withUpstreamAccountSwitchHistories; query != nil {
+		if err := _q.loadUpstreamAccountSwitchHistories(ctx, query, nodes,
+			func(n *Channel) { n.Edges.UpstreamAccountSwitchHistories = []*UpstreamAccountSwitchHistory{} },
+			func(n *Channel, e *UpstreamAccountSwitchHistory) {
+				n.Edges.UpstreamAccountSwitchHistories = append(n.Edges.UpstreamAccountSwitchHistories, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withProviderQuotaStatus; query != nil {
 		if err := _q.loadProviderQuotaStatus(ctx, query, nodes, nil,
 			func(n *Channel, e *ProviderQuotaStatus) { n.Edges.ProviderQuotaStatus = e }); err != nil {
@@ -777,6 +824,15 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 		if err := _q.loadUpstreamAccounts(ctx, query, nodes,
 			func(n *Channel) { n.appendNamedUpstreamAccounts(name) },
 			func(n *Channel, e *UpstreamAccount) { n.appendNamedUpstreamAccounts(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedUpstreamAccountSwitchHistories {
+		if err := _q.loadUpstreamAccountSwitchHistories(ctx, query, nodes,
+			func(n *Channel) { n.appendNamedUpstreamAccountSwitchHistories(name) },
+			func(n *Channel, e *UpstreamAccountSwitchHistory) {
+				n.appendNamedUpstreamAccountSwitchHistories(name, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -983,6 +1039,36 @@ func (_q *ChannelQuery) loadUpstreamAccounts(ctx context.Context, query *Upstrea
 	}
 	query.Where(predicate.UpstreamAccount(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(channel.UpstreamAccountsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ChannelID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "channel_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *ChannelQuery) loadUpstreamAccountSwitchHistories(ctx context.Context, query *UpstreamAccountSwitchHistoryQuery, nodes []*Channel, init func(*Channel), assign func(*Channel, *UpstreamAccountSwitchHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Channel)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(upstreamaccountswitchhistory.FieldChannelID)
+	}
+	query.Where(predicate.UpstreamAccountSwitchHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(channel.UpstreamAccountSwitchHistoriesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -1214,6 +1300,20 @@ func (_q *ChannelQuery) WithNamedUpstreamAccounts(name string, opts ...func(*Ups
 		_q.withNamedUpstreamAccounts = make(map[string]*UpstreamAccountQuery)
 	}
 	_q.withNamedUpstreamAccounts[name] = query
+	return _q
+}
+
+// WithNamedUpstreamAccountSwitchHistories tells the query-builder to eager-load the nodes that are connected to the "upstream_account_switch_histories"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChannelQuery) WithNamedUpstreamAccountSwitchHistories(name string, opts ...func(*UpstreamAccountSwitchHistoryQuery)) *ChannelQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedUpstreamAccountSwitchHistories == nil {
+		_q.withNamedUpstreamAccountSwitchHistories = make(map[string]*UpstreamAccountSwitchHistoryQuery)
+	}
+	_q.withNamedUpstreamAccountSwitchHistories[name] = query
 	return _q
 }
 

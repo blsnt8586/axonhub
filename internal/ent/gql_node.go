@@ -59,6 +59,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -300,6 +301,11 @@ var upstreamaccountpoolImplementors = []string{"UpstreamAccountPool", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*UpstreamAccountPool) IsNode() {}
+
+var upstreamaccountswitchhistoryImplementors = []string{"UpstreamAccountSwitchHistory", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*UpstreamAccountSwitchHistory) IsNode() {}
 
 var usagebillingrecordImplementors = []string{"UsageBillingRecord", "Node"}
 
@@ -800,6 +806,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(upstreamaccountpool.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, upstreamaccountpoolImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case upstreamaccountswitchhistory.Table:
+		query := c.UpstreamAccountSwitchHistory.Query().
+			Where(upstreamaccountswitchhistory.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, upstreamaccountswitchhistoryImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -1657,6 +1672,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.UpstreamAccountPool.Query().
 			Where(upstreamaccountpool.IDIn(ids...))
 		query, err := query.CollectFields(ctx, upstreamaccountpoolImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case upstreamaccountswitchhistory.Table:
+		query := c.UpstreamAccountSwitchHistory.Query().
+			Where(upstreamaccountswitchhistory.IDIn(ids...))
+		query, err := query.CollectFields(ctx, upstreamaccountswitchhistoryImplementors...)
 		if err != nil {
 			return nil, err
 		}

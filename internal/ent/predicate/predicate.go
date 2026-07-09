@@ -141,6 +141,9 @@ type UpstreamAccount func(*sql.Selector)
 // UpstreamAccountPool is the predicate function for upstreamaccountpool builders.
 type UpstreamAccountPool func(*sql.Selector)
 
+// UpstreamAccountSwitchHistory is the predicate function for upstreamaccountswitchhistory builders.
+type UpstreamAccountSwitchHistory func(*sql.Selector)
+
 // UsageBillingRecord is the predicate function for usagebillingrecord builders.
 type UsageBillingRecord func(*sql.Selector)
 

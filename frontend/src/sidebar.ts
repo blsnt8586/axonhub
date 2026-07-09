@@ -15,6 +15,7 @@ import {
   IconChartBar,
   IconWallet,
   IconCreditCard,
+  IconServer,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -80,6 +81,11 @@ export function useSidebarData(): SidebarData {
           title: t('sidebar.items.channels'),
           url: '/channels',
           icon: IconAi,
+        } as NavLink,
+        {
+          title: t('sidebar.items.upstreamAccounts'),
+          url: '/channels/accounts',
+          icon: IconServer,
         } as NavLink,
         {
           title: t('sidebar.items.models'),

@@ -67,6 +67,16 @@ type PersistenceState struct {
 	UpstreamAccountRetryCount int
 	// CurrentUpstreamAccountProxy overrides the channel proxy for the current account attempt.
 	CurrentUpstreamAccountProxy *httpclient.ProxyConfig
+	// LastUpstreamAccountID records the previous failed account before a same-channel account retry.
+	LastUpstreamAccountID *int
+	// LastUpstreamAccountExecutionID records the previous failed execution before account switching.
+	LastUpstreamAccountExecutionID *int
+	// LastUpstreamAccountErrorCode records the upstream status code that triggered account switching.
+	LastUpstreamAccountErrorCode *int
+	// LastUpstreamAccountErrorMessage records the error message that triggered account switching.
+	LastUpstreamAccountErrorMessage string
+	// LastUpstreamAccountLatencyMs records the failed attempt latency before account switching.
+	LastUpstreamAccountLatencyMs *int64
 
 	// Perf is the performance record for the current request.
 	Perf *biz.PerformanceRecord

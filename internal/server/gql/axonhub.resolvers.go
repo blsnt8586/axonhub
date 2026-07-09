@@ -935,6 +935,30 @@ func (r *queryResolver) UpstreamAccounts(ctx context.Context, channelID objects.
 	return r.upstreamAccountService.ListAccounts(ctx, channelID.ID, boolOrDefault(includeArchived, false))
 }
 
+// UpstreamAccountMonitoring is the resolver for the upstreamAccountMonitoring field.
+func (r *queryResolver) UpstreamAccountMonitoring(ctx context.Context, filter *biz.UpstreamAccountMonitoringFilter) ([]*biz.UpstreamAccountMonitoringSummary, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	if filter == nil {
+		filter = &biz.UpstreamAccountMonitoringFilter{}
+	}
+	return r.upstreamAccountService.MonitoringSummaries(ctx, *filter)
+}
+
+// UpstreamAccountMonitoringDetail is the resolver for the upstreamAccountMonitoringDetail field.
+func (r *queryResolver) UpstreamAccountMonitoringDetail(ctx context.Context, accountID objects.GUID, filter *biz.UpstreamAccountMonitoringFilter) (*biz.UpstreamAccountMonitoringDetail, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	if filter == nil {
+		filter = &biz.UpstreamAccountMonitoringFilter{}
+	}
+	return r.upstreamAccountService.MonitoringDetail(ctx, accountID.ID, *filter)
+}
+
 // APIKeyQuotaUsages is the resolver for the apiKeyQuotaUsages field.
 func (r *queryResolver) APIKeyQuotaUsages(ctx context.Context, apiKeyID objects.GUID) ([]*APIKeyProfileQuotaUsage, error) {
 	apiKey, err := r.client.APIKey.Get(ctx, apiKeyID.ID)
@@ -1076,6 +1100,26 @@ func (r *upstreamAccountResolver) IneligibleReason(ctx context.Context, obj *ent
 }
 
 // AccountID is the resolver for the accountID field.
+func (r *upstreamAccountMonitoringSummaryResolver) AccountID(ctx context.Context, obj *biz.UpstreamAccountMonitoringSummary) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUpstreamAccount, ID: obj.AccountID}, nil
+}
+
+// ChannelID is the resolver for the channelID field.
+func (r *upstreamAccountMonitoringSummaryResolver) ChannelID(ctx context.Context, obj *biz.UpstreamAccountMonitoringSummary) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeChannel, ID: obj.ChannelID}, nil
+}
+
+// RequestExecutionID is the resolver for the requestExecutionID field.
+func (r *upstreamAccountRecentErrorResolver) RequestExecutionID(ctx context.Context, obj *biz.UpstreamAccountRecentError) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeRequestExecution, ID: obj.RequestExecutionID}, nil
+}
+
+// RequestID is the resolver for the requestID field.
+func (r *upstreamAccountRecentErrorResolver) RequestID(ctx context.Context, obj *biz.UpstreamAccountRecentError) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeRequest, ID: obj.RequestID}, nil
+}
+
+// AccountID is the resolver for the accountID field.
 func (r *upstreamAccountTestResultResolver) AccountID(ctx context.Context, obj *biz.UpstreamAccountTestResult) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeUpstreamAccount,
@@ -1092,6 +1136,16 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Segment returns SegmentResolver implementation.
 func (r *Resolver) Segment() SegmentResolver { return &segmentResolver{r} }
 
+// UpstreamAccountMonitoringSummary returns UpstreamAccountMonitoringSummaryResolver implementation.
+func (r *Resolver) UpstreamAccountMonitoringSummary() UpstreamAccountMonitoringSummaryResolver {
+	return &upstreamAccountMonitoringSummaryResolver{r}
+}
+
+// UpstreamAccountRecentError returns UpstreamAccountRecentErrorResolver implementation.
+func (r *Resolver) UpstreamAccountRecentError() UpstreamAccountRecentErrorResolver {
+	return &upstreamAccountRecentErrorResolver{r}
+}
+
 // UpstreamAccountTestResult returns UpstreamAccountTestResultResolver implementation.
 func (r *Resolver) UpstreamAccountTestResult() UpstreamAccountTestResultResolver {
 	return &upstreamAccountTestResultResolver{r}
@@ -1100,4 +1154,6 @@ func (r *Resolver) UpstreamAccountTestResult() UpstreamAccountTestResultResolver
 type channelSettingsResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type segmentResolver struct{ *Resolver }
+type upstreamAccountMonitoringSummaryResolver struct{ *Resolver }
+type upstreamAccountRecentErrorResolver struct{ *Resolver }
 type upstreamAccountTestResultResolver struct{ *Resolver }

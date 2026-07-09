@@ -98,17 +98,20 @@ type RequestEdges struct {
 	Channel *Channel `json:"channel,omitempty"`
 	// UsageLogs holds the value of the usage_logs edge.
 	UsageLogs []*UsageLog `json:"usage_logs,omitempty"`
+	// UpstreamAccountSwitchHistories holds the value of the upstream_account_switch_histories edge.
+	UpstreamAccountSwitchHistories []*UpstreamAccountSwitchHistory `json:"upstream_account_switch_histories,omitempty"`
 	// BillingHolds holds the value of the billing_holds edge.
 	BillingHolds []*BillingHold `json:"billing_holds,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [9]bool
 	// totalCount holds the count of the edges above.
-	totalCount [8]map[string]int
+	totalCount [9]map[string]int
 
-	namedExecutions   map[string][]*RequestExecution
-	namedUsageLogs    map[string][]*UsageLog
-	namedBillingHolds map[string][]*BillingHold
+	namedExecutions                     map[string][]*RequestExecution
+	namedUsageLogs                      map[string][]*UsageLog
+	namedUpstreamAccountSwitchHistories map[string][]*UpstreamAccountSwitchHistory
+	namedBillingHolds                   map[string][]*BillingHold
 }
 
 // APIKeyOrErr returns the APIKey value or an error if the edge
@@ -184,10 +187,19 @@ func (e RequestEdges) UsageLogsOrErr() ([]*UsageLog, error) {
 	return nil, &NotLoadedError{edge: "usage_logs"}
 }
 
+// UpstreamAccountSwitchHistoriesOrErr returns the UpstreamAccountSwitchHistories value or an error if the edge
+// was not loaded in eager-loading.
+func (e RequestEdges) UpstreamAccountSwitchHistoriesOrErr() ([]*UpstreamAccountSwitchHistory, error) {
+	if e.loadedTypes[7] {
+		return e.UpstreamAccountSwitchHistories, nil
+	}
+	return nil, &NotLoadedError{edge: "upstream_account_switch_histories"}
+}
+
 // BillingHoldsOrErr returns the BillingHolds value or an error if the edge
 // was not loaded in eager-loading.
 func (e RequestEdges) BillingHoldsOrErr() ([]*BillingHold, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[8] {
 		return e.BillingHolds, nil
 	}
 	return nil, &NotLoadedError{edge: "billing_holds"}
@@ -447,6 +459,11 @@ func (_m *Request) QueryUsageLogs() *UsageLogQuery {
 	return NewRequestClient(_m.config).QueryUsageLogs(_m)
 }
 
+// QueryUpstreamAccountSwitchHistories queries the "upstream_account_switch_histories" edge of the Request entity.
+func (_m *Request) QueryUpstreamAccountSwitchHistories() *UpstreamAccountSwitchHistoryQuery {
+	return NewRequestClient(_m.config).QueryUpstreamAccountSwitchHistories(_m)
+}
+
 // QueryBillingHolds queries the "billing_holds" edge of the Request entity.
 func (_m *Request) QueryBillingHolds() *BillingHoldQuery {
 	return NewRequestClient(_m.config).QueryBillingHolds(_m)
@@ -613,6 +630,30 @@ func (_m *Request) appendNamedUsageLogs(name string, edges ...*UsageLog) {
 		_m.Edges.namedUsageLogs[name] = []*UsageLog{}
 	} else {
 		_m.Edges.namedUsageLogs[name] = append(_m.Edges.namedUsageLogs[name], edges...)
+	}
+}
+
+// NamedUpstreamAccountSwitchHistories returns the UpstreamAccountSwitchHistories named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Request) NamedUpstreamAccountSwitchHistories(name string) ([]*UpstreamAccountSwitchHistory, error) {
+	if _m.Edges.namedUpstreamAccountSwitchHistories == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUpstreamAccountSwitchHistories[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Request) appendNamedUpstreamAccountSwitchHistories(name string, edges ...*UpstreamAccountSwitchHistory) {
+	if _m.Edges.namedUpstreamAccountSwitchHistories == nil {
+		_m.Edges.namedUpstreamAccountSwitchHistories = make(map[string][]*UpstreamAccountSwitchHistory)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUpstreamAccountSwitchHistories[name] = []*UpstreamAccountSwitchHistory{}
+	} else {
+		_m.Edges.namedUpstreamAccountSwitchHistories[name] = append(_m.Edges.namedUpstreamAccountSwitchHistories[name], edges...)
 	}
 }
 

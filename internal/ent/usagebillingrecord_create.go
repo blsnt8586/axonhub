@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
@@ -71,6 +72,20 @@ func (_c *UsageBillingRecordCreate) SetBillingAccountID(v int) *UsageBillingReco
 // SetProjectID sets the "project_id" field.
 func (_c *UsageBillingRecordCreate) SetProjectID(v int) *UsageBillingRecordCreate {
 	_c.mutation.SetProjectID(v)
+	return _c
+}
+
+// SetUpstreamAccountID sets the "upstream_account_id" field.
+func (_c *UsageBillingRecordCreate) SetUpstreamAccountID(v int) *UsageBillingRecordCreate {
+	_c.mutation.SetUpstreamAccountID(v)
+	return _c
+}
+
+// SetNillableUpstreamAccountID sets the "upstream_account_id" field if the given value is not nil.
+func (_c *UsageBillingRecordCreate) SetNillableUpstreamAccountID(v *int) *UsageBillingRecordCreate {
+	if v != nil {
+		_c.SetUpstreamAccountID(*v)
+	}
 	return _c
 }
 
@@ -260,6 +275,11 @@ func (_c *UsageBillingRecordCreate) SetLedgerTransaction(v *LedgerTransaction) *
 // SetUserSubscription sets the "user_subscription" edge to the UserSubscription entity.
 func (_c *UsageBillingRecordCreate) SetUserSubscription(v *UserSubscription) *UsageBillingRecordCreate {
 	return _c.SetUserSubscriptionID(v.ID)
+}
+
+// SetUpstreamAccount sets the "upstream_account" edge to the UpstreamAccount entity.
+func (_c *UsageBillingRecordCreate) SetUpstreamAccount(v *UpstreamAccount) *UsageBillingRecordCreate {
+	return _c.SetUpstreamAccountID(v.ID)
 }
 
 // AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by IDs.
@@ -583,6 +603,23 @@ func (_c *UsageBillingRecordCreate) createSpec() (*UsageBillingRecord, *sqlgraph
 		_node.UserSubscriptionID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := _c.mutation.UpstreamAccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagebillingrecord.UpstreamAccountTable,
+			Columns: []string{usagebillingrecord.UpstreamAccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.UpstreamAccountID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	if nodes := _c.mutation.BillingNotificationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -745,6 +782,9 @@ func (u *UsageBillingRecordUpsertOne) UpdateNewValues() *UsageBillingRecordUpser
 		}
 		if _, exists := u.create.mutation.ProjectID(); exists {
 			s.SetIgnore(usagebillingrecord.FieldProjectID)
+		}
+		if _, exists := u.create.mutation.UpstreamAccountID(); exists {
+			s.SetIgnore(usagebillingrecord.FieldUpstreamAccountID)
 		}
 		if _, exists := u.create.mutation.UserID(); exists {
 			s.SetIgnore(usagebillingrecord.FieldUserID)
@@ -1084,6 +1124,9 @@ func (u *UsageBillingRecordUpsertBulk) UpdateNewValues() *UsageBillingRecordUpse
 			}
 			if _, exists := b.mutation.ProjectID(); exists {
 				s.SetIgnore(usagebillingrecord.FieldProjectID)
+			}
+			if _, exists := b.mutation.UpstreamAccountID(); exists {
+				s.SetIgnore(usagebillingrecord.FieldUpstreamAccountID)
 			}
 			if _, exists := b.mutation.UserID(); exists {
 				s.SetIgnore(usagebillingrecord.FieldUserID)

@@ -15,6 +15,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
+	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/llm/httpclient"
 )
@@ -356,6 +359,66 @@ func (_c *UpstreamAccountCreate) AddExecutions(v ...*RequestExecution) *Upstream
 	return _c.AddExecutionIDs(ids...)
 }
 
+// AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
+func (_c *UpstreamAccountCreate) AddUsageLogIDs(ids ...int) *UpstreamAccountCreate {
+	_c.mutation.AddUsageLogIDs(ids...)
+	return _c
+}
+
+// AddUsageLogs adds the "usage_logs" edges to the UsageLog entity.
+func (_c *UpstreamAccountCreate) AddUsageLogs(v ...*UsageLog) *UpstreamAccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUsageLogIDs(ids...)
+}
+
+// AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
+func (_c *UpstreamAccountCreate) AddUsageBillingRecordIDs(ids ...int) *UpstreamAccountCreate {
+	_c.mutation.AddUsageBillingRecordIDs(ids...)
+	return _c
+}
+
+// AddUsageBillingRecords adds the "usage_billing_records" edges to the UsageBillingRecord entity.
+func (_c *UpstreamAccountCreate) AddUsageBillingRecords(v ...*UsageBillingRecord) *UpstreamAccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUsageBillingRecordIDs(ids...)
+}
+
+// AddSwitchHistoriesFromIDs adds the "switch_histories_from" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (_c *UpstreamAccountCreate) AddSwitchHistoriesFromIDs(ids ...int) *UpstreamAccountCreate {
+	_c.mutation.AddSwitchHistoriesFromIDs(ids...)
+	return _c
+}
+
+// AddSwitchHistoriesFrom adds the "switch_histories_from" edges to the UpstreamAccountSwitchHistory entity.
+func (_c *UpstreamAccountCreate) AddSwitchHistoriesFrom(v ...*UpstreamAccountSwitchHistory) *UpstreamAccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSwitchHistoriesFromIDs(ids...)
+}
+
+// AddSwitchHistoriesToIDs adds the "switch_histories_to" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (_c *UpstreamAccountCreate) AddSwitchHistoriesToIDs(ids ...int) *UpstreamAccountCreate {
+	_c.mutation.AddSwitchHistoriesToIDs(ids...)
+	return _c
+}
+
+// AddSwitchHistoriesTo adds the "switch_histories_to" edges to the UpstreamAccountSwitchHistory entity.
+func (_c *UpstreamAccountCreate) AddSwitchHistoriesTo(v ...*UpstreamAccountSwitchHistory) *UpstreamAccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSwitchHistoriesToIDs(ids...)
+}
+
 // Mutation returns the UpstreamAccountMutation object of the builder.
 func (_c *UpstreamAccountCreate) Mutation() *UpstreamAccountMutation {
 	return _c.mutation
@@ -667,6 +730,70 @@ func (_c *UpstreamAccountCreate) createSpec() (*UpstreamAccount, *sqlgraph.Creat
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(requestexecution.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UsageLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.UsageLogsTable,
+			Columns: []string{upstreamaccount.UsageLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagelog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UsageBillingRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.UsageBillingRecordsTable,
+			Columns: []string{upstreamaccount.UsageBillingRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SwitchHistoriesFromIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.SwitchHistoriesFromTable,
+			Columns: []string{upstreamaccount.SwitchHistoriesFromColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SwitchHistoriesToIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.SwitchHistoriesToTable,
+			Columns: []string{upstreamaccount.SwitchHistoriesToColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

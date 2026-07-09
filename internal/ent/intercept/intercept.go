@@ -54,6 +54,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -1335,6 +1336,33 @@ func (f TraverseUpstreamAccountPool) Traverse(ctx context.Context, q ent.Query) 
 	return fmt.Errorf("unexpected query type %T. expect *ent.UpstreamAccountPoolQuery", q)
 }
 
+// The UpstreamAccountSwitchHistoryFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UpstreamAccountSwitchHistoryFunc func(context.Context, *ent.UpstreamAccountSwitchHistoryQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f UpstreamAccountSwitchHistoryFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.UpstreamAccountSwitchHistoryQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.UpstreamAccountSwitchHistoryQuery", q)
+}
+
+// The TraverseUpstreamAccountSwitchHistory type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUpstreamAccountSwitchHistory func(context.Context, *ent.UpstreamAccountSwitchHistoryQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUpstreamAccountSwitchHistory) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUpstreamAccountSwitchHistory) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UpstreamAccountSwitchHistoryQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.UpstreamAccountSwitchHistoryQuery", q)
+}
+
 // The UsageBillingRecordFunc type is an adapter to allow the use of ordinary function as a Querier.
 type UsageBillingRecordFunc func(context.Context, *ent.UsageBillingRecordQuery) (ent.Value, error)
 
@@ -1644,6 +1672,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.UpstreamAccountQuery, predicate.UpstreamAccount, upstreamaccount.OrderOption]{typ: ent.TypeUpstreamAccount, tq: q}, nil
 	case *ent.UpstreamAccountPoolQuery:
 		return &query[*ent.UpstreamAccountPoolQuery, predicate.UpstreamAccountPool, upstreamaccountpool.OrderOption]{typ: ent.TypeUpstreamAccountPool, tq: q}, nil
+	case *ent.UpstreamAccountSwitchHistoryQuery:
+		return &query[*ent.UpstreamAccountSwitchHistoryQuery, predicate.UpstreamAccountSwitchHistory, upstreamaccountswitchhistory.OrderOption]{typ: ent.TypeUpstreamAccountSwitchHistory, tq: q}, nil
 	case *ent.UsageBillingRecordQuery:
 		return &query[*ent.UsageBillingRecordQuery, predicate.UsageBillingRecord, usagebillingrecord.OrderOption]{typ: ent.TypeUsageBillingRecord, tq: q}, nil
 	case *ent.UsageDailyAggregateQuery:

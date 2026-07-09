@@ -31,6 +31,8 @@ const (
 	FieldProjectID = "project_id"
 	// FieldChannelID holds the string denoting the channel_id field in the database.
 	FieldChannelID = "channel_id"
+	// FieldUpstreamAccountID holds the string denoting the upstream_account_id field in the database.
+	FieldUpstreamAccountID = "upstream_account_id"
 	// FieldModelID holds the string denoting the model_id field in the database.
 	FieldModelID = "model_id"
 	// FieldPromptTokens holds the string denoting the prompt_tokens field in the database.
@@ -73,6 +75,8 @@ const (
 	EdgeProject = "project"
 	// EdgeChannel holds the string denoting the channel edge name in mutations.
 	EdgeChannel = "channel"
+	// EdgeUpstreamAccount holds the string denoting the upstream_account edge name in mutations.
+	EdgeUpstreamAccount = "upstream_account"
 	// EdgeUsageBillingRecords holds the string denoting the usage_billing_records edge name in mutations.
 	EdgeUsageBillingRecords = "usage_billing_records"
 	// EdgeBillingHolds holds the string denoting the billing_holds edge name in mutations.
@@ -100,6 +104,13 @@ const (
 	ChannelInverseTable = "channels"
 	// ChannelColumn is the table column denoting the channel relation/edge.
 	ChannelColumn = "channel_id"
+	// UpstreamAccountTable is the table that holds the upstream_account relation/edge.
+	UpstreamAccountTable = "usage_logs"
+	// UpstreamAccountInverseTable is the table name for the UpstreamAccount entity.
+	// It exists in this package in order to avoid circular dependency with the "upstreamaccount" package.
+	UpstreamAccountInverseTable = "upstream_accounts"
+	// UpstreamAccountColumn is the table column denoting the upstream_account relation/edge.
+	UpstreamAccountColumn = "upstream_account_id"
 	// UsageBillingRecordsTable is the table that holds the usage_billing_records relation/edge.
 	UsageBillingRecordsTable = "usage_billing_records"
 	// UsageBillingRecordsInverseTable is the table name for the UsageBillingRecord entity.
@@ -125,6 +136,7 @@ var Columns = []string{
 	FieldAPIKeyID,
 	FieldProjectID,
 	FieldChannelID,
+	FieldUpstreamAccountID,
 	FieldModelID,
 	FieldPromptTokens,
 	FieldCompletionTokens,
@@ -266,6 +278,11 @@ func ByChannelID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldChannelID, opts...).ToFunc()
 }
 
+// ByUpstreamAccountID orders the results by the upstream_account_id field.
+func ByUpstreamAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpstreamAccountID, opts...).ToFunc()
+}
+
 // ByModelID orders the results by the model_id field.
 func ByModelID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldModelID, opts...).ToFunc()
@@ -372,6 +389,13 @@ func ByChannelField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
+// ByUpstreamAccountField orders the results by upstream_account field.
+func ByUpstreamAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUpstreamAccountStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByUsageBillingRecordsCount orders the results by usage_billing_records count.
 func ByUsageBillingRecordsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -418,6 +442,13 @@ func newChannelStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ChannelInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
+	)
+}
+func newUpstreamAccountStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UpstreamAccountInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, UpstreamAccountTable, UpstreamAccountColumn),
 	)
 }
 func newUsageBillingRecordsStep() *sqlgraph.Step {

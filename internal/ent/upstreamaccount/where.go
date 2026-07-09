@@ -1159,6 +1159,98 @@ func HasExecutionsWith(preds ...predicate.RequestExecution) predicate.UpstreamAc
 	})
 }
 
+// HasUsageLogs applies the HasEdge predicate on the "usage_logs" edge.
+func HasUsageLogs() predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UsageLogsTable, UsageLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUsageLogsWith applies the HasEdge predicate on the "usage_logs" edge with a given conditions (other predicates).
+func HasUsageLogsWith(preds ...predicate.UsageLog) predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := newUsageLogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUsageBillingRecords applies the HasEdge predicate on the "usage_billing_records" edge.
+func HasUsageBillingRecords() predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UsageBillingRecordsTable, UsageBillingRecordsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUsageBillingRecordsWith applies the HasEdge predicate on the "usage_billing_records" edge with a given conditions (other predicates).
+func HasUsageBillingRecordsWith(preds ...predicate.UsageBillingRecord) predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := newUsageBillingRecordsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSwitchHistoriesFrom applies the HasEdge predicate on the "switch_histories_from" edge.
+func HasSwitchHistoriesFrom() predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SwitchHistoriesFromTable, SwitchHistoriesFromColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSwitchHistoriesFromWith applies the HasEdge predicate on the "switch_histories_from" edge with a given conditions (other predicates).
+func HasSwitchHistoriesFromWith(preds ...predicate.UpstreamAccountSwitchHistory) predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := newSwitchHistoriesFromStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSwitchHistoriesTo applies the HasEdge predicate on the "switch_histories_to" edge.
+func HasSwitchHistoriesTo() predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SwitchHistoriesToTable, SwitchHistoriesToColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSwitchHistoriesToWith applies the HasEdge predicate on the "switch_histories_to" edge with a given conditions (other predicates).
+func HasSwitchHistoriesToWith(preds ...predicate.UpstreamAccountSwitchHistory) predicate.UpstreamAccount {
+	return predicate.UpstreamAccount(func(s *sql.Selector) {
+		step := newSwitchHistoriesToStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.UpstreamAccount) predicate.UpstreamAccount {
 	return predicate.UpstreamAccount(sql.AndPredicates(predicates...))

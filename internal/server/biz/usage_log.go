@@ -82,14 +82,15 @@ func NewUsageLogService(ent *ent.Client, systemService *SystemService, channelSe
 
 // CreateUsageLogParams represents the parameters for creating a usage log.
 type CreateUsageLogParams struct {
-	RequestID     int
-	ProjectID     int
-	ChannelID     int
-	ActualModelID string // The channel actual model ID, not the request model ID.
-	Usage         *llm.Usage
-	Source        usagelog.Source
-	Format        string
-	APIKeyID      *int
+	RequestID         int
+	ProjectID         int
+	ChannelID         int
+	ActualModelID     string // The channel actual model ID, not the request model ID.
+	Usage             *llm.Usage
+	Source            usagelog.Source
+	Format            string
+	APIKeyID          *int
+	UpstreamAccountID *int
 }
 
 // CreateUsageLog creates a new usage log record from LLM response usage data.
@@ -115,6 +116,9 @@ func (s *UsageLogService) CreateUsageLog(ctx context.Context, params CreateUsage
 		mut = mut.SetAPIKeyID(*params.APIKeyID)
 	} else if ctxAPIKey, ok := contexts.GetAPIKey(ctx); ok && ctxAPIKey != nil {
 		mut = mut.SetAPIKeyID(ctxAPIKey.ID)
+	}
+	if params.UpstreamAccountID != nil && *params.UpstreamAccountID > 0 {
+		mut = mut.SetUpstreamAccountID(*params.UpstreamAccountID)
 	}
 
 	// Set prompt tokens details if available
@@ -186,13 +190,14 @@ func (s *UsageLogService) CreateUsageLogFromRequest(
 	}
 
 	return s.CreateUsageLog(ctx, CreateUsageLogParams{
-		RequestID:     request.ID,
-		ProjectID:     request.ProjectID,
-		ChannelID:     requestExec.ChannelID,
-		ActualModelID: requestExec.ModelID,
-		Usage:         usage,
-		Source:        usagelog.Source(request.Source),
-		Format:        request.Format,
-		APIKeyID:      lo.ToPtr(request.APIKeyID),
+		RequestID:         request.ID,
+		ProjectID:         request.ProjectID,
+		ChannelID:         requestExec.ChannelID,
+		ActualModelID:     requestExec.ModelID,
+		Usage:             usage,
+		Source:            usagelog.Source(request.Source),
+		Format:            request.Format,
+		APIKeyID:          lo.ToPtr(request.APIKeyID),
+		UpstreamAccountID: requestExec.UpstreamAccountID,
 	})
 }

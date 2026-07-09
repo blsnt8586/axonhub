@@ -49,6 +49,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -66,7 +67,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 53)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 54)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -1188,6 +1189,32 @@ var schemaGraph = func() *sqlgraph.Schema {
 	}
 	graph.Nodes[45] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
+			Table:   upstreamaccountswitchhistory.Table,
+			Columns: upstreamaccountswitchhistory.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: upstreamaccountswitchhistory.FieldID,
+			},
+		},
+		Type: "UpstreamAccountSwitchHistory",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			upstreamaccountswitchhistory.FieldCreatedAt:          {Type: field.TypeTime, Column: upstreamaccountswitchhistory.FieldCreatedAt},
+			upstreamaccountswitchhistory.FieldUpdatedAt:          {Type: field.TypeTime, Column: upstreamaccountswitchhistory.FieldUpdatedAt},
+			upstreamaccountswitchhistory.FieldProjectID:          {Type: field.TypeInt, Column: upstreamaccountswitchhistory.FieldProjectID},
+			upstreamaccountswitchhistory.FieldRequestID:          {Type: field.TypeInt, Column: upstreamaccountswitchhistory.FieldRequestID},
+			upstreamaccountswitchhistory.FieldRequestExecutionID: {Type: field.TypeInt, Column: upstreamaccountswitchhistory.FieldRequestExecutionID},
+			upstreamaccountswitchhistory.FieldChannelID:          {Type: field.TypeInt, Column: upstreamaccountswitchhistory.FieldChannelID},
+			upstreamaccountswitchhistory.FieldFromAccountID:      {Type: field.TypeInt, Column: upstreamaccountswitchhistory.FieldFromAccountID},
+			upstreamaccountswitchhistory.FieldToAccountID:        {Type: field.TypeInt, Column: upstreamaccountswitchhistory.FieldToAccountID},
+			upstreamaccountswitchhistory.FieldModelID:            {Type: field.TypeString, Column: upstreamaccountswitchhistory.FieldModelID},
+			upstreamaccountswitchhistory.FieldReason:             {Type: field.TypeString, Column: upstreamaccountswitchhistory.FieldReason},
+			upstreamaccountswitchhistory.FieldErrorCode:          {Type: field.TypeInt, Column: upstreamaccountswitchhistory.FieldErrorCode},
+			upstreamaccountswitchhistory.FieldErrorMessage:       {Type: field.TypeString, Column: upstreamaccountswitchhistory.FieldErrorMessage},
+			upstreamaccountswitchhistory.FieldLatencyMs:          {Type: field.TypeInt64, Column: upstreamaccountswitchhistory.FieldLatencyMs},
+		},
+	}
+	graph.Nodes[46] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagebillingrecord.Table,
 			Columns: usagebillingrecord.Columns,
 			ID: &sqlgraph.FieldSpec{
@@ -1202,6 +1229,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagebillingrecord.FieldUsageLogID:          {Type: field.TypeInt, Column: usagebillingrecord.FieldUsageLogID},
 			usagebillingrecord.FieldBillingAccountID:    {Type: field.TypeInt, Column: usagebillingrecord.FieldBillingAccountID},
 			usagebillingrecord.FieldProjectID:           {Type: field.TypeInt, Column: usagebillingrecord.FieldProjectID},
+			usagebillingrecord.FieldUpstreamAccountID:   {Type: field.TypeInt, Column: usagebillingrecord.FieldUpstreamAccountID},
 			usagebillingrecord.FieldUserID:              {Type: field.TypeInt, Column: usagebillingrecord.FieldUserID},
 			usagebillingrecord.FieldAPIKeyID:            {Type: field.TypeInt, Column: usagebillingrecord.FieldAPIKeyID},
 			usagebillingrecord.FieldModelID:             {Type: field.TypeString, Column: usagebillingrecord.FieldModelID},
@@ -1220,7 +1248,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagebillingrecord.FieldError:               {Type: field.TypeString, Column: usagebillingrecord.FieldError},
 		},
 	}
-	graph.Nodes[46] = &sqlgraph.Node{
+	graph.Nodes[47] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagedailyaggregate.Table,
 			Columns: usagedailyaggregate.Columns,
@@ -1254,7 +1282,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagedailyaggregate.FieldGrossMarginMicros:  {Type: field.TypeInt64, Column: usagedailyaggregate.FieldGrossMarginMicros},
 		},
 	}
-	graph.Nodes[47] = &sqlgraph.Node{
+	graph.Nodes[48] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagehourlyaggregate.Table,
 			Columns: usagehourlyaggregate.Columns,
@@ -1288,7 +1316,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagehourlyaggregate.FieldGrossMarginMicros:  {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldGrossMarginMicros},
 		},
 	}
-	graph.Nodes[48] = &sqlgraph.Node{
+	graph.Nodes[49] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagelog.Table,
 			Columns: usagelog.Columns,
@@ -1305,6 +1333,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagelog.FieldAPIKeyID:                           {Type: field.TypeInt, Column: usagelog.FieldAPIKeyID},
 			usagelog.FieldProjectID:                          {Type: field.TypeInt, Column: usagelog.FieldProjectID},
 			usagelog.FieldChannelID:                          {Type: field.TypeInt, Column: usagelog.FieldChannelID},
+			usagelog.FieldUpstreamAccountID:                  {Type: field.TypeInt, Column: usagelog.FieldUpstreamAccountID},
 			usagelog.FieldModelID:                            {Type: field.TypeString, Column: usagelog.FieldModelID},
 			usagelog.FieldPromptTokens:                       {Type: field.TypeInt64, Column: usagelog.FieldPromptTokens},
 			usagelog.FieldCompletionTokens:                   {Type: field.TypeInt64, Column: usagelog.FieldCompletionTokens},
@@ -1325,7 +1354,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagelog.FieldCostPriceReferenceID:               {Type: field.TypeString, Column: usagelog.FieldCostPriceReferenceID},
 		},
 	}
-	graph.Nodes[49] = &sqlgraph.Node{
+	graph.Nodes[50] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -1350,7 +1379,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldScopes:         {Type: field.TypeJSON, Column: user.FieldScopes},
 		},
 	}
-	graph.Nodes[50] = &sqlgraph.Node{
+	graph.Nodes[51] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userproject.Table,
 			Columns: userproject.Columns,
@@ -1369,7 +1398,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userproject.FieldScopes:    {Type: field.TypeJSON, Column: userproject.FieldScopes},
 		},
 	}
-	graph.Nodes[51] = &sqlgraph.Node{
+	graph.Nodes[52] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userrole.Table,
 			Columns: userrole.Columns,
@@ -1386,7 +1415,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userrole.FieldUpdatedAt: {Type: field.TypeTime, Column: userrole.FieldUpdatedAt},
 		},
 	}
-	graph.Nodes[52] = &sqlgraph.Node{
+	graph.Nodes[53] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usersubscription.Table,
 			Columns: usersubscription.Columns,
@@ -1893,6 +1922,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"Channel",
 		"UpstreamAccount",
+	)
+	graph.MustAddE(
+		"upstream_account_switch_histories",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{channel.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+		},
+		"Channel",
+		"UpstreamAccountSwitchHistory",
 	)
 	graph.MustAddE(
 		"provider_quota_status",
@@ -2639,6 +2680,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"UsageLog",
 	)
 	graph.MustAddE(
+		"upstream_account_switch_histories",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   request.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{request.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+		},
+		"Request",
+		"UpstreamAccountSwitchHistory",
+	)
+	graph.MustAddE(
 		"billing_holds",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -2697,6 +2750,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"RequestExecution",
 		"UpstreamAccount",
+	)
+	graph.MustAddE(
+		"upstream_account_switch_histories",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   requestexecution.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{requestexecution.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+		},
+		"RequestExecution",
+		"UpstreamAccountSwitchHistory",
 	)
 	graph.MustAddE(
 		"users",
@@ -2843,6 +2908,54 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"RequestExecution",
 	)
 	graph.MustAddE(
+		"usage_logs",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.UsageLogsTable,
+			Columns: []string{upstreamaccount.UsageLogsColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccount",
+		"UsageLog",
+	)
+	graph.MustAddE(
+		"usage_billing_records",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.UsageBillingRecordsTable,
+			Columns: []string{upstreamaccount.UsageBillingRecordsColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccount",
+		"UsageBillingRecord",
+	)
+	graph.MustAddE(
+		"switch_histories_from",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.SwitchHistoriesFromTable,
+			Columns: []string{upstreamaccount.SwitchHistoriesFromColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccount",
+		"UpstreamAccountSwitchHistory",
+	)
+	graph.MustAddE(
+		"switch_histories_to",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccount.SwitchHistoriesToTable,
+			Columns: []string{upstreamaccount.SwitchHistoriesToColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccount",
+		"UpstreamAccountSwitchHistory",
+	)
+	graph.MustAddE(
 		"channel",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -2864,6 +2977,66 @@ var schemaGraph = func() *sqlgraph.Schema {
 			Bidi:    false,
 		},
 		"UpstreamAccountPool",
+		"UpstreamAccount",
+	)
+	graph.MustAddE(
+		"request",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   upstreamaccountswitchhistory.RequestTable,
+			Columns: []string{upstreamaccountswitchhistory.RequestColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccountSwitchHistory",
+		"Request",
+	)
+	graph.MustAddE(
+		"request_execution",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   upstreamaccountswitchhistory.RequestExecutionTable,
+			Columns: []string{upstreamaccountswitchhistory.RequestExecutionColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccountSwitchHistory",
+		"RequestExecution",
+	)
+	graph.MustAddE(
+		"channel",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   upstreamaccountswitchhistory.ChannelTable,
+			Columns: []string{upstreamaccountswitchhistory.ChannelColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccountSwitchHistory",
+		"Channel",
+	)
+	graph.MustAddE(
+		"from_account",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   upstreamaccountswitchhistory.FromAccountTable,
+			Columns: []string{upstreamaccountswitchhistory.FromAccountColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccountSwitchHistory",
+		"UpstreamAccount",
+	)
+	graph.MustAddE(
+		"to_account",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   upstreamaccountswitchhistory.ToAccountTable,
+			Columns: []string{upstreamaccountswitchhistory.ToAccountColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccountSwitchHistory",
 		"UpstreamAccount",
 	)
 	graph.MustAddE(
@@ -2915,6 +3088,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"UserSubscription",
 	)
 	graph.MustAddE(
+		"upstream_account",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagebillingrecord.UpstreamAccountTable,
+			Columns: []string{usagebillingrecord.UpstreamAccountColumn},
+			Bidi:    false,
+		},
+		"UsageBillingRecord",
+		"UpstreamAccount",
+	)
+	graph.MustAddE(
 		"billing_notifications",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -2961,6 +3146,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"UsageLog",
 		"Channel",
+	)
+	graph.MustAddE(
+		"upstream_account",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagelog.UpstreamAccountTable,
+			Columns: []string{usagelog.UpstreamAccountColumn},
+			Bidi:    false,
+		},
+		"UsageLog",
+		"UpstreamAccount",
 	)
 	graph.MustAddE(
 		"usage_billing_records",
@@ -5479,6 +5676,20 @@ func (f *ChannelFilter) WhereHasUpstreamAccounts() {
 // WhereHasUpstreamAccountsWith applies a predicate to check if query has an edge upstream_accounts with a given conditions (other predicates).
 func (f *ChannelFilter) WhereHasUpstreamAccountsWith(preds ...predicate.UpstreamAccount) {
 	f.Where(entql.HasEdgeWith("upstream_accounts", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUpstreamAccountSwitchHistories applies a predicate to check if query has an edge upstream_account_switch_histories.
+func (f *ChannelFilter) WhereHasUpstreamAccountSwitchHistories() {
+	f.Where(entql.HasEdge("upstream_account_switch_histories"))
+}
+
+// WhereHasUpstreamAccountSwitchHistoriesWith applies a predicate to check if query has an edge upstream_account_switch_histories with a given conditions (other predicates).
+func (f *ChannelFilter) WhereHasUpstreamAccountSwitchHistoriesWith(preds ...predicate.UpstreamAccountSwitchHistory) {
+	f.Where(entql.HasEdgeWith("upstream_account_switch_histories", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -8468,6 +8679,20 @@ func (f *RequestFilter) WhereHasUsageLogsWith(preds ...predicate.UsageLog) {
 	})))
 }
 
+// WhereHasUpstreamAccountSwitchHistories applies a predicate to check if query has an edge upstream_account_switch_histories.
+func (f *RequestFilter) WhereHasUpstreamAccountSwitchHistories() {
+	f.Where(entql.HasEdge("upstream_account_switch_histories"))
+}
+
+// WhereHasUpstreamAccountSwitchHistoriesWith applies a predicate to check if query has an edge upstream_account_switch_histories with a given conditions (other predicates).
+func (f *RequestFilter) WhereHasUpstreamAccountSwitchHistoriesWith(preds ...predicate.UpstreamAccountSwitchHistory) {
+	f.Where(entql.HasEdgeWith("upstream_account_switch_histories", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasBillingHolds applies a predicate to check if query has an edge billing_holds.
 func (f *RequestFilter) WhereHasBillingHolds() {
 	f.Where(entql.HasEdge("billing_holds"))
@@ -8692,6 +8917,20 @@ func (f *RequestExecutionFilter) WhereHasUpstreamAccount() {
 // WhereHasUpstreamAccountWith applies a predicate to check if query has an edge upstream_account with a given conditions (other predicates).
 func (f *RequestExecutionFilter) WhereHasUpstreamAccountWith(preds ...predicate.UpstreamAccount) {
 	f.Where(entql.HasEdgeWith("upstream_account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUpstreamAccountSwitchHistories applies a predicate to check if query has an edge upstream_account_switch_histories.
+func (f *RequestExecutionFilter) WhereHasUpstreamAccountSwitchHistories() {
+	f.Where(entql.HasEdge("upstream_account_switch_histories"))
+}
+
+// WhereHasUpstreamAccountSwitchHistoriesWith applies a predicate to check if query has an edge upstream_account_switch_histories with a given conditions (other predicates).
+func (f *RequestExecutionFilter) WhereHasUpstreamAccountSwitchHistoriesWith(preds ...predicate.UpstreamAccountSwitchHistory) {
+	f.Where(entql.HasEdgeWith("upstream_account_switch_histories", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -9411,6 +9650,62 @@ func (f *UpstreamAccountFilter) WhereHasExecutionsWith(preds ...predicate.Reques
 	})))
 }
 
+// WhereHasUsageLogs applies a predicate to check if query has an edge usage_logs.
+func (f *UpstreamAccountFilter) WhereHasUsageLogs() {
+	f.Where(entql.HasEdge("usage_logs"))
+}
+
+// WhereHasUsageLogsWith applies a predicate to check if query has an edge usage_logs with a given conditions (other predicates).
+func (f *UpstreamAccountFilter) WhereHasUsageLogsWith(preds ...predicate.UsageLog) {
+	f.Where(entql.HasEdgeWith("usage_logs", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUsageBillingRecords applies a predicate to check if query has an edge usage_billing_records.
+func (f *UpstreamAccountFilter) WhereHasUsageBillingRecords() {
+	f.Where(entql.HasEdge("usage_billing_records"))
+}
+
+// WhereHasUsageBillingRecordsWith applies a predicate to check if query has an edge usage_billing_records with a given conditions (other predicates).
+func (f *UpstreamAccountFilter) WhereHasUsageBillingRecordsWith(preds ...predicate.UsageBillingRecord) {
+	f.Where(entql.HasEdgeWith("usage_billing_records", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasSwitchHistoriesFrom applies a predicate to check if query has an edge switch_histories_from.
+func (f *UpstreamAccountFilter) WhereHasSwitchHistoriesFrom() {
+	f.Where(entql.HasEdge("switch_histories_from"))
+}
+
+// WhereHasSwitchHistoriesFromWith applies a predicate to check if query has an edge switch_histories_from with a given conditions (other predicates).
+func (f *UpstreamAccountFilter) WhereHasSwitchHistoriesFromWith(preds ...predicate.UpstreamAccountSwitchHistory) {
+	f.Where(entql.HasEdgeWith("switch_histories_from", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasSwitchHistoriesTo applies a predicate to check if query has an edge switch_histories_to.
+func (f *UpstreamAccountFilter) WhereHasSwitchHistoriesTo() {
+	f.Where(entql.HasEdge("switch_histories_to"))
+}
+
+// WhereHasSwitchHistoriesToWith applies a predicate to check if query has an edge switch_histories_to with a given conditions (other predicates).
+func (f *UpstreamAccountFilter) WhereHasSwitchHistoriesToWith(preds ...predicate.UpstreamAccountSwitchHistory) {
+	f.Where(entql.HasEdgeWith("switch_histories_to", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *UpstreamAccountPoolQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -9530,6 +9825,181 @@ func (f *UpstreamAccountPoolFilter) WhereHasAccountsWith(preds ...predicate.Upst
 }
 
 // addPredicate implements the predicateAdder interface.
+func (_q *UpstreamAccountSwitchHistoryQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the UpstreamAccountSwitchHistoryQuery builder.
+func (_q *UpstreamAccountSwitchHistoryQuery) Filter() *UpstreamAccountSwitchHistoryFilter {
+	return &UpstreamAccountSwitchHistoryFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *UpstreamAccountSwitchHistoryMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the UpstreamAccountSwitchHistoryMutation builder.
+func (m *UpstreamAccountSwitchHistoryMutation) Filter() *UpstreamAccountSwitchHistoryFilter {
+	return &UpstreamAccountSwitchHistoryFilter{config: m.config, predicateAdder: m}
+}
+
+// UpstreamAccountSwitchHistoryFilter provides a generic filtering capability at runtime for UpstreamAccountSwitchHistoryQuery.
+type UpstreamAccountSwitchHistoryFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *UpstreamAccountSwitchHistoryFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[45].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldUpdatedAt))
+}
+
+// WhereProjectID applies the entql int predicate on the project_id field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereProjectID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldProjectID))
+}
+
+// WhereRequestID applies the entql int predicate on the request_id field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereRequestID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldRequestID))
+}
+
+// WhereRequestExecutionID applies the entql int predicate on the request_execution_id field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereRequestExecutionID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldRequestExecutionID))
+}
+
+// WhereChannelID applies the entql int predicate on the channel_id field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereChannelID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldChannelID))
+}
+
+// WhereFromAccountID applies the entql int predicate on the from_account_id field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereFromAccountID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldFromAccountID))
+}
+
+// WhereToAccountID applies the entql int predicate on the to_account_id field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereToAccountID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldToAccountID))
+}
+
+// WhereModelID applies the entql string predicate on the model_id field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereModelID(p entql.StringP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldModelID))
+}
+
+// WhereReason applies the entql string predicate on the reason field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereReason(p entql.StringP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldReason))
+}
+
+// WhereErrorCode applies the entql int predicate on the error_code field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereErrorCode(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldErrorCode))
+}
+
+// WhereErrorMessage applies the entql string predicate on the error_message field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereErrorMessage(p entql.StringP) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldErrorMessage))
+}
+
+// WhereLatencyMs applies the entql int64 predicate on the latency_ms field.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereLatencyMs(p entql.Int64P) {
+	f.Where(p.Field(upstreamaccountswitchhistory.FieldLatencyMs))
+}
+
+// WhereHasRequest applies a predicate to check if query has an edge request.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasRequest() {
+	f.Where(entql.HasEdge("request"))
+}
+
+// WhereHasRequestWith applies a predicate to check if query has an edge request with a given conditions (other predicates).
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasRequestWith(preds ...predicate.Request) {
+	f.Where(entql.HasEdgeWith("request", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasRequestExecution applies a predicate to check if query has an edge request_execution.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasRequestExecution() {
+	f.Where(entql.HasEdge("request_execution"))
+}
+
+// WhereHasRequestExecutionWith applies a predicate to check if query has an edge request_execution with a given conditions (other predicates).
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasRequestExecutionWith(preds ...predicate.RequestExecution) {
+	f.Where(entql.HasEdgeWith("request_execution", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasChannel applies a predicate to check if query has an edge channel.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasChannel() {
+	f.Where(entql.HasEdge("channel"))
+}
+
+// WhereHasChannelWith applies a predicate to check if query has an edge channel with a given conditions (other predicates).
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasChannelWith(preds ...predicate.Channel) {
+	f.Where(entql.HasEdgeWith("channel", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasFromAccount applies a predicate to check if query has an edge from_account.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasFromAccount() {
+	f.Where(entql.HasEdge("from_account"))
+}
+
+// WhereHasFromAccountWith applies a predicate to check if query has an edge from_account with a given conditions (other predicates).
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasFromAccountWith(preds ...predicate.UpstreamAccount) {
+	f.Where(entql.HasEdgeWith("from_account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasToAccount applies a predicate to check if query has an edge to_account.
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasToAccount() {
+	f.Where(entql.HasEdge("to_account"))
+}
+
+// WhereHasToAccountWith applies a predicate to check if query has an edge to_account with a given conditions (other predicates).
+func (f *UpstreamAccountSwitchHistoryFilter) WhereHasToAccountWith(preds ...predicate.UpstreamAccount) {
+	f.Where(entql.HasEdgeWith("to_account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (_q *UsageBillingRecordQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
 }
@@ -9558,7 +10028,7 @@ type UsageBillingRecordFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageBillingRecordFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[45].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[46].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9592,6 +10062,11 @@ func (f *UsageBillingRecordFilter) WhereBillingAccountID(p entql.IntP) {
 // WhereProjectID applies the entql int predicate on the project_id field.
 func (f *UsageBillingRecordFilter) WhereProjectID(p entql.IntP) {
 	f.Where(p.Field(usagebillingrecord.FieldProjectID))
+}
+
+// WhereUpstreamAccountID applies the entql int predicate on the upstream_account_id field.
+func (f *UsageBillingRecordFilter) WhereUpstreamAccountID(p entql.IntP) {
+	f.Where(p.Field(usagebillingrecord.FieldUpstreamAccountID))
 }
 
 // WhereUserID applies the entql int predicate on the user_id field.
@@ -9730,6 +10205,20 @@ func (f *UsageBillingRecordFilter) WhereHasUserSubscriptionWith(preds ...predica
 	})))
 }
 
+// WhereHasUpstreamAccount applies a predicate to check if query has an edge upstream_account.
+func (f *UsageBillingRecordFilter) WhereHasUpstreamAccount() {
+	f.Where(entql.HasEdge("upstream_account"))
+}
+
+// WhereHasUpstreamAccountWith applies a predicate to check if query has an edge upstream_account with a given conditions (other predicates).
+func (f *UsageBillingRecordFilter) WhereHasUpstreamAccountWith(preds ...predicate.UpstreamAccount) {
+	f.Where(entql.HasEdgeWith("upstream_account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasBillingNotifications applies a predicate to check if query has an edge billing_notifications.
 func (f *UsageBillingRecordFilter) WhereHasBillingNotifications() {
 	f.Where(entql.HasEdge("billing_notifications"))
@@ -9773,7 +10262,7 @@ type UsageDailyAggregateFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageDailyAggregateFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[46].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[47].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9918,7 +10407,7 @@ type UsageHourlyAggregateFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageHourlyAggregateFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[47].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[48].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -10063,7 +10552,7 @@ type UsageLogFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageLogFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[48].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[49].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -10102,6 +10591,11 @@ func (f *UsageLogFilter) WhereProjectID(p entql.IntP) {
 // WhereChannelID applies the entql int predicate on the channel_id field.
 func (f *UsageLogFilter) WhereChannelID(p entql.IntP) {
 	f.Where(p.Field(usagelog.FieldChannelID))
+}
+
+// WhereUpstreamAccountID applies the entql int predicate on the upstream_account_id field.
+func (f *UsageLogFilter) WhereUpstreamAccountID(p entql.IntP) {
+	f.Where(p.Field(usagelog.FieldUpstreamAccountID))
 }
 
 // WhereModelID applies the entql string predicate on the model_id field.
@@ -10236,6 +10730,20 @@ func (f *UsageLogFilter) WhereHasChannelWith(preds ...predicate.Channel) {
 	})))
 }
 
+// WhereHasUpstreamAccount applies a predicate to check if query has an edge upstream_account.
+func (f *UsageLogFilter) WhereHasUpstreamAccount() {
+	f.Where(entql.HasEdge("upstream_account"))
+}
+
+// WhereHasUpstreamAccountWith applies a predicate to check if query has an edge upstream_account with a given conditions (other predicates).
+func (f *UsageLogFilter) WhereHasUpstreamAccountWith(preds ...predicate.UpstreamAccount) {
+	f.Where(entql.HasEdgeWith("upstream_account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasUsageBillingRecords applies a predicate to check if query has an edge usage_billing_records.
 func (f *UsageLogFilter) WhereHasUsageBillingRecords() {
 	f.Where(entql.HasEdge("usage_billing_records"))
@@ -10293,7 +10801,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[49].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[50].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -10659,7 +11167,7 @@ type UserProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[50].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[51].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -10757,7 +11265,7 @@ type UserRoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserRoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[51].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[52].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -10845,7 +11353,7 @@ type UserSubscriptionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserSubscriptionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[52].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[53].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})

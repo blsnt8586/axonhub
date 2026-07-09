@@ -1137,6 +1137,29 @@ func HasUpstreamAccountWith(preds ...predicate.UpstreamAccount) predicate.Reques
 	})
 }
 
+// HasUpstreamAccountSwitchHistories applies the HasEdge predicate on the "upstream_account_switch_histories" edge.
+func HasUpstreamAccountSwitchHistories() predicate.RequestExecution {
+	return predicate.RequestExecution(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountSwitchHistoriesTable, UpstreamAccountSwitchHistoriesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUpstreamAccountSwitchHistoriesWith applies the HasEdge predicate on the "upstream_account_switch_histories" edge with a given conditions (other predicates).
+func HasUpstreamAccountSwitchHistoriesWith(preds ...predicate.UpstreamAccountSwitchHistory) predicate.RequestExecution {
+	return predicate.RequestExecution(func(s *sql.Selector) {
+		step := newUpstreamAccountSwitchHistoriesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.RequestExecution) predicate.RequestExecution {
 	return predicate.RequestExecution(sql.AndPredicates(predicates...))

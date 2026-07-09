@@ -927,6 +927,73 @@ type UpstreamAccountTestResult {
   ineligibleReason: String
 }
 
+input UpstreamAccountMonitoringFilter {
+  from: Time
+  to: Time
+  channelID: ID
+  providerType: String
+  status: String
+  modelID: String
+  accountID: ID
+}
+
+type UpstreamAccountRecentError {
+  requestExecutionID: ID!
+  requestID: ID!
+  statusCode: Int
+  errorMessage: String!
+  createdAt: Time!
+}
+
+type UpstreamAccountMonitoringSummary {
+  accountID: ID!
+  accountName: String!
+  channelID: ID!
+  channelName: String!
+  providerType: String!
+  status: String!
+  schedulable: Boolean!
+  requestCount: Int!
+  successCount: Int!
+  errorCount: Int!
+  successRate: Float!
+  errorRate: Float!
+  rateLimitCount: Int!
+  serverErrorCount: Int!
+  averageLatencyMs: Float
+  firstTokenLatencyMs: Float
+  userChargeMicros: Int!
+  upstreamCostMicros: Int!
+  grossMarginMicros: Int!
+  quotaLimitMicros: Int!
+  quotaUsedMicros: Int!
+  lastUsedAt: Time
+  lastErrorMessage: String
+  rateLimitResetAt: Time
+  overloadUntil: Time
+  cooldownUntil: Time
+  cooldownReason: String
+  recentErrors: [UpstreamAccountRecentError!]!
+}
+
+type UpstreamAccountUsageTrendPoint {
+  bucketStart: Time!
+  requestCount: Int!
+  successCount: Int!
+  errorCount: Int!
+  userChargeMicros: Int!
+  upstreamCostMicros: Int!
+  grossMarginMicros: Int!
+  totalTokens: Int!
+}
+
+type UpstreamAccountMonitoringDetail {
+  summary: UpstreamAccountMonitoringSummary!
+  usageTrend: [UpstreamAccountUsageTrendPoint!]!
+  recentExecutions: [RequestExecution!]!
+  switchHistory: [UpstreamAccountSwitchHistory!]!
+}
+
 extend type UpstreamAccount {
   hasCredentials: Boolean! @goField(forceResolver: true)
   hasProxyConfig: Boolean! @goField(forceResolver: true)
@@ -1114,6 +1181,13 @@ extend type Query {
     includeArchived: Boolean
   ): [UpstreamAccountPool!]!
   upstreamAccounts(channelID: ID!, includeArchived: Boolean): [UpstreamAccount!]!
+  upstreamAccountMonitoring(
+    filter: UpstreamAccountMonitoringFilter
+  ): [UpstreamAccountMonitoringSummary!]!
+  upstreamAccountMonitoringDetail(
+    accountID: ID!
+    filter: UpstreamAccountMonitoringFilter
+  ): UpstreamAccountMonitoringDetail!
 
   """
   Returns quota usage for profiles that have quota enabled for an API key.

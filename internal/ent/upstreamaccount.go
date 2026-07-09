@@ -84,13 +84,25 @@ type UpstreamAccountEdges struct {
 	Pool *UpstreamAccountPool `json:"pool,omitempty"`
 	// Executions holds the value of the executions edge.
 	Executions []*RequestExecution `json:"executions,omitempty"`
+	// UsageLogs holds the value of the usage_logs edge.
+	UsageLogs []*UsageLog `json:"usage_logs,omitempty"`
+	// UsageBillingRecords holds the value of the usage_billing_records edge.
+	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
+	// SwitchHistoriesFrom holds the value of the switch_histories_from edge.
+	SwitchHistoriesFrom []*UpstreamAccountSwitchHistory `json:"switch_histories_from,omitempty"`
+	// SwitchHistoriesTo holds the value of the switch_histories_to edge.
+	SwitchHistoriesTo []*UpstreamAccountSwitchHistory `json:"switch_histories_to,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [7]bool
 	// totalCount holds the count of the edges above.
-	totalCount [3]map[string]int
+	totalCount [7]map[string]int
 
-	namedExecutions map[string][]*RequestExecution
+	namedExecutions          map[string][]*RequestExecution
+	namedUsageLogs           map[string][]*UsageLog
+	namedUsageBillingRecords map[string][]*UsageBillingRecord
+	namedSwitchHistoriesFrom map[string][]*UpstreamAccountSwitchHistory
+	namedSwitchHistoriesTo   map[string][]*UpstreamAccountSwitchHistory
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -122,6 +134,42 @@ func (e UpstreamAccountEdges) ExecutionsOrErr() ([]*RequestExecution, error) {
 		return e.Executions, nil
 	}
 	return nil, &NotLoadedError{edge: "executions"}
+}
+
+// UsageLogsOrErr returns the UsageLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e UpstreamAccountEdges) UsageLogsOrErr() ([]*UsageLog, error) {
+	if e.loadedTypes[3] {
+		return e.UsageLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "usage_logs"}
+}
+
+// UsageBillingRecordsOrErr returns the UsageBillingRecords value or an error if the edge
+// was not loaded in eager-loading.
+func (e UpstreamAccountEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecord, error) {
+	if e.loadedTypes[4] {
+		return e.UsageBillingRecords, nil
+	}
+	return nil, &NotLoadedError{edge: "usage_billing_records"}
+}
+
+// SwitchHistoriesFromOrErr returns the SwitchHistoriesFrom value or an error if the edge
+// was not loaded in eager-loading.
+func (e UpstreamAccountEdges) SwitchHistoriesFromOrErr() ([]*UpstreamAccountSwitchHistory, error) {
+	if e.loadedTypes[5] {
+		return e.SwitchHistoriesFrom, nil
+	}
+	return nil, &NotLoadedError{edge: "switch_histories_from"}
+}
+
+// SwitchHistoriesToOrErr returns the SwitchHistoriesTo value or an error if the edge
+// was not loaded in eager-loading.
+func (e UpstreamAccountEdges) SwitchHistoriesToOrErr() ([]*UpstreamAccountSwitchHistory, error) {
+	if e.loadedTypes[6] {
+		return e.SwitchHistoriesTo, nil
+	}
+	return nil, &NotLoadedError{edge: "switch_histories_to"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -346,6 +394,26 @@ func (_m *UpstreamAccount) QueryExecutions() *RequestExecutionQuery {
 	return NewUpstreamAccountClient(_m.config).QueryExecutions(_m)
 }
 
+// QueryUsageLogs queries the "usage_logs" edge of the UpstreamAccount entity.
+func (_m *UpstreamAccount) QueryUsageLogs() *UsageLogQuery {
+	return NewUpstreamAccountClient(_m.config).QueryUsageLogs(_m)
+}
+
+// QueryUsageBillingRecords queries the "usage_billing_records" edge of the UpstreamAccount entity.
+func (_m *UpstreamAccount) QueryUsageBillingRecords() *UsageBillingRecordQuery {
+	return NewUpstreamAccountClient(_m.config).QueryUsageBillingRecords(_m)
+}
+
+// QuerySwitchHistoriesFrom queries the "switch_histories_from" edge of the UpstreamAccount entity.
+func (_m *UpstreamAccount) QuerySwitchHistoriesFrom() *UpstreamAccountSwitchHistoryQuery {
+	return NewUpstreamAccountClient(_m.config).QuerySwitchHistoriesFrom(_m)
+}
+
+// QuerySwitchHistoriesTo queries the "switch_histories_to" edge of the UpstreamAccount entity.
+func (_m *UpstreamAccount) QuerySwitchHistoriesTo() *UpstreamAccountSwitchHistoryQuery {
+	return NewUpstreamAccountClient(_m.config).QuerySwitchHistoriesTo(_m)
+}
+
 // Update returns a builder for updating this UpstreamAccount.
 // Note that you need to call UpstreamAccount.Unwrap() before calling this method if this UpstreamAccount
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -480,6 +548,102 @@ func (_m *UpstreamAccount) appendNamedExecutions(name string, edges ...*RequestE
 		_m.Edges.namedExecutions[name] = []*RequestExecution{}
 	} else {
 		_m.Edges.namedExecutions[name] = append(_m.Edges.namedExecutions[name], edges...)
+	}
+}
+
+// NamedUsageLogs returns the UsageLogs named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UpstreamAccount) NamedUsageLogs(name string) ([]*UsageLog, error) {
+	if _m.Edges.namedUsageLogs == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUsageLogs[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UpstreamAccount) appendNamedUsageLogs(name string, edges ...*UsageLog) {
+	if _m.Edges.namedUsageLogs == nil {
+		_m.Edges.namedUsageLogs = make(map[string][]*UsageLog)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUsageLogs[name] = []*UsageLog{}
+	} else {
+		_m.Edges.namedUsageLogs[name] = append(_m.Edges.namedUsageLogs[name], edges...)
+	}
+}
+
+// NamedUsageBillingRecords returns the UsageBillingRecords named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UpstreamAccount) NamedUsageBillingRecords(name string) ([]*UsageBillingRecord, error) {
+	if _m.Edges.namedUsageBillingRecords == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUsageBillingRecords[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UpstreamAccount) appendNamedUsageBillingRecords(name string, edges ...*UsageBillingRecord) {
+	if _m.Edges.namedUsageBillingRecords == nil {
+		_m.Edges.namedUsageBillingRecords = make(map[string][]*UsageBillingRecord)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUsageBillingRecords[name] = []*UsageBillingRecord{}
+	} else {
+		_m.Edges.namedUsageBillingRecords[name] = append(_m.Edges.namedUsageBillingRecords[name], edges...)
+	}
+}
+
+// NamedSwitchHistoriesFrom returns the SwitchHistoriesFrom named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UpstreamAccount) NamedSwitchHistoriesFrom(name string) ([]*UpstreamAccountSwitchHistory, error) {
+	if _m.Edges.namedSwitchHistoriesFrom == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedSwitchHistoriesFrom[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UpstreamAccount) appendNamedSwitchHistoriesFrom(name string, edges ...*UpstreamAccountSwitchHistory) {
+	if _m.Edges.namedSwitchHistoriesFrom == nil {
+		_m.Edges.namedSwitchHistoriesFrom = make(map[string][]*UpstreamAccountSwitchHistory)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedSwitchHistoriesFrom[name] = []*UpstreamAccountSwitchHistory{}
+	} else {
+		_m.Edges.namedSwitchHistoriesFrom[name] = append(_m.Edges.namedSwitchHistoriesFrom[name], edges...)
+	}
+}
+
+// NamedSwitchHistoriesTo returns the SwitchHistoriesTo named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UpstreamAccount) NamedSwitchHistoriesTo(name string) ([]*UpstreamAccountSwitchHistory, error) {
+	if _m.Edges.namedSwitchHistoriesTo == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedSwitchHistoriesTo[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UpstreamAccount) appendNamedSwitchHistoriesTo(name string, edges ...*UpstreamAccountSwitchHistory) {
+	if _m.Edges.namedSwitchHistoriesTo == nil {
+		_m.Edges.namedSwitchHistoriesTo = make(map[string][]*UpstreamAccountSwitchHistory)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedSwitchHistoriesTo[name] = []*UpstreamAccountSwitchHistory{}
+	} else {
+		_m.Edges.namedSwitchHistoriesTo[name] = append(_m.Edges.namedSwitchHistoriesTo[name], edges...)
 	}
 }
 

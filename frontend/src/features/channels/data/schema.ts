@@ -372,6 +372,99 @@ export const upstreamAccountTestResultSchema = z.object({
 });
 export type UpstreamAccountTestResult = z.infer<typeof upstreamAccountTestResultSchema>;
 
+export const upstreamAccountRecentErrorSchema = z.object({
+  requestExecutionID: z.string(),
+  requestID: z.string(),
+  statusCode: z.number().int().optional().nullable(),
+  errorMessage: z.string(),
+  createdAt: z.string(),
+});
+export type UpstreamAccountRecentError = z.infer<typeof upstreamAccountRecentErrorSchema>;
+
+export const upstreamAccountMonitoringSummarySchema = z.object({
+  accountID: z.string(),
+  accountName: z.string(),
+  channelID: z.string(),
+  channelName: z.string(),
+  providerType: z.string(),
+  status: z.string(),
+  schedulable: z.boolean(),
+  requestCount: z.number().int(),
+  successCount: z.number().int(),
+  errorCount: z.number().int(),
+  successRate: z.number(),
+  errorRate: z.number(),
+  rateLimitCount: z.number().int(),
+  serverErrorCount: z.number().int(),
+  averageLatencyMs: z.number().optional().nullable(),
+  firstTokenLatencyMs: z.number().optional().nullable(),
+  userChargeMicros: z.number(),
+  upstreamCostMicros: z.number(),
+  grossMarginMicros: z.number(),
+  quotaLimitMicros: z.number(),
+  quotaUsedMicros: z.number(),
+  lastUsedAt: z.string().optional().nullable(),
+  lastErrorMessage: z.string().optional().nullable(),
+  rateLimitResetAt: z.string().optional().nullable(),
+  overloadUntil: z.string().optional().nullable(),
+  cooldownUntil: z.string().optional().nullable(),
+  cooldownReason: z.string().optional().nullable(),
+  recentErrors: z.array(upstreamAccountRecentErrorSchema),
+});
+export type UpstreamAccountMonitoringSummary = z.infer<typeof upstreamAccountMonitoringSummarySchema>;
+
+export const upstreamAccountUsageTrendPointSchema = z.object({
+  bucketStart: z.string(),
+  requestCount: z.number(),
+  successCount: z.number(),
+  errorCount: z.number(),
+  userChargeMicros: z.number(),
+  upstreamCostMicros: z.number(),
+  grossMarginMicros: z.number(),
+  totalTokens: z.number(),
+});
+export type UpstreamAccountUsageTrendPoint = z.infer<typeof upstreamAccountUsageTrendPointSchema>;
+
+export const upstreamAccountSwitchHistorySchema = z.object({
+  id: z.string(),
+  createdAt: z.string(),
+  channelID: z.string(),
+  fromAccountID: z.string().optional().nullable(),
+  toAccountID: z.string().optional().nullable(),
+  modelID: z.string(),
+  reason: z.string(),
+  errorCode: z.number().int().optional().nullable(),
+  errorMessage: z.string(),
+  latencyMs: z.number().optional().nullable(),
+  fromAccount: upstreamAccountSchema.pick({ id: true, name: true }).partial().nullable().optional(),
+  toAccount: upstreamAccountSchema.pick({ id: true, name: true }).partial().nullable().optional(),
+});
+export type UpstreamAccountSwitchHistory = z.infer<typeof upstreamAccountSwitchHistorySchema>;
+
+export const upstreamAccountMonitoringExecutionSchema = z.object({
+  id: z.string(),
+  createdAt: z.string(),
+  requestID: z.string(),
+  channelID: z.string().optional().nullable(),
+  upstreamAccountID: z.string().optional().nullable(),
+  modelID: z.string(),
+  status: z.string(),
+  responseStatusCode: z.number().int().optional().nullable(),
+  errorMessage: z.string().optional().nullable(),
+  metricsLatencyMs: z.number().optional().nullable(),
+  metricsFirstTokenLatencyMs: z.number().optional().nullable(),
+  upstreamAccountRetryCount: z.number().optional(),
+});
+export type UpstreamAccountMonitoringExecution = z.infer<typeof upstreamAccountMonitoringExecutionSchema>;
+
+export const upstreamAccountMonitoringDetailSchema = z.object({
+  summary: upstreamAccountMonitoringSummarySchema,
+  usageTrend: z.array(upstreamAccountUsageTrendPointSchema),
+  recentExecutions: z.array(upstreamAccountMonitoringExecutionSchema),
+  switchHistory: z.array(upstreamAccountSwitchHistorySchema),
+});
+export type UpstreamAccountMonitoringDetail = z.infer<typeof upstreamAccountMonitoringDetailSchema>;
+
 // Channel
 export const channelSchema = z.object({
   id: z.string(),

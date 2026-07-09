@@ -19,6 +19,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/objects"
 )
@@ -348,6 +349,21 @@ func (_c *ChannelCreate) AddUpstreamAccounts(v ...*UpstreamAccount) *ChannelCrea
 		ids[i] = v[i].ID
 	}
 	return _c.AddUpstreamAccountIDs(ids...)
+}
+
+// AddUpstreamAccountSwitchHistoryIDs adds the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (_c *ChannelCreate) AddUpstreamAccountSwitchHistoryIDs(ids ...int) *ChannelCreate {
+	_c.mutation.AddUpstreamAccountSwitchHistoryIDs(ids...)
+	return _c
+}
+
+// AddUpstreamAccountSwitchHistories adds the "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_c *ChannelCreate) AddUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *ChannelCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUpstreamAccountSwitchHistoryIDs(ids...)
 }
 
 // SetProviderQuotaStatusID sets the "provider_quota_status" edge to the ProviderQuotaStatus entity by ID.
@@ -722,6 +738,22 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{channel.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

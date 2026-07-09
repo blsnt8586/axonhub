@@ -87,11 +87,15 @@ type RequestExecutionEdges struct {
 	DataStorage *DataStorage `json:"data_storage,omitempty"`
 	// UpstreamAccount holds the value of the upstream_account edge.
 	UpstreamAccount *UpstreamAccount `json:"upstream_account,omitempty"`
+	// UpstreamAccountSwitchHistories holds the value of the upstream_account_switch_histories edge.
+	UpstreamAccountSwitchHistories []*UpstreamAccountSwitchHistory `json:"upstream_account_switch_histories,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 	// totalCount holds the count of the edges above.
-	totalCount [4]map[string]int
+	totalCount [5]map[string]int
+
+	namedUpstreamAccountSwitchHistories map[string][]*UpstreamAccountSwitchHistory
 }
 
 // RequestOrErr returns the Request value or an error if the edge
@@ -136,6 +140,15 @@ func (e RequestExecutionEdges) UpstreamAccountOrErr() (*UpstreamAccount, error) 
 		return nil, &NotFoundError{label: upstreamaccount.Label}
 	}
 	return nil, &NotLoadedError{edge: "upstream_account"}
+}
+
+// UpstreamAccountSwitchHistoriesOrErr returns the UpstreamAccountSwitchHistories value or an error if the edge
+// was not loaded in eager-loading.
+func (e RequestExecutionEdges) UpstreamAccountSwitchHistoriesOrErr() ([]*UpstreamAccountSwitchHistory, error) {
+	if e.loadedTypes[4] {
+		return e.UpstreamAccountSwitchHistories, nil
+	}
+	return nil, &NotLoadedError{edge: "upstream_account_switch_histories"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -364,6 +377,11 @@ func (_m *RequestExecution) QueryUpstreamAccount() *UpstreamAccountQuery {
 	return NewRequestExecutionClient(_m.config).QueryUpstreamAccount(_m)
 }
 
+// QueryUpstreamAccountSwitchHistories queries the "upstream_account_switch_histories" edge of the RequestExecution entity.
+func (_m *RequestExecution) QueryUpstreamAccountSwitchHistories() *UpstreamAccountSwitchHistoryQuery {
+	return NewRequestExecutionClient(_m.config).QueryUpstreamAccountSwitchHistories(_m)
+}
+
 // Update returns a builder for updating this RequestExecution.
 // Note that you need to call RequestExecution.Unwrap() before calling this method if this RequestExecution
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -470,6 +488,30 @@ func (_m *RequestExecution) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.PassThroughApplied))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedUpstreamAccountSwitchHistories returns the UpstreamAccountSwitchHistories named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *RequestExecution) NamedUpstreamAccountSwitchHistories(name string) ([]*UpstreamAccountSwitchHistory, error) {
+	if _m.Edges.namedUpstreamAccountSwitchHistories == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUpstreamAccountSwitchHistories[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *RequestExecution) appendNamedUpstreamAccountSwitchHistories(name string, edges ...*UpstreamAccountSwitchHistory) {
+	if _m.Edges.namedUpstreamAccountSwitchHistories == nil {
+		_m.Edges.namedUpstreamAccountSwitchHistories = make(map[string][]*UpstreamAccountSwitchHistory)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUpstreamAccountSwitchHistories[name] = []*UpstreamAccountSwitchHistory{}
+	} else {
+		_m.Edges.namedUpstreamAccountSwitchHistories[name] = append(_m.Edges.namedUpstreamAccountSwitchHistories[name], edges...)
+	}
 }
 
 // RequestExecutions is a parsable slice of RequestExecution.

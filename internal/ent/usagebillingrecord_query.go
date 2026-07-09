@@ -17,6 +17,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
@@ -33,6 +34,7 @@ type UsageBillingRecordQuery struct {
 	withBillingAccount            *BillingAccountQuery
 	withLedgerTransaction         *LedgerTransactionQuery
 	withUserSubscription          *UserSubscriptionQuery
+	withUpstreamAccount           *UpstreamAccountQuery
 	withBillingNotifications      *BillingNotificationQuery
 	loadTotal                     []func(context.Context, []*UsageBillingRecord) error
 	modifiers                     []func(*sql.Selector)
@@ -154,6 +156,28 @@ func (_q *UsageBillingRecordQuery) QueryUserSubscription() *UserSubscriptionQuer
 			sqlgraph.From(usagebillingrecord.Table, usagebillingrecord.FieldID, selector),
 			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usagebillingrecord.UserSubscriptionTable, usagebillingrecord.UserSubscriptionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccount chains the current query on the "upstream_account" edge.
+func (_q *UsageBillingRecordQuery) QueryUpstreamAccount() *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagebillingrecord.Table, usagebillingrecord.FieldID, selector),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usagebillingrecord.UpstreamAccountTable, usagebillingrecord.UpstreamAccountColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -379,6 +403,7 @@ func (_q *UsageBillingRecordQuery) Clone() *UsageBillingRecordQuery {
 		withBillingAccount:       _q.withBillingAccount.Clone(),
 		withLedgerTransaction:    _q.withLedgerTransaction.Clone(),
 		withUserSubscription:     _q.withUserSubscription.Clone(),
+		withUpstreamAccount:      _q.withUpstreamAccount.Clone(),
 		withBillingNotifications: _q.withBillingNotifications.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
@@ -428,6 +453,17 @@ func (_q *UsageBillingRecordQuery) WithUserSubscription(opts ...func(*UserSubscr
 		opt(query)
 	}
 	_q.withUserSubscription = query
+	return _q
+}
+
+// WithUpstreamAccount tells the query-builder to eager-load the nodes that are connected to
+// the "upstream_account" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UsageBillingRecordQuery) WithUpstreamAccount(opts ...func(*UpstreamAccountQuery)) *UsageBillingRecordQuery {
+	query := (&UpstreamAccountClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUpstreamAccount = query
 	return _q
 }
 
@@ -526,11 +562,12 @@ func (_q *UsageBillingRecordQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	var (
 		nodes       = []*UsageBillingRecord{}
 		_spec       = _q.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			_q.withUsageLog != nil,
 			_q.withBillingAccount != nil,
 			_q.withLedgerTransaction != nil,
 			_q.withUserSubscription != nil,
+			_q.withUpstreamAccount != nil,
 			_q.withBillingNotifications != nil,
 		}
 	)
@@ -576,6 +613,12 @@ func (_q *UsageBillingRecordQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	if query := _q.withUserSubscription; query != nil {
 		if err := _q.loadUserSubscription(ctx, query, nodes, nil,
 			func(n *UsageBillingRecord, e *UserSubscription) { n.Edges.UserSubscription = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUpstreamAccount; query != nil {
+		if err := _q.loadUpstreamAccount(ctx, query, nodes, nil,
+			func(n *UsageBillingRecord, e *UpstreamAccount) { n.Edges.UpstreamAccount = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -719,6 +762,38 @@ func (_q *UsageBillingRecordQuery) loadUserSubscription(ctx context.Context, que
 	}
 	return nil
 }
+func (_q *UsageBillingRecordQuery) loadUpstreamAccount(ctx context.Context, query *UpstreamAccountQuery, nodes []*UsageBillingRecord, init func(*UsageBillingRecord), assign func(*UsageBillingRecord, *UpstreamAccount)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*UsageBillingRecord)
+	for i := range nodes {
+		if nodes[i].UpstreamAccountID == nil {
+			continue
+		}
+		fk := *nodes[i].UpstreamAccountID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(upstreamaccount.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "upstream_account_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (_q *UsageBillingRecordQuery) loadBillingNotifications(ctx context.Context, query *BillingNotificationQuery, nodes []*UsageBillingRecord, init func(*UsageBillingRecord), assign func(*UsageBillingRecord, *BillingNotification)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*UsageBillingRecord)
@@ -792,6 +867,9 @@ func (_q *UsageBillingRecordQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withUserSubscription != nil {
 			_spec.Node.AddColumnOnce(usagebillingrecord.FieldUserSubscriptionID)
+		}
+		if _q.withUpstreamAccount != nil {
+			_spec.Node.AddColumnOnce(usagebillingrecord.FieldUpstreamAccountID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

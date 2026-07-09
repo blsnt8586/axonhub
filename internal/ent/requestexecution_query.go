@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -17,21 +18,24 @@ import (
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 )
 
 // RequestExecutionQuery is the builder for querying RequestExecution entities.
 type RequestExecutionQuery struct {
 	config
-	ctx                 *QueryContext
-	order               []requestexecution.OrderOption
-	inters              []Interceptor
-	predicates          []predicate.RequestExecution
-	withRequest         *RequestQuery
-	withChannel         *ChannelQuery
-	withDataStorage     *DataStorageQuery
-	withUpstreamAccount *UpstreamAccountQuery
-	loadTotal           []func(context.Context, []*RequestExecution) error
-	modifiers           []func(*sql.Selector)
+	ctx                                     *QueryContext
+	order                                   []requestexecution.OrderOption
+	inters                                  []Interceptor
+	predicates                              []predicate.RequestExecution
+	withRequest                             *RequestQuery
+	withChannel                             *ChannelQuery
+	withDataStorage                         *DataStorageQuery
+	withUpstreamAccount                     *UpstreamAccountQuery
+	withUpstreamAccountSwitchHistories      *UpstreamAccountSwitchHistoryQuery
+	loadTotal                               []func(context.Context, []*RequestExecution) error
+	modifiers                               []func(*sql.Selector)
+	withNamedUpstreamAccountSwitchHistories map[string]*UpstreamAccountSwitchHistoryQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -149,6 +153,28 @@ func (_q *RequestExecutionQuery) QueryUpstreamAccount() *UpstreamAccountQuery {
 			sqlgraph.From(requestexecution.Table, requestexecution.FieldID, selector),
 			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, requestexecution.UpstreamAccountTable, requestexecution.UpstreamAccountColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccountSwitchHistories chains the current query on the "upstream_account_switch_histories" edge.
+func (_q *RequestExecutionQuery) QueryUpstreamAccountSwitchHistories() *UpstreamAccountSwitchHistoryQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(requestexecution.Table, requestexecution.FieldID, selector),
+			sqlgraph.To(upstreamaccountswitchhistory.Table, upstreamaccountswitchhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, requestexecution.UpstreamAccountSwitchHistoriesTable, requestexecution.UpstreamAccountSwitchHistoriesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -343,15 +369,16 @@ func (_q *RequestExecutionQuery) Clone() *RequestExecutionQuery {
 		return nil
 	}
 	return &RequestExecutionQuery{
-		config:              _q.config,
-		ctx:                 _q.ctx.Clone(),
-		order:               append([]requestexecution.OrderOption{}, _q.order...),
-		inters:              append([]Interceptor{}, _q.inters...),
-		predicates:          append([]predicate.RequestExecution{}, _q.predicates...),
-		withRequest:         _q.withRequest.Clone(),
-		withChannel:         _q.withChannel.Clone(),
-		withDataStorage:     _q.withDataStorage.Clone(),
-		withUpstreamAccount: _q.withUpstreamAccount.Clone(),
+		config:                             _q.config,
+		ctx:                                _q.ctx.Clone(),
+		order:                              append([]requestexecution.OrderOption{}, _q.order...),
+		inters:                             append([]Interceptor{}, _q.inters...),
+		predicates:                         append([]predicate.RequestExecution{}, _q.predicates...),
+		withRequest:                        _q.withRequest.Clone(),
+		withChannel:                        _q.withChannel.Clone(),
+		withDataStorage:                    _q.withDataStorage.Clone(),
+		withUpstreamAccount:                _q.withUpstreamAccount.Clone(),
+		withUpstreamAccountSwitchHistories: _q.withUpstreamAccountSwitchHistories.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -400,6 +427,17 @@ func (_q *RequestExecutionQuery) WithUpstreamAccount(opts ...func(*UpstreamAccou
 		opt(query)
 	}
 	_q.withUpstreamAccount = query
+	return _q
+}
+
+// WithUpstreamAccountSwitchHistories tells the query-builder to eager-load the nodes that are connected to
+// the "upstream_account_switch_histories" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RequestExecutionQuery) WithUpstreamAccountSwitchHistories(opts ...func(*UpstreamAccountSwitchHistoryQuery)) *RequestExecutionQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUpstreamAccountSwitchHistories = query
 	return _q
 }
 
@@ -481,11 +519,12 @@ func (_q *RequestExecutionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	var (
 		nodes       = []*RequestExecution{}
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			_q.withRequest != nil,
 			_q.withChannel != nil,
 			_q.withDataStorage != nil,
 			_q.withUpstreamAccount != nil,
+			_q.withUpstreamAccountSwitchHistories != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -530,6 +569,24 @@ func (_q *RequestExecutionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	if query := _q.withUpstreamAccount; query != nil {
 		if err := _q.loadUpstreamAccount(ctx, query, nodes, nil,
 			func(n *RequestExecution, e *UpstreamAccount) { n.Edges.UpstreamAccount = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUpstreamAccountSwitchHistories; query != nil {
+		if err := _q.loadUpstreamAccountSwitchHistories(ctx, query, nodes,
+			func(n *RequestExecution) { n.Edges.UpstreamAccountSwitchHistories = []*UpstreamAccountSwitchHistory{} },
+			func(n *RequestExecution, e *UpstreamAccountSwitchHistory) {
+				n.Edges.UpstreamAccountSwitchHistories = append(n.Edges.UpstreamAccountSwitchHistories, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedUpstreamAccountSwitchHistories {
+		if err := _q.loadUpstreamAccountSwitchHistories(ctx, query, nodes,
+			func(n *RequestExecution) { n.appendNamedUpstreamAccountSwitchHistories(name) },
+			func(n *RequestExecution, e *UpstreamAccountSwitchHistory) {
+				n.appendNamedUpstreamAccountSwitchHistories(name, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -660,6 +717,39 @@ func (_q *RequestExecutionQuery) loadUpstreamAccount(ctx context.Context, query 
 	}
 	return nil
 }
+func (_q *RequestExecutionQuery) loadUpstreamAccountSwitchHistories(ctx context.Context, query *UpstreamAccountSwitchHistoryQuery, nodes []*RequestExecution, init func(*RequestExecution), assign func(*RequestExecution, *UpstreamAccountSwitchHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*RequestExecution)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(upstreamaccountswitchhistory.FieldRequestExecutionID)
+	}
+	query.Where(predicate.UpstreamAccountSwitchHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(requestexecution.UpstreamAccountSwitchHistoriesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RequestExecutionID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "request_execution_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "request_execution_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *RequestExecutionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -764,6 +854,20 @@ func (_q *RequestExecutionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 func (_q *RequestExecutionQuery) Modify(modifiers ...func(s *sql.Selector)) *RequestExecutionSelect {
 	_q.modifiers = append(_q.modifiers, modifiers...)
 	return _q.Select()
+}
+
+// WithNamedUpstreamAccountSwitchHistories tells the query-builder to eager-load the nodes that are connected to the "upstream_account_switch_histories"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *RequestExecutionQuery) WithNamedUpstreamAccountSwitchHistories(name string, opts ...func(*UpstreamAccountSwitchHistoryQuery)) *RequestExecutionQuery {
+	query := (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedUpstreamAccountSwitchHistories == nil {
+		_q.withNamedUpstreamAccountSwitchHistories = make(map[string]*UpstreamAccountSwitchHistoryQuery)
+	}
+	_q.withNamedUpstreamAccountSwitchHistories[name] = query
+	return _q
 }
 
 // RequestExecutionGroupBy is the group-by builder for RequestExecution entities.

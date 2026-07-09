@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -287,9 +288,45 @@ func (_u *RequestExecutionUpdate) SetNillablePassThroughApplied(v *bool) *Reques
 	return _u
 }
 
+// AddUpstreamAccountSwitchHistoryIDs adds the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (_u *RequestExecutionUpdate) AddUpstreamAccountSwitchHistoryIDs(ids ...int) *RequestExecutionUpdate {
+	_u.mutation.AddUpstreamAccountSwitchHistoryIDs(ids...)
+	return _u
+}
+
+// AddUpstreamAccountSwitchHistories adds the "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_u *RequestExecutionUpdate) AddUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *RequestExecutionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUpstreamAccountSwitchHistoryIDs(ids...)
+}
+
 // Mutation returns the RequestExecutionMutation object of the builder.
 func (_u *RequestExecutionUpdate) Mutation() *RequestExecutionMutation {
 	return _u.mutation
+}
+
+// ClearUpstreamAccountSwitchHistories clears all "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_u *RequestExecutionUpdate) ClearUpstreamAccountSwitchHistories() *RequestExecutionUpdate {
+	_u.mutation.ClearUpstreamAccountSwitchHistories()
+	return _u
+}
+
+// RemoveUpstreamAccountSwitchHistoryIDs removes the "upstream_account_switch_histories" edge to UpstreamAccountSwitchHistory entities by IDs.
+func (_u *RequestExecutionUpdate) RemoveUpstreamAccountSwitchHistoryIDs(ids ...int) *RequestExecutionUpdate {
+	_u.mutation.RemoveUpstreamAccountSwitchHistoryIDs(ids...)
+	return _u
+}
+
+// RemoveUpstreamAccountSwitchHistories removes "upstream_account_switch_histories" edges to UpstreamAccountSwitchHistory entities.
+func (_u *RequestExecutionUpdate) RemoveUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *RequestExecutionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUpstreamAccountSwitchHistoryIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -459,6 +496,51 @@ func (_u *RequestExecutionUpdate) sqlSave(ctx context.Context) (_node int, err e
 	}
 	if value, ok := _u.mutation.PassThroughApplied(); ok {
 		_spec.SetField(requestexecution.FieldPassThroughApplied, field.TypeBool, value)
+	}
+	if _u.mutation.UpstreamAccountSwitchHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   requestexecution.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{requestexecution.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 && !_u.mutation.UpstreamAccountSwitchHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   requestexecution.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{requestexecution.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   requestexecution.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{requestexecution.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -738,9 +820,45 @@ func (_u *RequestExecutionUpdateOne) SetNillablePassThroughApplied(v *bool) *Req
 	return _u
 }
 
+// AddUpstreamAccountSwitchHistoryIDs adds the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (_u *RequestExecutionUpdateOne) AddUpstreamAccountSwitchHistoryIDs(ids ...int) *RequestExecutionUpdateOne {
+	_u.mutation.AddUpstreamAccountSwitchHistoryIDs(ids...)
+	return _u
+}
+
+// AddUpstreamAccountSwitchHistories adds the "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_u *RequestExecutionUpdateOne) AddUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *RequestExecutionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUpstreamAccountSwitchHistoryIDs(ids...)
+}
+
 // Mutation returns the RequestExecutionMutation object of the builder.
 func (_u *RequestExecutionUpdateOne) Mutation() *RequestExecutionMutation {
 	return _u.mutation
+}
+
+// ClearUpstreamAccountSwitchHistories clears all "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_u *RequestExecutionUpdateOne) ClearUpstreamAccountSwitchHistories() *RequestExecutionUpdateOne {
+	_u.mutation.ClearUpstreamAccountSwitchHistories()
+	return _u
+}
+
+// RemoveUpstreamAccountSwitchHistoryIDs removes the "upstream_account_switch_histories" edge to UpstreamAccountSwitchHistory entities by IDs.
+func (_u *RequestExecutionUpdateOne) RemoveUpstreamAccountSwitchHistoryIDs(ids ...int) *RequestExecutionUpdateOne {
+	_u.mutation.RemoveUpstreamAccountSwitchHistoryIDs(ids...)
+	return _u
+}
+
+// RemoveUpstreamAccountSwitchHistories removes "upstream_account_switch_histories" edges to UpstreamAccountSwitchHistory entities.
+func (_u *RequestExecutionUpdateOne) RemoveUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *RequestExecutionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUpstreamAccountSwitchHistoryIDs(ids...)
 }
 
 // Where appends a list predicates to the RequestExecutionUpdate builder.
@@ -940,6 +1058,51 @@ func (_u *RequestExecutionUpdateOne) sqlSave(ctx context.Context) (_node *Reques
 	}
 	if value, ok := _u.mutation.PassThroughApplied(); ok {
 		_spec.SetField(requestexecution.FieldPassThroughApplied, field.TypeBool, value)
+	}
+	if _u.mutation.UpstreamAccountSwitchHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   requestexecution.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{requestexecution.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 && !_u.mutation.UpstreamAccountSwitchHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   requestexecution.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{requestexecution.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   requestexecution.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{requestexecution.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(_u.modifiers...)
 	_node = &RequestExecution{config: _u.config}

@@ -1397,6 +1397,7 @@ type CreateUsageLogInput struct {
 	RequestID                          int
 	ProjectID                          int
 	ChannelID                          *int
+	UpstreamAccountID                  *int
 }
 
 // Mutate applies the CreateUsageLogInput on the UsageLogMutation builder.
@@ -1460,6 +1461,9 @@ func (i *CreateUsageLogInput) Mutate(m *UsageLogMutation) {
 	m.SetProjectID(i.ProjectID)
 	if v := i.ChannelID; v != nil {
 		m.SetChannelID(*v)
+	}
+	if v := i.UpstreamAccountID; v != nil {
+		m.SetUpstreamAccountID(*v)
 	}
 }
 

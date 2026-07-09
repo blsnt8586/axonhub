@@ -549,6 +549,18 @@ func (f UpstreamAccountPoolFunc) Mutate(ctx context.Context, m ent.Mutation) (en
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UpstreamAccountPoolMutation", m)
 }
 
+// The UpstreamAccountSwitchHistoryFunc type is an adapter to allow the use of ordinary
+// function as UpstreamAccountSwitchHistory mutator.
+type UpstreamAccountSwitchHistoryFunc func(context.Context, *ent.UpstreamAccountSwitchHistoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UpstreamAccountSwitchHistoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UpstreamAccountSwitchHistoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UpstreamAccountSwitchHistoryMutation", m)
+}
+
 // The UsageBillingRecordFunc type is an adapter to allow the use of ordinary
 // function as UsageBillingRecord mutator.
 type UsageBillingRecordFunc func(context.Context, *ent.UsageBillingRecordMutation) (ent.Value, error)

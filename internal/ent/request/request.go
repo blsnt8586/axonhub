@@ -84,6 +84,8 @@ const (
 	EdgeChannel = "channel"
 	// EdgeUsageLogs holds the string denoting the usage_logs edge name in mutations.
 	EdgeUsageLogs = "usage_logs"
+	// EdgeUpstreamAccountSwitchHistories holds the string denoting the upstream_account_switch_histories edge name in mutations.
+	EdgeUpstreamAccountSwitchHistories = "upstream_account_switch_histories"
 	// EdgeBillingHolds holds the string denoting the billing_holds edge name in mutations.
 	EdgeBillingHolds = "billing_holds"
 	// Table holds the table name of the request in the database.
@@ -137,6 +139,13 @@ const (
 	UsageLogsInverseTable = "usage_logs"
 	// UsageLogsColumn is the table column denoting the usage_logs relation/edge.
 	UsageLogsColumn = "request_id"
+	// UpstreamAccountSwitchHistoriesTable is the table that holds the upstream_account_switch_histories relation/edge.
+	UpstreamAccountSwitchHistoriesTable = "upstream_account_switch_histories"
+	// UpstreamAccountSwitchHistoriesInverseTable is the table name for the UpstreamAccountSwitchHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "upstreamaccountswitchhistory" package.
+	UpstreamAccountSwitchHistoriesInverseTable = "upstream_account_switch_histories"
+	// UpstreamAccountSwitchHistoriesColumn is the table column denoting the upstream_account_switch_histories relation/edge.
+	UpstreamAccountSwitchHistoriesColumn = "request_id"
 	// BillingHoldsTable is the table that holds the billing_holds relation/edge.
 	BillingHoldsTable = "billing_holds"
 	// BillingHoldsInverseTable is the table name for the BillingHold entity.
@@ -449,6 +458,20 @@ func ByUsageLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByUpstreamAccountSwitchHistoriesCount orders the results by upstream_account_switch_histories count.
+func ByUpstreamAccountSwitchHistoriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUpstreamAccountSwitchHistoriesStep(), opts...)
+	}
+}
+
+// ByUpstreamAccountSwitchHistories orders the results by upstream_account_switch_histories terms.
+func ByUpstreamAccountSwitchHistories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUpstreamAccountSwitchHistoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByBillingHoldsCount orders the results by billing_holds count.
 func ByBillingHoldsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -509,6 +532,13 @@ func newUsageLogsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsageLogsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UsageLogsTable, UsageLogsColumn),
+	)
+}
+func newUpstreamAccountSwitchHistoriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UpstreamAccountSwitchHistoriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountSwitchHistoriesTable, UpstreamAccountSwitchHistoriesColumn),
 	)
 }
 func newBillingHoldsStep() *sqlgraph.Step {

@@ -18,6 +18,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/request"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 )
@@ -32,6 +33,7 @@ type UsageLogQuery struct {
 	withRequest                  *RequestQuery
 	withProject                  *ProjectQuery
 	withChannel                  *ChannelQuery
+	withUpstreamAccount          *UpstreamAccountQuery
 	withUsageBillingRecords      *UsageBillingRecordQuery
 	withBillingHolds             *BillingHoldQuery
 	loadTotal                    []func(context.Context, []*UsageLog) error
@@ -133,6 +135,28 @@ func (_q *UsageLogQuery) QueryChannel() *ChannelQuery {
 			sqlgraph.From(usagelog.Table, usagelog.FieldID, selector),
 			sqlgraph.To(channel.Table, channel.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usagelog.ChannelTable, usagelog.ChannelColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccount chains the current query on the "upstream_account" edge.
+func (_q *UsageLogQuery) QueryUpstreamAccount() *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagelog.Table, usagelog.FieldID, selector),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usagelog.UpstreamAccountTable, usagelog.UpstreamAccountColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -379,6 +403,7 @@ func (_q *UsageLogQuery) Clone() *UsageLogQuery {
 		withRequest:             _q.withRequest.Clone(),
 		withProject:             _q.withProject.Clone(),
 		withChannel:             _q.withChannel.Clone(),
+		withUpstreamAccount:     _q.withUpstreamAccount.Clone(),
 		withUsageBillingRecords: _q.withUsageBillingRecords.Clone(),
 		withBillingHolds:        _q.withBillingHolds.Clone(),
 		// clone intermediate query.
@@ -418,6 +443,17 @@ func (_q *UsageLogQuery) WithChannel(opts ...func(*ChannelQuery)) *UsageLogQuery
 		opt(query)
 	}
 	_q.withChannel = query
+	return _q
+}
+
+// WithUpstreamAccount tells the query-builder to eager-load the nodes that are connected to
+// the "upstream_account" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UsageLogQuery) WithUpstreamAccount(opts ...func(*UpstreamAccountQuery)) *UsageLogQuery {
+	query := (&UpstreamAccountClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUpstreamAccount = query
 	return _q
 }
 
@@ -527,10 +563,11 @@ func (_q *UsageLogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Usa
 	var (
 		nodes       = []*UsageLog{}
 		_spec       = _q.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			_q.withRequest != nil,
 			_q.withProject != nil,
 			_q.withChannel != nil,
+			_q.withUpstreamAccount != nil,
 			_q.withUsageBillingRecords != nil,
 			_q.withBillingHolds != nil,
 		}
@@ -571,6 +608,12 @@ func (_q *UsageLogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Usa
 	if query := _q.withChannel; query != nil {
 		if err := _q.loadChannel(ctx, query, nodes, nil,
 			func(n *UsageLog, e *Channel) { n.Edges.Channel = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUpstreamAccount; query != nil {
+		if err := _q.loadUpstreamAccount(ctx, query, nodes, nil,
+			func(n *UsageLog, e *UpstreamAccount) { n.Edges.UpstreamAccount = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -699,6 +742,38 @@ func (_q *UsageLogQuery) loadChannel(ctx context.Context, query *ChannelQuery, n
 	}
 	return nil
 }
+func (_q *UsageLogQuery) loadUpstreamAccount(ctx context.Context, query *UpstreamAccountQuery, nodes []*UsageLog, init func(*UsageLog), assign func(*UsageLog, *UpstreamAccount)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*UsageLog)
+	for i := range nodes {
+		if nodes[i].UpstreamAccountID == nil {
+			continue
+		}
+		fk := *nodes[i].UpstreamAccountID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(upstreamaccount.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "upstream_account_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (_q *UsageLogQuery) loadUsageBillingRecords(ctx context.Context, query *UsageBillingRecordQuery, nodes []*UsageLog, init func(*UsageLog), assign func(*UsageLog, *UsageBillingRecord)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*UsageLog)
@@ -796,6 +871,9 @@ func (_q *UsageLogQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withChannel != nil {
 			_spec.Node.AddColumnOnce(usagelog.FieldChannelID)
+		}
+		if _q.withUpstreamAccount != nil {
+			_spec.Node.AddColumnOnce(usagelog.FieldUpstreamAccountID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

@@ -133,6 +133,8 @@ func (RequestExecution) Edges() []ent.Edge {
 			).
 			Immutable().
 			Unique(),
+		edge.To("upstream_account_switch_histories", UpstreamAccountSwitchHistory.Type).
+			Annotations(entgql.RelayConnection()),
 	}
 }
 

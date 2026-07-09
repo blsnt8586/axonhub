@@ -80,6 +80,11 @@ func ProjectID(v int) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldEQ(FieldProjectID, v))
 }
 
+// UpstreamAccountID applies equality check predicate on the "upstream_account_id" field. It's identical to UpstreamAccountIDEQ.
+func UpstreamAccountID(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldEQ(FieldUpstreamAccountID, v))
+}
+
 // UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
 func UserID(v int) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldEQ(FieldUserID, v))
@@ -293,6 +298,36 @@ func ProjectIDLT(v int) predicate.UsageBillingRecord {
 // ProjectIDLTE applies the LTE predicate on the "project_id" field.
 func ProjectIDLTE(v int) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.FieldLTE(FieldProjectID, v))
+}
+
+// UpstreamAccountIDEQ applies the EQ predicate on the "upstream_account_id" field.
+func UpstreamAccountIDEQ(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldEQ(FieldUpstreamAccountID, v))
+}
+
+// UpstreamAccountIDNEQ applies the NEQ predicate on the "upstream_account_id" field.
+func UpstreamAccountIDNEQ(v int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldNEQ(FieldUpstreamAccountID, v))
+}
+
+// UpstreamAccountIDIn applies the In predicate on the "upstream_account_id" field.
+func UpstreamAccountIDIn(vs ...int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldIn(FieldUpstreamAccountID, vs...))
+}
+
+// UpstreamAccountIDNotIn applies the NotIn predicate on the "upstream_account_id" field.
+func UpstreamAccountIDNotIn(vs ...int) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldNotIn(FieldUpstreamAccountID, vs...))
+}
+
+// UpstreamAccountIDIsNil applies the IsNil predicate on the "upstream_account_id" field.
+func UpstreamAccountIDIsNil() predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldIsNull(FieldUpstreamAccountID))
+}
+
+// UpstreamAccountIDNotNil applies the NotNil predicate on the "upstream_account_id" field.
+func UpstreamAccountIDNotNil() predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(sql.FieldNotNull(FieldUpstreamAccountID))
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.
@@ -994,6 +1029,29 @@ func HasUserSubscription() predicate.UsageBillingRecord {
 func HasUserSubscriptionWith(preds ...predicate.UserSubscription) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(func(s *sql.Selector) {
 		step := newUserSubscriptionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUpstreamAccount applies the HasEdge predicate on the "upstream_account" edge.
+func HasUpstreamAccount() predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UpstreamAccountTable, UpstreamAccountColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUpstreamAccountWith applies the HasEdge predicate on the "upstream_account" edge with a given conditions (other predicates).
+func HasUpstreamAccountWith(preds ...predicate.UpstreamAccount) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(func(s *sql.Selector) {
+		step := newUpstreamAccountStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

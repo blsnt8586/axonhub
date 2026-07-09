@@ -53,6 +53,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -8038,6 +8039,10 @@ type ChannelWhereInput struct {
 	HasUpstreamAccounts     *bool                        `json:"hasUpstreamAccounts,omitempty"`
 	HasUpstreamAccountsWith []*UpstreamAccountWhereInput `json:"hasUpstreamAccountsWith,omitempty"`
 
+	// "upstream_account_switch_histories" edge predicates.
+	HasUpstreamAccountSwitchHistories     *bool                                     `json:"hasUpstreamAccountSwitchHistories,omitempty"`
+	HasUpstreamAccountSwitchHistoriesWith []*UpstreamAccountSwitchHistoryWhereInput `json:"hasUpstreamAccountSwitchHistoriesWith,omitempty"`
+
 	// "provider_quota_status" edge predicates.
 	HasProviderQuotaStatus     *bool                            `json:"hasProviderQuotaStatus,omitempty"`
 	HasProviderQuotaStatusWith []*ProviderQuotaStatusWhereInput `json:"hasProviderQuotaStatusWith,omitempty"`
@@ -8624,6 +8629,24 @@ func (i *ChannelWhereInput) P() (predicate.Channel, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, channel.HasUpstreamAccountsWith(with...))
+	}
+	if i.HasUpstreamAccountSwitchHistories != nil {
+		p := channel.HasUpstreamAccountSwitchHistories()
+		if !*i.HasUpstreamAccountSwitchHistories {
+			p = channel.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUpstreamAccountSwitchHistoriesWith) > 0 {
+		with := make([]predicate.UpstreamAccountSwitchHistory, 0, len(i.HasUpstreamAccountSwitchHistoriesWith))
+		for _, w := range i.HasUpstreamAccountSwitchHistoriesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUpstreamAccountSwitchHistoriesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, channel.HasUpstreamAccountSwitchHistoriesWith(with...))
 	}
 	if i.HasProviderQuotaStatus != nil {
 		p := channel.HasProviderQuotaStatus()
@@ -19858,6 +19881,10 @@ type RequestWhereInput struct {
 	HasUsageLogs     *bool                 `json:"hasUsageLogs,omitempty"`
 	HasUsageLogsWith []*UsageLogWhereInput `json:"hasUsageLogsWith,omitempty"`
 
+	// "upstream_account_switch_histories" edge predicates.
+	HasUpstreamAccountSwitchHistories     *bool                                     `json:"hasUpstreamAccountSwitchHistories,omitempty"`
+	HasUpstreamAccountSwitchHistoriesWith []*UpstreamAccountSwitchHistoryWhereInput `json:"hasUpstreamAccountSwitchHistoriesWith,omitempty"`
+
 	// "billing_holds" edge predicates.
 	HasBillingHolds     *bool                    `json:"hasBillingHolds,omitempty"`
 	HasBillingHoldsWith []*BillingHoldWhereInput `json:"hasBillingHoldsWith,omitempty"`
@@ -20655,6 +20682,24 @@ func (i *RequestWhereInput) P() (predicate.Request, error) {
 		}
 		predicates = append(predicates, request.HasUsageLogsWith(with...))
 	}
+	if i.HasUpstreamAccountSwitchHistories != nil {
+		p := request.HasUpstreamAccountSwitchHistories()
+		if !*i.HasUpstreamAccountSwitchHistories {
+			p = request.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUpstreamAccountSwitchHistoriesWith) > 0 {
+		with := make([]predicate.UpstreamAccountSwitchHistory, 0, len(i.HasUpstreamAccountSwitchHistoriesWith))
+		for _, w := range i.HasUpstreamAccountSwitchHistoriesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUpstreamAccountSwitchHistoriesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, request.HasUpstreamAccountSwitchHistoriesWith(with...))
+	}
 	if i.HasBillingHolds != nil {
 		p := request.HasBillingHolds()
 		if !*i.HasBillingHolds {
@@ -20928,6 +20973,10 @@ type RequestExecutionWhereInput struct {
 	// "upstream_account" edge predicates.
 	HasUpstreamAccount     *bool                        `json:"hasUpstreamAccount,omitempty"`
 	HasUpstreamAccountWith []*UpstreamAccountWhereInput `json:"hasUpstreamAccountWith,omitempty"`
+
+	// "upstream_account_switch_histories" edge predicates.
+	HasUpstreamAccountSwitchHistories     *bool                                     `json:"hasUpstreamAccountSwitchHistories,omitempty"`
+	HasUpstreamAccountSwitchHistoriesWith []*UpstreamAccountSwitchHistoryWhereInput `json:"hasUpstreamAccountSwitchHistoriesWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -21616,6 +21665,24 @@ func (i *RequestExecutionWhereInput) P() (predicate.RequestExecution, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, requestexecution.HasUpstreamAccountWith(with...))
+	}
+	if i.HasUpstreamAccountSwitchHistories != nil {
+		p := requestexecution.HasUpstreamAccountSwitchHistories()
+		if !*i.HasUpstreamAccountSwitchHistories {
+			p = requestexecution.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUpstreamAccountSwitchHistoriesWith) > 0 {
+		with := make([]predicate.UpstreamAccountSwitchHistory, 0, len(i.HasUpstreamAccountSwitchHistoriesWith))
+		for _, w := range i.HasUpstreamAccountSwitchHistoriesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUpstreamAccountSwitchHistoriesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, requestexecution.HasUpstreamAccountSwitchHistoriesWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -23752,6 +23819,22 @@ type UpstreamAccountWhereInput struct {
 	// "executions" edge predicates.
 	HasExecutions     *bool                         `json:"hasExecutions,omitempty"`
 	HasExecutionsWith []*RequestExecutionWhereInput `json:"hasExecutionsWith,omitempty"`
+
+	// "usage_logs" edge predicates.
+	HasUsageLogs     *bool                 `json:"hasUsageLogs,omitempty"`
+	HasUsageLogsWith []*UsageLogWhereInput `json:"hasUsageLogsWith,omitempty"`
+
+	// "usage_billing_records" edge predicates.
+	HasUsageBillingRecords     *bool                           `json:"hasUsageBillingRecords,omitempty"`
+	HasUsageBillingRecordsWith []*UsageBillingRecordWhereInput `json:"hasUsageBillingRecordsWith,omitempty"`
+
+	// "switch_histories_from" edge predicates.
+	HasSwitchHistoriesFrom     *bool                                     `json:"hasSwitchHistoriesFrom,omitempty"`
+	HasSwitchHistoriesFromWith []*UpstreamAccountSwitchHistoryWhereInput `json:"hasSwitchHistoriesFromWith,omitempty"`
+
+	// "switch_histories_to" edge predicates.
+	HasSwitchHistoriesTo     *bool                                     `json:"hasSwitchHistoriesTo,omitempty"`
+	HasSwitchHistoriesToWith []*UpstreamAccountSwitchHistoryWhereInput `json:"hasSwitchHistoriesToWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -24435,6 +24518,78 @@ func (i *UpstreamAccountWhereInput) P() (predicate.UpstreamAccount, error) {
 		}
 		predicates = append(predicates, upstreamaccount.HasExecutionsWith(with...))
 	}
+	if i.HasUsageLogs != nil {
+		p := upstreamaccount.HasUsageLogs()
+		if !*i.HasUsageLogs {
+			p = upstreamaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUsageLogsWith) > 0 {
+		with := make([]predicate.UsageLog, 0, len(i.HasUsageLogsWith))
+		for _, w := range i.HasUsageLogsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUsageLogsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccount.HasUsageLogsWith(with...))
+	}
+	if i.HasUsageBillingRecords != nil {
+		p := upstreamaccount.HasUsageBillingRecords()
+		if !*i.HasUsageBillingRecords {
+			p = upstreamaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUsageBillingRecordsWith) > 0 {
+		with := make([]predicate.UsageBillingRecord, 0, len(i.HasUsageBillingRecordsWith))
+		for _, w := range i.HasUsageBillingRecordsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUsageBillingRecordsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccount.HasUsageBillingRecordsWith(with...))
+	}
+	if i.HasSwitchHistoriesFrom != nil {
+		p := upstreamaccount.HasSwitchHistoriesFrom()
+		if !*i.HasSwitchHistoriesFrom {
+			p = upstreamaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasSwitchHistoriesFromWith) > 0 {
+		with := make([]predicate.UpstreamAccountSwitchHistory, 0, len(i.HasSwitchHistoriesFromWith))
+		for _, w := range i.HasSwitchHistoriesFromWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasSwitchHistoriesFromWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccount.HasSwitchHistoriesFromWith(with...))
+	}
+	if i.HasSwitchHistoriesTo != nil {
+		p := upstreamaccount.HasSwitchHistoriesTo()
+		if !*i.HasSwitchHistoriesTo {
+			p = upstreamaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasSwitchHistoriesToWith) > 0 {
+		with := make([]predicate.UpstreamAccountSwitchHistory, 0, len(i.HasSwitchHistoriesToWith))
+		for _, w := range i.HasSwitchHistoriesToWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasSwitchHistoriesToWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccount.HasSwitchHistoriesToWith(with...))
+	}
 	switch len(predicates) {
 	case 0:
 		return nil, ErrEmptyUpstreamAccountWhereInput
@@ -24867,6 +25022,710 @@ func (i *UpstreamAccountPoolWhereInput) P() (predicate.UpstreamAccountPool, erro
 	}
 }
 
+// UpstreamAccountSwitchHistoryWhereInput represents a where input for filtering UpstreamAccountSwitchHistory queries.
+type UpstreamAccountSwitchHistoryWhereInput struct {
+	Predicates []predicate.UpstreamAccountSwitchHistory  `json:"-"`
+	Not        *UpstreamAccountSwitchHistoryWhereInput   `json:"not,omitempty"`
+	Or         []*UpstreamAccountSwitchHistoryWhereInput `json:"or,omitempty"`
+	And        []*UpstreamAccountSwitchHistoryWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "project_id" field predicates.
+	ProjectID      *int  `json:"projectID,omitempty"`
+	ProjectIDNEQ   *int  `json:"projectIDNEQ,omitempty"`
+	ProjectIDIn    []int `json:"projectIDIn,omitempty"`
+	ProjectIDNotIn []int `json:"projectIDNotIn,omitempty"`
+	ProjectIDGT    *int  `json:"projectIDGT,omitempty"`
+	ProjectIDGTE   *int  `json:"projectIDGTE,omitempty"`
+	ProjectIDLT    *int  `json:"projectIDLT,omitempty"`
+	ProjectIDLTE   *int  `json:"projectIDLTE,omitempty"`
+
+	// "request_id" field predicates.
+	RequestID       *int  `json:"requestID,omitempty"`
+	RequestIDNEQ    *int  `json:"requestIDNEQ,omitempty"`
+	RequestIDIn     []int `json:"requestIDIn,omitempty"`
+	RequestIDNotIn  []int `json:"requestIDNotIn,omitempty"`
+	RequestIDIsNil  bool  `json:"requestIDIsNil,omitempty"`
+	RequestIDNotNil bool  `json:"requestIDNotNil,omitempty"`
+
+	// "request_execution_id" field predicates.
+	RequestExecutionID       *int  `json:"requestExecutionID,omitempty"`
+	RequestExecutionIDNEQ    *int  `json:"requestExecutionIDNEQ,omitempty"`
+	RequestExecutionIDIn     []int `json:"requestExecutionIDIn,omitempty"`
+	RequestExecutionIDNotIn  []int `json:"requestExecutionIDNotIn,omitempty"`
+	RequestExecutionIDIsNil  bool  `json:"requestExecutionIDIsNil,omitempty"`
+	RequestExecutionIDNotNil bool  `json:"requestExecutionIDNotNil,omitempty"`
+
+	// "channel_id" field predicates.
+	ChannelID      *int  `json:"channelID,omitempty"`
+	ChannelIDNEQ   *int  `json:"channelIDNEQ,omitempty"`
+	ChannelIDIn    []int `json:"channelIDIn,omitempty"`
+	ChannelIDNotIn []int `json:"channelIDNotIn,omitempty"`
+
+	// "from_account_id" field predicates.
+	FromAccountID       *int  `json:"fromAccountID,omitempty"`
+	FromAccountIDNEQ    *int  `json:"fromAccountIDNEQ,omitempty"`
+	FromAccountIDIn     []int `json:"fromAccountIDIn,omitempty"`
+	FromAccountIDNotIn  []int `json:"fromAccountIDNotIn,omitempty"`
+	FromAccountIDIsNil  bool  `json:"fromAccountIDIsNil,omitempty"`
+	FromAccountIDNotNil bool  `json:"fromAccountIDNotNil,omitempty"`
+
+	// "to_account_id" field predicates.
+	ToAccountID       *int  `json:"toAccountID,omitempty"`
+	ToAccountIDNEQ    *int  `json:"toAccountIDNEQ,omitempty"`
+	ToAccountIDIn     []int `json:"toAccountIDIn,omitempty"`
+	ToAccountIDNotIn  []int `json:"toAccountIDNotIn,omitempty"`
+	ToAccountIDIsNil  bool  `json:"toAccountIDIsNil,omitempty"`
+	ToAccountIDNotNil bool  `json:"toAccountIDNotNil,omitempty"`
+
+	// "model_id" field predicates.
+	ModelID             *string  `json:"modelID,omitempty"`
+	ModelIDNEQ          *string  `json:"modelIDNEQ,omitempty"`
+	ModelIDIn           []string `json:"modelIDIn,omitempty"`
+	ModelIDNotIn        []string `json:"modelIDNotIn,omitempty"`
+	ModelIDGT           *string  `json:"modelIDGT,omitempty"`
+	ModelIDGTE          *string  `json:"modelIDGTE,omitempty"`
+	ModelIDLT           *string  `json:"modelIDLT,omitempty"`
+	ModelIDLTE          *string  `json:"modelIDLTE,omitempty"`
+	ModelIDContains     *string  `json:"modelIDContains,omitempty"`
+	ModelIDHasPrefix    *string  `json:"modelIDHasPrefix,omitempty"`
+	ModelIDHasSuffix    *string  `json:"modelIDHasSuffix,omitempty"`
+	ModelIDEqualFold    *string  `json:"modelIDEqualFold,omitempty"`
+	ModelIDContainsFold *string  `json:"modelIDContainsFold,omitempty"`
+
+	// "reason" field predicates.
+	Reason             *string  `json:"reason,omitempty"`
+	ReasonNEQ          *string  `json:"reasonNEQ,omitempty"`
+	ReasonIn           []string `json:"reasonIn,omitempty"`
+	ReasonNotIn        []string `json:"reasonNotIn,omitempty"`
+	ReasonGT           *string  `json:"reasonGT,omitempty"`
+	ReasonGTE          *string  `json:"reasonGTE,omitempty"`
+	ReasonLT           *string  `json:"reasonLT,omitempty"`
+	ReasonLTE          *string  `json:"reasonLTE,omitempty"`
+	ReasonContains     *string  `json:"reasonContains,omitempty"`
+	ReasonHasPrefix    *string  `json:"reasonHasPrefix,omitempty"`
+	ReasonHasSuffix    *string  `json:"reasonHasSuffix,omitempty"`
+	ReasonEqualFold    *string  `json:"reasonEqualFold,omitempty"`
+	ReasonContainsFold *string  `json:"reasonContainsFold,omitempty"`
+
+	// "error_code" field predicates.
+	ErrorCode       *int  `json:"errorCode,omitempty"`
+	ErrorCodeNEQ    *int  `json:"errorCodeNEQ,omitempty"`
+	ErrorCodeIn     []int `json:"errorCodeIn,omitempty"`
+	ErrorCodeNotIn  []int `json:"errorCodeNotIn,omitempty"`
+	ErrorCodeGT     *int  `json:"errorCodeGT,omitempty"`
+	ErrorCodeGTE    *int  `json:"errorCodeGTE,omitempty"`
+	ErrorCodeLT     *int  `json:"errorCodeLT,omitempty"`
+	ErrorCodeLTE    *int  `json:"errorCodeLTE,omitempty"`
+	ErrorCodeIsNil  bool  `json:"errorCodeIsNil,omitempty"`
+	ErrorCodeNotNil bool  `json:"errorCodeNotNil,omitempty"`
+
+	// "error_message" field predicates.
+	ErrorMessage             *string  `json:"errorMessage,omitempty"`
+	ErrorMessageNEQ          *string  `json:"errorMessageNEQ,omitempty"`
+	ErrorMessageIn           []string `json:"errorMessageIn,omitempty"`
+	ErrorMessageNotIn        []string `json:"errorMessageNotIn,omitempty"`
+	ErrorMessageGT           *string  `json:"errorMessageGT,omitempty"`
+	ErrorMessageGTE          *string  `json:"errorMessageGTE,omitempty"`
+	ErrorMessageLT           *string  `json:"errorMessageLT,omitempty"`
+	ErrorMessageLTE          *string  `json:"errorMessageLTE,omitempty"`
+	ErrorMessageContains     *string  `json:"errorMessageContains,omitempty"`
+	ErrorMessageHasPrefix    *string  `json:"errorMessageHasPrefix,omitempty"`
+	ErrorMessageHasSuffix    *string  `json:"errorMessageHasSuffix,omitempty"`
+	ErrorMessageEqualFold    *string  `json:"errorMessageEqualFold,omitempty"`
+	ErrorMessageContainsFold *string  `json:"errorMessageContainsFold,omitempty"`
+
+	// "latency_ms" field predicates.
+	LatencyMs       *int64  `json:"latencyMs,omitempty"`
+	LatencyMsNEQ    *int64  `json:"latencyMsNEQ,omitempty"`
+	LatencyMsIn     []int64 `json:"latencyMsIn,omitempty"`
+	LatencyMsNotIn  []int64 `json:"latencyMsNotIn,omitempty"`
+	LatencyMsGT     *int64  `json:"latencyMsGT,omitempty"`
+	LatencyMsGTE    *int64  `json:"latencyMsGTE,omitempty"`
+	LatencyMsLT     *int64  `json:"latencyMsLT,omitempty"`
+	LatencyMsLTE    *int64  `json:"latencyMsLTE,omitempty"`
+	LatencyMsIsNil  bool    `json:"latencyMsIsNil,omitempty"`
+	LatencyMsNotNil bool    `json:"latencyMsNotNil,omitempty"`
+
+	// "request" edge predicates.
+	HasRequest     *bool                `json:"hasRequest,omitempty"`
+	HasRequestWith []*RequestWhereInput `json:"hasRequestWith,omitempty"`
+
+	// "request_execution" edge predicates.
+	HasRequestExecution     *bool                         `json:"hasRequestExecution,omitempty"`
+	HasRequestExecutionWith []*RequestExecutionWhereInput `json:"hasRequestExecutionWith,omitempty"`
+
+	// "channel" edge predicates.
+	HasChannel     *bool                `json:"hasChannel,omitempty"`
+	HasChannelWith []*ChannelWhereInput `json:"hasChannelWith,omitempty"`
+
+	// "from_account" edge predicates.
+	HasFromAccount     *bool                        `json:"hasFromAccount,omitempty"`
+	HasFromAccountWith []*UpstreamAccountWhereInput `json:"hasFromAccountWith,omitempty"`
+
+	// "to_account" edge predicates.
+	HasToAccount     *bool                        `json:"hasToAccount,omitempty"`
+	HasToAccountWith []*UpstreamAccountWhereInput `json:"hasToAccountWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *UpstreamAccountSwitchHistoryWhereInput) AddPredicates(predicates ...predicate.UpstreamAccountSwitchHistory) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the UpstreamAccountSwitchHistoryWhereInput filter on the UpstreamAccountSwitchHistoryQuery builder.
+func (i *UpstreamAccountSwitchHistoryWhereInput) Filter(q *UpstreamAccountSwitchHistoryQuery) (*UpstreamAccountSwitchHistoryQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyUpstreamAccountSwitchHistoryWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyUpstreamAccountSwitchHistoryWhereInput is returned in case the UpstreamAccountSwitchHistoryWhereInput is empty.
+var ErrEmptyUpstreamAccountSwitchHistoryWhereInput = errors.New("ent: empty predicate UpstreamAccountSwitchHistoryWhereInput")
+
+// P returns a predicate for filtering upstreamaccountswitchhistories.
+// An error is returned if the input is empty or invalid.
+func (i *UpstreamAccountSwitchHistoryWhereInput) P() (predicate.UpstreamAccountSwitchHistory, error) {
+	var predicates []predicate.UpstreamAccountSwitchHistory
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, upstreamaccountswitchhistory.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.UpstreamAccountSwitchHistory, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, upstreamaccountswitchhistory.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.UpstreamAccountSwitchHistory, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, upstreamaccountswitchhistory.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.ProjectID != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ProjectIDEQ(*i.ProjectID))
+	}
+	if i.ProjectIDNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ProjectIDNEQ(*i.ProjectIDNEQ))
+	}
+	if len(i.ProjectIDIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ProjectIDIn(i.ProjectIDIn...))
+	}
+	if len(i.ProjectIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ProjectIDNotIn(i.ProjectIDNotIn...))
+	}
+	if i.ProjectIDGT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ProjectIDGT(*i.ProjectIDGT))
+	}
+	if i.ProjectIDGTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ProjectIDGTE(*i.ProjectIDGTE))
+	}
+	if i.ProjectIDLT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ProjectIDLT(*i.ProjectIDLT))
+	}
+	if i.ProjectIDLTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ProjectIDLTE(*i.ProjectIDLTE))
+	}
+	if i.RequestID != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestIDEQ(*i.RequestID))
+	}
+	if i.RequestIDNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestIDNEQ(*i.RequestIDNEQ))
+	}
+	if len(i.RequestIDIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestIDIn(i.RequestIDIn...))
+	}
+	if len(i.RequestIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestIDNotIn(i.RequestIDNotIn...))
+	}
+	if i.RequestIDIsNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestIDIsNil())
+	}
+	if i.RequestIDNotNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestIDNotNil())
+	}
+	if i.RequestExecutionID != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestExecutionIDEQ(*i.RequestExecutionID))
+	}
+	if i.RequestExecutionIDNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestExecutionIDNEQ(*i.RequestExecutionIDNEQ))
+	}
+	if len(i.RequestExecutionIDIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestExecutionIDIn(i.RequestExecutionIDIn...))
+	}
+	if len(i.RequestExecutionIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestExecutionIDNotIn(i.RequestExecutionIDNotIn...))
+	}
+	if i.RequestExecutionIDIsNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestExecutionIDIsNil())
+	}
+	if i.RequestExecutionIDNotNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.RequestExecutionIDNotNil())
+	}
+	if i.ChannelID != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ChannelIDEQ(*i.ChannelID))
+	}
+	if i.ChannelIDNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ChannelIDNEQ(*i.ChannelIDNEQ))
+	}
+	if len(i.ChannelIDIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ChannelIDIn(i.ChannelIDIn...))
+	}
+	if len(i.ChannelIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ChannelIDNotIn(i.ChannelIDNotIn...))
+	}
+	if i.FromAccountID != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.FromAccountIDEQ(*i.FromAccountID))
+	}
+	if i.FromAccountIDNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.FromAccountIDNEQ(*i.FromAccountIDNEQ))
+	}
+	if len(i.FromAccountIDIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.FromAccountIDIn(i.FromAccountIDIn...))
+	}
+	if len(i.FromAccountIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.FromAccountIDNotIn(i.FromAccountIDNotIn...))
+	}
+	if i.FromAccountIDIsNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.FromAccountIDIsNil())
+	}
+	if i.FromAccountIDNotNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.FromAccountIDNotNil())
+	}
+	if i.ToAccountID != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ToAccountIDEQ(*i.ToAccountID))
+	}
+	if i.ToAccountIDNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ToAccountIDNEQ(*i.ToAccountIDNEQ))
+	}
+	if len(i.ToAccountIDIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ToAccountIDIn(i.ToAccountIDIn...))
+	}
+	if len(i.ToAccountIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ToAccountIDNotIn(i.ToAccountIDNotIn...))
+	}
+	if i.ToAccountIDIsNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ToAccountIDIsNil())
+	}
+	if i.ToAccountIDNotNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ToAccountIDNotNil())
+	}
+	if i.ModelID != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDEQ(*i.ModelID))
+	}
+	if i.ModelIDNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDNEQ(*i.ModelIDNEQ))
+	}
+	if len(i.ModelIDIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDIn(i.ModelIDIn...))
+	}
+	if len(i.ModelIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDNotIn(i.ModelIDNotIn...))
+	}
+	if i.ModelIDGT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDGT(*i.ModelIDGT))
+	}
+	if i.ModelIDGTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDGTE(*i.ModelIDGTE))
+	}
+	if i.ModelIDLT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDLT(*i.ModelIDLT))
+	}
+	if i.ModelIDLTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDLTE(*i.ModelIDLTE))
+	}
+	if i.ModelIDContains != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDContains(*i.ModelIDContains))
+	}
+	if i.ModelIDHasPrefix != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDHasPrefix(*i.ModelIDHasPrefix))
+	}
+	if i.ModelIDHasSuffix != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDHasSuffix(*i.ModelIDHasSuffix))
+	}
+	if i.ModelIDEqualFold != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDEqualFold(*i.ModelIDEqualFold))
+	}
+	if i.ModelIDContainsFold != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ModelIDContainsFold(*i.ModelIDContainsFold))
+	}
+	if i.Reason != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonEQ(*i.Reason))
+	}
+	if i.ReasonNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonNEQ(*i.ReasonNEQ))
+	}
+	if len(i.ReasonIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonIn(i.ReasonIn...))
+	}
+	if len(i.ReasonNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonNotIn(i.ReasonNotIn...))
+	}
+	if i.ReasonGT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonGT(*i.ReasonGT))
+	}
+	if i.ReasonGTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonGTE(*i.ReasonGTE))
+	}
+	if i.ReasonLT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonLT(*i.ReasonLT))
+	}
+	if i.ReasonLTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonLTE(*i.ReasonLTE))
+	}
+	if i.ReasonContains != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonContains(*i.ReasonContains))
+	}
+	if i.ReasonHasPrefix != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonHasPrefix(*i.ReasonHasPrefix))
+	}
+	if i.ReasonHasSuffix != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonHasSuffix(*i.ReasonHasSuffix))
+	}
+	if i.ReasonEqualFold != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonEqualFold(*i.ReasonEqualFold))
+	}
+	if i.ReasonContainsFold != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ReasonContainsFold(*i.ReasonContainsFold))
+	}
+	if i.ErrorCode != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeEQ(*i.ErrorCode))
+	}
+	if i.ErrorCodeNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeNEQ(*i.ErrorCodeNEQ))
+	}
+	if len(i.ErrorCodeIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeIn(i.ErrorCodeIn...))
+	}
+	if len(i.ErrorCodeNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeNotIn(i.ErrorCodeNotIn...))
+	}
+	if i.ErrorCodeGT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeGT(*i.ErrorCodeGT))
+	}
+	if i.ErrorCodeGTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeGTE(*i.ErrorCodeGTE))
+	}
+	if i.ErrorCodeLT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeLT(*i.ErrorCodeLT))
+	}
+	if i.ErrorCodeLTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeLTE(*i.ErrorCodeLTE))
+	}
+	if i.ErrorCodeIsNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeIsNil())
+	}
+	if i.ErrorCodeNotNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorCodeNotNil())
+	}
+	if i.ErrorMessage != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageEQ(*i.ErrorMessage))
+	}
+	if i.ErrorMessageNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageNEQ(*i.ErrorMessageNEQ))
+	}
+	if len(i.ErrorMessageIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageIn(i.ErrorMessageIn...))
+	}
+	if len(i.ErrorMessageNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageNotIn(i.ErrorMessageNotIn...))
+	}
+	if i.ErrorMessageGT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageGT(*i.ErrorMessageGT))
+	}
+	if i.ErrorMessageGTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageGTE(*i.ErrorMessageGTE))
+	}
+	if i.ErrorMessageLT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageLT(*i.ErrorMessageLT))
+	}
+	if i.ErrorMessageLTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageLTE(*i.ErrorMessageLTE))
+	}
+	if i.ErrorMessageContains != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageContains(*i.ErrorMessageContains))
+	}
+	if i.ErrorMessageHasPrefix != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageHasPrefix(*i.ErrorMessageHasPrefix))
+	}
+	if i.ErrorMessageHasSuffix != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageHasSuffix(*i.ErrorMessageHasSuffix))
+	}
+	if i.ErrorMessageEqualFold != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageEqualFold(*i.ErrorMessageEqualFold))
+	}
+	if i.ErrorMessageContainsFold != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.ErrorMessageContainsFold(*i.ErrorMessageContainsFold))
+	}
+	if i.LatencyMs != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsEQ(*i.LatencyMs))
+	}
+	if i.LatencyMsNEQ != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsNEQ(*i.LatencyMsNEQ))
+	}
+	if len(i.LatencyMsIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsIn(i.LatencyMsIn...))
+	}
+	if len(i.LatencyMsNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsNotIn(i.LatencyMsNotIn...))
+	}
+	if i.LatencyMsGT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsGT(*i.LatencyMsGT))
+	}
+	if i.LatencyMsGTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsGTE(*i.LatencyMsGTE))
+	}
+	if i.LatencyMsLT != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsLT(*i.LatencyMsLT))
+	}
+	if i.LatencyMsLTE != nil {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsLTE(*i.LatencyMsLTE))
+	}
+	if i.LatencyMsIsNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsIsNil())
+	}
+	if i.LatencyMsNotNil {
+		predicates = append(predicates, upstreamaccountswitchhistory.LatencyMsNotNil())
+	}
+
+	if i.HasRequest != nil {
+		p := upstreamaccountswitchhistory.HasRequest()
+		if !*i.HasRequest {
+			p = upstreamaccountswitchhistory.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasRequestWith) > 0 {
+		with := make([]predicate.Request, 0, len(i.HasRequestWith))
+		for _, w := range i.HasRequestWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasRequestWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccountswitchhistory.HasRequestWith(with...))
+	}
+	if i.HasRequestExecution != nil {
+		p := upstreamaccountswitchhistory.HasRequestExecution()
+		if !*i.HasRequestExecution {
+			p = upstreamaccountswitchhistory.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasRequestExecutionWith) > 0 {
+		with := make([]predicate.RequestExecution, 0, len(i.HasRequestExecutionWith))
+		for _, w := range i.HasRequestExecutionWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasRequestExecutionWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccountswitchhistory.HasRequestExecutionWith(with...))
+	}
+	if i.HasChannel != nil {
+		p := upstreamaccountswitchhistory.HasChannel()
+		if !*i.HasChannel {
+			p = upstreamaccountswitchhistory.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasChannelWith) > 0 {
+		with := make([]predicate.Channel, 0, len(i.HasChannelWith))
+		for _, w := range i.HasChannelWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasChannelWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccountswitchhistory.HasChannelWith(with...))
+	}
+	if i.HasFromAccount != nil {
+		p := upstreamaccountswitchhistory.HasFromAccount()
+		if !*i.HasFromAccount {
+			p = upstreamaccountswitchhistory.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasFromAccountWith) > 0 {
+		with := make([]predicate.UpstreamAccount, 0, len(i.HasFromAccountWith))
+		for _, w := range i.HasFromAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasFromAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccountswitchhistory.HasFromAccountWith(with...))
+	}
+	if i.HasToAccount != nil {
+		p := upstreamaccountswitchhistory.HasToAccount()
+		if !*i.HasToAccount {
+			p = upstreamaccountswitchhistory.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasToAccountWith) > 0 {
+		with := make([]predicate.UpstreamAccount, 0, len(i.HasToAccountWith))
+		for _, w := range i.HasToAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasToAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccountswitchhistory.HasToAccountWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyUpstreamAccountSwitchHistoryWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return upstreamaccountswitchhistory.And(predicates...), nil
+	}
+}
+
 // UsageBillingRecordWhereInput represents a where input for filtering UsageBillingRecord queries.
 type UsageBillingRecordWhereInput struct {
 	Predicates []predicate.UsageBillingRecord  `json:"-"`
@@ -24925,6 +25784,14 @@ type UsageBillingRecordWhereInput struct {
 	ProjectIDGTE   *int  `json:"projectIDGTE,omitempty"`
 	ProjectIDLT    *int  `json:"projectIDLT,omitempty"`
 	ProjectIDLTE   *int  `json:"projectIDLTE,omitempty"`
+
+	// "upstream_account_id" field predicates.
+	UpstreamAccountID       *int  `json:"upstreamAccountID,omitempty"`
+	UpstreamAccountIDNEQ    *int  `json:"upstreamAccountIDNEQ,omitempty"`
+	UpstreamAccountIDIn     []int `json:"upstreamAccountIDIn,omitempty"`
+	UpstreamAccountIDNotIn  []int `json:"upstreamAccountIDNotIn,omitempty"`
+	UpstreamAccountIDIsNil  bool  `json:"upstreamAccountIDIsNil,omitempty"`
+	UpstreamAccountIDNotNil bool  `json:"upstreamAccountIDNotNil,omitempty"`
 
 	// "user_id" field predicates.
 	UserID       *int  `json:"userID,omitempty"`
@@ -25088,6 +25955,10 @@ type UsageBillingRecordWhereInput struct {
 	// "user_subscription" edge predicates.
 	HasUserSubscription     *bool                         `json:"hasUserSubscription,omitempty"`
 	HasUserSubscriptionWith []*UserSubscriptionWhereInput `json:"hasUserSubscriptionWith,omitempty"`
+
+	// "upstream_account" edge predicates.
+	HasUpstreamAccount     *bool                        `json:"hasUpstreamAccount,omitempty"`
+	HasUpstreamAccountWith []*UpstreamAccountWhereInput `json:"hasUpstreamAccountWith,omitempty"`
 
 	// "billing_notifications" edge predicates.
 	HasBillingNotifications     *bool                            `json:"hasBillingNotifications,omitempty"`
@@ -25284,6 +26155,24 @@ func (i *UsageBillingRecordWhereInput) P() (predicate.UsageBillingRecord, error)
 	}
 	if i.ProjectIDLTE != nil {
 		predicates = append(predicates, usagebillingrecord.ProjectIDLTE(*i.ProjectIDLTE))
+	}
+	if i.UpstreamAccountID != nil {
+		predicates = append(predicates, usagebillingrecord.UpstreamAccountIDEQ(*i.UpstreamAccountID))
+	}
+	if i.UpstreamAccountIDNEQ != nil {
+		predicates = append(predicates, usagebillingrecord.UpstreamAccountIDNEQ(*i.UpstreamAccountIDNEQ))
+	}
+	if len(i.UpstreamAccountIDIn) > 0 {
+		predicates = append(predicates, usagebillingrecord.UpstreamAccountIDIn(i.UpstreamAccountIDIn...))
+	}
+	if len(i.UpstreamAccountIDNotIn) > 0 {
+		predicates = append(predicates, usagebillingrecord.UpstreamAccountIDNotIn(i.UpstreamAccountIDNotIn...))
+	}
+	if i.UpstreamAccountIDIsNil {
+		predicates = append(predicates, usagebillingrecord.UpstreamAccountIDIsNil())
+	}
+	if i.UpstreamAccountIDNotNil {
+		predicates = append(predicates, usagebillingrecord.UpstreamAccountIDNotNil())
 	}
 	if i.UserID != nil {
 		predicates = append(predicates, usagebillingrecord.UserIDEQ(*i.UserID))
@@ -25720,6 +26609,24 @@ func (i *UsageBillingRecordWhereInput) P() (predicate.UsageBillingRecord, error)
 			with = append(with, p)
 		}
 		predicates = append(predicates, usagebillingrecord.HasUserSubscriptionWith(with...))
+	}
+	if i.HasUpstreamAccount != nil {
+		p := usagebillingrecord.HasUpstreamAccount()
+		if !*i.HasUpstreamAccount {
+			p = usagebillingrecord.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUpstreamAccountWith) > 0 {
+		with := make([]predicate.UpstreamAccount, 0, len(i.HasUpstreamAccountWith))
+		for _, w := range i.HasUpstreamAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUpstreamAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usagebillingrecord.HasUpstreamAccountWith(with...))
 	}
 	if i.HasBillingNotifications != nil {
 		p := usagebillingrecord.HasBillingNotifications()
@@ -27510,6 +28417,14 @@ type UsageLogWhereInput struct {
 	ChannelIDIsNil  bool  `json:"channelIDIsNil,omitempty"`
 	ChannelIDNotNil bool  `json:"channelIDNotNil,omitempty"`
 
+	// "upstream_account_id" field predicates.
+	UpstreamAccountID       *int  `json:"upstreamAccountID,omitempty"`
+	UpstreamAccountIDNEQ    *int  `json:"upstreamAccountIDNEQ,omitempty"`
+	UpstreamAccountIDIn     []int `json:"upstreamAccountIDIn,omitempty"`
+	UpstreamAccountIDNotIn  []int `json:"upstreamAccountIDNotIn,omitempty"`
+	UpstreamAccountIDIsNil  bool  `json:"upstreamAccountIDIsNil,omitempty"`
+	UpstreamAccountIDNotNil bool  `json:"upstreamAccountIDNotNil,omitempty"`
+
 	// "model_id" field predicates.
 	ModelID             *string  `json:"modelID,omitempty"`
 	ModelIDNEQ          *string  `json:"modelIDNEQ,omitempty"`
@@ -27724,6 +28639,10 @@ type UsageLogWhereInput struct {
 	// "channel" edge predicates.
 	HasChannel     *bool                `json:"hasChannel,omitempty"`
 	HasChannelWith []*ChannelWhereInput `json:"hasChannelWith,omitempty"`
+
+	// "upstream_account" edge predicates.
+	HasUpstreamAccount     *bool                        `json:"hasUpstreamAccount,omitempty"`
+	HasUpstreamAccountWith []*UpstreamAccountWhereInput `json:"hasUpstreamAccountWith,omitempty"`
 
 	// "usage_billing_records" edge predicates.
 	HasUsageBillingRecords     *bool                           `json:"hasUsageBillingRecords,omitempty"`
@@ -27948,6 +28867,24 @@ func (i *UsageLogWhereInput) P() (predicate.UsageLog, error) {
 	}
 	if i.ChannelIDNotNil {
 		predicates = append(predicates, usagelog.ChannelIDNotNil())
+	}
+	if i.UpstreamAccountID != nil {
+		predicates = append(predicates, usagelog.UpstreamAccountIDEQ(*i.UpstreamAccountID))
+	}
+	if i.UpstreamAccountIDNEQ != nil {
+		predicates = append(predicates, usagelog.UpstreamAccountIDNEQ(*i.UpstreamAccountIDNEQ))
+	}
+	if len(i.UpstreamAccountIDIn) > 0 {
+		predicates = append(predicates, usagelog.UpstreamAccountIDIn(i.UpstreamAccountIDIn...))
+	}
+	if len(i.UpstreamAccountIDNotIn) > 0 {
+		predicates = append(predicates, usagelog.UpstreamAccountIDNotIn(i.UpstreamAccountIDNotIn...))
+	}
+	if i.UpstreamAccountIDIsNil {
+		predicates = append(predicates, usagelog.UpstreamAccountIDIsNil())
+	}
+	if i.UpstreamAccountIDNotNil {
+		predicates = append(predicates, usagelog.UpstreamAccountIDNotNil())
 	}
 	if i.ModelID != nil {
 		predicates = append(predicates, usagelog.ModelIDEQ(*i.ModelID))
@@ -28510,6 +29447,24 @@ func (i *UsageLogWhereInput) P() (predicate.UsageLog, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, usagelog.HasChannelWith(with...))
+	}
+	if i.HasUpstreamAccount != nil {
+		p := usagelog.HasUpstreamAccount()
+		if !*i.HasUpstreamAccount {
+			p = usagelog.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUpstreamAccountWith) > 0 {
+		with := make([]predicate.UpstreamAccount, 0, len(i.HasUpstreamAccountWith))
+		for _, w := range i.HasUpstreamAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUpstreamAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usagelog.HasUpstreamAccountWith(with...))
 	}
 	if i.HasUsageBillingRecords != nil {
 		p := usagelog.HasUsageBillingRecords()

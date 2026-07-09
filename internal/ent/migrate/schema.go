@@ -1986,6 +1986,83 @@ var (
 			},
 		},
 	}
+	// UpstreamAccountSwitchHistoriesColumns holds the columns for the "upstream_account_switch_histories" table.
+	UpstreamAccountSwitchHistoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "project_id", Type: field.TypeInt, Default: 0},
+		{Name: "model_id", Type: field.TypeString, Default: ""},
+		{Name: "reason", Type: field.TypeString, Default: ""},
+		{Name: "error_code", Type: field.TypeInt, Nullable: true},
+		{Name: "error_message", Type: field.TypeString, Default: ""},
+		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "channel_id", Type: field.TypeInt},
+		{Name: "request_id", Type: field.TypeInt, Nullable: true},
+		{Name: "request_execution_id", Type: field.TypeInt, Nullable: true},
+		{Name: "from_account_id", Type: field.TypeInt, Nullable: true},
+		{Name: "to_account_id", Type: field.TypeInt, Nullable: true},
+	}
+	// UpstreamAccountSwitchHistoriesTable holds the schema information for the "upstream_account_switch_histories" table.
+	UpstreamAccountSwitchHistoriesTable = &schema.Table{
+		Name:       "upstream_account_switch_histories",
+		Columns:    UpstreamAccountSwitchHistoriesColumns,
+		PrimaryKey: []*schema.Column{UpstreamAccountSwitchHistoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "upstream_account_switch_histories_channels_upstream_account_switch_histories",
+				Columns:    []*schema.Column{UpstreamAccountSwitchHistoriesColumns[9]},
+				RefColumns: []*schema.Column{ChannelsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "upstream_account_switch_histories_requests_upstream_account_switch_histories",
+				Columns:    []*schema.Column{UpstreamAccountSwitchHistoriesColumns[10]},
+				RefColumns: []*schema.Column{RequestsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "upstream_account_switch_histories_request_executions_upstream_account_switch_histories",
+				Columns:    []*schema.Column{UpstreamAccountSwitchHistoriesColumns[11]},
+				RefColumns: []*schema.Column{RequestExecutionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "upstream_account_switch_histories_upstream_accounts_switch_histories_from",
+				Columns:    []*schema.Column{UpstreamAccountSwitchHistoriesColumns[12]},
+				RefColumns: []*schema.Column{UpstreamAccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "upstream_account_switch_histories_upstream_accounts_switch_histories_to",
+				Columns:    []*schema.Column{UpstreamAccountSwitchHistoriesColumns[13]},
+				RefColumns: []*schema.Column{UpstreamAccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "upstream_account_switch_histories_by_request_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UpstreamAccountSwitchHistoriesColumns[10], UpstreamAccountSwitchHistoriesColumns[1]},
+			},
+			{
+				Name:    "upstream_account_switch_histories_by_channel_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UpstreamAccountSwitchHistoriesColumns[9], UpstreamAccountSwitchHistoriesColumns[1]},
+			},
+			{
+				Name:    "upstream_account_switch_histories_by_to_account_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UpstreamAccountSwitchHistoriesColumns[13], UpstreamAccountSwitchHistoriesColumns[1]},
+			},
+			{
+				Name:    "upstream_account_switch_histories_by_from_account_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UpstreamAccountSwitchHistoriesColumns[12], UpstreamAccountSwitchHistoriesColumns[1]},
+			},
+		},
+	}
 	// UsageBillingRecordsColumns holds the columns for the "usage_billing_records" table.
 	UsageBillingRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -2008,6 +2085,7 @@ var (
 		{Name: "error", Type: field.TypeString, Default: ""},
 		{Name: "billing_account_id", Type: field.TypeInt},
 		{Name: "ledger_transaction_id", Type: field.TypeInt, Nullable: true},
+		{Name: "upstream_account_id", Type: field.TypeInt, Nullable: true},
 		{Name: "usage_log_id", Type: field.TypeInt},
 		{Name: "user_subscription_id", Type: field.TypeInt, Nullable: true},
 	}
@@ -2030,14 +2108,20 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:     "usage_billing_records_usage_logs_usage_billing_records",
+				Symbol:     "usage_billing_records_upstream_accounts_usage_billing_records",
 				Columns:    []*schema.Column{UsageBillingRecordsColumns[20]},
+				RefColumns: []*schema.Column{UpstreamAccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "usage_billing_records_usage_logs_usage_billing_records",
+				Columns:    []*schema.Column{UsageBillingRecordsColumns[21]},
 				RefColumns: []*schema.Column{UsageLogsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "usage_billing_records_user_subscriptions_usage_billing_records",
-				Columns:    []*schema.Column{UsageBillingRecordsColumns[21]},
+				Columns:    []*schema.Column{UsageBillingRecordsColumns[22]},
 				RefColumns: []*schema.Column{UserSubscriptionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -2046,7 +2130,7 @@ var (
 			{
 				Name:    "usage_billing_records_by_usage_log_id",
 				Unique:  true,
-				Columns: []*schema.Column{UsageBillingRecordsColumns[20]},
+				Columns: []*schema.Column{UsageBillingRecordsColumns[21]},
 			},
 			{
 				Name:    "usage_billing_records_by_account_created_at",
@@ -2057,6 +2141,11 @@ var (
 				Name:    "usage_billing_records_by_project_created_at",
 				Unique:  false,
 				Columns: []*schema.Column{UsageBillingRecordsColumns[3], UsageBillingRecordsColumns[1]},
+			},
+			{
+				Name:    "usage_billing_records_by_upstream_account_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsageBillingRecordsColumns[20], UsageBillingRecordsColumns[1]},
 			},
 			{
 				Name:    "usage_billing_records_by_user_created_at",
@@ -2071,7 +2160,7 @@ var (
 			{
 				Name:    "usage_billing_records_by_subscription_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{UsageBillingRecordsColumns[21], UsageBillingRecordsColumns[1]},
+				Columns: []*schema.Column{UsageBillingRecordsColumns[22], UsageBillingRecordsColumns[1]},
 			},
 		},
 	}
@@ -2238,6 +2327,7 @@ var (
 		{Name: "channel_id", Type: field.TypeInt, Nullable: true},
 		{Name: "project_id", Type: field.TypeInt, Default: 1},
 		{Name: "request_id", Type: field.TypeInt},
+		{Name: "upstream_account_id", Type: field.TypeInt, Nullable: true},
 	}
 	// UsageLogsTable holds the schema information for the "usage_logs" table.
 	UsageLogsTable = &schema.Table{
@@ -2262,6 +2352,12 @@ var (
 				Columns:    []*schema.Column{UsageLogsColumns[24]},
 				RefColumns: []*schema.Column{RequestsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "usage_logs_upstream_accounts_usage_logs",
+				Columns:    []*schema.Column{UsageLogsColumns[25]},
+				RefColumns: []*schema.Column{UpstreamAccountsColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
@@ -2289,6 +2385,11 @@ var (
 				Name:    "usage_logs_by_channel_id_created_at",
 				Unique:  false,
 				Columns: []*schema.Column{UsageLogsColumns[22], UsageLogsColumns[1]},
+			},
+			{
+				Name:    "usage_logs_by_upstream_account_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsageLogsColumns[25], UsageLogsColumns[1]},
 			},
 			{
 				Name:    "usage_logs_by_api_key_id_created_at",
@@ -2566,6 +2667,7 @@ var (
 		TracesTable,
 		UpstreamAccountsTable,
 		UpstreamAccountPoolsTable,
+		UpstreamAccountSwitchHistoriesTable,
 		UsageBillingRecordsTable,
 		UsageDailyAggregatesTable,
 		UsageHourlyAggregatesTable,
@@ -2641,13 +2743,20 @@ func init() {
 	UpstreamAccountsTable.ForeignKeys[0].RefTable = ChannelsTable
 	UpstreamAccountsTable.ForeignKeys[1].RefTable = UpstreamAccountPoolsTable
 	UpstreamAccountPoolsTable.ForeignKeys[0].RefTable = ChannelsTable
+	UpstreamAccountSwitchHistoriesTable.ForeignKeys[0].RefTable = ChannelsTable
+	UpstreamAccountSwitchHistoriesTable.ForeignKeys[1].RefTable = RequestsTable
+	UpstreamAccountSwitchHistoriesTable.ForeignKeys[2].RefTable = RequestExecutionsTable
+	UpstreamAccountSwitchHistoriesTable.ForeignKeys[3].RefTable = UpstreamAccountsTable
+	UpstreamAccountSwitchHistoriesTable.ForeignKeys[4].RefTable = UpstreamAccountsTable
 	UsageBillingRecordsTable.ForeignKeys[0].RefTable = BillingAccountsTable
 	UsageBillingRecordsTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
-	UsageBillingRecordsTable.ForeignKeys[2].RefTable = UsageLogsTable
-	UsageBillingRecordsTable.ForeignKeys[3].RefTable = UserSubscriptionsTable
+	UsageBillingRecordsTable.ForeignKeys[2].RefTable = UpstreamAccountsTable
+	UsageBillingRecordsTable.ForeignKeys[3].RefTable = UsageLogsTable
+	UsageBillingRecordsTable.ForeignKeys[4].RefTable = UserSubscriptionsTable
 	UsageLogsTable.ForeignKeys[0].RefTable = ChannelsTable
 	UsageLogsTable.ForeignKeys[1].RefTable = ProjectsTable
 	UsageLogsTable.ForeignKeys[2].RefTable = RequestsTable
+	UsageLogsTable.ForeignKeys[3].RefTable = UpstreamAccountsTable
 	UserProjectsTable.ForeignKeys[0].RefTable = UsersTable
 	UserProjectsTable.ForeignKeys[1].RefTable = ProjectsTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable

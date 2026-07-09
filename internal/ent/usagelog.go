@@ -13,6 +13,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/request"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/objects"
 )
@@ -34,6 +35,8 @@ type UsageLog struct {
 	ProjectID int `json:"project_id,omitempty"`
 	// Channel ID used for the request
 	ChannelID int `json:"channel_id,omitempty"`
+	// Selected upstream account for account-pool requests.
+	UpstreamAccountID *int `json:"upstream_account_id,omitempty"`
 	// Model identifier used for the request
 	ModelID string `json:"model_id,omitempty"`
 	// Number of tokens in the prompt
@@ -84,15 +87,17 @@ type UsageLogEdges struct {
 	Project *Project `json:"project,omitempty"`
 	// Channel holds the value of the channel edge.
 	Channel *Channel `json:"channel,omitempty"`
+	// UpstreamAccount holds the value of the upstream_account edge.
+	UpstreamAccount *UpstreamAccount `json:"upstream_account,omitempty"`
 	// UsageBillingRecords holds the value of the usage_billing_records edge.
 	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
 	// BillingHolds holds the value of the billing_holds edge.
 	BillingHolds []*BillingHold `json:"billing_holds,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 	// totalCount holds the count of the edges above.
-	totalCount [5]map[string]int
+	totalCount [6]map[string]int
 
 	namedUsageBillingRecords map[string][]*UsageBillingRecord
 	namedBillingHolds        map[string][]*BillingHold
@@ -131,10 +136,21 @@ func (e UsageLogEdges) ChannelOrErr() (*Channel, error) {
 	return nil, &NotLoadedError{edge: "channel"}
 }
 
+// UpstreamAccountOrErr returns the UpstreamAccount value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UsageLogEdges) UpstreamAccountOrErr() (*UpstreamAccount, error) {
+	if e.UpstreamAccount != nil {
+		return e.UpstreamAccount, nil
+	} else if e.loadedTypes[3] {
+		return nil, &NotFoundError{label: upstreamaccount.Label}
+	}
+	return nil, &NotLoadedError{edge: "upstream_account"}
+}
+
 // UsageBillingRecordsOrErr returns the UsageBillingRecords value or an error if the edge
 // was not loaded in eager-loading.
 func (e UsageLogEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecord, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.UsageBillingRecords, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_billing_records"}
@@ -143,7 +159,7 @@ func (e UsageLogEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecord, error)
 // BillingHoldsOrErr returns the BillingHolds value or an error if the edge
 // was not loaded in eager-loading.
 func (e UsageLogEdges) BillingHoldsOrErr() ([]*BillingHold, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.BillingHolds, nil
 	}
 	return nil, &NotLoadedError{edge: "billing_holds"}
@@ -158,7 +174,7 @@ func (*UsageLog) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case usagelog.FieldTotalCost:
 			values[i] = new(sql.NullFloat64)
-		case usagelog.FieldID, usagelog.FieldRequestID, usagelog.FieldAPIKeyID, usagelog.FieldProjectID, usagelog.FieldChannelID, usagelog.FieldPromptTokens, usagelog.FieldCompletionTokens, usagelog.FieldTotalTokens, usagelog.FieldPromptAudioTokens, usagelog.FieldPromptCachedTokens, usagelog.FieldPromptWriteCachedTokens, usagelog.FieldPromptWriteCachedTokens5m, usagelog.FieldPromptWriteCachedTokens1h, usagelog.FieldCompletionAudioTokens, usagelog.FieldCompletionReasoningTokens, usagelog.FieldCompletionAcceptedPredictionTokens, usagelog.FieldCompletionRejectedPredictionTokens:
+		case usagelog.FieldID, usagelog.FieldRequestID, usagelog.FieldAPIKeyID, usagelog.FieldProjectID, usagelog.FieldChannelID, usagelog.FieldUpstreamAccountID, usagelog.FieldPromptTokens, usagelog.FieldCompletionTokens, usagelog.FieldTotalTokens, usagelog.FieldPromptAudioTokens, usagelog.FieldPromptCachedTokens, usagelog.FieldPromptWriteCachedTokens, usagelog.FieldPromptWriteCachedTokens5m, usagelog.FieldPromptWriteCachedTokens1h, usagelog.FieldCompletionAudioTokens, usagelog.FieldCompletionReasoningTokens, usagelog.FieldCompletionAcceptedPredictionTokens, usagelog.FieldCompletionRejectedPredictionTokens:
 			values[i] = new(sql.NullInt64)
 		case usagelog.FieldModelID, usagelog.FieldSource, usagelog.FieldFormat, usagelog.FieldCostPriceReferenceID:
 			values[i] = new(sql.NullString)
@@ -220,6 +236,13 @@ func (_m *UsageLog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field channel_id", values[i])
 			} else if value.Valid {
 				_m.ChannelID = int(value.Int64)
+			}
+		case usagelog.FieldUpstreamAccountID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field upstream_account_id", values[i])
+			} else if value.Valid {
+				_m.UpstreamAccountID = new(int)
+				*_m.UpstreamAccountID = int(value.Int64)
 			}
 		case usagelog.FieldModelID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -360,6 +383,11 @@ func (_m *UsageLog) QueryChannel() *ChannelQuery {
 	return NewUsageLogClient(_m.config).QueryChannel(_m)
 }
 
+// QueryUpstreamAccount queries the "upstream_account" edge of the UsageLog entity.
+func (_m *UsageLog) QueryUpstreamAccount() *UpstreamAccountQuery {
+	return NewUsageLogClient(_m.config).QueryUpstreamAccount(_m)
+}
+
 // QueryUsageBillingRecords queries the "usage_billing_records" edge of the UsageLog entity.
 func (_m *UsageLog) QueryUsageBillingRecords() *UsageBillingRecordQuery {
 	return NewUsageLogClient(_m.config).QueryUsageBillingRecords(_m)
@@ -410,6 +438,11 @@ func (_m *UsageLog) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("channel_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ChannelID))
+	builder.WriteString(", ")
+	if v := _m.UpstreamAccountID; v != nil {
+		builder.WriteString("upstream_account_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("model_id=")
 	builder.WriteString(_m.ModelID)

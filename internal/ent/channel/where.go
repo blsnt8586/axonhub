@@ -971,6 +971,29 @@ func HasUpstreamAccountsWith(preds ...predicate.UpstreamAccount) predicate.Chann
 	})
 }
 
+// HasUpstreamAccountSwitchHistories applies the HasEdge predicate on the "upstream_account_switch_histories" edge.
+func HasUpstreamAccountSwitchHistories() predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountSwitchHistoriesTable, UpstreamAccountSwitchHistoriesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUpstreamAccountSwitchHistoriesWith applies the HasEdge predicate on the "upstream_account_switch_histories" edge with a given conditions (other predicates).
+func HasUpstreamAccountSwitchHistoriesWith(preds ...predicate.UpstreamAccountSwitchHistory) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := newUpstreamAccountSwitchHistoriesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasProviderQuotaStatus applies the HasEdge predicate on the "provider_quota_status" edge.
 func HasProviderQuotaStatus() predicate.Channel {
 	return predicate.Channel(func(s *sql.Selector) {

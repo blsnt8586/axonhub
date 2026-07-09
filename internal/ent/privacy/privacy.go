@@ -1191,6 +1191,30 @@ func (f UpstreamAccountPoolMutationRuleFunc) EvalMutation(ctx context.Context, m
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UpstreamAccountPoolMutation", m)
 }
 
+// The UpstreamAccountSwitchHistoryQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type UpstreamAccountSwitchHistoryQueryRuleFunc func(context.Context, *ent.UpstreamAccountSwitchHistoryQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f UpstreamAccountSwitchHistoryQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UpstreamAccountSwitchHistoryQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.UpstreamAccountSwitchHistoryQuery", q)
+}
+
+// The UpstreamAccountSwitchHistoryMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type UpstreamAccountSwitchHistoryMutationRuleFunc func(context.Context, *ent.UpstreamAccountSwitchHistoryMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f UpstreamAccountSwitchHistoryMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.UpstreamAccountSwitchHistoryMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UpstreamAccountSwitchHistoryMutation", m)
+}
+
 // The UsageBillingRecordQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type UsageBillingRecordQueryRuleFunc func(context.Context, *ent.UsageBillingRecordQuery) error
@@ -1508,6 +1532,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.UpstreamAccountPoolQuery:
 		return q.Filter(), nil
+	case *ent.UpstreamAccountSwitchHistoryQuery:
+		return q.Filter(), nil
 	case *ent.UsageBillingRecordQuery:
 		return q.Filter(), nil
 	case *ent.UsageDailyAggregateQuery:
@@ -1620,6 +1646,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.UpstreamAccountMutation:
 		return m.Filter(), nil
 	case *ent.UpstreamAccountPoolMutation:
+		return m.Filter(), nil
+	case *ent.UpstreamAccountSwitchHistoryMutation:
 		return m.Filter(), nil
 	case *ent.UsageBillingRecordMutation:
 		return m.Filter(), nil

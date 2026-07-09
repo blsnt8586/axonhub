@@ -53,10 +53,12 @@ import { Route as AuthenticatedProjectRequestsIndexRouteImport } from './routes/
 import { Route as AuthenticatedProjectPromptsIndexRouteImport } from './routes/_authenticated/project/prompts/index'
 import { Route as AuthenticatedProjectPlaygroundIndexRouteImport } from './routes/_authenticated/project/playground/index'
 import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_authenticated/project/api-keys/index'
+import { Route as AuthenticatedChannelsAccountsIndexRouteImport } from './routes/_authenticated/channels/accounts/index'
 import { Route as AuthenticatedAdminBillingIndexRouteImport } from './routes/_authenticated/admin/billing/index'
 import { Route as AuthenticatedProjectTracesTraceIdRouteImport } from './routes/_authenticated/project/traces/$traceId'
 import { Route as AuthenticatedProjectThreadsThreadIdRouteImport } from './routes/_authenticated/project/threads/$threadId'
 import { Route as AuthenticatedProjectRequestsRequestIdRouteImport } from './routes/_authenticated/project/requests/$requestId'
+import { Route as AuthenticatedChannelsAccountsAccountIdRouteImport } from './routes/_authenticated/channels/accounts/$accountId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -305,6 +307,12 @@ const AuthenticatedProjectApiKeysIndexRoute =
     path: '/project/api-keys/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedChannelsAccountsIndexRoute =
+  AuthenticatedChannelsAccountsIndexRouteImport.update({
+    id: '/channels/accounts/',
+    path: '/channels/accounts/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminBillingIndexRoute =
   AuthenticatedAdminBillingIndexRouteImport.update({
     id: '/admin/billing/',
@@ -327,6 +335,12 @@ const AuthenticatedProjectRequestsRequestIdRoute =
   AuthenticatedProjectRequestsRequestIdRouteImport.update({
     id: '/project/requests/$requestId',
     path: '/project/requests/$requestId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedChannelsAccountsAccountIdRoute =
+  AuthenticatedChannelsAccountsAccountIdRouteImport.update({
+    id: '/channels/accounts/$accountId',
+    path: '/channels/accounts/$accountId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -365,10 +379,12 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/system/': typeof AuthenticatedSystemIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
+  '/channels/accounts/$accountId': typeof AuthenticatedChannelsAccountsAccountIdRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
   '/admin/billing/': typeof AuthenticatedAdminBillingIndexRoute
+  '/channels/accounts/': typeof AuthenticatedChannelsAccountsIndexRoute
   '/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
   '/project/playground/': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
@@ -413,10 +429,12 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/system': typeof AuthenticatedSystemIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/channels/accounts/$accountId': typeof AuthenticatedChannelsAccountsAccountIdRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
   '/admin/billing': typeof AuthenticatedAdminBillingIndexRoute
+  '/channels/accounts': typeof AuthenticatedChannelsAccountsIndexRoute
   '/project/api-keys': typeof AuthenticatedProjectApiKeysIndexRoute
   '/project/playground': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/project/prompts': typeof AuthenticatedProjectPromptsIndexRoute
@@ -464,10 +482,12 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/system/': typeof AuthenticatedSystemIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/channels/accounts/$accountId': typeof AuthenticatedChannelsAccountsAccountIdRoute
   '/_authenticated/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/_authenticated/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/_authenticated/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
   '/_authenticated/admin/billing/': typeof AuthenticatedAdminBillingIndexRoute
+  '/_authenticated/channels/accounts/': typeof AuthenticatedChannelsAccountsIndexRoute
   '/_authenticated/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
   '/_authenticated/project/playground/': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/_authenticated/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
@@ -515,10 +535,12 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/system/'
     | '/users/'
+    | '/channels/accounts/$accountId'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
     | '/project/traces/$traceId'
     | '/admin/billing/'
+    | '/channels/accounts/'
     | '/project/api-keys/'
     | '/project/playground/'
     | '/project/prompts/'
@@ -563,10 +585,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/system'
     | '/users'
+    | '/channels/accounts/$accountId'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
     | '/project/traces/$traceId'
     | '/admin/billing'
+    | '/channels/accounts'
     | '/project/api-keys'
     | '/project/playground'
     | '/project/prompts'
@@ -613,10 +637,12 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/system/'
     | '/_authenticated/users/'
+    | '/_authenticated/channels/accounts/$accountId'
     | '/_authenticated/project/requests/$requestId'
     | '/_authenticated/project/threads/$threadId'
     | '/_authenticated/project/traces/$traceId'
     | '/_authenticated/admin/billing/'
+    | '/_authenticated/channels/accounts/'
     | '/_authenticated/project/api-keys/'
     | '/_authenticated/project/playground/'
     | '/_authenticated/project/prompts/'
@@ -952,6 +978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectApiKeysIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/channels/accounts/': {
+      id: '/_authenticated/channels/accounts/'
+      path: '/channels/accounts'
+      fullPath: '/channels/accounts/'
+      preLoaderRoute: typeof AuthenticatedChannelsAccountsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/billing/': {
       id: '/_authenticated/admin/billing/'
       path: '/admin/billing'
@@ -978,6 +1011,13 @@ declare module '@tanstack/react-router' {
       path: '/project/requests/$requestId'
       fullPath: '/project/requests/$requestId'
       preLoaderRoute: typeof AuthenticatedProjectRequestsRequestIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/channels/accounts/$accountId': {
+      id: '/_authenticated/channels/accounts/$accountId'
+      path: '/channels/accounts/$accountId'
+      fullPath: '/channels/accounts/$accountId'
+      preLoaderRoute: typeof AuthenticatedChannelsAccountsAccountIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -1026,10 +1066,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRolesIndexRoute: typeof AuthenticatedRolesIndexRoute
   AuthenticatedSystemIndexRoute: typeof AuthenticatedSystemIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedChannelsAccountsAccountIdRoute: typeof AuthenticatedChannelsAccountsAccountIdRoute
   AuthenticatedProjectRequestsRequestIdRoute: typeof AuthenticatedProjectRequestsRequestIdRoute
   AuthenticatedProjectThreadsThreadIdRoute: typeof AuthenticatedProjectThreadsThreadIdRoute
   AuthenticatedProjectTracesTraceIdRoute: typeof AuthenticatedProjectTracesTraceIdRoute
   AuthenticatedAdminBillingIndexRoute: typeof AuthenticatedAdminBillingIndexRoute
+  AuthenticatedChannelsAccountsIndexRoute: typeof AuthenticatedChannelsAccountsIndexRoute
   AuthenticatedProjectApiKeysIndexRoute: typeof AuthenticatedProjectApiKeysIndexRoute
   AuthenticatedProjectPlaygroundIndexRoute: typeof AuthenticatedProjectPlaygroundIndexRoute
   AuthenticatedProjectPromptsIndexRoute: typeof AuthenticatedProjectPromptsIndexRoute
@@ -1064,6 +1106,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRolesIndexRoute: AuthenticatedRolesIndexRoute,
   AuthenticatedSystemIndexRoute: AuthenticatedSystemIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedChannelsAccountsAccountIdRoute:
+    AuthenticatedChannelsAccountsAccountIdRoute,
   AuthenticatedProjectRequestsRequestIdRoute:
     AuthenticatedProjectRequestsRequestIdRoute,
   AuthenticatedProjectThreadsThreadIdRoute:
@@ -1071,6 +1115,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProjectTracesTraceIdRoute:
     AuthenticatedProjectTracesTraceIdRoute,
   AuthenticatedAdminBillingIndexRoute: AuthenticatedAdminBillingIndexRoute,
+  AuthenticatedChannelsAccountsIndexRoute:
+    AuthenticatedChannelsAccountsIndexRoute,
   AuthenticatedProjectApiKeysIndexRoute: AuthenticatedProjectApiKeysIndexRoute,
   AuthenticatedProjectPlaygroundIndexRoute:
     AuthenticatedProjectPlaygroundIndexRoute,

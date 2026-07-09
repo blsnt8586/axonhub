@@ -79,6 +79,14 @@ func (UpstreamAccount) Edges() []ent.Edge {
 			Unique(),
 		edge.To("executions", RequestExecution.Type).
 			Annotations(entgql.RelayConnection()),
+		edge.To("usage_logs", UsageLog.Type).
+			Annotations(entgql.RelayConnection()),
+		edge.To("usage_billing_records", UsageBillingRecord.Type).
+			Annotations(entgql.RelayConnection()),
+		edge.To("switch_histories_from", UpstreamAccountSwitchHistory.Type).
+			Annotations(entgql.RelayConnection()),
+		edge.To("switch_histories_to", UpstreamAccountSwitchHistory.Type).
+			Annotations(entgql.RelayConnection()),
 	}
 }
 

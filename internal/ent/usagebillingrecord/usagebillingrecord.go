@@ -29,6 +29,8 @@ const (
 	FieldBillingAccountID = "billing_account_id"
 	// FieldProjectID holds the string denoting the project_id field in the database.
 	FieldProjectID = "project_id"
+	// FieldUpstreamAccountID holds the string denoting the upstream_account_id field in the database.
+	FieldUpstreamAccountID = "upstream_account_id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
 	// FieldAPIKeyID holds the string denoting the api_key_id field in the database.
@@ -69,6 +71,8 @@ const (
 	EdgeLedgerTransaction = "ledger_transaction"
 	// EdgeUserSubscription holds the string denoting the user_subscription edge name in mutations.
 	EdgeUserSubscription = "user_subscription"
+	// EdgeUpstreamAccount holds the string denoting the upstream_account edge name in mutations.
+	EdgeUpstreamAccount = "upstream_account"
 	// EdgeBillingNotifications holds the string denoting the billing_notifications edge name in mutations.
 	EdgeBillingNotifications = "billing_notifications"
 	// Table holds the table name of the usagebillingrecord in the database.
@@ -101,6 +105,13 @@ const (
 	UserSubscriptionInverseTable = "user_subscriptions"
 	// UserSubscriptionColumn is the table column denoting the user_subscription relation/edge.
 	UserSubscriptionColumn = "user_subscription_id"
+	// UpstreamAccountTable is the table that holds the upstream_account relation/edge.
+	UpstreamAccountTable = "usage_billing_records"
+	// UpstreamAccountInverseTable is the table name for the UpstreamAccount entity.
+	// It exists in this package in order to avoid circular dependency with the "upstreamaccount" package.
+	UpstreamAccountInverseTable = "upstream_accounts"
+	// UpstreamAccountColumn is the table column denoting the upstream_account relation/edge.
+	UpstreamAccountColumn = "upstream_account_id"
 	// BillingNotificationsTable is the table that holds the billing_notifications relation/edge.
 	BillingNotificationsTable = "billing_notifications"
 	// BillingNotificationsInverseTable is the table name for the BillingNotification entity.
@@ -118,6 +129,7 @@ var Columns = []string{
 	FieldUsageLogID,
 	FieldBillingAccountID,
 	FieldProjectID,
+	FieldUpstreamAccountID,
 	FieldUserID,
 	FieldAPIKeyID,
 	FieldModelID,
@@ -262,6 +274,11 @@ func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProjectID, opts...).ToFunc()
 }
 
+// ByUpstreamAccountID orders the results by the upstream_account_id field.
+func ByUpstreamAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpstreamAccountID, opts...).ToFunc()
+}
+
 // ByUserID orders the results by the user_id field.
 func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
@@ -355,6 +372,13 @@ func ByUserSubscriptionField(field string, opts ...sql.OrderTermOption) OrderOpt
 	}
 }
 
+// ByUpstreamAccountField orders the results by upstream_account field.
+func ByUpstreamAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUpstreamAccountStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByBillingNotificationsCount orders the results by billing_notifications count.
 func ByBillingNotificationsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -394,6 +418,13 @@ func newUserSubscriptionStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserSubscriptionInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, UserSubscriptionTable, UserSubscriptionColumn),
+	)
+}
+func newUpstreamAccountStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UpstreamAccountInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, UpstreamAccountTable, UpstreamAccountColumn),
 	)
 }
 func newBillingNotificationsStep() *sqlgraph.Step {

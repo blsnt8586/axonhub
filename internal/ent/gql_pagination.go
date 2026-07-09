@@ -59,6 +59,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -14336,6 +14337,320 @@ func (_m *UpstreamAccountPool) ToEdge(order *UpstreamAccountPoolOrder) *Upstream
 		order = DefaultUpstreamAccountPoolOrder
 	}
 	return &UpstreamAccountPoolEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// UpstreamAccountSwitchHistoryEdge is the edge representation of UpstreamAccountSwitchHistory.
+type UpstreamAccountSwitchHistoryEdge struct {
+	Node   *UpstreamAccountSwitchHistory `json:"node"`
+	Cursor Cursor                        `json:"cursor"`
+}
+
+// UpstreamAccountSwitchHistoryConnection is the connection containing edges to UpstreamAccountSwitchHistory.
+type UpstreamAccountSwitchHistoryConnection struct {
+	Edges      []*UpstreamAccountSwitchHistoryEdge `json:"edges"`
+	PageInfo   PageInfo                            `json:"pageInfo"`
+	TotalCount int                                 `json:"totalCount"`
+}
+
+func (c *UpstreamAccountSwitchHistoryConnection) build(nodes []*UpstreamAccountSwitchHistory, pager *upstreamaccountswitchhistoryPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *UpstreamAccountSwitchHistory
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *UpstreamAccountSwitchHistory {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *UpstreamAccountSwitchHistory {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*UpstreamAccountSwitchHistoryEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &UpstreamAccountSwitchHistoryEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// UpstreamAccountSwitchHistoryPaginateOption enables pagination customization.
+type UpstreamAccountSwitchHistoryPaginateOption func(*upstreamaccountswitchhistoryPager) error
+
+// WithUpstreamAccountSwitchHistoryOrder configures pagination ordering.
+func WithUpstreamAccountSwitchHistoryOrder(order *UpstreamAccountSwitchHistoryOrder) UpstreamAccountSwitchHistoryPaginateOption {
+	if order == nil {
+		order = DefaultUpstreamAccountSwitchHistoryOrder
+	}
+	o := *order
+	return func(pager *upstreamaccountswitchhistoryPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultUpstreamAccountSwitchHistoryOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithUpstreamAccountSwitchHistoryFilter configures pagination filter.
+func WithUpstreamAccountSwitchHistoryFilter(filter func(*UpstreamAccountSwitchHistoryQuery) (*UpstreamAccountSwitchHistoryQuery, error)) UpstreamAccountSwitchHistoryPaginateOption {
+	return func(pager *upstreamaccountswitchhistoryPager) error {
+		if filter == nil {
+			return errors.New("UpstreamAccountSwitchHistoryQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type upstreamaccountswitchhistoryPager struct {
+	reverse bool
+	order   *UpstreamAccountSwitchHistoryOrder
+	filter  func(*UpstreamAccountSwitchHistoryQuery) (*UpstreamAccountSwitchHistoryQuery, error)
+}
+
+func newUpstreamAccountSwitchHistoryPager(opts []UpstreamAccountSwitchHistoryPaginateOption, reverse bool) (*upstreamaccountswitchhistoryPager, error) {
+	pager := &upstreamaccountswitchhistoryPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultUpstreamAccountSwitchHistoryOrder
+	}
+	return pager, nil
+}
+
+func (p *upstreamaccountswitchhistoryPager) applyFilter(query *UpstreamAccountSwitchHistoryQuery) (*UpstreamAccountSwitchHistoryQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *upstreamaccountswitchhistoryPager) toCursor(_m *UpstreamAccountSwitchHistory) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *upstreamaccountswitchhistoryPager) applyCursors(query *UpstreamAccountSwitchHistoryQuery, after, before *Cursor) (*UpstreamAccountSwitchHistoryQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultUpstreamAccountSwitchHistoryOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *upstreamaccountswitchhistoryPager) applyOrder(query *UpstreamAccountSwitchHistoryQuery) *UpstreamAccountSwitchHistoryQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultUpstreamAccountSwitchHistoryOrder.Field {
+		query = query.Order(DefaultUpstreamAccountSwitchHistoryOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *upstreamaccountswitchhistoryPager) orderExpr(query *UpstreamAccountSwitchHistoryQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultUpstreamAccountSwitchHistoryOrder.Field {
+			b.Comma().Ident(DefaultUpstreamAccountSwitchHistoryOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to UpstreamAccountSwitchHistory.
+func (_m *UpstreamAccountSwitchHistoryQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...UpstreamAccountSwitchHistoryPaginateOption,
+) (*UpstreamAccountSwitchHistoryConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newUpstreamAccountSwitchHistoryPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &UpstreamAccountSwitchHistoryConnection{Edges: []*UpstreamAccountSwitchHistoryEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// UpstreamAccountSwitchHistoryOrderFieldCreatedAt orders UpstreamAccountSwitchHistory by created_at.
+	UpstreamAccountSwitchHistoryOrderFieldCreatedAt = &UpstreamAccountSwitchHistoryOrderField{
+		Value: func(_m *UpstreamAccountSwitchHistory) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: upstreamaccountswitchhistory.FieldCreatedAt,
+		toTerm: upstreamaccountswitchhistory.ByCreatedAt,
+		toCursor: func(_m *UpstreamAccountSwitchHistory) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// UpstreamAccountSwitchHistoryOrderFieldUpdatedAt orders UpstreamAccountSwitchHistory by updated_at.
+	UpstreamAccountSwitchHistoryOrderFieldUpdatedAt = &UpstreamAccountSwitchHistoryOrderField{
+		Value: func(_m *UpstreamAccountSwitchHistory) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: upstreamaccountswitchhistory.FieldUpdatedAt,
+		toTerm: upstreamaccountswitchhistory.ByUpdatedAt,
+		toCursor: func(_m *UpstreamAccountSwitchHistory) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f UpstreamAccountSwitchHistoryOrderField) String() string {
+	var str string
+	switch f.column {
+	case UpstreamAccountSwitchHistoryOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case UpstreamAccountSwitchHistoryOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f UpstreamAccountSwitchHistoryOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *UpstreamAccountSwitchHistoryOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("UpstreamAccountSwitchHistoryOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *UpstreamAccountSwitchHistoryOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *UpstreamAccountSwitchHistoryOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid UpstreamAccountSwitchHistoryOrderField", str)
+	}
+	return nil
+}
+
+// UpstreamAccountSwitchHistoryOrderField defines the ordering field of UpstreamAccountSwitchHistory.
+type UpstreamAccountSwitchHistoryOrderField struct {
+	// Value extracts the ordering value from the given UpstreamAccountSwitchHistory.
+	Value    func(*UpstreamAccountSwitchHistory) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) upstreamaccountswitchhistory.OrderOption
+	toCursor func(*UpstreamAccountSwitchHistory) Cursor
+}
+
+// UpstreamAccountSwitchHistoryOrder defines the ordering of UpstreamAccountSwitchHistory.
+type UpstreamAccountSwitchHistoryOrder struct {
+	Direction OrderDirection                          `json:"direction"`
+	Field     *UpstreamAccountSwitchHistoryOrderField `json:"field"`
+}
+
+// DefaultUpstreamAccountSwitchHistoryOrder is the default ordering of UpstreamAccountSwitchHistory.
+var DefaultUpstreamAccountSwitchHistoryOrder = &UpstreamAccountSwitchHistoryOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &UpstreamAccountSwitchHistoryOrderField{
+		Value: func(_m *UpstreamAccountSwitchHistory) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: upstreamaccountswitchhistory.FieldID,
+		toTerm: upstreamaccountswitchhistory.ByID,
+		toCursor: func(_m *UpstreamAccountSwitchHistory) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts UpstreamAccountSwitchHistory into UpstreamAccountSwitchHistoryEdge.
+func (_m *UpstreamAccountSwitchHistory) ToEdge(order *UpstreamAccountSwitchHistoryOrder) *UpstreamAccountSwitchHistoryEdge {
+	if order == nil {
+		order = DefaultUpstreamAccountSwitchHistoryOrder
+	}
+	return &UpstreamAccountSwitchHistoryEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

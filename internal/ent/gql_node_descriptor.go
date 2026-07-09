@@ -42,6 +42,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
@@ -1866,7 +1867,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "Channel",
 		Fields: make([]*Field, 20),
-		Edges:  make([]*Edge, 8),
+		Edges:  make([]*Edge, 9),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -2100,12 +2101,22 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[7] = &Edge{
+		Type: "UpstreamAccountSwitchHistory",
+		Name: "upstream_account_switch_histories",
+	}
+	err = _m.QueryUpstreamAccountSwitchHistories().
+		Select(upstreamaccountswitchhistory.FieldID).
+		Scan(ctx, &node.Edges[7].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[8] = &Edge{
 		Type: "ProviderQuotaStatus",
 		Name: "provider_quota_status",
 	}
 	err = _m.QueryProviderQuotaStatus().
 		Select(providerquotastatus.FieldID).
-		Scan(ctx, &node.Edges[7].IDs)
+		Scan(ctx, &node.Edges[8].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -4650,7 +4661,7 @@ func (_m *Request) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "Request",
 		Fields: make([]*Field, 26),
-		Edges:  make([]*Edge, 8),
+		Edges:  make([]*Edge, 9),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -4932,12 +4943,22 @@ func (_m *Request) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[7] = &Edge{
+		Type: "UpstreamAccountSwitchHistory",
+		Name: "upstream_account_switch_histories",
+	}
+	err = _m.QueryUpstreamAccountSwitchHistories().
+		Select(upstreamaccountswitchhistory.FieldID).
+		Scan(ctx, &node.Edges[7].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[8] = &Edge{
 		Type: "BillingHold",
 		Name: "billing_holds",
 	}
 	err = _m.QueryBillingHolds().
 		Select(billinghold.FieldID).
-		Scan(ctx, &node.Edges[7].IDs)
+		Scan(ctx, &node.Edges[8].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -4950,7 +4971,7 @@ func (_m *RequestExecution) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "RequestExecution",
 		Fields: make([]*Field, 24),
-		Edges:  make([]*Edge, 4),
+		Edges:  make([]*Edge, 5),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -5182,6 +5203,16 @@ func (_m *RequestExecution) Node(ctx context.Context) (node *Node, err error) {
 	err = _m.QueryUpstreamAccount().
 		Select(upstreamaccount.FieldID).
 		Scan(ctx, &node.Edges[3].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[4] = &Edge{
+		Type: "UpstreamAccountSwitchHistory",
+		Name: "upstream_account_switch_histories",
+	}
+	err = _m.QueryUpstreamAccountSwitchHistories().
+		Select(upstreamaccountswitchhistory.FieldID).
+		Scan(ctx, &node.Edges[4].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -5624,7 +5655,7 @@ func (_m *UpstreamAccount) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "UpstreamAccount",
 		Fields: make([]*Field, 21),
-		Edges:  make([]*Edge, 3),
+		Edges:  make([]*Edge, 7),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -5825,6 +5856,46 @@ func (_m *UpstreamAccount) Node(ctx context.Context) (node *Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	node.Edges[3] = &Edge{
+		Type: "UsageLog",
+		Name: "usage_logs",
+	}
+	err = _m.QueryUsageLogs().
+		Select(usagelog.FieldID).
+		Scan(ctx, &node.Edges[3].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[4] = &Edge{
+		Type: "UsageBillingRecord",
+		Name: "usage_billing_records",
+	}
+	err = _m.QueryUsageBillingRecords().
+		Select(usagebillingrecord.FieldID).
+		Scan(ctx, &node.Edges[4].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[5] = &Edge{
+		Type: "UpstreamAccountSwitchHistory",
+		Name: "switch_histories_from",
+	}
+	err = _m.QuerySwitchHistoriesFrom().
+		Select(upstreamaccountswitchhistory.FieldID).
+		Scan(ctx, &node.Edges[5].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[6] = &Edge{
+		Type: "UpstreamAccountSwitchHistory",
+		Name: "switch_histories_to",
+	}
+	err = _m.QuerySwitchHistoriesTo().
+		Select(upstreamaccountswitchhistory.FieldID).
+		Scan(ctx, &node.Edges[6].IDs)
+	if err != nil {
+		return nil, err
+	}
 	return node, nil
 }
 
@@ -5933,12 +6004,178 @@ func (_m *UpstreamAccountPool) Node(ctx context.Context) (node *Node, err error)
 }
 
 // Node implements Noder interface
+func (_m *UpstreamAccountSwitchHistory) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "UpstreamAccountSwitchHistory",
+		Fields: make([]*Field, 13),
+		Edges:  make([]*Edge, 5),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProjectID); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "int",
+		Name:  "project_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RequestID); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "int",
+		Name:  "request_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RequestExecutionID); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "int",
+		Name:  "request_execution_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ChannelID); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "int",
+		Name:  "channel_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.FromAccountID); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "int",
+		Name:  "from_account_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ToAccountID); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "int",
+		Name:  "to_account_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ModelID); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "string",
+		Name:  "model_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Reason); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "string",
+		Name:  "reason",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ErrorCode); err != nil {
+		return nil, err
+	}
+	node.Fields[10] = &Field{
+		Type:  "int",
+		Name:  "error_code",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ErrorMessage); err != nil {
+		return nil, err
+	}
+	node.Fields[11] = &Field{
+		Type:  "string",
+		Name:  "error_message",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LatencyMs); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
+		Type:  "int64",
+		Name:  "latency_ms",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Request",
+		Name: "request",
+	}
+	err = _m.QueryRequest().
+		Select(request.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "RequestExecution",
+		Name: "request_execution",
+	}
+	err = _m.QueryRequestExecution().
+		Select(requestexecution.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[2] = &Edge{
+		Type: "Channel",
+		Name: "channel",
+	}
+	err = _m.QueryChannel().
+		Select(channel.FieldID).
+		Scan(ctx, &node.Edges[2].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[3] = &Edge{
+		Type: "UpstreamAccount",
+		Name: "from_account",
+	}
+	err = _m.QueryFromAccount().
+		Select(upstreamaccount.FieldID).
+		Scan(ctx, &node.Edges[3].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[4] = &Edge{
+		Type: "UpstreamAccount",
+		Name: "to_account",
+	}
+	err = _m.QueryToAccount().
+		Select(upstreamaccount.FieldID).
+		Scan(ctx, &node.Edges[4].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
 func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "UsageBillingRecord",
-		Fields: make([]*Field, 21),
-		Edges:  make([]*Edge, 5),
+		Fields: make([]*Field, 22),
+		Edges:  make([]*Edge, 6),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -5981,10 +6218,18 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 		Name:  "project_id",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.UserID); err != nil {
+	if buf, err = json.Marshal(_m.UpstreamAccountID); err != nil {
 		return nil, err
 	}
 	node.Fields[5] = &Field{
+		Type:  "int",
+		Name:  "upstream_account_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UserID); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
 		Type:  "int",
 		Name:  "user_id",
 		Value: string(buf),
@@ -5992,7 +6237,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.APIKeyID); err != nil {
 		return nil, err
 	}
-	node.Fields[6] = &Field{
+	node.Fields[7] = &Field{
 		Type:  "int",
 		Name:  "api_key_id",
 		Value: string(buf),
@@ -6000,7 +6245,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.ModelID); err != nil {
 		return nil, err
 	}
-	node.Fields[7] = &Field{
+	node.Fields[8] = &Field{
 		Type:  "string",
 		Name:  "model_id",
 		Value: string(buf),
@@ -6008,7 +6253,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.RequestType); err != nil {
 		return nil, err
 	}
-	node.Fields[8] = &Field{
+	node.Fields[9] = &Field{
 		Type:  "usagebillingrecord.RequestType",
 		Name:  "request_type",
 		Value: string(buf),
@@ -6016,7 +6261,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.UsageSnapshot); err != nil {
 		return nil, err
 	}
-	node.Fields[9] = &Field{
+	node.Fields[10] = &Field{
 		Type:  "objects.JSONRawMessage",
 		Name:  "usage_snapshot",
 		Value: string(buf),
@@ -6024,7 +6269,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.PriceSnapshot); err != nil {
 		return nil, err
 	}
-	node.Fields[10] = &Field{
+	node.Fields[11] = &Field{
 		Type:  "objects.ModelPrice",
 		Name:  "price_snapshot",
 		Value: string(buf),
@@ -6032,7 +6277,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.PriceReferenceID); err != nil {
 		return nil, err
 	}
-	node.Fields[11] = &Field{
+	node.Fields[12] = &Field{
 		Type:  "string",
 		Name:  "price_reference_id",
 		Value: string(buf),
@@ -6040,7 +6285,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.ChargeItems); err != nil {
 		return nil, err
 	}
-	node.Fields[12] = &Field{
+	node.Fields[13] = &Field{
 		Type:  "[]objects.CostItem",
 		Name:  "charge_items",
 		Value: string(buf),
@@ -6048,7 +6293,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.CostAmountMicros); err != nil {
 		return nil, err
 	}
-	node.Fields[13] = &Field{
+	node.Fields[14] = &Field{
 		Type:  "int64",
 		Name:  "cost_amount_micros",
 		Value: string(buf),
@@ -6056,7 +6301,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.ChargeAmountMicros); err != nil {
 		return nil, err
 	}
-	node.Fields[14] = &Field{
+	node.Fields[15] = &Field{
 		Type:  "int64",
 		Name:  "charge_amount_micros",
 		Value: string(buf),
@@ -6064,7 +6309,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.Currency); err != nil {
 		return nil, err
 	}
-	node.Fields[15] = &Field{
+	node.Fields[16] = &Field{
 		Type:  "string",
 		Name:  "currency",
 		Value: string(buf),
@@ -6072,7 +6317,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.Status); err != nil {
 		return nil, err
 	}
-	node.Fields[16] = &Field{
+	node.Fields[17] = &Field{
 		Type:  "usagebillingrecord.Status",
 		Name:  "status",
 		Value: string(buf),
@@ -6080,7 +6325,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.LedgerTransactionID); err != nil {
 		return nil, err
 	}
-	node.Fields[17] = &Field{
+	node.Fields[18] = &Field{
 		Type:  "int",
 		Name:  "ledger_transaction_id",
 		Value: string(buf),
@@ -6088,7 +6333,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.UserSubscriptionID); err != nil {
 		return nil, err
 	}
-	node.Fields[18] = &Field{
+	node.Fields[19] = &Field{
 		Type:  "int",
 		Name:  "user_subscription_id",
 		Value: string(buf),
@@ -6096,7 +6341,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.IdempotencyKey); err != nil {
 		return nil, err
 	}
-	node.Fields[19] = &Field{
+	node.Fields[20] = &Field{
 		Type:  "string",
 		Name:  "idempotency_key",
 		Value: string(buf),
@@ -6104,7 +6349,7 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 	if buf, err = json.Marshal(_m.Error); err != nil {
 		return nil, err
 	}
-	node.Fields[20] = &Field{
+	node.Fields[21] = &Field{
 		Type:  "string",
 		Name:  "error",
 		Value: string(buf),
@@ -6150,12 +6395,22 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 		return nil, err
 	}
 	node.Edges[4] = &Edge{
+		Type: "UpstreamAccount",
+		Name: "upstream_account",
+	}
+	err = _m.QueryUpstreamAccount().
+		Select(upstreamaccount.FieldID).
+		Scan(ctx, &node.Edges[4].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[5] = &Edge{
 		Type: "BillingNotification",
 		Name: "billing_notifications",
 	}
 	err = _m.QueryBillingNotifications().
 		Select(billingnotification.FieldID).
-		Scan(ctx, &node.Edges[4].IDs)
+		Scan(ctx, &node.Edges[5].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -6527,8 +6782,8 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "UsageLog",
-		Fields: make([]*Field, 24),
-		Edges:  make([]*Edge, 5),
+		Fields: make([]*Field, 25),
+		Edges:  make([]*Edge, 6),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -6579,10 +6834,18 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "channel_id",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.ModelID); err != nil {
+	if buf, err = json.Marshal(_m.UpstreamAccountID); err != nil {
 		return nil, err
 	}
 	node.Fields[6] = &Field{
+		Type:  "int",
+		Name:  "upstream_account_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ModelID); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
 		Type:  "string",
 		Name:  "model_id",
 		Value: string(buf),
@@ -6590,7 +6853,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.PromptTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[7] = &Field{
+	node.Fields[8] = &Field{
 		Type:  "int64",
 		Name:  "prompt_tokens",
 		Value: string(buf),
@@ -6598,7 +6861,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.CompletionTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[8] = &Field{
+	node.Fields[9] = &Field{
 		Type:  "int64",
 		Name:  "completion_tokens",
 		Value: string(buf),
@@ -6606,7 +6869,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.TotalTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[9] = &Field{
+	node.Fields[10] = &Field{
 		Type:  "int64",
 		Name:  "total_tokens",
 		Value: string(buf),
@@ -6614,7 +6877,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.PromptAudioTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[10] = &Field{
+	node.Fields[11] = &Field{
 		Type:  "int64",
 		Name:  "prompt_audio_tokens",
 		Value: string(buf),
@@ -6622,7 +6885,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.PromptCachedTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[11] = &Field{
+	node.Fields[12] = &Field{
 		Type:  "int64",
 		Name:  "prompt_cached_tokens",
 		Value: string(buf),
@@ -6630,7 +6893,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.PromptWriteCachedTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[12] = &Field{
+	node.Fields[13] = &Field{
 		Type:  "int64",
 		Name:  "prompt_write_cached_tokens",
 		Value: string(buf),
@@ -6638,7 +6901,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.PromptWriteCachedTokens5m); err != nil {
 		return nil, err
 	}
-	node.Fields[13] = &Field{
+	node.Fields[14] = &Field{
 		Type:  "int64",
 		Name:  "prompt_write_cached_tokens_5m",
 		Value: string(buf),
@@ -6646,7 +6909,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.PromptWriteCachedTokens1h); err != nil {
 		return nil, err
 	}
-	node.Fields[14] = &Field{
+	node.Fields[15] = &Field{
 		Type:  "int64",
 		Name:  "prompt_write_cached_tokens_1h",
 		Value: string(buf),
@@ -6654,7 +6917,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.CompletionAudioTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[15] = &Field{
+	node.Fields[16] = &Field{
 		Type:  "int64",
 		Name:  "completion_audio_tokens",
 		Value: string(buf),
@@ -6662,7 +6925,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.CompletionReasoningTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[16] = &Field{
+	node.Fields[17] = &Field{
 		Type:  "int64",
 		Name:  "completion_reasoning_tokens",
 		Value: string(buf),
@@ -6670,7 +6933,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.CompletionAcceptedPredictionTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[17] = &Field{
+	node.Fields[18] = &Field{
 		Type:  "int64",
 		Name:  "completion_accepted_prediction_tokens",
 		Value: string(buf),
@@ -6678,7 +6941,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.CompletionRejectedPredictionTokens); err != nil {
 		return nil, err
 	}
-	node.Fields[18] = &Field{
+	node.Fields[19] = &Field{
 		Type:  "int64",
 		Name:  "completion_rejected_prediction_tokens",
 		Value: string(buf),
@@ -6686,7 +6949,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.Source); err != nil {
 		return nil, err
 	}
-	node.Fields[19] = &Field{
+	node.Fields[20] = &Field{
 		Type:  "usagelog.Source",
 		Name:  "source",
 		Value: string(buf),
@@ -6694,7 +6957,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.Format); err != nil {
 		return nil, err
 	}
-	node.Fields[20] = &Field{
+	node.Fields[21] = &Field{
 		Type:  "string",
 		Name:  "format",
 		Value: string(buf),
@@ -6702,7 +6965,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.TotalCost); err != nil {
 		return nil, err
 	}
-	node.Fields[21] = &Field{
+	node.Fields[22] = &Field{
 		Type:  "float64",
 		Name:  "total_cost",
 		Value: string(buf),
@@ -6710,7 +6973,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.CostItems); err != nil {
 		return nil, err
 	}
-	node.Fields[22] = &Field{
+	node.Fields[23] = &Field{
 		Type:  "[]objects.CostItem",
 		Name:  "cost_items",
 		Value: string(buf),
@@ -6718,7 +6981,7 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.CostPriceReferenceID); err != nil {
 		return nil, err
 	}
-	node.Fields[23] = &Field{
+	node.Fields[24] = &Field{
 		Type:  "string",
 		Name:  "cost_price_reference_id",
 		Value: string(buf),
@@ -6754,22 +7017,32 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[3] = &Edge{
-		Type: "UsageBillingRecord",
-		Name: "usage_billing_records",
+		Type: "UpstreamAccount",
+		Name: "upstream_account",
 	}
-	err = _m.QueryUsageBillingRecords().
-		Select(usagebillingrecord.FieldID).
+	err = _m.QueryUpstreamAccount().
+		Select(upstreamaccount.FieldID).
 		Scan(ctx, &node.Edges[3].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[4] = &Edge{
+		Type: "UsageBillingRecord",
+		Name: "usage_billing_records",
+	}
+	err = _m.QueryUsageBillingRecords().
+		Select(usagebillingrecord.FieldID).
+		Scan(ctx, &node.Edges[4].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[5] = &Edge{
 		Type: "BillingHold",
 		Name: "billing_holds",
 	}
 	err = _m.QueryBillingHolds().
 		Select(billinghold.FieldID).
-		Scan(ctx, &node.Edges[4].IDs)
+		Scan(ctx, &node.Edges[5].IDs)
 	if err != nil {
 		return nil, err
 	}

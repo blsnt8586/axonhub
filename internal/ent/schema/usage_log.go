@@ -35,6 +35,8 @@ func (UsageLog) Indexes() []ent.Index {
 			StorageKey("usage_logs_by_project_id_created_at"),
 		index.Fields("channel_id", "created_at").
 			StorageKey("usage_logs_by_channel_id_created_at"),
+		index.Fields("upstream_account_id", "created_at").
+			StorageKey("usage_logs_by_upstream_account_id_created_at"),
 		index.Fields("api_key_id", "created_at").
 			StorageKey("usage_logs_by_api_key_id_created_at"),
 	}
@@ -46,6 +48,11 @@ func (UsageLog) Fields() []ent.Field {
 		field.Int("api_key_id").Optional().Immutable(),
 		field.Int("project_id").Immutable().Default(1).Comment("Project ID, default to 1 for backward compatibility"),
 		field.Int("channel_id").Immutable().Optional().Comment("Channel ID used for the request"), // Optional for deleted channel, this field is not null.
+		field.Int("upstream_account_id").
+			Optional().
+			Nillable().
+			Immutable().
+			Comment("Selected upstream account for account-pool requests."),
 		field.String("model_id").Immutable().Comment("Model identifier used for the request"),
 
 		// Core usage metrics from llm.Usage
@@ -106,6 +113,14 @@ func (UsageLog) Edges() []ent.Edge {
 			Annotations(
 				entgql.Directives(forceResolver()),
 			).
+			Unique(),
+		edge.From("upstream_account", UpstreamAccount.Type).
+			Ref("usage_logs").
+			Field("upstream_account_id").
+			Annotations(
+				entgql.Directives(forceResolver()),
+			).
+			Immutable().
 			Unique(),
 		edge.To("usage_billing_records", UsageBillingRecord.Type).
 			Annotations(

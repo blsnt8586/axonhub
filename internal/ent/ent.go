@@ -57,6 +57,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -170,6 +171,7 @@ func checkColumn(t, c string) error {
 			trace.Table:                         trace.ValidColumn,
 			upstreamaccount.Table:               upstreamaccount.ValidColumn,
 			upstreamaccountpool.Table:           upstreamaccountpool.ValidColumn,
+			upstreamaccountswitchhistory.Table:  upstreamaccountswitchhistory.ValidColumn,
 			usagebillingrecord.Table:            usagebillingrecord.ValidColumn,
 			usagedailyaggregate.Table:           usagedailyaggregate.ValidColumn,
 			usagehourlyaggregate.Table:          usagehourlyaggregate.ValidColumn,

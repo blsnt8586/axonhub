@@ -57,6 +57,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -123,6 +124,7 @@ const (
 	TypeTrace                         = "Trace"
 	TypeUpstreamAccount               = "UpstreamAccount"
 	TypeUpstreamAccountPool           = "UpstreamAccountPool"
+	TypeUpstreamAccountSwitchHistory  = "UpstreamAccountSwitchHistory"
 	TypeUsageBillingRecord            = "UsageBillingRecord"
 	TypeUsageDailyAggregate           = "UsageDailyAggregate"
 	TypeUsageHourlyAggregate          = "UsageHourlyAggregate"
@@ -16651,64 +16653,67 @@ func (m *BillingPriceRuleMutation) ResetEdge(name string) error {
 // ChannelMutation represents an operation that mutates the Channel nodes in the graph.
 type ChannelMutation struct {
 	config
-	op                            Op
-	typ                           string
-	id                            *int
-	created_at                    *time.Time
-	updated_at                    *time.Time
-	deleted_at                    *int
-	adddeleted_at                 *int
-	_type                         *channel.Type
-	base_url                      *string
-	name                          *string
-	status                        *channel.Status
-	credentials                   *objects.ChannelCredentials
-	disabled_api_keys             *[]objects.DisabledAPIKey
-	appenddisabled_api_keys       []objects.DisabledAPIKey
-	supported_models              *[]string
-	appendsupported_models        []string
-	manual_models                 *[]string
-	appendmanual_models           []string
-	auto_sync_supported_models    *bool
-	auto_sync_model_pattern       *string
-	tags                          *[]string
-	appendtags                    []string
-	default_test_model            *string
-	policies                      *objects.ChannelPolicies
-	settings                      **objects.ChannelSettings
-	ordering_weight               *int
-	addordering_weight            *int
-	error_message                 *string
-	remark                        *string
-	endpoints                     *[]objects.ChannelEndpoint
-	appendendpoints               []objects.ChannelEndpoint
-	clearedFields                 map[string]struct{}
-	requests                      map[int]struct{}
-	removedrequests               map[int]struct{}
-	clearedrequests               bool
-	executions                    map[int]struct{}
-	removedexecutions             map[int]struct{}
-	clearedexecutions             bool
-	usage_logs                    map[int]struct{}
-	removedusage_logs             map[int]struct{}
-	clearedusage_logs             bool
-	channel_probes                map[int]struct{}
-	removedchannel_probes         map[int]struct{}
-	clearedchannel_probes         bool
-	channel_model_prices          map[int]struct{}
-	removedchannel_model_prices   map[int]struct{}
-	clearedchannel_model_prices   bool
-	upstream_account_pools        map[int]struct{}
-	removedupstream_account_pools map[int]struct{}
-	clearedupstream_account_pools bool
-	upstream_accounts             map[int]struct{}
-	removedupstream_accounts      map[int]struct{}
-	clearedupstream_accounts      bool
-	provider_quota_status         *int
-	clearedprovider_quota_status  bool
-	done                          bool
-	oldValue                      func(context.Context) (*Channel, error)
-	predicates                    []predicate.Channel
+	op                                       Op
+	typ                                      string
+	id                                       *int
+	created_at                               *time.Time
+	updated_at                               *time.Time
+	deleted_at                               *int
+	adddeleted_at                            *int
+	_type                                    *channel.Type
+	base_url                                 *string
+	name                                     *string
+	status                                   *channel.Status
+	credentials                              *objects.ChannelCredentials
+	disabled_api_keys                        *[]objects.DisabledAPIKey
+	appenddisabled_api_keys                  []objects.DisabledAPIKey
+	supported_models                         *[]string
+	appendsupported_models                   []string
+	manual_models                            *[]string
+	appendmanual_models                      []string
+	auto_sync_supported_models               *bool
+	auto_sync_model_pattern                  *string
+	tags                                     *[]string
+	appendtags                               []string
+	default_test_model                       *string
+	policies                                 *objects.ChannelPolicies
+	settings                                 **objects.ChannelSettings
+	ordering_weight                          *int
+	addordering_weight                       *int
+	error_message                            *string
+	remark                                   *string
+	endpoints                                *[]objects.ChannelEndpoint
+	appendendpoints                          []objects.ChannelEndpoint
+	clearedFields                            map[string]struct{}
+	requests                                 map[int]struct{}
+	removedrequests                          map[int]struct{}
+	clearedrequests                          bool
+	executions                               map[int]struct{}
+	removedexecutions                        map[int]struct{}
+	clearedexecutions                        bool
+	usage_logs                               map[int]struct{}
+	removedusage_logs                        map[int]struct{}
+	clearedusage_logs                        bool
+	channel_probes                           map[int]struct{}
+	removedchannel_probes                    map[int]struct{}
+	clearedchannel_probes                    bool
+	channel_model_prices                     map[int]struct{}
+	removedchannel_model_prices              map[int]struct{}
+	clearedchannel_model_prices              bool
+	upstream_account_pools                   map[int]struct{}
+	removedupstream_account_pools            map[int]struct{}
+	clearedupstream_account_pools            bool
+	upstream_accounts                        map[int]struct{}
+	removedupstream_accounts                 map[int]struct{}
+	clearedupstream_accounts                 bool
+	upstream_account_switch_histories        map[int]struct{}
+	removedupstream_account_switch_histories map[int]struct{}
+	clearedupstream_account_switch_histories bool
+	provider_quota_status                    *int
+	clearedprovider_quota_status             bool
+	done                                     bool
+	oldValue                                 func(context.Context) (*Channel, error)
+	predicates                               []predicate.Channel
 }
 
 var _ ent.Mutation = (*ChannelMutation)(nil)
@@ -18192,6 +18197,60 @@ func (m *ChannelMutation) ResetUpstreamAccounts() {
 	m.removedupstream_accounts = nil
 }
 
+// AddUpstreamAccountSwitchHistoryIDs adds the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by ids.
+func (m *ChannelMutation) AddUpstreamAccountSwitchHistoryIDs(ids ...int) {
+	if m.upstream_account_switch_histories == nil {
+		m.upstream_account_switch_histories = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.upstream_account_switch_histories[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUpstreamAccountSwitchHistories clears the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity.
+func (m *ChannelMutation) ClearUpstreamAccountSwitchHistories() {
+	m.clearedupstream_account_switch_histories = true
+}
+
+// UpstreamAccountSwitchHistoriesCleared reports if the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity was cleared.
+func (m *ChannelMutation) UpstreamAccountSwitchHistoriesCleared() bool {
+	return m.clearedupstream_account_switch_histories
+}
+
+// RemoveUpstreamAccountSwitchHistoryIDs removes the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (m *ChannelMutation) RemoveUpstreamAccountSwitchHistoryIDs(ids ...int) {
+	if m.removedupstream_account_switch_histories == nil {
+		m.removedupstream_account_switch_histories = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.upstream_account_switch_histories, ids[i])
+		m.removedupstream_account_switch_histories[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUpstreamAccountSwitchHistories returns the removed IDs of the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity.
+func (m *ChannelMutation) RemovedUpstreamAccountSwitchHistoriesIDs() (ids []int) {
+	for id := range m.removedupstream_account_switch_histories {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UpstreamAccountSwitchHistoriesIDs returns the "upstream_account_switch_histories" edge IDs in the mutation.
+func (m *ChannelMutation) UpstreamAccountSwitchHistoriesIDs() (ids []int) {
+	for id := range m.upstream_account_switch_histories {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUpstreamAccountSwitchHistories resets all changes to the "upstream_account_switch_histories" edge.
+func (m *ChannelMutation) ResetUpstreamAccountSwitchHistories() {
+	m.upstream_account_switch_histories = nil
+	m.clearedupstream_account_switch_histories = false
+	m.removedupstream_account_switch_histories = nil
+}
+
 // SetProviderQuotaStatusID sets the "provider_quota_status" edge to the ProviderQuotaStatus entity by id.
 func (m *ChannelMutation) SetProviderQuotaStatusID(id int) {
 	m.provider_quota_status = &id
@@ -18794,7 +18853,7 @@ func (m *ChannelMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ChannelMutation) AddedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.requests != nil {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -18815,6 +18874,9 @@ func (m *ChannelMutation) AddedEdges() []string {
 	}
 	if m.upstream_accounts != nil {
 		edges = append(edges, channel.EdgeUpstreamAccounts)
+	}
+	if m.upstream_account_switch_histories != nil {
+		edges = append(edges, channel.EdgeUpstreamAccountSwitchHistories)
 	}
 	if m.provider_quota_status != nil {
 		edges = append(edges, channel.EdgeProviderQuotaStatus)
@@ -18868,6 +18930,12 @@ func (m *ChannelMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case channel.EdgeUpstreamAccountSwitchHistories:
+		ids := make([]ent.Value, 0, len(m.upstream_account_switch_histories))
+		for id := range m.upstream_account_switch_histories {
+			ids = append(ids, id)
+		}
+		return ids
 	case channel.EdgeProviderQuotaStatus:
 		if id := m.provider_quota_status; id != nil {
 			return []ent.Value{*id}
@@ -18878,7 +18946,7 @@ func (m *ChannelMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ChannelMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.removedrequests != nil {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -18899,6 +18967,9 @@ func (m *ChannelMutation) RemovedEdges() []string {
 	}
 	if m.removedupstream_accounts != nil {
 		edges = append(edges, channel.EdgeUpstreamAccounts)
+	}
+	if m.removedupstream_account_switch_histories != nil {
+		edges = append(edges, channel.EdgeUpstreamAccountSwitchHistories)
 	}
 	return edges
 }
@@ -18949,13 +19020,19 @@ func (m *ChannelMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case channel.EdgeUpstreamAccountSwitchHistories:
+		ids := make([]ent.Value, 0, len(m.removedupstream_account_switch_histories))
+		for id := range m.removedupstream_account_switch_histories {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ChannelMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.clearedrequests {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -18976,6 +19053,9 @@ func (m *ChannelMutation) ClearedEdges() []string {
 	}
 	if m.clearedupstream_accounts {
 		edges = append(edges, channel.EdgeUpstreamAccounts)
+	}
+	if m.clearedupstream_account_switch_histories {
+		edges = append(edges, channel.EdgeUpstreamAccountSwitchHistories)
 	}
 	if m.clearedprovider_quota_status {
 		edges = append(edges, channel.EdgeProviderQuotaStatus)
@@ -19001,6 +19081,8 @@ func (m *ChannelMutation) EdgeCleared(name string) bool {
 		return m.clearedupstream_account_pools
 	case channel.EdgeUpstreamAccounts:
 		return m.clearedupstream_accounts
+	case channel.EdgeUpstreamAccountSwitchHistories:
+		return m.clearedupstream_account_switch_histories
 	case channel.EdgeProviderQuotaStatus:
 		return m.clearedprovider_quota_status
 	}
@@ -19042,6 +19124,9 @@ func (m *ChannelMutation) ResetEdge(name string) error {
 		return nil
 	case channel.EdgeUpstreamAccounts:
 		m.ResetUpstreamAccounts()
+		return nil
+	case channel.EdgeUpstreamAccountSwitchHistories:
+		m.ResetUpstreamAccountSwitchHistories()
 		return nil
 	case channel.EdgeProviderQuotaStatus:
 		m.ResetProviderQuotaStatus()
@@ -42810,61 +42895,64 @@ func (m *RedeemCodeMutation) ResetEdge(name string) error {
 // RequestMutation represents an operation that mutates the Request nodes in the graph.
 type RequestMutation struct {
 	config
-	op                                Op
-	typ                               string
-	id                                *int
-	created_at                        *time.Time
-	updated_at                        *time.Time
-	source                            *request.Source
-	model_id                          *string
-	reasoning_effort                  *string
-	format                            *string
-	request_headers                   *objects.JSONRawMessage
-	appendrequest_headers             objects.JSONRawMessage
-	request_body                      *objects.JSONRawMessage
-	appendrequest_body                objects.JSONRawMessage
-	response_body                     *objects.JSONRawMessage
-	appendresponse_body               objects.JSONRawMessage
-	response_chunks                   *[]objects.JSONRawMessage
-	appendresponse_chunks             []objects.JSONRawMessage
-	external_id                       *string
-	status                            *request.Status
-	stream                            *bool
-	client_ip                         *string
-	metrics_latency_ms                *int64
-	addmetrics_latency_ms             *int64
-	metrics_first_token_latency_ms    *int64
-	addmetrics_first_token_latency_ms *int64
-	metrics_reasoning_duration_ms     *int64
-	addmetrics_reasoning_duration_ms  *int64
-	content_saved                     *bool
-	content_storage_id                *int
-	addcontent_storage_id             *int
-	content_storage_key               *string
-	content_saved_at                  *time.Time
-	clearedFields                     map[string]struct{}
-	api_key                           *int
-	clearedapi_key                    bool
-	project                           *int
-	clearedproject                    bool
-	trace                             *int
-	clearedtrace                      bool
-	data_storage                      *int
-	cleareddata_storage               bool
-	executions                        map[int]struct{}
-	removedexecutions                 map[int]struct{}
-	clearedexecutions                 bool
-	channel                           *int
-	clearedchannel                    bool
-	usage_logs                        map[int]struct{}
-	removedusage_logs                 map[int]struct{}
-	clearedusage_logs                 bool
-	billing_holds                     map[int]struct{}
-	removedbilling_holds              map[int]struct{}
-	clearedbilling_holds              bool
-	done                              bool
-	oldValue                          func(context.Context) (*Request, error)
-	predicates                        []predicate.Request
+	op                                       Op
+	typ                                      string
+	id                                       *int
+	created_at                               *time.Time
+	updated_at                               *time.Time
+	source                                   *request.Source
+	model_id                                 *string
+	reasoning_effort                         *string
+	format                                   *string
+	request_headers                          *objects.JSONRawMessage
+	appendrequest_headers                    objects.JSONRawMessage
+	request_body                             *objects.JSONRawMessage
+	appendrequest_body                       objects.JSONRawMessage
+	response_body                            *objects.JSONRawMessage
+	appendresponse_body                      objects.JSONRawMessage
+	response_chunks                          *[]objects.JSONRawMessage
+	appendresponse_chunks                    []objects.JSONRawMessage
+	external_id                              *string
+	status                                   *request.Status
+	stream                                   *bool
+	client_ip                                *string
+	metrics_latency_ms                       *int64
+	addmetrics_latency_ms                    *int64
+	metrics_first_token_latency_ms           *int64
+	addmetrics_first_token_latency_ms        *int64
+	metrics_reasoning_duration_ms            *int64
+	addmetrics_reasoning_duration_ms         *int64
+	content_saved                            *bool
+	content_storage_id                       *int
+	addcontent_storage_id                    *int
+	content_storage_key                      *string
+	content_saved_at                         *time.Time
+	clearedFields                            map[string]struct{}
+	api_key                                  *int
+	clearedapi_key                           bool
+	project                                  *int
+	clearedproject                           bool
+	trace                                    *int
+	clearedtrace                             bool
+	data_storage                             *int
+	cleareddata_storage                      bool
+	executions                               map[int]struct{}
+	removedexecutions                        map[int]struct{}
+	clearedexecutions                        bool
+	channel                                  *int
+	clearedchannel                           bool
+	usage_logs                               map[int]struct{}
+	removedusage_logs                        map[int]struct{}
+	clearedusage_logs                        bool
+	upstream_account_switch_histories        map[int]struct{}
+	removedupstream_account_switch_histories map[int]struct{}
+	clearedupstream_account_switch_histories bool
+	billing_holds                            map[int]struct{}
+	removedbilling_holds                     map[int]struct{}
+	clearedbilling_holds                     bool
+	done                                     bool
+	oldValue                                 func(context.Context) (*Request, error)
+	predicates                               []predicate.Request
 }
 
 var _ ent.Mutation = (*RequestMutation)(nil)
@@ -44486,6 +44574,60 @@ func (m *RequestMutation) ResetUsageLogs() {
 	m.removedusage_logs = nil
 }
 
+// AddUpstreamAccountSwitchHistoryIDs adds the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by ids.
+func (m *RequestMutation) AddUpstreamAccountSwitchHistoryIDs(ids ...int) {
+	if m.upstream_account_switch_histories == nil {
+		m.upstream_account_switch_histories = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.upstream_account_switch_histories[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUpstreamAccountSwitchHistories clears the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity.
+func (m *RequestMutation) ClearUpstreamAccountSwitchHistories() {
+	m.clearedupstream_account_switch_histories = true
+}
+
+// UpstreamAccountSwitchHistoriesCleared reports if the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity was cleared.
+func (m *RequestMutation) UpstreamAccountSwitchHistoriesCleared() bool {
+	return m.clearedupstream_account_switch_histories
+}
+
+// RemoveUpstreamAccountSwitchHistoryIDs removes the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (m *RequestMutation) RemoveUpstreamAccountSwitchHistoryIDs(ids ...int) {
+	if m.removedupstream_account_switch_histories == nil {
+		m.removedupstream_account_switch_histories = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.upstream_account_switch_histories, ids[i])
+		m.removedupstream_account_switch_histories[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUpstreamAccountSwitchHistories returns the removed IDs of the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity.
+func (m *RequestMutation) RemovedUpstreamAccountSwitchHistoriesIDs() (ids []int) {
+	for id := range m.removedupstream_account_switch_histories {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UpstreamAccountSwitchHistoriesIDs returns the "upstream_account_switch_histories" edge IDs in the mutation.
+func (m *RequestMutation) UpstreamAccountSwitchHistoriesIDs() (ids []int) {
+	for id := range m.upstream_account_switch_histories {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUpstreamAccountSwitchHistories resets all changes to the "upstream_account_switch_histories" edge.
+func (m *RequestMutation) ResetUpstreamAccountSwitchHistories() {
+	m.upstream_account_switch_histories = nil
+	m.clearedupstream_account_switch_histories = false
+	m.removedupstream_account_switch_histories = nil
+}
+
 // AddBillingHoldIDs adds the "billing_holds" edge to the BillingHold entity by ids.
 func (m *RequestMutation) AddBillingHoldIDs(ids ...int) {
 	if m.billing_holds == nil {
@@ -45242,7 +45384,7 @@ func (m *RequestMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RequestMutation) AddedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.api_key != nil {
 		edges = append(edges, request.EdgeAPIKey)
 	}
@@ -45263,6 +45405,9 @@ func (m *RequestMutation) AddedEdges() []string {
 	}
 	if m.usage_logs != nil {
 		edges = append(edges, request.EdgeUsageLogs)
+	}
+	if m.upstream_account_switch_histories != nil {
+		edges = append(edges, request.EdgeUpstreamAccountSwitchHistories)
 	}
 	if m.billing_holds != nil {
 		edges = append(edges, request.EdgeBillingHolds)
@@ -45306,6 +45451,12 @@ func (m *RequestMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case request.EdgeUpstreamAccountSwitchHistories:
+		ids := make([]ent.Value, 0, len(m.upstream_account_switch_histories))
+		for id := range m.upstream_account_switch_histories {
+			ids = append(ids, id)
+		}
+		return ids
 	case request.EdgeBillingHolds:
 		ids := make([]ent.Value, 0, len(m.billing_holds))
 		for id := range m.billing_holds {
@@ -45318,12 +45469,15 @@ func (m *RequestMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RequestMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.removedexecutions != nil {
 		edges = append(edges, request.EdgeExecutions)
 	}
 	if m.removedusage_logs != nil {
 		edges = append(edges, request.EdgeUsageLogs)
+	}
+	if m.removedupstream_account_switch_histories != nil {
+		edges = append(edges, request.EdgeUpstreamAccountSwitchHistories)
 	}
 	if m.removedbilling_holds != nil {
 		edges = append(edges, request.EdgeBillingHolds)
@@ -45347,6 +45501,12 @@ func (m *RequestMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case request.EdgeUpstreamAccountSwitchHistories:
+		ids := make([]ent.Value, 0, len(m.removedupstream_account_switch_histories))
+		for id := range m.removedupstream_account_switch_histories {
+			ids = append(ids, id)
+		}
+		return ids
 	case request.EdgeBillingHolds:
 		ids := make([]ent.Value, 0, len(m.removedbilling_holds))
 		for id := range m.removedbilling_holds {
@@ -45359,7 +45519,7 @@ func (m *RequestMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RequestMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.clearedapi_key {
 		edges = append(edges, request.EdgeAPIKey)
 	}
@@ -45380,6 +45540,9 @@ func (m *RequestMutation) ClearedEdges() []string {
 	}
 	if m.clearedusage_logs {
 		edges = append(edges, request.EdgeUsageLogs)
+	}
+	if m.clearedupstream_account_switch_histories {
+		edges = append(edges, request.EdgeUpstreamAccountSwitchHistories)
 	}
 	if m.clearedbilling_holds {
 		edges = append(edges, request.EdgeBillingHolds)
@@ -45405,6 +45568,8 @@ func (m *RequestMutation) EdgeCleared(name string) bool {
 		return m.clearedchannel
 	case request.EdgeUsageLogs:
 		return m.clearedusage_logs
+	case request.EdgeUpstreamAccountSwitchHistories:
+		return m.clearedupstream_account_switch_histories
 	case request.EdgeBillingHolds:
 		return m.clearedbilling_holds
 	}
@@ -45459,6 +45624,9 @@ func (m *RequestMutation) ResetEdge(name string) error {
 	case request.EdgeUsageLogs:
 		m.ResetUsageLogs()
 		return nil
+	case request.EdgeUpstreamAccountSwitchHistories:
+		m.ResetUpstreamAccountSwitchHistories()
+		return nil
 	case request.EdgeBillingHolds:
 		m.ResetBillingHolds()
 		return nil
@@ -45469,51 +45637,54 @@ func (m *RequestMutation) ResetEdge(name string) error {
 // RequestExecutionMutation represents an operation that mutates the RequestExecution nodes in the graph.
 type RequestExecutionMutation struct {
 	config
-	op                                Op
-	typ                               string
-	id                                *int
-	created_at                        *time.Time
-	updated_at                        *time.Time
-	project_id                        *int
-	addproject_id                     *int
-	upstream_account_retry_count      *int
-	addupstream_account_retry_count   *int
-	external_id                       *string
-	model_id                          *string
-	format                            *string
-	request_body                      *objects.JSONRawMessage
-	appendrequest_body                objects.JSONRawMessage
-	response_body                     *objects.JSONRawMessage
-	appendresponse_body               objects.JSONRawMessage
-	response_chunks                   *[]objects.JSONRawMessage
-	appendresponse_chunks             []objects.JSONRawMessage
-	error_message                     *string
-	response_status_code              *int
-	addresponse_status_code           *int
-	status                            *requestexecution.Status
-	stream                            *bool
-	metrics_latency_ms                *int64
-	addmetrics_latency_ms             *int64
-	metrics_first_token_latency_ms    *int64
-	addmetrics_first_token_latency_ms *int64
-	metrics_reasoning_duration_ms     *int64
-	addmetrics_reasoning_duration_ms  *int64
-	request_headers                   *objects.JSONRawMessage
-	appendrequest_headers             objects.JSONRawMessage
-	request_url                       *string
-	pass_through_applied              *bool
-	clearedFields                     map[string]struct{}
-	request                           *int
-	clearedrequest                    bool
-	channel                           *int
-	clearedchannel                    bool
-	data_storage                      *int
-	cleareddata_storage               bool
-	upstream_account                  *int
-	clearedupstream_account           bool
-	done                              bool
-	oldValue                          func(context.Context) (*RequestExecution, error)
-	predicates                        []predicate.RequestExecution
+	op                                       Op
+	typ                                      string
+	id                                       *int
+	created_at                               *time.Time
+	updated_at                               *time.Time
+	project_id                               *int
+	addproject_id                            *int
+	upstream_account_retry_count             *int
+	addupstream_account_retry_count          *int
+	external_id                              *string
+	model_id                                 *string
+	format                                   *string
+	request_body                             *objects.JSONRawMessage
+	appendrequest_body                       objects.JSONRawMessage
+	response_body                            *objects.JSONRawMessage
+	appendresponse_body                      objects.JSONRawMessage
+	response_chunks                          *[]objects.JSONRawMessage
+	appendresponse_chunks                    []objects.JSONRawMessage
+	error_message                            *string
+	response_status_code                     *int
+	addresponse_status_code                  *int
+	status                                   *requestexecution.Status
+	stream                                   *bool
+	metrics_latency_ms                       *int64
+	addmetrics_latency_ms                    *int64
+	metrics_first_token_latency_ms           *int64
+	addmetrics_first_token_latency_ms        *int64
+	metrics_reasoning_duration_ms            *int64
+	addmetrics_reasoning_duration_ms         *int64
+	request_headers                          *objects.JSONRawMessage
+	appendrequest_headers                    objects.JSONRawMessage
+	request_url                              *string
+	pass_through_applied                     *bool
+	clearedFields                            map[string]struct{}
+	request                                  *int
+	clearedrequest                           bool
+	channel                                  *int
+	clearedchannel                           bool
+	data_storage                             *int
+	cleareddata_storage                      bool
+	upstream_account                         *int
+	clearedupstream_account                  bool
+	upstream_account_switch_histories        map[int]struct{}
+	removedupstream_account_switch_histories map[int]struct{}
+	clearedupstream_account_switch_histories bool
+	done                                     bool
+	oldValue                                 func(context.Context) (*RequestExecution, error)
+	predicates                               []predicate.RequestExecution
 }
 
 var _ ent.Mutation = (*RequestExecutionMutation)(nil)
@@ -46942,6 +47113,60 @@ func (m *RequestExecutionMutation) ResetUpstreamAccount() {
 	m.clearedupstream_account = false
 }
 
+// AddUpstreamAccountSwitchHistoryIDs adds the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by ids.
+func (m *RequestExecutionMutation) AddUpstreamAccountSwitchHistoryIDs(ids ...int) {
+	if m.upstream_account_switch_histories == nil {
+		m.upstream_account_switch_histories = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.upstream_account_switch_histories[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUpstreamAccountSwitchHistories clears the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity.
+func (m *RequestExecutionMutation) ClearUpstreamAccountSwitchHistories() {
+	m.clearedupstream_account_switch_histories = true
+}
+
+// UpstreamAccountSwitchHistoriesCleared reports if the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity was cleared.
+func (m *RequestExecutionMutation) UpstreamAccountSwitchHistoriesCleared() bool {
+	return m.clearedupstream_account_switch_histories
+}
+
+// RemoveUpstreamAccountSwitchHistoryIDs removes the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (m *RequestExecutionMutation) RemoveUpstreamAccountSwitchHistoryIDs(ids ...int) {
+	if m.removedupstream_account_switch_histories == nil {
+		m.removedupstream_account_switch_histories = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.upstream_account_switch_histories, ids[i])
+		m.removedupstream_account_switch_histories[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUpstreamAccountSwitchHistories returns the removed IDs of the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity.
+func (m *RequestExecutionMutation) RemovedUpstreamAccountSwitchHistoriesIDs() (ids []int) {
+	for id := range m.removedupstream_account_switch_histories {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UpstreamAccountSwitchHistoriesIDs returns the "upstream_account_switch_histories" edge IDs in the mutation.
+func (m *RequestExecutionMutation) UpstreamAccountSwitchHistoriesIDs() (ids []int) {
+	for id := range m.upstream_account_switch_histories {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUpstreamAccountSwitchHistories resets all changes to the "upstream_account_switch_histories" edge.
+func (m *RequestExecutionMutation) ResetUpstreamAccountSwitchHistories() {
+	m.upstream_account_switch_histories = nil
+	m.clearedupstream_account_switch_histories = false
+	m.removedupstream_account_switch_histories = nil
+}
+
 // Where appends a list predicates to the RequestExecutionMutation builder.
 func (m *RequestExecutionMutation) Where(ps ...predicate.RequestExecution) {
 	m.predicates = append(m.predicates, ps...)
@@ -47622,7 +47847,7 @@ func (m *RequestExecutionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RequestExecutionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.request != nil {
 		edges = append(edges, requestexecution.EdgeRequest)
 	}
@@ -47634,6 +47859,9 @@ func (m *RequestExecutionMutation) AddedEdges() []string {
 	}
 	if m.upstream_account != nil {
 		edges = append(edges, requestexecution.EdgeUpstreamAccount)
+	}
+	if m.upstream_account_switch_histories != nil {
+		edges = append(edges, requestexecution.EdgeUpstreamAccountSwitchHistories)
 	}
 	return edges
 }
@@ -47658,25 +47886,42 @@ func (m *RequestExecutionMutation) AddedIDs(name string) []ent.Value {
 		if id := m.upstream_account; id != nil {
 			return []ent.Value{*id}
 		}
+	case requestexecution.EdgeUpstreamAccountSwitchHistories:
+		ids := make([]ent.Value, 0, len(m.upstream_account_switch_histories))
+		for id := range m.upstream_account_switch_histories {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RequestExecutionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
+	if m.removedupstream_account_switch_histories != nil {
+		edges = append(edges, requestexecution.EdgeUpstreamAccountSwitchHistories)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *RequestExecutionMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case requestexecution.EdgeUpstreamAccountSwitchHistories:
+		ids := make([]ent.Value, 0, len(m.removedupstream_account_switch_histories))
+		for id := range m.removedupstream_account_switch_histories {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RequestExecutionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedrequest {
 		edges = append(edges, requestexecution.EdgeRequest)
 	}
@@ -47688,6 +47933,9 @@ func (m *RequestExecutionMutation) ClearedEdges() []string {
 	}
 	if m.clearedupstream_account {
 		edges = append(edges, requestexecution.EdgeUpstreamAccount)
+	}
+	if m.clearedupstream_account_switch_histories {
+		edges = append(edges, requestexecution.EdgeUpstreamAccountSwitchHistories)
 	}
 	return edges
 }
@@ -47704,6 +47952,8 @@ func (m *RequestExecutionMutation) EdgeCleared(name string) bool {
 		return m.cleareddata_storage
 	case requestexecution.EdgeUpstreamAccount:
 		return m.clearedupstream_account
+	case requestexecution.EdgeUpstreamAccountSwitchHistories:
+		return m.clearedupstream_account_switch_histories
 	}
 	return false
 }
@@ -47743,6 +47993,9 @@ func (m *RequestExecutionMutation) ResetEdge(name string) error {
 		return nil
 	case requestexecution.EdgeUpstreamAccount:
 		m.ResetUpstreamAccount()
+		return nil
+	case requestexecution.EdgeUpstreamAccountSwitchHistories:
+		m.ResetUpstreamAccountSwitchHistories()
 		return nil
 	}
 	return fmt.Errorf("unknown RequestExecution edge %s", name)
@@ -52128,49 +52381,61 @@ func (m *TraceMutation) ResetEdge(name string) error {
 // UpstreamAccountMutation represents an operation that mutates the UpstreamAccount nodes in the graph.
 type UpstreamAccountMutation struct {
 	config
-	op                    Op
-	typ                   string
-	id                    *int
-	created_at            *time.Time
-	updated_at            *time.Time
-	deleted_at            *int
-	adddeleted_at         *int
-	name                  *string
-	credential_type       *upstreamaccount.CredentialType
-	credentials           *objects.UpstreamAccountCredentials
-	status                *upstreamaccount.Status
-	schedulable           *bool
-	priority              *int
-	addpriority           *int
-	weight                *int
-	addweight             *int
-	concurrency_limit     *int
-	addconcurrency_limit  *int
-	proxy_config          **httpclient.ProxyConfig
-	rate_multiplier       *float64
-	addrate_multiplier    *float64
-	expires_at            *time.Time
-	last_used_at          *time.Time
-	error_message         *string
-	rate_limit_reset_at   *time.Time
-	overload_until        *time.Time
-	cooldown_until        *time.Time
-	cooldown_reason       *string
-	quota_limit_micros    *int64
-	addquota_limit_micros *int64
-	quota_used_micros     *int64
-	addquota_used_micros  *int64
-	clearedFields         map[string]struct{}
-	channel               *int
-	clearedchannel        bool
-	pool                  *int
-	clearedpool           bool
-	executions            map[int]struct{}
-	removedexecutions     map[int]struct{}
-	clearedexecutions     bool
-	done                  bool
-	oldValue              func(context.Context) (*UpstreamAccount, error)
-	predicates            []predicate.UpstreamAccount
+	op                           Op
+	typ                          string
+	id                           *int
+	created_at                   *time.Time
+	updated_at                   *time.Time
+	deleted_at                   *int
+	adddeleted_at                *int
+	name                         *string
+	credential_type              *upstreamaccount.CredentialType
+	credentials                  *objects.UpstreamAccountCredentials
+	status                       *upstreamaccount.Status
+	schedulable                  *bool
+	priority                     *int
+	addpriority                  *int
+	weight                       *int
+	addweight                    *int
+	concurrency_limit            *int
+	addconcurrency_limit         *int
+	proxy_config                 **httpclient.ProxyConfig
+	rate_multiplier              *float64
+	addrate_multiplier           *float64
+	expires_at                   *time.Time
+	last_used_at                 *time.Time
+	error_message                *string
+	rate_limit_reset_at          *time.Time
+	overload_until               *time.Time
+	cooldown_until               *time.Time
+	cooldown_reason              *string
+	quota_limit_micros           *int64
+	addquota_limit_micros        *int64
+	quota_used_micros            *int64
+	addquota_used_micros         *int64
+	clearedFields                map[string]struct{}
+	channel                      *int
+	clearedchannel               bool
+	pool                         *int
+	clearedpool                  bool
+	executions                   map[int]struct{}
+	removedexecutions            map[int]struct{}
+	clearedexecutions            bool
+	usage_logs                   map[int]struct{}
+	removedusage_logs            map[int]struct{}
+	clearedusage_logs            bool
+	usage_billing_records        map[int]struct{}
+	removedusage_billing_records map[int]struct{}
+	clearedusage_billing_records bool
+	switch_histories_from        map[int]struct{}
+	removedswitch_histories_from map[int]struct{}
+	clearedswitch_histories_from bool
+	switch_histories_to          map[int]struct{}
+	removedswitch_histories_to   map[int]struct{}
+	clearedswitch_histories_to   bool
+	done                         bool
+	oldValue                     func(context.Context) (*UpstreamAccount, error)
+	predicates                   []predicate.UpstreamAccount
 }
 
 var _ ent.Mutation = (*UpstreamAccountMutation)(nil)
@@ -53500,6 +53765,222 @@ func (m *UpstreamAccountMutation) ResetExecutions() {
 	m.removedexecutions = nil
 }
 
+// AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by ids.
+func (m *UpstreamAccountMutation) AddUsageLogIDs(ids ...int) {
+	if m.usage_logs == nil {
+		m.usage_logs = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.usage_logs[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUsageLogs clears the "usage_logs" edge to the UsageLog entity.
+func (m *UpstreamAccountMutation) ClearUsageLogs() {
+	m.clearedusage_logs = true
+}
+
+// UsageLogsCleared reports if the "usage_logs" edge to the UsageLog entity was cleared.
+func (m *UpstreamAccountMutation) UsageLogsCleared() bool {
+	return m.clearedusage_logs
+}
+
+// RemoveUsageLogIDs removes the "usage_logs" edge to the UsageLog entity by IDs.
+func (m *UpstreamAccountMutation) RemoveUsageLogIDs(ids ...int) {
+	if m.removedusage_logs == nil {
+		m.removedusage_logs = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.usage_logs, ids[i])
+		m.removedusage_logs[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUsageLogs returns the removed IDs of the "usage_logs" edge to the UsageLog entity.
+func (m *UpstreamAccountMutation) RemovedUsageLogsIDs() (ids []int) {
+	for id := range m.removedusage_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UsageLogsIDs returns the "usage_logs" edge IDs in the mutation.
+func (m *UpstreamAccountMutation) UsageLogsIDs() (ids []int) {
+	for id := range m.usage_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUsageLogs resets all changes to the "usage_logs" edge.
+func (m *UpstreamAccountMutation) ResetUsageLogs() {
+	m.usage_logs = nil
+	m.clearedusage_logs = false
+	m.removedusage_logs = nil
+}
+
+// AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by ids.
+func (m *UpstreamAccountMutation) AddUsageBillingRecordIDs(ids ...int) {
+	if m.usage_billing_records == nil {
+		m.usage_billing_records = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.usage_billing_records[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUsageBillingRecords clears the "usage_billing_records" edge to the UsageBillingRecord entity.
+func (m *UpstreamAccountMutation) ClearUsageBillingRecords() {
+	m.clearedusage_billing_records = true
+}
+
+// UsageBillingRecordsCleared reports if the "usage_billing_records" edge to the UsageBillingRecord entity was cleared.
+func (m *UpstreamAccountMutation) UsageBillingRecordsCleared() bool {
+	return m.clearedusage_billing_records
+}
+
+// RemoveUsageBillingRecordIDs removes the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
+func (m *UpstreamAccountMutation) RemoveUsageBillingRecordIDs(ids ...int) {
+	if m.removedusage_billing_records == nil {
+		m.removedusage_billing_records = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.usage_billing_records, ids[i])
+		m.removedusage_billing_records[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUsageBillingRecords returns the removed IDs of the "usage_billing_records" edge to the UsageBillingRecord entity.
+func (m *UpstreamAccountMutation) RemovedUsageBillingRecordsIDs() (ids []int) {
+	for id := range m.removedusage_billing_records {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UsageBillingRecordsIDs returns the "usage_billing_records" edge IDs in the mutation.
+func (m *UpstreamAccountMutation) UsageBillingRecordsIDs() (ids []int) {
+	for id := range m.usage_billing_records {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUsageBillingRecords resets all changes to the "usage_billing_records" edge.
+func (m *UpstreamAccountMutation) ResetUsageBillingRecords() {
+	m.usage_billing_records = nil
+	m.clearedusage_billing_records = false
+	m.removedusage_billing_records = nil
+}
+
+// AddSwitchHistoriesFromIDs adds the "switch_histories_from" edge to the UpstreamAccountSwitchHistory entity by ids.
+func (m *UpstreamAccountMutation) AddSwitchHistoriesFromIDs(ids ...int) {
+	if m.switch_histories_from == nil {
+		m.switch_histories_from = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.switch_histories_from[ids[i]] = struct{}{}
+	}
+}
+
+// ClearSwitchHistoriesFrom clears the "switch_histories_from" edge to the UpstreamAccountSwitchHistory entity.
+func (m *UpstreamAccountMutation) ClearSwitchHistoriesFrom() {
+	m.clearedswitch_histories_from = true
+}
+
+// SwitchHistoriesFromCleared reports if the "switch_histories_from" edge to the UpstreamAccountSwitchHistory entity was cleared.
+func (m *UpstreamAccountMutation) SwitchHistoriesFromCleared() bool {
+	return m.clearedswitch_histories_from
+}
+
+// RemoveSwitchHistoriesFromIDs removes the "switch_histories_from" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (m *UpstreamAccountMutation) RemoveSwitchHistoriesFromIDs(ids ...int) {
+	if m.removedswitch_histories_from == nil {
+		m.removedswitch_histories_from = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.switch_histories_from, ids[i])
+		m.removedswitch_histories_from[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSwitchHistoriesFrom returns the removed IDs of the "switch_histories_from" edge to the UpstreamAccountSwitchHistory entity.
+func (m *UpstreamAccountMutation) RemovedSwitchHistoriesFromIDs() (ids []int) {
+	for id := range m.removedswitch_histories_from {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// SwitchHistoriesFromIDs returns the "switch_histories_from" edge IDs in the mutation.
+func (m *UpstreamAccountMutation) SwitchHistoriesFromIDs() (ids []int) {
+	for id := range m.switch_histories_from {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetSwitchHistoriesFrom resets all changes to the "switch_histories_from" edge.
+func (m *UpstreamAccountMutation) ResetSwitchHistoriesFrom() {
+	m.switch_histories_from = nil
+	m.clearedswitch_histories_from = false
+	m.removedswitch_histories_from = nil
+}
+
+// AddSwitchHistoriesToIDs adds the "switch_histories_to" edge to the UpstreamAccountSwitchHistory entity by ids.
+func (m *UpstreamAccountMutation) AddSwitchHistoriesToIDs(ids ...int) {
+	if m.switch_histories_to == nil {
+		m.switch_histories_to = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.switch_histories_to[ids[i]] = struct{}{}
+	}
+}
+
+// ClearSwitchHistoriesTo clears the "switch_histories_to" edge to the UpstreamAccountSwitchHistory entity.
+func (m *UpstreamAccountMutation) ClearSwitchHistoriesTo() {
+	m.clearedswitch_histories_to = true
+}
+
+// SwitchHistoriesToCleared reports if the "switch_histories_to" edge to the UpstreamAccountSwitchHistory entity was cleared.
+func (m *UpstreamAccountMutation) SwitchHistoriesToCleared() bool {
+	return m.clearedswitch_histories_to
+}
+
+// RemoveSwitchHistoriesToIDs removes the "switch_histories_to" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (m *UpstreamAccountMutation) RemoveSwitchHistoriesToIDs(ids ...int) {
+	if m.removedswitch_histories_to == nil {
+		m.removedswitch_histories_to = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.switch_histories_to, ids[i])
+		m.removedswitch_histories_to[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSwitchHistoriesTo returns the removed IDs of the "switch_histories_to" edge to the UpstreamAccountSwitchHistory entity.
+func (m *UpstreamAccountMutation) RemovedSwitchHistoriesToIDs() (ids []int) {
+	for id := range m.removedswitch_histories_to {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// SwitchHistoriesToIDs returns the "switch_histories_to" edge IDs in the mutation.
+func (m *UpstreamAccountMutation) SwitchHistoriesToIDs() (ids []int) {
+	for id := range m.switch_histories_to {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetSwitchHistoriesTo resets all changes to the "switch_histories_to" edge.
+func (m *UpstreamAccountMutation) ResetSwitchHistoriesTo() {
+	m.switch_histories_to = nil
+	m.clearedswitch_histories_to = false
+	m.removedswitch_histories_to = nil
+}
+
 // Where appends a list predicates to the UpstreamAccountMutation builder.
 func (m *UpstreamAccountMutation) Where(ps ...predicate.UpstreamAccount) {
 	m.predicates = append(m.predicates, ps...)
@@ -54168,7 +54649,7 @@ func (m *UpstreamAccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UpstreamAccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 7)
 	if m.channel != nil {
 		edges = append(edges, upstreamaccount.EdgeChannel)
 	}
@@ -54177,6 +54658,18 @@ func (m *UpstreamAccountMutation) AddedEdges() []string {
 	}
 	if m.executions != nil {
 		edges = append(edges, upstreamaccount.EdgeExecutions)
+	}
+	if m.usage_logs != nil {
+		edges = append(edges, upstreamaccount.EdgeUsageLogs)
+	}
+	if m.usage_billing_records != nil {
+		edges = append(edges, upstreamaccount.EdgeUsageBillingRecords)
+	}
+	if m.switch_histories_from != nil {
+		edges = append(edges, upstreamaccount.EdgeSwitchHistoriesFrom)
+	}
+	if m.switch_histories_to != nil {
+		edges = append(edges, upstreamaccount.EdgeSwitchHistoriesTo)
 	}
 	return edges
 }
@@ -54199,15 +54692,51 @@ func (m *UpstreamAccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case upstreamaccount.EdgeUsageLogs:
+		ids := make([]ent.Value, 0, len(m.usage_logs))
+		for id := range m.usage_logs {
+			ids = append(ids, id)
+		}
+		return ids
+	case upstreamaccount.EdgeUsageBillingRecords:
+		ids := make([]ent.Value, 0, len(m.usage_billing_records))
+		for id := range m.usage_billing_records {
+			ids = append(ids, id)
+		}
+		return ids
+	case upstreamaccount.EdgeSwitchHistoriesFrom:
+		ids := make([]ent.Value, 0, len(m.switch_histories_from))
+		for id := range m.switch_histories_from {
+			ids = append(ids, id)
+		}
+		return ids
+	case upstreamaccount.EdgeSwitchHistoriesTo:
+		ids := make([]ent.Value, 0, len(m.switch_histories_to))
+		for id := range m.switch_histories_to {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UpstreamAccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 7)
 	if m.removedexecutions != nil {
 		edges = append(edges, upstreamaccount.EdgeExecutions)
+	}
+	if m.removedusage_logs != nil {
+		edges = append(edges, upstreamaccount.EdgeUsageLogs)
+	}
+	if m.removedusage_billing_records != nil {
+		edges = append(edges, upstreamaccount.EdgeUsageBillingRecords)
+	}
+	if m.removedswitch_histories_from != nil {
+		edges = append(edges, upstreamaccount.EdgeSwitchHistoriesFrom)
+	}
+	if m.removedswitch_histories_to != nil {
+		edges = append(edges, upstreamaccount.EdgeSwitchHistoriesTo)
 	}
 	return edges
 }
@@ -54222,13 +54751,37 @@ func (m *UpstreamAccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case upstreamaccount.EdgeUsageLogs:
+		ids := make([]ent.Value, 0, len(m.removedusage_logs))
+		for id := range m.removedusage_logs {
+			ids = append(ids, id)
+		}
+		return ids
+	case upstreamaccount.EdgeUsageBillingRecords:
+		ids := make([]ent.Value, 0, len(m.removedusage_billing_records))
+		for id := range m.removedusage_billing_records {
+			ids = append(ids, id)
+		}
+		return ids
+	case upstreamaccount.EdgeSwitchHistoriesFrom:
+		ids := make([]ent.Value, 0, len(m.removedswitch_histories_from))
+		for id := range m.removedswitch_histories_from {
+			ids = append(ids, id)
+		}
+		return ids
+	case upstreamaccount.EdgeSwitchHistoriesTo:
+		ids := make([]ent.Value, 0, len(m.removedswitch_histories_to))
+		for id := range m.removedswitch_histories_to {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UpstreamAccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 7)
 	if m.clearedchannel {
 		edges = append(edges, upstreamaccount.EdgeChannel)
 	}
@@ -54237,6 +54790,18 @@ func (m *UpstreamAccountMutation) ClearedEdges() []string {
 	}
 	if m.clearedexecutions {
 		edges = append(edges, upstreamaccount.EdgeExecutions)
+	}
+	if m.clearedusage_logs {
+		edges = append(edges, upstreamaccount.EdgeUsageLogs)
+	}
+	if m.clearedusage_billing_records {
+		edges = append(edges, upstreamaccount.EdgeUsageBillingRecords)
+	}
+	if m.clearedswitch_histories_from {
+		edges = append(edges, upstreamaccount.EdgeSwitchHistoriesFrom)
+	}
+	if m.clearedswitch_histories_to {
+		edges = append(edges, upstreamaccount.EdgeSwitchHistoriesTo)
 	}
 	return edges
 }
@@ -54251,6 +54816,14 @@ func (m *UpstreamAccountMutation) EdgeCleared(name string) bool {
 		return m.clearedpool
 	case upstreamaccount.EdgeExecutions:
 		return m.clearedexecutions
+	case upstreamaccount.EdgeUsageLogs:
+		return m.clearedusage_logs
+	case upstreamaccount.EdgeUsageBillingRecords:
+		return m.clearedusage_billing_records
+	case upstreamaccount.EdgeSwitchHistoriesFrom:
+		return m.clearedswitch_histories_from
+	case upstreamaccount.EdgeSwitchHistoriesTo:
+		return m.clearedswitch_histories_to
 	}
 	return false
 }
@@ -54281,6 +54854,18 @@ func (m *UpstreamAccountMutation) ResetEdge(name string) error {
 		return nil
 	case upstreamaccount.EdgeExecutions:
 		m.ResetExecutions()
+		return nil
+	case upstreamaccount.EdgeUsageLogs:
+		m.ResetUsageLogs()
+		return nil
+	case upstreamaccount.EdgeUsageBillingRecords:
+		m.ResetUsageBillingRecords()
+		return nil
+	case upstreamaccount.EdgeSwitchHistoriesFrom:
+		m.ResetSwitchHistoriesFrom()
+		return nil
+	case upstreamaccount.EdgeSwitchHistoriesTo:
+		m.ResetSwitchHistoriesTo()
 		return nil
 	}
 	return fmt.Errorf("unknown UpstreamAccount edge %s", name)
@@ -55400,6 +55985,1439 @@ func (m *UpstreamAccountPoolMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown UpstreamAccountPool edge %s", name)
 }
 
+// UpstreamAccountSwitchHistoryMutation represents an operation that mutates the UpstreamAccountSwitchHistory nodes in the graph.
+type UpstreamAccountSwitchHistoryMutation struct {
+	config
+	op                       Op
+	typ                      string
+	id                       *int
+	created_at               *time.Time
+	updated_at               *time.Time
+	project_id               *int
+	addproject_id            *int
+	model_id                 *string
+	reason                   *string
+	error_code               *int
+	adderror_code            *int
+	error_message            *string
+	latency_ms               *int64
+	addlatency_ms            *int64
+	clearedFields            map[string]struct{}
+	request                  *int
+	clearedrequest           bool
+	request_execution        *int
+	clearedrequest_execution bool
+	channel                  *int
+	clearedchannel           bool
+	from_account             *int
+	clearedfrom_account      bool
+	to_account               *int
+	clearedto_account        bool
+	done                     bool
+	oldValue                 func(context.Context) (*UpstreamAccountSwitchHistory, error)
+	predicates               []predicate.UpstreamAccountSwitchHistory
+}
+
+var _ ent.Mutation = (*UpstreamAccountSwitchHistoryMutation)(nil)
+
+// upstreamaccountswitchhistoryOption allows management of the mutation configuration using functional options.
+type upstreamaccountswitchhistoryOption func(*UpstreamAccountSwitchHistoryMutation)
+
+// newUpstreamAccountSwitchHistoryMutation creates new mutation for the UpstreamAccountSwitchHistory entity.
+func newUpstreamAccountSwitchHistoryMutation(c config, op Op, opts ...upstreamaccountswitchhistoryOption) *UpstreamAccountSwitchHistoryMutation {
+	m := &UpstreamAccountSwitchHistoryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUpstreamAccountSwitchHistory,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUpstreamAccountSwitchHistoryID sets the ID field of the mutation.
+func withUpstreamAccountSwitchHistoryID(id int) upstreamaccountswitchhistoryOption {
+	return func(m *UpstreamAccountSwitchHistoryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UpstreamAccountSwitchHistory
+		)
+		m.oldValue = func(ctx context.Context) (*UpstreamAccountSwitchHistory, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UpstreamAccountSwitchHistory.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUpstreamAccountSwitchHistory sets the old UpstreamAccountSwitchHistory of the mutation.
+func withUpstreamAccountSwitchHistory(node *UpstreamAccountSwitchHistory) upstreamaccountswitchhistoryOption {
+	return func(m *UpstreamAccountSwitchHistoryMutation) {
+		m.oldValue = func(context.Context) (*UpstreamAccountSwitchHistory, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UpstreamAccountSwitchHistoryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UpstreamAccountSwitchHistoryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UpstreamAccountSwitchHistoryMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UpstreamAccountSwitchHistory.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetProjectID sets the "project_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetProjectID(i int) {
+	m.project_id = &i
+	m.addproject_id = nil
+}
+
+// ProjectID returns the value of the "project_id" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ProjectID() (r int, exists bool) {
+	v := m.project_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectID returns the old "project_id" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldProjectID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectID: %w", err)
+	}
+	return oldValue.ProjectID, nil
+}
+
+// AddProjectID adds i to the "project_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) AddProjectID(i int) {
+	if m.addproject_id != nil {
+		*m.addproject_id += i
+	} else {
+		m.addproject_id = &i
+	}
+}
+
+// AddedProjectID returns the value that was added to the "project_id" field in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) AddedProjectID() (r int, exists bool) {
+	v := m.addproject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetProjectID resets all changes to the "project_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetProjectID() {
+	m.project_id = nil
+	m.addproject_id = nil
+}
+
+// SetRequestID sets the "request_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetRequestID(i int) {
+	m.request = &i
+}
+
+// RequestID returns the value of the "request_id" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) RequestID() (r int, exists bool) {
+	v := m.request
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestID returns the old "request_id" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldRequestID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestID: %w", err)
+	}
+	return oldValue.RequestID, nil
+}
+
+// ClearRequestID clears the value of the "request_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearRequestID() {
+	m.request = nil
+	m.clearedFields[upstreamaccountswitchhistory.FieldRequestID] = struct{}{}
+}
+
+// RequestIDCleared returns if the "request_id" field was cleared in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) RequestIDCleared() bool {
+	_, ok := m.clearedFields[upstreamaccountswitchhistory.FieldRequestID]
+	return ok
+}
+
+// ResetRequestID resets all changes to the "request_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetRequestID() {
+	m.request = nil
+	delete(m.clearedFields, upstreamaccountswitchhistory.FieldRequestID)
+}
+
+// SetRequestExecutionID sets the "request_execution_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetRequestExecutionID(i int) {
+	m.request_execution = &i
+}
+
+// RequestExecutionID returns the value of the "request_execution_id" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) RequestExecutionID() (r int, exists bool) {
+	v := m.request_execution
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestExecutionID returns the old "request_execution_id" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldRequestExecutionID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestExecutionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestExecutionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestExecutionID: %w", err)
+	}
+	return oldValue.RequestExecutionID, nil
+}
+
+// ClearRequestExecutionID clears the value of the "request_execution_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearRequestExecutionID() {
+	m.request_execution = nil
+	m.clearedFields[upstreamaccountswitchhistory.FieldRequestExecutionID] = struct{}{}
+}
+
+// RequestExecutionIDCleared returns if the "request_execution_id" field was cleared in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) RequestExecutionIDCleared() bool {
+	_, ok := m.clearedFields[upstreamaccountswitchhistory.FieldRequestExecutionID]
+	return ok
+}
+
+// ResetRequestExecutionID resets all changes to the "request_execution_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetRequestExecutionID() {
+	m.request_execution = nil
+	delete(m.clearedFields, upstreamaccountswitchhistory.FieldRequestExecutionID)
+}
+
+// SetChannelID sets the "channel_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetChannelID(i int) {
+	m.channel = &i
+}
+
+// ChannelID returns the value of the "channel_id" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ChannelID() (r int, exists bool) {
+	v := m.channel
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChannelID returns the old "channel_id" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldChannelID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChannelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChannelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChannelID: %w", err)
+	}
+	return oldValue.ChannelID, nil
+}
+
+// ResetChannelID resets all changes to the "channel_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetChannelID() {
+	m.channel = nil
+}
+
+// SetFromAccountID sets the "from_account_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetFromAccountID(i int) {
+	m.from_account = &i
+}
+
+// FromAccountID returns the value of the "from_account_id" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) FromAccountID() (r int, exists bool) {
+	v := m.from_account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFromAccountID returns the old "from_account_id" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldFromAccountID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFromAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFromAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFromAccountID: %w", err)
+	}
+	return oldValue.FromAccountID, nil
+}
+
+// ClearFromAccountID clears the value of the "from_account_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearFromAccountID() {
+	m.from_account = nil
+	m.clearedFields[upstreamaccountswitchhistory.FieldFromAccountID] = struct{}{}
+}
+
+// FromAccountIDCleared returns if the "from_account_id" field was cleared in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) FromAccountIDCleared() bool {
+	_, ok := m.clearedFields[upstreamaccountswitchhistory.FieldFromAccountID]
+	return ok
+}
+
+// ResetFromAccountID resets all changes to the "from_account_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetFromAccountID() {
+	m.from_account = nil
+	delete(m.clearedFields, upstreamaccountswitchhistory.FieldFromAccountID)
+}
+
+// SetToAccountID sets the "to_account_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetToAccountID(i int) {
+	m.to_account = &i
+}
+
+// ToAccountID returns the value of the "to_account_id" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ToAccountID() (r int, exists bool) {
+	v := m.to_account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldToAccountID returns the old "to_account_id" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldToAccountID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldToAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldToAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldToAccountID: %w", err)
+	}
+	return oldValue.ToAccountID, nil
+}
+
+// ClearToAccountID clears the value of the "to_account_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearToAccountID() {
+	m.to_account = nil
+	m.clearedFields[upstreamaccountswitchhistory.FieldToAccountID] = struct{}{}
+}
+
+// ToAccountIDCleared returns if the "to_account_id" field was cleared in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ToAccountIDCleared() bool {
+	_, ok := m.clearedFields[upstreamaccountswitchhistory.FieldToAccountID]
+	return ok
+}
+
+// ResetToAccountID resets all changes to the "to_account_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetToAccountID() {
+	m.to_account = nil
+	delete(m.clearedFields, upstreamaccountswitchhistory.FieldToAccountID)
+}
+
+// SetModelID sets the "model_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetModelID(s string) {
+	m.model_id = &s
+}
+
+// ModelID returns the value of the "model_id" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ModelID() (r string, exists bool) {
+	v := m.model_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModelID returns the old "model_id" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldModelID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModelID: %w", err)
+	}
+	return oldValue.ModelID, nil
+}
+
+// ResetModelID resets all changes to the "model_id" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetModelID() {
+	m.model_id = nil
+}
+
+// SetReason sets the "reason" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetReason(s string) {
+	m.reason = &s
+}
+
+// Reason returns the value of the "reason" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) Reason() (r string, exists bool) {
+	v := m.reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReason returns the old "reason" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReason: %w", err)
+	}
+	return oldValue.Reason, nil
+}
+
+// ResetReason resets all changes to the "reason" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetReason() {
+	m.reason = nil
+}
+
+// SetErrorCode sets the "error_code" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetErrorCode(i int) {
+	m.error_code = &i
+	m.adderror_code = nil
+}
+
+// ErrorCode returns the value of the "error_code" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ErrorCode() (r int, exists bool) {
+	v := m.error_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorCode returns the old "error_code" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldErrorCode(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorCode: %w", err)
+	}
+	return oldValue.ErrorCode, nil
+}
+
+// AddErrorCode adds i to the "error_code" field.
+func (m *UpstreamAccountSwitchHistoryMutation) AddErrorCode(i int) {
+	if m.adderror_code != nil {
+		*m.adderror_code += i
+	} else {
+		m.adderror_code = &i
+	}
+}
+
+// AddedErrorCode returns the value that was added to the "error_code" field in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) AddedErrorCode() (r int, exists bool) {
+	v := m.adderror_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearErrorCode clears the value of the "error_code" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearErrorCode() {
+	m.error_code = nil
+	m.adderror_code = nil
+	m.clearedFields[upstreamaccountswitchhistory.FieldErrorCode] = struct{}{}
+}
+
+// ErrorCodeCleared returns if the "error_code" field was cleared in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ErrorCodeCleared() bool {
+	_, ok := m.clearedFields[upstreamaccountswitchhistory.FieldErrorCode]
+	return ok
+}
+
+// ResetErrorCode resets all changes to the "error_code" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetErrorCode() {
+	m.error_code = nil
+	m.adderror_code = nil
+	delete(m.clearedFields, upstreamaccountswitchhistory.FieldErrorCode)
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetErrorMessage(s string) {
+	m.error_message = &s
+}
+
+// ErrorMessage returns the value of the "error_message" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ErrorMessage() (r string, exists bool) {
+	v := m.error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorMessage returns the old "error_message" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldErrorMessage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorMessage: %w", err)
+	}
+	return oldValue.ErrorMessage, nil
+}
+
+// ResetErrorMessage resets all changes to the "error_message" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetErrorMessage() {
+	m.error_message = nil
+}
+
+// SetLatencyMs sets the "latency_ms" field.
+func (m *UpstreamAccountSwitchHistoryMutation) SetLatencyMs(i int64) {
+	m.latency_ms = &i
+	m.addlatency_ms = nil
+}
+
+// LatencyMs returns the value of the "latency_ms" field in the mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) LatencyMs() (r int64, exists bool) {
+	v := m.latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatencyMs returns the old "latency_ms" field's value of the UpstreamAccountSwitchHistory entity.
+// If the UpstreamAccountSwitchHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountSwitchHistoryMutation) OldLatencyMs(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatencyMs: %w", err)
+	}
+	return oldValue.LatencyMs, nil
+}
+
+// AddLatencyMs adds i to the "latency_ms" field.
+func (m *UpstreamAccountSwitchHistoryMutation) AddLatencyMs(i int64) {
+	if m.addlatency_ms != nil {
+		*m.addlatency_ms += i
+	} else {
+		m.addlatency_ms = &i
+	}
+}
+
+// AddedLatencyMs returns the value that was added to the "latency_ms" field in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) AddedLatencyMs() (r int64, exists bool) {
+	v := m.addlatency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLatencyMs clears the value of the "latency_ms" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	m.clearedFields[upstreamaccountswitchhistory.FieldLatencyMs] = struct{}{}
+}
+
+// LatencyMsCleared returns if the "latency_ms" field was cleared in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) LatencyMsCleared() bool {
+	_, ok := m.clearedFields[upstreamaccountswitchhistory.FieldLatencyMs]
+	return ok
+}
+
+// ResetLatencyMs resets all changes to the "latency_ms" field.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	delete(m.clearedFields, upstreamaccountswitchhistory.FieldLatencyMs)
+}
+
+// ClearRequest clears the "request" edge to the Request entity.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearRequest() {
+	m.clearedrequest = true
+	m.clearedFields[upstreamaccountswitchhistory.FieldRequestID] = struct{}{}
+}
+
+// RequestCleared reports if the "request" edge to the Request entity was cleared.
+func (m *UpstreamAccountSwitchHistoryMutation) RequestCleared() bool {
+	return m.RequestIDCleared() || m.clearedrequest
+}
+
+// RequestIDs returns the "request" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RequestID instead. It exists only for internal usage by the builders.
+func (m *UpstreamAccountSwitchHistoryMutation) RequestIDs() (ids []int) {
+	if id := m.request; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRequest resets all changes to the "request" edge.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetRequest() {
+	m.request = nil
+	m.clearedrequest = false
+}
+
+// ClearRequestExecution clears the "request_execution" edge to the RequestExecution entity.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearRequestExecution() {
+	m.clearedrequest_execution = true
+	m.clearedFields[upstreamaccountswitchhistory.FieldRequestExecutionID] = struct{}{}
+}
+
+// RequestExecutionCleared reports if the "request_execution" edge to the RequestExecution entity was cleared.
+func (m *UpstreamAccountSwitchHistoryMutation) RequestExecutionCleared() bool {
+	return m.RequestExecutionIDCleared() || m.clearedrequest_execution
+}
+
+// RequestExecutionIDs returns the "request_execution" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RequestExecutionID instead. It exists only for internal usage by the builders.
+func (m *UpstreamAccountSwitchHistoryMutation) RequestExecutionIDs() (ids []int) {
+	if id := m.request_execution; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRequestExecution resets all changes to the "request_execution" edge.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetRequestExecution() {
+	m.request_execution = nil
+	m.clearedrequest_execution = false
+}
+
+// ClearChannel clears the "channel" edge to the Channel entity.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearChannel() {
+	m.clearedchannel = true
+	m.clearedFields[upstreamaccountswitchhistory.FieldChannelID] = struct{}{}
+}
+
+// ChannelCleared reports if the "channel" edge to the Channel entity was cleared.
+func (m *UpstreamAccountSwitchHistoryMutation) ChannelCleared() bool {
+	return m.clearedchannel
+}
+
+// ChannelIDs returns the "channel" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ChannelID instead. It exists only for internal usage by the builders.
+func (m *UpstreamAccountSwitchHistoryMutation) ChannelIDs() (ids []int) {
+	if id := m.channel; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetChannel resets all changes to the "channel" edge.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetChannel() {
+	m.channel = nil
+	m.clearedchannel = false
+}
+
+// ClearFromAccount clears the "from_account" edge to the UpstreamAccount entity.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearFromAccount() {
+	m.clearedfrom_account = true
+	m.clearedFields[upstreamaccountswitchhistory.FieldFromAccountID] = struct{}{}
+}
+
+// FromAccountCleared reports if the "from_account" edge to the UpstreamAccount entity was cleared.
+func (m *UpstreamAccountSwitchHistoryMutation) FromAccountCleared() bool {
+	return m.FromAccountIDCleared() || m.clearedfrom_account
+}
+
+// FromAccountIDs returns the "from_account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// FromAccountID instead. It exists only for internal usage by the builders.
+func (m *UpstreamAccountSwitchHistoryMutation) FromAccountIDs() (ids []int) {
+	if id := m.from_account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetFromAccount resets all changes to the "from_account" edge.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetFromAccount() {
+	m.from_account = nil
+	m.clearedfrom_account = false
+}
+
+// ClearToAccount clears the "to_account" edge to the UpstreamAccount entity.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearToAccount() {
+	m.clearedto_account = true
+	m.clearedFields[upstreamaccountswitchhistory.FieldToAccountID] = struct{}{}
+}
+
+// ToAccountCleared reports if the "to_account" edge to the UpstreamAccount entity was cleared.
+func (m *UpstreamAccountSwitchHistoryMutation) ToAccountCleared() bool {
+	return m.ToAccountIDCleared() || m.clearedto_account
+}
+
+// ToAccountIDs returns the "to_account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ToAccountID instead. It exists only for internal usage by the builders.
+func (m *UpstreamAccountSwitchHistoryMutation) ToAccountIDs() (ids []int) {
+	if id := m.to_account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetToAccount resets all changes to the "to_account" edge.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetToAccount() {
+	m.to_account = nil
+	m.clearedto_account = false
+}
+
+// Where appends a list predicates to the UpstreamAccountSwitchHistoryMutation builder.
+func (m *UpstreamAccountSwitchHistoryMutation) Where(ps ...predicate.UpstreamAccountSwitchHistory) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UpstreamAccountSwitchHistoryMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UpstreamAccountSwitchHistoryMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UpstreamAccountSwitchHistory, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UpstreamAccountSwitchHistoryMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UpstreamAccountSwitchHistoryMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UpstreamAccountSwitchHistory).
+func (m *UpstreamAccountSwitchHistoryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UpstreamAccountSwitchHistoryMutation) Fields() []string {
+	fields := make([]string, 0, 13)
+	if m.created_at != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldUpdatedAt)
+	}
+	if m.project_id != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldProjectID)
+	}
+	if m.request != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldRequestID)
+	}
+	if m.request_execution != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldRequestExecutionID)
+	}
+	if m.channel != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldChannelID)
+	}
+	if m.from_account != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldFromAccountID)
+	}
+	if m.to_account != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldToAccountID)
+	}
+	if m.model_id != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldModelID)
+	}
+	if m.reason != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldReason)
+	}
+	if m.error_code != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldErrorCode)
+	}
+	if m.error_message != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldErrorMessage)
+	}
+	if m.latency_ms != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldLatencyMs)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UpstreamAccountSwitchHistoryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case upstreamaccountswitchhistory.FieldCreatedAt:
+		return m.CreatedAt()
+	case upstreamaccountswitchhistory.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case upstreamaccountswitchhistory.FieldProjectID:
+		return m.ProjectID()
+	case upstreamaccountswitchhistory.FieldRequestID:
+		return m.RequestID()
+	case upstreamaccountswitchhistory.FieldRequestExecutionID:
+		return m.RequestExecutionID()
+	case upstreamaccountswitchhistory.FieldChannelID:
+		return m.ChannelID()
+	case upstreamaccountswitchhistory.FieldFromAccountID:
+		return m.FromAccountID()
+	case upstreamaccountswitchhistory.FieldToAccountID:
+		return m.ToAccountID()
+	case upstreamaccountswitchhistory.FieldModelID:
+		return m.ModelID()
+	case upstreamaccountswitchhistory.FieldReason:
+		return m.Reason()
+	case upstreamaccountswitchhistory.FieldErrorCode:
+		return m.ErrorCode()
+	case upstreamaccountswitchhistory.FieldErrorMessage:
+		return m.ErrorMessage()
+	case upstreamaccountswitchhistory.FieldLatencyMs:
+		return m.LatencyMs()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UpstreamAccountSwitchHistoryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case upstreamaccountswitchhistory.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case upstreamaccountswitchhistory.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case upstreamaccountswitchhistory.FieldProjectID:
+		return m.OldProjectID(ctx)
+	case upstreamaccountswitchhistory.FieldRequestID:
+		return m.OldRequestID(ctx)
+	case upstreamaccountswitchhistory.FieldRequestExecutionID:
+		return m.OldRequestExecutionID(ctx)
+	case upstreamaccountswitchhistory.FieldChannelID:
+		return m.OldChannelID(ctx)
+	case upstreamaccountswitchhistory.FieldFromAccountID:
+		return m.OldFromAccountID(ctx)
+	case upstreamaccountswitchhistory.FieldToAccountID:
+		return m.OldToAccountID(ctx)
+	case upstreamaccountswitchhistory.FieldModelID:
+		return m.OldModelID(ctx)
+	case upstreamaccountswitchhistory.FieldReason:
+		return m.OldReason(ctx)
+	case upstreamaccountswitchhistory.FieldErrorCode:
+		return m.OldErrorCode(ctx)
+	case upstreamaccountswitchhistory.FieldErrorMessage:
+		return m.OldErrorMessage(ctx)
+	case upstreamaccountswitchhistory.FieldLatencyMs:
+		return m.OldLatencyMs(ctx)
+	}
+	return nil, fmt.Errorf("unknown UpstreamAccountSwitchHistory field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UpstreamAccountSwitchHistoryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case upstreamaccountswitchhistory.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldProjectID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectID(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldRequestID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestID(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldRequestExecutionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestExecutionID(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldChannelID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChannelID(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldFromAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFromAccountID(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldToAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetToAccountID(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldModelID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModelID(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReason(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldErrorCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorCode(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorMessage(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatencyMs(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountSwitchHistory field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) AddedFields() []string {
+	var fields []string
+	if m.addproject_id != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldProjectID)
+	}
+	if m.adderror_code != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldErrorCode)
+	}
+	if m.addlatency_ms != nil {
+		fields = append(fields, upstreamaccountswitchhistory.FieldLatencyMs)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UpstreamAccountSwitchHistoryMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case upstreamaccountswitchhistory.FieldProjectID:
+		return m.AddedProjectID()
+	case upstreamaccountswitchhistory.FieldErrorCode:
+		return m.AddedErrorCode()
+	case upstreamaccountswitchhistory.FieldLatencyMs:
+		return m.AddedLatencyMs()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UpstreamAccountSwitchHistoryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case upstreamaccountswitchhistory.FieldProjectID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddProjectID(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldErrorCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddErrorCode(v)
+		return nil
+	case upstreamaccountswitchhistory.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatencyMs(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountSwitchHistory numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(upstreamaccountswitchhistory.FieldRequestID) {
+		fields = append(fields, upstreamaccountswitchhistory.FieldRequestID)
+	}
+	if m.FieldCleared(upstreamaccountswitchhistory.FieldRequestExecutionID) {
+		fields = append(fields, upstreamaccountswitchhistory.FieldRequestExecutionID)
+	}
+	if m.FieldCleared(upstreamaccountswitchhistory.FieldFromAccountID) {
+		fields = append(fields, upstreamaccountswitchhistory.FieldFromAccountID)
+	}
+	if m.FieldCleared(upstreamaccountswitchhistory.FieldToAccountID) {
+		fields = append(fields, upstreamaccountswitchhistory.FieldToAccountID)
+	}
+	if m.FieldCleared(upstreamaccountswitchhistory.FieldErrorCode) {
+		fields = append(fields, upstreamaccountswitchhistory.FieldErrorCode)
+	}
+	if m.FieldCleared(upstreamaccountswitchhistory.FieldLatencyMs) {
+		fields = append(fields, upstreamaccountswitchhistory.FieldLatencyMs)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearField(name string) error {
+	switch name {
+	case upstreamaccountswitchhistory.FieldRequestID:
+		m.ClearRequestID()
+		return nil
+	case upstreamaccountswitchhistory.FieldRequestExecutionID:
+		m.ClearRequestExecutionID()
+		return nil
+	case upstreamaccountswitchhistory.FieldFromAccountID:
+		m.ClearFromAccountID()
+		return nil
+	case upstreamaccountswitchhistory.FieldToAccountID:
+		m.ClearToAccountID()
+		return nil
+	case upstreamaccountswitchhistory.FieldErrorCode:
+		m.ClearErrorCode()
+		return nil
+	case upstreamaccountswitchhistory.FieldLatencyMs:
+		m.ClearLatencyMs()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountSwitchHistory nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetField(name string) error {
+	switch name {
+	case upstreamaccountswitchhistory.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case upstreamaccountswitchhistory.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case upstreamaccountswitchhistory.FieldProjectID:
+		m.ResetProjectID()
+		return nil
+	case upstreamaccountswitchhistory.FieldRequestID:
+		m.ResetRequestID()
+		return nil
+	case upstreamaccountswitchhistory.FieldRequestExecutionID:
+		m.ResetRequestExecutionID()
+		return nil
+	case upstreamaccountswitchhistory.FieldChannelID:
+		m.ResetChannelID()
+		return nil
+	case upstreamaccountswitchhistory.FieldFromAccountID:
+		m.ResetFromAccountID()
+		return nil
+	case upstreamaccountswitchhistory.FieldToAccountID:
+		m.ResetToAccountID()
+		return nil
+	case upstreamaccountswitchhistory.FieldModelID:
+		m.ResetModelID()
+		return nil
+	case upstreamaccountswitchhistory.FieldReason:
+		m.ResetReason()
+		return nil
+	case upstreamaccountswitchhistory.FieldErrorCode:
+		m.ResetErrorCode()
+		return nil
+	case upstreamaccountswitchhistory.FieldErrorMessage:
+		m.ResetErrorMessage()
+		return nil
+	case upstreamaccountswitchhistory.FieldLatencyMs:
+		m.ResetLatencyMs()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountSwitchHistory field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 5)
+	if m.request != nil {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeRequest)
+	}
+	if m.request_execution != nil {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeRequestExecution)
+	}
+	if m.channel != nil {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeChannel)
+	}
+	if m.from_account != nil {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeFromAccount)
+	}
+	if m.to_account != nil {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeToAccount)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case upstreamaccountswitchhistory.EdgeRequest:
+		if id := m.request; id != nil {
+			return []ent.Value{*id}
+		}
+	case upstreamaccountswitchhistory.EdgeRequestExecution:
+		if id := m.request_execution; id != nil {
+			return []ent.Value{*id}
+		}
+	case upstreamaccountswitchhistory.EdgeChannel:
+		if id := m.channel; id != nil {
+			return []ent.Value{*id}
+		}
+	case upstreamaccountswitchhistory.EdgeFromAccount:
+		if id := m.from_account; id != nil {
+			return []ent.Value{*id}
+		}
+	case upstreamaccountswitchhistory.EdgeToAccount:
+		if id := m.to_account; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 5)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 5)
+	if m.clearedrequest {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeRequest)
+	}
+	if m.clearedrequest_execution {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeRequestExecution)
+	}
+	if m.clearedchannel {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeChannel)
+	}
+	if m.clearedfrom_account {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeFromAccount)
+	}
+	if m.clearedto_account {
+		edges = append(edges, upstreamaccountswitchhistory.EdgeToAccount)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UpstreamAccountSwitchHistoryMutation) EdgeCleared(name string) bool {
+	switch name {
+	case upstreamaccountswitchhistory.EdgeRequest:
+		return m.clearedrequest
+	case upstreamaccountswitchhistory.EdgeRequestExecution:
+		return m.clearedrequest_execution
+	case upstreamaccountswitchhistory.EdgeChannel:
+		return m.clearedchannel
+	case upstreamaccountswitchhistory.EdgeFromAccount:
+		return m.clearedfrom_account
+	case upstreamaccountswitchhistory.EdgeToAccount:
+		return m.clearedto_account
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UpstreamAccountSwitchHistoryMutation) ClearEdge(name string) error {
+	switch name {
+	case upstreamaccountswitchhistory.EdgeRequest:
+		m.ClearRequest()
+		return nil
+	case upstreamaccountswitchhistory.EdgeRequestExecution:
+		m.ClearRequestExecution()
+		return nil
+	case upstreamaccountswitchhistory.EdgeChannel:
+		m.ClearChannel()
+		return nil
+	case upstreamaccountswitchhistory.EdgeFromAccount:
+		m.ClearFromAccount()
+		return nil
+	case upstreamaccountswitchhistory.EdgeToAccount:
+		m.ClearToAccount()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountSwitchHistory unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UpstreamAccountSwitchHistoryMutation) ResetEdge(name string) error {
+	switch name {
+	case upstreamaccountswitchhistory.EdgeRequest:
+		m.ResetRequest()
+		return nil
+	case upstreamaccountswitchhistory.EdgeRequestExecution:
+		m.ResetRequestExecution()
+		return nil
+	case upstreamaccountswitchhistory.EdgeChannel:
+		m.ResetChannel()
+		return nil
+	case upstreamaccountswitchhistory.EdgeFromAccount:
+		m.ResetFromAccount()
+		return nil
+	case upstreamaccountswitchhistory.EdgeToAccount:
+		m.ResetToAccount()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountSwitchHistory edge %s", name)
+}
+
 // UsageBillingRecordMutation represents an operation that mutates the UsageBillingRecord nodes in the graph.
 type UsageBillingRecordMutation struct {
 	config
@@ -55439,6 +57457,8 @@ type UsageBillingRecordMutation struct {
 	clearedledger_transaction    bool
 	user_subscription            *int
 	cleareduser_subscription     bool
+	upstream_account             *int
+	clearedupstream_account      bool
 	billing_notifications        map[int]struct{}
 	removedbilling_notifications map[int]struct{}
 	clearedbilling_notifications bool
@@ -55743,6 +57763,55 @@ func (m *UsageBillingRecordMutation) AddedProjectID() (r int, exists bool) {
 func (m *UsageBillingRecordMutation) ResetProjectID() {
 	m.project_id = nil
 	m.addproject_id = nil
+}
+
+// SetUpstreamAccountID sets the "upstream_account_id" field.
+func (m *UsageBillingRecordMutation) SetUpstreamAccountID(i int) {
+	m.upstream_account = &i
+}
+
+// UpstreamAccountID returns the value of the "upstream_account_id" field in the mutation.
+func (m *UsageBillingRecordMutation) UpstreamAccountID() (r int, exists bool) {
+	v := m.upstream_account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamAccountID returns the old "upstream_account_id" field's value of the UsageBillingRecord entity.
+// If the UsageBillingRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRecordMutation) OldUpstreamAccountID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamAccountID: %w", err)
+	}
+	return oldValue.UpstreamAccountID, nil
+}
+
+// ClearUpstreamAccountID clears the value of the "upstream_account_id" field.
+func (m *UsageBillingRecordMutation) ClearUpstreamAccountID() {
+	m.upstream_account = nil
+	m.clearedFields[usagebillingrecord.FieldUpstreamAccountID] = struct{}{}
+}
+
+// UpstreamAccountIDCleared returns if the "upstream_account_id" field was cleared in this mutation.
+func (m *UsageBillingRecordMutation) UpstreamAccountIDCleared() bool {
+	_, ok := m.clearedFields[usagebillingrecord.FieldUpstreamAccountID]
+	return ok
+}
+
+// ResetUpstreamAccountID resets all changes to the "upstream_account_id" field.
+func (m *UsageBillingRecordMutation) ResetUpstreamAccountID() {
+	m.upstream_account = nil
+	delete(m.clearedFields, usagebillingrecord.FieldUpstreamAccountID)
 }
 
 // SetUserID sets the "user_id" field.
@@ -56607,6 +58676,33 @@ func (m *UsageBillingRecordMutation) ResetUserSubscription() {
 	m.cleareduser_subscription = false
 }
 
+// ClearUpstreamAccount clears the "upstream_account" edge to the UpstreamAccount entity.
+func (m *UsageBillingRecordMutation) ClearUpstreamAccount() {
+	m.clearedupstream_account = true
+	m.clearedFields[usagebillingrecord.FieldUpstreamAccountID] = struct{}{}
+}
+
+// UpstreamAccountCleared reports if the "upstream_account" edge to the UpstreamAccount entity was cleared.
+func (m *UsageBillingRecordMutation) UpstreamAccountCleared() bool {
+	return m.UpstreamAccountIDCleared() || m.clearedupstream_account
+}
+
+// UpstreamAccountIDs returns the "upstream_account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UpstreamAccountID instead. It exists only for internal usage by the builders.
+func (m *UsageBillingRecordMutation) UpstreamAccountIDs() (ids []int) {
+	if id := m.upstream_account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUpstreamAccount resets all changes to the "upstream_account" edge.
+func (m *UsageBillingRecordMutation) ResetUpstreamAccount() {
+	m.upstream_account = nil
+	m.clearedupstream_account = false
+}
+
 // AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by ids.
 func (m *UsageBillingRecordMutation) AddBillingNotificationIDs(ids ...int) {
 	if m.billing_notifications == nil {
@@ -56695,7 +58791,7 @@ func (m *UsageBillingRecordMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageBillingRecordMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 22)
 	if m.created_at != nil {
 		fields = append(fields, usagebillingrecord.FieldCreatedAt)
 	}
@@ -56710,6 +58806,9 @@ func (m *UsageBillingRecordMutation) Fields() []string {
 	}
 	if m.project_id != nil {
 		fields = append(fields, usagebillingrecord.FieldProjectID)
+	}
+	if m.upstream_account != nil {
+		fields = append(fields, usagebillingrecord.FieldUpstreamAccountID)
 	}
 	if m.user_id != nil {
 		fields = append(fields, usagebillingrecord.FieldUserID)
@@ -56777,6 +58876,8 @@ func (m *UsageBillingRecordMutation) Field(name string) (ent.Value, bool) {
 		return m.BillingAccountID()
 	case usagebillingrecord.FieldProjectID:
 		return m.ProjectID()
+	case usagebillingrecord.FieldUpstreamAccountID:
+		return m.UpstreamAccountID()
 	case usagebillingrecord.FieldUserID:
 		return m.UserID()
 	case usagebillingrecord.FieldAPIKeyID:
@@ -56828,6 +58929,8 @@ func (m *UsageBillingRecordMutation) OldField(ctx context.Context, name string) 
 		return m.OldBillingAccountID(ctx)
 	case usagebillingrecord.FieldProjectID:
 		return m.OldProjectID(ctx)
+	case usagebillingrecord.FieldUpstreamAccountID:
+		return m.OldUpstreamAccountID(ctx)
 	case usagebillingrecord.FieldUserID:
 		return m.OldUserID(ctx)
 	case usagebillingrecord.FieldAPIKeyID:
@@ -56903,6 +59006,13 @@ func (m *UsageBillingRecordMutation) SetField(name string, value ent.Value) erro
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProjectID(v)
+		return nil
+	case usagebillingrecord.FieldUpstreamAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamAccountID(v)
 		return nil
 	case usagebillingrecord.FieldUserID:
 		v, ok := value.(int)
@@ -57109,6 +59219,9 @@ func (m *UsageBillingRecordMutation) AddField(name string, value ent.Value) erro
 // mutation.
 func (m *UsageBillingRecordMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(usagebillingrecord.FieldUpstreamAccountID) {
+		fields = append(fields, usagebillingrecord.FieldUpstreamAccountID)
+	}
 	if m.FieldCleared(usagebillingrecord.FieldUserID) {
 		fields = append(fields, usagebillingrecord.FieldUserID)
 	}
@@ -57138,6 +59251,9 @@ func (m *UsageBillingRecordMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *UsageBillingRecordMutation) ClearField(name string) error {
 	switch name {
+	case usagebillingrecord.FieldUpstreamAccountID:
+		m.ClearUpstreamAccountID()
+		return nil
 	case usagebillingrecord.FieldUserID:
 		m.ClearUserID()
 		return nil
@@ -57175,6 +59291,9 @@ func (m *UsageBillingRecordMutation) ResetField(name string) error {
 		return nil
 	case usagebillingrecord.FieldProjectID:
 		m.ResetProjectID()
+		return nil
+	case usagebillingrecord.FieldUpstreamAccountID:
+		m.ResetUpstreamAccountID()
 		return nil
 	case usagebillingrecord.FieldUserID:
 		m.ResetUserID()
@@ -57230,7 +59349,7 @@ func (m *UsageBillingRecordMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UsageBillingRecordMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.usage_log != nil {
 		edges = append(edges, usagebillingrecord.EdgeUsageLog)
 	}
@@ -57242,6 +59361,9 @@ func (m *UsageBillingRecordMutation) AddedEdges() []string {
 	}
 	if m.user_subscription != nil {
 		edges = append(edges, usagebillingrecord.EdgeUserSubscription)
+	}
+	if m.upstream_account != nil {
+		edges = append(edges, usagebillingrecord.EdgeUpstreamAccount)
 	}
 	if m.billing_notifications != nil {
 		edges = append(edges, usagebillingrecord.EdgeBillingNotifications)
@@ -57269,6 +59391,10 @@ func (m *UsageBillingRecordMutation) AddedIDs(name string) []ent.Value {
 		if id := m.user_subscription; id != nil {
 			return []ent.Value{*id}
 		}
+	case usagebillingrecord.EdgeUpstreamAccount:
+		if id := m.upstream_account; id != nil {
+			return []ent.Value{*id}
+		}
 	case usagebillingrecord.EdgeBillingNotifications:
 		ids := make([]ent.Value, 0, len(m.billing_notifications))
 		for id := range m.billing_notifications {
@@ -57281,7 +59407,7 @@ func (m *UsageBillingRecordMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UsageBillingRecordMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removedbilling_notifications != nil {
 		edges = append(edges, usagebillingrecord.EdgeBillingNotifications)
 	}
@@ -57304,7 +59430,7 @@ func (m *UsageBillingRecordMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UsageBillingRecordMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.clearedusage_log {
 		edges = append(edges, usagebillingrecord.EdgeUsageLog)
 	}
@@ -57316,6 +59442,9 @@ func (m *UsageBillingRecordMutation) ClearedEdges() []string {
 	}
 	if m.cleareduser_subscription {
 		edges = append(edges, usagebillingrecord.EdgeUserSubscription)
+	}
+	if m.clearedupstream_account {
+		edges = append(edges, usagebillingrecord.EdgeUpstreamAccount)
 	}
 	if m.clearedbilling_notifications {
 		edges = append(edges, usagebillingrecord.EdgeBillingNotifications)
@@ -57335,6 +59464,8 @@ func (m *UsageBillingRecordMutation) EdgeCleared(name string) bool {
 		return m.clearedledger_transaction
 	case usagebillingrecord.EdgeUserSubscription:
 		return m.cleareduser_subscription
+	case usagebillingrecord.EdgeUpstreamAccount:
+		return m.clearedupstream_account
 	case usagebillingrecord.EdgeBillingNotifications:
 		return m.clearedbilling_notifications
 	}
@@ -57357,6 +59488,9 @@ func (m *UsageBillingRecordMutation) ClearEdge(name string) error {
 	case usagebillingrecord.EdgeUserSubscription:
 		m.ClearUserSubscription()
 		return nil
+	case usagebillingrecord.EdgeUpstreamAccount:
+		m.ClearUpstreamAccount()
+		return nil
 	}
 	return fmt.Errorf("unknown UsageBillingRecord unique edge %s", name)
 }
@@ -57376,6 +59510,9 @@ func (m *UsageBillingRecordMutation) ResetEdge(name string) error {
 		return nil
 	case usagebillingrecord.EdgeUserSubscription:
 		m.ResetUserSubscription()
+		return nil
+	case usagebillingrecord.EdgeUpstreamAccount:
+		m.ResetUpstreamAccount()
 		return nil
 	case usagebillingrecord.EdgeBillingNotifications:
 		m.ResetBillingNotifications()
@@ -61175,6 +63312,8 @@ type UsageLogMutation struct {
 	clearedproject                           bool
 	channel                                  *int
 	clearedchannel                           bool
+	upstream_account                         *int
+	clearedupstream_account                  bool
 	usage_billing_records                    map[int]struct{}
 	removedusage_billing_records             map[int]struct{}
 	clearedusage_billing_records             bool
@@ -61545,6 +63684,55 @@ func (m *UsageLogMutation) ChannelIDCleared() bool {
 func (m *UsageLogMutation) ResetChannelID() {
 	m.channel = nil
 	delete(m.clearedFields, usagelog.FieldChannelID)
+}
+
+// SetUpstreamAccountID sets the "upstream_account_id" field.
+func (m *UsageLogMutation) SetUpstreamAccountID(i int) {
+	m.upstream_account = &i
+}
+
+// UpstreamAccountID returns the value of the "upstream_account_id" field in the mutation.
+func (m *UsageLogMutation) UpstreamAccountID() (r int, exists bool) {
+	v := m.upstream_account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamAccountID returns the old "upstream_account_id" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldUpstreamAccountID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamAccountID: %w", err)
+	}
+	return oldValue.UpstreamAccountID, nil
+}
+
+// ClearUpstreamAccountID clears the value of the "upstream_account_id" field.
+func (m *UsageLogMutation) ClearUpstreamAccountID() {
+	m.upstream_account = nil
+	m.clearedFields[usagelog.FieldUpstreamAccountID] = struct{}{}
+}
+
+// UpstreamAccountIDCleared returns if the "upstream_account_id" field was cleared in this mutation.
+func (m *UsageLogMutation) UpstreamAccountIDCleared() bool {
+	_, ok := m.clearedFields[usagelog.FieldUpstreamAccountID]
+	return ok
+}
+
+// ResetUpstreamAccountID resets all changes to the "upstream_account_id" field.
+func (m *UsageLogMutation) ResetUpstreamAccountID() {
+	m.upstream_account = nil
+	delete(m.clearedFields, usagelog.FieldUpstreamAccountID)
 }
 
 // SetModelID sets the "model_id" field.
@@ -62718,6 +64906,33 @@ func (m *UsageLogMutation) ResetChannel() {
 	m.clearedchannel = false
 }
 
+// ClearUpstreamAccount clears the "upstream_account" edge to the UpstreamAccount entity.
+func (m *UsageLogMutation) ClearUpstreamAccount() {
+	m.clearedupstream_account = true
+	m.clearedFields[usagelog.FieldUpstreamAccountID] = struct{}{}
+}
+
+// UpstreamAccountCleared reports if the "upstream_account" edge to the UpstreamAccount entity was cleared.
+func (m *UsageLogMutation) UpstreamAccountCleared() bool {
+	return m.UpstreamAccountIDCleared() || m.clearedupstream_account
+}
+
+// UpstreamAccountIDs returns the "upstream_account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UpstreamAccountID instead. It exists only for internal usage by the builders.
+func (m *UsageLogMutation) UpstreamAccountIDs() (ids []int) {
+	if id := m.upstream_account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUpstreamAccount resets all changes to the "upstream_account" edge.
+func (m *UsageLogMutation) ResetUpstreamAccount() {
+	m.upstream_account = nil
+	m.clearedupstream_account = false
+}
+
 // AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by ids.
 func (m *UsageLogMutation) AddUsageBillingRecordIDs(ids ...int) {
 	if m.usage_billing_records == nil {
@@ -62860,7 +65075,7 @@ func (m *UsageLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageLogMutation) Fields() []string {
-	fields := make([]string, 0, 24)
+	fields := make([]string, 0, 25)
 	if m.created_at != nil {
 		fields = append(fields, usagelog.FieldCreatedAt)
 	}
@@ -62878,6 +65093,9 @@ func (m *UsageLogMutation) Fields() []string {
 	}
 	if m.channel != nil {
 		fields = append(fields, usagelog.FieldChannelID)
+	}
+	if m.upstream_account != nil {
+		fields = append(fields, usagelog.FieldUpstreamAccountID)
 	}
 	if m.model_id != nil {
 		fields = append(fields, usagelog.FieldModelID)
@@ -62953,6 +65171,8 @@ func (m *UsageLogMutation) Field(name string) (ent.Value, bool) {
 		return m.ProjectID()
 	case usagelog.FieldChannelID:
 		return m.ChannelID()
+	case usagelog.FieldUpstreamAccountID:
+		return m.UpstreamAccountID()
 	case usagelog.FieldModelID:
 		return m.ModelID()
 	case usagelog.FieldPromptTokens:
@@ -63010,6 +65230,8 @@ func (m *UsageLogMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldProjectID(ctx)
 	case usagelog.FieldChannelID:
 		return m.OldChannelID(ctx)
+	case usagelog.FieldUpstreamAccountID:
+		return m.OldUpstreamAccountID(ctx)
 	case usagelog.FieldModelID:
 		return m.OldModelID(ctx)
 	case usagelog.FieldPromptTokens:
@@ -63096,6 +65318,13 @@ func (m *UsageLogMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetChannelID(v)
+		return nil
+	case usagelog.FieldUpstreamAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamAccountID(v)
 		return nil
 	case usagelog.FieldModelID:
 		v, ok := value.(string)
@@ -63430,6 +65659,9 @@ func (m *UsageLogMutation) ClearedFields() []string {
 	if m.FieldCleared(usagelog.FieldChannelID) {
 		fields = append(fields, usagelog.FieldChannelID)
 	}
+	if m.FieldCleared(usagelog.FieldUpstreamAccountID) {
+		fields = append(fields, usagelog.FieldUpstreamAccountID)
+	}
 	if m.FieldCleared(usagelog.FieldPromptAudioTokens) {
 		fields = append(fields, usagelog.FieldPromptAudioTokens)
 	}
@@ -63485,6 +65717,9 @@ func (m *UsageLogMutation) ClearField(name string) error {
 		return nil
 	case usagelog.FieldChannelID:
 		m.ClearChannelID()
+		return nil
+	case usagelog.FieldUpstreamAccountID:
+		m.ClearUpstreamAccountID()
 		return nil
 	case usagelog.FieldPromptAudioTokens:
 		m.ClearPromptAudioTokens()
@@ -63548,6 +65783,9 @@ func (m *UsageLogMutation) ResetField(name string) error {
 	case usagelog.FieldChannelID:
 		m.ResetChannelID()
 		return nil
+	case usagelog.FieldUpstreamAccountID:
+		m.ResetUpstreamAccountID()
+		return nil
 	case usagelog.FieldModelID:
 		m.ResetModelID()
 		return nil
@@ -63608,7 +65846,7 @@ func (m *UsageLogMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UsageLogMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.request != nil {
 		edges = append(edges, usagelog.EdgeRequest)
 	}
@@ -63617,6 +65855,9 @@ func (m *UsageLogMutation) AddedEdges() []string {
 	}
 	if m.channel != nil {
 		edges = append(edges, usagelog.EdgeChannel)
+	}
+	if m.upstream_account != nil {
+		edges = append(edges, usagelog.EdgeUpstreamAccount)
 	}
 	if m.usage_billing_records != nil {
 		edges = append(edges, usagelog.EdgeUsageBillingRecords)
@@ -63643,6 +65884,10 @@ func (m *UsageLogMutation) AddedIDs(name string) []ent.Value {
 		if id := m.channel; id != nil {
 			return []ent.Value{*id}
 		}
+	case usagelog.EdgeUpstreamAccount:
+		if id := m.upstream_account; id != nil {
+			return []ent.Value{*id}
+		}
 	case usagelog.EdgeUsageBillingRecords:
 		ids := make([]ent.Value, 0, len(m.usage_billing_records))
 		for id := range m.usage_billing_records {
@@ -63661,7 +65906,7 @@ func (m *UsageLogMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UsageLogMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removedusage_billing_records != nil {
 		edges = append(edges, usagelog.EdgeUsageBillingRecords)
 	}
@@ -63693,7 +65938,7 @@ func (m *UsageLogMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UsageLogMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.clearedrequest {
 		edges = append(edges, usagelog.EdgeRequest)
 	}
@@ -63702,6 +65947,9 @@ func (m *UsageLogMutation) ClearedEdges() []string {
 	}
 	if m.clearedchannel {
 		edges = append(edges, usagelog.EdgeChannel)
+	}
+	if m.clearedupstream_account {
+		edges = append(edges, usagelog.EdgeUpstreamAccount)
 	}
 	if m.clearedusage_billing_records {
 		edges = append(edges, usagelog.EdgeUsageBillingRecords)
@@ -63722,6 +65970,8 @@ func (m *UsageLogMutation) EdgeCleared(name string) bool {
 		return m.clearedproject
 	case usagelog.EdgeChannel:
 		return m.clearedchannel
+	case usagelog.EdgeUpstreamAccount:
+		return m.clearedupstream_account
 	case usagelog.EdgeUsageBillingRecords:
 		return m.clearedusage_billing_records
 	case usagelog.EdgeBillingHolds:
@@ -63743,6 +65993,9 @@ func (m *UsageLogMutation) ClearEdge(name string) error {
 	case usagelog.EdgeChannel:
 		m.ClearChannel()
 		return nil
+	case usagelog.EdgeUpstreamAccount:
+		m.ClearUpstreamAccount()
+		return nil
 	}
 	return fmt.Errorf("unknown UsageLog unique edge %s", name)
 }
@@ -63759,6 +66012,9 @@ func (m *UsageLogMutation) ResetEdge(name string) error {
 		return nil
 	case usagelog.EdgeChannel:
 		m.ResetChannel()
+		return nil
+	case usagelog.EdgeUpstreamAccount:
+		m.ResetUpstreamAccount()
 		return nil
 	case usagelog.EdgeUsageBillingRecords:
 		m.ResetUsageBillingRecords()

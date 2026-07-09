@@ -37,6 +37,10 @@ import {
   upstreamAccountPoolSchema,
   UpstreamAccountTestResult,
   upstreamAccountTestResultSchema,
+  UpstreamAccountMonitoringDetail,
+  UpstreamAccountMonitoringSummary,
+  upstreamAccountMonitoringDetailSchema,
+  upstreamAccountMonitoringSummarySchema,
   ProxyConfig,
 } from './schema';
 
@@ -1900,6 +1904,134 @@ const TEST_UPSTREAM_ACCOUNT_MUTATION = `
   }
 `;
 
+const UPSTREAM_ACCOUNT_MONITORING_QUERY = `
+  query UpstreamAccountMonitoring($filter: UpstreamAccountMonitoringFilter) {
+    upstreamAccountMonitoring(filter: $filter) {
+      accountID
+      accountName
+      channelID
+      channelName
+      providerType
+      status
+      schedulable
+      requestCount
+      successCount
+      errorCount
+      successRate
+      errorRate
+      rateLimitCount
+      serverErrorCount
+      averageLatencyMs
+      firstTokenLatencyMs
+      userChargeMicros
+      upstreamCostMicros
+      grossMarginMicros
+      quotaLimitMicros
+      quotaUsedMicros
+      lastUsedAt
+      lastErrorMessage
+      rateLimitResetAt
+      overloadUntil
+      cooldownUntil
+      cooldownReason
+      recentErrors {
+        requestExecutionID
+        requestID
+        statusCode
+        errorMessage
+        createdAt
+      }
+    }
+  }
+`;
+
+const UPSTREAM_ACCOUNT_MONITORING_DETAIL_QUERY = `
+  query UpstreamAccountMonitoringDetail($accountID: ID!, $filter: UpstreamAccountMonitoringFilter) {
+    upstreamAccountMonitoringDetail(accountID: $accountID, filter: $filter) {
+      summary {
+        accountID
+        accountName
+        channelID
+        channelName
+        providerType
+        status
+        schedulable
+        requestCount
+        successCount
+        errorCount
+        successRate
+        errorRate
+        rateLimitCount
+        serverErrorCount
+        averageLatencyMs
+        firstTokenLatencyMs
+        userChargeMicros
+        upstreamCostMicros
+        grossMarginMicros
+        quotaLimitMicros
+        quotaUsedMicros
+        lastUsedAt
+        lastErrorMessage
+        rateLimitResetAt
+        overloadUntil
+        cooldownUntil
+        cooldownReason
+        recentErrors {
+          requestExecutionID
+          requestID
+          statusCode
+          errorMessage
+          createdAt
+        }
+      }
+      usageTrend {
+        bucketStart
+        requestCount
+        successCount
+        errorCount
+        userChargeMicros
+        upstreamCostMicros
+        grossMarginMicros
+        totalTokens
+      }
+      recentExecutions {
+        id
+        createdAt
+        requestID
+        channelID
+        upstreamAccountID
+        modelID
+        status
+        responseStatusCode
+        errorMessage
+        metricsLatencyMs
+        metricsFirstTokenLatencyMs
+        upstreamAccountRetryCount
+      }
+      switchHistory {
+        id
+        createdAt
+        channelID
+        fromAccountID
+        toAccountID
+        modelID
+        reason
+        errorCode
+        errorMessage
+        latencyMs
+        fromAccount {
+          id
+          name
+        }
+        toAccount {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
+
 export interface CreateUpstreamAccountPoolInput {
   channelID: string;
   name: string;
@@ -2172,6 +2304,59 @@ export function useTestUpstreamAccount() {
         toast.error(result.ineligibleReason || result.message);
       }
     },
+  });
+}
+
+export interface UpstreamAccountMonitoringFilter {
+  from?: string;
+  to?: string;
+  channelID?: string;
+  providerType?: string;
+  status?: string;
+  modelID?: string;
+  accountID?: string;
+}
+
+export function useUpstreamAccountMonitoring(filter?: UpstreamAccountMonitoringFilter) {
+  const { handleError } = useErrorHandler();
+
+  return useQuery({
+    queryKey: ['upstreamAccountMonitoring', filter],
+    queryFn: async () => {
+      try {
+        const data = await graphqlRequest<{ upstreamAccountMonitoring: UpstreamAccountMonitoringSummary[] }>(UPSTREAM_ACCOUNT_MONITORING_QUERY, {
+          filter,
+        });
+        return (data.upstreamAccountMonitoring || []).map((item) => upstreamAccountMonitoringSummarySchema.parse(item));
+      } catch (error) {
+        handleError(error, { context: 'Load Upstream Account Monitoring' });
+        throw error;
+      }
+    },
+  });
+}
+
+export function useUpstreamAccountMonitoringDetail(accountID: string, filter?: UpstreamAccountMonitoringFilter) {
+  const { handleError } = useErrorHandler();
+
+  return useQuery({
+    queryKey: ['upstreamAccountMonitoringDetail', accountID, filter],
+    queryFn: async () => {
+      try {
+        const data = await graphqlRequest<{ upstreamAccountMonitoringDetail: UpstreamAccountMonitoringDetail }>(
+          UPSTREAM_ACCOUNT_MONITORING_DETAIL_QUERY,
+          {
+            accountID,
+            filter,
+          }
+        );
+        return upstreamAccountMonitoringDetailSchema.parse(data.upstreamAccountMonitoringDetail);
+      } catch (error) {
+        handleError(error, { context: 'Load Upstream Account Detail' });
+        throw error;
+      }
+    },
+    enabled: !!accountID,
   });
 }
 

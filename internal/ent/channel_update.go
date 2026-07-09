@@ -21,6 +21,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/objects"
 )
@@ -472,6 +473,21 @@ func (_u *ChannelUpdate) AddUpstreamAccounts(v ...*UpstreamAccount) *ChannelUpda
 	return _u.AddUpstreamAccountIDs(ids...)
 }
 
+// AddUpstreamAccountSwitchHistoryIDs adds the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (_u *ChannelUpdate) AddUpstreamAccountSwitchHistoryIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.AddUpstreamAccountSwitchHistoryIDs(ids...)
+	return _u
+}
+
+// AddUpstreamAccountSwitchHistories adds the "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_u *ChannelUpdate) AddUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUpstreamAccountSwitchHistoryIDs(ids...)
+}
+
 // SetProviderQuotaStatusID sets the "provider_quota_status" edge to the ProviderQuotaStatus entity by ID.
 func (_u *ChannelUpdate) SetProviderQuotaStatusID(id int) *ChannelUpdate {
 	_u.mutation.SetProviderQuotaStatusID(id)
@@ -641,6 +657,27 @@ func (_u *ChannelUpdate) RemoveUpstreamAccounts(v ...*UpstreamAccount) *ChannelU
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUpstreamAccountIDs(ids...)
+}
+
+// ClearUpstreamAccountSwitchHistories clears all "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_u *ChannelUpdate) ClearUpstreamAccountSwitchHistories() *ChannelUpdate {
+	_u.mutation.ClearUpstreamAccountSwitchHistories()
+	return _u
+}
+
+// RemoveUpstreamAccountSwitchHistoryIDs removes the "upstream_account_switch_histories" edge to UpstreamAccountSwitchHistory entities by IDs.
+func (_u *ChannelUpdate) RemoveUpstreamAccountSwitchHistoryIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.RemoveUpstreamAccountSwitchHistoryIDs(ids...)
+	return _u
+}
+
+// RemoveUpstreamAccountSwitchHistories removes "upstream_account_switch_histories" edges to UpstreamAccountSwitchHistory entities.
+func (_u *ChannelUpdate) RemoveUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUpstreamAccountSwitchHistoryIDs(ids...)
 }
 
 // ClearProviderQuotaStatus clears the "provider_quota_status" edge to the ProviderQuotaStatus entity.
@@ -1160,6 +1197,51 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.UpstreamAccountSwitchHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{channel.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 && !_u.mutation.UpstreamAccountSwitchHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{channel.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{channel.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.ProviderQuotaStatusCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
@@ -1644,6 +1726,21 @@ func (_u *ChannelUpdateOne) AddUpstreamAccounts(v ...*UpstreamAccount) *ChannelU
 	return _u.AddUpstreamAccountIDs(ids...)
 }
 
+// AddUpstreamAccountSwitchHistoryIDs adds the "upstream_account_switch_histories" edge to the UpstreamAccountSwitchHistory entity by IDs.
+func (_u *ChannelUpdateOne) AddUpstreamAccountSwitchHistoryIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.AddUpstreamAccountSwitchHistoryIDs(ids...)
+	return _u
+}
+
+// AddUpstreamAccountSwitchHistories adds the "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_u *ChannelUpdateOne) AddUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUpstreamAccountSwitchHistoryIDs(ids...)
+}
+
 // SetProviderQuotaStatusID sets the "provider_quota_status" edge to the ProviderQuotaStatus entity by ID.
 func (_u *ChannelUpdateOne) SetProviderQuotaStatusID(id int) *ChannelUpdateOne {
 	_u.mutation.SetProviderQuotaStatusID(id)
@@ -1813,6 +1910,27 @@ func (_u *ChannelUpdateOne) RemoveUpstreamAccounts(v ...*UpstreamAccount) *Chann
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUpstreamAccountIDs(ids...)
+}
+
+// ClearUpstreamAccountSwitchHistories clears all "upstream_account_switch_histories" edges to the UpstreamAccountSwitchHistory entity.
+func (_u *ChannelUpdateOne) ClearUpstreamAccountSwitchHistories() *ChannelUpdateOne {
+	_u.mutation.ClearUpstreamAccountSwitchHistories()
+	return _u
+}
+
+// RemoveUpstreamAccountSwitchHistoryIDs removes the "upstream_account_switch_histories" edge to UpstreamAccountSwitchHistory entities by IDs.
+func (_u *ChannelUpdateOne) RemoveUpstreamAccountSwitchHistoryIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.RemoveUpstreamAccountSwitchHistoryIDs(ids...)
+	return _u
+}
+
+// RemoveUpstreamAccountSwitchHistories removes "upstream_account_switch_histories" edges to UpstreamAccountSwitchHistory entities.
+func (_u *ChannelUpdateOne) RemoveUpstreamAccountSwitchHistories(v ...*UpstreamAccountSwitchHistory) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUpstreamAccountSwitchHistoryIDs(ids...)
 }
 
 // ClearProviderQuotaStatus clears the "provider_quota_status" edge to the ProviderQuotaStatus entity.
@@ -2355,6 +2473,51 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UpstreamAccountSwitchHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{channel.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 && !_u.mutation.UpstreamAccountSwitchHistoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{channel.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UpstreamAccountSwitchHistoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountSwitchHistoriesTable,
+			Columns: []string{channel.UpstreamAccountSwitchHistoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountswitchhistory.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

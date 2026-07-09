@@ -55,6 +55,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
 	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountswitchhistory"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -3614,6 +3615,95 @@ func (_q *ChannelQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 				return err
 			}
 			_q.WithNamedUpstreamAccounts(alias, func(wq *UpstreamAccountQuery) {
+				*wq = *query
+			})
+
+		case "upstreamAccountSwitchHistories":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+			)
+			args := newUpstreamAccountSwitchHistoryPaginateArgs(fieldArgs(ctx, new(UpstreamAccountSwitchHistoryWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUpstreamAccountSwitchHistoryPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*Channel) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"channel_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(channel.UpstreamAccountSwitchHistoriesColumn), ids...))
+						})
+						if err := query.GroupBy(channel.UpstreamAccountSwitchHistoriesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*Channel) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.UpstreamAccountSwitchHistories)
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, upstreamaccountswitchhistoryImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(channel.UpstreamAccountSwitchHistoriesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUpstreamAccountSwitchHistories(alias, func(wq *UpstreamAccountSwitchHistoryQuery) {
 				*wq = *query
 			})
 
@@ -9848,6 +9938,95 @@ func (_q *RequestQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 				*wq = *query
 			})
 
+		case "upstreamAccountSwitchHistories":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+			)
+			args := newUpstreamAccountSwitchHistoryPaginateArgs(fieldArgs(ctx, new(UpstreamAccountSwitchHistoryWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUpstreamAccountSwitchHistoryPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*Request) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"request_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(request.UpstreamAccountSwitchHistoriesColumn), ids...))
+						})
+						if err := query.GroupBy(request.UpstreamAccountSwitchHistoriesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*Request) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.UpstreamAccountSwitchHistories)
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, upstreamaccountswitchhistoryImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(request.UpstreamAccountSwitchHistoriesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUpstreamAccountSwitchHistories(alias, func(wq *UpstreamAccountSwitchHistoryQuery) {
+				*wq = *query
+			})
+
 		case "billingHolds":
 			var (
 				alias = field.Alias
@@ -9891,10 +10070,10 @@ func (_q *RequestQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[7] == nil {
-								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[7][alias] = n
+							nodes[i].Edges.totalCount[8][alias] = n
 						}
 						return nil
 					})
@@ -9902,10 +10081,10 @@ func (_q *RequestQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*Request) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.BillingHolds)
-							if nodes[i].Edges.totalCount[7] == nil {
-								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[7][alias] = n
+							nodes[i].Edges.totalCount[8][alias] = n
 						}
 						return nil
 					})
@@ -10210,6 +10389,95 @@ func (_q *RequestExecutionQuery) collectField(ctx context.Context, oneNode bool,
 				selectedFields = append(selectedFields, requestexecution.FieldUpstreamAccountID)
 				fieldSeen[requestexecution.FieldUpstreamAccountID] = struct{}{}
 			}
+
+		case "upstreamAccountSwitchHistories":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+			)
+			args := newUpstreamAccountSwitchHistoryPaginateArgs(fieldArgs(ctx, new(UpstreamAccountSwitchHistoryWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUpstreamAccountSwitchHistoryPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*RequestExecution) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"request_execution_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(requestexecution.UpstreamAccountSwitchHistoriesColumn), ids...))
+						})
+						if err := query.GroupBy(requestexecution.UpstreamAccountSwitchHistoriesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*RequestExecution) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.UpstreamAccountSwitchHistories)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, upstreamaccountswitchhistoryImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(requestexecution.UpstreamAccountSwitchHistoriesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUpstreamAccountSwitchHistories(alias, func(wq *UpstreamAccountSwitchHistoryQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[requestexecution.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, requestexecution.FieldCreatedAt)
@@ -11637,6 +11905,362 @@ func (_q *UpstreamAccountQuery) collectField(ctx context.Context, oneNode bool, 
 			_q.WithNamedExecutions(alias, func(wq *RequestExecutionQuery) {
 				*wq = *query
 			})
+
+		case "usageLogs":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UsageLogClient{config: _q.config}).Query()
+			)
+			args := newUsageLogPaginateArgs(fieldArgs(ctx, new(UsageLogWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUsageLogPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UpstreamAccount) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"upstream_account_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(upstreamaccount.UsageLogsColumn), ids...))
+						})
+						if err := query.GroupBy(upstreamaccount.UsageLogsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[3] == nil {
+								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[3][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UpstreamAccount) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.UsageLogs)
+							if nodes[i].Edges.totalCount[3] == nil {
+								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[3][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, usagelogImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(upstreamaccount.UsageLogsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUsageLogs(alias, func(wq *UsageLogQuery) {
+				*wq = *query
+			})
+
+		case "usageBillingRecords":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UsageBillingRecordClient{config: _q.config}).Query()
+			)
+			args := newUsageBillingRecordPaginateArgs(fieldArgs(ctx, new(UsageBillingRecordWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUsageBillingRecordPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UpstreamAccount) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"upstream_account_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(upstreamaccount.UsageBillingRecordsColumn), ids...))
+						})
+						if err := query.GroupBy(upstreamaccount.UsageBillingRecordsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UpstreamAccount) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.UsageBillingRecords)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, usagebillingrecordImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(upstreamaccount.UsageBillingRecordsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUsageBillingRecords(alias, func(wq *UsageBillingRecordQuery) {
+				*wq = *query
+			})
+
+		case "switchHistoriesFrom":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+			)
+			args := newUpstreamAccountSwitchHistoryPaginateArgs(fieldArgs(ctx, new(UpstreamAccountSwitchHistoryWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUpstreamAccountSwitchHistoryPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UpstreamAccount) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"from_account_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(upstreamaccount.SwitchHistoriesFromColumn), ids...))
+						})
+						if err := query.GroupBy(upstreamaccount.SwitchHistoriesFromColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[5][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UpstreamAccount) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.SwitchHistoriesFrom)
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[5][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, upstreamaccountswitchhistoryImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(upstreamaccount.SwitchHistoriesFromColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedSwitchHistoriesFrom(alias, func(wq *UpstreamAccountSwitchHistoryQuery) {
+				*wq = *query
+			})
+
+		case "switchHistoriesTo":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountSwitchHistoryClient{config: _q.config}).Query()
+			)
+			args := newUpstreamAccountSwitchHistoryPaginateArgs(fieldArgs(ctx, new(UpstreamAccountSwitchHistoryWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUpstreamAccountSwitchHistoryPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UpstreamAccount) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"to_account_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(upstreamaccount.SwitchHistoriesToColumn), ids...))
+						})
+						if err := query.GroupBy(upstreamaccount.SwitchHistoriesToColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[6][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UpstreamAccount) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.SwitchHistoriesTo)
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[6][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, upstreamaccountswitchhistoryImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(upstreamaccount.SwitchHistoriesToColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedSwitchHistoriesTo(alias, func(wq *UpstreamAccountSwitchHistoryQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[upstreamaccount.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, upstreamaccount.FieldCreatedAt)
@@ -11963,6 +12587,230 @@ func newUpstreamAccountPoolPaginateArgs(rv map[string]any) *upstreamaccountpoolP
 }
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *UpstreamAccountSwitchHistoryQuery) CollectFields(ctx context.Context, satisfies ...string) (*UpstreamAccountSwitchHistoryQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *UpstreamAccountSwitchHistoryQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(upstreamaccountswitchhistory.Columns))
+		selectedFields = []string{upstreamaccountswitchhistory.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "request":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&RequestClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, requestImplementors)...); err != nil {
+				return err
+			}
+			_q.withRequest = query
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldRequestID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldRequestID)
+				fieldSeen[upstreamaccountswitchhistory.FieldRequestID] = struct{}{}
+			}
+
+		case "requestExecution":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&RequestExecutionClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, requestexecutionImplementors)...); err != nil {
+				return err
+			}
+			_q.withRequestExecution = query
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldRequestExecutionID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldRequestExecutionID)
+				fieldSeen[upstreamaccountswitchhistory.FieldRequestExecutionID] = struct{}{}
+			}
+
+		case "channel":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&ChannelClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, channelImplementors)...); err != nil {
+				return err
+			}
+			_q.withChannel = query
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldChannelID)
+				fieldSeen[upstreamaccountswitchhistory.FieldChannelID] = struct{}{}
+			}
+
+		case "fromAccount":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, upstreamaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.withFromAccount = query
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldFromAccountID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldFromAccountID)
+				fieldSeen[upstreamaccountswitchhistory.FieldFromAccountID] = struct{}{}
+			}
+
+		case "toAccount":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, upstreamaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.withToAccount = query
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldToAccountID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldToAccountID)
+				fieldSeen[upstreamaccountswitchhistory.FieldToAccountID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldCreatedAt)
+				fieldSeen[upstreamaccountswitchhistory.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldUpdatedAt)
+				fieldSeen[upstreamaccountswitchhistory.FieldUpdatedAt] = struct{}{}
+			}
+		case "projectID":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldProjectID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldProjectID)
+				fieldSeen[upstreamaccountswitchhistory.FieldProjectID] = struct{}{}
+			}
+		case "requestID":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldRequestID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldRequestID)
+				fieldSeen[upstreamaccountswitchhistory.FieldRequestID] = struct{}{}
+			}
+		case "requestExecutionID":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldRequestExecutionID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldRequestExecutionID)
+				fieldSeen[upstreamaccountswitchhistory.FieldRequestExecutionID] = struct{}{}
+			}
+		case "channelID":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldChannelID)
+				fieldSeen[upstreamaccountswitchhistory.FieldChannelID] = struct{}{}
+			}
+		case "fromAccountID":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldFromAccountID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldFromAccountID)
+				fieldSeen[upstreamaccountswitchhistory.FieldFromAccountID] = struct{}{}
+			}
+		case "toAccountID":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldToAccountID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldToAccountID)
+				fieldSeen[upstreamaccountswitchhistory.FieldToAccountID] = struct{}{}
+			}
+		case "modelID":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldModelID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldModelID)
+				fieldSeen[upstreamaccountswitchhistory.FieldModelID] = struct{}{}
+			}
+		case "reason":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldReason]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldReason)
+				fieldSeen[upstreamaccountswitchhistory.FieldReason] = struct{}{}
+			}
+		case "errorCode":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldErrorCode]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldErrorCode)
+				fieldSeen[upstreamaccountswitchhistory.FieldErrorCode] = struct{}{}
+			}
+		case "errorMessage":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldErrorMessage]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldErrorMessage)
+				fieldSeen[upstreamaccountswitchhistory.FieldErrorMessage] = struct{}{}
+			}
+		case "latencyMs":
+			if _, ok := fieldSeen[upstreamaccountswitchhistory.FieldLatencyMs]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountswitchhistory.FieldLatencyMs)
+				fieldSeen[upstreamaccountswitchhistory.FieldLatencyMs] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type upstreamaccountswitchhistoryPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []UpstreamAccountSwitchHistoryPaginateOption
+}
+
+func newUpstreamAccountSwitchHistoryPaginateArgs(rv map[string]any) *upstreamaccountswitchhistoryPaginateArgs {
+	args := &upstreamaccountswitchhistoryPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &UpstreamAccountSwitchHistoryOrder{Field: &UpstreamAccountSwitchHistoryOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithUpstreamAccountSwitchHistoryOrder(order))
+			}
+		case *UpstreamAccountSwitchHistoryOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithUpstreamAccountSwitchHistoryOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*UpstreamAccountSwitchHistoryWhereInput); ok {
+		args.opts = append(args.opts, WithUpstreamAccountSwitchHistoryFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (_q *UsageBillingRecordQuery) CollectFields(ctx context.Context, satisfies ...string) (*UsageBillingRecordQuery, error) {
 	fc := graphql.GetFieldContext(ctx)
 	if fc == nil {
@@ -12044,6 +12892,21 @@ func (_q *UsageBillingRecordQuery) collectField(ctx context.Context, oneNode boo
 				fieldSeen[usagebillingrecord.FieldUserSubscriptionID] = struct{}{}
 			}
 
+		case "upstreamAccount":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, upstreamaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.withUpstreamAccount = query
+			if _, ok := fieldSeen[usagebillingrecord.FieldUpstreamAccountID]; !ok {
+				selectedFields = append(selectedFields, usagebillingrecord.FieldUpstreamAccountID)
+				fieldSeen[usagebillingrecord.FieldUpstreamAccountID] = struct{}{}
+			}
+
 		case "billingNotifications":
 			var (
 				alias = field.Alias
@@ -12087,10 +12950,10 @@ func (_q *UsageBillingRecordQuery) collectField(ctx context.Context, oneNode boo
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[4] == nil {
-								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[4][alias] = n
+							nodes[i].Edges.totalCount[5][alias] = n
 						}
 						return nil
 					})
@@ -12098,10 +12961,10 @@ func (_q *UsageBillingRecordQuery) collectField(ctx context.Context, oneNode boo
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UsageBillingRecord) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.BillingNotifications)
-							if nodes[i].Edges.totalCount[4] == nil {
-								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[4][alias] = n
+							nodes[i].Edges.totalCount[5][alias] = n
 						}
 						return nil
 					})
@@ -12156,6 +13019,11 @@ func (_q *UsageBillingRecordQuery) collectField(ctx context.Context, oneNode boo
 			if _, ok := fieldSeen[usagebillingrecord.FieldProjectID]; !ok {
 				selectedFields = append(selectedFields, usagebillingrecord.FieldProjectID)
 				fieldSeen[usagebillingrecord.FieldProjectID] = struct{}{}
+			}
+		case "upstreamAccountID":
+			if _, ok := fieldSeen[usagebillingrecord.FieldUpstreamAccountID]; !ok {
+				selectedFields = append(selectedFields, usagebillingrecord.FieldUpstreamAccountID)
+				fieldSeen[usagebillingrecord.FieldUpstreamAccountID] = struct{}{}
 			}
 		case "userID":
 			if _, ok := fieldSeen[usagebillingrecord.FieldUserID]; !ok {
@@ -12745,6 +13613,21 @@ func (_q *UsageLogQuery) collectField(ctx context.Context, oneNode bool, opCtx *
 				fieldSeen[usagelog.FieldChannelID] = struct{}{}
 			}
 
+		case "upstreamAccount":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, upstreamaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.withUpstreamAccount = query
+			if _, ok := fieldSeen[usagelog.FieldUpstreamAccountID]; !ok {
+				selectedFields = append(selectedFields, usagelog.FieldUpstreamAccountID)
+				fieldSeen[usagelog.FieldUpstreamAccountID] = struct{}{}
+			}
+
 		case "usageBillingRecords":
 			var (
 				alias = field.Alias
@@ -12788,10 +13671,10 @@ func (_q *UsageLogQuery) collectField(ctx context.Context, oneNode bool, opCtx *
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[3] == nil {
-								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[3][alias] = n
+							nodes[i].Edges.totalCount[4][alias] = n
 						}
 						return nil
 					})
@@ -12799,10 +13682,10 @@ func (_q *UsageLogQuery) collectField(ctx context.Context, oneNode bool, opCtx *
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UsageLog) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UsageBillingRecords)
-							if nodes[i].Edges.totalCount[3] == nil {
-								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[3][alias] = n
+							nodes[i].Edges.totalCount[4][alias] = n
 						}
 						return nil
 					})
@@ -12877,10 +13760,10 @@ func (_q *UsageLogQuery) collectField(ctx context.Context, oneNode bool, opCtx *
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[4] == nil {
-								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[4][alias] = n
+							nodes[i].Edges.totalCount[5][alias] = n
 						}
 						return nil
 					})
@@ -12888,10 +13771,10 @@ func (_q *UsageLogQuery) collectField(ctx context.Context, oneNode bool, opCtx *
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UsageLog) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.BillingHolds)
-							if nodes[i].Edges.totalCount[4] == nil {
-								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[4][alias] = n
+							nodes[i].Edges.totalCount[5][alias] = n
 						}
 						return nil
 					})
@@ -12951,6 +13834,11 @@ func (_q *UsageLogQuery) collectField(ctx context.Context, oneNode bool, opCtx *
 			if _, ok := fieldSeen[usagelog.FieldChannelID]; !ok {
 				selectedFields = append(selectedFields, usagelog.FieldChannelID)
 				fieldSeen[usagelog.FieldChannelID] = struct{}{}
+			}
+		case "upstreamAccountID":
+			if _, ok := fieldSeen[usagelog.FieldUpstreamAccountID]; !ok {
+				selectedFields = append(selectedFields, usagelog.FieldUpstreamAccountID)
+				fieldSeen[usagelog.FieldUpstreamAccountID] = struct{}{}
 			}
 		case "modelID":
 			if _, ok := fieldSeen[usagelog.FieldModelID]; !ok {
