@@ -358,6 +358,7 @@ Verification:
 - [x] Stage 9: Billing Notifications
 - [x] Stage 10: Production Operations And Security Closure
 - [ ] Stage 11: Production Deployment And End-to-End Acceptance
+- [ ] Stage 12+: Commercial Platform Enhancement Roadmap ([commercial-platform-enhancement-roadmap.md](./commercial-platform-enhancement-roadmap.md))
 
 ## Stage 11: Production Deployment And End-to-End Acceptance
 
