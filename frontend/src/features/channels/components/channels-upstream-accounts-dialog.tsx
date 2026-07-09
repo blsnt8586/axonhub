@@ -458,11 +458,15 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                 </CardHeader>
                 <CardContent className='grid gap-3 px-4 pb-4 md:grid-cols-4'>
                   <Field label='Name'>
-                    <Input value={accountForm.name} onChange={(event) => setAccountForm({ ...accountForm, name: event.target.value })} />
+                    <Input
+                      data-testid='upstream-account-name-input'
+                      value={accountForm.name}
+                      onChange={(event) => setAccountForm({ ...accountForm, name: event.target.value })}
+                    />
                   </Field>
                   <Field label='Pool'>
                     <Select value={accountForm.poolID} onValueChange={(value) => setAccountForm({ ...accountForm, poolID: value })}>
-                      <SelectTrigger className='w-full'>
+                      <SelectTrigger className='w-full' data-testid='upstream-account-pool-select'>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -492,6 +496,7 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                   </Field>
                   <Field label='Credential'>
                     <Input
+                      data-testid='upstream-account-credential-input'
                       type='password'
                       value={accountForm.credential}
                       placeholder={accountForm.id ? 'Leave blank to keep existing' : 'Required'}
@@ -591,6 +596,7 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                   </div>
                   <div className='flex gap-2 md:col-span-4'>
                     <Button
+                      data-testid='upstream-account-save-button'
                       onClick={handleSaveAccount}
                       disabled={busy || !accountForm.name.trim() || (!accountForm.id && !accountForm.credential.trim())}
                     >
@@ -666,7 +672,11 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                 </CardHeader>
                 <CardContent className='grid gap-3 px-4 pb-4 md:grid-cols-3'>
                   <Field label='Name'>
-                    <Input value={poolForm.name} onChange={(event) => setPoolForm({ ...poolForm, name: event.target.value })} />
+                    <Input
+                      data-testid='upstream-pool-name-input'
+                      value={poolForm.name}
+                      onChange={(event) => setPoolForm({ ...poolForm, name: event.target.value })}
+                    />
                   </Field>
                   <Field label='Status'>
                     <Select
@@ -688,6 +698,7 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                   </Field>
                   <Field label='Model patterns'>
                     <Input
+                      data-testid='upstream-pool-model-patterns-input'
                       value={poolForm.modelPatterns}
                       onChange={(event) => setPoolForm({ ...poolForm, modelPatterns: event.target.value })}
                     />
@@ -701,7 +712,7 @@ export function ChannelsUpstreamAccountsDialog({ open, onOpenChange }: Props) {
                     </Field>
                   </div>
                   <div className='flex gap-2 md:col-span-3'>
-                    <Button onClick={handleSavePool} disabled={busy || !poolForm.name.trim()}>
+                    <Button data-testid='upstream-pool-save-button' onClick={handleSavePool} disabled={busy || !poolForm.name.trim()}>
                       <IconPlus className='mr-1 h-4 w-4' />
                       {poolForm.id ? 'Save pool' : 'Create pool'}
                     </Button>

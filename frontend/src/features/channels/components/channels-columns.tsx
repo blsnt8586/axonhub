@@ -118,6 +118,18 @@ const ActionCell = memo(({ row }: { row: Row<Channel> }) => {
       <Button size='sm' variant='outline' className='h-8 w-8 p-0' onClick={handleEdit}>
         <IconEdit className='h-3 w-3' />
       </Button>
+      <Button
+        size='sm'
+        variant='outline'
+        className='h-8 w-8 p-0'
+        data-testid='upstream-accounts-button'
+        onClick={() => {
+          setCurrentRow(channel);
+          setOpen('upstreamAccounts');
+        }}
+      >
+        <IconServer className='h-3 w-3' />
+      </Button>
       <Button size='sm' variant='outline' className='h-8 px-3' onClick={handleDefaultTest} disabled={testChannel.isPending}>
         <IconPlayerPlay className='mr-1 h-3 w-3' />
       </Button>

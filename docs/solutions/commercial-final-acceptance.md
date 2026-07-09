@@ -35,6 +35,7 @@ Stage 18 covers the production-facing commercial loop:
 | Usage billing and aggregates | `internal/server/biz/usage_billing_test.go`, `internal/server/biz/usage_aggregate_test.go` | Usage records are charged once, project price rules override global pricing, outbox retry is repeatable, aggregates rebuild deterministically, and upstream account dimensions propagate. |
 | GraphQL authorization | `internal/server/gql/*_test.go` | Owner/user resolver boundaries and secret redaction are covered for billing and upstream account surfaces. |
 | Commercial browser smoke | `./scripts/e2e/e2e-test.sh commercial-smoke.spec.ts` | Owner billing console entry, public registration, user wallet rendering, redeem-code redemption, subscription purchase, and simulated ePay recharge are covered in Playwright. |
+| Account-pool browser smoke | `./scripts/e2e/e2e-test.sh upstream-accounts-smoke.spec.ts` | Channel account-pool dialog, pool creation, write-only account credential creation, monitoring list, and account detail views are covered in Playwright. |
 | Frontend compilation | `pnpm exec tsc --noEmit`, `pnpm build` from `frontend/` | The commercial UI remains type-safe and production-buildable. |
 
 `pnpm lint` was also run during Stage 18. It failed on existing repository-wide
@@ -74,6 +75,17 @@ Stage 19 adds automated Playwright coverage for the core browser loop:
 - A seeded subscription plan can be purchased from the browser.
 - A simulated ePay recharge returns through the payment callback and the wallet
   page shows a paid order.
+
+Stage 20 adds automated Playwright coverage for the upstream account-pool
+operator loop:
+
+- Owner seeds a dedicated Channel and opens the upstream-account dialog.
+- Owner creates an account pool with model targeting.
+- Owner creates an upstream account whose credential remains write-only in the
+  browser.
+- Owner opens the account monitoring page and sees the created account.
+- Owner opens the single-account detail page and sees quota/cooldown, recent
+  executions, and switch-history sections.
 
 The remaining manual checks are broader release checks that need real provider
 configuration, API traffic, and responsive review.
@@ -124,9 +136,9 @@ Use the project-specific production `.env` and verify that
 
 ## Residual Production Risks
 
-- Browser commercial smoke is now automated for the core owner/user billing
-  loop. Deeper API-traffic, mobile, and production-provider checks remain manual
-  release tasks.
+- Browser commercial smoke is now automated for the core owner/user billing loop
+  and the owner account-pool management/monitoring loop. Deeper API-traffic,
+  mobile, and production-provider checks remain manual release tasks.
 - Full frontend lint is not yet a clean release gate. Typecheck and production
   build pass, but repository-wide lint needs a separate cleanup stage.
 - Docker/PostgreSQL startup and backup/restore are still deployment acceptance
@@ -145,8 +157,9 @@ are true:
 - Backend focused tests pass.
 - Frontend typecheck and production build pass.
 - Docker/PostgreSQL stack starts and healthcheck passes.
-- Automated commercial browser smoke passes, and remaining manual browser
-  checklist items pass for real API traffic and responsive layouts.
+- Automated commercial and account-pool browser smoke passes, and remaining
+  manual browser checklist items pass for real API traffic and responsive
+  layouts.
 - Log sampling confirms no payment secrets, upstream account secrets, or full
   API keys are emitted.
 - A database backup and rollback point exist.

@@ -96,6 +96,7 @@ export function DataTableToolbar<TData>({
       <div className='relative min-w-48 flex-1'>
         <i className='ph ph-magnifying-glass text-muted-foreground absolute top-2.5 left-3'></i>
         <Input
+          data-testid='channels-name-filter'
           placeholder={t('channels.filters.filterByName')}
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}

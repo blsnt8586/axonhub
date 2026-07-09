@@ -36,10 +36,9 @@ learn from `new-api` and `sub2api` where they are stronger.
 - [x] Public registration is a real product flow with backend registration
   settings, public sign-up, user wallet initialization, optional default
   project/API key creation, and browser smoke coverage.
-- [ ] Upstream account pools are not first-class resources yet. Channel
-  credentials and disabled API keys exist, but they are not equivalent to a
-  schedulable account pool with per-account health, quota, proxy, and switch
-  history.
+- [x] Upstream account pools are first-class Channel resources with
+  per-account credentials, schedulability, health, quota, cooldown, scheduling,
+  switch history, monitoring, and browser-smoke coverage.
 - [ ] Long-range usage analytics still need production-grade aggregation tables
   instead of depending only on detail rows and ad hoc queries.
 
@@ -354,6 +353,45 @@ Verification:
   wallet rendering, redeem redemption, subscription purchase, and simulated ePay
   paid order visibility.
 
+## Stage 20: Account Pool Browser Smoke And Roadmap Alignment
+
+Status: [x] Completed
+
+Goal: verify the upstream account-pool product loop in the browser and align the
+roadmap baseline with the completed Stage 15-17 implementation.
+
+Backend scope:
+
+- [x] Keep the existing Channel, UpstreamAccountPool, UpstreamAccount,
+  account-level scheduling, switch history, and monitoring services unchanged.
+- [x] Seed a dedicated smoke Channel through GraphQL so the browser test does
+  not depend on pre-existing operator data.
+- [x] Exercise the existing GraphQL create-pool and create-account mutations
+  through browser-managed UI actions.
+
+Frontend scope:
+
+- [x] Promote account-pool management to a first-class Channel row action
+  instead of leaving it only under the overflow menu.
+- [x] Add stable test identifiers for Channel name filtering and account-pool
+  management controls.
+- [x] Add Playwright coverage for opening a Channel's upstream-account dialog,
+  creating an account pool, creating a write-only-credential upstream account,
+  and confirming account inventory state.
+- [x] Add Playwright coverage for the account monitoring list and single-account
+  detail page, including quota/cooldown, recent executions, and switch-history
+  sections.
+- [x] Preserve the existing dense admin-table UI pattern; no new marketing-style
+  or card-heavy surfaces were introduced.
+
+Verification:
+
+- [x] `pnpm exec tsc --noEmit`
+- [x] `pnpm build`
+- [x] `./scripts/e2e/e2e-test.sh upstream-accounts-smoke.spec.ts`
+- [x] Browser smoke confirms account pools can be managed as first-class
+  operator resources and monitored outside the Channel detail dialog.
+
 ## Completion Log
 
 Append one line per completed enhancement stage.
@@ -364,3 +402,4 @@ Append one line per completed enhancement stage.
 | Stage 17 | this commit | 2026-07-09 | Added upstream-account usage dimensions, switch history, owner monitoring/detail pages, and focused backend/frontend verification. |
 | Stage 18 | this commit | 2026-07-09 | Added final commercial lifecycle acceptance test, Stage 18 acceptance evidence, and release-gate checklist for remaining deployment/browser smoke. |
 | Stage 19 | this commit | 2026-07-09 | Added commercial Playwright smoke automation for owner billing, public registration, user wallet, redeem, subscription purchase, and simulated ePay recharge; fixed subscription GraphQL edge resolution across transaction boundaries. |
+| Stage 20 | this commit | 2026-07-09 | Added account-pool browser smoke automation for Channel account-pool management, write-only account credentials, account monitoring, and account detail pages; aligned the roadmap baseline with completed account-pool stages. |
