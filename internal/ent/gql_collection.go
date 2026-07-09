@@ -54,6 +54,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
+	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -11776,6 +11778,384 @@ func newUsageBillingRecordPaginateArgs(rv map[string]any) *usagebillingrecordPag
 	}
 	if v, ok := rv[whereField].(*UsageBillingRecordWhereInput); ok {
 		args.opts = append(args.opts, WithUsageBillingRecordFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *UsageDailyAggregateQuery) CollectFields(ctx context.Context, satisfies ...string) (*UsageDailyAggregateQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *UsageDailyAggregateQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(usagedailyaggregate.Columns))
+		selectedFields = []string{usagedailyaggregate.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+		case "createdAt":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldCreatedAt)
+				fieldSeen[usagedailyaggregate.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldUpdatedAt)
+				fieldSeen[usagedailyaggregate.FieldUpdatedAt] = struct{}{}
+			}
+		case "bucketStart":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldBucketStart]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldBucketStart)
+				fieldSeen[usagedailyaggregate.FieldBucketStart] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldUserID)
+				fieldSeen[usagedailyaggregate.FieldUserID] = struct{}{}
+			}
+		case "apiKeyID":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldAPIKeyID]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldAPIKeyID)
+				fieldSeen[usagedailyaggregate.FieldAPIKeyID] = struct{}{}
+			}
+		case "projectID":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldProjectID]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldProjectID)
+				fieldSeen[usagedailyaggregate.FieldProjectID] = struct{}{}
+			}
+		case "channelID":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldChannelID)
+				fieldSeen[usagedailyaggregate.FieldChannelID] = struct{}{}
+			}
+		case "upstreamAccountID":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldUpstreamAccountID]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldUpstreamAccountID)
+				fieldSeen[usagedailyaggregate.FieldUpstreamAccountID] = struct{}{}
+			}
+		case "modelID":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldModelID]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldModelID)
+				fieldSeen[usagedailyaggregate.FieldModelID] = struct{}{}
+			}
+		case "requestType":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldRequestType]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldRequestType)
+				fieldSeen[usagedailyaggregate.FieldRequestType] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldStatus)
+				fieldSeen[usagedailyaggregate.FieldStatus] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldCurrency)
+				fieldSeen[usagedailyaggregate.FieldCurrency] = struct{}{}
+			}
+		case "requestCount":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldRequestCount]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldRequestCount)
+				fieldSeen[usagedailyaggregate.FieldRequestCount] = struct{}{}
+			}
+		case "successCount":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldSuccessCount]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldSuccessCount)
+				fieldSeen[usagedailyaggregate.FieldSuccessCount] = struct{}{}
+			}
+		case "errorCount":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldErrorCount]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldErrorCount)
+				fieldSeen[usagedailyaggregate.FieldErrorCount] = struct{}{}
+			}
+		case "promptTokens":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldPromptTokens]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldPromptTokens)
+				fieldSeen[usagedailyaggregate.FieldPromptTokens] = struct{}{}
+			}
+		case "completionTokens":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldCompletionTokens]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldCompletionTokens)
+				fieldSeen[usagedailyaggregate.FieldCompletionTokens] = struct{}{}
+			}
+		case "totalTokens":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldTotalTokens]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldTotalTokens)
+				fieldSeen[usagedailyaggregate.FieldTotalTokens] = struct{}{}
+			}
+		case "userChargeMicros":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldUserChargeMicros]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldUserChargeMicros)
+				fieldSeen[usagedailyaggregate.FieldUserChargeMicros] = struct{}{}
+			}
+		case "upstreamCostMicros":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldUpstreamCostMicros]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldUpstreamCostMicros)
+				fieldSeen[usagedailyaggregate.FieldUpstreamCostMicros] = struct{}{}
+			}
+		case "grossMarginMicros":
+			if _, ok := fieldSeen[usagedailyaggregate.FieldGrossMarginMicros]; !ok {
+				selectedFields = append(selectedFields, usagedailyaggregate.FieldGrossMarginMicros)
+				fieldSeen[usagedailyaggregate.FieldGrossMarginMicros] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type usagedailyaggregatePaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []UsageDailyAggregatePaginateOption
+}
+
+func newUsageDailyAggregatePaginateArgs(rv map[string]any) *usagedailyaggregatePaginateArgs {
+	args := &usagedailyaggregatePaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &UsageDailyAggregateOrder{Field: &UsageDailyAggregateOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithUsageDailyAggregateOrder(order))
+			}
+		case *UsageDailyAggregateOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithUsageDailyAggregateOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*UsageDailyAggregateWhereInput); ok {
+		args.opts = append(args.opts, WithUsageDailyAggregateFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *UsageHourlyAggregateQuery) CollectFields(ctx context.Context, satisfies ...string) (*UsageHourlyAggregateQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *UsageHourlyAggregateQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(usagehourlyaggregate.Columns))
+		selectedFields = []string{usagehourlyaggregate.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+		case "createdAt":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldCreatedAt)
+				fieldSeen[usagehourlyaggregate.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldUpdatedAt)
+				fieldSeen[usagehourlyaggregate.FieldUpdatedAt] = struct{}{}
+			}
+		case "bucketStart":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldBucketStart]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldBucketStart)
+				fieldSeen[usagehourlyaggregate.FieldBucketStart] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldUserID)
+				fieldSeen[usagehourlyaggregate.FieldUserID] = struct{}{}
+			}
+		case "apiKeyID":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldAPIKeyID]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldAPIKeyID)
+				fieldSeen[usagehourlyaggregate.FieldAPIKeyID] = struct{}{}
+			}
+		case "projectID":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldProjectID]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldProjectID)
+				fieldSeen[usagehourlyaggregate.FieldProjectID] = struct{}{}
+			}
+		case "channelID":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldChannelID)
+				fieldSeen[usagehourlyaggregate.FieldChannelID] = struct{}{}
+			}
+		case "upstreamAccountID":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldUpstreamAccountID]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldUpstreamAccountID)
+				fieldSeen[usagehourlyaggregate.FieldUpstreamAccountID] = struct{}{}
+			}
+		case "modelID":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldModelID]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldModelID)
+				fieldSeen[usagehourlyaggregate.FieldModelID] = struct{}{}
+			}
+		case "requestType":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldRequestType]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldRequestType)
+				fieldSeen[usagehourlyaggregate.FieldRequestType] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldStatus)
+				fieldSeen[usagehourlyaggregate.FieldStatus] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldCurrency)
+				fieldSeen[usagehourlyaggregate.FieldCurrency] = struct{}{}
+			}
+		case "requestCount":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldRequestCount]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldRequestCount)
+				fieldSeen[usagehourlyaggregate.FieldRequestCount] = struct{}{}
+			}
+		case "successCount":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldSuccessCount]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldSuccessCount)
+				fieldSeen[usagehourlyaggregate.FieldSuccessCount] = struct{}{}
+			}
+		case "errorCount":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldErrorCount]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldErrorCount)
+				fieldSeen[usagehourlyaggregate.FieldErrorCount] = struct{}{}
+			}
+		case "promptTokens":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldPromptTokens]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldPromptTokens)
+				fieldSeen[usagehourlyaggregate.FieldPromptTokens] = struct{}{}
+			}
+		case "completionTokens":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldCompletionTokens]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldCompletionTokens)
+				fieldSeen[usagehourlyaggregate.FieldCompletionTokens] = struct{}{}
+			}
+		case "totalTokens":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldTotalTokens]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldTotalTokens)
+				fieldSeen[usagehourlyaggregate.FieldTotalTokens] = struct{}{}
+			}
+		case "userChargeMicros":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldUserChargeMicros]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldUserChargeMicros)
+				fieldSeen[usagehourlyaggregate.FieldUserChargeMicros] = struct{}{}
+			}
+		case "upstreamCostMicros":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldUpstreamCostMicros]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldUpstreamCostMicros)
+				fieldSeen[usagehourlyaggregate.FieldUpstreamCostMicros] = struct{}{}
+			}
+		case "grossMarginMicros":
+			if _, ok := fieldSeen[usagehourlyaggregate.FieldGrossMarginMicros]; !ok {
+				selectedFields = append(selectedFields, usagehourlyaggregate.FieldGrossMarginMicros)
+				fieldSeen[usagehourlyaggregate.FieldGrossMarginMicros] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type usagehourlyaggregatePaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []UsageHourlyAggregatePaginateOption
+}
+
+func newUsageHourlyAggregatePaginateArgs(rv map[string]any) *usagehourlyaggregatePaginateArgs {
+	args := &usagehourlyaggregatePaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &UsageHourlyAggregateOrder{Field: &UsageHourlyAggregateOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithUsageHourlyAggregateOrder(order))
+			}
+		case *UsageHourlyAggregateOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithUsageHourlyAggregateOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*UsageHourlyAggregateWhereInput); ok {
+		args.opts = append(args.opts, WithUsageHourlyAggregateFilter(v.Filter))
 	}
 	return args
 }

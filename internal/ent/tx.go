@@ -100,6 +100,10 @@ type Tx struct {
 	Trace *TraceClient
 	// UsageBillingRecord is the client for interacting with the UsageBillingRecord builders.
 	UsageBillingRecord *UsageBillingRecordClient
+	// UsageDailyAggregate is the client for interacting with the UsageDailyAggregate builders.
+	UsageDailyAggregate *UsageDailyAggregateClient
+	// UsageHourlyAggregate is the client for interacting with the UsageHourlyAggregate builders.
+	UsageHourlyAggregate *UsageHourlyAggregateClient
 	// UsageLog is the client for interacting with the UsageLog builders.
 	UsageLog *UsageLogClient
 	// User is the client for interacting with the User builders.
@@ -285,6 +289,8 @@ func (tx *Tx) init() {
 	tx.Thread = NewThreadClient(tx.config)
 	tx.Trace = NewTraceClient(tx.config)
 	tx.UsageBillingRecord = NewUsageBillingRecordClient(tx.config)
+	tx.UsageDailyAggregate = NewUsageDailyAggregateClient(tx.config)
+	tx.UsageHourlyAggregate = NewUsageHourlyAggregateClient(tx.config)
 	tx.UsageLog = NewUsageLogClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserProject = NewUserProjectClient(tx.config)

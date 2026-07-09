@@ -344,6 +344,7 @@ type MaintenanceForm = {
   limit: string;
   now: string;
   reason: string;
+  rebuildUsageAggregates: boolean;
 };
 
 type AuditFilterForm = {
@@ -798,7 +799,7 @@ function commercialSettingFormFromSetting(setting: CommercialSetting): Commercia
 }
 
 function defaultMaintenanceForm(): MaintenanceForm {
-  return { limit: '100', now: '', reason: '' };
+  return { limit: '100', now: '', reason: '', rebuildUsageAggregates: false };
 }
 
 function defaultAuditFilter(): AuditFilterForm {
@@ -1718,6 +1719,7 @@ export default function AdminBillingPage() {
         limit,
         now: optionalTime(maintenanceForm.now),
         reason: maintenanceForm.reason.trim(),
+        rebuildUsageAggregates: maintenanceForm.rebuildUsageAggregates,
       });
       setMaintenanceResult(result);
       toast.success(t('adminBilling.operations.maintenanceSuccess'));
@@ -3239,7 +3241,71 @@ function ReportsTab({
             </Table>
           </CardContent>
         </Card>
+      </div>
 
+      <div className='grid gap-4 xl:grid-cols-2'>
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.reports.topApiKeys')}</CardTitle>
+          </CardHeader>
+          <CardContent className='overflow-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.columns.apiKey')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.count')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <DataStateRow colSpan={3} isLoading={isLoading} isEmpty={(report?.topApiKeys ?? []).length === 0} />
+                {report?.topApiKeys.map((apiKey) => (
+                  <TableRow key={apiKey.apiKeyId}>
+                    <TableCell>
+                      <div className='font-medium'>{apiKey.apiKeyName || `#${apiKey.apiKeyId}`}</div>
+                      <div className='text-muted-foreground text-xs'>ID {apiKey.apiKeyId}</div>
+                    </TableCell>
+                    <TableCell className='text-right font-mono'>{apiKey.requestCount}</TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(apiKey.chargeAmountMicros, reportCurrency)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.reports.topChannels')}</CardTitle>
+          </CardHeader>
+          <CardContent className='overflow-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.columns.channel')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.count')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <DataStateRow colSpan={3} isLoading={isLoading} isEmpty={(report?.topChannels ?? []).length === 0} />
+                {report?.topChannels.map((channel) => (
+                  <TableRow key={channel.channelId}>
+                    <TableCell>
+                      <div className='font-medium'>{channel.channelName || `#${channel.channelId}`}</div>
+                      <div className='text-muted-foreground text-xs'>ID {channel.channelId}</div>
+                    </TableCell>
+                    <TableCell className='text-right font-mono'>{channel.requestCount}</TableCell>
+                    <TableCell className='text-right font-mono'>{formatMicros(channel.chargeAmountMicros, reportCurrency)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className='grid gap-4 xl:grid-cols-2'>
         <Card className='rounded-lg'>
           <CardHeader>
             <CardTitle className='text-base'>{t('adminBilling.reports.daily')}</CardTitle>
@@ -3993,6 +4059,9 @@ function OperationsTab({
         ['subscriptionResetProcessed', maintenanceResult.subscriptionResetProcessed],
         ['affiliateRebateThawProcessed', maintenanceResult.affiliateRebateThawProcessed],
         ['failedBillingRetryProcessed', maintenanceResult.failedBillingRetryProcessed],
+        ['usageAggregateRecordsProcessed', maintenanceResult.usageAggregateRecordsProcessed],
+        ['usageAggregateHourlyRows', maintenanceResult.usageAggregateHourlyRows],
+        ['usageAggregateDailyRows', maintenanceResult.usageAggregateDailyRows],
       ]
     : [];
 
@@ -4076,6 +4145,10 @@ function OperationsTab({
                 <FilterInput label={t('adminBilling.operations.limit')} value={maintenanceForm.limit} onChange={(value) => setMaintenanceForm((prev) => ({ ...prev, limit: value }))} />
                 <FilterInput label={t('adminBilling.operations.now')} type='datetime-local' value={maintenanceForm.now} onChange={(value) => setMaintenanceForm((prev) => ({ ...prev, now: value }))} />
               </div>
+              <label className='flex items-center gap-2 rounded-md border p-3 text-sm'>
+                <Switch checked={maintenanceForm.rebuildUsageAggregates} onCheckedChange={(checked) => setMaintenanceForm((prev) => ({ ...prev, rebuildUsageAggregates: checked }))} />
+                <span>{t('adminBilling.operations.rebuildUsageAggregates')}</span>
+              </label>
               <FilterInput label={t('adminBilling.columns.reason')} value={maintenanceForm.reason} onChange={(value) => setMaintenanceForm((prev) => ({ ...prev, reason: value }))} />
               <Button type='submit' disabled={isRunningMaintenance}>
                 {isRunningMaintenance ? <Loader2 className='size-4 animate-spin' /> : <Wrench className='size-4' />}

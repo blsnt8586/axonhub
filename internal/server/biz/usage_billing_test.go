@@ -668,12 +668,14 @@ func newUsageBillingTestProcessorWithConfig(t *testing.T, name string, cfg Billi
 	require.NoError(t, err)
 	pricingSvc := NewPricingService(PricingServiceParams{Ent: client})
 	ledgerSvc := NewLedgerService(LedgerServiceParams{Ent: client})
+	aggregateSvc := NewUsageAggregateService(UsageAggregateServiceParams{Ent: client})
 	processor := NewUsageBillingProcessor(UsageBillingProcessorParams{
 		Config:                cfg,
 		Ent:                   client,
 		PricingService:        pricingSvc,
 		BillingAccountService: accountSvc,
 		LedgerService:         ledgerSvc,
+		UsageAggregateService: aggregateSvc,
 	})
 
 	return client, ctx, processor, account

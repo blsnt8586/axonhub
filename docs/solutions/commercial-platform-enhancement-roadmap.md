@@ -119,36 +119,36 @@ Verification:
 
 ## Stage 14: Usage Aggregation Tables
 
-Status: [ ] Planned
+Status: [x] Completed
 
 Goal: introduce production-grade hourly and daily aggregation so dashboards do
 not depend on scanning detail logs over long time ranges.
 
 Backend scope:
 
-- [ ] Add hourly and daily usage aggregate entities.
-- [ ] Aggregate dimensions: user, API key, project, channel, model, request type,
+- [x] Add hourly and daily usage aggregate entities.
+- [x] Aggregate dimensions: user, API key, project, channel, model, request type,
   status, and an optional upstream account ID reserved for Stage 15+.
-- [ ] Aggregate metrics: request count, success count, error count, prompt
+- [x] Aggregate metrics: request count, success count, error count, prompt
   tokens, completion tokens, total tokens, user charge micros, upstream cost
   micros, and gross margin micros.
-- [ ] Update usage billing completion to enqueue or apply aggregate updates
+- [x] Update usage billing completion to enqueue or apply aggregate updates
   idempotently.
-- [ ] Add a rebuild task that can regenerate aggregates from detail rows.
-- [ ] Keep detail UsageLog and UsageBillingRecord as the source of truth.
+- [x] Add a rebuild task that can regenerate aggregates from detail rows.
+- [x] Keep detail UsageLog and UsageBillingRecord as the source of truth.
 
 Frontend scope:
 
-- [ ] Move user and owner trend charts to aggregate-backed queries.
-- [ ] Add model, project, channel, and API key rankings from aggregates.
-- [ ] Keep detail request and billing pages for auditing and debugging.
+- [x] Move user and owner trend charts to aggregate-backed queries.
+- [x] Add model, project, channel, and API key rankings from aggregates.
+- [x] Keep detail request and billing pages for auditing and debugging.
 
 Verification:
 
-- [ ] Aggregate totals match seeded detail rows.
-- [ ] Rebuild is repeatable and idempotent.
-- [ ] Duplicate usage billing does not double count aggregates.
-- [ ] Long time-range dashboard queries use aggregate data.
+- [x] Aggregate totals match seeded detail rows.
+- [x] Rebuild is repeatable and idempotent.
+- [x] Duplicate usage billing does not double count aggregates.
+- [x] Long time-range dashboard queries use aggregate data.
 
 ## Stage 15: Upstream Account Pool Model
 

@@ -52,6 +52,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
+	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -24254,6 +24256,1698 @@ func (i *UsageBillingRecordWhereInput) P() (predicate.UsageBillingRecord, error)
 		return predicates[0], nil
 	default:
 		return usagebillingrecord.And(predicates...), nil
+	}
+}
+
+// UsageDailyAggregateWhereInput represents a where input for filtering UsageDailyAggregate queries.
+type UsageDailyAggregateWhereInput struct {
+	Predicates []predicate.UsageDailyAggregate  `json:"-"`
+	Not        *UsageDailyAggregateWhereInput   `json:"not,omitempty"`
+	Or         []*UsageDailyAggregateWhereInput `json:"or,omitempty"`
+	And        []*UsageDailyAggregateWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "bucket_start" field predicates.
+	BucketStart      *time.Time  `json:"bucketStart,omitempty"`
+	BucketStartNEQ   *time.Time  `json:"bucketStartNEQ,omitempty"`
+	BucketStartIn    []time.Time `json:"bucketStartIn,omitempty"`
+	BucketStartNotIn []time.Time `json:"bucketStartNotIn,omitempty"`
+	BucketStartGT    *time.Time  `json:"bucketStartGT,omitempty"`
+	BucketStartGTE   *time.Time  `json:"bucketStartGTE,omitempty"`
+	BucketStartLT    *time.Time  `json:"bucketStartLT,omitempty"`
+	BucketStartLTE   *time.Time  `json:"bucketStartLTE,omitempty"`
+
+	// "user_id" field predicates.
+	UserID      *int  `json:"userID,omitempty"`
+	UserIDNEQ   *int  `json:"userIDNEQ,omitempty"`
+	UserIDIn    []int `json:"userIDIn,omitempty"`
+	UserIDNotIn []int `json:"userIDNotIn,omitempty"`
+	UserIDGT    *int  `json:"userIDGT,omitempty"`
+	UserIDGTE   *int  `json:"userIDGTE,omitempty"`
+	UserIDLT    *int  `json:"userIDLT,omitempty"`
+	UserIDLTE   *int  `json:"userIDLTE,omitempty"`
+
+	// "api_key_id" field predicates.
+	APIKeyID      *int  `json:"apiKeyID,omitempty"`
+	APIKeyIDNEQ   *int  `json:"apiKeyIDNEQ,omitempty"`
+	APIKeyIDIn    []int `json:"apiKeyIDIn,omitempty"`
+	APIKeyIDNotIn []int `json:"apiKeyIDNotIn,omitempty"`
+	APIKeyIDGT    *int  `json:"apiKeyIDGT,omitempty"`
+	APIKeyIDGTE   *int  `json:"apiKeyIDGTE,omitempty"`
+	APIKeyIDLT    *int  `json:"apiKeyIDLT,omitempty"`
+	APIKeyIDLTE   *int  `json:"apiKeyIDLTE,omitempty"`
+
+	// "project_id" field predicates.
+	ProjectID      *int  `json:"projectID,omitempty"`
+	ProjectIDNEQ   *int  `json:"projectIDNEQ,omitempty"`
+	ProjectIDIn    []int `json:"projectIDIn,omitempty"`
+	ProjectIDNotIn []int `json:"projectIDNotIn,omitempty"`
+	ProjectIDGT    *int  `json:"projectIDGT,omitempty"`
+	ProjectIDGTE   *int  `json:"projectIDGTE,omitempty"`
+	ProjectIDLT    *int  `json:"projectIDLT,omitempty"`
+	ProjectIDLTE   *int  `json:"projectIDLTE,omitempty"`
+
+	// "channel_id" field predicates.
+	ChannelID      *int  `json:"channelID,omitempty"`
+	ChannelIDNEQ   *int  `json:"channelIDNEQ,omitempty"`
+	ChannelIDIn    []int `json:"channelIDIn,omitempty"`
+	ChannelIDNotIn []int `json:"channelIDNotIn,omitempty"`
+	ChannelIDGT    *int  `json:"channelIDGT,omitempty"`
+	ChannelIDGTE   *int  `json:"channelIDGTE,omitempty"`
+	ChannelIDLT    *int  `json:"channelIDLT,omitempty"`
+	ChannelIDLTE   *int  `json:"channelIDLTE,omitempty"`
+
+	// "upstream_account_id" field predicates.
+	UpstreamAccountID      *int  `json:"upstreamAccountID,omitempty"`
+	UpstreamAccountIDNEQ   *int  `json:"upstreamAccountIDNEQ,omitempty"`
+	UpstreamAccountIDIn    []int `json:"upstreamAccountIDIn,omitempty"`
+	UpstreamAccountIDNotIn []int `json:"upstreamAccountIDNotIn,omitempty"`
+	UpstreamAccountIDGT    *int  `json:"upstreamAccountIDGT,omitempty"`
+	UpstreamAccountIDGTE   *int  `json:"upstreamAccountIDGTE,omitempty"`
+	UpstreamAccountIDLT    *int  `json:"upstreamAccountIDLT,omitempty"`
+	UpstreamAccountIDLTE   *int  `json:"upstreamAccountIDLTE,omitempty"`
+
+	// "model_id" field predicates.
+	ModelID             *string  `json:"modelID,omitempty"`
+	ModelIDNEQ          *string  `json:"modelIDNEQ,omitempty"`
+	ModelIDIn           []string `json:"modelIDIn,omitempty"`
+	ModelIDNotIn        []string `json:"modelIDNotIn,omitempty"`
+	ModelIDGT           *string  `json:"modelIDGT,omitempty"`
+	ModelIDGTE          *string  `json:"modelIDGTE,omitempty"`
+	ModelIDLT           *string  `json:"modelIDLT,omitempty"`
+	ModelIDLTE          *string  `json:"modelIDLTE,omitempty"`
+	ModelIDContains     *string  `json:"modelIDContains,omitempty"`
+	ModelIDHasPrefix    *string  `json:"modelIDHasPrefix,omitempty"`
+	ModelIDHasSuffix    *string  `json:"modelIDHasSuffix,omitempty"`
+	ModelIDEqualFold    *string  `json:"modelIDEqualFold,omitempty"`
+	ModelIDContainsFold *string  `json:"modelIDContainsFold,omitempty"`
+
+	// "request_type" field predicates.
+	RequestType      *usagedailyaggregate.RequestType  `json:"requestType,omitempty"`
+	RequestTypeNEQ   *usagedailyaggregate.RequestType  `json:"requestTypeNEQ,omitempty"`
+	RequestTypeIn    []usagedailyaggregate.RequestType `json:"requestTypeIn,omitempty"`
+	RequestTypeNotIn []usagedailyaggregate.RequestType `json:"requestTypeNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *usagedailyaggregate.Status  `json:"status,omitempty"`
+	StatusNEQ   *usagedailyaggregate.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []usagedailyaggregate.Status `json:"statusIn,omitempty"`
+	StatusNotIn []usagedailyaggregate.Status `json:"statusNotIn,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "request_count" field predicates.
+	RequestCount      *int64  `json:"requestCount,omitempty"`
+	RequestCountNEQ   *int64  `json:"requestCountNEQ,omitempty"`
+	RequestCountIn    []int64 `json:"requestCountIn,omitempty"`
+	RequestCountNotIn []int64 `json:"requestCountNotIn,omitempty"`
+	RequestCountGT    *int64  `json:"requestCountGT,omitempty"`
+	RequestCountGTE   *int64  `json:"requestCountGTE,omitempty"`
+	RequestCountLT    *int64  `json:"requestCountLT,omitempty"`
+	RequestCountLTE   *int64  `json:"requestCountLTE,omitempty"`
+
+	// "success_count" field predicates.
+	SuccessCount      *int64  `json:"successCount,omitempty"`
+	SuccessCountNEQ   *int64  `json:"successCountNEQ,omitempty"`
+	SuccessCountIn    []int64 `json:"successCountIn,omitempty"`
+	SuccessCountNotIn []int64 `json:"successCountNotIn,omitempty"`
+	SuccessCountGT    *int64  `json:"successCountGT,omitempty"`
+	SuccessCountGTE   *int64  `json:"successCountGTE,omitempty"`
+	SuccessCountLT    *int64  `json:"successCountLT,omitempty"`
+	SuccessCountLTE   *int64  `json:"successCountLTE,omitempty"`
+
+	// "error_count" field predicates.
+	ErrorCount      *int64  `json:"errorCount,omitempty"`
+	ErrorCountNEQ   *int64  `json:"errorCountNEQ,omitempty"`
+	ErrorCountIn    []int64 `json:"errorCountIn,omitempty"`
+	ErrorCountNotIn []int64 `json:"errorCountNotIn,omitempty"`
+	ErrorCountGT    *int64  `json:"errorCountGT,omitempty"`
+	ErrorCountGTE   *int64  `json:"errorCountGTE,omitempty"`
+	ErrorCountLT    *int64  `json:"errorCountLT,omitempty"`
+	ErrorCountLTE   *int64  `json:"errorCountLTE,omitempty"`
+
+	// "prompt_tokens" field predicates.
+	PromptTokens      *int64  `json:"promptTokens,omitempty"`
+	PromptTokensNEQ   *int64  `json:"promptTokensNEQ,omitempty"`
+	PromptTokensIn    []int64 `json:"promptTokensIn,omitempty"`
+	PromptTokensNotIn []int64 `json:"promptTokensNotIn,omitempty"`
+	PromptTokensGT    *int64  `json:"promptTokensGT,omitempty"`
+	PromptTokensGTE   *int64  `json:"promptTokensGTE,omitempty"`
+	PromptTokensLT    *int64  `json:"promptTokensLT,omitempty"`
+	PromptTokensLTE   *int64  `json:"promptTokensLTE,omitempty"`
+
+	// "completion_tokens" field predicates.
+	CompletionTokens      *int64  `json:"completionTokens,omitempty"`
+	CompletionTokensNEQ   *int64  `json:"completionTokensNEQ,omitempty"`
+	CompletionTokensIn    []int64 `json:"completionTokensIn,omitempty"`
+	CompletionTokensNotIn []int64 `json:"completionTokensNotIn,omitempty"`
+	CompletionTokensGT    *int64  `json:"completionTokensGT,omitempty"`
+	CompletionTokensGTE   *int64  `json:"completionTokensGTE,omitempty"`
+	CompletionTokensLT    *int64  `json:"completionTokensLT,omitempty"`
+	CompletionTokensLTE   *int64  `json:"completionTokensLTE,omitempty"`
+
+	// "total_tokens" field predicates.
+	TotalTokens      *int64  `json:"totalTokens,omitempty"`
+	TotalTokensNEQ   *int64  `json:"totalTokensNEQ,omitempty"`
+	TotalTokensIn    []int64 `json:"totalTokensIn,omitempty"`
+	TotalTokensNotIn []int64 `json:"totalTokensNotIn,omitempty"`
+	TotalTokensGT    *int64  `json:"totalTokensGT,omitempty"`
+	TotalTokensGTE   *int64  `json:"totalTokensGTE,omitempty"`
+	TotalTokensLT    *int64  `json:"totalTokensLT,omitempty"`
+	TotalTokensLTE   *int64  `json:"totalTokensLTE,omitempty"`
+
+	// "user_charge_micros" field predicates.
+	UserChargeMicros      *int64  `json:"userChargeMicros,omitempty"`
+	UserChargeMicrosNEQ   *int64  `json:"userChargeMicrosNEQ,omitempty"`
+	UserChargeMicrosIn    []int64 `json:"userChargeMicrosIn,omitempty"`
+	UserChargeMicrosNotIn []int64 `json:"userChargeMicrosNotIn,omitempty"`
+	UserChargeMicrosGT    *int64  `json:"userChargeMicrosGT,omitempty"`
+	UserChargeMicrosGTE   *int64  `json:"userChargeMicrosGTE,omitempty"`
+	UserChargeMicrosLT    *int64  `json:"userChargeMicrosLT,omitempty"`
+	UserChargeMicrosLTE   *int64  `json:"userChargeMicrosLTE,omitempty"`
+
+	// "upstream_cost_micros" field predicates.
+	UpstreamCostMicros      *int64  `json:"upstreamCostMicros,omitempty"`
+	UpstreamCostMicrosNEQ   *int64  `json:"upstreamCostMicrosNEQ,omitempty"`
+	UpstreamCostMicrosIn    []int64 `json:"upstreamCostMicrosIn,omitempty"`
+	UpstreamCostMicrosNotIn []int64 `json:"upstreamCostMicrosNotIn,omitempty"`
+	UpstreamCostMicrosGT    *int64  `json:"upstreamCostMicrosGT,omitempty"`
+	UpstreamCostMicrosGTE   *int64  `json:"upstreamCostMicrosGTE,omitempty"`
+	UpstreamCostMicrosLT    *int64  `json:"upstreamCostMicrosLT,omitempty"`
+	UpstreamCostMicrosLTE   *int64  `json:"upstreamCostMicrosLTE,omitempty"`
+
+	// "gross_margin_micros" field predicates.
+	GrossMarginMicros      *int64  `json:"grossMarginMicros,omitempty"`
+	GrossMarginMicrosNEQ   *int64  `json:"grossMarginMicrosNEQ,omitempty"`
+	GrossMarginMicrosIn    []int64 `json:"grossMarginMicrosIn,omitempty"`
+	GrossMarginMicrosNotIn []int64 `json:"grossMarginMicrosNotIn,omitempty"`
+	GrossMarginMicrosGT    *int64  `json:"grossMarginMicrosGT,omitempty"`
+	GrossMarginMicrosGTE   *int64  `json:"grossMarginMicrosGTE,omitempty"`
+	GrossMarginMicrosLT    *int64  `json:"grossMarginMicrosLT,omitempty"`
+	GrossMarginMicrosLTE   *int64  `json:"grossMarginMicrosLTE,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *UsageDailyAggregateWhereInput) AddPredicates(predicates ...predicate.UsageDailyAggregate) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the UsageDailyAggregateWhereInput filter on the UsageDailyAggregateQuery builder.
+func (i *UsageDailyAggregateWhereInput) Filter(q *UsageDailyAggregateQuery) (*UsageDailyAggregateQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyUsageDailyAggregateWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyUsageDailyAggregateWhereInput is returned in case the UsageDailyAggregateWhereInput is empty.
+var ErrEmptyUsageDailyAggregateWhereInput = errors.New("ent: empty predicate UsageDailyAggregateWhereInput")
+
+// P returns a predicate for filtering usagedailyaggregates.
+// An error is returned if the input is empty or invalid.
+func (i *UsageDailyAggregateWhereInput) P() (predicate.UsageDailyAggregate, error) {
+	var predicates []predicate.UsageDailyAggregate
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, usagedailyaggregate.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.UsageDailyAggregate, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, usagedailyaggregate.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.UsageDailyAggregate, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, usagedailyaggregate.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, usagedailyaggregate.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, usagedailyaggregate.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, usagedailyaggregate.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, usagedailyaggregate.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, usagedailyaggregate.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, usagedailyaggregate.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, usagedailyaggregate.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, usagedailyaggregate.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, usagedailyaggregate.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.BucketStart != nil {
+		predicates = append(predicates, usagedailyaggregate.BucketStartEQ(*i.BucketStart))
+	}
+	if i.BucketStartNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.BucketStartNEQ(*i.BucketStartNEQ))
+	}
+	if len(i.BucketStartIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.BucketStartIn(i.BucketStartIn...))
+	}
+	if len(i.BucketStartNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.BucketStartNotIn(i.BucketStartNotIn...))
+	}
+	if i.BucketStartGT != nil {
+		predicates = append(predicates, usagedailyaggregate.BucketStartGT(*i.BucketStartGT))
+	}
+	if i.BucketStartGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.BucketStartGTE(*i.BucketStartGTE))
+	}
+	if i.BucketStartLT != nil {
+		predicates = append(predicates, usagedailyaggregate.BucketStartLT(*i.BucketStartLT))
+	}
+	if i.BucketStartLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.BucketStartLTE(*i.BucketStartLTE))
+	}
+	if i.UserID != nil {
+		predicates = append(predicates, usagedailyaggregate.UserIDEQ(*i.UserID))
+	}
+	if i.UserIDNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.UserIDNEQ(*i.UserIDNEQ))
+	}
+	if len(i.UserIDIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UserIDIn(i.UserIDIn...))
+	}
+	if len(i.UserIDNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UserIDNotIn(i.UserIDNotIn...))
+	}
+	if i.UserIDGT != nil {
+		predicates = append(predicates, usagedailyaggregate.UserIDGT(*i.UserIDGT))
+	}
+	if i.UserIDGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UserIDGTE(*i.UserIDGTE))
+	}
+	if i.UserIDLT != nil {
+		predicates = append(predicates, usagedailyaggregate.UserIDLT(*i.UserIDLT))
+	}
+	if i.UserIDLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UserIDLTE(*i.UserIDLTE))
+	}
+	if i.APIKeyID != nil {
+		predicates = append(predicates, usagedailyaggregate.APIKeyIDEQ(*i.APIKeyID))
+	}
+	if i.APIKeyIDNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.APIKeyIDNEQ(*i.APIKeyIDNEQ))
+	}
+	if len(i.APIKeyIDIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.APIKeyIDIn(i.APIKeyIDIn...))
+	}
+	if len(i.APIKeyIDNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.APIKeyIDNotIn(i.APIKeyIDNotIn...))
+	}
+	if i.APIKeyIDGT != nil {
+		predicates = append(predicates, usagedailyaggregate.APIKeyIDGT(*i.APIKeyIDGT))
+	}
+	if i.APIKeyIDGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.APIKeyIDGTE(*i.APIKeyIDGTE))
+	}
+	if i.APIKeyIDLT != nil {
+		predicates = append(predicates, usagedailyaggregate.APIKeyIDLT(*i.APIKeyIDLT))
+	}
+	if i.APIKeyIDLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.APIKeyIDLTE(*i.APIKeyIDLTE))
+	}
+	if i.ProjectID != nil {
+		predicates = append(predicates, usagedailyaggregate.ProjectIDEQ(*i.ProjectID))
+	}
+	if i.ProjectIDNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.ProjectIDNEQ(*i.ProjectIDNEQ))
+	}
+	if len(i.ProjectIDIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.ProjectIDIn(i.ProjectIDIn...))
+	}
+	if len(i.ProjectIDNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.ProjectIDNotIn(i.ProjectIDNotIn...))
+	}
+	if i.ProjectIDGT != nil {
+		predicates = append(predicates, usagedailyaggregate.ProjectIDGT(*i.ProjectIDGT))
+	}
+	if i.ProjectIDGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.ProjectIDGTE(*i.ProjectIDGTE))
+	}
+	if i.ProjectIDLT != nil {
+		predicates = append(predicates, usagedailyaggregate.ProjectIDLT(*i.ProjectIDLT))
+	}
+	if i.ProjectIDLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.ProjectIDLTE(*i.ProjectIDLTE))
+	}
+	if i.ChannelID != nil {
+		predicates = append(predicates, usagedailyaggregate.ChannelIDEQ(*i.ChannelID))
+	}
+	if i.ChannelIDNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.ChannelIDNEQ(*i.ChannelIDNEQ))
+	}
+	if len(i.ChannelIDIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.ChannelIDIn(i.ChannelIDIn...))
+	}
+	if len(i.ChannelIDNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.ChannelIDNotIn(i.ChannelIDNotIn...))
+	}
+	if i.ChannelIDGT != nil {
+		predicates = append(predicates, usagedailyaggregate.ChannelIDGT(*i.ChannelIDGT))
+	}
+	if i.ChannelIDGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.ChannelIDGTE(*i.ChannelIDGTE))
+	}
+	if i.ChannelIDLT != nil {
+		predicates = append(predicates, usagedailyaggregate.ChannelIDLT(*i.ChannelIDLT))
+	}
+	if i.ChannelIDLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.ChannelIDLTE(*i.ChannelIDLTE))
+	}
+	if i.UpstreamAccountID != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamAccountIDEQ(*i.UpstreamAccountID))
+	}
+	if i.UpstreamAccountIDNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamAccountIDNEQ(*i.UpstreamAccountIDNEQ))
+	}
+	if len(i.UpstreamAccountIDIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UpstreamAccountIDIn(i.UpstreamAccountIDIn...))
+	}
+	if len(i.UpstreamAccountIDNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UpstreamAccountIDNotIn(i.UpstreamAccountIDNotIn...))
+	}
+	if i.UpstreamAccountIDGT != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamAccountIDGT(*i.UpstreamAccountIDGT))
+	}
+	if i.UpstreamAccountIDGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamAccountIDGTE(*i.UpstreamAccountIDGTE))
+	}
+	if i.UpstreamAccountIDLT != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamAccountIDLT(*i.UpstreamAccountIDLT))
+	}
+	if i.UpstreamAccountIDLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamAccountIDLTE(*i.UpstreamAccountIDLTE))
+	}
+	if i.ModelID != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDEQ(*i.ModelID))
+	}
+	if i.ModelIDNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDNEQ(*i.ModelIDNEQ))
+	}
+	if len(i.ModelIDIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.ModelIDIn(i.ModelIDIn...))
+	}
+	if len(i.ModelIDNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.ModelIDNotIn(i.ModelIDNotIn...))
+	}
+	if i.ModelIDGT != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDGT(*i.ModelIDGT))
+	}
+	if i.ModelIDGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDGTE(*i.ModelIDGTE))
+	}
+	if i.ModelIDLT != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDLT(*i.ModelIDLT))
+	}
+	if i.ModelIDLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDLTE(*i.ModelIDLTE))
+	}
+	if i.ModelIDContains != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDContains(*i.ModelIDContains))
+	}
+	if i.ModelIDHasPrefix != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDHasPrefix(*i.ModelIDHasPrefix))
+	}
+	if i.ModelIDHasSuffix != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDHasSuffix(*i.ModelIDHasSuffix))
+	}
+	if i.ModelIDEqualFold != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDEqualFold(*i.ModelIDEqualFold))
+	}
+	if i.ModelIDContainsFold != nil {
+		predicates = append(predicates, usagedailyaggregate.ModelIDContainsFold(*i.ModelIDContainsFold))
+	}
+	if i.RequestType != nil {
+		predicates = append(predicates, usagedailyaggregate.RequestTypeEQ(*i.RequestType))
+	}
+	if i.RequestTypeNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.RequestTypeNEQ(*i.RequestTypeNEQ))
+	}
+	if len(i.RequestTypeIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.RequestTypeIn(i.RequestTypeIn...))
+	}
+	if len(i.RequestTypeNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.RequestTypeNotIn(i.RequestTypeNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, usagedailyaggregate.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, usagedailyaggregate.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.RequestCount != nil {
+		predicates = append(predicates, usagedailyaggregate.RequestCountEQ(*i.RequestCount))
+	}
+	if i.RequestCountNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.RequestCountNEQ(*i.RequestCountNEQ))
+	}
+	if len(i.RequestCountIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.RequestCountIn(i.RequestCountIn...))
+	}
+	if len(i.RequestCountNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.RequestCountNotIn(i.RequestCountNotIn...))
+	}
+	if i.RequestCountGT != nil {
+		predicates = append(predicates, usagedailyaggregate.RequestCountGT(*i.RequestCountGT))
+	}
+	if i.RequestCountGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.RequestCountGTE(*i.RequestCountGTE))
+	}
+	if i.RequestCountLT != nil {
+		predicates = append(predicates, usagedailyaggregate.RequestCountLT(*i.RequestCountLT))
+	}
+	if i.RequestCountLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.RequestCountLTE(*i.RequestCountLTE))
+	}
+	if i.SuccessCount != nil {
+		predicates = append(predicates, usagedailyaggregate.SuccessCountEQ(*i.SuccessCount))
+	}
+	if i.SuccessCountNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.SuccessCountNEQ(*i.SuccessCountNEQ))
+	}
+	if len(i.SuccessCountIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.SuccessCountIn(i.SuccessCountIn...))
+	}
+	if len(i.SuccessCountNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.SuccessCountNotIn(i.SuccessCountNotIn...))
+	}
+	if i.SuccessCountGT != nil {
+		predicates = append(predicates, usagedailyaggregate.SuccessCountGT(*i.SuccessCountGT))
+	}
+	if i.SuccessCountGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.SuccessCountGTE(*i.SuccessCountGTE))
+	}
+	if i.SuccessCountLT != nil {
+		predicates = append(predicates, usagedailyaggregate.SuccessCountLT(*i.SuccessCountLT))
+	}
+	if i.SuccessCountLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.SuccessCountLTE(*i.SuccessCountLTE))
+	}
+	if i.ErrorCount != nil {
+		predicates = append(predicates, usagedailyaggregate.ErrorCountEQ(*i.ErrorCount))
+	}
+	if i.ErrorCountNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.ErrorCountNEQ(*i.ErrorCountNEQ))
+	}
+	if len(i.ErrorCountIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.ErrorCountIn(i.ErrorCountIn...))
+	}
+	if len(i.ErrorCountNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.ErrorCountNotIn(i.ErrorCountNotIn...))
+	}
+	if i.ErrorCountGT != nil {
+		predicates = append(predicates, usagedailyaggregate.ErrorCountGT(*i.ErrorCountGT))
+	}
+	if i.ErrorCountGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.ErrorCountGTE(*i.ErrorCountGTE))
+	}
+	if i.ErrorCountLT != nil {
+		predicates = append(predicates, usagedailyaggregate.ErrorCountLT(*i.ErrorCountLT))
+	}
+	if i.ErrorCountLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.ErrorCountLTE(*i.ErrorCountLTE))
+	}
+	if i.PromptTokens != nil {
+		predicates = append(predicates, usagedailyaggregate.PromptTokensEQ(*i.PromptTokens))
+	}
+	if i.PromptTokensNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.PromptTokensNEQ(*i.PromptTokensNEQ))
+	}
+	if len(i.PromptTokensIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.PromptTokensIn(i.PromptTokensIn...))
+	}
+	if len(i.PromptTokensNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.PromptTokensNotIn(i.PromptTokensNotIn...))
+	}
+	if i.PromptTokensGT != nil {
+		predicates = append(predicates, usagedailyaggregate.PromptTokensGT(*i.PromptTokensGT))
+	}
+	if i.PromptTokensGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.PromptTokensGTE(*i.PromptTokensGTE))
+	}
+	if i.PromptTokensLT != nil {
+		predicates = append(predicates, usagedailyaggregate.PromptTokensLT(*i.PromptTokensLT))
+	}
+	if i.PromptTokensLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.PromptTokensLTE(*i.PromptTokensLTE))
+	}
+	if i.CompletionTokens != nil {
+		predicates = append(predicates, usagedailyaggregate.CompletionTokensEQ(*i.CompletionTokens))
+	}
+	if i.CompletionTokensNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.CompletionTokensNEQ(*i.CompletionTokensNEQ))
+	}
+	if len(i.CompletionTokensIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.CompletionTokensIn(i.CompletionTokensIn...))
+	}
+	if len(i.CompletionTokensNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.CompletionTokensNotIn(i.CompletionTokensNotIn...))
+	}
+	if i.CompletionTokensGT != nil {
+		predicates = append(predicates, usagedailyaggregate.CompletionTokensGT(*i.CompletionTokensGT))
+	}
+	if i.CompletionTokensGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.CompletionTokensGTE(*i.CompletionTokensGTE))
+	}
+	if i.CompletionTokensLT != nil {
+		predicates = append(predicates, usagedailyaggregate.CompletionTokensLT(*i.CompletionTokensLT))
+	}
+	if i.CompletionTokensLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.CompletionTokensLTE(*i.CompletionTokensLTE))
+	}
+	if i.TotalTokens != nil {
+		predicates = append(predicates, usagedailyaggregate.TotalTokensEQ(*i.TotalTokens))
+	}
+	if i.TotalTokensNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.TotalTokensNEQ(*i.TotalTokensNEQ))
+	}
+	if len(i.TotalTokensIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.TotalTokensIn(i.TotalTokensIn...))
+	}
+	if len(i.TotalTokensNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.TotalTokensNotIn(i.TotalTokensNotIn...))
+	}
+	if i.TotalTokensGT != nil {
+		predicates = append(predicates, usagedailyaggregate.TotalTokensGT(*i.TotalTokensGT))
+	}
+	if i.TotalTokensGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.TotalTokensGTE(*i.TotalTokensGTE))
+	}
+	if i.TotalTokensLT != nil {
+		predicates = append(predicates, usagedailyaggregate.TotalTokensLT(*i.TotalTokensLT))
+	}
+	if i.TotalTokensLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.TotalTokensLTE(*i.TotalTokensLTE))
+	}
+	if i.UserChargeMicros != nil {
+		predicates = append(predicates, usagedailyaggregate.UserChargeMicrosEQ(*i.UserChargeMicros))
+	}
+	if i.UserChargeMicrosNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.UserChargeMicrosNEQ(*i.UserChargeMicrosNEQ))
+	}
+	if len(i.UserChargeMicrosIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UserChargeMicrosIn(i.UserChargeMicrosIn...))
+	}
+	if len(i.UserChargeMicrosNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UserChargeMicrosNotIn(i.UserChargeMicrosNotIn...))
+	}
+	if i.UserChargeMicrosGT != nil {
+		predicates = append(predicates, usagedailyaggregate.UserChargeMicrosGT(*i.UserChargeMicrosGT))
+	}
+	if i.UserChargeMicrosGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UserChargeMicrosGTE(*i.UserChargeMicrosGTE))
+	}
+	if i.UserChargeMicrosLT != nil {
+		predicates = append(predicates, usagedailyaggregate.UserChargeMicrosLT(*i.UserChargeMicrosLT))
+	}
+	if i.UserChargeMicrosLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UserChargeMicrosLTE(*i.UserChargeMicrosLTE))
+	}
+	if i.UpstreamCostMicros != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamCostMicrosEQ(*i.UpstreamCostMicros))
+	}
+	if i.UpstreamCostMicrosNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamCostMicrosNEQ(*i.UpstreamCostMicrosNEQ))
+	}
+	if len(i.UpstreamCostMicrosIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UpstreamCostMicrosIn(i.UpstreamCostMicrosIn...))
+	}
+	if len(i.UpstreamCostMicrosNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.UpstreamCostMicrosNotIn(i.UpstreamCostMicrosNotIn...))
+	}
+	if i.UpstreamCostMicrosGT != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamCostMicrosGT(*i.UpstreamCostMicrosGT))
+	}
+	if i.UpstreamCostMicrosGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamCostMicrosGTE(*i.UpstreamCostMicrosGTE))
+	}
+	if i.UpstreamCostMicrosLT != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamCostMicrosLT(*i.UpstreamCostMicrosLT))
+	}
+	if i.UpstreamCostMicrosLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.UpstreamCostMicrosLTE(*i.UpstreamCostMicrosLTE))
+	}
+	if i.GrossMarginMicros != nil {
+		predicates = append(predicates, usagedailyaggregate.GrossMarginMicrosEQ(*i.GrossMarginMicros))
+	}
+	if i.GrossMarginMicrosNEQ != nil {
+		predicates = append(predicates, usagedailyaggregate.GrossMarginMicrosNEQ(*i.GrossMarginMicrosNEQ))
+	}
+	if len(i.GrossMarginMicrosIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.GrossMarginMicrosIn(i.GrossMarginMicrosIn...))
+	}
+	if len(i.GrossMarginMicrosNotIn) > 0 {
+		predicates = append(predicates, usagedailyaggregate.GrossMarginMicrosNotIn(i.GrossMarginMicrosNotIn...))
+	}
+	if i.GrossMarginMicrosGT != nil {
+		predicates = append(predicates, usagedailyaggregate.GrossMarginMicrosGT(*i.GrossMarginMicrosGT))
+	}
+	if i.GrossMarginMicrosGTE != nil {
+		predicates = append(predicates, usagedailyaggregate.GrossMarginMicrosGTE(*i.GrossMarginMicrosGTE))
+	}
+	if i.GrossMarginMicrosLT != nil {
+		predicates = append(predicates, usagedailyaggregate.GrossMarginMicrosLT(*i.GrossMarginMicrosLT))
+	}
+	if i.GrossMarginMicrosLTE != nil {
+		predicates = append(predicates, usagedailyaggregate.GrossMarginMicrosLTE(*i.GrossMarginMicrosLTE))
+	}
+
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyUsageDailyAggregateWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return usagedailyaggregate.And(predicates...), nil
+	}
+}
+
+// UsageHourlyAggregateWhereInput represents a where input for filtering UsageHourlyAggregate queries.
+type UsageHourlyAggregateWhereInput struct {
+	Predicates []predicate.UsageHourlyAggregate  `json:"-"`
+	Not        *UsageHourlyAggregateWhereInput   `json:"not,omitempty"`
+	Or         []*UsageHourlyAggregateWhereInput `json:"or,omitempty"`
+	And        []*UsageHourlyAggregateWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "bucket_start" field predicates.
+	BucketStart      *time.Time  `json:"bucketStart,omitempty"`
+	BucketStartNEQ   *time.Time  `json:"bucketStartNEQ,omitempty"`
+	BucketStartIn    []time.Time `json:"bucketStartIn,omitempty"`
+	BucketStartNotIn []time.Time `json:"bucketStartNotIn,omitempty"`
+	BucketStartGT    *time.Time  `json:"bucketStartGT,omitempty"`
+	BucketStartGTE   *time.Time  `json:"bucketStartGTE,omitempty"`
+	BucketStartLT    *time.Time  `json:"bucketStartLT,omitempty"`
+	BucketStartLTE   *time.Time  `json:"bucketStartLTE,omitempty"`
+
+	// "user_id" field predicates.
+	UserID      *int  `json:"userID,omitempty"`
+	UserIDNEQ   *int  `json:"userIDNEQ,omitempty"`
+	UserIDIn    []int `json:"userIDIn,omitempty"`
+	UserIDNotIn []int `json:"userIDNotIn,omitempty"`
+	UserIDGT    *int  `json:"userIDGT,omitempty"`
+	UserIDGTE   *int  `json:"userIDGTE,omitempty"`
+	UserIDLT    *int  `json:"userIDLT,omitempty"`
+	UserIDLTE   *int  `json:"userIDLTE,omitempty"`
+
+	// "api_key_id" field predicates.
+	APIKeyID      *int  `json:"apiKeyID,omitempty"`
+	APIKeyIDNEQ   *int  `json:"apiKeyIDNEQ,omitempty"`
+	APIKeyIDIn    []int `json:"apiKeyIDIn,omitempty"`
+	APIKeyIDNotIn []int `json:"apiKeyIDNotIn,omitempty"`
+	APIKeyIDGT    *int  `json:"apiKeyIDGT,omitempty"`
+	APIKeyIDGTE   *int  `json:"apiKeyIDGTE,omitempty"`
+	APIKeyIDLT    *int  `json:"apiKeyIDLT,omitempty"`
+	APIKeyIDLTE   *int  `json:"apiKeyIDLTE,omitempty"`
+
+	// "project_id" field predicates.
+	ProjectID      *int  `json:"projectID,omitempty"`
+	ProjectIDNEQ   *int  `json:"projectIDNEQ,omitempty"`
+	ProjectIDIn    []int `json:"projectIDIn,omitempty"`
+	ProjectIDNotIn []int `json:"projectIDNotIn,omitempty"`
+	ProjectIDGT    *int  `json:"projectIDGT,omitempty"`
+	ProjectIDGTE   *int  `json:"projectIDGTE,omitempty"`
+	ProjectIDLT    *int  `json:"projectIDLT,omitempty"`
+	ProjectIDLTE   *int  `json:"projectIDLTE,omitempty"`
+
+	// "channel_id" field predicates.
+	ChannelID      *int  `json:"channelID,omitempty"`
+	ChannelIDNEQ   *int  `json:"channelIDNEQ,omitempty"`
+	ChannelIDIn    []int `json:"channelIDIn,omitempty"`
+	ChannelIDNotIn []int `json:"channelIDNotIn,omitempty"`
+	ChannelIDGT    *int  `json:"channelIDGT,omitempty"`
+	ChannelIDGTE   *int  `json:"channelIDGTE,omitempty"`
+	ChannelIDLT    *int  `json:"channelIDLT,omitempty"`
+	ChannelIDLTE   *int  `json:"channelIDLTE,omitempty"`
+
+	// "upstream_account_id" field predicates.
+	UpstreamAccountID      *int  `json:"upstreamAccountID,omitempty"`
+	UpstreamAccountIDNEQ   *int  `json:"upstreamAccountIDNEQ,omitempty"`
+	UpstreamAccountIDIn    []int `json:"upstreamAccountIDIn,omitempty"`
+	UpstreamAccountIDNotIn []int `json:"upstreamAccountIDNotIn,omitempty"`
+	UpstreamAccountIDGT    *int  `json:"upstreamAccountIDGT,omitempty"`
+	UpstreamAccountIDGTE   *int  `json:"upstreamAccountIDGTE,omitempty"`
+	UpstreamAccountIDLT    *int  `json:"upstreamAccountIDLT,omitempty"`
+	UpstreamAccountIDLTE   *int  `json:"upstreamAccountIDLTE,omitempty"`
+
+	// "model_id" field predicates.
+	ModelID             *string  `json:"modelID,omitempty"`
+	ModelIDNEQ          *string  `json:"modelIDNEQ,omitempty"`
+	ModelIDIn           []string `json:"modelIDIn,omitempty"`
+	ModelIDNotIn        []string `json:"modelIDNotIn,omitempty"`
+	ModelIDGT           *string  `json:"modelIDGT,omitempty"`
+	ModelIDGTE          *string  `json:"modelIDGTE,omitempty"`
+	ModelIDLT           *string  `json:"modelIDLT,omitempty"`
+	ModelIDLTE          *string  `json:"modelIDLTE,omitempty"`
+	ModelIDContains     *string  `json:"modelIDContains,omitempty"`
+	ModelIDHasPrefix    *string  `json:"modelIDHasPrefix,omitempty"`
+	ModelIDHasSuffix    *string  `json:"modelIDHasSuffix,omitempty"`
+	ModelIDEqualFold    *string  `json:"modelIDEqualFold,omitempty"`
+	ModelIDContainsFold *string  `json:"modelIDContainsFold,omitempty"`
+
+	// "request_type" field predicates.
+	RequestType      *usagehourlyaggregate.RequestType  `json:"requestType,omitempty"`
+	RequestTypeNEQ   *usagehourlyaggregate.RequestType  `json:"requestTypeNEQ,omitempty"`
+	RequestTypeIn    []usagehourlyaggregate.RequestType `json:"requestTypeIn,omitempty"`
+	RequestTypeNotIn []usagehourlyaggregate.RequestType `json:"requestTypeNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *usagehourlyaggregate.Status  `json:"status,omitempty"`
+	StatusNEQ   *usagehourlyaggregate.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []usagehourlyaggregate.Status `json:"statusIn,omitempty"`
+	StatusNotIn []usagehourlyaggregate.Status `json:"statusNotIn,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "request_count" field predicates.
+	RequestCount      *int64  `json:"requestCount,omitempty"`
+	RequestCountNEQ   *int64  `json:"requestCountNEQ,omitempty"`
+	RequestCountIn    []int64 `json:"requestCountIn,omitempty"`
+	RequestCountNotIn []int64 `json:"requestCountNotIn,omitempty"`
+	RequestCountGT    *int64  `json:"requestCountGT,omitempty"`
+	RequestCountGTE   *int64  `json:"requestCountGTE,omitempty"`
+	RequestCountLT    *int64  `json:"requestCountLT,omitempty"`
+	RequestCountLTE   *int64  `json:"requestCountLTE,omitempty"`
+
+	// "success_count" field predicates.
+	SuccessCount      *int64  `json:"successCount,omitempty"`
+	SuccessCountNEQ   *int64  `json:"successCountNEQ,omitempty"`
+	SuccessCountIn    []int64 `json:"successCountIn,omitempty"`
+	SuccessCountNotIn []int64 `json:"successCountNotIn,omitempty"`
+	SuccessCountGT    *int64  `json:"successCountGT,omitempty"`
+	SuccessCountGTE   *int64  `json:"successCountGTE,omitempty"`
+	SuccessCountLT    *int64  `json:"successCountLT,omitempty"`
+	SuccessCountLTE   *int64  `json:"successCountLTE,omitempty"`
+
+	// "error_count" field predicates.
+	ErrorCount      *int64  `json:"errorCount,omitempty"`
+	ErrorCountNEQ   *int64  `json:"errorCountNEQ,omitempty"`
+	ErrorCountIn    []int64 `json:"errorCountIn,omitempty"`
+	ErrorCountNotIn []int64 `json:"errorCountNotIn,omitempty"`
+	ErrorCountGT    *int64  `json:"errorCountGT,omitempty"`
+	ErrorCountGTE   *int64  `json:"errorCountGTE,omitempty"`
+	ErrorCountLT    *int64  `json:"errorCountLT,omitempty"`
+	ErrorCountLTE   *int64  `json:"errorCountLTE,omitempty"`
+
+	// "prompt_tokens" field predicates.
+	PromptTokens      *int64  `json:"promptTokens,omitempty"`
+	PromptTokensNEQ   *int64  `json:"promptTokensNEQ,omitempty"`
+	PromptTokensIn    []int64 `json:"promptTokensIn,omitempty"`
+	PromptTokensNotIn []int64 `json:"promptTokensNotIn,omitempty"`
+	PromptTokensGT    *int64  `json:"promptTokensGT,omitempty"`
+	PromptTokensGTE   *int64  `json:"promptTokensGTE,omitempty"`
+	PromptTokensLT    *int64  `json:"promptTokensLT,omitempty"`
+	PromptTokensLTE   *int64  `json:"promptTokensLTE,omitempty"`
+
+	// "completion_tokens" field predicates.
+	CompletionTokens      *int64  `json:"completionTokens,omitempty"`
+	CompletionTokensNEQ   *int64  `json:"completionTokensNEQ,omitempty"`
+	CompletionTokensIn    []int64 `json:"completionTokensIn,omitempty"`
+	CompletionTokensNotIn []int64 `json:"completionTokensNotIn,omitempty"`
+	CompletionTokensGT    *int64  `json:"completionTokensGT,omitempty"`
+	CompletionTokensGTE   *int64  `json:"completionTokensGTE,omitempty"`
+	CompletionTokensLT    *int64  `json:"completionTokensLT,omitempty"`
+	CompletionTokensLTE   *int64  `json:"completionTokensLTE,omitempty"`
+
+	// "total_tokens" field predicates.
+	TotalTokens      *int64  `json:"totalTokens,omitempty"`
+	TotalTokensNEQ   *int64  `json:"totalTokensNEQ,omitempty"`
+	TotalTokensIn    []int64 `json:"totalTokensIn,omitempty"`
+	TotalTokensNotIn []int64 `json:"totalTokensNotIn,omitempty"`
+	TotalTokensGT    *int64  `json:"totalTokensGT,omitempty"`
+	TotalTokensGTE   *int64  `json:"totalTokensGTE,omitempty"`
+	TotalTokensLT    *int64  `json:"totalTokensLT,omitempty"`
+	TotalTokensLTE   *int64  `json:"totalTokensLTE,omitempty"`
+
+	// "user_charge_micros" field predicates.
+	UserChargeMicros      *int64  `json:"userChargeMicros,omitempty"`
+	UserChargeMicrosNEQ   *int64  `json:"userChargeMicrosNEQ,omitempty"`
+	UserChargeMicrosIn    []int64 `json:"userChargeMicrosIn,omitempty"`
+	UserChargeMicrosNotIn []int64 `json:"userChargeMicrosNotIn,omitempty"`
+	UserChargeMicrosGT    *int64  `json:"userChargeMicrosGT,omitempty"`
+	UserChargeMicrosGTE   *int64  `json:"userChargeMicrosGTE,omitempty"`
+	UserChargeMicrosLT    *int64  `json:"userChargeMicrosLT,omitempty"`
+	UserChargeMicrosLTE   *int64  `json:"userChargeMicrosLTE,omitempty"`
+
+	// "upstream_cost_micros" field predicates.
+	UpstreamCostMicros      *int64  `json:"upstreamCostMicros,omitempty"`
+	UpstreamCostMicrosNEQ   *int64  `json:"upstreamCostMicrosNEQ,omitempty"`
+	UpstreamCostMicrosIn    []int64 `json:"upstreamCostMicrosIn,omitempty"`
+	UpstreamCostMicrosNotIn []int64 `json:"upstreamCostMicrosNotIn,omitempty"`
+	UpstreamCostMicrosGT    *int64  `json:"upstreamCostMicrosGT,omitempty"`
+	UpstreamCostMicrosGTE   *int64  `json:"upstreamCostMicrosGTE,omitempty"`
+	UpstreamCostMicrosLT    *int64  `json:"upstreamCostMicrosLT,omitempty"`
+	UpstreamCostMicrosLTE   *int64  `json:"upstreamCostMicrosLTE,omitempty"`
+
+	// "gross_margin_micros" field predicates.
+	GrossMarginMicros      *int64  `json:"grossMarginMicros,omitempty"`
+	GrossMarginMicrosNEQ   *int64  `json:"grossMarginMicrosNEQ,omitempty"`
+	GrossMarginMicrosIn    []int64 `json:"grossMarginMicrosIn,omitempty"`
+	GrossMarginMicrosNotIn []int64 `json:"grossMarginMicrosNotIn,omitempty"`
+	GrossMarginMicrosGT    *int64  `json:"grossMarginMicrosGT,omitempty"`
+	GrossMarginMicrosGTE   *int64  `json:"grossMarginMicrosGTE,omitempty"`
+	GrossMarginMicrosLT    *int64  `json:"grossMarginMicrosLT,omitempty"`
+	GrossMarginMicrosLTE   *int64  `json:"grossMarginMicrosLTE,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *UsageHourlyAggregateWhereInput) AddPredicates(predicates ...predicate.UsageHourlyAggregate) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the UsageHourlyAggregateWhereInput filter on the UsageHourlyAggregateQuery builder.
+func (i *UsageHourlyAggregateWhereInput) Filter(q *UsageHourlyAggregateQuery) (*UsageHourlyAggregateQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyUsageHourlyAggregateWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyUsageHourlyAggregateWhereInput is returned in case the UsageHourlyAggregateWhereInput is empty.
+var ErrEmptyUsageHourlyAggregateWhereInput = errors.New("ent: empty predicate UsageHourlyAggregateWhereInput")
+
+// P returns a predicate for filtering usagehourlyaggregates.
+// An error is returned if the input is empty or invalid.
+func (i *UsageHourlyAggregateWhereInput) P() (predicate.UsageHourlyAggregate, error) {
+	var predicates []predicate.UsageHourlyAggregate
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, usagehourlyaggregate.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.UsageHourlyAggregate, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, usagehourlyaggregate.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.UsageHourlyAggregate, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, usagehourlyaggregate.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, usagehourlyaggregate.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, usagehourlyaggregate.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.BucketStart != nil {
+		predicates = append(predicates, usagehourlyaggregate.BucketStartEQ(*i.BucketStart))
+	}
+	if i.BucketStartNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.BucketStartNEQ(*i.BucketStartNEQ))
+	}
+	if len(i.BucketStartIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.BucketStartIn(i.BucketStartIn...))
+	}
+	if len(i.BucketStartNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.BucketStartNotIn(i.BucketStartNotIn...))
+	}
+	if i.BucketStartGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.BucketStartGT(*i.BucketStartGT))
+	}
+	if i.BucketStartGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.BucketStartGTE(*i.BucketStartGTE))
+	}
+	if i.BucketStartLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.BucketStartLT(*i.BucketStartLT))
+	}
+	if i.BucketStartLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.BucketStartLTE(*i.BucketStartLTE))
+	}
+	if i.UserID != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserIDEQ(*i.UserID))
+	}
+	if i.UserIDNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserIDNEQ(*i.UserIDNEQ))
+	}
+	if len(i.UserIDIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UserIDIn(i.UserIDIn...))
+	}
+	if len(i.UserIDNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UserIDNotIn(i.UserIDNotIn...))
+	}
+	if i.UserIDGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserIDGT(*i.UserIDGT))
+	}
+	if i.UserIDGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserIDGTE(*i.UserIDGTE))
+	}
+	if i.UserIDLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserIDLT(*i.UserIDLT))
+	}
+	if i.UserIDLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserIDLTE(*i.UserIDLTE))
+	}
+	if i.APIKeyID != nil {
+		predicates = append(predicates, usagehourlyaggregate.APIKeyIDEQ(*i.APIKeyID))
+	}
+	if i.APIKeyIDNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.APIKeyIDNEQ(*i.APIKeyIDNEQ))
+	}
+	if len(i.APIKeyIDIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.APIKeyIDIn(i.APIKeyIDIn...))
+	}
+	if len(i.APIKeyIDNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.APIKeyIDNotIn(i.APIKeyIDNotIn...))
+	}
+	if i.APIKeyIDGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.APIKeyIDGT(*i.APIKeyIDGT))
+	}
+	if i.APIKeyIDGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.APIKeyIDGTE(*i.APIKeyIDGTE))
+	}
+	if i.APIKeyIDLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.APIKeyIDLT(*i.APIKeyIDLT))
+	}
+	if i.APIKeyIDLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.APIKeyIDLTE(*i.APIKeyIDLTE))
+	}
+	if i.ProjectID != nil {
+		predicates = append(predicates, usagehourlyaggregate.ProjectIDEQ(*i.ProjectID))
+	}
+	if i.ProjectIDNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.ProjectIDNEQ(*i.ProjectIDNEQ))
+	}
+	if len(i.ProjectIDIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.ProjectIDIn(i.ProjectIDIn...))
+	}
+	if len(i.ProjectIDNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.ProjectIDNotIn(i.ProjectIDNotIn...))
+	}
+	if i.ProjectIDGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.ProjectIDGT(*i.ProjectIDGT))
+	}
+	if i.ProjectIDGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.ProjectIDGTE(*i.ProjectIDGTE))
+	}
+	if i.ProjectIDLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.ProjectIDLT(*i.ProjectIDLT))
+	}
+	if i.ProjectIDLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.ProjectIDLTE(*i.ProjectIDLTE))
+	}
+	if i.ChannelID != nil {
+		predicates = append(predicates, usagehourlyaggregate.ChannelIDEQ(*i.ChannelID))
+	}
+	if i.ChannelIDNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.ChannelIDNEQ(*i.ChannelIDNEQ))
+	}
+	if len(i.ChannelIDIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.ChannelIDIn(i.ChannelIDIn...))
+	}
+	if len(i.ChannelIDNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.ChannelIDNotIn(i.ChannelIDNotIn...))
+	}
+	if i.ChannelIDGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.ChannelIDGT(*i.ChannelIDGT))
+	}
+	if i.ChannelIDGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.ChannelIDGTE(*i.ChannelIDGTE))
+	}
+	if i.ChannelIDLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.ChannelIDLT(*i.ChannelIDLT))
+	}
+	if i.ChannelIDLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.ChannelIDLTE(*i.ChannelIDLTE))
+	}
+	if i.UpstreamAccountID != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamAccountIDEQ(*i.UpstreamAccountID))
+	}
+	if i.UpstreamAccountIDNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamAccountIDNEQ(*i.UpstreamAccountIDNEQ))
+	}
+	if len(i.UpstreamAccountIDIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamAccountIDIn(i.UpstreamAccountIDIn...))
+	}
+	if len(i.UpstreamAccountIDNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamAccountIDNotIn(i.UpstreamAccountIDNotIn...))
+	}
+	if i.UpstreamAccountIDGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamAccountIDGT(*i.UpstreamAccountIDGT))
+	}
+	if i.UpstreamAccountIDGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamAccountIDGTE(*i.UpstreamAccountIDGTE))
+	}
+	if i.UpstreamAccountIDLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamAccountIDLT(*i.UpstreamAccountIDLT))
+	}
+	if i.UpstreamAccountIDLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamAccountIDLTE(*i.UpstreamAccountIDLTE))
+	}
+	if i.ModelID != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDEQ(*i.ModelID))
+	}
+	if i.ModelIDNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDNEQ(*i.ModelIDNEQ))
+	}
+	if len(i.ModelIDIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDIn(i.ModelIDIn...))
+	}
+	if len(i.ModelIDNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDNotIn(i.ModelIDNotIn...))
+	}
+	if i.ModelIDGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDGT(*i.ModelIDGT))
+	}
+	if i.ModelIDGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDGTE(*i.ModelIDGTE))
+	}
+	if i.ModelIDLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDLT(*i.ModelIDLT))
+	}
+	if i.ModelIDLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDLTE(*i.ModelIDLTE))
+	}
+	if i.ModelIDContains != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDContains(*i.ModelIDContains))
+	}
+	if i.ModelIDHasPrefix != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDHasPrefix(*i.ModelIDHasPrefix))
+	}
+	if i.ModelIDHasSuffix != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDHasSuffix(*i.ModelIDHasSuffix))
+	}
+	if i.ModelIDEqualFold != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDEqualFold(*i.ModelIDEqualFold))
+	}
+	if i.ModelIDContainsFold != nil {
+		predicates = append(predicates, usagehourlyaggregate.ModelIDContainsFold(*i.ModelIDContainsFold))
+	}
+	if i.RequestType != nil {
+		predicates = append(predicates, usagehourlyaggregate.RequestTypeEQ(*i.RequestType))
+	}
+	if i.RequestTypeNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.RequestTypeNEQ(*i.RequestTypeNEQ))
+	}
+	if len(i.RequestTypeIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.RequestTypeIn(i.RequestTypeIn...))
+	}
+	if len(i.RequestTypeNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.RequestTypeNotIn(i.RequestTypeNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, usagehourlyaggregate.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, usagehourlyaggregate.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.RequestCount != nil {
+		predicates = append(predicates, usagehourlyaggregate.RequestCountEQ(*i.RequestCount))
+	}
+	if i.RequestCountNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.RequestCountNEQ(*i.RequestCountNEQ))
+	}
+	if len(i.RequestCountIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.RequestCountIn(i.RequestCountIn...))
+	}
+	if len(i.RequestCountNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.RequestCountNotIn(i.RequestCountNotIn...))
+	}
+	if i.RequestCountGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.RequestCountGT(*i.RequestCountGT))
+	}
+	if i.RequestCountGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.RequestCountGTE(*i.RequestCountGTE))
+	}
+	if i.RequestCountLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.RequestCountLT(*i.RequestCountLT))
+	}
+	if i.RequestCountLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.RequestCountLTE(*i.RequestCountLTE))
+	}
+	if i.SuccessCount != nil {
+		predicates = append(predicates, usagehourlyaggregate.SuccessCountEQ(*i.SuccessCount))
+	}
+	if i.SuccessCountNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.SuccessCountNEQ(*i.SuccessCountNEQ))
+	}
+	if len(i.SuccessCountIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.SuccessCountIn(i.SuccessCountIn...))
+	}
+	if len(i.SuccessCountNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.SuccessCountNotIn(i.SuccessCountNotIn...))
+	}
+	if i.SuccessCountGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.SuccessCountGT(*i.SuccessCountGT))
+	}
+	if i.SuccessCountGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.SuccessCountGTE(*i.SuccessCountGTE))
+	}
+	if i.SuccessCountLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.SuccessCountLT(*i.SuccessCountLT))
+	}
+	if i.SuccessCountLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.SuccessCountLTE(*i.SuccessCountLTE))
+	}
+	if i.ErrorCount != nil {
+		predicates = append(predicates, usagehourlyaggregate.ErrorCountEQ(*i.ErrorCount))
+	}
+	if i.ErrorCountNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.ErrorCountNEQ(*i.ErrorCountNEQ))
+	}
+	if len(i.ErrorCountIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.ErrorCountIn(i.ErrorCountIn...))
+	}
+	if len(i.ErrorCountNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.ErrorCountNotIn(i.ErrorCountNotIn...))
+	}
+	if i.ErrorCountGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.ErrorCountGT(*i.ErrorCountGT))
+	}
+	if i.ErrorCountGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.ErrorCountGTE(*i.ErrorCountGTE))
+	}
+	if i.ErrorCountLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.ErrorCountLT(*i.ErrorCountLT))
+	}
+	if i.ErrorCountLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.ErrorCountLTE(*i.ErrorCountLTE))
+	}
+	if i.PromptTokens != nil {
+		predicates = append(predicates, usagehourlyaggregate.PromptTokensEQ(*i.PromptTokens))
+	}
+	if i.PromptTokensNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.PromptTokensNEQ(*i.PromptTokensNEQ))
+	}
+	if len(i.PromptTokensIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.PromptTokensIn(i.PromptTokensIn...))
+	}
+	if len(i.PromptTokensNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.PromptTokensNotIn(i.PromptTokensNotIn...))
+	}
+	if i.PromptTokensGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.PromptTokensGT(*i.PromptTokensGT))
+	}
+	if i.PromptTokensGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.PromptTokensGTE(*i.PromptTokensGTE))
+	}
+	if i.PromptTokensLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.PromptTokensLT(*i.PromptTokensLT))
+	}
+	if i.PromptTokensLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.PromptTokensLTE(*i.PromptTokensLTE))
+	}
+	if i.CompletionTokens != nil {
+		predicates = append(predicates, usagehourlyaggregate.CompletionTokensEQ(*i.CompletionTokens))
+	}
+	if i.CompletionTokensNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.CompletionTokensNEQ(*i.CompletionTokensNEQ))
+	}
+	if len(i.CompletionTokensIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.CompletionTokensIn(i.CompletionTokensIn...))
+	}
+	if len(i.CompletionTokensNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.CompletionTokensNotIn(i.CompletionTokensNotIn...))
+	}
+	if i.CompletionTokensGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.CompletionTokensGT(*i.CompletionTokensGT))
+	}
+	if i.CompletionTokensGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.CompletionTokensGTE(*i.CompletionTokensGTE))
+	}
+	if i.CompletionTokensLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.CompletionTokensLT(*i.CompletionTokensLT))
+	}
+	if i.CompletionTokensLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.CompletionTokensLTE(*i.CompletionTokensLTE))
+	}
+	if i.TotalTokens != nil {
+		predicates = append(predicates, usagehourlyaggregate.TotalTokensEQ(*i.TotalTokens))
+	}
+	if i.TotalTokensNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.TotalTokensNEQ(*i.TotalTokensNEQ))
+	}
+	if len(i.TotalTokensIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.TotalTokensIn(i.TotalTokensIn...))
+	}
+	if len(i.TotalTokensNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.TotalTokensNotIn(i.TotalTokensNotIn...))
+	}
+	if i.TotalTokensGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.TotalTokensGT(*i.TotalTokensGT))
+	}
+	if i.TotalTokensGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.TotalTokensGTE(*i.TotalTokensGTE))
+	}
+	if i.TotalTokensLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.TotalTokensLT(*i.TotalTokensLT))
+	}
+	if i.TotalTokensLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.TotalTokensLTE(*i.TotalTokensLTE))
+	}
+	if i.UserChargeMicros != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserChargeMicrosEQ(*i.UserChargeMicros))
+	}
+	if i.UserChargeMicrosNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserChargeMicrosNEQ(*i.UserChargeMicrosNEQ))
+	}
+	if len(i.UserChargeMicrosIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UserChargeMicrosIn(i.UserChargeMicrosIn...))
+	}
+	if len(i.UserChargeMicrosNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UserChargeMicrosNotIn(i.UserChargeMicrosNotIn...))
+	}
+	if i.UserChargeMicrosGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserChargeMicrosGT(*i.UserChargeMicrosGT))
+	}
+	if i.UserChargeMicrosGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserChargeMicrosGTE(*i.UserChargeMicrosGTE))
+	}
+	if i.UserChargeMicrosLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserChargeMicrosLT(*i.UserChargeMicrosLT))
+	}
+	if i.UserChargeMicrosLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UserChargeMicrosLTE(*i.UserChargeMicrosLTE))
+	}
+	if i.UpstreamCostMicros != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamCostMicrosEQ(*i.UpstreamCostMicros))
+	}
+	if i.UpstreamCostMicrosNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamCostMicrosNEQ(*i.UpstreamCostMicrosNEQ))
+	}
+	if len(i.UpstreamCostMicrosIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamCostMicrosIn(i.UpstreamCostMicrosIn...))
+	}
+	if len(i.UpstreamCostMicrosNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamCostMicrosNotIn(i.UpstreamCostMicrosNotIn...))
+	}
+	if i.UpstreamCostMicrosGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamCostMicrosGT(*i.UpstreamCostMicrosGT))
+	}
+	if i.UpstreamCostMicrosGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamCostMicrosGTE(*i.UpstreamCostMicrosGTE))
+	}
+	if i.UpstreamCostMicrosLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamCostMicrosLT(*i.UpstreamCostMicrosLT))
+	}
+	if i.UpstreamCostMicrosLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.UpstreamCostMicrosLTE(*i.UpstreamCostMicrosLTE))
+	}
+	if i.GrossMarginMicros != nil {
+		predicates = append(predicates, usagehourlyaggregate.GrossMarginMicrosEQ(*i.GrossMarginMicros))
+	}
+	if i.GrossMarginMicrosNEQ != nil {
+		predicates = append(predicates, usagehourlyaggregate.GrossMarginMicrosNEQ(*i.GrossMarginMicrosNEQ))
+	}
+	if len(i.GrossMarginMicrosIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.GrossMarginMicrosIn(i.GrossMarginMicrosIn...))
+	}
+	if len(i.GrossMarginMicrosNotIn) > 0 {
+		predicates = append(predicates, usagehourlyaggregate.GrossMarginMicrosNotIn(i.GrossMarginMicrosNotIn...))
+	}
+	if i.GrossMarginMicrosGT != nil {
+		predicates = append(predicates, usagehourlyaggregate.GrossMarginMicrosGT(*i.GrossMarginMicrosGT))
+	}
+	if i.GrossMarginMicrosGTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.GrossMarginMicrosGTE(*i.GrossMarginMicrosGTE))
+	}
+	if i.GrossMarginMicrosLT != nil {
+		predicates = append(predicates, usagehourlyaggregate.GrossMarginMicrosLT(*i.GrossMarginMicrosLT))
+	}
+	if i.GrossMarginMicrosLTE != nil {
+		predicates = append(predicates, usagehourlyaggregate.GrossMarginMicrosLTE(*i.GrossMarginMicrosLTE))
+	}
+
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyUsageHourlyAggregateWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return usagehourlyaggregate.And(predicates...), nil
 	}
 }
 

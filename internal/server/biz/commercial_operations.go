@@ -19,24 +19,26 @@ const defaultCommercialSettingKey = "default"
 type CommercialOperationsServiceParams struct {
 	fx.In
 
-	Ent                 *ent.Client
-	PaymentService      *PaymentService
-	BillingHoldService  *BillingHoldService
-	SubscriptionService *SubscriptionService
-	AffiliateService    *AffiliateService
-	BillingOutboxWorker *BillingOutboxWorker
-	BillingAuditService *BillingAuditService `optional:"true"`
+	Ent                   *ent.Client
+	PaymentService        *PaymentService
+	BillingHoldService    *BillingHoldService
+	SubscriptionService   *SubscriptionService
+	AffiliateService      *AffiliateService
+	BillingOutboxWorker   *BillingOutboxWorker
+	UsageAggregateService *UsageAggregateService
+	BillingAuditService   *BillingAuditService `optional:"true"`
 }
 
 type CommercialOperationsService struct {
 	*AbstractService
 
-	paymentService      *PaymentService
-	billingHoldService  *BillingHoldService
-	subscriptionService *SubscriptionService
-	affiliateService    *AffiliateService
-	billingOutboxWorker *BillingOutboxWorker
-	auditService        *BillingAuditService
+	paymentService        *PaymentService
+	billingHoldService    *BillingHoldService
+	subscriptionService   *SubscriptionService
+	affiliateService      *AffiliateService
+	billingOutboxWorker   *BillingOutboxWorker
+	usageAggregateService *UsageAggregateService
+	auditService          *BillingAuditService
 }
 
 type SaveCommercialSettingInput struct {
@@ -56,29 +58,34 @@ type SaveCommercialSettingInput struct {
 }
 
 type CommercialMaintenanceRunInput struct {
-	Now    time.Time
-	Limit  int
-	Reason string
+	Now                    time.Time
+	Limit                  int
+	Reason                 string
+	RebuildUsageAggregates bool
 }
 
 type CommercialMaintenanceRunResult struct {
-	OrderExpiryProcessed         int `json:"orderExpiryProcessed"`
-	HoldExpiryProcessed          int `json:"holdExpiryProcessed"`
-	SubscriptionExpiryProcessed  int `json:"subscriptionExpiryProcessed"`
-	SubscriptionResetProcessed   int `json:"subscriptionResetProcessed"`
-	AffiliateRebateThawProcessed int `json:"affiliateRebateThawProcessed"`
-	FailedBillingRetryProcessed  int `json:"failedBillingRetryProcessed"`
+	OrderExpiryProcessed           int `json:"orderExpiryProcessed"`
+	HoldExpiryProcessed            int `json:"holdExpiryProcessed"`
+	SubscriptionExpiryProcessed    int `json:"subscriptionExpiryProcessed"`
+	SubscriptionResetProcessed     int `json:"subscriptionResetProcessed"`
+	AffiliateRebateThawProcessed   int `json:"affiliateRebateThawProcessed"`
+	FailedBillingRetryProcessed    int `json:"failedBillingRetryProcessed"`
+	UsageAggregateRecordsProcessed int `json:"usageAggregateRecordsProcessed"`
+	UsageAggregateHourlyRows       int `json:"usageAggregateHourlyRows"`
+	UsageAggregateDailyRows        int `json:"usageAggregateDailyRows"`
 }
 
 func NewCommercialOperationsService(params CommercialOperationsServiceParams) *CommercialOperationsService {
 	return &CommercialOperationsService{
-		AbstractService:     &AbstractService{db: params.Ent},
-		paymentService:      params.PaymentService,
-		billingHoldService:  params.BillingHoldService,
-		subscriptionService: params.SubscriptionService,
-		affiliateService:    params.AffiliateService,
-		billingOutboxWorker: params.BillingOutboxWorker,
-		auditService:        params.BillingAuditService,
+		AbstractService:       &AbstractService{db: params.Ent},
+		paymentService:        params.PaymentService,
+		billingHoldService:    params.BillingHoldService,
+		subscriptionService:   params.SubscriptionService,
+		affiliateService:      params.AffiliateService,
+		billingOutboxWorker:   params.BillingOutboxWorker,
+		usageAggregateService: params.UsageAggregateService,
+		auditService:          params.BillingAuditService,
 	}
 }
 
@@ -233,6 +240,15 @@ func (s *CommercialOperationsService) RunMaintenance(ctx context.Context, input 
 		if err != nil {
 			return result, err
 		}
+	}
+	if input.RebuildUsageAggregates && s.usageAggregateService != nil {
+		rebuild, err := s.usageAggregateService.Rebuild(runCtx, UsageAggregateRebuildInput{})
+		if err != nil {
+			return result, err
+		}
+		result.UsageAggregateRecordsProcessed = rebuild.RecordsProcessed
+		result.UsageAggregateHourlyRows = rebuild.HourlyRows
+		result.UsageAggregateDailyRows = rebuild.DailyRows
 	}
 
 	s.recordMaintenanceAudit(ctx, input.Reason)

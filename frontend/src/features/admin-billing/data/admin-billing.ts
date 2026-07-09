@@ -589,6 +589,20 @@ export interface BillingTopProjectRow {
   requestCount: number;
 }
 
+export interface BillingTopAPIKeyRow {
+  apiKeyId: number;
+  apiKeyName: string;
+  chargeAmountMicros: number;
+  requestCount: number;
+}
+
+export interface BillingTopChannelRow {
+  channelId: number;
+  channelName: string;
+  chargeAmountMicros: number;
+  requestCount: number;
+}
+
 export interface BillingTopUserReportRow {
   userId: number;
   email: string;
@@ -605,6 +619,8 @@ export interface BillingCommercialReport {
   daily: BillingDailyReportRow[];
   topModels: BillingTopModelRow[];
   topProjects: BillingTopProjectRow[];
+  topApiKeys: BillingTopAPIKeyRow[];
+  topChannels: BillingTopChannelRow[];
   topUsers: BillingTopUserReportRow[];
 }
 
@@ -627,6 +643,9 @@ export interface CommercialMaintenanceRunResult {
   subscriptionResetProcessed: number;
   affiliateRebateThawProcessed: number;
   failedBillingRetryProcessed: number;
+  usageAggregateRecordsProcessed: number;
+  usageAggregateHourlyRows: number;
+  usageAggregateDailyRows: number;
 }
 
 type Connection<T> = {
@@ -1261,6 +1280,18 @@ const ADMIN_BILLING_REPORT_QUERY = `
         chargeAmountMicros
         requestCount
       }
+      topApiKeys {
+        apiKeyId
+        apiKeyName
+        chargeAmountMicros
+        requestCount
+      }
+      topChannels {
+        channelId
+        channelName
+        chargeAmountMicros
+        requestCount
+      }
       topUsers {
         userId
         email
@@ -1582,6 +1613,9 @@ const RUN_COMMERCIAL_MAINTENANCE_MUTATION = `
       subscriptionResetProcessed
       affiliateRebateThawProcessed
       failedBillingRetryProcessed
+      usageAggregateRecordsProcessed
+      usageAggregateHourlyRows
+      usageAggregateDailyRows
     }
   }
 `;
@@ -2294,7 +2328,7 @@ export function useRunCommercialMaintenance() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: { now?: string; limit?: number; reason: string }) => {
+    mutationFn: async (input: { now?: string; limit?: number; reason: string; rebuildUsageAggregates?: boolean }) => {
       const data = await graphqlRequest<{ runCommercialMaintenance: CommercialMaintenanceRunResult }>(RUN_COMMERCIAL_MAINTENANCE_MUTATION, {
         input,
       });

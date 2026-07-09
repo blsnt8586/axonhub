@@ -50,6 +50,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
+	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -1874,6 +1876,182 @@ func init() {
 	usagebillingrecordDescError := usagebillingrecordFields[18].Descriptor()
 	// usagebillingrecord.DefaultError holds the default value on creation for the error field.
 	usagebillingrecord.DefaultError = usagebillingrecordDescError.Default.(string)
+	usagedailyaggregateMixin := schema.UsageDailyAggregate{}.Mixin()
+	usagedailyaggregate.Policy = privacy.NewPolicies(schema.UsageDailyAggregate{})
+	usagedailyaggregate.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := usagedailyaggregate.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	usagedailyaggregateMixinFields0 := usagedailyaggregateMixin[0].Fields()
+	_ = usagedailyaggregateMixinFields0
+	usagedailyaggregateFields := schema.UsageDailyAggregate{}.Fields()
+	_ = usagedailyaggregateFields
+	// usagedailyaggregateDescCreatedAt is the schema descriptor for created_at field.
+	usagedailyaggregateDescCreatedAt := usagedailyaggregateMixinFields0[0].Descriptor()
+	// usagedailyaggregate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usagedailyaggregate.DefaultCreatedAt = usagedailyaggregateDescCreatedAt.Default.(func() time.Time)
+	// usagedailyaggregateDescUpdatedAt is the schema descriptor for updated_at field.
+	usagedailyaggregateDescUpdatedAt := usagedailyaggregateMixinFields0[1].Descriptor()
+	// usagedailyaggregate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usagedailyaggregate.DefaultUpdatedAt = usagedailyaggregateDescUpdatedAt.Default.(func() time.Time)
+	// usagedailyaggregate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usagedailyaggregate.UpdateDefaultUpdatedAt = usagedailyaggregateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// usagedailyaggregateDescUserID is the schema descriptor for user_id field.
+	usagedailyaggregateDescUserID := usagedailyaggregateFields[1].Descriptor()
+	// usagedailyaggregate.DefaultUserID holds the default value on creation for the user_id field.
+	usagedailyaggregate.DefaultUserID = usagedailyaggregateDescUserID.Default.(int)
+	// usagedailyaggregateDescAPIKeyID is the schema descriptor for api_key_id field.
+	usagedailyaggregateDescAPIKeyID := usagedailyaggregateFields[2].Descriptor()
+	// usagedailyaggregate.DefaultAPIKeyID holds the default value on creation for the api_key_id field.
+	usagedailyaggregate.DefaultAPIKeyID = usagedailyaggregateDescAPIKeyID.Default.(int)
+	// usagedailyaggregateDescProjectID is the schema descriptor for project_id field.
+	usagedailyaggregateDescProjectID := usagedailyaggregateFields[3].Descriptor()
+	// usagedailyaggregate.DefaultProjectID holds the default value on creation for the project_id field.
+	usagedailyaggregate.DefaultProjectID = usagedailyaggregateDescProjectID.Default.(int)
+	// usagedailyaggregateDescChannelID is the schema descriptor for channel_id field.
+	usagedailyaggregateDescChannelID := usagedailyaggregateFields[4].Descriptor()
+	// usagedailyaggregate.DefaultChannelID holds the default value on creation for the channel_id field.
+	usagedailyaggregate.DefaultChannelID = usagedailyaggregateDescChannelID.Default.(int)
+	// usagedailyaggregateDescUpstreamAccountID is the schema descriptor for upstream_account_id field.
+	usagedailyaggregateDescUpstreamAccountID := usagedailyaggregateFields[5].Descriptor()
+	// usagedailyaggregate.DefaultUpstreamAccountID holds the default value on creation for the upstream_account_id field.
+	usagedailyaggregate.DefaultUpstreamAccountID = usagedailyaggregateDescUpstreamAccountID.Default.(int)
+	// usagedailyaggregateDescModelID is the schema descriptor for model_id field.
+	usagedailyaggregateDescModelID := usagedailyaggregateFields[6].Descriptor()
+	// usagedailyaggregate.DefaultModelID holds the default value on creation for the model_id field.
+	usagedailyaggregate.DefaultModelID = usagedailyaggregateDescModelID.Default.(string)
+	// usagedailyaggregateDescCurrency is the schema descriptor for currency field.
+	usagedailyaggregateDescCurrency := usagedailyaggregateFields[9].Descriptor()
+	// usagedailyaggregate.DefaultCurrency holds the default value on creation for the currency field.
+	usagedailyaggregate.DefaultCurrency = usagedailyaggregateDescCurrency.Default.(string)
+	// usagedailyaggregateDescRequestCount is the schema descriptor for request_count field.
+	usagedailyaggregateDescRequestCount := usagedailyaggregateFields[10].Descriptor()
+	// usagedailyaggregate.DefaultRequestCount holds the default value on creation for the request_count field.
+	usagedailyaggregate.DefaultRequestCount = usagedailyaggregateDescRequestCount.Default.(int64)
+	// usagedailyaggregateDescSuccessCount is the schema descriptor for success_count field.
+	usagedailyaggregateDescSuccessCount := usagedailyaggregateFields[11].Descriptor()
+	// usagedailyaggregate.DefaultSuccessCount holds the default value on creation for the success_count field.
+	usagedailyaggregate.DefaultSuccessCount = usagedailyaggregateDescSuccessCount.Default.(int64)
+	// usagedailyaggregateDescErrorCount is the schema descriptor for error_count field.
+	usagedailyaggregateDescErrorCount := usagedailyaggregateFields[12].Descriptor()
+	// usagedailyaggregate.DefaultErrorCount holds the default value on creation for the error_count field.
+	usagedailyaggregate.DefaultErrorCount = usagedailyaggregateDescErrorCount.Default.(int64)
+	// usagedailyaggregateDescPromptTokens is the schema descriptor for prompt_tokens field.
+	usagedailyaggregateDescPromptTokens := usagedailyaggregateFields[13].Descriptor()
+	// usagedailyaggregate.DefaultPromptTokens holds the default value on creation for the prompt_tokens field.
+	usagedailyaggregate.DefaultPromptTokens = usagedailyaggregateDescPromptTokens.Default.(int64)
+	// usagedailyaggregateDescCompletionTokens is the schema descriptor for completion_tokens field.
+	usagedailyaggregateDescCompletionTokens := usagedailyaggregateFields[14].Descriptor()
+	// usagedailyaggregate.DefaultCompletionTokens holds the default value on creation for the completion_tokens field.
+	usagedailyaggregate.DefaultCompletionTokens = usagedailyaggregateDescCompletionTokens.Default.(int64)
+	// usagedailyaggregateDescTotalTokens is the schema descriptor for total_tokens field.
+	usagedailyaggregateDescTotalTokens := usagedailyaggregateFields[15].Descriptor()
+	// usagedailyaggregate.DefaultTotalTokens holds the default value on creation for the total_tokens field.
+	usagedailyaggregate.DefaultTotalTokens = usagedailyaggregateDescTotalTokens.Default.(int64)
+	// usagedailyaggregateDescUserChargeMicros is the schema descriptor for user_charge_micros field.
+	usagedailyaggregateDescUserChargeMicros := usagedailyaggregateFields[16].Descriptor()
+	// usagedailyaggregate.DefaultUserChargeMicros holds the default value on creation for the user_charge_micros field.
+	usagedailyaggregate.DefaultUserChargeMicros = usagedailyaggregateDescUserChargeMicros.Default.(int64)
+	// usagedailyaggregateDescUpstreamCostMicros is the schema descriptor for upstream_cost_micros field.
+	usagedailyaggregateDescUpstreamCostMicros := usagedailyaggregateFields[17].Descriptor()
+	// usagedailyaggregate.DefaultUpstreamCostMicros holds the default value on creation for the upstream_cost_micros field.
+	usagedailyaggregate.DefaultUpstreamCostMicros = usagedailyaggregateDescUpstreamCostMicros.Default.(int64)
+	// usagedailyaggregateDescGrossMarginMicros is the schema descriptor for gross_margin_micros field.
+	usagedailyaggregateDescGrossMarginMicros := usagedailyaggregateFields[18].Descriptor()
+	// usagedailyaggregate.DefaultGrossMarginMicros holds the default value on creation for the gross_margin_micros field.
+	usagedailyaggregate.DefaultGrossMarginMicros = usagedailyaggregateDescGrossMarginMicros.Default.(int64)
+	usagehourlyaggregateMixin := schema.UsageHourlyAggregate{}.Mixin()
+	usagehourlyaggregate.Policy = privacy.NewPolicies(schema.UsageHourlyAggregate{})
+	usagehourlyaggregate.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := usagehourlyaggregate.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	usagehourlyaggregateMixinFields0 := usagehourlyaggregateMixin[0].Fields()
+	_ = usagehourlyaggregateMixinFields0
+	usagehourlyaggregateFields := schema.UsageHourlyAggregate{}.Fields()
+	_ = usagehourlyaggregateFields
+	// usagehourlyaggregateDescCreatedAt is the schema descriptor for created_at field.
+	usagehourlyaggregateDescCreatedAt := usagehourlyaggregateMixinFields0[0].Descriptor()
+	// usagehourlyaggregate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usagehourlyaggregate.DefaultCreatedAt = usagehourlyaggregateDescCreatedAt.Default.(func() time.Time)
+	// usagehourlyaggregateDescUpdatedAt is the schema descriptor for updated_at field.
+	usagehourlyaggregateDescUpdatedAt := usagehourlyaggregateMixinFields0[1].Descriptor()
+	// usagehourlyaggregate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usagehourlyaggregate.DefaultUpdatedAt = usagehourlyaggregateDescUpdatedAt.Default.(func() time.Time)
+	// usagehourlyaggregate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usagehourlyaggregate.UpdateDefaultUpdatedAt = usagehourlyaggregateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// usagehourlyaggregateDescUserID is the schema descriptor for user_id field.
+	usagehourlyaggregateDescUserID := usagehourlyaggregateFields[1].Descriptor()
+	// usagehourlyaggregate.DefaultUserID holds the default value on creation for the user_id field.
+	usagehourlyaggregate.DefaultUserID = usagehourlyaggregateDescUserID.Default.(int)
+	// usagehourlyaggregateDescAPIKeyID is the schema descriptor for api_key_id field.
+	usagehourlyaggregateDescAPIKeyID := usagehourlyaggregateFields[2].Descriptor()
+	// usagehourlyaggregate.DefaultAPIKeyID holds the default value on creation for the api_key_id field.
+	usagehourlyaggregate.DefaultAPIKeyID = usagehourlyaggregateDescAPIKeyID.Default.(int)
+	// usagehourlyaggregateDescProjectID is the schema descriptor for project_id field.
+	usagehourlyaggregateDescProjectID := usagehourlyaggregateFields[3].Descriptor()
+	// usagehourlyaggregate.DefaultProjectID holds the default value on creation for the project_id field.
+	usagehourlyaggregate.DefaultProjectID = usagehourlyaggregateDescProjectID.Default.(int)
+	// usagehourlyaggregateDescChannelID is the schema descriptor for channel_id field.
+	usagehourlyaggregateDescChannelID := usagehourlyaggregateFields[4].Descriptor()
+	// usagehourlyaggregate.DefaultChannelID holds the default value on creation for the channel_id field.
+	usagehourlyaggregate.DefaultChannelID = usagehourlyaggregateDescChannelID.Default.(int)
+	// usagehourlyaggregateDescUpstreamAccountID is the schema descriptor for upstream_account_id field.
+	usagehourlyaggregateDescUpstreamAccountID := usagehourlyaggregateFields[5].Descriptor()
+	// usagehourlyaggregate.DefaultUpstreamAccountID holds the default value on creation for the upstream_account_id field.
+	usagehourlyaggregate.DefaultUpstreamAccountID = usagehourlyaggregateDescUpstreamAccountID.Default.(int)
+	// usagehourlyaggregateDescModelID is the schema descriptor for model_id field.
+	usagehourlyaggregateDescModelID := usagehourlyaggregateFields[6].Descriptor()
+	// usagehourlyaggregate.DefaultModelID holds the default value on creation for the model_id field.
+	usagehourlyaggregate.DefaultModelID = usagehourlyaggregateDescModelID.Default.(string)
+	// usagehourlyaggregateDescCurrency is the schema descriptor for currency field.
+	usagehourlyaggregateDescCurrency := usagehourlyaggregateFields[9].Descriptor()
+	// usagehourlyaggregate.DefaultCurrency holds the default value on creation for the currency field.
+	usagehourlyaggregate.DefaultCurrency = usagehourlyaggregateDescCurrency.Default.(string)
+	// usagehourlyaggregateDescRequestCount is the schema descriptor for request_count field.
+	usagehourlyaggregateDescRequestCount := usagehourlyaggregateFields[10].Descriptor()
+	// usagehourlyaggregate.DefaultRequestCount holds the default value on creation for the request_count field.
+	usagehourlyaggregate.DefaultRequestCount = usagehourlyaggregateDescRequestCount.Default.(int64)
+	// usagehourlyaggregateDescSuccessCount is the schema descriptor for success_count field.
+	usagehourlyaggregateDescSuccessCount := usagehourlyaggregateFields[11].Descriptor()
+	// usagehourlyaggregate.DefaultSuccessCount holds the default value on creation for the success_count field.
+	usagehourlyaggregate.DefaultSuccessCount = usagehourlyaggregateDescSuccessCount.Default.(int64)
+	// usagehourlyaggregateDescErrorCount is the schema descriptor for error_count field.
+	usagehourlyaggregateDescErrorCount := usagehourlyaggregateFields[12].Descriptor()
+	// usagehourlyaggregate.DefaultErrorCount holds the default value on creation for the error_count field.
+	usagehourlyaggregate.DefaultErrorCount = usagehourlyaggregateDescErrorCount.Default.(int64)
+	// usagehourlyaggregateDescPromptTokens is the schema descriptor for prompt_tokens field.
+	usagehourlyaggregateDescPromptTokens := usagehourlyaggregateFields[13].Descriptor()
+	// usagehourlyaggregate.DefaultPromptTokens holds the default value on creation for the prompt_tokens field.
+	usagehourlyaggregate.DefaultPromptTokens = usagehourlyaggregateDescPromptTokens.Default.(int64)
+	// usagehourlyaggregateDescCompletionTokens is the schema descriptor for completion_tokens field.
+	usagehourlyaggregateDescCompletionTokens := usagehourlyaggregateFields[14].Descriptor()
+	// usagehourlyaggregate.DefaultCompletionTokens holds the default value on creation for the completion_tokens field.
+	usagehourlyaggregate.DefaultCompletionTokens = usagehourlyaggregateDescCompletionTokens.Default.(int64)
+	// usagehourlyaggregateDescTotalTokens is the schema descriptor for total_tokens field.
+	usagehourlyaggregateDescTotalTokens := usagehourlyaggregateFields[15].Descriptor()
+	// usagehourlyaggregate.DefaultTotalTokens holds the default value on creation for the total_tokens field.
+	usagehourlyaggregate.DefaultTotalTokens = usagehourlyaggregateDescTotalTokens.Default.(int64)
+	// usagehourlyaggregateDescUserChargeMicros is the schema descriptor for user_charge_micros field.
+	usagehourlyaggregateDescUserChargeMicros := usagehourlyaggregateFields[16].Descriptor()
+	// usagehourlyaggregate.DefaultUserChargeMicros holds the default value on creation for the user_charge_micros field.
+	usagehourlyaggregate.DefaultUserChargeMicros = usagehourlyaggregateDescUserChargeMicros.Default.(int64)
+	// usagehourlyaggregateDescUpstreamCostMicros is the schema descriptor for upstream_cost_micros field.
+	usagehourlyaggregateDescUpstreamCostMicros := usagehourlyaggregateFields[17].Descriptor()
+	// usagehourlyaggregate.DefaultUpstreamCostMicros holds the default value on creation for the upstream_cost_micros field.
+	usagehourlyaggregate.DefaultUpstreamCostMicros = usagehourlyaggregateDescUpstreamCostMicros.Default.(int64)
+	// usagehourlyaggregateDescGrossMarginMicros is the schema descriptor for gross_margin_micros field.
+	usagehourlyaggregateDescGrossMarginMicros := usagehourlyaggregateFields[18].Descriptor()
+	// usagehourlyaggregate.DefaultGrossMarginMicros holds the default value on creation for the gross_margin_micros field.
+	usagehourlyaggregate.DefaultGrossMarginMicros = usagehourlyaggregateDescGrossMarginMicros.Default.(int64)
 	usagelogMixin := schema.UsageLog{}.Mixin()
 	usagelog.Policy = privacy.NewPolicies(schema.UsageLog{})
 	usagelog.Hooks[0] = func(next ent.Mutator) ent.Mutator {

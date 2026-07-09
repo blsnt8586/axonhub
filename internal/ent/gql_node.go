@@ -58,6 +58,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
+	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -291,6 +293,16 @@ var usagebillingrecordImplementors = []string{"UsageBillingRecord", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*UsageBillingRecord) IsNode() {}
+
+var usagedailyaggregateImplementors = []string{"UsageDailyAggregate", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*UsageDailyAggregate) IsNode() {}
+
+var usagehourlyaggregateImplementors = []string{"UsageHourlyAggregate", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*UsageHourlyAggregate) IsNode() {}
 
 var usagelogImplementors = []string{"UsageLog", "Node"}
 
@@ -767,6 +779,24 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(usagebillingrecord.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, usagebillingrecordImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case usagedailyaggregate.Table:
+		query := c.UsageDailyAggregate.Query().
+			Where(usagedailyaggregate.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, usagedailyaggregateImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case usagehourlyaggregate.Table:
+		query := c.UsageHourlyAggregate.Query().
+			Where(usagehourlyaggregate.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, usagehourlyaggregateImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -1581,6 +1611,38 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.UsageBillingRecord.Query().
 			Where(usagebillingrecord.IDIn(ids...))
 		query, err := query.CollectFields(ctx, usagebillingrecordImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case usagedailyaggregate.Table:
+		query := c.UsageDailyAggregate.Query().
+			Where(usagedailyaggregate.IDIn(ids...))
+		query, err := query.CollectFields(ctx, usagedailyaggregateImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case usagehourlyaggregate.Table:
+		query := c.UsageHourlyAggregate.Query().
+			Where(usagehourlyaggregate.IDIn(ids...))
+		query, err := query.CollectFields(ctx, usagehourlyaggregateImplementors...)
 		if err != nil {
 			return nil, err
 		}

@@ -138,6 +138,12 @@ type Trace func(*sql.Selector)
 // UsageBillingRecord is the predicate function for usagebillingrecord builders.
 type UsageBillingRecord func(*sql.Selector)
 
+// UsageDailyAggregate is the predicate function for usagedailyaggregate builders.
+type UsageDailyAggregate func(*sql.Selector)
+
+// UsageHourlyAggregate is the predicate function for usagehourlyaggregate builders.
+type UsageHourlyAggregate func(*sql.Selector)
+
 // UsageLog is the predicate function for usagelog builders.
 type UsageLog func(*sql.Selector)
 

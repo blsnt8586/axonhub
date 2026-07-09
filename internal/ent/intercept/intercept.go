@@ -53,6 +53,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
+	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -1304,6 +1306,60 @@ func (f TraverseUsageBillingRecord) Traverse(ctx context.Context, q ent.Query) e
 	return fmt.Errorf("unexpected query type %T. expect *ent.UsageBillingRecordQuery", q)
 }
 
+// The UsageDailyAggregateFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UsageDailyAggregateFunc func(context.Context, *ent.UsageDailyAggregateQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f UsageDailyAggregateFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.UsageDailyAggregateQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.UsageDailyAggregateQuery", q)
+}
+
+// The TraverseUsageDailyAggregate type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUsageDailyAggregate func(context.Context, *ent.UsageDailyAggregateQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUsageDailyAggregate) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUsageDailyAggregate) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UsageDailyAggregateQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.UsageDailyAggregateQuery", q)
+}
+
+// The UsageHourlyAggregateFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UsageHourlyAggregateFunc func(context.Context, *ent.UsageHourlyAggregateQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f UsageHourlyAggregateFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.UsageHourlyAggregateQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.UsageHourlyAggregateQuery", q)
+}
+
+// The TraverseUsageHourlyAggregate type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUsageHourlyAggregate func(context.Context, *ent.UsageHourlyAggregateQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUsageHourlyAggregate) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUsageHourlyAggregate) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UsageHourlyAggregateQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.UsageHourlyAggregateQuery", q)
+}
+
 // The UsageLogFunc type is an adapter to allow the use of ordinary function as a Querier.
 type UsageLogFunc func(context.Context, *ent.UsageLogQuery) (ent.Value, error)
 
@@ -1530,6 +1586,10 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.TraceQuery, predicate.Trace, trace.OrderOption]{typ: ent.TypeTrace, tq: q}, nil
 	case *ent.UsageBillingRecordQuery:
 		return &query[*ent.UsageBillingRecordQuery, predicate.UsageBillingRecord, usagebillingrecord.OrderOption]{typ: ent.TypeUsageBillingRecord, tq: q}, nil
+	case *ent.UsageDailyAggregateQuery:
+		return &query[*ent.UsageDailyAggregateQuery, predicate.UsageDailyAggregate, usagedailyaggregate.OrderOption]{typ: ent.TypeUsageDailyAggregate, tq: q}, nil
+	case *ent.UsageHourlyAggregateQuery:
+		return &query[*ent.UsageHourlyAggregateQuery, predicate.UsageHourlyAggregate, usagehourlyaggregate.OrderOption]{typ: ent.TypeUsageHourlyAggregate, tq: q}, nil
 	case *ent.UsageLogQuery:
 		return &query[*ent.UsageLogQuery, predicate.UsageLog, usagelog.OrderOption]{typ: ent.TypeUsageLog, tq: q}, nil
 	case *ent.UserQuery:

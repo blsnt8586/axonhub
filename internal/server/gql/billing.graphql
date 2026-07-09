@@ -378,6 +378,7 @@ input RunCommercialMaintenanceInput {
   now: Time
   limit: Int
   reason: String!
+  rebuildUsageAggregates: Boolean
 }
 
 input AdminBillingAuditLogsFilter {
@@ -438,6 +439,20 @@ type BillingTopProjectRow {
   requestCount: Int!
 }
 
+type BillingTopAPIKeyRow {
+  apiKeyId: Int!
+  apiKeyName: String!
+  chargeAmountMicros: Int!
+  requestCount: Int!
+}
+
+type BillingTopChannelRow {
+  channelId: Int!
+  channelName: String!
+  chargeAmountMicros: Int!
+  requestCount: Int!
+}
+
 type BillingTopUserReportRow {
   userId: Int!
   email: String!
@@ -454,6 +469,8 @@ type BillingCommercialReport {
   daily: [BillingDailyReportRow!]!
   topModels: [BillingTopModelRow!]!
   topProjects: [BillingTopProjectRow!]!
+  topApiKeys: [BillingTopAPIKeyRow!]!
+  topChannels: [BillingTopChannelRow!]!
   topUsers: [BillingTopUserReportRow!]!
 }
 
@@ -506,6 +523,9 @@ type CommercialMaintenanceRunResult {
   subscriptionResetProcessed: Int!
   affiliateRebateThawProcessed: Int!
   failedBillingRetryProcessed: Int!
+  usageAggregateRecordsProcessed: Int!
+  usageAggregateHourlyRows: Int!
+  usageAggregateDailyRows: Int!
 }
 
 extend type Mutation {

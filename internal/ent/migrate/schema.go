@@ -1957,6 +1957,142 @@ var (
 			},
 		},
 	}
+	// UsageDailyAggregatesColumns holds the columns for the "usage_daily_aggregates" table.
+	UsageDailyAggregatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "bucket_start", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeInt, Default: 0},
+		{Name: "api_key_id", Type: field.TypeInt, Default: 0},
+		{Name: "project_id", Type: field.TypeInt, Default: 0},
+		{Name: "channel_id", Type: field.TypeInt, Default: 0},
+		{Name: "upstream_account_id", Type: field.TypeInt, Default: 0},
+		{Name: "model_id", Type: field.TypeString, Default: ""},
+		{Name: "request_type", Type: field.TypeEnum, Enums: []string{"chat", "image", "video", "embedding", "audio", "other"}, Default: "chat"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "charged", "skipped", "failed", "refunded"}, Default: "charged"},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "request_count", Type: field.TypeInt64, Default: 0},
+		{Name: "success_count", Type: field.TypeInt64, Default: 0},
+		{Name: "error_count", Type: field.TypeInt64, Default: 0},
+		{Name: "prompt_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "completion_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "total_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "user_charge_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "upstream_cost_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "gross_margin_micros", Type: field.TypeInt64, Default: 0},
+	}
+	// UsageDailyAggregatesTable holds the schema information for the "usage_daily_aggregates" table.
+	UsageDailyAggregatesTable = &schema.Table{
+		Name:       "usage_daily_aggregates",
+		Columns:    UsageDailyAggregatesColumns,
+		PrimaryKey: []*schema.Column{UsageDailyAggregatesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usage_daily_aggregates_by_bucket_start",
+				Unique:  false,
+				Columns: []*schema.Column{UsageDailyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_daily_aggregates_by_user_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageDailyAggregatesColumns[4], UsageDailyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_daily_aggregates_by_project_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageDailyAggregatesColumns[6], UsageDailyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_daily_aggregates_by_api_key_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageDailyAggregatesColumns[5], UsageDailyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_daily_aggregates_by_channel_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageDailyAggregatesColumns[7], UsageDailyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_daily_aggregates_by_model_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageDailyAggregatesColumns[9], UsageDailyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_daily_aggregates_unique_dimension",
+				Unique:  true,
+				Columns: []*schema.Column{UsageDailyAggregatesColumns[3], UsageDailyAggregatesColumns[4], UsageDailyAggregatesColumns[5], UsageDailyAggregatesColumns[6], UsageDailyAggregatesColumns[7], UsageDailyAggregatesColumns[9], UsageDailyAggregatesColumns[10], UsageDailyAggregatesColumns[11], UsageDailyAggregatesColumns[12], UsageDailyAggregatesColumns[8]},
+			},
+		},
+	}
+	// UsageHourlyAggregatesColumns holds the columns for the "usage_hourly_aggregates" table.
+	UsageHourlyAggregatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "bucket_start", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeInt, Default: 0},
+		{Name: "api_key_id", Type: field.TypeInt, Default: 0},
+		{Name: "project_id", Type: field.TypeInt, Default: 0},
+		{Name: "channel_id", Type: field.TypeInt, Default: 0},
+		{Name: "upstream_account_id", Type: field.TypeInt, Default: 0},
+		{Name: "model_id", Type: field.TypeString, Default: ""},
+		{Name: "request_type", Type: field.TypeEnum, Enums: []string{"chat", "image", "video", "embedding", "audio", "other"}, Default: "chat"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "charged", "skipped", "failed", "refunded"}, Default: "charged"},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "request_count", Type: field.TypeInt64, Default: 0},
+		{Name: "success_count", Type: field.TypeInt64, Default: 0},
+		{Name: "error_count", Type: field.TypeInt64, Default: 0},
+		{Name: "prompt_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "completion_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "total_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "user_charge_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "upstream_cost_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "gross_margin_micros", Type: field.TypeInt64, Default: 0},
+	}
+	// UsageHourlyAggregatesTable holds the schema information for the "usage_hourly_aggregates" table.
+	UsageHourlyAggregatesTable = &schema.Table{
+		Name:       "usage_hourly_aggregates",
+		Columns:    UsageHourlyAggregatesColumns,
+		PrimaryKey: []*schema.Column{UsageHourlyAggregatesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usage_hourly_aggregates_by_bucket_start",
+				Unique:  false,
+				Columns: []*schema.Column{UsageHourlyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_hourly_aggregates_by_user_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageHourlyAggregatesColumns[4], UsageHourlyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_hourly_aggregates_by_project_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageHourlyAggregatesColumns[6], UsageHourlyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_hourly_aggregates_by_api_key_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageHourlyAggregatesColumns[5], UsageHourlyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_hourly_aggregates_by_channel_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageHourlyAggregatesColumns[7], UsageHourlyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_hourly_aggregates_by_model_bucket",
+				Unique:  false,
+				Columns: []*schema.Column{UsageHourlyAggregatesColumns[9], UsageHourlyAggregatesColumns[3]},
+			},
+			{
+				Name:    "usage_hourly_aggregates_unique_dimension",
+				Unique:  true,
+				Columns: []*schema.Column{UsageHourlyAggregatesColumns[3], UsageHourlyAggregatesColumns[4], UsageHourlyAggregatesColumns[5], UsageHourlyAggregatesColumns[6], UsageHourlyAggregatesColumns[7], UsageHourlyAggregatesColumns[9], UsageHourlyAggregatesColumns[10], UsageHourlyAggregatesColumns[11], UsageHourlyAggregatesColumns[12], UsageHourlyAggregatesColumns[8]},
+			},
+		},
+	}
 	// UsageLogsColumns holds the columns for the "usage_logs" table.
 	UsageLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -2311,6 +2447,8 @@ var (
 		ThreadsTable,
 		TracesTable,
 		UsageBillingRecordsTable,
+		UsageDailyAggregatesTable,
+		UsageHourlyAggregatesTable,
 		UsageLogsTable,
 		UsersTable,
 		UserProjectsTable,

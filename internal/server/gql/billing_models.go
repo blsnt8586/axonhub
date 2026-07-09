@@ -51,6 +51,13 @@ func intValue(value *int) int {
 	return *value
 }
 
+func boolValue(value *bool) bool {
+	if value == nil {
+		return false
+	}
+	return *value
+}
+
 func timeValue(value *time.Time) time.Time {
 	if value == nil {
 		return time.Time{}

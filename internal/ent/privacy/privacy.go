@@ -1167,6 +1167,54 @@ func (f UsageBillingRecordMutationRuleFunc) EvalMutation(ctx context.Context, m 
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UsageBillingRecordMutation", m)
 }
 
+// The UsageDailyAggregateQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type UsageDailyAggregateQueryRuleFunc func(context.Context, *ent.UsageDailyAggregateQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f UsageDailyAggregateQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UsageDailyAggregateQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.UsageDailyAggregateQuery", q)
+}
+
+// The UsageDailyAggregateMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type UsageDailyAggregateMutationRuleFunc func(context.Context, *ent.UsageDailyAggregateMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f UsageDailyAggregateMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.UsageDailyAggregateMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UsageDailyAggregateMutation", m)
+}
+
+// The UsageHourlyAggregateQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type UsageHourlyAggregateQueryRuleFunc func(context.Context, *ent.UsageHourlyAggregateQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f UsageHourlyAggregateQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UsageHourlyAggregateQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.UsageHourlyAggregateQuery", q)
+}
+
+// The UsageHourlyAggregateMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type UsageHourlyAggregateMutationRuleFunc func(context.Context, *ent.UsageHourlyAggregateMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f UsageHourlyAggregateMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.UsageHourlyAggregateMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UsageHourlyAggregateMutation", m)
+}
+
 // The UsageLogQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type UsageLogQueryRuleFunc func(context.Context, *ent.UsageLogQuery) error
@@ -1410,6 +1458,10 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.UsageBillingRecordQuery:
 		return q.Filter(), nil
+	case *ent.UsageDailyAggregateQuery:
+		return q.Filter(), nil
+	case *ent.UsageHourlyAggregateQuery:
+		return q.Filter(), nil
 	case *ent.UsageLogQuery:
 		return q.Filter(), nil
 	case *ent.UserQuery:
@@ -1514,6 +1566,10 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.TraceMutation:
 		return m.Filter(), nil
 	case *ent.UsageBillingRecordMutation:
+		return m.Filter(), nil
+	case *ent.UsageDailyAggregateMutation:
+		return m.Filter(), nil
+	case *ent.UsageHourlyAggregateMutation:
 		return m.Filter(), nil
 	case *ent.UsageLogMutation:
 		return m.Filter(), nil

@@ -56,6 +56,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
+	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -117,6 +119,8 @@ const (
 	TypeThread                        = "Thread"
 	TypeTrace                         = "Trace"
 	TypeUsageBillingRecord            = "UsageBillingRecord"
+	TypeUsageDailyAggregate           = "UsageDailyAggregate"
+	TypeUsageHourlyAggregate          = "UsageHourlyAggregate"
 	TypeUsageLog                      = "UsageLog"
 	TypeUser                          = "User"
 	TypeUserProject                   = "UserProject"
@@ -53726,6 +53730,3748 @@ func (m *UsageBillingRecordMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown UsageBillingRecord edge %s", name)
+}
+
+// UsageDailyAggregateMutation represents an operation that mutates the UsageDailyAggregate nodes in the graph.
+type UsageDailyAggregateMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *int
+	created_at              *time.Time
+	updated_at              *time.Time
+	bucket_start            *time.Time
+	user_id                 *int
+	adduser_id              *int
+	api_key_id              *int
+	addapi_key_id           *int
+	project_id              *int
+	addproject_id           *int
+	channel_id              *int
+	addchannel_id           *int
+	upstream_account_id     *int
+	addupstream_account_id  *int
+	model_id                *string
+	request_type            *usagedailyaggregate.RequestType
+	status                  *usagedailyaggregate.Status
+	currency                *string
+	request_count           *int64
+	addrequest_count        *int64
+	success_count           *int64
+	addsuccess_count        *int64
+	error_count             *int64
+	adderror_count          *int64
+	prompt_tokens           *int64
+	addprompt_tokens        *int64
+	completion_tokens       *int64
+	addcompletion_tokens    *int64
+	total_tokens            *int64
+	addtotal_tokens         *int64
+	user_charge_micros      *int64
+	adduser_charge_micros   *int64
+	upstream_cost_micros    *int64
+	addupstream_cost_micros *int64
+	gross_margin_micros     *int64
+	addgross_margin_micros  *int64
+	clearedFields           map[string]struct{}
+	done                    bool
+	oldValue                func(context.Context) (*UsageDailyAggregate, error)
+	predicates              []predicate.UsageDailyAggregate
+}
+
+var _ ent.Mutation = (*UsageDailyAggregateMutation)(nil)
+
+// usagedailyaggregateOption allows management of the mutation configuration using functional options.
+type usagedailyaggregateOption func(*UsageDailyAggregateMutation)
+
+// newUsageDailyAggregateMutation creates new mutation for the UsageDailyAggregate entity.
+func newUsageDailyAggregateMutation(c config, op Op, opts ...usagedailyaggregateOption) *UsageDailyAggregateMutation {
+	m := &UsageDailyAggregateMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUsageDailyAggregate,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUsageDailyAggregateID sets the ID field of the mutation.
+func withUsageDailyAggregateID(id int) usagedailyaggregateOption {
+	return func(m *UsageDailyAggregateMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UsageDailyAggregate
+		)
+		m.oldValue = func(ctx context.Context) (*UsageDailyAggregate, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UsageDailyAggregate.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUsageDailyAggregate sets the old UsageDailyAggregate of the mutation.
+func withUsageDailyAggregate(node *UsageDailyAggregate) usagedailyaggregateOption {
+	return func(m *UsageDailyAggregateMutation) {
+		m.oldValue = func(context.Context) (*UsageDailyAggregate, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UsageDailyAggregateMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UsageDailyAggregateMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UsageDailyAggregateMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UsageDailyAggregateMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UsageDailyAggregate.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UsageDailyAggregateMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UsageDailyAggregateMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UsageDailyAggregateMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UsageDailyAggregateMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UsageDailyAggregateMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UsageDailyAggregateMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetBucketStart sets the "bucket_start" field.
+func (m *UsageDailyAggregateMutation) SetBucketStart(t time.Time) {
+	m.bucket_start = &t
+}
+
+// BucketStart returns the value of the "bucket_start" field in the mutation.
+func (m *UsageDailyAggregateMutation) BucketStart() (r time.Time, exists bool) {
+	v := m.bucket_start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBucketStart returns the old "bucket_start" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldBucketStart(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBucketStart is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBucketStart requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBucketStart: %w", err)
+	}
+	return oldValue.BucketStart, nil
+}
+
+// ResetBucketStart resets all changes to the "bucket_start" field.
+func (m *UsageDailyAggregateMutation) ResetBucketStart() {
+	m.bucket_start = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *UsageDailyAggregateMutation) SetUserID(i int) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *UsageDailyAggregateMutation) UserID() (r int, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *UsageDailyAggregateMutation) AddUserID(i int) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedUserID() (r int, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *UsageDailyAggregateMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+}
+
+// SetAPIKeyID sets the "api_key_id" field.
+func (m *UsageDailyAggregateMutation) SetAPIKeyID(i int) {
+	m.api_key_id = &i
+	m.addapi_key_id = nil
+}
+
+// APIKeyID returns the value of the "api_key_id" field in the mutation.
+func (m *UsageDailyAggregateMutation) APIKeyID() (r int, exists bool) {
+	v := m.api_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIKeyID returns the old "api_key_id" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldAPIKeyID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIKeyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIKeyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIKeyID: %w", err)
+	}
+	return oldValue.APIKeyID, nil
+}
+
+// AddAPIKeyID adds i to the "api_key_id" field.
+func (m *UsageDailyAggregateMutation) AddAPIKeyID(i int) {
+	if m.addapi_key_id != nil {
+		*m.addapi_key_id += i
+	} else {
+		m.addapi_key_id = &i
+	}
+}
+
+// AddedAPIKeyID returns the value that was added to the "api_key_id" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedAPIKeyID() (r int, exists bool) {
+	v := m.addapi_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAPIKeyID resets all changes to the "api_key_id" field.
+func (m *UsageDailyAggregateMutation) ResetAPIKeyID() {
+	m.api_key_id = nil
+	m.addapi_key_id = nil
+}
+
+// SetProjectID sets the "project_id" field.
+func (m *UsageDailyAggregateMutation) SetProjectID(i int) {
+	m.project_id = &i
+	m.addproject_id = nil
+}
+
+// ProjectID returns the value of the "project_id" field in the mutation.
+func (m *UsageDailyAggregateMutation) ProjectID() (r int, exists bool) {
+	v := m.project_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectID returns the old "project_id" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldProjectID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectID: %w", err)
+	}
+	return oldValue.ProjectID, nil
+}
+
+// AddProjectID adds i to the "project_id" field.
+func (m *UsageDailyAggregateMutation) AddProjectID(i int) {
+	if m.addproject_id != nil {
+		*m.addproject_id += i
+	} else {
+		m.addproject_id = &i
+	}
+}
+
+// AddedProjectID returns the value that was added to the "project_id" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedProjectID() (r int, exists bool) {
+	v := m.addproject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetProjectID resets all changes to the "project_id" field.
+func (m *UsageDailyAggregateMutation) ResetProjectID() {
+	m.project_id = nil
+	m.addproject_id = nil
+}
+
+// SetChannelID sets the "channel_id" field.
+func (m *UsageDailyAggregateMutation) SetChannelID(i int) {
+	m.channel_id = &i
+	m.addchannel_id = nil
+}
+
+// ChannelID returns the value of the "channel_id" field in the mutation.
+func (m *UsageDailyAggregateMutation) ChannelID() (r int, exists bool) {
+	v := m.channel_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChannelID returns the old "channel_id" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldChannelID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChannelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChannelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChannelID: %w", err)
+	}
+	return oldValue.ChannelID, nil
+}
+
+// AddChannelID adds i to the "channel_id" field.
+func (m *UsageDailyAggregateMutation) AddChannelID(i int) {
+	if m.addchannel_id != nil {
+		*m.addchannel_id += i
+	} else {
+		m.addchannel_id = &i
+	}
+}
+
+// AddedChannelID returns the value that was added to the "channel_id" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedChannelID() (r int, exists bool) {
+	v := m.addchannel_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetChannelID resets all changes to the "channel_id" field.
+func (m *UsageDailyAggregateMutation) ResetChannelID() {
+	m.channel_id = nil
+	m.addchannel_id = nil
+}
+
+// SetUpstreamAccountID sets the "upstream_account_id" field.
+func (m *UsageDailyAggregateMutation) SetUpstreamAccountID(i int) {
+	m.upstream_account_id = &i
+	m.addupstream_account_id = nil
+}
+
+// UpstreamAccountID returns the value of the "upstream_account_id" field in the mutation.
+func (m *UsageDailyAggregateMutation) UpstreamAccountID() (r int, exists bool) {
+	v := m.upstream_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamAccountID returns the old "upstream_account_id" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldUpstreamAccountID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamAccountID: %w", err)
+	}
+	return oldValue.UpstreamAccountID, nil
+}
+
+// AddUpstreamAccountID adds i to the "upstream_account_id" field.
+func (m *UsageDailyAggregateMutation) AddUpstreamAccountID(i int) {
+	if m.addupstream_account_id != nil {
+		*m.addupstream_account_id += i
+	} else {
+		m.addupstream_account_id = &i
+	}
+}
+
+// AddedUpstreamAccountID returns the value that was added to the "upstream_account_id" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedUpstreamAccountID() (r int, exists bool) {
+	v := m.addupstream_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUpstreamAccountID resets all changes to the "upstream_account_id" field.
+func (m *UsageDailyAggregateMutation) ResetUpstreamAccountID() {
+	m.upstream_account_id = nil
+	m.addupstream_account_id = nil
+}
+
+// SetModelID sets the "model_id" field.
+func (m *UsageDailyAggregateMutation) SetModelID(s string) {
+	m.model_id = &s
+}
+
+// ModelID returns the value of the "model_id" field in the mutation.
+func (m *UsageDailyAggregateMutation) ModelID() (r string, exists bool) {
+	v := m.model_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModelID returns the old "model_id" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldModelID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModelID: %w", err)
+	}
+	return oldValue.ModelID, nil
+}
+
+// ResetModelID resets all changes to the "model_id" field.
+func (m *UsageDailyAggregateMutation) ResetModelID() {
+	m.model_id = nil
+}
+
+// SetRequestType sets the "request_type" field.
+func (m *UsageDailyAggregateMutation) SetRequestType(ut usagedailyaggregate.RequestType) {
+	m.request_type = &ut
+}
+
+// RequestType returns the value of the "request_type" field in the mutation.
+func (m *UsageDailyAggregateMutation) RequestType() (r usagedailyaggregate.RequestType, exists bool) {
+	v := m.request_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestType returns the old "request_type" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldRequestType(ctx context.Context) (v usagedailyaggregate.RequestType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestType: %w", err)
+	}
+	return oldValue.RequestType, nil
+}
+
+// ResetRequestType resets all changes to the "request_type" field.
+func (m *UsageDailyAggregateMutation) ResetRequestType() {
+	m.request_type = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *UsageDailyAggregateMutation) SetStatus(u usagedailyaggregate.Status) {
+	m.status = &u
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *UsageDailyAggregateMutation) Status() (r usagedailyaggregate.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldStatus(ctx context.Context) (v usagedailyaggregate.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *UsageDailyAggregateMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetCurrency sets the "currency" field.
+func (m *UsageDailyAggregateMutation) SetCurrency(s string) {
+	m.currency = &s
+}
+
+// Currency returns the value of the "currency" field in the mutation.
+func (m *UsageDailyAggregateMutation) Currency() (r string, exists bool) {
+	v := m.currency
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrency returns the old "currency" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldCurrency(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrency is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrency requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrency: %w", err)
+	}
+	return oldValue.Currency, nil
+}
+
+// ResetCurrency resets all changes to the "currency" field.
+func (m *UsageDailyAggregateMutation) ResetCurrency() {
+	m.currency = nil
+}
+
+// SetRequestCount sets the "request_count" field.
+func (m *UsageDailyAggregateMutation) SetRequestCount(i int64) {
+	m.request_count = &i
+	m.addrequest_count = nil
+}
+
+// RequestCount returns the value of the "request_count" field in the mutation.
+func (m *UsageDailyAggregateMutation) RequestCount() (r int64, exists bool) {
+	v := m.request_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestCount returns the old "request_count" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldRequestCount(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestCount: %w", err)
+	}
+	return oldValue.RequestCount, nil
+}
+
+// AddRequestCount adds i to the "request_count" field.
+func (m *UsageDailyAggregateMutation) AddRequestCount(i int64) {
+	if m.addrequest_count != nil {
+		*m.addrequest_count += i
+	} else {
+		m.addrequest_count = &i
+	}
+}
+
+// AddedRequestCount returns the value that was added to the "request_count" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedRequestCount() (r int64, exists bool) {
+	v := m.addrequest_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRequestCount resets all changes to the "request_count" field.
+func (m *UsageDailyAggregateMutation) ResetRequestCount() {
+	m.request_count = nil
+	m.addrequest_count = nil
+}
+
+// SetSuccessCount sets the "success_count" field.
+func (m *UsageDailyAggregateMutation) SetSuccessCount(i int64) {
+	m.success_count = &i
+	m.addsuccess_count = nil
+}
+
+// SuccessCount returns the value of the "success_count" field in the mutation.
+func (m *UsageDailyAggregateMutation) SuccessCount() (r int64, exists bool) {
+	v := m.success_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSuccessCount returns the old "success_count" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldSuccessCount(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSuccessCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSuccessCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSuccessCount: %w", err)
+	}
+	return oldValue.SuccessCount, nil
+}
+
+// AddSuccessCount adds i to the "success_count" field.
+func (m *UsageDailyAggregateMutation) AddSuccessCount(i int64) {
+	if m.addsuccess_count != nil {
+		*m.addsuccess_count += i
+	} else {
+		m.addsuccess_count = &i
+	}
+}
+
+// AddedSuccessCount returns the value that was added to the "success_count" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedSuccessCount() (r int64, exists bool) {
+	v := m.addsuccess_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSuccessCount resets all changes to the "success_count" field.
+func (m *UsageDailyAggregateMutation) ResetSuccessCount() {
+	m.success_count = nil
+	m.addsuccess_count = nil
+}
+
+// SetErrorCount sets the "error_count" field.
+func (m *UsageDailyAggregateMutation) SetErrorCount(i int64) {
+	m.error_count = &i
+	m.adderror_count = nil
+}
+
+// ErrorCount returns the value of the "error_count" field in the mutation.
+func (m *UsageDailyAggregateMutation) ErrorCount() (r int64, exists bool) {
+	v := m.error_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorCount returns the old "error_count" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldErrorCount(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorCount: %w", err)
+	}
+	return oldValue.ErrorCount, nil
+}
+
+// AddErrorCount adds i to the "error_count" field.
+func (m *UsageDailyAggregateMutation) AddErrorCount(i int64) {
+	if m.adderror_count != nil {
+		*m.adderror_count += i
+	} else {
+		m.adderror_count = &i
+	}
+}
+
+// AddedErrorCount returns the value that was added to the "error_count" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedErrorCount() (r int64, exists bool) {
+	v := m.adderror_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetErrorCount resets all changes to the "error_count" field.
+func (m *UsageDailyAggregateMutation) ResetErrorCount() {
+	m.error_count = nil
+	m.adderror_count = nil
+}
+
+// SetPromptTokens sets the "prompt_tokens" field.
+func (m *UsageDailyAggregateMutation) SetPromptTokens(i int64) {
+	m.prompt_tokens = &i
+	m.addprompt_tokens = nil
+}
+
+// PromptTokens returns the value of the "prompt_tokens" field in the mutation.
+func (m *UsageDailyAggregateMutation) PromptTokens() (r int64, exists bool) {
+	v := m.prompt_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPromptTokens returns the old "prompt_tokens" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldPromptTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPromptTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPromptTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPromptTokens: %w", err)
+	}
+	return oldValue.PromptTokens, nil
+}
+
+// AddPromptTokens adds i to the "prompt_tokens" field.
+func (m *UsageDailyAggregateMutation) AddPromptTokens(i int64) {
+	if m.addprompt_tokens != nil {
+		*m.addprompt_tokens += i
+	} else {
+		m.addprompt_tokens = &i
+	}
+}
+
+// AddedPromptTokens returns the value that was added to the "prompt_tokens" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedPromptTokens() (r int64, exists bool) {
+	v := m.addprompt_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPromptTokens resets all changes to the "prompt_tokens" field.
+func (m *UsageDailyAggregateMutation) ResetPromptTokens() {
+	m.prompt_tokens = nil
+	m.addprompt_tokens = nil
+}
+
+// SetCompletionTokens sets the "completion_tokens" field.
+func (m *UsageDailyAggregateMutation) SetCompletionTokens(i int64) {
+	m.completion_tokens = &i
+	m.addcompletion_tokens = nil
+}
+
+// CompletionTokens returns the value of the "completion_tokens" field in the mutation.
+func (m *UsageDailyAggregateMutation) CompletionTokens() (r int64, exists bool) {
+	v := m.completion_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompletionTokens returns the old "completion_tokens" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldCompletionTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompletionTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompletionTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompletionTokens: %w", err)
+	}
+	return oldValue.CompletionTokens, nil
+}
+
+// AddCompletionTokens adds i to the "completion_tokens" field.
+func (m *UsageDailyAggregateMutation) AddCompletionTokens(i int64) {
+	if m.addcompletion_tokens != nil {
+		*m.addcompletion_tokens += i
+	} else {
+		m.addcompletion_tokens = &i
+	}
+}
+
+// AddedCompletionTokens returns the value that was added to the "completion_tokens" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedCompletionTokens() (r int64, exists bool) {
+	v := m.addcompletion_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCompletionTokens resets all changes to the "completion_tokens" field.
+func (m *UsageDailyAggregateMutation) ResetCompletionTokens() {
+	m.completion_tokens = nil
+	m.addcompletion_tokens = nil
+}
+
+// SetTotalTokens sets the "total_tokens" field.
+func (m *UsageDailyAggregateMutation) SetTotalTokens(i int64) {
+	m.total_tokens = &i
+	m.addtotal_tokens = nil
+}
+
+// TotalTokens returns the value of the "total_tokens" field in the mutation.
+func (m *UsageDailyAggregateMutation) TotalTokens() (r int64, exists bool) {
+	v := m.total_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalTokens returns the old "total_tokens" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldTotalTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalTokens: %w", err)
+	}
+	return oldValue.TotalTokens, nil
+}
+
+// AddTotalTokens adds i to the "total_tokens" field.
+func (m *UsageDailyAggregateMutation) AddTotalTokens(i int64) {
+	if m.addtotal_tokens != nil {
+		*m.addtotal_tokens += i
+	} else {
+		m.addtotal_tokens = &i
+	}
+}
+
+// AddedTotalTokens returns the value that was added to the "total_tokens" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedTotalTokens() (r int64, exists bool) {
+	v := m.addtotal_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalTokens resets all changes to the "total_tokens" field.
+func (m *UsageDailyAggregateMutation) ResetTotalTokens() {
+	m.total_tokens = nil
+	m.addtotal_tokens = nil
+}
+
+// SetUserChargeMicros sets the "user_charge_micros" field.
+func (m *UsageDailyAggregateMutation) SetUserChargeMicros(i int64) {
+	m.user_charge_micros = &i
+	m.adduser_charge_micros = nil
+}
+
+// UserChargeMicros returns the value of the "user_charge_micros" field in the mutation.
+func (m *UsageDailyAggregateMutation) UserChargeMicros() (r int64, exists bool) {
+	v := m.user_charge_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserChargeMicros returns the old "user_charge_micros" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldUserChargeMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserChargeMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserChargeMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserChargeMicros: %w", err)
+	}
+	return oldValue.UserChargeMicros, nil
+}
+
+// AddUserChargeMicros adds i to the "user_charge_micros" field.
+func (m *UsageDailyAggregateMutation) AddUserChargeMicros(i int64) {
+	if m.adduser_charge_micros != nil {
+		*m.adduser_charge_micros += i
+	} else {
+		m.adduser_charge_micros = &i
+	}
+}
+
+// AddedUserChargeMicros returns the value that was added to the "user_charge_micros" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedUserChargeMicros() (r int64, exists bool) {
+	v := m.adduser_charge_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserChargeMicros resets all changes to the "user_charge_micros" field.
+func (m *UsageDailyAggregateMutation) ResetUserChargeMicros() {
+	m.user_charge_micros = nil
+	m.adduser_charge_micros = nil
+}
+
+// SetUpstreamCostMicros sets the "upstream_cost_micros" field.
+func (m *UsageDailyAggregateMutation) SetUpstreamCostMicros(i int64) {
+	m.upstream_cost_micros = &i
+	m.addupstream_cost_micros = nil
+}
+
+// UpstreamCostMicros returns the value of the "upstream_cost_micros" field in the mutation.
+func (m *UsageDailyAggregateMutation) UpstreamCostMicros() (r int64, exists bool) {
+	v := m.upstream_cost_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamCostMicros returns the old "upstream_cost_micros" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldUpstreamCostMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamCostMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamCostMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamCostMicros: %w", err)
+	}
+	return oldValue.UpstreamCostMicros, nil
+}
+
+// AddUpstreamCostMicros adds i to the "upstream_cost_micros" field.
+func (m *UsageDailyAggregateMutation) AddUpstreamCostMicros(i int64) {
+	if m.addupstream_cost_micros != nil {
+		*m.addupstream_cost_micros += i
+	} else {
+		m.addupstream_cost_micros = &i
+	}
+}
+
+// AddedUpstreamCostMicros returns the value that was added to the "upstream_cost_micros" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedUpstreamCostMicros() (r int64, exists bool) {
+	v := m.addupstream_cost_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUpstreamCostMicros resets all changes to the "upstream_cost_micros" field.
+func (m *UsageDailyAggregateMutation) ResetUpstreamCostMicros() {
+	m.upstream_cost_micros = nil
+	m.addupstream_cost_micros = nil
+}
+
+// SetGrossMarginMicros sets the "gross_margin_micros" field.
+func (m *UsageDailyAggregateMutation) SetGrossMarginMicros(i int64) {
+	m.gross_margin_micros = &i
+	m.addgross_margin_micros = nil
+}
+
+// GrossMarginMicros returns the value of the "gross_margin_micros" field in the mutation.
+func (m *UsageDailyAggregateMutation) GrossMarginMicros() (r int64, exists bool) {
+	v := m.gross_margin_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGrossMarginMicros returns the old "gross_margin_micros" field's value of the UsageDailyAggregate entity.
+// If the UsageDailyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageDailyAggregateMutation) OldGrossMarginMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGrossMarginMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGrossMarginMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGrossMarginMicros: %w", err)
+	}
+	return oldValue.GrossMarginMicros, nil
+}
+
+// AddGrossMarginMicros adds i to the "gross_margin_micros" field.
+func (m *UsageDailyAggregateMutation) AddGrossMarginMicros(i int64) {
+	if m.addgross_margin_micros != nil {
+		*m.addgross_margin_micros += i
+	} else {
+		m.addgross_margin_micros = &i
+	}
+}
+
+// AddedGrossMarginMicros returns the value that was added to the "gross_margin_micros" field in this mutation.
+func (m *UsageDailyAggregateMutation) AddedGrossMarginMicros() (r int64, exists bool) {
+	v := m.addgross_margin_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGrossMarginMicros resets all changes to the "gross_margin_micros" field.
+func (m *UsageDailyAggregateMutation) ResetGrossMarginMicros() {
+	m.gross_margin_micros = nil
+	m.addgross_margin_micros = nil
+}
+
+// Where appends a list predicates to the UsageDailyAggregateMutation builder.
+func (m *UsageDailyAggregateMutation) Where(ps ...predicate.UsageDailyAggregate) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UsageDailyAggregateMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UsageDailyAggregateMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UsageDailyAggregate, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UsageDailyAggregateMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UsageDailyAggregateMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UsageDailyAggregate).
+func (m *UsageDailyAggregateMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UsageDailyAggregateMutation) Fields() []string {
+	fields := make([]string, 0, 21)
+	if m.created_at != nil {
+		fields = append(fields, usagedailyaggregate.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, usagedailyaggregate.FieldUpdatedAt)
+	}
+	if m.bucket_start != nil {
+		fields = append(fields, usagedailyaggregate.FieldBucketStart)
+	}
+	if m.user_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldUserID)
+	}
+	if m.api_key_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldAPIKeyID)
+	}
+	if m.project_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldProjectID)
+	}
+	if m.channel_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldChannelID)
+	}
+	if m.upstream_account_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldUpstreamAccountID)
+	}
+	if m.model_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldModelID)
+	}
+	if m.request_type != nil {
+		fields = append(fields, usagedailyaggregate.FieldRequestType)
+	}
+	if m.status != nil {
+		fields = append(fields, usagedailyaggregate.FieldStatus)
+	}
+	if m.currency != nil {
+		fields = append(fields, usagedailyaggregate.FieldCurrency)
+	}
+	if m.request_count != nil {
+		fields = append(fields, usagedailyaggregate.FieldRequestCount)
+	}
+	if m.success_count != nil {
+		fields = append(fields, usagedailyaggregate.FieldSuccessCount)
+	}
+	if m.error_count != nil {
+		fields = append(fields, usagedailyaggregate.FieldErrorCount)
+	}
+	if m.prompt_tokens != nil {
+		fields = append(fields, usagedailyaggregate.FieldPromptTokens)
+	}
+	if m.completion_tokens != nil {
+		fields = append(fields, usagedailyaggregate.FieldCompletionTokens)
+	}
+	if m.total_tokens != nil {
+		fields = append(fields, usagedailyaggregate.FieldTotalTokens)
+	}
+	if m.user_charge_micros != nil {
+		fields = append(fields, usagedailyaggregate.FieldUserChargeMicros)
+	}
+	if m.upstream_cost_micros != nil {
+		fields = append(fields, usagedailyaggregate.FieldUpstreamCostMicros)
+	}
+	if m.gross_margin_micros != nil {
+		fields = append(fields, usagedailyaggregate.FieldGrossMarginMicros)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UsageDailyAggregateMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case usagedailyaggregate.FieldCreatedAt:
+		return m.CreatedAt()
+	case usagedailyaggregate.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case usagedailyaggregate.FieldBucketStart:
+		return m.BucketStart()
+	case usagedailyaggregate.FieldUserID:
+		return m.UserID()
+	case usagedailyaggregate.FieldAPIKeyID:
+		return m.APIKeyID()
+	case usagedailyaggregate.FieldProjectID:
+		return m.ProjectID()
+	case usagedailyaggregate.FieldChannelID:
+		return m.ChannelID()
+	case usagedailyaggregate.FieldUpstreamAccountID:
+		return m.UpstreamAccountID()
+	case usagedailyaggregate.FieldModelID:
+		return m.ModelID()
+	case usagedailyaggregate.FieldRequestType:
+		return m.RequestType()
+	case usagedailyaggregate.FieldStatus:
+		return m.Status()
+	case usagedailyaggregate.FieldCurrency:
+		return m.Currency()
+	case usagedailyaggregate.FieldRequestCount:
+		return m.RequestCount()
+	case usagedailyaggregate.FieldSuccessCount:
+		return m.SuccessCount()
+	case usagedailyaggregate.FieldErrorCount:
+		return m.ErrorCount()
+	case usagedailyaggregate.FieldPromptTokens:
+		return m.PromptTokens()
+	case usagedailyaggregate.FieldCompletionTokens:
+		return m.CompletionTokens()
+	case usagedailyaggregate.FieldTotalTokens:
+		return m.TotalTokens()
+	case usagedailyaggregate.FieldUserChargeMicros:
+		return m.UserChargeMicros()
+	case usagedailyaggregate.FieldUpstreamCostMicros:
+		return m.UpstreamCostMicros()
+	case usagedailyaggregate.FieldGrossMarginMicros:
+		return m.GrossMarginMicros()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UsageDailyAggregateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case usagedailyaggregate.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case usagedailyaggregate.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case usagedailyaggregate.FieldBucketStart:
+		return m.OldBucketStart(ctx)
+	case usagedailyaggregate.FieldUserID:
+		return m.OldUserID(ctx)
+	case usagedailyaggregate.FieldAPIKeyID:
+		return m.OldAPIKeyID(ctx)
+	case usagedailyaggregate.FieldProjectID:
+		return m.OldProjectID(ctx)
+	case usagedailyaggregate.FieldChannelID:
+		return m.OldChannelID(ctx)
+	case usagedailyaggregate.FieldUpstreamAccountID:
+		return m.OldUpstreamAccountID(ctx)
+	case usagedailyaggregate.FieldModelID:
+		return m.OldModelID(ctx)
+	case usagedailyaggregate.FieldRequestType:
+		return m.OldRequestType(ctx)
+	case usagedailyaggregate.FieldStatus:
+		return m.OldStatus(ctx)
+	case usagedailyaggregate.FieldCurrency:
+		return m.OldCurrency(ctx)
+	case usagedailyaggregate.FieldRequestCount:
+		return m.OldRequestCount(ctx)
+	case usagedailyaggregate.FieldSuccessCount:
+		return m.OldSuccessCount(ctx)
+	case usagedailyaggregate.FieldErrorCount:
+		return m.OldErrorCount(ctx)
+	case usagedailyaggregate.FieldPromptTokens:
+		return m.OldPromptTokens(ctx)
+	case usagedailyaggregate.FieldCompletionTokens:
+		return m.OldCompletionTokens(ctx)
+	case usagedailyaggregate.FieldTotalTokens:
+		return m.OldTotalTokens(ctx)
+	case usagedailyaggregate.FieldUserChargeMicros:
+		return m.OldUserChargeMicros(ctx)
+	case usagedailyaggregate.FieldUpstreamCostMicros:
+		return m.OldUpstreamCostMicros(ctx)
+	case usagedailyaggregate.FieldGrossMarginMicros:
+		return m.OldGrossMarginMicros(ctx)
+	}
+	return nil, fmt.Errorf("unknown UsageDailyAggregate field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UsageDailyAggregateMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case usagedailyaggregate.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case usagedailyaggregate.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case usagedailyaggregate.FieldBucketStart:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBucketStart(v)
+		return nil
+	case usagedailyaggregate.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case usagedailyaggregate.FieldAPIKeyID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIKeyID(v)
+		return nil
+	case usagedailyaggregate.FieldProjectID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectID(v)
+		return nil
+	case usagedailyaggregate.FieldChannelID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChannelID(v)
+		return nil
+	case usagedailyaggregate.FieldUpstreamAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamAccountID(v)
+		return nil
+	case usagedailyaggregate.FieldModelID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModelID(v)
+		return nil
+	case usagedailyaggregate.FieldRequestType:
+		v, ok := value.(usagedailyaggregate.RequestType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestType(v)
+		return nil
+	case usagedailyaggregate.FieldStatus:
+		v, ok := value.(usagedailyaggregate.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case usagedailyaggregate.FieldCurrency:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrency(v)
+		return nil
+	case usagedailyaggregate.FieldRequestCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestCount(v)
+		return nil
+	case usagedailyaggregate.FieldSuccessCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSuccessCount(v)
+		return nil
+	case usagedailyaggregate.FieldErrorCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorCount(v)
+		return nil
+	case usagedailyaggregate.FieldPromptTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPromptTokens(v)
+		return nil
+	case usagedailyaggregate.FieldCompletionTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompletionTokens(v)
+		return nil
+	case usagedailyaggregate.FieldTotalTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalTokens(v)
+		return nil
+	case usagedailyaggregate.FieldUserChargeMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserChargeMicros(v)
+		return nil
+	case usagedailyaggregate.FieldUpstreamCostMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamCostMicros(v)
+		return nil
+	case usagedailyaggregate.FieldGrossMarginMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGrossMarginMicros(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UsageDailyAggregate field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UsageDailyAggregateMutation) AddedFields() []string {
+	var fields []string
+	if m.adduser_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldUserID)
+	}
+	if m.addapi_key_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldAPIKeyID)
+	}
+	if m.addproject_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldProjectID)
+	}
+	if m.addchannel_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldChannelID)
+	}
+	if m.addupstream_account_id != nil {
+		fields = append(fields, usagedailyaggregate.FieldUpstreamAccountID)
+	}
+	if m.addrequest_count != nil {
+		fields = append(fields, usagedailyaggregate.FieldRequestCount)
+	}
+	if m.addsuccess_count != nil {
+		fields = append(fields, usagedailyaggregate.FieldSuccessCount)
+	}
+	if m.adderror_count != nil {
+		fields = append(fields, usagedailyaggregate.FieldErrorCount)
+	}
+	if m.addprompt_tokens != nil {
+		fields = append(fields, usagedailyaggregate.FieldPromptTokens)
+	}
+	if m.addcompletion_tokens != nil {
+		fields = append(fields, usagedailyaggregate.FieldCompletionTokens)
+	}
+	if m.addtotal_tokens != nil {
+		fields = append(fields, usagedailyaggregate.FieldTotalTokens)
+	}
+	if m.adduser_charge_micros != nil {
+		fields = append(fields, usagedailyaggregate.FieldUserChargeMicros)
+	}
+	if m.addupstream_cost_micros != nil {
+		fields = append(fields, usagedailyaggregate.FieldUpstreamCostMicros)
+	}
+	if m.addgross_margin_micros != nil {
+		fields = append(fields, usagedailyaggregate.FieldGrossMarginMicros)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UsageDailyAggregateMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case usagedailyaggregate.FieldUserID:
+		return m.AddedUserID()
+	case usagedailyaggregate.FieldAPIKeyID:
+		return m.AddedAPIKeyID()
+	case usagedailyaggregate.FieldProjectID:
+		return m.AddedProjectID()
+	case usagedailyaggregate.FieldChannelID:
+		return m.AddedChannelID()
+	case usagedailyaggregate.FieldUpstreamAccountID:
+		return m.AddedUpstreamAccountID()
+	case usagedailyaggregate.FieldRequestCount:
+		return m.AddedRequestCount()
+	case usagedailyaggregate.FieldSuccessCount:
+		return m.AddedSuccessCount()
+	case usagedailyaggregate.FieldErrorCount:
+		return m.AddedErrorCount()
+	case usagedailyaggregate.FieldPromptTokens:
+		return m.AddedPromptTokens()
+	case usagedailyaggregate.FieldCompletionTokens:
+		return m.AddedCompletionTokens()
+	case usagedailyaggregate.FieldTotalTokens:
+		return m.AddedTotalTokens()
+	case usagedailyaggregate.FieldUserChargeMicros:
+		return m.AddedUserChargeMicros()
+	case usagedailyaggregate.FieldUpstreamCostMicros:
+		return m.AddedUpstreamCostMicros()
+	case usagedailyaggregate.FieldGrossMarginMicros:
+		return m.AddedGrossMarginMicros()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UsageDailyAggregateMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case usagedailyaggregate.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	case usagedailyaggregate.FieldAPIKeyID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAPIKeyID(v)
+		return nil
+	case usagedailyaggregate.FieldProjectID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddProjectID(v)
+		return nil
+	case usagedailyaggregate.FieldChannelID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddChannelID(v)
+		return nil
+	case usagedailyaggregate.FieldUpstreamAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUpstreamAccountID(v)
+		return nil
+	case usagedailyaggregate.FieldRequestCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRequestCount(v)
+		return nil
+	case usagedailyaggregate.FieldSuccessCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSuccessCount(v)
+		return nil
+	case usagedailyaggregate.FieldErrorCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddErrorCount(v)
+		return nil
+	case usagedailyaggregate.FieldPromptTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPromptTokens(v)
+		return nil
+	case usagedailyaggregate.FieldCompletionTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCompletionTokens(v)
+		return nil
+	case usagedailyaggregate.FieldTotalTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalTokens(v)
+		return nil
+	case usagedailyaggregate.FieldUserChargeMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserChargeMicros(v)
+		return nil
+	case usagedailyaggregate.FieldUpstreamCostMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUpstreamCostMicros(v)
+		return nil
+	case usagedailyaggregate.FieldGrossMarginMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGrossMarginMicros(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UsageDailyAggregate numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UsageDailyAggregateMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UsageDailyAggregateMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UsageDailyAggregateMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown UsageDailyAggregate nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UsageDailyAggregateMutation) ResetField(name string) error {
+	switch name {
+	case usagedailyaggregate.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case usagedailyaggregate.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case usagedailyaggregate.FieldBucketStart:
+		m.ResetBucketStart()
+		return nil
+	case usagedailyaggregate.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case usagedailyaggregate.FieldAPIKeyID:
+		m.ResetAPIKeyID()
+		return nil
+	case usagedailyaggregate.FieldProjectID:
+		m.ResetProjectID()
+		return nil
+	case usagedailyaggregate.FieldChannelID:
+		m.ResetChannelID()
+		return nil
+	case usagedailyaggregate.FieldUpstreamAccountID:
+		m.ResetUpstreamAccountID()
+		return nil
+	case usagedailyaggregate.FieldModelID:
+		m.ResetModelID()
+		return nil
+	case usagedailyaggregate.FieldRequestType:
+		m.ResetRequestType()
+		return nil
+	case usagedailyaggregate.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case usagedailyaggregate.FieldCurrency:
+		m.ResetCurrency()
+		return nil
+	case usagedailyaggregate.FieldRequestCount:
+		m.ResetRequestCount()
+		return nil
+	case usagedailyaggregate.FieldSuccessCount:
+		m.ResetSuccessCount()
+		return nil
+	case usagedailyaggregate.FieldErrorCount:
+		m.ResetErrorCount()
+		return nil
+	case usagedailyaggregate.FieldPromptTokens:
+		m.ResetPromptTokens()
+		return nil
+	case usagedailyaggregate.FieldCompletionTokens:
+		m.ResetCompletionTokens()
+		return nil
+	case usagedailyaggregate.FieldTotalTokens:
+		m.ResetTotalTokens()
+		return nil
+	case usagedailyaggregate.FieldUserChargeMicros:
+		m.ResetUserChargeMicros()
+		return nil
+	case usagedailyaggregate.FieldUpstreamCostMicros:
+		m.ResetUpstreamCostMicros()
+		return nil
+	case usagedailyaggregate.FieldGrossMarginMicros:
+		m.ResetGrossMarginMicros()
+		return nil
+	}
+	return fmt.Errorf("unknown UsageDailyAggregate field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UsageDailyAggregateMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UsageDailyAggregateMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UsageDailyAggregateMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UsageDailyAggregateMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UsageDailyAggregateMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UsageDailyAggregateMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UsageDailyAggregateMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown UsageDailyAggregate unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UsageDailyAggregateMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown UsageDailyAggregate edge %s", name)
+}
+
+// UsageHourlyAggregateMutation represents an operation that mutates the UsageHourlyAggregate nodes in the graph.
+type UsageHourlyAggregateMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *int
+	created_at              *time.Time
+	updated_at              *time.Time
+	bucket_start            *time.Time
+	user_id                 *int
+	adduser_id              *int
+	api_key_id              *int
+	addapi_key_id           *int
+	project_id              *int
+	addproject_id           *int
+	channel_id              *int
+	addchannel_id           *int
+	upstream_account_id     *int
+	addupstream_account_id  *int
+	model_id                *string
+	request_type            *usagehourlyaggregate.RequestType
+	status                  *usagehourlyaggregate.Status
+	currency                *string
+	request_count           *int64
+	addrequest_count        *int64
+	success_count           *int64
+	addsuccess_count        *int64
+	error_count             *int64
+	adderror_count          *int64
+	prompt_tokens           *int64
+	addprompt_tokens        *int64
+	completion_tokens       *int64
+	addcompletion_tokens    *int64
+	total_tokens            *int64
+	addtotal_tokens         *int64
+	user_charge_micros      *int64
+	adduser_charge_micros   *int64
+	upstream_cost_micros    *int64
+	addupstream_cost_micros *int64
+	gross_margin_micros     *int64
+	addgross_margin_micros  *int64
+	clearedFields           map[string]struct{}
+	done                    bool
+	oldValue                func(context.Context) (*UsageHourlyAggregate, error)
+	predicates              []predicate.UsageHourlyAggregate
+}
+
+var _ ent.Mutation = (*UsageHourlyAggregateMutation)(nil)
+
+// usagehourlyaggregateOption allows management of the mutation configuration using functional options.
+type usagehourlyaggregateOption func(*UsageHourlyAggregateMutation)
+
+// newUsageHourlyAggregateMutation creates new mutation for the UsageHourlyAggregate entity.
+func newUsageHourlyAggregateMutation(c config, op Op, opts ...usagehourlyaggregateOption) *UsageHourlyAggregateMutation {
+	m := &UsageHourlyAggregateMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUsageHourlyAggregate,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUsageHourlyAggregateID sets the ID field of the mutation.
+func withUsageHourlyAggregateID(id int) usagehourlyaggregateOption {
+	return func(m *UsageHourlyAggregateMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UsageHourlyAggregate
+		)
+		m.oldValue = func(ctx context.Context) (*UsageHourlyAggregate, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UsageHourlyAggregate.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUsageHourlyAggregate sets the old UsageHourlyAggregate of the mutation.
+func withUsageHourlyAggregate(node *UsageHourlyAggregate) usagehourlyaggregateOption {
+	return func(m *UsageHourlyAggregateMutation) {
+		m.oldValue = func(context.Context) (*UsageHourlyAggregate, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UsageHourlyAggregateMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UsageHourlyAggregateMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UsageHourlyAggregateMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UsageHourlyAggregateMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UsageHourlyAggregate.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UsageHourlyAggregateMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UsageHourlyAggregateMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UsageHourlyAggregateMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UsageHourlyAggregateMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UsageHourlyAggregateMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UsageHourlyAggregateMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetBucketStart sets the "bucket_start" field.
+func (m *UsageHourlyAggregateMutation) SetBucketStart(t time.Time) {
+	m.bucket_start = &t
+}
+
+// BucketStart returns the value of the "bucket_start" field in the mutation.
+func (m *UsageHourlyAggregateMutation) BucketStart() (r time.Time, exists bool) {
+	v := m.bucket_start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBucketStart returns the old "bucket_start" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldBucketStart(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBucketStart is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBucketStart requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBucketStart: %w", err)
+	}
+	return oldValue.BucketStart, nil
+}
+
+// ResetBucketStart resets all changes to the "bucket_start" field.
+func (m *UsageHourlyAggregateMutation) ResetBucketStart() {
+	m.bucket_start = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *UsageHourlyAggregateMutation) SetUserID(i int) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *UsageHourlyAggregateMutation) UserID() (r int, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *UsageHourlyAggregateMutation) AddUserID(i int) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedUserID() (r int, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *UsageHourlyAggregateMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+}
+
+// SetAPIKeyID sets the "api_key_id" field.
+func (m *UsageHourlyAggregateMutation) SetAPIKeyID(i int) {
+	m.api_key_id = &i
+	m.addapi_key_id = nil
+}
+
+// APIKeyID returns the value of the "api_key_id" field in the mutation.
+func (m *UsageHourlyAggregateMutation) APIKeyID() (r int, exists bool) {
+	v := m.api_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIKeyID returns the old "api_key_id" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldAPIKeyID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIKeyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIKeyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIKeyID: %w", err)
+	}
+	return oldValue.APIKeyID, nil
+}
+
+// AddAPIKeyID adds i to the "api_key_id" field.
+func (m *UsageHourlyAggregateMutation) AddAPIKeyID(i int) {
+	if m.addapi_key_id != nil {
+		*m.addapi_key_id += i
+	} else {
+		m.addapi_key_id = &i
+	}
+}
+
+// AddedAPIKeyID returns the value that was added to the "api_key_id" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedAPIKeyID() (r int, exists bool) {
+	v := m.addapi_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAPIKeyID resets all changes to the "api_key_id" field.
+func (m *UsageHourlyAggregateMutation) ResetAPIKeyID() {
+	m.api_key_id = nil
+	m.addapi_key_id = nil
+}
+
+// SetProjectID sets the "project_id" field.
+func (m *UsageHourlyAggregateMutation) SetProjectID(i int) {
+	m.project_id = &i
+	m.addproject_id = nil
+}
+
+// ProjectID returns the value of the "project_id" field in the mutation.
+func (m *UsageHourlyAggregateMutation) ProjectID() (r int, exists bool) {
+	v := m.project_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectID returns the old "project_id" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldProjectID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectID: %w", err)
+	}
+	return oldValue.ProjectID, nil
+}
+
+// AddProjectID adds i to the "project_id" field.
+func (m *UsageHourlyAggregateMutation) AddProjectID(i int) {
+	if m.addproject_id != nil {
+		*m.addproject_id += i
+	} else {
+		m.addproject_id = &i
+	}
+}
+
+// AddedProjectID returns the value that was added to the "project_id" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedProjectID() (r int, exists bool) {
+	v := m.addproject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetProjectID resets all changes to the "project_id" field.
+func (m *UsageHourlyAggregateMutation) ResetProjectID() {
+	m.project_id = nil
+	m.addproject_id = nil
+}
+
+// SetChannelID sets the "channel_id" field.
+func (m *UsageHourlyAggregateMutation) SetChannelID(i int) {
+	m.channel_id = &i
+	m.addchannel_id = nil
+}
+
+// ChannelID returns the value of the "channel_id" field in the mutation.
+func (m *UsageHourlyAggregateMutation) ChannelID() (r int, exists bool) {
+	v := m.channel_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChannelID returns the old "channel_id" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldChannelID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChannelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChannelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChannelID: %w", err)
+	}
+	return oldValue.ChannelID, nil
+}
+
+// AddChannelID adds i to the "channel_id" field.
+func (m *UsageHourlyAggregateMutation) AddChannelID(i int) {
+	if m.addchannel_id != nil {
+		*m.addchannel_id += i
+	} else {
+		m.addchannel_id = &i
+	}
+}
+
+// AddedChannelID returns the value that was added to the "channel_id" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedChannelID() (r int, exists bool) {
+	v := m.addchannel_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetChannelID resets all changes to the "channel_id" field.
+func (m *UsageHourlyAggregateMutation) ResetChannelID() {
+	m.channel_id = nil
+	m.addchannel_id = nil
+}
+
+// SetUpstreamAccountID sets the "upstream_account_id" field.
+func (m *UsageHourlyAggregateMutation) SetUpstreamAccountID(i int) {
+	m.upstream_account_id = &i
+	m.addupstream_account_id = nil
+}
+
+// UpstreamAccountID returns the value of the "upstream_account_id" field in the mutation.
+func (m *UsageHourlyAggregateMutation) UpstreamAccountID() (r int, exists bool) {
+	v := m.upstream_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamAccountID returns the old "upstream_account_id" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldUpstreamAccountID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamAccountID: %w", err)
+	}
+	return oldValue.UpstreamAccountID, nil
+}
+
+// AddUpstreamAccountID adds i to the "upstream_account_id" field.
+func (m *UsageHourlyAggregateMutation) AddUpstreamAccountID(i int) {
+	if m.addupstream_account_id != nil {
+		*m.addupstream_account_id += i
+	} else {
+		m.addupstream_account_id = &i
+	}
+}
+
+// AddedUpstreamAccountID returns the value that was added to the "upstream_account_id" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedUpstreamAccountID() (r int, exists bool) {
+	v := m.addupstream_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUpstreamAccountID resets all changes to the "upstream_account_id" field.
+func (m *UsageHourlyAggregateMutation) ResetUpstreamAccountID() {
+	m.upstream_account_id = nil
+	m.addupstream_account_id = nil
+}
+
+// SetModelID sets the "model_id" field.
+func (m *UsageHourlyAggregateMutation) SetModelID(s string) {
+	m.model_id = &s
+}
+
+// ModelID returns the value of the "model_id" field in the mutation.
+func (m *UsageHourlyAggregateMutation) ModelID() (r string, exists bool) {
+	v := m.model_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModelID returns the old "model_id" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldModelID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModelID: %w", err)
+	}
+	return oldValue.ModelID, nil
+}
+
+// ResetModelID resets all changes to the "model_id" field.
+func (m *UsageHourlyAggregateMutation) ResetModelID() {
+	m.model_id = nil
+}
+
+// SetRequestType sets the "request_type" field.
+func (m *UsageHourlyAggregateMutation) SetRequestType(ut usagehourlyaggregate.RequestType) {
+	m.request_type = &ut
+}
+
+// RequestType returns the value of the "request_type" field in the mutation.
+func (m *UsageHourlyAggregateMutation) RequestType() (r usagehourlyaggregate.RequestType, exists bool) {
+	v := m.request_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestType returns the old "request_type" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldRequestType(ctx context.Context) (v usagehourlyaggregate.RequestType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestType: %w", err)
+	}
+	return oldValue.RequestType, nil
+}
+
+// ResetRequestType resets all changes to the "request_type" field.
+func (m *UsageHourlyAggregateMutation) ResetRequestType() {
+	m.request_type = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *UsageHourlyAggregateMutation) SetStatus(u usagehourlyaggregate.Status) {
+	m.status = &u
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *UsageHourlyAggregateMutation) Status() (r usagehourlyaggregate.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldStatus(ctx context.Context) (v usagehourlyaggregate.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *UsageHourlyAggregateMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetCurrency sets the "currency" field.
+func (m *UsageHourlyAggregateMutation) SetCurrency(s string) {
+	m.currency = &s
+}
+
+// Currency returns the value of the "currency" field in the mutation.
+func (m *UsageHourlyAggregateMutation) Currency() (r string, exists bool) {
+	v := m.currency
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrency returns the old "currency" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldCurrency(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrency is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrency requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrency: %w", err)
+	}
+	return oldValue.Currency, nil
+}
+
+// ResetCurrency resets all changes to the "currency" field.
+func (m *UsageHourlyAggregateMutation) ResetCurrency() {
+	m.currency = nil
+}
+
+// SetRequestCount sets the "request_count" field.
+func (m *UsageHourlyAggregateMutation) SetRequestCount(i int64) {
+	m.request_count = &i
+	m.addrequest_count = nil
+}
+
+// RequestCount returns the value of the "request_count" field in the mutation.
+func (m *UsageHourlyAggregateMutation) RequestCount() (r int64, exists bool) {
+	v := m.request_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestCount returns the old "request_count" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldRequestCount(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestCount: %w", err)
+	}
+	return oldValue.RequestCount, nil
+}
+
+// AddRequestCount adds i to the "request_count" field.
+func (m *UsageHourlyAggregateMutation) AddRequestCount(i int64) {
+	if m.addrequest_count != nil {
+		*m.addrequest_count += i
+	} else {
+		m.addrequest_count = &i
+	}
+}
+
+// AddedRequestCount returns the value that was added to the "request_count" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedRequestCount() (r int64, exists bool) {
+	v := m.addrequest_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRequestCount resets all changes to the "request_count" field.
+func (m *UsageHourlyAggregateMutation) ResetRequestCount() {
+	m.request_count = nil
+	m.addrequest_count = nil
+}
+
+// SetSuccessCount sets the "success_count" field.
+func (m *UsageHourlyAggregateMutation) SetSuccessCount(i int64) {
+	m.success_count = &i
+	m.addsuccess_count = nil
+}
+
+// SuccessCount returns the value of the "success_count" field in the mutation.
+func (m *UsageHourlyAggregateMutation) SuccessCount() (r int64, exists bool) {
+	v := m.success_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSuccessCount returns the old "success_count" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldSuccessCount(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSuccessCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSuccessCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSuccessCount: %w", err)
+	}
+	return oldValue.SuccessCount, nil
+}
+
+// AddSuccessCount adds i to the "success_count" field.
+func (m *UsageHourlyAggregateMutation) AddSuccessCount(i int64) {
+	if m.addsuccess_count != nil {
+		*m.addsuccess_count += i
+	} else {
+		m.addsuccess_count = &i
+	}
+}
+
+// AddedSuccessCount returns the value that was added to the "success_count" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedSuccessCount() (r int64, exists bool) {
+	v := m.addsuccess_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSuccessCount resets all changes to the "success_count" field.
+func (m *UsageHourlyAggregateMutation) ResetSuccessCount() {
+	m.success_count = nil
+	m.addsuccess_count = nil
+}
+
+// SetErrorCount sets the "error_count" field.
+func (m *UsageHourlyAggregateMutation) SetErrorCount(i int64) {
+	m.error_count = &i
+	m.adderror_count = nil
+}
+
+// ErrorCount returns the value of the "error_count" field in the mutation.
+func (m *UsageHourlyAggregateMutation) ErrorCount() (r int64, exists bool) {
+	v := m.error_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorCount returns the old "error_count" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldErrorCount(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorCount: %w", err)
+	}
+	return oldValue.ErrorCount, nil
+}
+
+// AddErrorCount adds i to the "error_count" field.
+func (m *UsageHourlyAggregateMutation) AddErrorCount(i int64) {
+	if m.adderror_count != nil {
+		*m.adderror_count += i
+	} else {
+		m.adderror_count = &i
+	}
+}
+
+// AddedErrorCount returns the value that was added to the "error_count" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedErrorCount() (r int64, exists bool) {
+	v := m.adderror_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetErrorCount resets all changes to the "error_count" field.
+func (m *UsageHourlyAggregateMutation) ResetErrorCount() {
+	m.error_count = nil
+	m.adderror_count = nil
+}
+
+// SetPromptTokens sets the "prompt_tokens" field.
+func (m *UsageHourlyAggregateMutation) SetPromptTokens(i int64) {
+	m.prompt_tokens = &i
+	m.addprompt_tokens = nil
+}
+
+// PromptTokens returns the value of the "prompt_tokens" field in the mutation.
+func (m *UsageHourlyAggregateMutation) PromptTokens() (r int64, exists bool) {
+	v := m.prompt_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPromptTokens returns the old "prompt_tokens" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldPromptTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPromptTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPromptTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPromptTokens: %w", err)
+	}
+	return oldValue.PromptTokens, nil
+}
+
+// AddPromptTokens adds i to the "prompt_tokens" field.
+func (m *UsageHourlyAggregateMutation) AddPromptTokens(i int64) {
+	if m.addprompt_tokens != nil {
+		*m.addprompt_tokens += i
+	} else {
+		m.addprompt_tokens = &i
+	}
+}
+
+// AddedPromptTokens returns the value that was added to the "prompt_tokens" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedPromptTokens() (r int64, exists bool) {
+	v := m.addprompt_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPromptTokens resets all changes to the "prompt_tokens" field.
+func (m *UsageHourlyAggregateMutation) ResetPromptTokens() {
+	m.prompt_tokens = nil
+	m.addprompt_tokens = nil
+}
+
+// SetCompletionTokens sets the "completion_tokens" field.
+func (m *UsageHourlyAggregateMutation) SetCompletionTokens(i int64) {
+	m.completion_tokens = &i
+	m.addcompletion_tokens = nil
+}
+
+// CompletionTokens returns the value of the "completion_tokens" field in the mutation.
+func (m *UsageHourlyAggregateMutation) CompletionTokens() (r int64, exists bool) {
+	v := m.completion_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompletionTokens returns the old "completion_tokens" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldCompletionTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompletionTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompletionTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompletionTokens: %w", err)
+	}
+	return oldValue.CompletionTokens, nil
+}
+
+// AddCompletionTokens adds i to the "completion_tokens" field.
+func (m *UsageHourlyAggregateMutation) AddCompletionTokens(i int64) {
+	if m.addcompletion_tokens != nil {
+		*m.addcompletion_tokens += i
+	} else {
+		m.addcompletion_tokens = &i
+	}
+}
+
+// AddedCompletionTokens returns the value that was added to the "completion_tokens" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedCompletionTokens() (r int64, exists bool) {
+	v := m.addcompletion_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCompletionTokens resets all changes to the "completion_tokens" field.
+func (m *UsageHourlyAggregateMutation) ResetCompletionTokens() {
+	m.completion_tokens = nil
+	m.addcompletion_tokens = nil
+}
+
+// SetTotalTokens sets the "total_tokens" field.
+func (m *UsageHourlyAggregateMutation) SetTotalTokens(i int64) {
+	m.total_tokens = &i
+	m.addtotal_tokens = nil
+}
+
+// TotalTokens returns the value of the "total_tokens" field in the mutation.
+func (m *UsageHourlyAggregateMutation) TotalTokens() (r int64, exists bool) {
+	v := m.total_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalTokens returns the old "total_tokens" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldTotalTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalTokens: %w", err)
+	}
+	return oldValue.TotalTokens, nil
+}
+
+// AddTotalTokens adds i to the "total_tokens" field.
+func (m *UsageHourlyAggregateMutation) AddTotalTokens(i int64) {
+	if m.addtotal_tokens != nil {
+		*m.addtotal_tokens += i
+	} else {
+		m.addtotal_tokens = &i
+	}
+}
+
+// AddedTotalTokens returns the value that was added to the "total_tokens" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedTotalTokens() (r int64, exists bool) {
+	v := m.addtotal_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalTokens resets all changes to the "total_tokens" field.
+func (m *UsageHourlyAggregateMutation) ResetTotalTokens() {
+	m.total_tokens = nil
+	m.addtotal_tokens = nil
+}
+
+// SetUserChargeMicros sets the "user_charge_micros" field.
+func (m *UsageHourlyAggregateMutation) SetUserChargeMicros(i int64) {
+	m.user_charge_micros = &i
+	m.adduser_charge_micros = nil
+}
+
+// UserChargeMicros returns the value of the "user_charge_micros" field in the mutation.
+func (m *UsageHourlyAggregateMutation) UserChargeMicros() (r int64, exists bool) {
+	v := m.user_charge_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserChargeMicros returns the old "user_charge_micros" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldUserChargeMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserChargeMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserChargeMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserChargeMicros: %w", err)
+	}
+	return oldValue.UserChargeMicros, nil
+}
+
+// AddUserChargeMicros adds i to the "user_charge_micros" field.
+func (m *UsageHourlyAggregateMutation) AddUserChargeMicros(i int64) {
+	if m.adduser_charge_micros != nil {
+		*m.adduser_charge_micros += i
+	} else {
+		m.adduser_charge_micros = &i
+	}
+}
+
+// AddedUserChargeMicros returns the value that was added to the "user_charge_micros" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedUserChargeMicros() (r int64, exists bool) {
+	v := m.adduser_charge_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserChargeMicros resets all changes to the "user_charge_micros" field.
+func (m *UsageHourlyAggregateMutation) ResetUserChargeMicros() {
+	m.user_charge_micros = nil
+	m.adduser_charge_micros = nil
+}
+
+// SetUpstreamCostMicros sets the "upstream_cost_micros" field.
+func (m *UsageHourlyAggregateMutation) SetUpstreamCostMicros(i int64) {
+	m.upstream_cost_micros = &i
+	m.addupstream_cost_micros = nil
+}
+
+// UpstreamCostMicros returns the value of the "upstream_cost_micros" field in the mutation.
+func (m *UsageHourlyAggregateMutation) UpstreamCostMicros() (r int64, exists bool) {
+	v := m.upstream_cost_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamCostMicros returns the old "upstream_cost_micros" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldUpstreamCostMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamCostMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamCostMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamCostMicros: %w", err)
+	}
+	return oldValue.UpstreamCostMicros, nil
+}
+
+// AddUpstreamCostMicros adds i to the "upstream_cost_micros" field.
+func (m *UsageHourlyAggregateMutation) AddUpstreamCostMicros(i int64) {
+	if m.addupstream_cost_micros != nil {
+		*m.addupstream_cost_micros += i
+	} else {
+		m.addupstream_cost_micros = &i
+	}
+}
+
+// AddedUpstreamCostMicros returns the value that was added to the "upstream_cost_micros" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedUpstreamCostMicros() (r int64, exists bool) {
+	v := m.addupstream_cost_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUpstreamCostMicros resets all changes to the "upstream_cost_micros" field.
+func (m *UsageHourlyAggregateMutation) ResetUpstreamCostMicros() {
+	m.upstream_cost_micros = nil
+	m.addupstream_cost_micros = nil
+}
+
+// SetGrossMarginMicros sets the "gross_margin_micros" field.
+func (m *UsageHourlyAggregateMutation) SetGrossMarginMicros(i int64) {
+	m.gross_margin_micros = &i
+	m.addgross_margin_micros = nil
+}
+
+// GrossMarginMicros returns the value of the "gross_margin_micros" field in the mutation.
+func (m *UsageHourlyAggregateMutation) GrossMarginMicros() (r int64, exists bool) {
+	v := m.gross_margin_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGrossMarginMicros returns the old "gross_margin_micros" field's value of the UsageHourlyAggregate entity.
+// If the UsageHourlyAggregate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageHourlyAggregateMutation) OldGrossMarginMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGrossMarginMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGrossMarginMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGrossMarginMicros: %w", err)
+	}
+	return oldValue.GrossMarginMicros, nil
+}
+
+// AddGrossMarginMicros adds i to the "gross_margin_micros" field.
+func (m *UsageHourlyAggregateMutation) AddGrossMarginMicros(i int64) {
+	if m.addgross_margin_micros != nil {
+		*m.addgross_margin_micros += i
+	} else {
+		m.addgross_margin_micros = &i
+	}
+}
+
+// AddedGrossMarginMicros returns the value that was added to the "gross_margin_micros" field in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedGrossMarginMicros() (r int64, exists bool) {
+	v := m.addgross_margin_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGrossMarginMicros resets all changes to the "gross_margin_micros" field.
+func (m *UsageHourlyAggregateMutation) ResetGrossMarginMicros() {
+	m.gross_margin_micros = nil
+	m.addgross_margin_micros = nil
+}
+
+// Where appends a list predicates to the UsageHourlyAggregateMutation builder.
+func (m *UsageHourlyAggregateMutation) Where(ps ...predicate.UsageHourlyAggregate) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UsageHourlyAggregateMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UsageHourlyAggregateMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UsageHourlyAggregate, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UsageHourlyAggregateMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UsageHourlyAggregateMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UsageHourlyAggregate).
+func (m *UsageHourlyAggregateMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UsageHourlyAggregateMutation) Fields() []string {
+	fields := make([]string, 0, 21)
+	if m.created_at != nil {
+		fields = append(fields, usagehourlyaggregate.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, usagehourlyaggregate.FieldUpdatedAt)
+	}
+	if m.bucket_start != nil {
+		fields = append(fields, usagehourlyaggregate.FieldBucketStart)
+	}
+	if m.user_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldUserID)
+	}
+	if m.api_key_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldAPIKeyID)
+	}
+	if m.project_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldProjectID)
+	}
+	if m.channel_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldChannelID)
+	}
+	if m.upstream_account_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldUpstreamAccountID)
+	}
+	if m.model_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldModelID)
+	}
+	if m.request_type != nil {
+		fields = append(fields, usagehourlyaggregate.FieldRequestType)
+	}
+	if m.status != nil {
+		fields = append(fields, usagehourlyaggregate.FieldStatus)
+	}
+	if m.currency != nil {
+		fields = append(fields, usagehourlyaggregate.FieldCurrency)
+	}
+	if m.request_count != nil {
+		fields = append(fields, usagehourlyaggregate.FieldRequestCount)
+	}
+	if m.success_count != nil {
+		fields = append(fields, usagehourlyaggregate.FieldSuccessCount)
+	}
+	if m.error_count != nil {
+		fields = append(fields, usagehourlyaggregate.FieldErrorCount)
+	}
+	if m.prompt_tokens != nil {
+		fields = append(fields, usagehourlyaggregate.FieldPromptTokens)
+	}
+	if m.completion_tokens != nil {
+		fields = append(fields, usagehourlyaggregate.FieldCompletionTokens)
+	}
+	if m.total_tokens != nil {
+		fields = append(fields, usagehourlyaggregate.FieldTotalTokens)
+	}
+	if m.user_charge_micros != nil {
+		fields = append(fields, usagehourlyaggregate.FieldUserChargeMicros)
+	}
+	if m.upstream_cost_micros != nil {
+		fields = append(fields, usagehourlyaggregate.FieldUpstreamCostMicros)
+	}
+	if m.gross_margin_micros != nil {
+		fields = append(fields, usagehourlyaggregate.FieldGrossMarginMicros)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UsageHourlyAggregateMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case usagehourlyaggregate.FieldCreatedAt:
+		return m.CreatedAt()
+	case usagehourlyaggregate.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case usagehourlyaggregate.FieldBucketStart:
+		return m.BucketStart()
+	case usagehourlyaggregate.FieldUserID:
+		return m.UserID()
+	case usagehourlyaggregate.FieldAPIKeyID:
+		return m.APIKeyID()
+	case usagehourlyaggregate.FieldProjectID:
+		return m.ProjectID()
+	case usagehourlyaggregate.FieldChannelID:
+		return m.ChannelID()
+	case usagehourlyaggregate.FieldUpstreamAccountID:
+		return m.UpstreamAccountID()
+	case usagehourlyaggregate.FieldModelID:
+		return m.ModelID()
+	case usagehourlyaggregate.FieldRequestType:
+		return m.RequestType()
+	case usagehourlyaggregate.FieldStatus:
+		return m.Status()
+	case usagehourlyaggregate.FieldCurrency:
+		return m.Currency()
+	case usagehourlyaggregate.FieldRequestCount:
+		return m.RequestCount()
+	case usagehourlyaggregate.FieldSuccessCount:
+		return m.SuccessCount()
+	case usagehourlyaggregate.FieldErrorCount:
+		return m.ErrorCount()
+	case usagehourlyaggregate.FieldPromptTokens:
+		return m.PromptTokens()
+	case usagehourlyaggregate.FieldCompletionTokens:
+		return m.CompletionTokens()
+	case usagehourlyaggregate.FieldTotalTokens:
+		return m.TotalTokens()
+	case usagehourlyaggregate.FieldUserChargeMicros:
+		return m.UserChargeMicros()
+	case usagehourlyaggregate.FieldUpstreamCostMicros:
+		return m.UpstreamCostMicros()
+	case usagehourlyaggregate.FieldGrossMarginMicros:
+		return m.GrossMarginMicros()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UsageHourlyAggregateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case usagehourlyaggregate.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case usagehourlyaggregate.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case usagehourlyaggregate.FieldBucketStart:
+		return m.OldBucketStart(ctx)
+	case usagehourlyaggregate.FieldUserID:
+		return m.OldUserID(ctx)
+	case usagehourlyaggregate.FieldAPIKeyID:
+		return m.OldAPIKeyID(ctx)
+	case usagehourlyaggregate.FieldProjectID:
+		return m.OldProjectID(ctx)
+	case usagehourlyaggregate.FieldChannelID:
+		return m.OldChannelID(ctx)
+	case usagehourlyaggregate.FieldUpstreamAccountID:
+		return m.OldUpstreamAccountID(ctx)
+	case usagehourlyaggregate.FieldModelID:
+		return m.OldModelID(ctx)
+	case usagehourlyaggregate.FieldRequestType:
+		return m.OldRequestType(ctx)
+	case usagehourlyaggregate.FieldStatus:
+		return m.OldStatus(ctx)
+	case usagehourlyaggregate.FieldCurrency:
+		return m.OldCurrency(ctx)
+	case usagehourlyaggregate.FieldRequestCount:
+		return m.OldRequestCount(ctx)
+	case usagehourlyaggregate.FieldSuccessCount:
+		return m.OldSuccessCount(ctx)
+	case usagehourlyaggregate.FieldErrorCount:
+		return m.OldErrorCount(ctx)
+	case usagehourlyaggregate.FieldPromptTokens:
+		return m.OldPromptTokens(ctx)
+	case usagehourlyaggregate.FieldCompletionTokens:
+		return m.OldCompletionTokens(ctx)
+	case usagehourlyaggregate.FieldTotalTokens:
+		return m.OldTotalTokens(ctx)
+	case usagehourlyaggregate.FieldUserChargeMicros:
+		return m.OldUserChargeMicros(ctx)
+	case usagehourlyaggregate.FieldUpstreamCostMicros:
+		return m.OldUpstreamCostMicros(ctx)
+	case usagehourlyaggregate.FieldGrossMarginMicros:
+		return m.OldGrossMarginMicros(ctx)
+	}
+	return nil, fmt.Errorf("unknown UsageHourlyAggregate field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UsageHourlyAggregateMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case usagehourlyaggregate.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case usagehourlyaggregate.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case usagehourlyaggregate.FieldBucketStart:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBucketStart(v)
+		return nil
+	case usagehourlyaggregate.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case usagehourlyaggregate.FieldAPIKeyID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIKeyID(v)
+		return nil
+	case usagehourlyaggregate.FieldProjectID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectID(v)
+		return nil
+	case usagehourlyaggregate.FieldChannelID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChannelID(v)
+		return nil
+	case usagehourlyaggregate.FieldUpstreamAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamAccountID(v)
+		return nil
+	case usagehourlyaggregate.FieldModelID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModelID(v)
+		return nil
+	case usagehourlyaggregate.FieldRequestType:
+		v, ok := value.(usagehourlyaggregate.RequestType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestType(v)
+		return nil
+	case usagehourlyaggregate.FieldStatus:
+		v, ok := value.(usagehourlyaggregate.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case usagehourlyaggregate.FieldCurrency:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrency(v)
+		return nil
+	case usagehourlyaggregate.FieldRequestCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestCount(v)
+		return nil
+	case usagehourlyaggregate.FieldSuccessCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSuccessCount(v)
+		return nil
+	case usagehourlyaggregate.FieldErrorCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorCount(v)
+		return nil
+	case usagehourlyaggregate.FieldPromptTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPromptTokens(v)
+		return nil
+	case usagehourlyaggregate.FieldCompletionTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompletionTokens(v)
+		return nil
+	case usagehourlyaggregate.FieldTotalTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalTokens(v)
+		return nil
+	case usagehourlyaggregate.FieldUserChargeMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserChargeMicros(v)
+		return nil
+	case usagehourlyaggregate.FieldUpstreamCostMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamCostMicros(v)
+		return nil
+	case usagehourlyaggregate.FieldGrossMarginMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGrossMarginMicros(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UsageHourlyAggregate field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UsageHourlyAggregateMutation) AddedFields() []string {
+	var fields []string
+	if m.adduser_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldUserID)
+	}
+	if m.addapi_key_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldAPIKeyID)
+	}
+	if m.addproject_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldProjectID)
+	}
+	if m.addchannel_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldChannelID)
+	}
+	if m.addupstream_account_id != nil {
+		fields = append(fields, usagehourlyaggregate.FieldUpstreamAccountID)
+	}
+	if m.addrequest_count != nil {
+		fields = append(fields, usagehourlyaggregate.FieldRequestCount)
+	}
+	if m.addsuccess_count != nil {
+		fields = append(fields, usagehourlyaggregate.FieldSuccessCount)
+	}
+	if m.adderror_count != nil {
+		fields = append(fields, usagehourlyaggregate.FieldErrorCount)
+	}
+	if m.addprompt_tokens != nil {
+		fields = append(fields, usagehourlyaggregate.FieldPromptTokens)
+	}
+	if m.addcompletion_tokens != nil {
+		fields = append(fields, usagehourlyaggregate.FieldCompletionTokens)
+	}
+	if m.addtotal_tokens != nil {
+		fields = append(fields, usagehourlyaggregate.FieldTotalTokens)
+	}
+	if m.adduser_charge_micros != nil {
+		fields = append(fields, usagehourlyaggregate.FieldUserChargeMicros)
+	}
+	if m.addupstream_cost_micros != nil {
+		fields = append(fields, usagehourlyaggregate.FieldUpstreamCostMicros)
+	}
+	if m.addgross_margin_micros != nil {
+		fields = append(fields, usagehourlyaggregate.FieldGrossMarginMicros)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UsageHourlyAggregateMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case usagehourlyaggregate.FieldUserID:
+		return m.AddedUserID()
+	case usagehourlyaggregate.FieldAPIKeyID:
+		return m.AddedAPIKeyID()
+	case usagehourlyaggregate.FieldProjectID:
+		return m.AddedProjectID()
+	case usagehourlyaggregate.FieldChannelID:
+		return m.AddedChannelID()
+	case usagehourlyaggregate.FieldUpstreamAccountID:
+		return m.AddedUpstreamAccountID()
+	case usagehourlyaggregate.FieldRequestCount:
+		return m.AddedRequestCount()
+	case usagehourlyaggregate.FieldSuccessCount:
+		return m.AddedSuccessCount()
+	case usagehourlyaggregate.FieldErrorCount:
+		return m.AddedErrorCount()
+	case usagehourlyaggregate.FieldPromptTokens:
+		return m.AddedPromptTokens()
+	case usagehourlyaggregate.FieldCompletionTokens:
+		return m.AddedCompletionTokens()
+	case usagehourlyaggregate.FieldTotalTokens:
+		return m.AddedTotalTokens()
+	case usagehourlyaggregate.FieldUserChargeMicros:
+		return m.AddedUserChargeMicros()
+	case usagehourlyaggregate.FieldUpstreamCostMicros:
+		return m.AddedUpstreamCostMicros()
+	case usagehourlyaggregate.FieldGrossMarginMicros:
+		return m.AddedGrossMarginMicros()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UsageHourlyAggregateMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case usagehourlyaggregate.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	case usagehourlyaggregate.FieldAPIKeyID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAPIKeyID(v)
+		return nil
+	case usagehourlyaggregate.FieldProjectID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddProjectID(v)
+		return nil
+	case usagehourlyaggregate.FieldChannelID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddChannelID(v)
+		return nil
+	case usagehourlyaggregate.FieldUpstreamAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUpstreamAccountID(v)
+		return nil
+	case usagehourlyaggregate.FieldRequestCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRequestCount(v)
+		return nil
+	case usagehourlyaggregate.FieldSuccessCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSuccessCount(v)
+		return nil
+	case usagehourlyaggregate.FieldErrorCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddErrorCount(v)
+		return nil
+	case usagehourlyaggregate.FieldPromptTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPromptTokens(v)
+		return nil
+	case usagehourlyaggregate.FieldCompletionTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCompletionTokens(v)
+		return nil
+	case usagehourlyaggregate.FieldTotalTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalTokens(v)
+		return nil
+	case usagehourlyaggregate.FieldUserChargeMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserChargeMicros(v)
+		return nil
+	case usagehourlyaggregate.FieldUpstreamCostMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUpstreamCostMicros(v)
+		return nil
+	case usagehourlyaggregate.FieldGrossMarginMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGrossMarginMicros(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UsageHourlyAggregate numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UsageHourlyAggregateMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UsageHourlyAggregateMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UsageHourlyAggregateMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown UsageHourlyAggregate nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UsageHourlyAggregateMutation) ResetField(name string) error {
+	switch name {
+	case usagehourlyaggregate.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case usagehourlyaggregate.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case usagehourlyaggregate.FieldBucketStart:
+		m.ResetBucketStart()
+		return nil
+	case usagehourlyaggregate.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case usagehourlyaggregate.FieldAPIKeyID:
+		m.ResetAPIKeyID()
+		return nil
+	case usagehourlyaggregate.FieldProjectID:
+		m.ResetProjectID()
+		return nil
+	case usagehourlyaggregate.FieldChannelID:
+		m.ResetChannelID()
+		return nil
+	case usagehourlyaggregate.FieldUpstreamAccountID:
+		m.ResetUpstreamAccountID()
+		return nil
+	case usagehourlyaggregate.FieldModelID:
+		m.ResetModelID()
+		return nil
+	case usagehourlyaggregate.FieldRequestType:
+		m.ResetRequestType()
+		return nil
+	case usagehourlyaggregate.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case usagehourlyaggregate.FieldCurrency:
+		m.ResetCurrency()
+		return nil
+	case usagehourlyaggregate.FieldRequestCount:
+		m.ResetRequestCount()
+		return nil
+	case usagehourlyaggregate.FieldSuccessCount:
+		m.ResetSuccessCount()
+		return nil
+	case usagehourlyaggregate.FieldErrorCount:
+		m.ResetErrorCount()
+		return nil
+	case usagehourlyaggregate.FieldPromptTokens:
+		m.ResetPromptTokens()
+		return nil
+	case usagehourlyaggregate.FieldCompletionTokens:
+		m.ResetCompletionTokens()
+		return nil
+	case usagehourlyaggregate.FieldTotalTokens:
+		m.ResetTotalTokens()
+		return nil
+	case usagehourlyaggregate.FieldUserChargeMicros:
+		m.ResetUserChargeMicros()
+		return nil
+	case usagehourlyaggregate.FieldUpstreamCostMicros:
+		m.ResetUpstreamCostMicros()
+		return nil
+	case usagehourlyaggregate.FieldGrossMarginMicros:
+		m.ResetGrossMarginMicros()
+		return nil
+	}
+	return fmt.Errorf("unknown UsageHourlyAggregate field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UsageHourlyAggregateMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UsageHourlyAggregateMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UsageHourlyAggregateMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UsageHourlyAggregateMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UsageHourlyAggregateMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UsageHourlyAggregateMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown UsageHourlyAggregate unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UsageHourlyAggregateMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown UsageHourlyAggregate edge %s", name)
 }
 
 // UsageLogMutation represents an operation that mutates the UsageLog nodes in the graph.

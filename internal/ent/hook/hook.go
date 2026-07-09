@@ -537,6 +537,30 @@ func (f UsageBillingRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UsageBillingRecordMutation", m)
 }
 
+// The UsageDailyAggregateFunc type is an adapter to allow the use of ordinary
+// function as UsageDailyAggregate mutator.
+type UsageDailyAggregateFunc func(context.Context, *ent.UsageDailyAggregateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UsageDailyAggregateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UsageDailyAggregateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UsageDailyAggregateMutation", m)
+}
+
+// The UsageHourlyAggregateFunc type is an adapter to allow the use of ordinary
+// function as UsageHourlyAggregate mutator.
+type UsageHourlyAggregateFunc func(context.Context, *ent.UsageHourlyAggregateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UsageHourlyAggregateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UsageHourlyAggregateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UsageHourlyAggregateMutation", m)
+}
+
 // The UsageLogFunc type is an adapter to allow the use of ordinary
 // function as UsageLog mutator.
 type UsageLogFunc func(context.Context, *ent.UsageLogMutation) (ent.Value, error)

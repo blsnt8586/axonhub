@@ -30,6 +30,7 @@ type UsageBillingProcessorParams struct {
 	BillingHoldService     *BillingHoldService
 	CommercialLimitService *APIKeyCommercialLimitService
 	SubscriptionService    *SubscriptionService
+	UsageAggregateService  *UsageAggregateService      `optional:"true"`
 	NotificationService    *BillingNotificationService `optional:"true"`
 }
 
@@ -43,6 +44,7 @@ type UsageBillingProcessor struct {
 	billingHoldService     *BillingHoldService
 	commercialLimitService *APIKeyCommercialLimitService
 	subscriptionService    *SubscriptionService
+	usageAggregateService  *UsageAggregateService
 	notificationService    *BillingNotificationService
 }
 
@@ -56,6 +58,7 @@ func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingP
 		billingHoldService:     params.BillingHoldService,
 		commercialLimitService: params.CommercialLimitService,
 		subscriptionService:    params.SubscriptionService,
+		usageAggregateService:  params.UsageAggregateService,
 		notificationService:    params.NotificationService,
 	}
 }
@@ -327,6 +330,11 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 		charged, err := update.Save(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to mark usage billing record charged: %w", err)
+		}
+		if p.usageAggregateService != nil {
+			if err := p.usageAggregateService.ApplyBillingRecord(ctx, charged); err != nil {
+				return err
+			}
 		}
 
 		record = charged

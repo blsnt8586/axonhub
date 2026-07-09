@@ -5801,6 +5801,366 @@ func (_m *UsageBillingRecord) Node(ctx context.Context) (node *Node, err error) 
 }
 
 // Node implements Noder interface
+func (_m *UsageDailyAggregate) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "UsageDailyAggregate",
+		Fields: make([]*Field, 21),
+		Edges:  make([]*Edge, 0),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.BucketStart); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "time.Time",
+		Name:  "bucket_start",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UserID); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "int",
+		Name:  "user_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.APIKeyID); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "int",
+		Name:  "api_key_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProjectID); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "int",
+		Name:  "project_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ChannelID); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "int",
+		Name:  "channel_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpstreamAccountID); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "int",
+		Name:  "upstream_account_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ModelID); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "string",
+		Name:  "model_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RequestType); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "usagedailyaggregate.RequestType",
+		Name:  "request_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[10] = &Field{
+		Type:  "usagedailyaggregate.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Currency); err != nil {
+		return nil, err
+	}
+	node.Fields[11] = &Field{
+		Type:  "string",
+		Name:  "currency",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RequestCount); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
+		Type:  "int64",
+		Name:  "request_count",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.SuccessCount); err != nil {
+		return nil, err
+	}
+	node.Fields[13] = &Field{
+		Type:  "int64",
+		Name:  "success_count",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ErrorCount); err != nil {
+		return nil, err
+	}
+	node.Fields[14] = &Field{
+		Type:  "int64",
+		Name:  "error_count",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.PromptTokens); err != nil {
+		return nil, err
+	}
+	node.Fields[15] = &Field{
+		Type:  "int64",
+		Name:  "prompt_tokens",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.CompletionTokens); err != nil {
+		return nil, err
+	}
+	node.Fields[16] = &Field{
+		Type:  "int64",
+		Name:  "completion_tokens",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.TotalTokens); err != nil {
+		return nil, err
+	}
+	node.Fields[17] = &Field{
+		Type:  "int64",
+		Name:  "total_tokens",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UserChargeMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[18] = &Field{
+		Type:  "int64",
+		Name:  "user_charge_micros",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpstreamCostMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[19] = &Field{
+		Type:  "int64",
+		Name:  "upstream_cost_micros",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.GrossMarginMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[20] = &Field{
+		Type:  "int64",
+		Name:  "gross_margin_micros",
+		Value: string(buf),
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *UsageHourlyAggregate) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "UsageHourlyAggregate",
+		Fields: make([]*Field, 21),
+		Edges:  make([]*Edge, 0),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.BucketStart); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "time.Time",
+		Name:  "bucket_start",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UserID); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "int",
+		Name:  "user_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.APIKeyID); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "int",
+		Name:  "api_key_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProjectID); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "int",
+		Name:  "project_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ChannelID); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "int",
+		Name:  "channel_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpstreamAccountID); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "int",
+		Name:  "upstream_account_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ModelID); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "string",
+		Name:  "model_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RequestType); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "usagehourlyaggregate.RequestType",
+		Name:  "request_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[10] = &Field{
+		Type:  "usagehourlyaggregate.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Currency); err != nil {
+		return nil, err
+	}
+	node.Fields[11] = &Field{
+		Type:  "string",
+		Name:  "currency",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RequestCount); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
+		Type:  "int64",
+		Name:  "request_count",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.SuccessCount); err != nil {
+		return nil, err
+	}
+	node.Fields[13] = &Field{
+		Type:  "int64",
+		Name:  "success_count",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ErrorCount); err != nil {
+		return nil, err
+	}
+	node.Fields[14] = &Field{
+		Type:  "int64",
+		Name:  "error_count",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.PromptTokens); err != nil {
+		return nil, err
+	}
+	node.Fields[15] = &Field{
+		Type:  "int64",
+		Name:  "prompt_tokens",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.CompletionTokens); err != nil {
+		return nil, err
+	}
+	node.Fields[16] = &Field{
+		Type:  "int64",
+		Name:  "completion_tokens",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.TotalTokens); err != nil {
+		return nil, err
+	}
+	node.Fields[17] = &Field{
+		Type:  "int64",
+		Name:  "total_tokens",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UserChargeMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[18] = &Field{
+		Type:  "int64",
+		Name:  "user_charge_micros",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpstreamCostMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[19] = &Field{
+		Type:  "int64",
+		Name:  "upstream_cost_micros",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.GrossMarginMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[20] = &Field{
+		Type:  "int64",
+		Name:  "gross_margin_micros",
+		Value: string(buf),
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
 func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,

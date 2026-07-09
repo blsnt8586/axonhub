@@ -1574,6 +1574,16 @@ func (r *usageBillingRecordResolver) UserSubscriptionID(ctx context.Context, obj
 }
 
 // ID is the resolver for the id field.
+func (r *usageDailyAggregateResolver) ID(ctx context.Context, obj *ent.UsageDailyAggregate) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ID is the resolver for the id field.
+func (r *usageHourlyAggregateResolver) ID(ctx context.Context, obj *ent.UsageHourlyAggregate) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ID is the resolver for the id field.
 func (r *usageLogResolver) ID(ctx context.Context, obj *ent.UsageLog) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeUsageLog,
@@ -1901,6 +1911,16 @@ func (r *Resolver) UsageBillingRecord() UsageBillingRecordResolver {
 	return &usageBillingRecordResolver{r}
 }
 
+// UsageDailyAggregate returns UsageDailyAggregateResolver implementation.
+func (r *Resolver) UsageDailyAggregate() UsageDailyAggregateResolver {
+	return &usageDailyAggregateResolver{r}
+}
+
+// UsageHourlyAggregate returns UsageHourlyAggregateResolver implementation.
+func (r *Resolver) UsageHourlyAggregate() UsageHourlyAggregateResolver {
+	return &usageHourlyAggregateResolver{r}
+}
+
 // UsageLog returns UsageLogResolver implementation.
 func (r *Resolver) UsageLog() UsageLogResolver { return &usageLogResolver{r} }
 
@@ -1961,6 +1981,8 @@ type systemResolver struct{ *Resolver }
 type threadResolver struct{ *Resolver }
 type traceResolver struct{ *Resolver }
 type usageBillingRecordResolver struct{ *Resolver }
+type usageDailyAggregateResolver struct{ *Resolver }
+type usageHourlyAggregateResolver struct{ *Resolver }
 type usageLogResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
 type userProjectResolver struct{ *Resolver }

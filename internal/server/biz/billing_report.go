@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 )
 
 type BillingReportServiceParams struct {
@@ -45,6 +46,8 @@ type BillingCommercialReport struct {
 	Daily       []BillingDailyReportRow   `json:"daily"`
 	TopModels   []BillingTopModelRow      `json:"topModels"`
 	TopProjects []BillingTopProjectRow    `json:"topProjects"`
+	TopAPIKeys  []BillingTopAPIKeyRow     `json:"topApiKeys"`
+	TopChannels []BillingTopChannelRow    `json:"topChannels"`
 	TopUsers    []BillingTopUserReportRow `json:"topUsers"`
 }
 
@@ -77,6 +80,20 @@ type BillingTopModelRow struct {
 type BillingTopProjectRow struct {
 	ProjectID          int    `json:"projectId"`
 	ProjectName        string `json:"projectName"`
+	ChargeAmountMicros int64  `json:"chargeAmountMicros"`
+	RequestCount       int    `json:"requestCount"`
+}
+
+type BillingTopAPIKeyRow struct {
+	APIKeyID           int    `json:"apiKeyId"`
+	APIKeyName         string `json:"apiKeyName"`
+	ChargeAmountMicros int64  `json:"chargeAmountMicros"`
+	RequestCount       int    `json:"requestCount"`
+}
+
+type BillingTopChannelRow struct {
+	ChannelID          int    `json:"channelId"`
+	ChannelName        string `json:"channelName"`
 	ChargeAmountMicros int64  `json:"chargeAmountMicros"`
 	RequestCount       int    `json:"requestCount"`
 }
@@ -145,11 +162,29 @@ func (s *BillingReportService) GetCommercialReport(ctx context.Context, filter B
 		projectName[project.ID] = project.Name
 	}
 
+	apiKeys, err := s.ent.APIKey.Query().All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query api keys: %w", err)
+	}
+	apiKeyName := map[int]string{}
+	for _, apiKey := range apiKeys {
+		apiKeyName[apiKey.ID] = apiKey.Name
+	}
+
+	channels, err := s.ent.Channel.Query().All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query channels: %w", err)
+	}
+	channelName := map[int]string{}
+	for _, channel := range channels {
+		channelName[channel.ID] = channel.Name
+	}
+
 	ledgerRows, err := s.queryLedgerTransactions(ctx, BillingCSVExportInput{From: filter.From, To: filter.To, Currency: currency})
 	if err != nil {
 		return nil, err
 	}
-	usageRows, err := s.queryUsageBillingRecords(ctx, BillingCSVExportInput{From: filter.From, To: filter.To, Currency: currency})
+	aggregateRows, err := s.queryDailyUsageAggregates(ctx, filter, currency)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +209,8 @@ func (s *BillingReportService) GetCommercialReport(ctx context.Context, filter B
 	dailyByDate := map[string]*BillingDailyReportRow{}
 	models := map[string]*BillingTopModelRow{}
 	projectsByID := map[int]*BillingTopProjectRow{}
+	apiKeysByID := map[int]*BillingTopAPIKeyRow{}
+	channelsByID := map[int]*BillingTopChannelRow{}
 	usersByID := map[int]*BillingTopUserReportRow{}
 
 	for _, tx := range ledgerRows {
@@ -194,8 +231,6 @@ func (s *BillingReportService) GetCommercialReport(ctx context.Context, filter B
 			if tx.Direction == ledgertransaction.DirectionDebit {
 				report.Summary.ConsumptionAmountMicros += tx.AmountMicros
 				report.Summary.NetMovementMicros -= tx.AmountMicros
-				daily.ConsumptionAmountMicros += tx.AmountMicros
-				daily.NetMovementMicros -= tx.AmountMicros
 			}
 		case ledgertransaction.TypeRefund, ledgertransaction.TypeChargeback:
 			report.Summary.RefundAmountMicros += tx.AmountMicros
@@ -247,36 +282,63 @@ func (s *BillingReportService) GetCommercialReport(ctx context.Context, filter B
 		}
 	}
 
-	for _, usage := range usageRows {
-		if usage.Status != usagebillingrecord.StatusCharged {
+	for _, aggregate := range aggregateRows {
+		if aggregate.Status != usagedailyaggregate.StatusCharged {
 			continue
 		}
-		model := models[usage.ModelID]
+		date := reportDate(aggregate.BucketStart)
+		daily := dailyRow(dailyByDate, date)
+		daily.ConsumptionAmountMicros += aggregate.UserChargeMicros
+		daily.NetMovementMicros -= aggregate.UserChargeMicros
+
+		model := models[aggregate.ModelID]
 		if model == nil {
-			model = &BillingTopModelRow{ModelID: usage.ModelID}
-			models[usage.ModelID] = model
+			model = &BillingTopModelRow{ModelID: aggregate.ModelID}
+			models[aggregate.ModelID] = model
 		}
-		model.ChargeAmountMicros += usage.ChargeAmountMicros
-		model.RequestCount++
+		model.ChargeAmountMicros += aggregate.UserChargeMicros
+		model.RequestCount += int(aggregate.RequestCount)
 
-		project := projectsByID[usage.ProjectID]
+		project := projectsByID[aggregate.ProjectID]
 		if project == nil {
-			project = &BillingTopProjectRow{ProjectID: usage.ProjectID, ProjectName: projectName[usage.ProjectID]}
-			projectsByID[usage.ProjectID] = project
+			project = &BillingTopProjectRow{ProjectID: aggregate.ProjectID, ProjectName: projectName[aggregate.ProjectID]}
+			projectsByID[aggregate.ProjectID] = project
 		}
-		project.ChargeAmountMicros += usage.ChargeAmountMicros
-		project.RequestCount++
+		project.ChargeAmountMicros += aggregate.UserChargeMicros
+		project.RequestCount += int(aggregate.RequestCount)
 
-		if usage.UserID > 0 {
-			user := userReportRow(usersByID, usage.UserID, userEmail[usage.UserID])
-			user.ConsumptionAmountMicros += usage.ChargeAmountMicros
-			user.NetAmountMicros -= usage.ChargeAmountMicros
+		if aggregate.APIKeyID > 0 {
+			apiKey := apiKeysByID[aggregate.APIKeyID]
+			if apiKey == nil {
+				apiKey = &BillingTopAPIKeyRow{APIKeyID: aggregate.APIKeyID, APIKeyName: apiKeyName[aggregate.APIKeyID]}
+				apiKeysByID[aggregate.APIKeyID] = apiKey
+			}
+			apiKey.ChargeAmountMicros += aggregate.UserChargeMicros
+			apiKey.RequestCount += int(aggregate.RequestCount)
+		}
+
+		if aggregate.ChannelID > 0 {
+			channel := channelsByID[aggregate.ChannelID]
+			if channel == nil {
+				channel = &BillingTopChannelRow{ChannelID: aggregate.ChannelID, ChannelName: channelName[aggregate.ChannelID]}
+				channelsByID[aggregate.ChannelID] = channel
+			}
+			channel.ChargeAmountMicros += aggregate.UserChargeMicros
+			channel.RequestCount += int(aggregate.RequestCount)
+		}
+
+		if aggregate.UserID > 0 {
+			user := userReportRow(usersByID, aggregate.UserID, userEmail[aggregate.UserID])
+			user.ConsumptionAmountMicros += aggregate.UserChargeMicros
+			user.NetAmountMicros -= aggregate.UserChargeMicros
 		}
 	}
 
 	report.Daily = mapDailyRows(dailyByDate)
 	report.TopModels = topModelRows(models, limit)
 	report.TopProjects = topProjectRows(projectsByID, limit)
+	report.TopAPIKeys = topAPIKeyRows(apiKeysByID, limit)
+	report.TopChannels = topChannelRows(channelsByID, limit)
 	report.TopUsers = topUserRows(usersByID, limit)
 	return report, nil
 }
@@ -371,6 +433,22 @@ func (s *BillingReportService) queryUsageBillingRecords(ctx context.Context, inp
 	rows, err := query.Order(ent.Desc(usagebillingrecord.FieldCreatedAt)).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query usage billing records: %w", err)
+	}
+	return rows, nil
+}
+
+func (s *BillingReportService) queryDailyUsageAggregates(ctx context.Context, filter BillingReportFilter, currency string) ([]*ent.UsageDailyAggregate, error) {
+	query := s.ent.UsageDailyAggregate.Query().
+		Where(usagedailyaggregate.CurrencyEQ(currency))
+	if filter.From != nil {
+		query.Where(usagedailyaggregate.BucketStartGTE(truncateUsageDay(*filter.From)))
+	}
+	if filter.To != nil {
+		query.Where(usagedailyaggregate.BucketStartLTE(truncateUsageDay(*filter.To)))
+	}
+	rows, err := query.Order(ent.Asc(usagedailyaggregate.FieldBucketStart)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query daily usage aggregates: %w", err)
 	}
 	return rows, nil
 }
@@ -578,6 +656,28 @@ func topProjectRows(rows map[int]*BillingTopProjectRow, limit int) []BillingTopP
 	}
 	slices.SortFunc(result, func(a, b BillingTopProjectRow) int {
 		return compareReportRows(a.ChargeAmountMicros, b.ChargeAmountMicros, strconv.Itoa(a.ProjectID), strconv.Itoa(b.ProjectID))
+	})
+	return trimReportRows(result, limit)
+}
+
+func topAPIKeyRows(rows map[int]*BillingTopAPIKeyRow, limit int) []BillingTopAPIKeyRow {
+	result := make([]BillingTopAPIKeyRow, 0, len(rows))
+	for _, row := range rows {
+		result = append(result, *row)
+	}
+	slices.SortFunc(result, func(a, b BillingTopAPIKeyRow) int {
+		return compareReportRows(a.ChargeAmountMicros, b.ChargeAmountMicros, strconv.Itoa(a.APIKeyID), strconv.Itoa(b.APIKeyID))
+	})
+	return trimReportRows(result, limit)
+}
+
+func topChannelRows(rows map[int]*BillingTopChannelRow, limit int) []BillingTopChannelRow {
+	result := make([]BillingTopChannelRow, 0, len(rows))
+	for _, row := range rows {
+		result = append(result, *row)
+	}
+	slices.SortFunc(result, func(a, b BillingTopChannelRow) int {
+		return compareReportRows(a.ChargeAmountMicros, b.ChargeAmountMicros, strconv.Itoa(a.ChannelID), strconv.Itoa(b.ChannelID))
 	})
 	return trimReportRows(result, limit)
 }

@@ -748,9 +748,10 @@ func (r *mutationResolver) RunCommercialMaintenance(ctx context.Context, input R
 		return nil, fmt.Errorf("commercial operations service is not configured")
 	}
 	result, err := r.commercialOperationsService.RunMaintenance(ctx, biz.CommercialMaintenanceRunInput{
-		Now:    timeValue(input.Now),
-		Limit:  intValue(input.Limit),
-		Reason: input.Reason,
+		Now:                    timeValue(input.Now),
+		Limit:                  intValue(input.Limit),
+		Reason:                 input.Reason,
+		RebuildUsageAggregates: boolValue(input.RebuildUsageAggregates),
 	})
 	if err != nil {
 		return nil, err

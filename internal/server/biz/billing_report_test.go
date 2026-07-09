@@ -51,6 +51,10 @@ func TestBillingReportServiceAggregatesCommercialReport(t *testing.T) {
 	createBillingReportUsage(t, ctx, client, accountB.ID, userB.ID, projectA.ID, "gpt-4o", 4_000_000, now.Add(-90*time.Minute), usagebillingrecord.StatusCharged, "usage-report-b")
 	createBillingReportUsage(t, ctx, client, accountB.ID, userB.ID, projectB.ID, "sora", 2_000_000, now.Add(-80*time.Minute), usagebillingrecord.StatusCharged, "usage-report-c")
 	createBillingReportUsage(t, ctx, client, accountA.ID, userA.ID, projectB.ID, "sora", 5_000_000, now.Add(-70*time.Minute), usagebillingrecord.StatusFailed, "usage-report-failed")
+	aggregateSvc := NewUsageAggregateService(UsageAggregateServiceParams{Ent: client})
+	rebuild, err := aggregateSvc.Rebuild(ctx, UsageAggregateRebuildInput{})
+	require.NoError(t, err)
+	require.Equal(t, 4, rebuild.RecordsProcessed)
 
 	createBillingReportPaymentOrder(t, ctx, client, accountA.ID, projectA.ID, "paid-a", 10_000_000, paymentorder.StatusPaid, now.Add(-26*time.Hour))
 	createBillingReportPaymentOrder(t, ctx, client, accountB.ID, projectB.ID, "paid-b", 20_000_000, paymentorder.StatusPaid, now.Add(-2*time.Hour))
@@ -76,6 +80,8 @@ func TestBillingReportServiceAggregatesCommercialReport(t *testing.T) {
 	require.Equal(t, int64(10_000_000), report.Daily[0].RechargeAmountMicros)
 	require.Equal(t, "2026-07-08", report.Daily[1].Date)
 	require.Equal(t, int64(20_000_000), report.Daily[1].RechargeAmountMicros)
+	require.Equal(t, int64(9_000_000), report.Daily[1].ConsumptionAmountMicros)
+	require.Equal(t, int64(10_000_000), report.Daily[1].NetMovementMicros)
 
 	require.Len(t, report.TopModels, 2)
 	require.Equal(t, "gpt-4o", report.TopModels[0].ModelID)
@@ -93,6 +99,58 @@ func TestBillingReportServiceAggregatesCommercialReport(t *testing.T) {
 	require.Equal(t, "b@example.com", report.TopUsers[0].Email)
 	require.Equal(t, int64(20_000_000), report.TopUsers[0].RechargeAmountMicros)
 	require.Equal(t, int64(6_000_000), report.TopUsers[0].ConsumptionAmountMicros)
+}
+
+func TestBillingReportServiceUsesUsageAggregatesForRankings(t *testing.T) {
+	t.Parallel()
+
+	client, ctx := newBillingReportTestClient(t, "billing_report_uses_usage_aggregates")
+	svc := NewBillingReportService(BillingReportServiceParams{Ent: client})
+	now := time.Date(2026, 7, 8, 10, 0, 0, 0, time.UTC)
+	from := now.Add(-24 * time.Hour)
+	to := now.Add(24 * time.Hour)
+
+	user := createBillingReportUser(t, ctx, client, "aggregate-report@example.com")
+	project := createBillingReportProject(t, ctx, client, "Aggregate Project")
+	account := createBillingReportAccount(t, ctx, client, user.ID)
+	createBillingReportUsage(t, ctx, client, account.ID, user.ID, project.ID, "gpt-aggregate-report", 7_000_000, now, usagebillingrecord.StatusCharged, "aggregate-report-usage")
+
+	aggregateSvc := NewUsageAggregateService(UsageAggregateServiceParams{Ent: client})
+	_, err := aggregateSvc.Rebuild(ctx, UsageAggregateRebuildInput{})
+	require.NoError(t, err)
+	apiKeyValue, err := GenerateAPIKey("ah")
+	require.NoError(t, err)
+	apiKey, err := client.APIKey.Create().
+		SetKey(apiKeyValue).
+		SetName("Aggregate Report Key").
+		SetUserID(user.ID).
+		SetProjectID(project.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.UsageDailyAggregate.Update().
+		SetAPIKeyID(apiKey.ID).
+		SetChannelID(42).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.UsageBillingRecord.Delete().Exec(ctx)
+	require.NoError(t, err)
+
+	report, err := svc.GetCommercialReport(ctx, BillingReportFilter{From: &from, To: &to, Currency: "CNY", Limit: 5})
+	require.NoError(t, err)
+
+	require.Len(t, report.TopModels, 1)
+	require.Equal(t, "gpt-aggregate-report", report.TopModels[0].ModelID)
+	require.Equal(t, int64(7_000_000), report.TopModels[0].ChargeAmountMicros)
+	require.Len(t, report.TopProjects, 1)
+	require.Equal(t, project.ID, report.TopProjects[0].ProjectID)
+	require.Equal(t, int64(7_000_000), report.TopProjects[0].ChargeAmountMicros)
+	require.Len(t, report.TopAPIKeys, 1)
+	require.Equal(t, apiKey.ID, report.TopAPIKeys[0].APIKeyID)
+	require.Equal(t, "Aggregate Report Key", report.TopAPIKeys[0].APIKeyName)
+	require.Len(t, report.TopChannels, 1)
+	require.Equal(t, 42, report.TopChannels[0].ChannelID)
+	require.Len(t, report.Daily, 1)
+	require.Equal(t, int64(7_000_000), report.Daily[0].ConsumptionAmountMicros)
 }
 
 func TestBillingReportServiceExportsCSV(t *testing.T) {

@@ -48,6 +48,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
+	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -62,7 +64,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 49)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 51)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -1156,6 +1158,74 @@ var schemaGraph = func() *sqlgraph.Schema {
 	}
 	graph.Nodes[44] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
+			Table:   usagedailyaggregate.Table,
+			Columns: usagedailyaggregate.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: usagedailyaggregate.FieldID,
+			},
+		},
+		Type: "UsageDailyAggregate",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			usagedailyaggregate.FieldCreatedAt:          {Type: field.TypeTime, Column: usagedailyaggregate.FieldCreatedAt},
+			usagedailyaggregate.FieldUpdatedAt:          {Type: field.TypeTime, Column: usagedailyaggregate.FieldUpdatedAt},
+			usagedailyaggregate.FieldBucketStart:        {Type: field.TypeTime, Column: usagedailyaggregate.FieldBucketStart},
+			usagedailyaggregate.FieldUserID:             {Type: field.TypeInt, Column: usagedailyaggregate.FieldUserID},
+			usagedailyaggregate.FieldAPIKeyID:           {Type: field.TypeInt, Column: usagedailyaggregate.FieldAPIKeyID},
+			usagedailyaggregate.FieldProjectID:          {Type: field.TypeInt, Column: usagedailyaggregate.FieldProjectID},
+			usagedailyaggregate.FieldChannelID:          {Type: field.TypeInt, Column: usagedailyaggregate.FieldChannelID},
+			usagedailyaggregate.FieldUpstreamAccountID:  {Type: field.TypeInt, Column: usagedailyaggregate.FieldUpstreamAccountID},
+			usagedailyaggregate.FieldModelID:            {Type: field.TypeString, Column: usagedailyaggregate.FieldModelID},
+			usagedailyaggregate.FieldRequestType:        {Type: field.TypeEnum, Column: usagedailyaggregate.FieldRequestType},
+			usagedailyaggregate.FieldStatus:             {Type: field.TypeEnum, Column: usagedailyaggregate.FieldStatus},
+			usagedailyaggregate.FieldCurrency:           {Type: field.TypeString, Column: usagedailyaggregate.FieldCurrency},
+			usagedailyaggregate.FieldRequestCount:       {Type: field.TypeInt64, Column: usagedailyaggregate.FieldRequestCount},
+			usagedailyaggregate.FieldSuccessCount:       {Type: field.TypeInt64, Column: usagedailyaggregate.FieldSuccessCount},
+			usagedailyaggregate.FieldErrorCount:         {Type: field.TypeInt64, Column: usagedailyaggregate.FieldErrorCount},
+			usagedailyaggregate.FieldPromptTokens:       {Type: field.TypeInt64, Column: usagedailyaggregate.FieldPromptTokens},
+			usagedailyaggregate.FieldCompletionTokens:   {Type: field.TypeInt64, Column: usagedailyaggregate.FieldCompletionTokens},
+			usagedailyaggregate.FieldTotalTokens:        {Type: field.TypeInt64, Column: usagedailyaggregate.FieldTotalTokens},
+			usagedailyaggregate.FieldUserChargeMicros:   {Type: field.TypeInt64, Column: usagedailyaggregate.FieldUserChargeMicros},
+			usagedailyaggregate.FieldUpstreamCostMicros: {Type: field.TypeInt64, Column: usagedailyaggregate.FieldUpstreamCostMicros},
+			usagedailyaggregate.FieldGrossMarginMicros:  {Type: field.TypeInt64, Column: usagedailyaggregate.FieldGrossMarginMicros},
+		},
+	}
+	graph.Nodes[45] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   usagehourlyaggregate.Table,
+			Columns: usagehourlyaggregate.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: usagehourlyaggregate.FieldID,
+			},
+		},
+		Type: "UsageHourlyAggregate",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			usagehourlyaggregate.FieldCreatedAt:          {Type: field.TypeTime, Column: usagehourlyaggregate.FieldCreatedAt},
+			usagehourlyaggregate.FieldUpdatedAt:          {Type: field.TypeTime, Column: usagehourlyaggregate.FieldUpdatedAt},
+			usagehourlyaggregate.FieldBucketStart:        {Type: field.TypeTime, Column: usagehourlyaggregate.FieldBucketStart},
+			usagehourlyaggregate.FieldUserID:             {Type: field.TypeInt, Column: usagehourlyaggregate.FieldUserID},
+			usagehourlyaggregate.FieldAPIKeyID:           {Type: field.TypeInt, Column: usagehourlyaggregate.FieldAPIKeyID},
+			usagehourlyaggregate.FieldProjectID:          {Type: field.TypeInt, Column: usagehourlyaggregate.FieldProjectID},
+			usagehourlyaggregate.FieldChannelID:          {Type: field.TypeInt, Column: usagehourlyaggregate.FieldChannelID},
+			usagehourlyaggregate.FieldUpstreamAccountID:  {Type: field.TypeInt, Column: usagehourlyaggregate.FieldUpstreamAccountID},
+			usagehourlyaggregate.FieldModelID:            {Type: field.TypeString, Column: usagehourlyaggregate.FieldModelID},
+			usagehourlyaggregate.FieldRequestType:        {Type: field.TypeEnum, Column: usagehourlyaggregate.FieldRequestType},
+			usagehourlyaggregate.FieldStatus:             {Type: field.TypeEnum, Column: usagehourlyaggregate.FieldStatus},
+			usagehourlyaggregate.FieldCurrency:           {Type: field.TypeString, Column: usagehourlyaggregate.FieldCurrency},
+			usagehourlyaggregate.FieldRequestCount:       {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldRequestCount},
+			usagehourlyaggregate.FieldSuccessCount:       {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldSuccessCount},
+			usagehourlyaggregate.FieldErrorCount:         {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldErrorCount},
+			usagehourlyaggregate.FieldPromptTokens:       {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldPromptTokens},
+			usagehourlyaggregate.FieldCompletionTokens:   {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldCompletionTokens},
+			usagehourlyaggregate.FieldTotalTokens:        {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldTotalTokens},
+			usagehourlyaggregate.FieldUserChargeMicros:   {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldUserChargeMicros},
+			usagehourlyaggregate.FieldUpstreamCostMicros: {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldUpstreamCostMicros},
+			usagehourlyaggregate.FieldGrossMarginMicros:  {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldGrossMarginMicros},
+		},
+	}
+	graph.Nodes[46] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagelog.Table,
 			Columns: usagelog.Columns,
 			ID: &sqlgraph.FieldSpec{
@@ -1191,7 +1261,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagelog.FieldCostPriceReferenceID:               {Type: field.TypeString, Column: usagelog.FieldCostPriceReferenceID},
 		},
 	}
-	graph.Nodes[45] = &sqlgraph.Node{
+	graph.Nodes[47] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -1216,7 +1286,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldScopes:         {Type: field.TypeJSON, Column: user.FieldScopes},
 		},
 	}
-	graph.Nodes[46] = &sqlgraph.Node{
+	graph.Nodes[48] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userproject.Table,
 			Columns: userproject.Columns,
@@ -1235,7 +1305,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userproject.FieldScopes:    {Type: field.TypeJSON, Column: userproject.FieldScopes},
 		},
 	}
-	graph.Nodes[47] = &sqlgraph.Node{
+	graph.Nodes[49] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userrole.Table,
 			Columns: userrole.Columns,
@@ -1252,7 +1322,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userrole.FieldUpdatedAt: {Type: field.TypeTime, Column: userrole.FieldUpdatedAt},
 		},
 	}
-	graph.Nodes[48] = &sqlgraph.Node{
+	graph.Nodes[50] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usersubscription.Table,
 			Columns: usersubscription.Columns,
@@ -9143,6 +9213,296 @@ func (f *UsageBillingRecordFilter) WhereHasBillingNotificationsWith(preds ...pre
 }
 
 // addPredicate implements the predicateAdder interface.
+func (_q *UsageDailyAggregateQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the UsageDailyAggregateQuery builder.
+func (_q *UsageDailyAggregateQuery) Filter() *UsageDailyAggregateFilter {
+	return &UsageDailyAggregateFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *UsageDailyAggregateMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the UsageDailyAggregateMutation builder.
+func (m *UsageDailyAggregateMutation) Filter() *UsageDailyAggregateFilter {
+	return &UsageDailyAggregateFilter{config: m.config, predicateAdder: m}
+}
+
+// UsageDailyAggregateFilter provides a generic filtering capability at runtime for UsageDailyAggregateQuery.
+type UsageDailyAggregateFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *UsageDailyAggregateFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[44].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *UsageDailyAggregateFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(usagedailyaggregate.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *UsageDailyAggregateFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(usagedailyaggregate.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *UsageDailyAggregateFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(usagedailyaggregate.FieldUpdatedAt))
+}
+
+// WhereBucketStart applies the entql time.Time predicate on the bucket_start field.
+func (f *UsageDailyAggregateFilter) WhereBucketStart(p entql.TimeP) {
+	f.Where(p.Field(usagedailyaggregate.FieldBucketStart))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *UsageDailyAggregateFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(usagedailyaggregate.FieldUserID))
+}
+
+// WhereAPIKeyID applies the entql int predicate on the api_key_id field.
+func (f *UsageDailyAggregateFilter) WhereAPIKeyID(p entql.IntP) {
+	f.Where(p.Field(usagedailyaggregate.FieldAPIKeyID))
+}
+
+// WhereProjectID applies the entql int predicate on the project_id field.
+func (f *UsageDailyAggregateFilter) WhereProjectID(p entql.IntP) {
+	f.Where(p.Field(usagedailyaggregate.FieldProjectID))
+}
+
+// WhereChannelID applies the entql int predicate on the channel_id field.
+func (f *UsageDailyAggregateFilter) WhereChannelID(p entql.IntP) {
+	f.Where(p.Field(usagedailyaggregate.FieldChannelID))
+}
+
+// WhereUpstreamAccountID applies the entql int predicate on the upstream_account_id field.
+func (f *UsageDailyAggregateFilter) WhereUpstreamAccountID(p entql.IntP) {
+	f.Where(p.Field(usagedailyaggregate.FieldUpstreamAccountID))
+}
+
+// WhereModelID applies the entql string predicate on the model_id field.
+func (f *UsageDailyAggregateFilter) WhereModelID(p entql.StringP) {
+	f.Where(p.Field(usagedailyaggregate.FieldModelID))
+}
+
+// WhereRequestType applies the entql string predicate on the request_type field.
+func (f *UsageDailyAggregateFilter) WhereRequestType(p entql.StringP) {
+	f.Where(p.Field(usagedailyaggregate.FieldRequestType))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *UsageDailyAggregateFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(usagedailyaggregate.FieldStatus))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *UsageDailyAggregateFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(usagedailyaggregate.FieldCurrency))
+}
+
+// WhereRequestCount applies the entql int64 predicate on the request_count field.
+func (f *UsageDailyAggregateFilter) WhereRequestCount(p entql.Int64P) {
+	f.Where(p.Field(usagedailyaggregate.FieldRequestCount))
+}
+
+// WhereSuccessCount applies the entql int64 predicate on the success_count field.
+func (f *UsageDailyAggregateFilter) WhereSuccessCount(p entql.Int64P) {
+	f.Where(p.Field(usagedailyaggregate.FieldSuccessCount))
+}
+
+// WhereErrorCount applies the entql int64 predicate on the error_count field.
+func (f *UsageDailyAggregateFilter) WhereErrorCount(p entql.Int64P) {
+	f.Where(p.Field(usagedailyaggregate.FieldErrorCount))
+}
+
+// WherePromptTokens applies the entql int64 predicate on the prompt_tokens field.
+func (f *UsageDailyAggregateFilter) WherePromptTokens(p entql.Int64P) {
+	f.Where(p.Field(usagedailyaggregate.FieldPromptTokens))
+}
+
+// WhereCompletionTokens applies the entql int64 predicate on the completion_tokens field.
+func (f *UsageDailyAggregateFilter) WhereCompletionTokens(p entql.Int64P) {
+	f.Where(p.Field(usagedailyaggregate.FieldCompletionTokens))
+}
+
+// WhereTotalTokens applies the entql int64 predicate on the total_tokens field.
+func (f *UsageDailyAggregateFilter) WhereTotalTokens(p entql.Int64P) {
+	f.Where(p.Field(usagedailyaggregate.FieldTotalTokens))
+}
+
+// WhereUserChargeMicros applies the entql int64 predicate on the user_charge_micros field.
+func (f *UsageDailyAggregateFilter) WhereUserChargeMicros(p entql.Int64P) {
+	f.Where(p.Field(usagedailyaggregate.FieldUserChargeMicros))
+}
+
+// WhereUpstreamCostMicros applies the entql int64 predicate on the upstream_cost_micros field.
+func (f *UsageDailyAggregateFilter) WhereUpstreamCostMicros(p entql.Int64P) {
+	f.Where(p.Field(usagedailyaggregate.FieldUpstreamCostMicros))
+}
+
+// WhereGrossMarginMicros applies the entql int64 predicate on the gross_margin_micros field.
+func (f *UsageDailyAggregateFilter) WhereGrossMarginMicros(p entql.Int64P) {
+	f.Where(p.Field(usagedailyaggregate.FieldGrossMarginMicros))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (_q *UsageHourlyAggregateQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the UsageHourlyAggregateQuery builder.
+func (_q *UsageHourlyAggregateQuery) Filter() *UsageHourlyAggregateFilter {
+	return &UsageHourlyAggregateFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *UsageHourlyAggregateMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the UsageHourlyAggregateMutation builder.
+func (m *UsageHourlyAggregateMutation) Filter() *UsageHourlyAggregateFilter {
+	return &UsageHourlyAggregateFilter{config: m.config, predicateAdder: m}
+}
+
+// UsageHourlyAggregateFilter provides a generic filtering capability at runtime for UsageHourlyAggregateQuery.
+type UsageHourlyAggregateFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *UsageHourlyAggregateFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[45].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *UsageHourlyAggregateFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *UsageHourlyAggregateFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *UsageHourlyAggregateFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldUpdatedAt))
+}
+
+// WhereBucketStart applies the entql time.Time predicate on the bucket_start field.
+func (f *UsageHourlyAggregateFilter) WhereBucketStart(p entql.TimeP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldBucketStart))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *UsageHourlyAggregateFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldUserID))
+}
+
+// WhereAPIKeyID applies the entql int predicate on the api_key_id field.
+func (f *UsageHourlyAggregateFilter) WhereAPIKeyID(p entql.IntP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldAPIKeyID))
+}
+
+// WhereProjectID applies the entql int predicate on the project_id field.
+func (f *UsageHourlyAggregateFilter) WhereProjectID(p entql.IntP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldProjectID))
+}
+
+// WhereChannelID applies the entql int predicate on the channel_id field.
+func (f *UsageHourlyAggregateFilter) WhereChannelID(p entql.IntP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldChannelID))
+}
+
+// WhereUpstreamAccountID applies the entql int predicate on the upstream_account_id field.
+func (f *UsageHourlyAggregateFilter) WhereUpstreamAccountID(p entql.IntP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldUpstreamAccountID))
+}
+
+// WhereModelID applies the entql string predicate on the model_id field.
+func (f *UsageHourlyAggregateFilter) WhereModelID(p entql.StringP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldModelID))
+}
+
+// WhereRequestType applies the entql string predicate on the request_type field.
+func (f *UsageHourlyAggregateFilter) WhereRequestType(p entql.StringP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldRequestType))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *UsageHourlyAggregateFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldStatus))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *UsageHourlyAggregateFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(usagehourlyaggregate.FieldCurrency))
+}
+
+// WhereRequestCount applies the entql int64 predicate on the request_count field.
+func (f *UsageHourlyAggregateFilter) WhereRequestCount(p entql.Int64P) {
+	f.Where(p.Field(usagehourlyaggregate.FieldRequestCount))
+}
+
+// WhereSuccessCount applies the entql int64 predicate on the success_count field.
+func (f *UsageHourlyAggregateFilter) WhereSuccessCount(p entql.Int64P) {
+	f.Where(p.Field(usagehourlyaggregate.FieldSuccessCount))
+}
+
+// WhereErrorCount applies the entql int64 predicate on the error_count field.
+func (f *UsageHourlyAggregateFilter) WhereErrorCount(p entql.Int64P) {
+	f.Where(p.Field(usagehourlyaggregate.FieldErrorCount))
+}
+
+// WherePromptTokens applies the entql int64 predicate on the prompt_tokens field.
+func (f *UsageHourlyAggregateFilter) WherePromptTokens(p entql.Int64P) {
+	f.Where(p.Field(usagehourlyaggregate.FieldPromptTokens))
+}
+
+// WhereCompletionTokens applies the entql int64 predicate on the completion_tokens field.
+func (f *UsageHourlyAggregateFilter) WhereCompletionTokens(p entql.Int64P) {
+	f.Where(p.Field(usagehourlyaggregate.FieldCompletionTokens))
+}
+
+// WhereTotalTokens applies the entql int64 predicate on the total_tokens field.
+func (f *UsageHourlyAggregateFilter) WhereTotalTokens(p entql.Int64P) {
+	f.Where(p.Field(usagehourlyaggregate.FieldTotalTokens))
+}
+
+// WhereUserChargeMicros applies the entql int64 predicate on the user_charge_micros field.
+func (f *UsageHourlyAggregateFilter) WhereUserChargeMicros(p entql.Int64P) {
+	f.Where(p.Field(usagehourlyaggregate.FieldUserChargeMicros))
+}
+
+// WhereUpstreamCostMicros applies the entql int64 predicate on the upstream_cost_micros field.
+func (f *UsageHourlyAggregateFilter) WhereUpstreamCostMicros(p entql.Int64P) {
+	f.Where(p.Field(usagehourlyaggregate.FieldUpstreamCostMicros))
+}
+
+// WhereGrossMarginMicros applies the entql int64 predicate on the gross_margin_micros field.
+func (f *UsageHourlyAggregateFilter) WhereGrossMarginMicros(p entql.Int64P) {
+	f.Where(p.Field(usagehourlyaggregate.FieldGrossMarginMicros))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (_q *UsageLogQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
 }
@@ -9171,7 +9531,7 @@ type UsageLogFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageLogFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[44].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[46].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9401,7 +9761,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[45].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[47].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9767,7 +10127,7 @@ type UserProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[46].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[48].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9865,7 +10225,7 @@ type UserRoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserRoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[47].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[49].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9953,7 +10313,7 @@ type UserSubscriptionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserSubscriptionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[48].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[50].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})

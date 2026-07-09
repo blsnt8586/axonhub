@@ -59,6 +59,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
+	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/userproject"
@@ -159,6 +161,10 @@ type Client struct {
 	Trace *TraceClient
 	// UsageBillingRecord is the client for interacting with the UsageBillingRecord builders.
 	UsageBillingRecord *UsageBillingRecordClient
+	// UsageDailyAggregate is the client for interacting with the UsageDailyAggregate builders.
+	UsageDailyAggregate *UsageDailyAggregateClient
+	// UsageHourlyAggregate is the client for interacting with the UsageHourlyAggregate builders.
+	UsageHourlyAggregate *UsageHourlyAggregateClient
 	// UsageLog is the client for interacting with the UsageLog builders.
 	UsageLog *UsageLogClient
 	// User is the client for interacting with the User builders.
@@ -226,6 +232,8 @@ func (c *Client) init() {
 	c.Thread = NewThreadClient(c.config)
 	c.Trace = NewTraceClient(c.config)
 	c.UsageBillingRecord = NewUsageBillingRecordClient(c.config)
+	c.UsageDailyAggregate = NewUsageDailyAggregateClient(c.config)
+	c.UsageHourlyAggregate = NewUsageHourlyAggregateClient(c.config)
 	c.UsageLog = NewUsageLogClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserProject = NewUserProjectClient(c.config)
@@ -367,6 +375,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Thread:                        NewThreadClient(cfg),
 		Trace:                         NewTraceClient(cfg),
 		UsageBillingRecord:            NewUsageBillingRecordClient(cfg),
+		UsageDailyAggregate:           NewUsageDailyAggregateClient(cfg),
+		UsageHourlyAggregate:          NewUsageHourlyAggregateClient(cfg),
 		UsageLog:                      NewUsageLogClient(cfg),
 		User:                          NewUserClient(cfg),
 		UserProject:                   NewUserProjectClient(cfg),
@@ -435,6 +445,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Thread:                        NewThreadClient(cfg),
 		Trace:                         NewTraceClient(cfg),
 		UsageBillingRecord:            NewUsageBillingRecordClient(cfg),
+		UsageDailyAggregate:           NewUsageDailyAggregateClient(cfg),
+		UsageHourlyAggregate:          NewUsageHourlyAggregateClient(cfg),
 		UsageLog:                      NewUsageLogClient(cfg),
 		User:                          NewUserClient(cfg),
 		UserProject:                   NewUserProjectClient(cfg),
@@ -480,8 +492,8 @@ func (c *Client) Use(hooks ...Hook) {
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
 		c.RequestExecution, c.Role, c.SubscriptionPlan, c.System, c.Thread, c.Trace,
-		c.UsageBillingRecord, c.UsageLog, c.User, c.UserProject, c.UserRole,
-		c.UserSubscription,
+		c.UsageBillingRecord, c.UsageDailyAggregate, c.UsageHourlyAggregate,
+		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -502,8 +514,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
 		c.RequestExecution, c.Role, c.SubscriptionPlan, c.System, c.Thread, c.Trace,
-		c.UsageBillingRecord, c.UsageLog, c.User, c.UserProject, c.UserRole,
-		c.UserSubscription,
+		c.UsageBillingRecord, c.UsageDailyAggregate, c.UsageHourlyAggregate,
+		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -600,6 +612,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Trace.mutate(ctx, m)
 	case *UsageBillingRecordMutation:
 		return c.UsageBillingRecord.mutate(ctx, m)
+	case *UsageDailyAggregateMutation:
+		return c.UsageDailyAggregate.mutate(ctx, m)
+	case *UsageHourlyAggregateMutation:
+		return c.UsageHourlyAggregate.mutate(ctx, m)
 	case *UsageLogMutation:
 		return c.UsageLog.mutate(ctx, m)
 	case *UserMutation:
@@ -8395,6 +8411,274 @@ func (c *UsageBillingRecordClient) mutate(ctx context.Context, m *UsageBillingRe
 	}
 }
 
+// UsageDailyAggregateClient is a client for the UsageDailyAggregate schema.
+type UsageDailyAggregateClient struct {
+	config
+}
+
+// NewUsageDailyAggregateClient returns a client for the UsageDailyAggregate from the given config.
+func NewUsageDailyAggregateClient(c config) *UsageDailyAggregateClient {
+	return &UsageDailyAggregateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usagedailyaggregate.Hooks(f(g(h())))`.
+func (c *UsageDailyAggregateClient) Use(hooks ...Hook) {
+	c.hooks.UsageDailyAggregate = append(c.hooks.UsageDailyAggregate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usagedailyaggregate.Intercept(f(g(h())))`.
+func (c *UsageDailyAggregateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UsageDailyAggregate = append(c.inters.UsageDailyAggregate, interceptors...)
+}
+
+// Create returns a builder for creating a UsageDailyAggregate entity.
+func (c *UsageDailyAggregateClient) Create() *UsageDailyAggregateCreate {
+	mutation := newUsageDailyAggregateMutation(c.config, OpCreate)
+	return &UsageDailyAggregateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UsageDailyAggregate entities.
+func (c *UsageDailyAggregateClient) CreateBulk(builders ...*UsageDailyAggregateCreate) *UsageDailyAggregateCreateBulk {
+	return &UsageDailyAggregateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UsageDailyAggregateClient) MapCreateBulk(slice any, setFunc func(*UsageDailyAggregateCreate, int)) *UsageDailyAggregateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UsageDailyAggregateCreateBulk{err: fmt.Errorf("calling to UsageDailyAggregateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UsageDailyAggregateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UsageDailyAggregateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UsageDailyAggregate.
+func (c *UsageDailyAggregateClient) Update() *UsageDailyAggregateUpdate {
+	mutation := newUsageDailyAggregateMutation(c.config, OpUpdate)
+	return &UsageDailyAggregateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UsageDailyAggregateClient) UpdateOne(_m *UsageDailyAggregate) *UsageDailyAggregateUpdateOne {
+	mutation := newUsageDailyAggregateMutation(c.config, OpUpdateOne, withUsageDailyAggregate(_m))
+	return &UsageDailyAggregateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UsageDailyAggregateClient) UpdateOneID(id int) *UsageDailyAggregateUpdateOne {
+	mutation := newUsageDailyAggregateMutation(c.config, OpUpdateOne, withUsageDailyAggregateID(id))
+	return &UsageDailyAggregateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UsageDailyAggregate.
+func (c *UsageDailyAggregateClient) Delete() *UsageDailyAggregateDelete {
+	mutation := newUsageDailyAggregateMutation(c.config, OpDelete)
+	return &UsageDailyAggregateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UsageDailyAggregateClient) DeleteOne(_m *UsageDailyAggregate) *UsageDailyAggregateDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UsageDailyAggregateClient) DeleteOneID(id int) *UsageDailyAggregateDeleteOne {
+	builder := c.Delete().Where(usagedailyaggregate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UsageDailyAggregateDeleteOne{builder}
+}
+
+// Query returns a query builder for UsageDailyAggregate.
+func (c *UsageDailyAggregateClient) Query() *UsageDailyAggregateQuery {
+	return &UsageDailyAggregateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUsageDailyAggregate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UsageDailyAggregate entity by its id.
+func (c *UsageDailyAggregateClient) Get(ctx context.Context, id int) (*UsageDailyAggregate, error) {
+	return c.Query().Where(usagedailyaggregate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UsageDailyAggregateClient) GetX(ctx context.Context, id int) *UsageDailyAggregate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *UsageDailyAggregateClient) Hooks() []Hook {
+	hooks := c.hooks.UsageDailyAggregate
+	return append(hooks[:len(hooks):len(hooks)], usagedailyaggregate.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *UsageDailyAggregateClient) Interceptors() []Interceptor {
+	return c.inters.UsageDailyAggregate
+}
+
+func (c *UsageDailyAggregateClient) mutate(ctx context.Context, m *UsageDailyAggregateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UsageDailyAggregateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UsageDailyAggregateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UsageDailyAggregateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UsageDailyAggregateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UsageDailyAggregate mutation op: %q", m.Op())
+	}
+}
+
+// UsageHourlyAggregateClient is a client for the UsageHourlyAggregate schema.
+type UsageHourlyAggregateClient struct {
+	config
+}
+
+// NewUsageHourlyAggregateClient returns a client for the UsageHourlyAggregate from the given config.
+func NewUsageHourlyAggregateClient(c config) *UsageHourlyAggregateClient {
+	return &UsageHourlyAggregateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usagehourlyaggregate.Hooks(f(g(h())))`.
+func (c *UsageHourlyAggregateClient) Use(hooks ...Hook) {
+	c.hooks.UsageHourlyAggregate = append(c.hooks.UsageHourlyAggregate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usagehourlyaggregate.Intercept(f(g(h())))`.
+func (c *UsageHourlyAggregateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UsageHourlyAggregate = append(c.inters.UsageHourlyAggregate, interceptors...)
+}
+
+// Create returns a builder for creating a UsageHourlyAggregate entity.
+func (c *UsageHourlyAggregateClient) Create() *UsageHourlyAggregateCreate {
+	mutation := newUsageHourlyAggregateMutation(c.config, OpCreate)
+	return &UsageHourlyAggregateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UsageHourlyAggregate entities.
+func (c *UsageHourlyAggregateClient) CreateBulk(builders ...*UsageHourlyAggregateCreate) *UsageHourlyAggregateCreateBulk {
+	return &UsageHourlyAggregateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UsageHourlyAggregateClient) MapCreateBulk(slice any, setFunc func(*UsageHourlyAggregateCreate, int)) *UsageHourlyAggregateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UsageHourlyAggregateCreateBulk{err: fmt.Errorf("calling to UsageHourlyAggregateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UsageHourlyAggregateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UsageHourlyAggregateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UsageHourlyAggregate.
+func (c *UsageHourlyAggregateClient) Update() *UsageHourlyAggregateUpdate {
+	mutation := newUsageHourlyAggregateMutation(c.config, OpUpdate)
+	return &UsageHourlyAggregateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UsageHourlyAggregateClient) UpdateOne(_m *UsageHourlyAggregate) *UsageHourlyAggregateUpdateOne {
+	mutation := newUsageHourlyAggregateMutation(c.config, OpUpdateOne, withUsageHourlyAggregate(_m))
+	return &UsageHourlyAggregateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UsageHourlyAggregateClient) UpdateOneID(id int) *UsageHourlyAggregateUpdateOne {
+	mutation := newUsageHourlyAggregateMutation(c.config, OpUpdateOne, withUsageHourlyAggregateID(id))
+	return &UsageHourlyAggregateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UsageHourlyAggregate.
+func (c *UsageHourlyAggregateClient) Delete() *UsageHourlyAggregateDelete {
+	mutation := newUsageHourlyAggregateMutation(c.config, OpDelete)
+	return &UsageHourlyAggregateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UsageHourlyAggregateClient) DeleteOne(_m *UsageHourlyAggregate) *UsageHourlyAggregateDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UsageHourlyAggregateClient) DeleteOneID(id int) *UsageHourlyAggregateDeleteOne {
+	builder := c.Delete().Where(usagehourlyaggregate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UsageHourlyAggregateDeleteOne{builder}
+}
+
+// Query returns a query builder for UsageHourlyAggregate.
+func (c *UsageHourlyAggregateClient) Query() *UsageHourlyAggregateQuery {
+	return &UsageHourlyAggregateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUsageHourlyAggregate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UsageHourlyAggregate entity by its id.
+func (c *UsageHourlyAggregateClient) Get(ctx context.Context, id int) (*UsageHourlyAggregate, error) {
+	return c.Query().Where(usagehourlyaggregate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UsageHourlyAggregateClient) GetX(ctx context.Context, id int) *UsageHourlyAggregate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *UsageHourlyAggregateClient) Hooks() []Hook {
+	hooks := c.hooks.UsageHourlyAggregate
+	return append(hooks[:len(hooks):len(hooks)], usagehourlyaggregate.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *UsageHourlyAggregateClient) Interceptors() []Interceptor {
+	return c.inters.UsageHourlyAggregate
+}
+
+func (c *UsageHourlyAggregateClient) mutate(ctx context.Context, m *UsageHourlyAggregateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UsageHourlyAggregateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UsageHourlyAggregateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UsageHourlyAggregateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UsageHourlyAggregateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UsageHourlyAggregate mutation op: %q", m.Op())
+	}
+}
+
 // UsageLogClient is a client for the UsageLog schema.
 type UsageLogClient struct {
 	config
@@ -9670,8 +9954,8 @@ type (
 		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
 		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
 		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
-		UsageBillingRecord, UsageLog, User, UserProject, UserRole,
-		UserSubscription []ent.Hook
+		UsageBillingRecord, UsageDailyAggregate, UsageHourlyAggregate, UsageLog, User,
+		UserProject, UserRole, UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, AffiliateInvitation, AffiliateProfile,
@@ -9684,7 +9968,7 @@ type (
 		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
 		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
 		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
-		UsageBillingRecord, UsageLog, User, UserProject, UserRole,
-		UserSubscription []ent.Interceptor
+		UsageBillingRecord, UsageDailyAggregate, UsageHourlyAggregate, UsageLog, User,
+		UserProject, UserRole, UserSubscription []ent.Interceptor
 	}
 )

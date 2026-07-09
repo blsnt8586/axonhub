@@ -443,6 +443,9 @@ func TestBillingResolversOwnerCanQueryAdminBillingReportAndExportCSV(t *testing.
 		SetIdempotencyKey("resolver-report-usage").
 		Save(ctx)
 	require.NoError(t, err)
+	aggregateSvc := biz.NewUsageAggregateService(biz.UsageAggregateServiceParams{Ent: client})
+	_, err = aggregateSvc.Rebuild(ctx, biz.UsageAggregateRebuildInput{})
+	require.NoError(t, err)
 
 	_, err = client.PaymentOrder.Create().
 		SetCreatedAt(now).

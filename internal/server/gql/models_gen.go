@@ -603,9 +603,10 @@ type RestorePayload struct {
 }
 
 type RunCommercialMaintenanceInput struct {
-	Now    *time.Time `json:"now,omitempty"`
-	Limit  *int       `json:"limit,omitempty"`
-	Reason string     `json:"reason"`
+	Now                    *time.Time `json:"now,omitempty"`
+	Limit                  *int       `json:"limit,omitempty"`
+	Reason                 string     `json:"reason"`
+	RebuildUsageAggregates *bool      `json:"rebuildUsageAggregates,omitempty"`
 }
 
 type SaveBillingPriceRuleForm struct {
