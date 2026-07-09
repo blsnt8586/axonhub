@@ -129,6 +129,18 @@ export const systemApi = {
       method: 'POST',
       body: data,
     }),
+
+  getRegistrationSettings: (): Promise<RegistrationSettings> =>
+    apiRequest('/admin/system/registration', {
+      requireAuth: true,
+    }),
+
+  updateRegistrationSettings: (data: UpdateRegistrationSettingsInput): Promise<RegistrationSettings> =>
+    apiRequest('/admin/system/registration', {
+      method: 'PUT',
+      requireAuth: true,
+      body: data,
+    }),
 };
 
 // Auth API endpoints
@@ -141,6 +153,14 @@ export const authApi = {
     token: string;
   }> =>
     apiRequest('/admin/auth/signin', {
+      method: 'POST',
+      body: data,
+    }),
+
+  getRegistrationStatus: (): Promise<RegistrationStatus> => apiRequest('/admin/auth/registration'),
+
+  register: (data: RegisterInput): Promise<RegisterResponse> =>
+    apiRequest('/admin/auth/register', {
       method: 'POST',
       body: data,
     }),
@@ -178,3 +198,37 @@ export const authApi = {
       body: { code },
     }),
 };
+
+export interface RegistrationStatus {
+  enabled: boolean;
+  requireApproval: boolean;
+}
+
+export interface RegisterInput {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  preferLanguage?: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+  requireApproval: boolean;
+  user?: AuthUser;
+}
+
+export interface RegistrationSettings {
+  enabled: boolean;
+  requireApproval: boolean;
+  createDefaultProject: boolean;
+  createDefaultApiKey: boolean;
+  signupGrantAmount: string;
+  defaultProjectName: string;
+  defaultApiKeyName: string;
+  rateLimitWindowSeconds: number;
+  rateLimitMaxAttempts: number;
+}
+
+export type UpdateRegistrationSettingsInput = RegistrationSettings;

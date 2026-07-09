@@ -282,6 +282,12 @@
   "auth.signIn.validation.passwordPattern": "Password must contain uppercase, lowercase, and numbers",
   "auth.signIn.links.forgotPassword": "Forgot password?",
   "auth.signIn.footer.agreement": "By signing in, you agree to our Terms of Service and Privacy Policy",
+  "auth.signUp.submit": "Create Account",
+  "auth.signUp.creating": "Creating...",
+  "auth.signUp.success": "Account created. You can sign in now.",
+  "auth.signUp.awaitingApproval": "Account created and waiting for administrator approval.",
+  "auth.signUp.failed": "Failed to create account",
+  "auth.signUp.disabled": "Public registration is currently disabled.",
   "settings.nav.appearance": "Appearance",
   "settings.nav.display": "Display",
   "settings.nav.notifications": "Notifications"

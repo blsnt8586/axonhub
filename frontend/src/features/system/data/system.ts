@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest, GraphQLRequestError } from '@/gql/graphql';
 import { toast } from 'sonner';
 import { getTokenFromStorage } from '@/stores/authStore';
+import { systemApi, type RegistrationSettings, type UpdateRegistrationSettingsInput } from '@/lib/api-client';
 import i18n from '@/lib/i18n';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import type { ProxyConfig } from '@/features/channels/data/schema';
@@ -260,6 +261,8 @@ export interface UpdateSecuritySettingsInput {
   blockedIPs?: string[];
   showRequestLogIPBanIcon?: boolean;
 }
+
+export type { RegistrationSettings, UpdateRegistrationSettingsInput };
 
 export interface StoragePolicy {
   storeChunks: boolean;
@@ -1179,6 +1182,39 @@ export function useUpdateSecuritySettings() {
     },
     onError: () => {
       toast.error(i18n.t('common.errors.systemUpdateFailed'));
+    },
+  });
+}
+
+export function useRegistrationSettings() {
+  const { handleError } = useErrorHandler();
+
+  return useQuery({
+    queryKey: ['registrationSettings'],
+    queryFn: async () => {
+      try {
+        return await systemApi.getRegistrationSettings();
+      } catch (error) {
+        handleError(error, i18n.t('common.errors.internalServerError'));
+        throw error;
+      }
+    },
+  });
+}
+
+export function useUpdateRegistrationSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: UpdateRegistrationSettingsInput) => systemApi.updateRegistrationSettings(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['registrationSettings'] });
+      queryClient.invalidateQueries({ queryKey: ['registration-status'] });
+      toast.success(i18n.t('common.success.systemUpdated'));
+    },
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : i18n.t('common.errors.systemUpdateFailed');
+      toast.error(errorMessage);
     },
   });
 }

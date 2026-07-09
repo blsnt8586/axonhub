@@ -1,13 +1,14 @@
-import { HTMLAttributes, useState } from 'react';
+import { HTMLAttributes } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/password-input';
+import { useRegister, useRegistrationStatus } from '../../data/auth';
 
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>;
 
@@ -19,9 +20,12 @@ const formSchema = z
       .min(1, {
         message: 'Please enter your password',
       })
-      .min(7, {
-        message: 'Password must be at least 7 characters long',
-      }),
+      .min(8, {
+        message: 'Password must be at least 8 characters long',
+      })
+      .regex(/[a-z]/, { message: 'Password must include a lowercase letter' })
+      .regex(/[A-Z]/, { message: 'Password must include an uppercase letter' })
+      .regex(/\d/, { message: 'Password must include a number' }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -29,12 +33,10 @@ const formSchema = z
     path: ['confirmPassword'],
   });
 
-import { useTranslation } from 'react-i18next';
-
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
   const { t } = useTranslation();
-
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: registrationStatus, isLoading: isStatusLoading } = useRegistrationStatus();
+  const register = useRegister();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,16 +48,21 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
   });
 
   function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
+    register.mutate({
+      email: data.email,
+      password: data.password,
+    });
   }
+
+  const registrationDisabled = registrationStatus && !registrationStatus.enabled;
+  const isLoading = isStatusLoading || register.isPending;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className={cn('grid gap-3', className)} {...props}>
+        {registrationDisabled && (
+          <div className='text-muted-foreground rounded-md border p-3 text-sm'>{t('auth.signUp.disabled')}</div>
+        )}
         <FormField
           control={form.control}
           name='email'
@@ -95,8 +102,8 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
             </FormItem>
           )}
         />
-        <Button className='mt-2' disabled={isLoading}>
-          Create Account
+        <Button className='mt-2' disabled={isLoading || !!registrationDisabled}>
+          {register.isPending ? t('auth.signUp.creating') : t('auth.signUp.submit')}
         </Button>
 
         {/* <div className='relative my-2'>

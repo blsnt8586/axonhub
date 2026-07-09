@@ -97,6 +97,8 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		unSecureAdminGroup.GET("/system/status", handlers.System.GetSystemStatus)
 		unSecureAdminGroup.POST("/system/initialize", handlers.System.InitializeSystem)
 		// User Login - DO NOT AUTH
+		unSecureAdminGroup.GET("/auth/registration", handlers.Auth.GetRegistrationStatus)
+		unSecureAdminGroup.POST("/auth/register", handlers.Auth.Register)
 		unSecureAdminGroup.POST("/auth/signin", handlers.Auth.SignIn)
 	}
 
@@ -130,6 +132,9 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 
 		// OIDC Manual Linking
 		adminGroup.GET("/oidc/link/:provider", handlers.OIDC.GetLinkAuthorizeURL)
+
+		adminGroup.GET("/system/registration", handlers.System.GetRegistrationSettings)
+		adminGroup.PUT("/system/registration", handlers.System.UpdateRegistrationSettings)
 
 		// Playground API with channel specification support
 		adminGroup.POST(

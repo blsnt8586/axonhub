@@ -45,44 +45,44 @@ learn from `new-api` and `sub2api` where they are stronger.
 
 ## Stage 12: Public Registration And Onboarding
 
-Status: [ ] Planned
+Status: [x] Completed
 
 Goal: turn the existing `/sign-up` page into a real self-service registration
 flow while keeping owner/admin creation separate.
 
 Backend scope:
 
-- [ ] Add registration settings: enabled, require approval, default user status,
+- [x] Add registration settings: enabled, require approval, default user status,
   default project policy, optional default API key creation, optional signup
   wallet grant, and rate-limit settings.
-- [ ] Add a public registration API that creates only normal users. It must reuse
+- [x] Add a public registration API that creates only normal users. It must reuse
   existing password hashing and user creation logic, but it must not accept
   owner/admin role input from the public request.
-- [ ] Create or initialize the user billing account during registration.
-- [ ] Optionally create a default project and default user API key according to
+- [x] Create or initialize the user billing account during registration.
+- [x] Optionally create a default project and default user API key according to
   settings.
-- [ ] Enforce duplicate email checks, password strength, request rate limits,
+- [x] Enforce duplicate email checks, password strength, request rate limits,
   and registration-disabled behavior.
-- [ ] Add audit or system log records for successful registration and rejected
+- [x] Add audit or system log records for successful registration and rejected
   registration attempts where useful.
 
 Frontend scope:
 
-- [ ] Replace the current sign-up form placeholder behavior with a real API call.
-- [ ] Show registration-disabled, pending-approval, success, and validation
+- [x] Replace the current sign-up form placeholder behavior with a real API call.
+- [x] Show registration-disabled, pending-approval, success, and validation
   states.
-- [ ] After successful registration, redirect to sign-in with a clear success
+- [x] After successful registration, redirect to sign-in with a clear success
   message.
-- [ ] Add owner settings controls for registration policy.
+- [x] Add owner settings controls for registration policy.
 
 Verification:
 
-- [ ] Registration disabled rejects public registration.
-- [ ] Public registration cannot create owner/admin users.
-- [ ] Duplicate email fails deterministically.
-- [ ] Successful registration creates user and billing account.
-- [ ] Optional default project/API key creation follows settings.
-- [ ] Frontend typecheck and build pass.
+- [x] Registration disabled rejects public registration.
+- [x] Public registration cannot create owner/admin users.
+- [x] Duplicate email fails deterministically.
+- [x] Successful registration creates user and billing account.
+- [x] Optional default project/API key creation follows settings.
+- [x] Frontend typecheck and build pass.
 
 ## Stage 13: User Account Profile And Usage Console
 
@@ -306,3 +306,4 @@ Append one line per completed enhancement stage.
 
 | Stage | Commit | Date | Notes |
 | --- | --- | --- | --- |
+| Stage 12 | this commit | 2026-07-09 | Added public registration settings, real sign-up API/UI, user wallet initialization, optional default project/API key, signup grant, rate limiting, audit log, and focused tests. |

@@ -6,7 +6,7 @@ import { ME_QUERY } from '@/gql/users';
 import { toast } from 'sonner';
 import { useAuthStore, setTokenToStorage, removeTokenFromStorage } from '@/stores/authStore';
 import { AuthUser } from '@/stores/authStore';
-import { authApi } from '@/lib/api-client';
+import { authApi, type RegisterInput } from '@/lib/api-client';
 import i18n from '@/lib/i18n';
 
 export interface SignInInput {
@@ -80,6 +80,35 @@ export function useSignIn() {
     },
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to sign in';
+      toast.error(errorMessage);
+    },
+  });
+}
+
+export function useRegistrationStatus() {
+  return useQuery({
+    queryKey: ['registration-status'],
+    queryFn: async () => authApi.getRegistrationStatus(),
+    retry: 1,
+  });
+}
+
+export function useRegister() {
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (input: RegisterInput) => authApi.register(input),
+    onSuccess: (data) => {
+      if (data.requireApproval) {
+        toast.success(i18n.t('auth.signUp.awaitingApproval'));
+      } else {
+        toast.success(i18n.t('auth.signUp.success'));
+      }
+
+      router.navigate({ to: '/sign-in' });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || i18n.t('auth.signUp.failed');
       toast.error(errorMessage);
     },
   });

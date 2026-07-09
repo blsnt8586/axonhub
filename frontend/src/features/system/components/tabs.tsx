@@ -8,6 +8,7 @@ import { BrandSettings } from './brand-settings';
 import { DiagnosticsSettings } from './diagnostics-settings';
 import { GeneralSettings } from './general-settings';
 import { QuotaSettings } from './quota-settings';
+import { RegistrationSettings } from './registration-settings';
 import { RetrySettings } from './retry-settings';
 import { SecuritySettings } from './security-settings';
 import { StorageSettings } from './storage-settings';
@@ -16,7 +17,19 @@ import { ProxyPresetsSettings } from './proxy-presets-settings';
 import { WebhookSettings } from './webhook-settings';
 import { usePermissions } from '@/hooks/usePermissions';
 
-type SystemTabKey = 'general' | 'security' | 'brand' | 'storage' | 'retry' | 'webhook' | 'proxy' | 'quota' | 'backup' | 'diagnostics' | 'about';
+type SystemTabKey =
+  | 'general'
+  | 'security'
+  | 'brand'
+  | 'storage'
+  | 'retry'
+  | 'webhook'
+  | 'proxy'
+  | 'quota'
+  | 'registration'
+  | 'backup'
+  | 'diagnostics'
+  | 'about';
 
 interface SystemSettingsTabsProps {
   initialTab?: SystemTabKey;
@@ -32,7 +45,7 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
       return;
     }
 
-    if (!isOwner && (initialTab === 'backup' || initialTab === 'diagnostics')) {
+    if (!isOwner && (initialTab === 'backup' || initialTab === 'diagnostics' || initialTab === 'registration')) {
       setActiveTab('general');
       return;
     }
@@ -45,7 +58,7 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
       value={activeTab}
       onValueChange={(value) => {
         const nextTab = value as SystemTabKey;
-        if (!isOwner && (nextTab === 'backup' || nextTab === 'diagnostics')) {
+        if (!isOwner && (nextTab === 'backup' || nextTab === 'diagnostics' || nextTab === 'registration')) {
           setActiveTab('general');
           return;
         }
@@ -78,6 +91,11 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
         <TabsTrigger value='quota' data-value='quota'>
           {t('system.tabs.quota')}
         </TabsTrigger>
+        {isOwner && (
+          <TabsTrigger value='registration' data-value='registration'>
+            {t('system.tabs.registration')}
+          </TabsTrigger>
+        )}
         {isOwner && (
           <TabsTrigger value='diagnostics' data-value='diagnostics'>
             {t('system.tabs.diagnostics')}
@@ -117,6 +135,11 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
         <TabsContent value='quota' className='mt-0 p-0'>
           <QuotaSettings />
         </TabsContent>
+        {isOwner && (
+          <TabsContent value='registration' className='mt-0 p-0'>
+            <RegistrationSettings />
+          </TabsContent>
+        )}
         {isOwner && (
           <TabsContent value='diagnostics' className='mt-0 p-0'>
             <DiagnosticsSettings />

@@ -14,17 +14,20 @@ import (
 type AuthHandlersParams struct {
 	fx.In
 
-	AuthService *biz.AuthService
+	AuthService         *biz.AuthService
+	RegistrationService *biz.RegistrationService
 }
 
 func NewAuthHandlers(params AuthHandlersParams) *AuthHandlers {
 	return &AuthHandlers{
-		AuthService: params.AuthService,
+		AuthService:         params.AuthService,
+		RegistrationService: params.RegistrationService,
 	}
 }
 
 type AuthHandlers struct {
-	AuthService *biz.AuthService
+	AuthService         *biz.AuthService
+	RegistrationService *biz.RegistrationService
 }
 
 // SignInRequest 登录请求.
@@ -37,6 +40,26 @@ type SignInRequest struct {
 type SignInResponse struct {
 	User  *objects.UserInfo `json:"user"`
 	Token string            `json:"token"`
+}
+
+type RegistrationStatusResponse struct {
+	Enabled         bool `json:"enabled"`
+	RequireApproval bool `json:"requireApproval"`
+}
+
+type RegisterRequest struct {
+	Email          string `json:"email"                    binding:"required,email"`
+	Password       string `json:"password"                 binding:"required"`
+	FirstName      string `json:"firstName,omitempty"`
+	LastName       string `json:"lastName,omitempty"`
+	PreferLanguage string `json:"preferLanguage,omitempty"`
+}
+
+type RegisterResponse struct {
+	Success         bool              `json:"success"`
+	Message         string            `json:"message"`
+	RequireApproval bool              `json:"requireApproval"`
+	User            *objects.UserInfo `json:"user,omitempty"`
 }
 
 // SignIn handles user authentication.
@@ -78,4 +101,63 @@ func (h *AuthHandlers) SignIn(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *AuthHandlers) GetRegistrationStatus(c *gin.Context) {
+	status, err := h.RegistrationService.PublicRegistrationStatus(c.Request.Context())
+	if err != nil {
+		JSONError(c, http.StatusInternalServerError, errors.New("Failed to get registration status"))
+		return
+	}
+
+	c.JSON(http.StatusOK, RegistrationStatusResponse{
+		Enabled:         status.Enabled,
+		RequireApproval: status.RequireApproval,
+	})
+}
+
+func (h *AuthHandlers) Register(c *gin.Context) {
+	var req RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		JSONError(c, http.StatusBadRequest, errors.New("Invalid request format"))
+		return
+	}
+
+	result, err := h.RegistrationService.Register(c.Request.Context(), biz.RegisterUserInput{
+		Email:          req.Email,
+		Password:       req.Password,
+		FirstName:      req.FirstName,
+		LastName:       req.LastName,
+		PreferLanguage: req.PreferLanguage,
+		ClientIP:       c.ClientIP(),
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, biz.ErrRegistrationDisabled):
+			JSONError(c, http.StatusForbidden, err)
+		case errors.Is(err, biz.ErrRegistrationEmailExists):
+			JSONError(c, http.StatusConflict, err)
+		case errors.Is(err, biz.ErrRegistrationInvalidEmail), errors.Is(err, biz.ErrRegistrationPasswordWeak):
+			JSONError(c, http.StatusBadRequest, err)
+		case errors.Is(err, biz.ErrRegistrationRateLimited):
+			JSONError(c, http.StatusTooManyRequests, err)
+		default:
+			JSONError(c, http.StatusInternalServerError, errors.New("Internal server error"))
+		}
+
+		return
+	}
+
+	requireApproval := result.User.Status == "deactivated"
+	message := "Registration successful"
+	if requireApproval {
+		message = "Registration submitted and awaiting approval"
+	}
+
+	c.JSON(http.StatusOK, RegisterResponse{
+		Success:         true,
+		Message:         message,
+		RequireApproval: requireApproval,
+		User:            biz.ConvertUserToUserInfo(c.Request.Context(), result.User),
+	})
 }

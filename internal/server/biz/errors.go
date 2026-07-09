@@ -7,18 +7,25 @@ import (
 )
 
 var (
-	ErrInvalidJWT              = errors.New("invalid jwt token")
-	ErrInvalidToken            = errors.New("invalid token")
-	ErrInvalidAPIKey           = errors.New("invalid api key")
-	ErrInvalidPassword         = errors.New("invalid password")
-	ErrInvalidModel            = transformer.ErrInvalidModel
-	ErrInternal                = errors.New("server internal error, please try again later")
-	ErrAPIKeyOwnerRequired     = errors.New("owner api key is required")
-	ErrServiceAccountRequired  = errors.New("service account api key required")
-	ErrAPIKeyScopeRequired     = errors.New("api key missing required scope")
-	ErrAPIKeyNameRequired      = errors.New("api key name is required")
-	ErrSystemNotInitialized    = errors.New("system not initialized")
-	ErrOIDCLoginRequired       = errors.New("OIDC user without password, please login via OIDC or set a password")
+	ErrInvalidJWT               = errors.New("invalid jwt token")
+	ErrInvalidToken             = errors.New("invalid token")
+	ErrInvalidAPIKey            = errors.New("invalid api key")
+	ErrInvalidPassword          = errors.New("invalid password")
+	ErrInvalidModel             = transformer.ErrInvalidModel
+	ErrInternal                 = errors.New("server internal error, please try again later")
+	ErrAPIKeyOwnerRequired      = errors.New("owner api key is required")
+	ErrServiceAccountRequired   = errors.New("service account api key required")
+	ErrAPIKeyScopeRequired      = errors.New("api key missing required scope")
+	ErrAPIKeyNameRequired       = errors.New("api key name is required")
+	ErrSystemNotInitialized     = errors.New("system not initialized")
+	ErrOIDCLoginRequired        = errors.New("OIDC user without password, please login via OIDC or set a password")
+	ErrRegistrationDisabled     = errors.New("registration is disabled")
+	ErrRegistrationEmailExists  = errors.New("email already registered")
+	ErrRegistrationInvalidEmail = errors.New("invalid registration email")
+	ErrRegistrationPasswordWeak = errors.New(
+		"password must be at least 8 characters and include uppercase, lowercase, and number",
+	)
+	ErrRegistrationRateLimited = errors.New("too many registration attempts, please try again later")
 	ErrProjectNotFound         = errors.New("project not found")
 	ErrBillingAccountNotFound  = errors.New("billing account not found")
 	ErrBillingAccountFrozen    = errors.New("billing account is frozen")

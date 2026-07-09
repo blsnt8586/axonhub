@@ -282,6 +282,12 @@
   "auth.signIn.validation.passwordPattern": "密码必须包含大写字母、小写字母和数字",
   "auth.signIn.links.forgotPassword": "忘记密码？",
   "auth.signIn.footer.agreement": "登录即表示您同意我们的服务条款和隐私政策",
+  "auth.signUp.submit": "创建账户",
+  "auth.signUp.creating": "创建中...",
+  "auth.signUp.success": "账户已创建，现在可以登录。",
+  "auth.signUp.awaitingApproval": "账户已创建，正在等待管理员审核。",
+  "auth.signUp.failed": "创建账户失败",
+  "auth.signUp.disabled": "当前未开放公开注册。",
   "settings.nav.appearance": "外观",
   "settings.nav.display": "显示",
   "settings.nav.notifications": "通知"

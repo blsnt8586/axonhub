@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -14,7 +15,9 @@ import (
 	"go.uber.org/fx"
 
 	"github.com/looplj/axonhub/internal/build"
+	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/log"
+	"github.com/looplj/axonhub/internal/scopes"
 	"github.com/looplj/axonhub/internal/server/assets"
 	"github.com/looplj/axonhub/internal/server/biz"
 )
@@ -22,17 +25,20 @@ import (
 type SystemHandlersParams struct {
 	fx.In
 
-	SystemService *biz.SystemService
+	SystemService       *biz.SystemService
+	RegistrationService *biz.RegistrationService
 }
 
 func NewSystemHandlers(params SystemHandlersParams) *SystemHandlers {
 	return &SystemHandlers{
-		SystemService: params.SystemService,
+		SystemService:       params.SystemService,
+		RegistrationService: params.RegistrationService,
 	}
 }
 
 type SystemHandlers struct {
-	SystemService *biz.SystemService
+	SystemService       *biz.SystemService
+	RegistrationService *biz.RegistrationService
 }
 
 // SystemStatusResponse 系统状态响应.
@@ -71,6 +77,30 @@ type WebhookDebugResponse struct {
 	Query   map[string][]string `json:"query"`
 	Headers map[string][]string `json:"headers"`
 	Body    json.RawMessage     `json:"body"`
+}
+
+type RegistrationSettingsResponse struct {
+	Enabled                bool   `json:"enabled"`
+	RequireApproval        bool   `json:"requireApproval"`
+	CreateDefaultProject   bool   `json:"createDefaultProject"`
+	CreateDefaultAPIKey    bool   `json:"createDefaultApiKey"`
+	SignupGrantAmount      string `json:"signupGrantAmount"`
+	DefaultProjectName     string `json:"defaultProjectName"`
+	DefaultAPIKeyName      string `json:"defaultApiKeyName"`
+	RateLimitWindowSeconds int    `json:"rateLimitWindowSeconds"`
+	RateLimitMaxAttempts   int    `json:"rateLimitMaxAttempts"`
+}
+
+type UpdateRegistrationSettingsRequest struct {
+	Enabled                bool   `json:"enabled"`
+	RequireApproval        bool   `json:"requireApproval"`
+	CreateDefaultProject   bool   `json:"createDefaultProject"`
+	CreateDefaultAPIKey    bool   `json:"createDefaultApiKey"`
+	SignupGrantAmount      string `json:"signupGrantAmount"`
+	DefaultProjectName     string `json:"defaultProjectName"`
+	DefaultAPIKeyName      string `json:"defaultApiKeyName"`
+	RateLimitWindowSeconds int    `json:"rateLimitWindowSeconds"`
+	RateLimitMaxAttempts   int    `json:"rateLimitMaxAttempts"`
 }
 
 // GetSystemStatus returns the system initialization status.
@@ -129,6 +159,58 @@ func (h *SystemHandlers) WebhookEcho(c *gin.Context) {
 	_ = json.NewEncoder(c.Writer).Encode(resp)
 }
 
+func (h *SystemHandlers) GetRegistrationSettings(c *gin.Context) {
+	if !canReadSettings(c.Request.Context()) {
+		JSONError(c, http.StatusForbidden, errors.New("permission denied: requires read settings scope"))
+		return
+	}
+
+	settings, err := h.RegistrationService.RegistrationSettings(c.Request.Context())
+	if err != nil {
+		JSONError(c, http.StatusInternalServerError, errors.New("Failed to get registration settings"))
+		return
+	}
+
+	c.JSON(http.StatusOK, toRegistrationSettingsResponse(*settings))
+}
+
+func (h *SystemHandlers) UpdateRegistrationSettings(c *gin.Context) {
+	if !canWriteSettings(c.Request.Context()) {
+		JSONError(c, http.StatusForbidden, errors.New("permission denied: requires write settings scope"))
+		return
+	}
+
+	var req UpdateRegistrationSettingsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		JSONError(c, http.StatusBadRequest, errors.New("Invalid request format"))
+		return
+	}
+
+	settings := biz.RegistrationSettings{
+		Enabled:                req.Enabled,
+		RequireApproval:        req.RequireApproval,
+		CreateDefaultProject:   req.CreateDefaultProject,
+		CreateDefaultAPIKey:    req.CreateDefaultAPIKey,
+		SignupGrantAmount:      req.SignupGrantAmount,
+		DefaultProjectName:     req.DefaultProjectName,
+		DefaultAPIKeyName:      req.DefaultAPIKeyName,
+		RateLimitWindowSeconds: req.RateLimitWindowSeconds,
+		RateLimitMaxAttempts:   req.RateLimitMaxAttempts,
+	}
+	if err := h.RegistrationService.SetRegistrationSettings(c.Request.Context(), settings); err != nil {
+		JSONError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	saved, err := h.RegistrationService.RegistrationSettings(c.Request.Context())
+	if err != nil {
+		JSONError(c, http.StatusInternalServerError, errors.New("Failed to get registration settings"))
+		return
+	}
+
+	c.JSON(http.StatusOK, toRegistrationSettingsResponse(*saved))
+}
+
 // InitializeSystem initializes the system with owner credentials.
 func (h *SystemHandlers) InitializeSystem(c *gin.Context) {
 	var req InitializeSystemRequest
@@ -182,6 +264,38 @@ func (h *SystemHandlers) InitializeSystem(c *gin.Context) {
 		Success: true,
 		Message: "System initialized successfully",
 	})
+}
+
+func canReadSettings(ctx context.Context) bool {
+	user, ok := contexts.GetUser(ctx)
+	if ok && user != nil && user.IsOwner {
+		return true
+	}
+
+	return scopes.UserHasScope(ctx, scopes.ScopeReadSettings)
+}
+
+func canWriteSettings(ctx context.Context) bool {
+	user, ok := contexts.GetUser(ctx)
+	if ok && user != nil && user.IsOwner {
+		return true
+	}
+
+	return scopes.UserHasScope(ctx, scopes.ScopeWriteSettings)
+}
+
+func toRegistrationSettingsResponse(settings biz.RegistrationSettings) RegistrationSettingsResponse {
+	return RegistrationSettingsResponse{
+		Enabled:                settings.Enabled,
+		RequireApproval:        settings.RequireApproval,
+		CreateDefaultProject:   settings.CreateDefaultProject,
+		CreateDefaultAPIKey:    settings.CreateDefaultAPIKey,
+		SignupGrantAmount:      settings.SignupGrantAmount,
+		DefaultProjectName:     settings.DefaultProjectName,
+		DefaultAPIKeyName:      settings.DefaultAPIKeyName,
+		RateLimitWindowSeconds: settings.RateLimitWindowSeconds,
+		RateLimitMaxAttempts:   settings.RateLimitMaxAttempts,
+	}
 }
 
 // GetFavicon returns the system brand logo as favicon.
