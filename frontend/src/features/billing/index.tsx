@@ -119,6 +119,10 @@ function BillingCommercialProfilePanel({
 }) {
   const { t } = useTranslation();
   const totals = profile?.totals;
+  const topModels = profile?.topModels ?? [];
+  const topProjects = profile?.topProjects ?? [];
+  const topApiKeys = profile?.topApiKeys ?? [];
+  const recentBillingFailures = profile?.recentBillingFailures ?? [];
 
   return (
     <Card className='rounded-lg'>
@@ -184,9 +188,9 @@ function BillingCommercialProfilePanel({
         </div>
 
         <div className='grid gap-4 xl:grid-cols-3'>
-          <CommercialRankList title={t('billing.commercial.topModels')} rows={profile?.topModels ?? []} isLoading={isLoading} formatCurrency={formatCurrency} />
-          <CommercialRankList title={t('billing.commercial.topProjects')} rows={profile?.topProjects ?? []} isLoading={isLoading} formatCurrency={formatCurrency} />
-          <CommercialRankList title={t('billing.commercial.topApiKeys')} rows={profile?.topApiKeys ?? []} isLoading={isLoading} formatCurrency={formatCurrency} />
+          <CommercialRankList title={t('billing.commercial.topModels')} rows={topModels} isLoading={isLoading} formatCurrency={formatCurrency} />
+          <CommercialRankList title={t('billing.commercial.topProjects')} rows={topProjects} isLoading={isLoading} formatCurrency={formatCurrency} />
+          <CommercialRankList title={t('billing.commercial.topApiKeys')} rows={topApiKeys} isLoading={isLoading} formatCurrency={formatCurrency} />
         </div>
 
         <div className='overflow-auto rounded-md border'>
@@ -202,8 +206,8 @@ function BillingCommercialProfilePanel({
               </TableRow>
             </TableHeader>
             <TableBody>
-              <CommercialDataStateRow colSpan={6} isLoading={isLoading} isEmpty={(profile?.recentBillingFailures ?? []).length === 0} />
-              {profile?.recentBillingFailures.map((failure) => (
+              <CommercialDataStateRow colSpan={6} isLoading={isLoading} isEmpty={recentBillingFailures.length === 0} />
+              {recentBillingFailures.map((failure) => (
                 <TableRow key={failure.id}>
                   <TableCell>{formatDate(failure.createdAt)}</TableCell>
                   <TableCell className='font-mono text-xs'>{failure.modelId}</TableCell>

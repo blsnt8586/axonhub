@@ -1,13 +1,18 @@
 package gql
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"entgo.io/contrib/entgql"
+	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 
@@ -670,6 +675,112 @@ func TestBillingResolversRejectsPriceRuleManagementForNonOwner(t *testing.T) {
 	require.True(t, errors.Is(err, ErrNotOwner))
 }
 
+func TestBillingResolversUserCanPurchaseAndReadOwnSubscriptionPlan(t *testing.T) {
+	mutationResolver, _, ctx, client, owner, _ := setupBillingResolversTest(t, "billing_resolver_user_purchase_subscription")
+	defer client.Close()
+
+	ownerCtx := contexts.WithUser(ctx, owner)
+	plan, err := mutationResolver.SaveSubscriptionPlan(ownerCtx, biz.SaveSubscriptionPlanInput{
+		Name:           "Self-service plan",
+		Period:         "month",
+		PeriodDays:     30,
+		Price:          decimal.Zero,
+		Currency:       "CNY",
+		IncludedAmount: decimal.RequireFromString("20"),
+		Status:         "enabled",
+	})
+	require.NoError(t, err)
+
+	normalUser := createBillingResolverUser(t, ctx, client, false)
+	userCtx := contexts.WithUser(context.Background(), normalUser)
+
+	subscription, err := mutationResolver.PurchaseSubscriptionPlan(userCtx, biz.PurchaseSubscriptionPlanInput{PlanID: plan.ID})
+	require.NoError(t, err)
+	require.Equal(t, normalUser.ID, subscription.UserID)
+
+	reloaded, err := client.UserSubscription.Get(userCtx, subscription.ID)
+	require.NoError(t, err)
+	require.Equal(t, subscription.ID, reloaded.ID)
+
+	readablePlan, err := reloaded.QueryPlan().Only(userCtx)
+	require.NoError(t, err)
+	require.Equal(t, plan.ID, readablePlan.ID)
+}
+
+func TestBillingGraphQLUserCanPurchaseSubscriptionPlanSelection(t *testing.T) {
+	mutationResolver, _, ctx, client, owner, _ := setupBillingResolversTest(t, "billing_graphql_user_purchase_subscription")
+	defer client.Close()
+
+	ownerCtx := contexts.WithUser(ctx, owner)
+	plan, err := mutationResolver.SaveSubscriptionPlan(ownerCtx, biz.SaveSubscriptionPlanInput{
+		Name:           "GraphQL self-service plan",
+		Period:         "month",
+		PeriodDays:     30,
+		Price:          decimal.Zero,
+		Currency:       "CNY",
+		IncludedAmount: decimal.RequireFromString("20"),
+		Status:         "enabled",
+	})
+	require.NoError(t, err)
+
+	normalUser := createBillingResolverUser(t, ctx, client, false)
+	gqlSrv := handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: mutationResolver.Resolver}))
+	gqlSrv.Use(entgql.Transactioner{TxOpener: client})
+	graphQLHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gqlSrv.ServeHTTP(w, r.WithContext(contexts.WithUser(r.Context(), normalUser)))
+	})
+
+	body, err := json.Marshal(map[string]any{
+		"query": `
+			mutation PurchaseSubscriptionPlan($input: PurchaseSubscriptionPlanInput!) {
+				purchaseSubscriptionPlan(input: $input) {
+					id
+					status
+					startsAt
+					expiresAt
+					includedAmountMicros
+					usedAmountMicros
+					currency
+					plan {
+						id
+						name
+						period
+						priceMicros
+						currency
+					}
+				}
+			}`,
+		"variables": map[string]any{
+			"input": map[string]any{
+				"planId": fmt.Sprintf("gid://axonhub/%s/%d", ent.TypeSubscriptionPlan, plan.ID),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/admin/graphql", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	graphQLHandler.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var payload struct {
+		Data struct {
+			PurchaseSubscriptionPlan struct {
+				Status string `json:"status"`
+				Plan   struct {
+					Name string `json:"name"`
+				} `json:"plan"`
+			} `json:"purchaseSubscriptionPlan"`
+		} `json:"data"`
+		Errors []map[string]any `json:"errors"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Empty(t, payload.Errors, rec.Body.String())
+	require.Equal(t, "active", payload.Data.PurchaseSubscriptionPlan.Status)
+	require.Equal(t, plan.Name, payload.Data.PurchaseSubscriptionPlan.Plan.Name)
+}
+
 func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *queryResolver, context.Context, *ent.Client, *ent.User, *ent.Project) {
 	t.Helper()
 
@@ -698,6 +809,11 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 		PaymentService:      paymentSvc,
 		BillingAuditService: billingAuditSvc,
 	})
+	subscriptionSvc := biz.NewSubscriptionService(biz.SubscriptionServiceParams{
+		Ent:                   client,
+		BillingAccountService: billingAccountSvc,
+		LedgerService:         ledgerSvc,
+	})
 
 	resolver := &Resolver{
 		client:                      client,
@@ -706,6 +822,7 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 		commercialOperationsService: commercialOperationsSvc,
 		paymentService:              paymentSvc,
 		pricingService:              pricingSvc,
+		subscriptionService:         subscriptionSvc,
 	}
 
 	return &mutationResolver{resolver}, &queryResolver{resolver}, ctx, client, owner, project

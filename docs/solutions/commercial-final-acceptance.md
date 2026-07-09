@@ -2,9 +2,9 @@
 
 Date: 2026-07-09
 
-This document is the Stage 18 acceptance record for the commercial AxonHub fork.
-It verifies the added commercial modules as one product flow instead of only as
-isolated services.
+This document is the Stage 18 acceptance record for the commercial AxonHub fork,
+updated with Stage 19 browser-smoke evidence. It verifies the added commercial
+modules as one product flow instead of only as isolated services.
 
 ## Acceptance Scope
 
@@ -34,6 +34,7 @@ Stage 18 covers the production-facing commercial loop:
 | Billing admission | `internal/server/orchestrator/billing_admission_test.go` | Gateway admission denies insufficient billing state in enforce mode and preserves non-user/no-service behavior. |
 | Usage billing and aggregates | `internal/server/biz/usage_billing_test.go`, `internal/server/biz/usage_aggregate_test.go` | Usage records are charged once, project price rules override global pricing, outbox retry is repeatable, aggregates rebuild deterministically, and upstream account dimensions propagate. |
 | GraphQL authorization | `internal/server/gql/*_test.go` | Owner/user resolver boundaries and secret redaction are covered for billing and upstream account surfaces. |
+| Commercial browser smoke | `./scripts/e2e/e2e-test.sh commercial-smoke.spec.ts` | Owner billing console entry, public registration, user wallet rendering, redeem-code redemption, subscription purchase, and simulated ePay recharge are covered in Playwright. |
 | Frontend compilation | `pnpm exec tsc --noEmit`, `pnpm build` from `frontend/` | The commercial UI remains type-safe and production-buildable. |
 
 `pnpm lint` was also run during Stage 18. It failed on existing repository-wide
@@ -61,29 +62,31 @@ asserts the business contract that was easy to regress during earlier stages:
 - Aggregate rebuild can be run repeatedly through commercial maintenance with
   stable row counts.
 
-## Manual Browser Smoke Checklist
+## Browser Smoke Checklist
 
-These are acceptance steps for a running environment. They are intentionally
-listed as manual checks until a dedicated browser-smoke stage adds robust seeded
-Playwright fixtures for commercial flows.
+Stage 19 adds automated Playwright coverage for the core browser loop:
+
+- Owner opens the commercial billing console and core commercial tabs render.
+- Public registration creates a normal user.
+- The registered user signs in through API-backed credentials and opens the
+  wallet page.
+- A seeded redeem code can be redeemed from the browser.
+- A seeded subscription plan can be purchased from the browser.
+- A simulated ePay recharge returns through the payment callback and the wallet
+  page shows a paid order.
+
+The remaining manual checks are broader release checks that need real provider
+configuration, API traffic, and responsive review.
 
 User flow:
 
-- Register a new account from the public sign-up page.
-- Sign in with the registered email/password.
-- Confirm the wallet page shows balance, held amount, credit limit, and
-  available amount.
-- Create a simulated ePay recharge checkout and complete the simulated notify
-  path.
-- Redeem a valid redeem code.
 - Create or inspect the default API key.
 - Call the API with the key and confirm wallet/usage/billing data updates.
-- Purchase a subscription plan and confirm included quota is consumed before
-  wallet fallback.
+- Confirm subscription included quota is consumed before wallet fallback under a
+  real API request path.
 
 Owner flow:
 
-- Sign in as owner.
 - Inspect users, billing accounts, ledgers, usage charges, payment orders,
   payment events, price rules, providers, reports, subscriptions, redeem codes,
   account pools, switch history, and account health.
@@ -121,9 +124,9 @@ Use the project-specific production `.env` and verify that
 
 ## Residual Production Risks
 
-- Browser commercial smoke is documented but not yet automated. The existing
-  Playwright suite covers core admin surfaces, but not the complete user wallet
-  and payment loop.
+- Browser commercial smoke is now automated for the core owner/user billing
+  loop. Deeper API-traffic, mobile, and production-provider checks remain manual
+  release tasks.
 - Full frontend lint is not yet a clean release gate. Typecheck and production
   build pass, but repository-wide lint needs a separate cleanup stage.
 - Docker/PostgreSQL startup and backup/restore are still deployment acceptance
@@ -142,7 +145,8 @@ are true:
 - Backend focused tests pass.
 - Frontend typecheck and production build pass.
 - Docker/PostgreSQL stack starts and healthcheck passes.
-- Manual browser smoke checklist passes for both owner and normal user.
+- Automated commercial browser smoke passes, and remaining manual browser
+  checklist items pass for real API traffic and responsive layouts.
 - Log sampling confirms no payment secrets, upstream account secrets, or full
   API keys are emitted.
 - A database backup and rollback point exist.

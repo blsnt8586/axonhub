@@ -4886,6 +4886,9 @@ function AdminCommercialProfileSnapshot({
   const { t } = useTranslation();
   const currency = profile?.billingAccount.currency || 'CNY';
   const totals = profile?.totals;
+  const topModels = profile?.topModels ?? [];
+  const topApiKeys = profile?.topApiKeys ?? [];
+  const recentBillingFailures = profile?.recentBillingFailures ?? [];
 
   return (
     <div className='space-y-3 rounded-md border p-3'>
@@ -4902,8 +4905,8 @@ function AdminCommercialProfileSnapshot({
         <CommercialSnapshotMetric title={t('adminBilling.userDetail.failures')} value={isLoading ? '-' : String(totals?.failureCount ?? 0)} />
       </div>
       <div className='grid gap-3 xl:grid-cols-3'>
-        <MiniList title={t('adminBilling.userDetail.topModels')} isLoading={isLoading} empty={(profile?.topModels ?? []).length === 0}>
-          {profile?.topModels.map((row) => (
+        <MiniList title={t('adminBilling.userDetail.topModels')} isLoading={isLoading} empty={topModels.length === 0}>
+          {topModels.map((row) => (
             <MiniRow
               key={row.id}
               left={row.name || row.id}
@@ -4912,8 +4915,8 @@ function AdminCommercialProfileSnapshot({
             />
           ))}
         </MiniList>
-        <MiniList title={t('adminBilling.userDetail.topApiKeys')} isLoading={isLoading} empty={(profile?.topApiKeys ?? []).length === 0}>
-          {profile?.topApiKeys.map((row) => (
+        <MiniList title={t('adminBilling.userDetail.topApiKeys')} isLoading={isLoading} empty={topApiKeys.length === 0}>
+          {topApiKeys.map((row) => (
             <MiniRow
               key={row.id}
               left={row.name || row.id}
@@ -4925,9 +4928,9 @@ function AdminCommercialProfileSnapshot({
         <MiniList
           title={t('adminBilling.userDetail.billingFailures')}
           isLoading={isLoading}
-          empty={(profile?.recentBillingFailures ?? []).length === 0}
+          empty={recentBillingFailures.length === 0}
         >
-          {profile?.recentBillingFailures.map((failure) => (
+          {recentBillingFailures.map((failure) => (
             <MiniRow
               key={failure.id}
               left={failure.modelId}

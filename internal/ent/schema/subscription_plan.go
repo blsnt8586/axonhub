@@ -92,6 +92,7 @@ func (SubscriptionPlan) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
 			scopes.OwnerRule(),
+			scopes.EnabledSubscriptionPlanQueryRule(),
 			scopes.UserReadScopeRule(scopes.ScopeReadBilling),
 		},
 		Mutation: scopes.MutationPolicy{

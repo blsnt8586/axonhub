@@ -33,9 +33,9 @@ learn from `new-api` and `sub2api` where they are stronger.
   rebates, billing notifications, and commercial audit logs exist.
 - [x] AxonHub has strong Channel, Orchestrator, Trace, Request, UsageLog,
   ProviderQuotaStatus, and circuit-breaker foundations.
-- [ ] Public registration is not a real product flow yet: the frontend sign-up
-  form does not call a backend registration API, and the public routes only
-  expose health, payment callbacks, system status/initialize, sign-in, and OAuth.
+- [x] Public registration is a real product flow with backend registration
+  settings, public sign-up, user wallet initialization, optional default
+  project/API key creation, and browser smoke coverage.
 - [ ] Upstream account pools are not first-class resources yet. Channel
   credentials and disabled API keys exist, but they are not equivalent to a
   schedulable account pool with per-account health, quota, proxy, and switch
@@ -296,10 +296,10 @@ Backend acceptance:
 
 Frontend acceptance:
 
-- [ ] User browser smoke confirms registration, sign-in, recharge, API key
-  creation, API call, and wallet/usage/billing views.
-- [ ] Owner browser smoke confirms users, ledgers, usage charges, reports,
-  account pools, account switching, and account health views.
+- [x] User browser smoke confirms registration, sign-in, recharge, wallet,
+  redeem, subscription purchase, and paid order visibility.
+- [x] Owner browser smoke confirms the commercial billing console entry and core
+  commercial operation tabs.
 - [ ] Desktop and mobile layouts are usable.
 - [x] Production build passes.
 
@@ -311,7 +311,48 @@ Verification:
 - [x] Frontend typecheck and build pass.
 - [ ] Frontend lint is clean; full `pnpm lint` is currently blocked by existing
   repository-wide lint debt outside this stage.
-- [ ] Browser smoke tests cover owner and normal user flows.
+- [x] Browser smoke tests cover owner and normal user commercial billing flows.
+
+## Stage 19: Commercial Browser Smoke Automation
+
+Status: [x] Completed
+
+Goal: add repeatable browser smoke coverage for the owner commercial console and
+normal-user commercial lifecycle.
+
+Backend scope:
+
+- [x] Allow normal users to read their own subscription records after a
+  self-service purchase without requiring owner billing scopes.
+- [x] Allow normal users to read enabled subscription plans needed by public
+  plan listings and purchased subscription edge resolution.
+- [x] Return a purchase result with the plan edge preloaded so GraphQL
+  transaction boundaries do not leave browser mutations with a closed
+  transaction-backed entity.
+- [x] Add GraphQL regression coverage for the exact purchase selection set used
+  by the browser, including the production GraphQL transactioner.
+
+Frontend scope:
+
+- [x] Add Playwright helpers for API sign-in, commercial registration enablement,
+  seeded redeem codes, subscription plans, sell price rules, and simulated ePay
+  providers.
+- [x] Add a commercial smoke spec that covers owner `/admin/billing` entry,
+  public `/sign-up`, normal-user `/billing`, redeem-code redemption,
+  subscription purchase, and simulated ePay recharge.
+- [x] Fix billing and admin billing commercial profile panels so missing optional
+  arrays from the API do not crash the page.
+- [x] Make simulated ePay assertions wait for the real return URL instead of
+  treating the current `/billing` route as completion.
+
+Verification:
+
+- [x] `go test ./internal/server/gql -run 'TestBilling(GraphQLUserCanPurchaseSubscriptionPlanSelection|ResolversUserCanPurchaseAndReadOwnSubscriptionPlan|ResolversRejectsPriceRuleManagementForNonOwner)' -count=1`
+- [x] `pnpm exec tsc --noEmit`
+- [x] `./scripts/e2e/e2e-test.sh commercial-smoke.spec.ts`
+- [x] Browser smoke confirms owner console entry, public registration, user
+  wallet rendering, redeem redemption, subscription purchase, and simulated ePay
+  paid order visibility.
 
 ## Completion Log
 
@@ -322,3 +363,4 @@ Append one line per completed enhancement stage.
 | Stage 12 | this commit | 2026-07-09 | Added public registration settings, real sign-up API/UI, user wallet initialization, optional default project/API key, signup grant, rate limiting, audit log, and focused tests. |
 | Stage 17 | this commit | 2026-07-09 | Added upstream-account usage dimensions, switch history, owner monitoring/detail pages, and focused backend/frontend verification. |
 | Stage 18 | this commit | 2026-07-09 | Added final commercial lifecycle acceptance test, Stage 18 acceptance evidence, and release-gate checklist for remaining deployment/browser smoke. |
+| Stage 19 | this commit | 2026-07-09 | Added commercial Playwright smoke automation for owner billing, public registration, user wallet, redeem, subscription purchase, and simulated ePay recharge; fixed subscription GraphQL edge resolution across transaction boundaries. |

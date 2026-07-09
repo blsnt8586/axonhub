@@ -356,7 +356,14 @@ func (s *SubscriptionService) PurchasePlan(ctx context.Context, input PurchaseSu
 		return nil, err
 	}
 
-	return created, nil
+	if created == nil {
+		return nil, fmt.Errorf("subscription purchase did not create a subscription")
+	}
+
+	return s.entFromContext(ctx).UserSubscription.Query().
+		Where(usersubscription.IDEQ(created.ID)).
+		WithPlan().
+		Only(ctx)
 }
 
 func (s *SubscriptionService) AdminAssign(ctx context.Context, input AdminAssignSubscriptionInput) (*ent.UserSubscription, error) {
