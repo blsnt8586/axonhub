@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -85,6 +87,25 @@ type AddUserToProjectInput struct {
 	IsOwner   *bool           `json:"isOwner,omitempty"`
 	Scopes    []string        `json:"scopes,omitempty"`
 	RoleIDs   []*objects.GUID `json:"roleIDs,omitempty"`
+}
+
+type AdminAffiliateInvitationsFilter struct {
+	InviterUserID *int                        `json:"inviterUserId,omitempty"`
+	InviteeUserID *int                        `json:"inviteeUserId,omitempty"`
+	Status        *affiliateinvitation.Status `json:"status,omitempty"`
+	InviteCode    *string                     `json:"inviteCode,omitempty"`
+	From          *time.Time                  `json:"from,omitempty"`
+	To            *time.Time                  `json:"to,omitempty"`
+}
+
+type AdminAffiliateRebatesFilter struct {
+	InviterUserID      *int                        `json:"inviterUserId,omitempty"`
+	InviteeUserID      *int                        `json:"inviteeUserId,omitempty"`
+	SourceType         *affiliaterebate.SourceType `json:"sourceType,omitempty"`
+	Status             *affiliaterebate.Status     `json:"status,omitempty"`
+	From               *time.Time                  `json:"from,omitempty"`
+	To                 *time.Time                  `json:"to,omitempty"`
+	TransferableBefore *time.Time                  `json:"transferableBefore,omitempty"`
 }
 
 type AdminBillingHoldsFilter struct {

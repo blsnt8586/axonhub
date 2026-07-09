@@ -70,15 +70,25 @@ type UserEdges struct {
 	AssignedUserSubscriptions []*UserSubscription `json:"assigned_user_subscriptions,omitempty"`
 	// PromoUsages holds the value of the promo_usages edge.
 	PromoUsages []*PromoUsage `json:"promo_usages,omitempty"`
+	// AffiliateProfiles holds the value of the affiliate_profiles edge.
+	AffiliateProfiles []*AffiliateProfile `json:"affiliate_profiles,omitempty"`
+	// AffiliateInviters holds the value of the affiliate_inviters edge.
+	AffiliateInviters []*AffiliateInvitation `json:"affiliate_inviters,omitempty"`
+	// AffiliateInvitees holds the value of the affiliate_invitees edge.
+	AffiliateInvitees []*AffiliateInvitation `json:"affiliate_invitees,omitempty"`
+	// AffiliateRebatesEarned holds the value of the affiliate_rebates_earned edge.
+	AffiliateRebatesEarned []*AffiliateRebate `json:"affiliate_rebates_earned,omitempty"`
+	// AffiliateRebatesGenerated holds the value of the affiliate_rebates_generated edge.
+	AffiliateRebatesGenerated []*AffiliateRebate `json:"affiliate_rebates_generated,omitempty"`
 	// ProjectUsers holds the value of the project_users edge.
 	ProjectUsers []*UserProject `json:"project_users,omitempty"`
 	// UserRoles holds the value of the user_roles edge.
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [12]bool
+	loadedTypes [17]bool
 	// totalCount holds the count of the edges above.
-	totalCount [12]map[string]int
+	totalCount [17]map[string]int
 
 	namedProjects                  map[string][]*Project
 	namedAPIKeys                   map[string][]*APIKey
@@ -90,6 +100,11 @@ type UserEdges struct {
 	namedUserSubscriptions         map[string][]*UserSubscription
 	namedAssignedUserSubscriptions map[string][]*UserSubscription
 	namedPromoUsages               map[string][]*PromoUsage
+	namedAffiliateProfiles         map[string][]*AffiliateProfile
+	namedAffiliateInviters         map[string][]*AffiliateInvitation
+	namedAffiliateInvitees         map[string][]*AffiliateInvitation
+	namedAffiliateRebatesEarned    map[string][]*AffiliateRebate
+	namedAffiliateRebatesGenerated map[string][]*AffiliateRebate
 	namedProjectUsers              map[string][]*UserProject
 	namedUserRoles                 map[string][]*UserRole
 }
@@ -184,10 +199,55 @@ func (e UserEdges) PromoUsagesOrErr() ([]*PromoUsage, error) {
 	return nil, &NotLoadedError{edge: "promo_usages"}
 }
 
+// AffiliateProfilesOrErr returns the AffiliateProfiles value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AffiliateProfilesOrErr() ([]*AffiliateProfile, error) {
+	if e.loadedTypes[10] {
+		return e.AffiliateProfiles, nil
+	}
+	return nil, &NotLoadedError{edge: "affiliate_profiles"}
+}
+
+// AffiliateInvitersOrErr returns the AffiliateInviters value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AffiliateInvitersOrErr() ([]*AffiliateInvitation, error) {
+	if e.loadedTypes[11] {
+		return e.AffiliateInviters, nil
+	}
+	return nil, &NotLoadedError{edge: "affiliate_inviters"}
+}
+
+// AffiliateInviteesOrErr returns the AffiliateInvitees value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AffiliateInviteesOrErr() ([]*AffiliateInvitation, error) {
+	if e.loadedTypes[12] {
+		return e.AffiliateInvitees, nil
+	}
+	return nil, &NotLoadedError{edge: "affiliate_invitees"}
+}
+
+// AffiliateRebatesEarnedOrErr returns the AffiliateRebatesEarned value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AffiliateRebatesEarnedOrErr() ([]*AffiliateRebate, error) {
+	if e.loadedTypes[13] {
+		return e.AffiliateRebatesEarned, nil
+	}
+	return nil, &NotLoadedError{edge: "affiliate_rebates_earned"}
+}
+
+// AffiliateRebatesGeneratedOrErr returns the AffiliateRebatesGenerated value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AffiliateRebatesGeneratedOrErr() ([]*AffiliateRebate, error) {
+	if e.loadedTypes[14] {
+		return e.AffiliateRebatesGenerated, nil
+	}
+	return nil, &NotLoadedError{edge: "affiliate_rebates_generated"}
+}
+
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[10] {
+	if e.loadedTypes[15] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -196,7 +256,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[11] {
+	if e.loadedTypes[16] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -373,6 +433,31 @@ func (_m *User) QueryAssignedUserSubscriptions() *UserSubscriptionQuery {
 // QueryPromoUsages queries the "promo_usages" edge of the User entity.
 func (_m *User) QueryPromoUsages() *PromoUsageQuery {
 	return NewUserClient(_m.config).QueryPromoUsages(_m)
+}
+
+// QueryAffiliateProfiles queries the "affiliate_profiles" edge of the User entity.
+func (_m *User) QueryAffiliateProfiles() *AffiliateProfileQuery {
+	return NewUserClient(_m.config).QueryAffiliateProfiles(_m)
+}
+
+// QueryAffiliateInviters queries the "affiliate_inviters" edge of the User entity.
+func (_m *User) QueryAffiliateInviters() *AffiliateInvitationQuery {
+	return NewUserClient(_m.config).QueryAffiliateInviters(_m)
+}
+
+// QueryAffiliateInvitees queries the "affiliate_invitees" edge of the User entity.
+func (_m *User) QueryAffiliateInvitees() *AffiliateInvitationQuery {
+	return NewUserClient(_m.config).QueryAffiliateInvitees(_m)
+}
+
+// QueryAffiliateRebatesEarned queries the "affiliate_rebates_earned" edge of the User entity.
+func (_m *User) QueryAffiliateRebatesEarned() *AffiliateRebateQuery {
+	return NewUserClient(_m.config).QueryAffiliateRebatesEarned(_m)
+}
+
+// QueryAffiliateRebatesGenerated queries the "affiliate_rebates_generated" edge of the User entity.
+func (_m *User) QueryAffiliateRebatesGenerated() *AffiliateRebateQuery {
+	return NewUserClient(_m.config).QueryAffiliateRebatesGenerated(_m)
 }
 
 // QueryProjectUsers queries the "project_users" edge of the User entity.
@@ -683,6 +768,126 @@ func (_m *User) appendNamedPromoUsages(name string, edges ...*PromoUsage) {
 		_m.Edges.namedPromoUsages[name] = []*PromoUsage{}
 	} else {
 		_m.Edges.namedPromoUsages[name] = append(_m.Edges.namedPromoUsages[name], edges...)
+	}
+}
+
+// NamedAffiliateProfiles returns the AffiliateProfiles named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedAffiliateProfiles(name string) ([]*AffiliateProfile, error) {
+	if _m.Edges.namedAffiliateProfiles == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAffiliateProfiles[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedAffiliateProfiles(name string, edges ...*AffiliateProfile) {
+	if _m.Edges.namedAffiliateProfiles == nil {
+		_m.Edges.namedAffiliateProfiles = make(map[string][]*AffiliateProfile)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAffiliateProfiles[name] = []*AffiliateProfile{}
+	} else {
+		_m.Edges.namedAffiliateProfiles[name] = append(_m.Edges.namedAffiliateProfiles[name], edges...)
+	}
+}
+
+// NamedAffiliateInviters returns the AffiliateInviters named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedAffiliateInviters(name string) ([]*AffiliateInvitation, error) {
+	if _m.Edges.namedAffiliateInviters == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAffiliateInviters[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedAffiliateInviters(name string, edges ...*AffiliateInvitation) {
+	if _m.Edges.namedAffiliateInviters == nil {
+		_m.Edges.namedAffiliateInviters = make(map[string][]*AffiliateInvitation)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAffiliateInviters[name] = []*AffiliateInvitation{}
+	} else {
+		_m.Edges.namedAffiliateInviters[name] = append(_m.Edges.namedAffiliateInviters[name], edges...)
+	}
+}
+
+// NamedAffiliateInvitees returns the AffiliateInvitees named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedAffiliateInvitees(name string) ([]*AffiliateInvitation, error) {
+	if _m.Edges.namedAffiliateInvitees == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAffiliateInvitees[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedAffiliateInvitees(name string, edges ...*AffiliateInvitation) {
+	if _m.Edges.namedAffiliateInvitees == nil {
+		_m.Edges.namedAffiliateInvitees = make(map[string][]*AffiliateInvitation)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAffiliateInvitees[name] = []*AffiliateInvitation{}
+	} else {
+		_m.Edges.namedAffiliateInvitees[name] = append(_m.Edges.namedAffiliateInvitees[name], edges...)
+	}
+}
+
+// NamedAffiliateRebatesEarned returns the AffiliateRebatesEarned named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedAffiliateRebatesEarned(name string) ([]*AffiliateRebate, error) {
+	if _m.Edges.namedAffiliateRebatesEarned == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAffiliateRebatesEarned[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedAffiliateRebatesEarned(name string, edges ...*AffiliateRebate) {
+	if _m.Edges.namedAffiliateRebatesEarned == nil {
+		_m.Edges.namedAffiliateRebatesEarned = make(map[string][]*AffiliateRebate)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAffiliateRebatesEarned[name] = []*AffiliateRebate{}
+	} else {
+		_m.Edges.namedAffiliateRebatesEarned[name] = append(_m.Edges.namedAffiliateRebatesEarned[name], edges...)
+	}
+}
+
+// NamedAffiliateRebatesGenerated returns the AffiliateRebatesGenerated named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedAffiliateRebatesGenerated(name string) ([]*AffiliateRebate, error) {
+	if _m.Edges.namedAffiliateRebatesGenerated == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAffiliateRebatesGenerated[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedAffiliateRebatesGenerated(name string, edges ...*AffiliateRebate) {
+	if _m.Edges.namedAffiliateRebatesGenerated == nil {
+		_m.Edges.namedAffiliateRebatesGenerated = make(map[string][]*AffiliateRebate)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAffiliateRebatesGenerated[name] = []*AffiliateRebate{}
+	} else {
+		_m.Edges.namedAffiliateRebatesGenerated[name] = append(_m.Edges.namedAffiliateRebatesGenerated[name], edges...)
 	}
 }
 

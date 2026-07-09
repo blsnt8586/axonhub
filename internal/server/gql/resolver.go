@@ -51,6 +51,7 @@ type Resolver struct {
 	paymentService                 *biz.PaymentService
 	pricingService                 *biz.PricingService
 	promoCodeService               *biz.PromoCodeService
+	affiliateService               *biz.AffiliateService
 	redeemCodeService              *biz.RedeemCodeService
 	subscriptionService            *biz.SubscriptionService
 	scheduler                      *scheduler.Scheduler
@@ -93,6 +94,7 @@ func NewSchema(
 	paymentService *biz.PaymentService,
 	pricingService *biz.PricingService,
 	promoCodeService *biz.PromoCodeService,
+	affiliateService *biz.AffiliateService,
 	redeemCodeService *biz.RedeemCodeService,
 	subscriptionService *biz.SubscriptionService,
 	scheduler *scheduler.Scheduler,
@@ -134,6 +136,7 @@ func NewSchema(
 			paymentService:                 paymentService,
 			pricingService:                 pricingService,
 			promoCodeService:               promoCodeService,
+			affiliateService:               affiliateService,
 			redeemCodeService:              redeemCodeService,
 			subscriptionService:            subscriptionService,
 			scheduler:                      scheduler,

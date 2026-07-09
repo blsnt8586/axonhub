@@ -34,6 +34,7 @@ type PaymentServiceParams struct {
 	LedgerService         *LedgerService
 	ProviderRegistry      *PaymentProviderRegistry
 	PromoCodeService      *PromoCodeService `optional:"true"`
+	AffiliateService      *AffiliateService `optional:"true"`
 }
 
 type PaymentService struct {
@@ -43,6 +44,7 @@ type PaymentService struct {
 	ledgerService         *LedgerService
 	providerRegistry      *PaymentProviderRegistry
 	promoCodeService      *PromoCodeService
+	affiliateService      *AffiliateService
 }
 
 func NewPaymentService(params PaymentServiceParams) *PaymentService {
@@ -52,6 +54,7 @@ func NewPaymentService(params PaymentServiceParams) *PaymentService {
 		ledgerService:         params.LedgerService,
 		providerRegistry:      params.ProviderRegistry,
 		promoCodeService:      params.PromoCodeService,
+		affiliateService:      params.AffiliateService,
 	}
 }
 
@@ -1146,6 +1149,11 @@ func (s *PaymentService) confirmPaidOrder(ctx context.Context, input confirmPaid
 				Save(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to apply payment promo usage: %w", err)
+			}
+		}
+		if s.affiliateService != nil {
+			if _, err := s.affiliateService.CreateRebateForPaymentOrder(ctx, paidOrder); err != nil {
+				return err
 			}
 		}
 

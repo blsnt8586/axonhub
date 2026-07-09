@@ -16,6 +16,14 @@ type Tx struct {
 	APIKey *APIKeyClient
 	// APIKeyProfileTemplate is the client for interacting with the APIKeyProfileTemplate builders.
 	APIKeyProfileTemplate *APIKeyProfileTemplateClient
+	// AffiliateInvitation is the client for interacting with the AffiliateInvitation builders.
+	AffiliateInvitation *AffiliateInvitationClient
+	// AffiliateProfile is the client for interacting with the AffiliateProfile builders.
+	AffiliateProfile *AffiliateProfileClient
+	// AffiliateRebate is the client for interacting with the AffiliateRebate builders.
+	AffiliateRebate *AffiliateRebateClient
+	// AffiliateSetting is the client for interacting with the AffiliateSetting builders.
+	AffiliateSetting *AffiliateSettingClient
 	// BillingAccount is the client for interacting with the BillingAccount builders.
 	BillingAccount *BillingAccountClient
 	// BillingAccountBinding is the client for interacting with the BillingAccountBinding builders.
@@ -225,6 +233,10 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.APIKey = NewAPIKeyClient(tx.config)
 	tx.APIKeyProfileTemplate = NewAPIKeyProfileTemplateClient(tx.config)
+	tx.AffiliateInvitation = NewAffiliateInvitationClient(tx.config)
+	tx.AffiliateProfile = NewAffiliateProfileClient(tx.config)
+	tx.AffiliateRebate = NewAffiliateRebateClient(tx.config)
+	tx.AffiliateSetting = NewAffiliateSettingClient(tx.config)
 	tx.BillingAccount = NewBillingAccountClient(tx.config)
 	tx.BillingAccountBinding = NewBillingAccountBindingClient(tx.config)
 	tx.BillingHold = NewBillingHoldClient(tx.config)

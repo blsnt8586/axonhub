@@ -13,6 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
@@ -44,6 +47,11 @@ type UserQuery struct {
 	withUserSubscriptions              *UserSubscriptionQuery
 	withAssignedUserSubscriptions      *UserSubscriptionQuery
 	withPromoUsages                    *PromoUsageQuery
+	withAffiliateProfiles              *AffiliateProfileQuery
+	withAffiliateInviters              *AffiliateInvitationQuery
+	withAffiliateInvitees              *AffiliateInvitationQuery
+	withAffiliateRebatesEarned         *AffiliateRebateQuery
+	withAffiliateRebatesGenerated      *AffiliateRebateQuery
 	withProjectUsers                   *UserProjectQuery
 	withUserRoles                      *UserRoleQuery
 	loadTotal                          []func(context.Context, []*User) error
@@ -58,6 +66,11 @@ type UserQuery struct {
 	withNamedUserSubscriptions         map[string]*UserSubscriptionQuery
 	withNamedAssignedUserSubscriptions map[string]*UserSubscriptionQuery
 	withNamedPromoUsages               map[string]*PromoUsageQuery
+	withNamedAffiliateProfiles         map[string]*AffiliateProfileQuery
+	withNamedAffiliateInviters         map[string]*AffiliateInvitationQuery
+	withNamedAffiliateInvitees         map[string]*AffiliateInvitationQuery
+	withNamedAffiliateRebatesEarned    map[string]*AffiliateRebateQuery
+	withNamedAffiliateRebatesGenerated map[string]*AffiliateRebateQuery
 	withNamedProjectUsers              map[string]*UserProjectQuery
 	withNamedUserRoles                 map[string]*UserRoleQuery
 	// intermediate query (i.e. traversal path).
@@ -316,6 +329,116 @@ func (_q *UserQuery) QueryPromoUsages() *PromoUsageQuery {
 	return query
 }
 
+// QueryAffiliateProfiles chains the current query on the "affiliate_profiles" edge.
+func (_q *UserQuery) QueryAffiliateProfiles() *AffiliateProfileQuery {
+	query := (&AffiliateProfileClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(affiliateprofile.Table, affiliateprofile.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateProfilesTable, user.AffiliateProfilesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAffiliateInviters chains the current query on the "affiliate_inviters" edge.
+func (_q *UserQuery) QueryAffiliateInviters() *AffiliateInvitationQuery {
+	query := (&AffiliateInvitationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(affiliateinvitation.Table, affiliateinvitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateInvitersTable, user.AffiliateInvitersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAffiliateInvitees chains the current query on the "affiliate_invitees" edge.
+func (_q *UserQuery) QueryAffiliateInvitees() *AffiliateInvitationQuery {
+	query := (&AffiliateInvitationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(affiliateinvitation.Table, affiliateinvitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateInviteesTable, user.AffiliateInviteesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAffiliateRebatesEarned chains the current query on the "affiliate_rebates_earned" edge.
+func (_q *UserQuery) QueryAffiliateRebatesEarned() *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateRebatesEarnedTable, user.AffiliateRebatesEarnedColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAffiliateRebatesGenerated chains the current query on the "affiliate_rebates_generated" edge.
+func (_q *UserQuery) QueryAffiliateRebatesGenerated() *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateRebatesGeneratedTable, user.AffiliateRebatesGeneratedColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryProjectUsers chains the current query on the "project_users" edge.
 func (_q *UserQuery) QueryProjectUsers() *UserProjectQuery {
 	query := (&UserProjectClient{config: _q.config}).Query()
@@ -562,6 +685,11 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withUserSubscriptions:         _q.withUserSubscriptions.Clone(),
 		withAssignedUserSubscriptions: _q.withAssignedUserSubscriptions.Clone(),
 		withPromoUsages:               _q.withPromoUsages.Clone(),
+		withAffiliateProfiles:         _q.withAffiliateProfiles.Clone(),
+		withAffiliateInviters:         _q.withAffiliateInviters.Clone(),
+		withAffiliateInvitees:         _q.withAffiliateInvitees.Clone(),
+		withAffiliateRebatesEarned:    _q.withAffiliateRebatesEarned.Clone(),
+		withAffiliateRebatesGenerated: _q.withAffiliateRebatesGenerated.Clone(),
 		withProjectUsers:              _q.withProjectUsers.Clone(),
 		withUserRoles:                 _q.withUserRoles.Clone(),
 		// clone intermediate query.
@@ -681,6 +809,61 @@ func (_q *UserQuery) WithPromoUsages(opts ...func(*PromoUsageQuery)) *UserQuery 
 	return _q
 }
 
+// WithAffiliateProfiles tells the query-builder to eager-load the nodes that are connected to
+// the "affiliate_profiles" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithAffiliateProfiles(opts ...func(*AffiliateProfileQuery)) *UserQuery {
+	query := (&AffiliateProfileClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAffiliateProfiles = query
+	return _q
+}
+
+// WithAffiliateInviters tells the query-builder to eager-load the nodes that are connected to
+// the "affiliate_inviters" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithAffiliateInviters(opts ...func(*AffiliateInvitationQuery)) *UserQuery {
+	query := (&AffiliateInvitationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAffiliateInviters = query
+	return _q
+}
+
+// WithAffiliateInvitees tells the query-builder to eager-load the nodes that are connected to
+// the "affiliate_invitees" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithAffiliateInvitees(opts ...func(*AffiliateInvitationQuery)) *UserQuery {
+	query := (&AffiliateInvitationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAffiliateInvitees = query
+	return _q
+}
+
+// WithAffiliateRebatesEarned tells the query-builder to eager-load the nodes that are connected to
+// the "affiliate_rebates_earned" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithAffiliateRebatesEarned(opts ...func(*AffiliateRebateQuery)) *UserQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAffiliateRebatesEarned = query
+	return _q
+}
+
+// WithAffiliateRebatesGenerated tells the query-builder to eager-load the nodes that are connected to
+// the "affiliate_rebates_generated" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithAffiliateRebatesGenerated(opts ...func(*AffiliateRebateQuery)) *UserQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAffiliateRebatesGenerated = query
+	return _q
+}
+
 // WithProjectUsers tells the query-builder to eager-load the nodes that are connected to
 // the "project_users" edge. The optional arguments are used to configure the query builder of the edge.
 func (_q *UserQuery) WithProjectUsers(opts ...func(*UserProjectQuery)) *UserQuery {
@@ -787,7 +970,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [12]bool{
+		loadedTypes = [17]bool{
 			_q.withProjects != nil,
 			_q.withAPIKeys != nil,
 			_q.withRoles != nil,
@@ -798,6 +981,11 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withUserSubscriptions != nil,
 			_q.withAssignedUserSubscriptions != nil,
 			_q.withPromoUsages != nil,
+			_q.withAffiliateProfiles != nil,
+			_q.withAffiliateInviters != nil,
+			_q.withAffiliateInvitees != nil,
+			_q.withAffiliateRebatesEarned != nil,
+			_q.withAffiliateRebatesGenerated != nil,
 			_q.withProjectUsers != nil,
 			_q.withUserRoles != nil,
 		}
@@ -897,6 +1085,49 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withAffiliateProfiles; query != nil {
+		if err := _q.loadAffiliateProfiles(ctx, query, nodes,
+			func(n *User) { n.Edges.AffiliateProfiles = []*AffiliateProfile{} },
+			func(n *User, e *AffiliateProfile) { n.Edges.AffiliateProfiles = append(n.Edges.AffiliateProfiles, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAffiliateInviters; query != nil {
+		if err := _q.loadAffiliateInviters(ctx, query, nodes,
+			func(n *User) { n.Edges.AffiliateInviters = []*AffiliateInvitation{} },
+			func(n *User, e *AffiliateInvitation) {
+				n.Edges.AffiliateInviters = append(n.Edges.AffiliateInviters, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAffiliateInvitees; query != nil {
+		if err := _q.loadAffiliateInvitees(ctx, query, nodes,
+			func(n *User) { n.Edges.AffiliateInvitees = []*AffiliateInvitation{} },
+			func(n *User, e *AffiliateInvitation) {
+				n.Edges.AffiliateInvitees = append(n.Edges.AffiliateInvitees, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAffiliateRebatesEarned; query != nil {
+		if err := _q.loadAffiliateRebatesEarned(ctx, query, nodes,
+			func(n *User) { n.Edges.AffiliateRebatesEarned = []*AffiliateRebate{} },
+			func(n *User, e *AffiliateRebate) {
+				n.Edges.AffiliateRebatesEarned = append(n.Edges.AffiliateRebatesEarned, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAffiliateRebatesGenerated; query != nil {
+		if err := _q.loadAffiliateRebatesGenerated(ctx, query, nodes,
+			func(n *User) { n.Edges.AffiliateRebatesGenerated = []*AffiliateRebate{} },
+			func(n *User, e *AffiliateRebate) {
+				n.Edges.AffiliateRebatesGenerated = append(n.Edges.AffiliateRebatesGenerated, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withProjectUsers; query != nil {
 		if err := _q.loadProjectUsers(ctx, query, nodes,
 			func(n *User) { n.Edges.ProjectUsers = []*UserProject{} },
@@ -978,6 +1209,41 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadPromoUsages(ctx, query, nodes,
 			func(n *User) { n.appendNamedPromoUsages(name) },
 			func(n *User, e *PromoUsage) { n.appendNamedPromoUsages(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAffiliateProfiles {
+		if err := _q.loadAffiliateProfiles(ctx, query, nodes,
+			func(n *User) { n.appendNamedAffiliateProfiles(name) },
+			func(n *User, e *AffiliateProfile) { n.appendNamedAffiliateProfiles(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAffiliateInviters {
+		if err := _q.loadAffiliateInviters(ctx, query, nodes,
+			func(n *User) { n.appendNamedAffiliateInviters(name) },
+			func(n *User, e *AffiliateInvitation) { n.appendNamedAffiliateInviters(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAffiliateInvitees {
+		if err := _q.loadAffiliateInvitees(ctx, query, nodes,
+			func(n *User) { n.appendNamedAffiliateInvitees(name) },
+			func(n *User, e *AffiliateInvitation) { n.appendNamedAffiliateInvitees(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAffiliateRebatesEarned {
+		if err := _q.loadAffiliateRebatesEarned(ctx, query, nodes,
+			func(n *User) { n.appendNamedAffiliateRebatesEarned(name) },
+			func(n *User, e *AffiliateRebate) { n.appendNamedAffiliateRebatesEarned(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAffiliateRebatesGenerated {
+		if err := _q.loadAffiliateRebatesGenerated(ctx, query, nodes,
+			func(n *User) { n.appendNamedAffiliateRebatesGenerated(name) },
+			func(n *User, e *AffiliateRebate) { n.appendNamedAffiliateRebatesGenerated(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1374,6 +1640,156 @@ func (_q *UserQuery) loadPromoUsages(ctx context.Context, query *PromoUsageQuery
 	}
 	return nil
 }
+func (_q *UserQuery) loadAffiliateProfiles(ctx context.Context, query *AffiliateProfileQuery, nodes []*User, init func(*User), assign func(*User, *AffiliateProfile)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(affiliateprofile.FieldUserID)
+	}
+	query.Where(predicate.AffiliateProfile(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AffiliateProfilesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadAffiliateInviters(ctx context.Context, query *AffiliateInvitationQuery, nodes []*User, init func(*User), assign func(*User, *AffiliateInvitation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(affiliateinvitation.FieldInviterUserID)
+	}
+	query.Where(predicate.AffiliateInvitation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AffiliateInvitersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.InviterUserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "inviter_user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadAffiliateInvitees(ctx context.Context, query *AffiliateInvitationQuery, nodes []*User, init func(*User), assign func(*User, *AffiliateInvitation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(affiliateinvitation.FieldInviteeUserID)
+	}
+	query.Where(predicate.AffiliateInvitation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AffiliateInviteesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.InviteeUserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "invitee_user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadAffiliateRebatesEarned(ctx context.Context, query *AffiliateRebateQuery, nodes []*User, init func(*User), assign func(*User, *AffiliateRebate)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(affiliaterebate.FieldInviterUserID)
+	}
+	query.Where(predicate.AffiliateRebate(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AffiliateRebatesEarnedColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.InviterUserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "inviter_user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadAffiliateRebatesGenerated(ctx context.Context, query *AffiliateRebateQuery, nodes []*User, init func(*User), assign func(*User, *AffiliateRebate)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(affiliaterebate.FieldInviteeUserID)
+	}
+	query.Where(predicate.AffiliateRebate(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AffiliateRebatesGeneratedColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.InviteeUserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "invitee_user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *UserQuery) loadProjectUsers(ctx context.Context, query *UserProjectQuery, nodes []*User, init func(*User), assign func(*User, *UserProject)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -1665,6 +2081,76 @@ func (_q *UserQuery) WithNamedPromoUsages(name string, opts ...func(*PromoUsageQ
 		_q.withNamedPromoUsages = make(map[string]*PromoUsageQuery)
 	}
 	_q.withNamedPromoUsages[name] = query
+	return _q
+}
+
+// WithNamedAffiliateProfiles tells the query-builder to eager-load the nodes that are connected to the "affiliate_profiles"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedAffiliateProfiles(name string, opts ...func(*AffiliateProfileQuery)) *UserQuery {
+	query := (&AffiliateProfileClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAffiliateProfiles == nil {
+		_q.withNamedAffiliateProfiles = make(map[string]*AffiliateProfileQuery)
+	}
+	_q.withNamedAffiliateProfiles[name] = query
+	return _q
+}
+
+// WithNamedAffiliateInviters tells the query-builder to eager-load the nodes that are connected to the "affiliate_inviters"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedAffiliateInviters(name string, opts ...func(*AffiliateInvitationQuery)) *UserQuery {
+	query := (&AffiliateInvitationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAffiliateInviters == nil {
+		_q.withNamedAffiliateInviters = make(map[string]*AffiliateInvitationQuery)
+	}
+	_q.withNamedAffiliateInviters[name] = query
+	return _q
+}
+
+// WithNamedAffiliateInvitees tells the query-builder to eager-load the nodes that are connected to the "affiliate_invitees"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedAffiliateInvitees(name string, opts ...func(*AffiliateInvitationQuery)) *UserQuery {
+	query := (&AffiliateInvitationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAffiliateInvitees == nil {
+		_q.withNamedAffiliateInvitees = make(map[string]*AffiliateInvitationQuery)
+	}
+	_q.withNamedAffiliateInvitees[name] = query
+	return _q
+}
+
+// WithNamedAffiliateRebatesEarned tells the query-builder to eager-load the nodes that are connected to the "affiliate_rebates_earned"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedAffiliateRebatesEarned(name string, opts ...func(*AffiliateRebateQuery)) *UserQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAffiliateRebatesEarned == nil {
+		_q.withNamedAffiliateRebatesEarned = make(map[string]*AffiliateRebateQuery)
+	}
+	_q.withNamedAffiliateRebatesEarned[name] = query
+	return _q
+}
+
+// WithNamedAffiliateRebatesGenerated tells the query-builder to eager-load the nodes that are connected to the "affiliate_rebates_generated"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedAffiliateRebatesGenerated(name string, opts ...func(*AffiliateRebateQuery)) *UserQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAffiliateRebatesGenerated == nil {
+		_q.withNamedAffiliateRebatesGenerated = make(map[string]*AffiliateRebateQuery)
+	}
+	_q.withNamedAffiliateRebatesGenerated[name] = query
 	return _q
 }
 

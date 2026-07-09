@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
@@ -304,6 +305,21 @@ func (_u *PaymentOrderUpdate) AddPaymentEvents(v ...*PaymentEvent) *PaymentOrder
 	return _u.AddPaymentEventIDs(ids...)
 }
 
+// AddAffiliateRebateIDs adds the "affiliate_rebates" edge to the AffiliateRebate entity by IDs.
+func (_u *PaymentOrderUpdate) AddAffiliateRebateIDs(ids ...int) *PaymentOrderUpdate {
+	_u.mutation.AddAffiliateRebateIDs(ids...)
+	return _u
+}
+
+// AddAffiliateRebates adds the "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_u *PaymentOrderUpdate) AddAffiliateRebates(v ...*AffiliateRebate) *PaymentOrderUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateRebateIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -355,6 +371,27 @@ func (_u *PaymentOrderUpdate) RemovePaymentEvents(v ...*PaymentEvent) *PaymentOr
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePaymentEventIDs(ids...)
+}
+
+// ClearAffiliateRebates clears all "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_u *PaymentOrderUpdate) ClearAffiliateRebates() *PaymentOrderUpdate {
+	_u.mutation.ClearAffiliateRebates()
+	return _u
+}
+
+// RemoveAffiliateRebateIDs removes the "affiliate_rebates" edge to AffiliateRebate entities by IDs.
+func (_u *PaymentOrderUpdate) RemoveAffiliateRebateIDs(ids ...int) *PaymentOrderUpdate {
+	_u.mutation.RemoveAffiliateRebateIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateRebates removes "affiliate_rebates" edges to AffiliateRebate entities.
+func (_u *PaymentOrderUpdate) RemoveAffiliateRebates(v ...*AffiliateRebate) *PaymentOrderUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateRebateIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -612,6 +649,51 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentevent.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateRebatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AffiliateRebatesTable,
+			Columns: []string{paymentorder.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateRebatesIDs(); len(nodes) > 0 && !_u.mutation.AffiliateRebatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AffiliateRebatesTable,
+			Columns: []string{paymentorder.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateRebatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AffiliateRebatesTable,
+			Columns: []string{paymentorder.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -911,6 +993,21 @@ func (_u *PaymentOrderUpdateOne) AddPaymentEvents(v ...*PaymentEvent) *PaymentOr
 	return _u.AddPaymentEventIDs(ids...)
 }
 
+// AddAffiliateRebateIDs adds the "affiliate_rebates" edge to the AffiliateRebate entity by IDs.
+func (_u *PaymentOrderUpdateOne) AddAffiliateRebateIDs(ids ...int) *PaymentOrderUpdateOne {
+	_u.mutation.AddAffiliateRebateIDs(ids...)
+	return _u
+}
+
+// AddAffiliateRebates adds the "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_u *PaymentOrderUpdateOne) AddAffiliateRebates(v ...*AffiliateRebate) *PaymentOrderUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateRebateIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -962,6 +1059,27 @@ func (_u *PaymentOrderUpdateOne) RemovePaymentEvents(v ...*PaymentEvent) *Paymen
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePaymentEventIDs(ids...)
+}
+
+// ClearAffiliateRebates clears all "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_u *PaymentOrderUpdateOne) ClearAffiliateRebates() *PaymentOrderUpdateOne {
+	_u.mutation.ClearAffiliateRebates()
+	return _u
+}
+
+// RemoveAffiliateRebateIDs removes the "affiliate_rebates" edge to AffiliateRebate entities by IDs.
+func (_u *PaymentOrderUpdateOne) RemoveAffiliateRebateIDs(ids ...int) *PaymentOrderUpdateOne {
+	_u.mutation.RemoveAffiliateRebateIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateRebates removes "affiliate_rebates" edges to AffiliateRebate entities.
+func (_u *PaymentOrderUpdateOne) RemoveAffiliateRebates(v ...*AffiliateRebate) *PaymentOrderUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateRebateIDs(ids...)
 }
 
 // Where appends a list predicates to the PaymentOrderUpdate builder.
@@ -1249,6 +1367,51 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentevent.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateRebatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AffiliateRebatesTable,
+			Columns: []string{paymentorder.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateRebatesIDs(); len(nodes) > 0 && !_u.mutation.AffiliateRebatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AffiliateRebatesTable,
+			Columns: []string{paymentorder.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateRebatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AffiliateRebatesTable,
+			Columns: []string{paymentorder.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

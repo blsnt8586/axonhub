@@ -95,14 +95,17 @@ type PaymentOrderEdges struct {
 	PromoUsages []*PromoUsage `json:"promo_usages,omitempty"`
 	// PaymentEvents holds the value of the payment_events edge.
 	PaymentEvents []*PaymentEvent `json:"payment_events,omitempty"`
+	// AffiliateRebates holds the value of the affiliate_rebates edge.
+	AffiliateRebates []*AffiliateRebate `json:"affiliate_rebates,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 	// totalCount holds the count of the edges above.
-	totalCount [6]map[string]int
+	totalCount [7]map[string]int
 
-	namedPromoUsages   map[string][]*PromoUsage
-	namedPaymentEvents map[string][]*PaymentEvent
+	namedPromoUsages      map[string][]*PromoUsage
+	namedPaymentEvents    map[string][]*PaymentEvent
+	namedAffiliateRebates map[string][]*AffiliateRebate
 }
 
 // BillingAccountOrErr returns the BillingAccount value or an error if the edge
@@ -165,6 +168,15 @@ func (e PaymentOrderEdges) PaymentEventsOrErr() ([]*PaymentEvent, error) {
 		return e.PaymentEvents, nil
 	}
 	return nil, &NotLoadedError{edge: "payment_events"}
+}
+
+// AffiliateRebatesOrErr returns the AffiliateRebates value or an error if the edge
+// was not loaded in eager-loading.
+func (e PaymentOrderEdges) AffiliateRebatesOrErr() ([]*AffiliateRebate, error) {
+	if e.loadedTypes[6] {
+		return e.AffiliateRebates, nil
+	}
+	return nil, &NotLoadedError{edge: "affiliate_rebates"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -410,6 +422,11 @@ func (_m *PaymentOrder) QueryPaymentEvents() *PaymentEventQuery {
 	return NewPaymentOrderClient(_m.config).QueryPaymentEvents(_m)
 }
 
+// QueryAffiliateRebates queries the "affiliate_rebates" edge of the PaymentOrder entity.
+func (_m *PaymentOrder) QueryAffiliateRebates() *AffiliateRebateQuery {
+	return NewPaymentOrderClient(_m.config).QueryAffiliateRebates(_m)
+}
+
 // Update returns a builder for updating this PaymentOrder.
 // Note that you need to call PaymentOrder.Unwrap() before calling this method if this PaymentOrder
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -575,6 +592,30 @@ func (_m *PaymentOrder) appendNamedPaymentEvents(name string, edges ...*PaymentE
 		_m.Edges.namedPaymentEvents[name] = []*PaymentEvent{}
 	} else {
 		_m.Edges.namedPaymentEvents[name] = append(_m.Edges.namedPaymentEvents[name], edges...)
+	}
+}
+
+// NamedAffiliateRebates returns the AffiliateRebates named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *PaymentOrder) NamedAffiliateRebates(name string) ([]*AffiliateRebate, error) {
+	if _m.Edges.namedAffiliateRebates == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAffiliateRebates[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *PaymentOrder) appendNamedAffiliateRebates(name string, edges ...*AffiliateRebate) {
+	if _m.Edges.namedAffiliateRebates == nil {
+		_m.Edges.namedAffiliateRebates = make(map[string][]*AffiliateRebate)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAffiliateRebates[name] = []*AffiliateRebate{}
+	} else {
+		_m.Edges.namedAffiliateRebates[name] = append(_m.Edges.namedAffiliateRebates[name], edges...)
 	}
 }
 

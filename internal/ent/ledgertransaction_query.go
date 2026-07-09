@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
@@ -40,6 +41,7 @@ type LedgerTransactionQuery struct {
 	withRedeemCodes                     *RedeemCodeQuery
 	withPurchasedUserSubscriptions      *UserSubscriptionQuery
 	withPromoUsages                     *PromoUsageQuery
+	withAffiliateRebates                *AffiliateRebateQuery
 	loadTotal                           []func(context.Context, []*LedgerTransaction) error
 	modifiers                           []func(*sql.Selector)
 	withNamedEntries                    map[string]*LedgerEntryQuery
@@ -49,6 +51,7 @@ type LedgerTransactionQuery struct {
 	withNamedRedeemCodes                map[string]*RedeemCodeQuery
 	withNamedPurchasedUserSubscriptions map[string]*UserSubscriptionQuery
 	withNamedPromoUsages                map[string]*PromoUsageQuery
+	withNamedAffiliateRebates           map[string]*AffiliateRebateQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -261,6 +264,28 @@ func (_q *LedgerTransactionQuery) QueryPromoUsages() *PromoUsageQuery {
 	return query
 }
 
+// QueryAffiliateRebates chains the current query on the "affiliate_rebates" edge.
+func (_q *LedgerTransactionQuery) QueryAffiliateRebates() *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, selector),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.AffiliateRebatesTable, ledgertransaction.AffiliateRebatesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first LedgerTransaction entity from the query.
 // Returns a *NotFoundError when no LedgerTransaction was found.
 func (_q *LedgerTransactionQuery) First(ctx context.Context) (*LedgerTransaction, error) {
@@ -461,6 +486,7 @@ func (_q *LedgerTransactionQuery) Clone() *LedgerTransactionQuery {
 		withRedeemCodes:                _q.withRedeemCodes.Clone(),
 		withPurchasedUserSubscriptions: _q.withPurchasedUserSubscriptions.Clone(),
 		withPromoUsages:                _q.withPromoUsages.Clone(),
+		withAffiliateRebates:           _q.withAffiliateRebates.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -556,6 +582,17 @@ func (_q *LedgerTransactionQuery) WithPromoUsages(opts ...func(*PromoUsageQuery)
 	return _q
 }
 
+// WithAffiliateRebates tells the query-builder to eager-load the nodes that are connected to
+// the "affiliate_rebates" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerTransactionQuery) WithAffiliateRebates(opts ...func(*AffiliateRebateQuery)) *LedgerTransactionQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAffiliateRebates = query
+	return _q
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -640,7 +677,7 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	var (
 		nodes       = []*LedgerTransaction{}
 		_spec       = _q.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [9]bool{
 			_q.withBillingAccount != nil,
 			_q.withEntries != nil,
 			_q.withUsageBillingRecords != nil,
@@ -649,6 +686,7 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 			_q.withRedeemCodes != nil,
 			_q.withPurchasedUserSubscriptions != nil,
 			_q.withPromoUsages != nil,
+			_q.withAffiliateRebates != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -731,6 +769,15 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 			return nil, err
 		}
 	}
+	if query := _q.withAffiliateRebates; query != nil {
+		if err := _q.loadAffiliateRebates(ctx, query, nodes,
+			func(n *LedgerTransaction) { n.Edges.AffiliateRebates = []*AffiliateRebate{} },
+			func(n *LedgerTransaction, e *AffiliateRebate) {
+				n.Edges.AffiliateRebates = append(n.Edges.AffiliateRebates, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedEntries {
 		if err := _q.loadEntries(ctx, query, nodes,
 			func(n *LedgerTransaction) { n.appendNamedEntries(name) },
@@ -777,6 +824,13 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 		if err := _q.loadPromoUsages(ctx, query, nodes,
 			func(n *LedgerTransaction) { n.appendNamedPromoUsages(name) },
 			func(n *LedgerTransaction, e *PromoUsage) { n.appendNamedPromoUsages(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAffiliateRebates {
+		if err := _q.loadAffiliateRebates(ctx, query, nodes,
+			func(n *LedgerTransaction) { n.appendNamedAffiliateRebates(name) },
+			func(n *LedgerTransaction, e *AffiliateRebate) { n.appendNamedAffiliateRebates(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1036,6 +1090,39 @@ func (_q *LedgerTransactionQuery) loadPromoUsages(ctx context.Context, query *Pr
 	}
 	return nil
 }
+func (_q *LedgerTransactionQuery) loadAffiliateRebates(ctx context.Context, query *AffiliateRebateQuery, nodes []*LedgerTransaction, init func(*LedgerTransaction), assign func(*LedgerTransaction, *AffiliateRebate)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*LedgerTransaction)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(affiliaterebate.FieldLedgerTransactionID)
+	}
+	query.Where(predicate.AffiliateRebate(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ledgertransaction.AffiliateRebatesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.LedgerTransactionID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "ledger_transaction_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ledger_transaction_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *LedgerTransactionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1228,6 +1315,20 @@ func (_q *LedgerTransactionQuery) WithNamedPromoUsages(name string, opts ...func
 		_q.withNamedPromoUsages = make(map[string]*PromoUsageQuery)
 	}
 	_q.withNamedPromoUsages[name] = query
+	return _q
+}
+
+// WithNamedAffiliateRebates tells the query-builder to eager-load the nodes that are connected to the "affiliate_rebates"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerTransactionQuery) WithNamedAffiliateRebates(name string, opts ...func(*AffiliateRebateQuery)) *LedgerTransactionQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAffiliateRebates == nil {
+		_q.withNamedAffiliateRebates = make(map[string]*AffiliateRebateQuery)
+	}
+	_q.withNamedAffiliateRebates[name] = query
 	return _q
 }
 

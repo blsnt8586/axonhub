@@ -15,6 +15,10 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/affiliatesetting"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
@@ -66,6 +70,14 @@ type Client struct {
 	APIKey *APIKeyClient
 	// APIKeyProfileTemplate is the client for interacting with the APIKeyProfileTemplate builders.
 	APIKeyProfileTemplate *APIKeyProfileTemplateClient
+	// AffiliateInvitation is the client for interacting with the AffiliateInvitation builders.
+	AffiliateInvitation *AffiliateInvitationClient
+	// AffiliateProfile is the client for interacting with the AffiliateProfile builders.
+	AffiliateProfile *AffiliateProfileClient
+	// AffiliateRebate is the client for interacting with the AffiliateRebate builders.
+	AffiliateRebate *AffiliateRebateClient
+	// AffiliateSetting is the client for interacting with the AffiliateSetting builders.
+	AffiliateSetting *AffiliateSettingClient
 	// BillingAccount is the client for interacting with the BillingAccount builders.
 	BillingAccount *BillingAccountClient
 	// BillingAccountBinding is the client for interacting with the BillingAccountBinding builders.
@@ -157,6 +169,10 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.APIKey = NewAPIKeyClient(c.config)
 	c.APIKeyProfileTemplate = NewAPIKeyProfileTemplateClient(c.config)
+	c.AffiliateInvitation = NewAffiliateInvitationClient(c.config)
+	c.AffiliateProfile = NewAffiliateProfileClient(c.config)
+	c.AffiliateRebate = NewAffiliateRebateClient(c.config)
+	c.AffiliateSetting = NewAffiliateSettingClient(c.config)
 	c.BillingAccount = NewBillingAccountClient(c.config)
 	c.BillingAccountBinding = NewBillingAccountBindingClient(c.config)
 	c.BillingHold = NewBillingHoldClient(c.config)
@@ -289,6 +305,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:                   cfg,
 		APIKey:                   NewAPIKeyClient(cfg),
 		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
+		AffiliateInvitation:      NewAffiliateInvitationClient(cfg),
+		AffiliateProfile:         NewAffiliateProfileClient(cfg),
+		AffiliateRebate:          NewAffiliateRebateClient(cfg),
+		AffiliateSetting:         NewAffiliateSettingClient(cfg),
 		BillingAccount:           NewBillingAccountClient(cfg),
 		BillingAccountBinding:    NewBillingAccountBindingClient(cfg),
 		BillingHold:              NewBillingHoldClient(cfg),
@@ -348,6 +368,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:                   cfg,
 		APIKey:                   NewAPIKeyClient(cfg),
 		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
+		AffiliateInvitation:      NewAffiliateInvitationClient(cfg),
+		AffiliateProfile:         NewAffiliateProfileClient(cfg),
+		AffiliateRebate:          NewAffiliateRebateClient(cfg),
+		AffiliateSetting:         NewAffiliateSettingClient(cfg),
 		BillingAccount:           NewBillingAccountClient(cfg),
 		BillingAccountBinding:    NewBillingAccountBindingClient(cfg),
 		BillingHold:              NewBillingHoldClient(cfg),
@@ -415,15 +439,17 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.APIKey, c.APIKeyProfileTemplate, c.BillingAccount, c.BillingAccountBinding,
-		c.BillingHold, c.BillingOutbox, c.BillingPriceRule, c.Channel,
-		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
-		c.ChannelProbe, c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model,
-		c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance,
-		c.Project, c.PromoCode, c.PromoUsage, c.Prompt, c.PromptProtectionRule,
-		c.ProviderQuotaStatus, c.RedeemCode, c.Request, c.RequestExecution, c.Role,
-		c.SubscriptionPlan, c.System, c.Thread, c.Trace, c.UsageBillingRecord,
-		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
+		c.APIKey, c.APIKeyProfileTemplate, c.AffiliateInvitation, c.AffiliateProfile,
+		c.AffiliateRebate, c.AffiliateSetting, c.BillingAccount,
+		c.BillingAccountBinding, c.BillingHold, c.BillingOutbox, c.BillingPriceRule,
+		c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
+		c.ChannelOverrideTemplate, c.ChannelProbe, c.DataStorage, c.LedgerEntry,
+		c.LedgerTransaction, c.Model, c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder,
+		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
+		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
+		c.RequestExecution, c.Role, c.SubscriptionPlan, c.System, c.Thread, c.Trace,
+		c.UsageBillingRecord, c.UsageLog, c.User, c.UserProject, c.UserRole,
+		c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -433,15 +459,17 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.APIKey, c.APIKeyProfileTemplate, c.BillingAccount, c.BillingAccountBinding,
-		c.BillingHold, c.BillingOutbox, c.BillingPriceRule, c.Channel,
-		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
-		c.ChannelProbe, c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model,
-		c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance,
-		c.Project, c.PromoCode, c.PromoUsage, c.Prompt, c.PromptProtectionRule,
-		c.ProviderQuotaStatus, c.RedeemCode, c.Request, c.RequestExecution, c.Role,
-		c.SubscriptionPlan, c.System, c.Thread, c.Trace, c.UsageBillingRecord,
-		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
+		c.APIKey, c.APIKeyProfileTemplate, c.AffiliateInvitation, c.AffiliateProfile,
+		c.AffiliateRebate, c.AffiliateSetting, c.BillingAccount,
+		c.BillingAccountBinding, c.BillingHold, c.BillingOutbox, c.BillingPriceRule,
+		c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
+		c.ChannelOverrideTemplate, c.ChannelProbe, c.DataStorage, c.LedgerEntry,
+		c.LedgerTransaction, c.Model, c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder,
+		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
+		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
+		c.RequestExecution, c.Role, c.SubscriptionPlan, c.System, c.Thread, c.Trace,
+		c.UsageBillingRecord, c.UsageLog, c.User, c.UserProject, c.UserRole,
+		c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -454,6 +482,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.APIKey.mutate(ctx, m)
 	case *APIKeyProfileTemplateMutation:
 		return c.APIKeyProfileTemplate.mutate(ctx, m)
+	case *AffiliateInvitationMutation:
+		return c.AffiliateInvitation.mutate(ctx, m)
+	case *AffiliateProfileMutation:
+		return c.AffiliateProfile.mutate(ctx, m)
+	case *AffiliateRebateMutation:
+		return c.AffiliateRebate.mutate(ctx, m)
+	case *AffiliateSettingMutation:
+		return c.AffiliateSetting.mutate(ctx, m)
 	case *BillingAccountMutation:
 		return c.BillingAccount.mutate(ctx, m)
 	case *BillingAccountBindingMutation:
@@ -866,6 +902,702 @@ func (c *APIKeyProfileTemplateClient) mutate(ctx context.Context, m *APIKeyProfi
 		return (&APIKeyProfileTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown APIKeyProfileTemplate mutation op: %q", m.Op())
+	}
+}
+
+// AffiliateInvitationClient is a client for the AffiliateInvitation schema.
+type AffiliateInvitationClient struct {
+	config
+}
+
+// NewAffiliateInvitationClient returns a client for the AffiliateInvitation from the given config.
+func NewAffiliateInvitationClient(c config) *AffiliateInvitationClient {
+	return &AffiliateInvitationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `affiliateinvitation.Hooks(f(g(h())))`.
+func (c *AffiliateInvitationClient) Use(hooks ...Hook) {
+	c.hooks.AffiliateInvitation = append(c.hooks.AffiliateInvitation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `affiliateinvitation.Intercept(f(g(h())))`.
+func (c *AffiliateInvitationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AffiliateInvitation = append(c.inters.AffiliateInvitation, interceptors...)
+}
+
+// Create returns a builder for creating a AffiliateInvitation entity.
+func (c *AffiliateInvitationClient) Create() *AffiliateInvitationCreate {
+	mutation := newAffiliateInvitationMutation(c.config, OpCreate)
+	return &AffiliateInvitationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AffiliateInvitation entities.
+func (c *AffiliateInvitationClient) CreateBulk(builders ...*AffiliateInvitationCreate) *AffiliateInvitationCreateBulk {
+	return &AffiliateInvitationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AffiliateInvitationClient) MapCreateBulk(slice any, setFunc func(*AffiliateInvitationCreate, int)) *AffiliateInvitationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AffiliateInvitationCreateBulk{err: fmt.Errorf("calling to AffiliateInvitationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AffiliateInvitationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AffiliateInvitationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AffiliateInvitation.
+func (c *AffiliateInvitationClient) Update() *AffiliateInvitationUpdate {
+	mutation := newAffiliateInvitationMutation(c.config, OpUpdate)
+	return &AffiliateInvitationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AffiliateInvitationClient) UpdateOne(_m *AffiliateInvitation) *AffiliateInvitationUpdateOne {
+	mutation := newAffiliateInvitationMutation(c.config, OpUpdateOne, withAffiliateInvitation(_m))
+	return &AffiliateInvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AffiliateInvitationClient) UpdateOneID(id int) *AffiliateInvitationUpdateOne {
+	mutation := newAffiliateInvitationMutation(c.config, OpUpdateOne, withAffiliateInvitationID(id))
+	return &AffiliateInvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AffiliateInvitation.
+func (c *AffiliateInvitationClient) Delete() *AffiliateInvitationDelete {
+	mutation := newAffiliateInvitationMutation(c.config, OpDelete)
+	return &AffiliateInvitationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AffiliateInvitationClient) DeleteOne(_m *AffiliateInvitation) *AffiliateInvitationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AffiliateInvitationClient) DeleteOneID(id int) *AffiliateInvitationDeleteOne {
+	builder := c.Delete().Where(affiliateinvitation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AffiliateInvitationDeleteOne{builder}
+}
+
+// Query returns a query builder for AffiliateInvitation.
+func (c *AffiliateInvitationClient) Query() *AffiliateInvitationQuery {
+	return &AffiliateInvitationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAffiliateInvitation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AffiliateInvitation entity by its id.
+func (c *AffiliateInvitationClient) Get(ctx context.Context, id int) (*AffiliateInvitation, error) {
+	return c.Query().Where(affiliateinvitation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AffiliateInvitationClient) GetX(ctx context.Context, id int) *AffiliateInvitation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryInviter queries the inviter edge of a AffiliateInvitation.
+func (c *AffiliateInvitationClient) QueryInviter(_m *AffiliateInvitation) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliateinvitation.Table, affiliateinvitation.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliateinvitation.InviterTable, affiliateinvitation.InviterColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInvitee queries the invitee edge of a AffiliateInvitation.
+func (c *AffiliateInvitationClient) QueryInvitee(_m *AffiliateInvitation) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliateinvitation.Table, affiliateinvitation.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliateinvitation.InviteeTable, affiliateinvitation.InviteeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRebates queries the rebates edge of a AffiliateInvitation.
+func (c *AffiliateInvitationClient) QueryRebates(_m *AffiliateInvitation) *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliateinvitation.Table, affiliateinvitation.FieldID, id),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, affiliateinvitation.RebatesTable, affiliateinvitation.RebatesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AffiliateInvitationClient) Hooks() []Hook {
+	hooks := c.hooks.AffiliateInvitation
+	return append(hooks[:len(hooks):len(hooks)], affiliateinvitation.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *AffiliateInvitationClient) Interceptors() []Interceptor {
+	return c.inters.AffiliateInvitation
+}
+
+func (c *AffiliateInvitationClient) mutate(ctx context.Context, m *AffiliateInvitationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AffiliateInvitationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AffiliateInvitationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AffiliateInvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AffiliateInvitationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AffiliateInvitation mutation op: %q", m.Op())
+	}
+}
+
+// AffiliateProfileClient is a client for the AffiliateProfile schema.
+type AffiliateProfileClient struct {
+	config
+}
+
+// NewAffiliateProfileClient returns a client for the AffiliateProfile from the given config.
+func NewAffiliateProfileClient(c config) *AffiliateProfileClient {
+	return &AffiliateProfileClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `affiliateprofile.Hooks(f(g(h())))`.
+func (c *AffiliateProfileClient) Use(hooks ...Hook) {
+	c.hooks.AffiliateProfile = append(c.hooks.AffiliateProfile, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `affiliateprofile.Intercept(f(g(h())))`.
+func (c *AffiliateProfileClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AffiliateProfile = append(c.inters.AffiliateProfile, interceptors...)
+}
+
+// Create returns a builder for creating a AffiliateProfile entity.
+func (c *AffiliateProfileClient) Create() *AffiliateProfileCreate {
+	mutation := newAffiliateProfileMutation(c.config, OpCreate)
+	return &AffiliateProfileCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AffiliateProfile entities.
+func (c *AffiliateProfileClient) CreateBulk(builders ...*AffiliateProfileCreate) *AffiliateProfileCreateBulk {
+	return &AffiliateProfileCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AffiliateProfileClient) MapCreateBulk(slice any, setFunc func(*AffiliateProfileCreate, int)) *AffiliateProfileCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AffiliateProfileCreateBulk{err: fmt.Errorf("calling to AffiliateProfileClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AffiliateProfileCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AffiliateProfileCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AffiliateProfile.
+func (c *AffiliateProfileClient) Update() *AffiliateProfileUpdate {
+	mutation := newAffiliateProfileMutation(c.config, OpUpdate)
+	return &AffiliateProfileUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AffiliateProfileClient) UpdateOne(_m *AffiliateProfile) *AffiliateProfileUpdateOne {
+	mutation := newAffiliateProfileMutation(c.config, OpUpdateOne, withAffiliateProfile(_m))
+	return &AffiliateProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AffiliateProfileClient) UpdateOneID(id int) *AffiliateProfileUpdateOne {
+	mutation := newAffiliateProfileMutation(c.config, OpUpdateOne, withAffiliateProfileID(id))
+	return &AffiliateProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AffiliateProfile.
+func (c *AffiliateProfileClient) Delete() *AffiliateProfileDelete {
+	mutation := newAffiliateProfileMutation(c.config, OpDelete)
+	return &AffiliateProfileDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AffiliateProfileClient) DeleteOne(_m *AffiliateProfile) *AffiliateProfileDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AffiliateProfileClient) DeleteOneID(id int) *AffiliateProfileDeleteOne {
+	builder := c.Delete().Where(affiliateprofile.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AffiliateProfileDeleteOne{builder}
+}
+
+// Query returns a query builder for AffiliateProfile.
+func (c *AffiliateProfileClient) Query() *AffiliateProfileQuery {
+	return &AffiliateProfileQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAffiliateProfile},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AffiliateProfile entity by its id.
+func (c *AffiliateProfileClient) Get(ctx context.Context, id int) (*AffiliateProfile, error) {
+	return c.Query().Where(affiliateprofile.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AffiliateProfileClient) GetX(ctx context.Context, id int) *AffiliateProfile {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a AffiliateProfile.
+func (c *AffiliateProfileClient) QueryUser(_m *AffiliateProfile) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliateprofile.Table, affiliateprofile.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliateprofile.UserTable, affiliateprofile.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AffiliateProfileClient) Hooks() []Hook {
+	hooks := c.hooks.AffiliateProfile
+	return append(hooks[:len(hooks):len(hooks)], affiliateprofile.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *AffiliateProfileClient) Interceptors() []Interceptor {
+	return c.inters.AffiliateProfile
+}
+
+func (c *AffiliateProfileClient) mutate(ctx context.Context, m *AffiliateProfileMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AffiliateProfileCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AffiliateProfileUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AffiliateProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AffiliateProfileDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AffiliateProfile mutation op: %q", m.Op())
+	}
+}
+
+// AffiliateRebateClient is a client for the AffiliateRebate schema.
+type AffiliateRebateClient struct {
+	config
+}
+
+// NewAffiliateRebateClient returns a client for the AffiliateRebate from the given config.
+func NewAffiliateRebateClient(c config) *AffiliateRebateClient {
+	return &AffiliateRebateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `affiliaterebate.Hooks(f(g(h())))`.
+func (c *AffiliateRebateClient) Use(hooks ...Hook) {
+	c.hooks.AffiliateRebate = append(c.hooks.AffiliateRebate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `affiliaterebate.Intercept(f(g(h())))`.
+func (c *AffiliateRebateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AffiliateRebate = append(c.inters.AffiliateRebate, interceptors...)
+}
+
+// Create returns a builder for creating a AffiliateRebate entity.
+func (c *AffiliateRebateClient) Create() *AffiliateRebateCreate {
+	mutation := newAffiliateRebateMutation(c.config, OpCreate)
+	return &AffiliateRebateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AffiliateRebate entities.
+func (c *AffiliateRebateClient) CreateBulk(builders ...*AffiliateRebateCreate) *AffiliateRebateCreateBulk {
+	return &AffiliateRebateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AffiliateRebateClient) MapCreateBulk(slice any, setFunc func(*AffiliateRebateCreate, int)) *AffiliateRebateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AffiliateRebateCreateBulk{err: fmt.Errorf("calling to AffiliateRebateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AffiliateRebateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AffiliateRebateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AffiliateRebate.
+func (c *AffiliateRebateClient) Update() *AffiliateRebateUpdate {
+	mutation := newAffiliateRebateMutation(c.config, OpUpdate)
+	return &AffiliateRebateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AffiliateRebateClient) UpdateOne(_m *AffiliateRebate) *AffiliateRebateUpdateOne {
+	mutation := newAffiliateRebateMutation(c.config, OpUpdateOne, withAffiliateRebate(_m))
+	return &AffiliateRebateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AffiliateRebateClient) UpdateOneID(id int) *AffiliateRebateUpdateOne {
+	mutation := newAffiliateRebateMutation(c.config, OpUpdateOne, withAffiliateRebateID(id))
+	return &AffiliateRebateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AffiliateRebate.
+func (c *AffiliateRebateClient) Delete() *AffiliateRebateDelete {
+	mutation := newAffiliateRebateMutation(c.config, OpDelete)
+	return &AffiliateRebateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AffiliateRebateClient) DeleteOne(_m *AffiliateRebate) *AffiliateRebateDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AffiliateRebateClient) DeleteOneID(id int) *AffiliateRebateDeleteOne {
+	builder := c.Delete().Where(affiliaterebate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AffiliateRebateDeleteOne{builder}
+}
+
+// Query returns a query builder for AffiliateRebate.
+func (c *AffiliateRebateClient) Query() *AffiliateRebateQuery {
+	return &AffiliateRebateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAffiliateRebate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AffiliateRebate entity by its id.
+func (c *AffiliateRebateClient) Get(ctx context.Context, id int) (*AffiliateRebate, error) {
+	return c.Query().Where(affiliaterebate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AffiliateRebateClient) GetX(ctx context.Context, id int) *AffiliateRebate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryInvitation queries the invitation edge of a AffiliateRebate.
+func (c *AffiliateRebateClient) QueryInvitation(_m *AffiliateRebate) *AffiliateInvitationQuery {
+	query := (&AffiliateInvitationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliaterebate.Table, affiliaterebate.FieldID, id),
+			sqlgraph.To(affiliateinvitation.Table, affiliateinvitation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliaterebate.InvitationTable, affiliaterebate.InvitationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInviter queries the inviter edge of a AffiliateRebate.
+func (c *AffiliateRebateClient) QueryInviter(_m *AffiliateRebate) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliaterebate.Table, affiliaterebate.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliaterebate.InviterTable, affiliaterebate.InviterColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInvitee queries the invitee edge of a AffiliateRebate.
+func (c *AffiliateRebateClient) QueryInvitee(_m *AffiliateRebate) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliaterebate.Table, affiliaterebate.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliaterebate.InviteeTable, affiliaterebate.InviteeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPaymentOrder queries the payment_order edge of a AffiliateRebate.
+func (c *AffiliateRebateClient) QueryPaymentOrder(_m *AffiliateRebate) *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliaterebate.Table, affiliaterebate.FieldID, id),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliaterebate.PaymentOrderTable, affiliaterebate.PaymentOrderColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserSubscription queries the user_subscription edge of a AffiliateRebate.
+func (c *AffiliateRebateClient) QueryUserSubscription(_m *AffiliateRebate) *UserSubscriptionQuery {
+	query := (&UserSubscriptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliaterebate.Table, affiliaterebate.FieldID, id),
+			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliaterebate.UserSubscriptionTable, affiliaterebate.UserSubscriptionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryLedgerTransaction queries the ledger_transaction edge of a AffiliateRebate.
+func (c *AffiliateRebateClient) QueryLedgerTransaction(_m *AffiliateRebate) *LedgerTransactionQuery {
+	query := (&LedgerTransactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(affiliaterebate.Table, affiliaterebate.FieldID, id),
+			sqlgraph.To(ledgertransaction.Table, ledgertransaction.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, affiliaterebate.LedgerTransactionTable, affiliaterebate.LedgerTransactionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AffiliateRebateClient) Hooks() []Hook {
+	hooks := c.hooks.AffiliateRebate
+	return append(hooks[:len(hooks):len(hooks)], affiliaterebate.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *AffiliateRebateClient) Interceptors() []Interceptor {
+	return c.inters.AffiliateRebate
+}
+
+func (c *AffiliateRebateClient) mutate(ctx context.Context, m *AffiliateRebateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AffiliateRebateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AffiliateRebateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AffiliateRebateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AffiliateRebateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AffiliateRebate mutation op: %q", m.Op())
+	}
+}
+
+// AffiliateSettingClient is a client for the AffiliateSetting schema.
+type AffiliateSettingClient struct {
+	config
+}
+
+// NewAffiliateSettingClient returns a client for the AffiliateSetting from the given config.
+func NewAffiliateSettingClient(c config) *AffiliateSettingClient {
+	return &AffiliateSettingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `affiliatesetting.Hooks(f(g(h())))`.
+func (c *AffiliateSettingClient) Use(hooks ...Hook) {
+	c.hooks.AffiliateSetting = append(c.hooks.AffiliateSetting, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `affiliatesetting.Intercept(f(g(h())))`.
+func (c *AffiliateSettingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AffiliateSetting = append(c.inters.AffiliateSetting, interceptors...)
+}
+
+// Create returns a builder for creating a AffiliateSetting entity.
+func (c *AffiliateSettingClient) Create() *AffiliateSettingCreate {
+	mutation := newAffiliateSettingMutation(c.config, OpCreate)
+	return &AffiliateSettingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AffiliateSetting entities.
+func (c *AffiliateSettingClient) CreateBulk(builders ...*AffiliateSettingCreate) *AffiliateSettingCreateBulk {
+	return &AffiliateSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AffiliateSettingClient) MapCreateBulk(slice any, setFunc func(*AffiliateSettingCreate, int)) *AffiliateSettingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AffiliateSettingCreateBulk{err: fmt.Errorf("calling to AffiliateSettingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AffiliateSettingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AffiliateSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AffiliateSetting.
+func (c *AffiliateSettingClient) Update() *AffiliateSettingUpdate {
+	mutation := newAffiliateSettingMutation(c.config, OpUpdate)
+	return &AffiliateSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AffiliateSettingClient) UpdateOne(_m *AffiliateSetting) *AffiliateSettingUpdateOne {
+	mutation := newAffiliateSettingMutation(c.config, OpUpdateOne, withAffiliateSetting(_m))
+	return &AffiliateSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AffiliateSettingClient) UpdateOneID(id int) *AffiliateSettingUpdateOne {
+	mutation := newAffiliateSettingMutation(c.config, OpUpdateOne, withAffiliateSettingID(id))
+	return &AffiliateSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AffiliateSetting.
+func (c *AffiliateSettingClient) Delete() *AffiliateSettingDelete {
+	mutation := newAffiliateSettingMutation(c.config, OpDelete)
+	return &AffiliateSettingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AffiliateSettingClient) DeleteOne(_m *AffiliateSetting) *AffiliateSettingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AffiliateSettingClient) DeleteOneID(id int) *AffiliateSettingDeleteOne {
+	builder := c.Delete().Where(affiliatesetting.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AffiliateSettingDeleteOne{builder}
+}
+
+// Query returns a query builder for AffiliateSetting.
+func (c *AffiliateSettingClient) Query() *AffiliateSettingQuery {
+	return &AffiliateSettingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAffiliateSetting},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AffiliateSetting entity by its id.
+func (c *AffiliateSettingClient) Get(ctx context.Context, id int) (*AffiliateSetting, error) {
+	return c.Query().Where(affiliatesetting.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AffiliateSettingClient) GetX(ctx context.Context, id int) *AffiliateSetting {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AffiliateSettingClient) Hooks() []Hook {
+	hooks := c.hooks.AffiliateSetting
+	return append(hooks[:len(hooks):len(hooks)], affiliatesetting.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *AffiliateSettingClient) Interceptors() []Interceptor {
+	return c.inters.AffiliateSetting
+}
+
+func (c *AffiliateSettingClient) mutate(ctx context.Context, m *AffiliateSettingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AffiliateSettingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AffiliateSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AffiliateSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AffiliateSettingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AffiliateSetting mutation op: %q", m.Op())
 	}
 }
 
@@ -3116,6 +3848,22 @@ func (c *LedgerTransactionClient) QueryPromoUsages(_m *LedgerTransaction) *Promo
 	return query
 }
 
+// QueryAffiliateRebates queries the affiliate_rebates edge of a LedgerTransaction.
+func (c *LedgerTransactionClient) QueryAffiliateRebates(_m *LedgerTransaction) *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, id),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.AffiliateRebatesTable, ledgertransaction.AffiliateRebatesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *LedgerTransactionClient) Hooks() []Hook {
 	hooks := c.hooks.LedgerTransaction
@@ -3791,6 +4539,22 @@ func (c *PaymentOrderClient) QueryPaymentEvents(_m *PaymentOrder) *PaymentEventQ
 			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
 			sqlgraph.To(paymentevent.Table, paymentevent.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.PaymentEventsTable, paymentorder.PaymentEventsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAffiliateRebates queries the affiliate_rebates edge of a PaymentOrder.
+func (c *PaymentOrderClient) QueryAffiliateRebates(_m *PaymentOrder) *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.AffiliateRebatesTable, paymentorder.AffiliateRebatesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -7255,6 +8019,86 @@ func (c *UserClient) QueryPromoUsages(_m *User) *PromoUsageQuery {
 	return query
 }
 
+// QueryAffiliateProfiles queries the affiliate_profiles edge of a User.
+func (c *UserClient) QueryAffiliateProfiles(_m *User) *AffiliateProfileQuery {
+	query := (&AffiliateProfileClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(affiliateprofile.Table, affiliateprofile.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateProfilesTable, user.AffiliateProfilesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAffiliateInviters queries the affiliate_inviters edge of a User.
+func (c *UserClient) QueryAffiliateInviters(_m *User) *AffiliateInvitationQuery {
+	query := (&AffiliateInvitationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(affiliateinvitation.Table, affiliateinvitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateInvitersTable, user.AffiliateInvitersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAffiliateInvitees queries the affiliate_invitees edge of a User.
+func (c *UserClient) QueryAffiliateInvitees(_m *User) *AffiliateInvitationQuery {
+	query := (&AffiliateInvitationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(affiliateinvitation.Table, affiliateinvitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateInviteesTable, user.AffiliateInviteesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAffiliateRebatesEarned queries the affiliate_rebates_earned edge of a User.
+func (c *UserClient) QueryAffiliateRebatesEarned(_m *User) *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateRebatesEarnedTable, user.AffiliateRebatesEarnedColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAffiliateRebatesGenerated queries the affiliate_rebates_generated edge of a User.
+func (c *UserClient) QueryAffiliateRebatesGenerated(_m *User) *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateRebatesGeneratedTable, user.AffiliateRebatesGeneratedColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryProjectUsers queries the project_users edge of a User.
 func (c *UserClient) QueryProjectUsers(_m *User) *UserProjectQuery {
 	query := (&UserProjectClient{config: c.config}).Query()
@@ -7865,6 +8709,22 @@ func (c *UserSubscriptionClient) QueryUsageBillingRecords(_m *UserSubscription) 
 	return query
 }
 
+// QueryAffiliateRebates queries the affiliate_rebates edge of a UserSubscription.
+func (c *UserSubscriptionClient) QueryAffiliateRebates(_m *UserSubscription) *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usersubscription.Table, usersubscription.FieldID, id),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usersubscription.AffiliateRebatesTable, usersubscription.AffiliateRebatesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserSubscriptionClient) Hooks() []Hook {
 	hooks := c.hooks.UserSubscription
@@ -7894,7 +8754,8 @@ func (c *UserSubscriptionClient) mutate(ctx context.Context, m *UserSubscription
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		APIKey, APIKeyProfileTemplate, BillingAccount, BillingAccountBinding,
+		APIKey, APIKeyProfileTemplate, AffiliateInvitation, AffiliateProfile,
+		AffiliateRebate, AffiliateSetting, BillingAccount, BillingAccountBinding,
 		BillingHold, BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
@@ -7905,7 +8766,8 @@ type (
 		UserSubscription []ent.Hook
 	}
 	inters struct {
-		APIKey, APIKeyProfileTemplate, BillingAccount, BillingAccountBinding,
+		APIKey, APIKeyProfileTemplate, AffiliateInvitation, AffiliateProfile,
+		AffiliateRebate, AffiliateSetting, BillingAccount, BillingAccountBinding,
 		BillingHold, BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,

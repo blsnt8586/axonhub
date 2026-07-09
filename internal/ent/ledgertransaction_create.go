@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
@@ -294,6 +295,21 @@ func (_c *LedgerTransactionCreate) AddPromoUsages(v ...*PromoUsage) *LedgerTrans
 		ids[i] = v[i].ID
 	}
 	return _c.AddPromoUsageIDs(ids...)
+}
+
+// AddAffiliateRebateIDs adds the "affiliate_rebates" edge to the AffiliateRebate entity by IDs.
+func (_c *LedgerTransactionCreate) AddAffiliateRebateIDs(ids ...int) *LedgerTransactionCreate {
+	_c.mutation.AddAffiliateRebateIDs(ids...)
+	return _c
+}
+
+// AddAffiliateRebates adds the "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_c *LedgerTransactionCreate) AddAffiliateRebates(v ...*AffiliateRebate) *LedgerTransactionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAffiliateRebateIDs(ids...)
 }
 
 // Mutation returns the LedgerTransactionMutation object of the builder.
@@ -645,6 +661,22 @@ func (_c *LedgerTransactionCreate) createSpec() (*LedgerTransaction, *sqlgraph.C
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AffiliateRebatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.AffiliateRebatesTable,
+			Columns: []string{ledgertransaction.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

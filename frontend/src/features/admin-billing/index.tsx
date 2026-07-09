@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Ban, BarChart3, Clock, Download, Loader2, PackageCheck, RefreshCw, RotateCcw, Save, Ticket, Trash2, Unlock, WalletCards } from 'lucide-react';
+import { AlertCircle, Ban, BarChart3, Clock, Download, Loader2, PackageCheck, RefreshCw, RotateCcw, Save, Ticket, Trash2, Unlock, UserPlus, WalletCards } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { extractNumberIDAsNumber } from '@/lib/utils';
@@ -25,6 +25,8 @@ import {
   type AdminPaymentOrdersFilter,
   type AdminPromoCodesFilter,
   type AdminPromoUsagesFilter,
+  type AdminAffiliateInvitationsFilter,
+  type AdminAffiliateRebatesFilter,
   type AdminRedeemCodesFilter,
   type AdminUserSubscriptionsFilter,
   type AdminUsageBillingRecordsFilter,
@@ -45,6 +47,14 @@ import {
   type PromoUsage,
   type PromoUsageScope,
   type PromoUsageStatus,
+  type AffiliateInvitation,
+  type AffiliateInvitationStatus,
+  type AffiliateProfile,
+  type AffiliateProfileStatus,
+  type AffiliateRebate,
+  type AffiliateRebateSourceType,
+  type AffiliateRebateStatus,
+  type AffiliateSetting,
   type RedeemCode,
   type RedeemCodeStatus,
   type RedeemCodeType,
@@ -64,6 +74,10 @@ import {
   useAdminPaymentOrders,
   useAdminPromoCodes,
   useAdminPromoUsages,
+  useAdminAffiliateInvitations,
+  useAdminAffiliateProfiles,
+  useAdminAffiliateRebates,
+  useAdminAffiliateSetting,
   useAdminRedeemCodes,
   useAdminSubscriptionPlans,
   useAdminUsageBillingRecords,
@@ -84,6 +98,8 @@ import {
   useMakeUpPaymentOrder,
   useSaveBillingPriceRule,
   useSavePromoCode,
+  useSaveAffiliateProfile,
+  useSaveAffiliateSetting,
   useSaveSubscriptionPlan,
   useUpdatePromoCodeStatus,
   useUpdateRedeemCodeStatus,
@@ -227,6 +243,40 @@ type PromoUsageFilterForm = {
   code: string;
   from: string;
   to: string;
+};
+
+type AffiliateSettingForm = {
+  enabled: boolean;
+  defaultRebateRateBps: string;
+  freezeDays: string;
+  minTransferAmount: string;
+  currency: string;
+};
+
+type AffiliateProfileForm = {
+  userId: string;
+  status: AffiliateProfileStatus;
+  rebateRateOverrideBps: string;
+  notes: string;
+};
+
+type AffiliateInvitationFilterForm = {
+  inviterUserId: string;
+  inviteeUserId: string;
+  status: 'all' | AffiliateInvitationStatus;
+  inviteCode: string;
+  from: string;
+  to: string;
+};
+
+type AffiliateRebateFilterForm = {
+  inviterUserId: string;
+  inviteeUserId: string;
+  sourceType: 'all' | AffiliateRebateSourceType;
+  status: 'all' | AffiliateRebateStatus;
+  from: string;
+  to: string;
+  transferableBefore: string;
 };
 
 type ReportFilterForm = {
@@ -552,6 +602,47 @@ function defaultPromoUsageFilter(): PromoUsageFilterForm {
   };
 }
 
+function defaultAffiliateSettingForm(): AffiliateSettingForm {
+  return {
+    enabled: true,
+    defaultRebateRateBps: '500',
+    freezeDays: '7',
+    minTransferAmount: '0.00',
+    currency: 'CNY',
+  };
+}
+
+function affiliateSettingFormFromSetting(setting: AffiliateSetting): AffiliateSettingForm {
+  return {
+    enabled: setting.enabled,
+    defaultRebateRateBps: String(setting.defaultRebateRateBps),
+    freezeDays: String(setting.freezeDays),
+    minTransferAmount: microsToAmount(setting.minTransferMicros).toFixed(2),
+    currency: setting.currency,
+  };
+}
+
+function defaultAffiliateProfileForm(): AffiliateProfileForm {
+  return { userId: '', status: 'active', rebateRateOverrideBps: '', notes: '' };
+}
+
+function affiliateProfileFormFromProfile(profile: AffiliateProfile): AffiliateProfileForm {
+  return {
+    userId: profile.userID,
+    status: profile.status,
+    rebateRateOverrideBps: profile.rebateRateOverrideBps == null ? '' : String(profile.rebateRateOverrideBps),
+    notes: profile.notes,
+  };
+}
+
+function defaultAffiliateInvitationFilter(): AffiliateInvitationFilterForm {
+  return { inviterUserId: '', inviteeUserId: '', status: 'all', inviteCode: '', from: '', to: '' };
+}
+
+function defaultAffiliateRebateFilter(): AffiliateRebateFilterForm {
+  return { inviterUserId: '', inviteeUserId: '', sourceType: 'all', status: 'all', from: '', to: '', transferableBefore: '' };
+}
+
 function defaultSubscriptionPlanForm(): SubscriptionPlanForm {
   return {
     name: '',
@@ -718,6 +809,29 @@ function buildPromoUsageFilter(form: PromoUsageFilterForm): AdminPromoUsagesFilt
   };
 }
 
+function buildAffiliateInvitationFilter(form: AffiliateInvitationFilterForm): AdminAffiliateInvitationsFilter {
+  return {
+    inviterUserId: optionalInt(form.inviterUserId),
+    inviteeUserId: optionalInt(form.inviteeUserId),
+    status: form.status === 'all' ? undefined : form.status,
+    inviteCode: optionalText(form.inviteCode),
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+  };
+}
+
+function buildAffiliateRebateFilter(form: AffiliateRebateFilterForm): AdminAffiliateRebatesFilter {
+  return {
+    inviterUserId: optionalInt(form.inviterUserId),
+    inviteeUserId: optionalInt(form.inviteeUserId),
+    sourceType: form.sourceType === 'all' ? undefined : form.sourceType,
+    status: form.status === 'all' ? undefined : form.status,
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+    transferableBefore: optionalTime(form.transferableBefore),
+  };
+}
+
 function buildSubscriptionFilter(form: SubscriptionFilterForm): AdminUserSubscriptionsFilter {
   return {
     userId: optionalInt(form.userId),
@@ -786,6 +900,10 @@ export default function AdminBillingPage() {
   const [promoCodeForm, setPromoCodeForm] = useState<PromoCodeForm>(() => defaultPromoCodeForm());
   const [promoFilter, setPromoFilter] = useState<PromoFilterForm>(() => defaultPromoFilter());
   const [promoUsageFilter, setPromoUsageFilter] = useState<PromoUsageFilterForm>(() => defaultPromoUsageFilter());
+  const [affiliateSettingForm, setAffiliateSettingForm] = useState<AffiliateSettingForm>(() => defaultAffiliateSettingForm());
+  const [affiliateProfileForm, setAffiliateProfileForm] = useState<AffiliateProfileForm>(() => defaultAffiliateProfileForm());
+  const [affiliateInvitationFilter, setAffiliateInvitationFilter] = useState<AffiliateInvitationFilterForm>(() => defaultAffiliateInvitationFilter());
+  const [affiliateRebateFilter, setAffiliateRebateFilter] = useState<AffiliateRebateFilterForm>(() => defaultAffiliateRebateFilter());
   const [subscriptionPlanForm, setSubscriptionPlanForm] = useState<SubscriptionPlanForm>(() => defaultSubscriptionPlanForm());
   const [subscriptionAssignForm, setSubscriptionAssignForm] = useState<SubscriptionAssignForm>(() => defaultSubscriptionAssignForm());
   const [subscriptionFilter, setSubscriptionFilter] = useState<SubscriptionFilterForm>(() => defaultSubscriptionFilter());
@@ -799,6 +917,8 @@ export default function AdminBillingPage() {
   const [appliedRedeemFilter, setAppliedRedeemFilter] = useState<AdminRedeemCodesFilter>({});
   const [appliedPromoFilter, setAppliedPromoFilter] = useState<AdminPromoCodesFilter>({});
   const [appliedPromoUsageFilter, setAppliedPromoUsageFilter] = useState<AdminPromoUsagesFilter>({});
+  const [appliedAffiliateInvitationFilter, setAppliedAffiliateInvitationFilter] = useState<AdminAffiliateInvitationsFilter>({});
+  const [appliedAffiliateRebateFilter, setAppliedAffiliateRebateFilter] = useState<AdminAffiliateRebatesFilter>({});
   const [appliedSubscriptionFilter, setAppliedSubscriptionFilter] = useState<AdminUserSubscriptionsFilter>({});
   const [appliedReportFilter, setAppliedReportFilter] = useState<AdminBillingReportFilter>(() => buildReportFilter(defaultReportFilter()));
   const [holdReleaseReasons, setHoldReleaseReasons] = useState<Record<string, string>>({});
@@ -828,6 +948,10 @@ export default function AdminBillingPage() {
   const adminRedeemCodes = useAdminRedeemCodes(appliedRedeemFilter, 50);
   const adminPromoCodes = useAdminPromoCodes(appliedPromoFilter, 50);
   const adminPromoUsages = useAdminPromoUsages(appliedPromoUsageFilter, 50);
+  const adminAffiliateSetting = useAdminAffiliateSetting();
+  const adminAffiliateProfiles = useAdminAffiliateProfiles(50);
+  const adminAffiliateInvitations = useAdminAffiliateInvitations(appliedAffiliateInvitationFilter, 50);
+  const adminAffiliateRebates = useAdminAffiliateRebates(appliedAffiliateRebateFilter, 50);
   const adminSubscriptionPlans = useAdminSubscriptionPlans(100);
   const adminUserSubscriptions = useAdminUserSubscriptions(appliedSubscriptionFilter, 50);
   const adminReport = useAdminBillingReport(appliedReportFilter);
@@ -844,6 +968,8 @@ export default function AdminBillingPage() {
   const savePromoCode = useSavePromoCode();
   const updatePromoCodeStatus = useUpdatePromoCodeStatus();
   const deletePromoCode = useDeletePromoCode();
+  const saveAffiliateSetting = useSaveAffiliateSetting();
+  const saveAffiliateProfile = useSaveAffiliateProfile();
   const saveSubscriptionPlan = useSaveSubscriptionPlan();
   const deleteSubscriptionPlan = useDeleteSubscriptionPlan();
   const adminAssignSubscription = useAdminAssignSubscription();
@@ -860,6 +986,11 @@ export default function AdminBillingPage() {
     setAccountStatus(account.status);
     setCreditLimit(microsToAmount(account.creditLimitMicros).toFixed(2));
   }, [selectedUserBilling.data?.account]);
+
+  useEffect(() => {
+    if (!adminAffiliateSetting.data) return;
+    setAffiliateSettingForm(affiliateSettingFormFromSetting(adminAffiliateSetting.data));
+  }, [adminAffiliateSetting.data]);
 
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
   const currency = selectedUserBilling.data?.account.currency || data?.accounts[0]?.currency || 'CNY';
@@ -887,6 +1018,12 @@ export default function AdminBillingPage() {
       adminOrders.refetch(),
       adminEvents.refetch(),
       adminRedeemCodes.refetch(),
+      adminPromoCodes.refetch(),
+      adminPromoUsages.refetch(),
+      adminAffiliateSetting.refetch(),
+      adminAffiliateProfiles.refetch(),
+      adminAffiliateInvitations.refetch(),
+      adminAffiliateRebates.refetch(),
       adminSubscriptionPlans.refetch(),
       adminUserSubscriptions.refetch(),
       adminReport.refetch(),
@@ -1228,6 +1365,55 @@ export default function AdminBillingPage() {
     }
   }
 
+  async function handleSaveAffiliateSetting(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const defaultRate = Number(affiliateSettingForm.defaultRebateRateBps);
+    const freezeDays = Number(affiliateSettingForm.freezeDays);
+    const minTransferAmount = normalizeNonNegativeAmount(affiliateSettingForm.minTransferAmount, 2);
+    if (!Number.isInteger(defaultRate) || defaultRate < 0 || defaultRate > 10000 || !Number.isInteger(freezeDays) || freezeDays < 0 || !minTransferAmount) {
+      toast.error(t('adminBilling.affiliate.invalidSetting'));
+      return;
+    }
+    try {
+      await saveAffiliateSetting.mutateAsync({
+        enabled: affiliateSettingForm.enabled,
+        defaultRebateRateBps: defaultRate,
+        freezeDays,
+        minTransferAmount,
+        currency: affiliateSettingForm.currency.trim().toUpperCase() || 'CNY',
+      });
+      toast.success(t('adminBilling.affiliate.settingSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleSaveAffiliateProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!affiliateProfileForm.userId) {
+      toast.error(t('adminBilling.affiliate.userRequired'));
+      return;
+    }
+    const overrideText = affiliateProfileForm.rebateRateOverrideBps.trim();
+    const override = overrideText === '' ? null : Number(overrideText);
+    if (override !== null && (!Number.isInteger(override) || override < 0 || override > 10000)) {
+      toast.error(t('adminBilling.affiliate.invalidProfile'));
+      return;
+    }
+    try {
+      await saveAffiliateProfile.mutateAsync({
+        userId: affiliateProfileForm.userId,
+        status: affiliateProfileForm.status,
+        rebateRateOverrideBps: override,
+        notes: optionalText(affiliateProfileForm.notes),
+      });
+      toast.success(t('adminBilling.affiliate.profileSuccess'));
+      setAffiliateProfileForm(defaultAffiliateProfileForm());
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
   async function handleSaveSubscriptionPlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const price = normalizeNonNegativeAmount(subscriptionPlanForm.price, 2);
@@ -1454,6 +1640,7 @@ export default function AdminBillingPage() {
             <TabsTrigger value='events'>{t('adminBilling.tabs.events')}</TabsTrigger>
             <TabsTrigger value='redeemCodes'>{t('adminBilling.tabs.redeemCodes')}</TabsTrigger>
             <TabsTrigger value='promoCodes'>{t('adminBilling.tabs.promoCodes')}</TabsTrigger>
+            <TabsTrigger value='affiliate'>{t('adminBilling.tabs.affiliate')}</TabsTrigger>
             <TabsTrigger value='subscriptions'>{t('adminBilling.tabs.subscriptions')}</TabsTrigger>
             <TabsTrigger value='pricing'>{t('adminBilling.tabs.pricing')}</TabsTrigger>
             <TabsTrigger value='providers'>{t('adminBilling.tabs.providers')}</TabsTrigger>
@@ -2351,6 +2538,43 @@ export default function AdminBillingPage() {
             />
           </TabsContent>
 
+          <TabsContent value='affiliate' className='mt-0'>
+            <AffiliateTab
+              setting={adminAffiliateSetting.data}
+              profiles={adminAffiliateProfiles.data ?? []}
+              invitations={adminAffiliateInvitations.data ?? []}
+              rebates={adminAffiliateRebates.data ?? []}
+              users={users}
+              formatMicros={formatMicros}
+              formatDate={formatDate}
+              settingForm={affiliateSettingForm}
+              setSettingForm={setAffiliateSettingForm}
+              profileForm={affiliateProfileForm}
+              setProfileForm={setAffiliateProfileForm}
+              invitationFilter={affiliateInvitationFilter}
+              setInvitationFilter={setAffiliateInvitationFilter}
+              rebateFilter={affiliateRebateFilter}
+              setRebateFilter={setAffiliateRebateFilter}
+              onSaveSetting={handleSaveAffiliateSetting}
+              onSaveProfile={handleSaveAffiliateProfile}
+              onEditProfile={(profile) => setAffiliateProfileForm(affiliateProfileFormFromProfile(profile))}
+              onApplyInvitationFilter={() => setAppliedAffiliateInvitationFilter(buildAffiliateInvitationFilter(affiliateInvitationFilter))}
+              onResetInvitationFilter={() => {
+                const next = defaultAffiliateInvitationFilter();
+                setAffiliateInvitationFilter(next);
+                setAppliedAffiliateInvitationFilter({});
+              }}
+              onApplyRebateFilter={() => setAppliedAffiliateRebateFilter(buildAffiliateRebateFilter(affiliateRebateFilter))}
+              onResetRebateFilter={() => {
+                const next = defaultAffiliateRebateFilter();
+                setAffiliateRebateFilter(next);
+                setAppliedAffiliateRebateFilter({});
+              }}
+              isSavingSetting={saveAffiliateSetting.isPending}
+              isSavingProfile={saveAffiliateProfile.isPending}
+            />
+          </TabsContent>
+
           <TabsContent value='subscriptions' className='mt-0'>
             <SubscriptionsTab
               users={users}
@@ -3193,6 +3417,259 @@ function PromoCodesTab({
           </Table>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function AffiliateTab({
+  setting,
+  profiles,
+  invitations,
+  rebates,
+  users,
+  formatMicros,
+  formatDate,
+  settingForm,
+  setSettingForm,
+  profileForm,
+  setProfileForm,
+  invitationFilter,
+  setInvitationFilter,
+  rebateFilter,
+  setRebateFilter,
+  onSaveSetting,
+  onSaveProfile,
+  onEditProfile,
+  onApplyInvitationFilter,
+  onResetInvitationFilter,
+  onApplyRebateFilter,
+  onResetRebateFilter,
+  isSavingSetting,
+  isSavingProfile,
+}: {
+  setting?: AffiliateSetting;
+  profiles: AffiliateProfile[];
+  invitations: AffiliateInvitation[];
+  rebates: AffiliateRebate[];
+  users: Array<{ id: string; email: string }>;
+  formatMicros: (value: number, currency?: string, minimumFractionDigits?: number) => string;
+  formatDate: (value?: string | null) => string;
+  settingForm: AffiliateSettingForm;
+  setSettingForm: (value: AffiliateSettingForm | ((prev: AffiliateSettingForm) => AffiliateSettingForm)) => void;
+  profileForm: AffiliateProfileForm;
+  setProfileForm: (value: AffiliateProfileForm | ((prev: AffiliateProfileForm) => AffiliateProfileForm)) => void;
+  invitationFilter: AffiliateInvitationFilterForm;
+  setInvitationFilter: (value: AffiliateInvitationFilterForm | ((prev: AffiliateInvitationFilterForm) => AffiliateInvitationFilterForm)) => void;
+  rebateFilter: AffiliateRebateFilterForm;
+  setRebateFilter: (value: AffiliateRebateFilterForm | ((prev: AffiliateRebateFilterForm) => AffiliateRebateFilterForm)) => void;
+  onSaveSetting: (event: FormEvent<HTMLFormElement>) => void;
+  onSaveProfile: (event: FormEvent<HTMLFormElement>) => void;
+  onEditProfile: (profile: AffiliateProfile) => void;
+  onApplyInvitationFilter: () => void;
+  onResetInvitationFilter: () => void;
+  onApplyRebateFilter: () => void;
+  onResetRebateFilter: () => void;
+  isSavingSetting: boolean;
+  isSavingProfile: boolean;
+}) {
+  const { t } = useTranslation();
+  const userEmailByID = useMemo(() => {
+    const map = new Map<string, string>();
+    users.forEach((user) => map.set(String(extractNumberIDAsNumber(user.id)), user.email));
+    return map;
+  }, [users]);
+
+  return (
+    <div className='grid gap-4 xl:grid-cols-[420px_1fr]'>
+      <div className='space-y-4'>
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 text-base'>
+              <UserPlus className='size-4' />
+              {t('adminBilling.affiliate.settingTitle')}
+            </CardTitle>
+            <CardDescription>{t('adminBilling.affiliate.settingDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className='grid gap-3' onSubmit={onSaveSetting}>
+              <label className='flex items-center gap-2 rounded-md border p-3 text-sm'>
+                <Switch checked={settingForm.enabled} onCheckedChange={(checked) => setSettingForm((prev) => ({ ...prev, enabled: checked }))} />
+                <span>{t('adminBilling.affiliate.enabled')}</span>
+              </label>
+              <FilterInput label={t('adminBilling.affiliate.defaultRate')} value={settingForm.defaultRebateRateBps} onChange={(value) => setSettingForm((prev) => ({ ...prev, defaultRebateRateBps: value }))} />
+              <FilterInput label={t('adminBilling.affiliate.freezeDays')} value={settingForm.freezeDays} onChange={(value) => setSettingForm((prev) => ({ ...prev, freezeDays: value }))} />
+              <FilterInput label={t('adminBilling.affiliate.minTransfer')} value={settingForm.minTransferAmount} onChange={(value) => setSettingForm((prev) => ({ ...prev, minTransferAmount: value }))} />
+              <FilterInput label={t('adminBilling.columns.currency')} value={settingForm.currency} onChange={(value) => setSettingForm((prev) => ({ ...prev, currency: value.toUpperCase() }))} />
+              <Button type='submit' disabled={isSavingSetting}>
+                {isSavingSetting ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                {t('adminBilling.affiliate.saveSetting')}
+              </Button>
+              {setting && (
+                <div className='text-muted-foreground text-xs'>
+                  {t('adminBilling.columns.updatedAt')}: {formatDate(setting.updatedAt)}
+                </div>
+              )}
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.affiliate.profileTitle')}</CardTitle>
+            <CardDescription>{t('adminBilling.affiliate.profileDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className='grid gap-3' onSubmit={onSaveProfile}>
+              <UserSelect users={users} value={profileForm.userId} onChange={(value) => setProfileForm((prev) => ({ ...prev, userId: value }))} label={t('adminBilling.adjust.user')} placeholder={t('adminBilling.adjust.userPlaceholder')} />
+              <FilterSelect label={t('adminBilling.columns.status')} value={profileForm.status} onChange={(value) => setProfileForm((prev) => ({ ...prev, status: value as AffiliateProfileStatus }))} options={['active', 'disabled']} />
+              <FilterInput label={t('adminBilling.affiliate.overrideRate')} value={profileForm.rebateRateOverrideBps} onChange={(value) => setProfileForm((prev) => ({ ...prev, rebateRateOverrideBps: value }))} />
+              <FilterInput label={t('adminBilling.redeem.notes')} value={profileForm.notes} onChange={(value) => setProfileForm((prev) => ({ ...prev, notes: value }))} />
+              <div className='flex gap-2'>
+                <Button type='submit' disabled={isSavingProfile}>
+                  {isSavingProfile ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                  {t('adminBilling.affiliate.saveProfile')}
+                </Button>
+                <Button type='button' variant='outline' onClick={() => setProfileForm(defaultAffiliateProfileForm())}>{t('adminBilling.promo.newCode')}</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className='space-y-4'>
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.affiliate.profilesTitle')}</CardTitle>
+            <CardDescription>{t('adminBilling.affiliate.profilesDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className='overflow-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.columns.user')}</TableHead>
+                  <TableHead>{t('adminBilling.affiliate.inviteCode')}</TableHead>
+                  <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.affiliate.overrideRate')}</TableHead>
+                  <TableHead>{t('adminBilling.columns.action')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {profiles.length === 0 ? (
+                  <TableRow><TableCell colSpan={5} className='text-muted-foreground h-24 text-center'>{t('common.noData')}</TableCell></TableRow>
+                ) : (
+                  profiles.map((profile) => (
+                    <TableRow key={profile.id}>
+                      <TableCell>
+                        <div className='font-mono text-xs'>{profile.userID}</div>
+                        <div className='text-muted-foreground text-xs'>{userEmailByID.get(String(extractNumberIDAsNumber(profile.userID))) || '-'}</div>
+                      </TableCell>
+                      <TableCell className='font-mono text-xs'>{profile.inviteCode}</TableCell>
+                      <TableCell><Badge variant={profile.status === 'active' ? 'default' : 'secondary'}>{profile.status}</Badge></TableCell>
+                      <TableCell className='text-right font-mono'>{profile.rebateRateOverrideBps ?? '-'}</TableCell>
+                      <TableCell><Button type='button' size='sm' variant='outline' onClick={() => onEditProfile(profile)}>{t('adminBilling.subscriptions.edit')}</Button></TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.affiliate.invitationsTitle')}</CardTitle>
+            <CardDescription>{t('adminBilling.affiliate.invitationsDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-3 overflow-auto'>
+            <div className='grid gap-2 md:grid-cols-3 xl:grid-cols-6'>
+              <FilterInput label={t('adminBilling.affiliate.inviterId')} value={invitationFilter.inviterUserId} onChange={(value) => setInvitationFilter((prev) => ({ ...prev, inviterUserId: value }))} />
+              <FilterInput label={t('adminBilling.affiliate.inviteeId')} value={invitationFilter.inviteeUserId} onChange={(value) => setInvitationFilter((prev) => ({ ...prev, inviteeUserId: value }))} />
+              <FilterSelect label={t('adminBilling.columns.status')} value={invitationFilter.status} onChange={(value) => setInvitationFilter((prev) => ({ ...prev, status: value as AffiliateInvitationFilterForm['status'] }))} options={['all', 'active', 'canceled']} />
+              <FilterInput label={t('adminBilling.affiliate.inviteCode')} value={invitationFilter.inviteCode} onChange={(value) => setInvitationFilter((prev) => ({ ...prev, inviteCode: value }))} />
+              <FilterInput label={t('adminBilling.filters.from')} type='datetime-local' value={invitationFilter.from} onChange={(value) => setInvitationFilter((prev) => ({ ...prev, from: value }))} />
+              <FilterInput label={t('adminBilling.filters.to')} type='datetime-local' value={invitationFilter.to} onChange={(value) => setInvitationFilter((prev) => ({ ...prev, to: value }))} />
+            </div>
+            <FilterActions onApply={onApplyInvitationFilter} onReset={onResetInvitationFilter} />
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                  <TableHead>{t('adminBilling.affiliate.inviterId')}</TableHead>
+                  <TableHead>{t('adminBilling.affiliate.inviteeId')}</TableHead>
+                  <TableHead>{t('adminBilling.affiliate.inviteCode')}</TableHead>
+                  <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invitations.length === 0 ? (
+                  <TableRow><TableCell colSpan={5} className='text-muted-foreground h-24 text-center'>{t('common.noData')}</TableCell></TableRow>
+                ) : (
+                  invitations.map((invitation) => (
+                    <TableRow key={invitation.id}>
+                      <TableCell>{formatDate(invitation.createdAt)}</TableCell>
+                      <TableCell className='font-mono text-xs'>{invitation.inviterUserID}</TableCell>
+                      <TableCell className='font-mono text-xs'>{invitation.inviteeUserID}</TableCell>
+                      <TableCell className='font-mono text-xs'>{invitation.inviteCode}</TableCell>
+                      <TableCell><Badge variant={invitation.status === 'active' ? 'default' : 'secondary'}>{invitation.status}</Badge></TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card className='rounded-lg'>
+          <CardHeader>
+            <CardTitle className='text-base'>{t('adminBilling.affiliate.rebatesTitle')}</CardTitle>
+            <CardDescription>{t('adminBilling.affiliate.rebatesDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-3 overflow-auto'>
+            <div className='grid gap-2 md:grid-cols-3 xl:grid-cols-7'>
+              <FilterInput label={t('adminBilling.affiliate.inviterId')} value={rebateFilter.inviterUserId} onChange={(value) => setRebateFilter((prev) => ({ ...prev, inviterUserId: value }))} />
+              <FilterInput label={t('adminBilling.affiliate.inviteeId')} value={rebateFilter.inviteeUserId} onChange={(value) => setRebateFilter((prev) => ({ ...prev, inviteeUserId: value }))} />
+              <FilterSelect label={t('adminBilling.affiliate.sourceType')} value={rebateFilter.sourceType} onChange={(value) => setRebateFilter((prev) => ({ ...prev, sourceType: value as AffiliateRebateFilterForm['sourceType'] }))} options={['all', 'payment_order', 'user_subscription']} />
+              <FilterSelect label={t('adminBilling.columns.status')} value={rebateFilter.status} onChange={(value) => setRebateFilter((prev) => ({ ...prev, status: value as AffiliateRebateFilterForm['status'] }))} options={['all', 'frozen', 'available', 'transferred', 'voided']} />
+              <FilterInput label={t('adminBilling.filters.from')} type='datetime-local' value={rebateFilter.from} onChange={(value) => setRebateFilter((prev) => ({ ...prev, from: value }))} />
+              <FilterInput label={t('adminBilling.filters.to')} type='datetime-local' value={rebateFilter.to} onChange={(value) => setRebateFilter((prev) => ({ ...prev, to: value }))} />
+              <FilterInput label={t('adminBilling.affiliate.transferableBefore')} type='datetime-local' value={rebateFilter.transferableBefore} onChange={(value) => setRebateFilter((prev) => ({ ...prev, transferableBefore: value }))} />
+            </div>
+            <FilterActions onApply={onApplyRebateFilter} onReset={onResetRebateFilter} />
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                  <TableHead>{t('adminBilling.affiliate.inviterId')}</TableHead>
+                  <TableHead>{t('adminBilling.affiliate.inviteeId')}</TableHead>
+                  <TableHead>{t('adminBilling.affiliate.sourceType')}</TableHead>
+                  <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                  <TableHead>{t('adminBilling.affiliate.freezeUntil')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.affiliate.baseAmount')}</TableHead>
+                  <TableHead className='text-right'>{t('adminBilling.affiliate.rebateAmount')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rebates.length === 0 ? (
+                  <TableRow><TableCell colSpan={8} className='text-muted-foreground h-24 text-center'>{t('common.noData')}</TableCell></TableRow>
+                ) : (
+                  rebates.map((rebate) => (
+                    <TableRow key={rebate.id}>
+                      <TableCell>{formatDate(rebate.createdAt)}</TableCell>
+                      <TableCell className='font-mono text-xs'>{rebate.inviterUserID}</TableCell>
+                      <TableCell className='font-mono text-xs'>{rebate.inviteeUserID}</TableCell>
+                      <TableCell>{rebate.sourceType}</TableCell>
+                      <TableCell><Badge variant={rebate.status === 'transferred' ? 'default' : 'secondary'}>{rebate.status}</Badge></TableCell>
+                      <TableCell>{formatDate(rebate.freezeUntil)}</TableCell>
+                      <TableCell className='text-right font-mono'>{formatMicros(rebate.baseAmountMicros, rebate.currency)}</TableCell>
+                      <TableCell className='text-right font-mono'>{formatMicros(rebate.amountMicros, rebate.currency)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { AlertCircle, CreditCard, ExternalLink, Loader2, PackageCheck, RefreshCw, ShieldCheck, Ticket, Wallet } from 'lucide-react';
+import { AlertCircle, CreditCard, ExternalLink, Loader2, PackageCheck, RefreshCw, ShieldCheck, Ticket, UserPlus, Users, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -16,11 +16,13 @@ import {
   type SubscriptionPlan,
   type UserSubscription,
   useCreateMyEPayRechargeCheckout,
+  useBindAffiliateInvite,
   useMyBillingOverview,
   usePurchaseSubscriptionPlan,
   useQuoteRechargePromo,
   useQuoteSubscriptionPromo,
   useRedeemCode,
+  useTransferAffiliateRebates,
 } from './data/billing';
 
 function microsToAmount(value: number) {
@@ -99,12 +101,15 @@ export default function BillingPage() {
   const [rechargeQuote, setRechargeQuote] = useState<PromoQuote | null>(null);
   const [subscriptionPromoCode, setSubscriptionPromoCode] = useState('');
   const [redeemCode, setRedeemCode] = useState('');
+  const [affiliateInviteCode, setAffiliateInviteCode] = useState('');
   const { data, isLoading, isFetching, error, refetch } = useMyBillingOverview(10);
   const createCheckout = useCreateMyEPayRechargeCheckout();
   const quoteRechargePromo = useQuoteRechargePromo();
   const quoteSubscriptionPromo = useQuoteSubscriptionPromo();
   const redeemCodeMutation = useRedeemCode();
   const purchaseSubscriptionPlan = usePurchaseSubscriptionPlan();
+  const bindAffiliateInvite = useBindAffiliateInvite();
+  const transferAffiliateRebates = useTransferAffiliateRebates();
 
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
   const currency = data?.account.currency || 'CNY';
@@ -179,6 +184,36 @@ export default function BillingPage() {
       await redeemCodeMutation.mutateAsync({ code });
       toast.success(t('billing.redeem.success'));
       setRedeemCode('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('common.errors.unknownError');
+      toast.error(message);
+    }
+  }
+
+  async function handleBindAffiliateInvite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const inviteCode = affiliateInviteCode.trim();
+    if (!inviteCode) {
+      toast.error(t('billing.affiliate.invalidInviteCode'));
+      return;
+    }
+    try {
+      await bindAffiliateInvite.mutateAsync({ inviteCode });
+      toast.success(t('billing.affiliate.bindSuccess'));
+      setAffiliateInviteCode('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('common.errors.unknownError');
+      toast.error(message);
+    }
+  }
+
+  async function handleTransferAffiliateRebates() {
+    try {
+      const result = await transferAffiliateRebates.mutateAsync();
+      toast.success(t('billing.affiliate.transferSuccess', {
+        count: result.transferredCount,
+        amount: formatCurrency.format(microsToAmount(result.transferredMicros)),
+      }));
     } catch (err) {
       const message = err instanceof Error ? err.message : t('common.errors.unknownError');
       toast.error(message);
@@ -389,6 +424,76 @@ export default function BillingPage() {
                 </form>
               </CardContent>
             </Card>
+
+            <Card className='rounded-lg'>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2 text-base'>
+                  <UserPlus className='size-4' />
+                  {t('billing.affiliate.title')}
+                </CardTitle>
+                <CardDescription>{t('billing.affiliate.description')}</CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <div className='rounded-md border p-3'>
+                  <div className='text-muted-foreground text-xs'>{t('billing.affiliate.myInviteCode')}</div>
+                  <div className='mt-1 flex items-center justify-between gap-2'>
+                    <code className='truncate font-mono text-lg font-semibold'>{data?.affiliateSummary.profile.inviteCode || '-'}</code>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='outline'
+                      onClick={() => {
+                        const code = data?.affiliateSummary.profile.inviteCode;
+                        if (code) {
+                          void navigator.clipboard?.writeText(code);
+                          toast.success(t('billing.affiliate.copied'));
+                        }
+                      }}
+                    >
+                      {t('billing.affiliate.copy')}
+                    </Button>
+                  </div>
+                </div>
+                <div className='grid grid-cols-3 gap-2 text-sm'>
+                  <div className='rounded-md border p-2'>
+                    <div className='text-muted-foreground text-xs'>{t('billing.affiliate.invitees')}</div>
+                    <div className='mt-1 font-mono text-lg font-semibold'>{data?.affiliateSummary.inviteeCount ?? 0}</div>
+                  </div>
+                  <div className='rounded-md border p-2'>
+                    <div className='text-muted-foreground text-xs'>{t('billing.affiliate.frozen')}</div>
+                    <div className='mt-1 font-mono text-sm font-semibold'>{formatCurrency.format(microsToAmount(data?.affiliateSummary.frozenMicros ?? 0))}</div>
+                  </div>
+                  <div className='rounded-md border p-2'>
+                    <div className='text-muted-foreground text-xs'>{t('billing.affiliate.available')}</div>
+                    <div className='mt-1 font-mono text-sm font-semibold'>{formatCurrency.format(microsToAmount(data?.affiliateSummary.availableMicros ?? 0))}</div>
+                  </div>
+                </div>
+                {!data?.affiliateSummary.invitation && (
+                  <form className='space-y-3' onSubmit={handleBindAffiliateInvite}>
+                    <div className='space-y-2'>
+                      <label className='text-sm font-medium' htmlFor='billing-affiliate-invite'>
+                        {t('billing.affiliate.inviteCode')}
+                      </label>
+                      <Input
+                        id='billing-affiliate-invite'
+                        value={affiliateInviteCode}
+                        onChange={(event) => setAffiliateInviteCode(event.target.value.toUpperCase())}
+                        placeholder={t('billing.affiliate.invitePlaceholder')}
+                        autoComplete='off'
+                      />
+                    </div>
+                    <Button className='w-full' type='submit' variant='outline' disabled={bindAffiliateInvite.isPending}>
+                      {bindAffiliateInvite.isPending ? <Loader2 className='size-4 animate-spin' /> : <Users className='size-4' />}
+                      {t('billing.affiliate.bind')}
+                    </Button>
+                  </form>
+                )}
+                <Button className='w-full' type='button' onClick={() => void handleTransferAffiliateRebates()} disabled={transferAffiliateRebates.isPending || (data?.affiliateSummary.availableMicros ?? 0) <= 0}>
+                  {transferAffiliateRebates.isPending ? <Loader2 className='size-4 animate-spin' /> : <Wallet className='size-4' />}
+                  {t('billing.affiliate.transfer')}
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           <Card className='rounded-lg'>
@@ -577,6 +682,80 @@ export default function BillingPage() {
             </Table>
           </CardContent>
         </Card>
+
+        <div className='grid gap-4 lg:grid-cols-2'>
+          <Card className='rounded-lg'>
+            <CardHeader>
+              <CardTitle className='text-base'>{t('billing.affiliate.inviteesTitle')}</CardTitle>
+              <CardDescription>{t('billing.affiliate.inviteesDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className='overflow-auto'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('billing.columns.time')}</TableHead>
+                    <TableHead>{t('billing.affiliate.invitee')}</TableHead>
+                    <TableHead>{t('billing.columns.status')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(data?.affiliateInvitations ?? []).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className='text-muted-foreground h-24 text-center'>
+                        {isLoading ? t('common.loading') : t('common.noData')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    data?.affiliateInvitations.map((invitation) => (
+                      <TableRow key={invitation.id}>
+                        <TableCell>{formatDate(invitation.createdAt)}</TableCell>
+                        <TableCell className='font-mono text-xs'>{invitation.inviteeUserID}</TableCell>
+                        <TableCell><Badge variant={invitation.status === 'active' ? 'default' : 'secondary'}>{invitation.status}</Badge></TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card className='rounded-lg'>
+            <CardHeader>
+              <CardTitle className='text-base'>{t('billing.affiliate.rebatesTitle')}</CardTitle>
+              <CardDescription>{t('billing.affiliate.rebatesDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className='overflow-auto'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('billing.columns.time')}</TableHead>
+                    <TableHead>{t('billing.columns.status')}</TableHead>
+                    <TableHead>{t('billing.affiliate.freezeUntil')}</TableHead>
+                    <TableHead className='text-right'>{t('billing.columns.amount')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(data?.affiliateRebates ?? []).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className='text-muted-foreground h-24 text-center'>
+                        {isLoading ? t('common.loading') : t('common.noData')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    data?.affiliateRebates.map((rebate) => (
+                      <TableRow key={rebate.id}>
+                        <TableCell>{formatDate(rebate.createdAt)}</TableCell>
+                        <TableCell><Badge variant={rebate.status === 'transferred' ? 'default' : 'secondary'}>{rebate.status}</Badge></TableCell>
+                        <TableCell>{formatDate(rebate.freezeUntil)}</TableCell>
+                        <TableCell className='text-right font-mono'>{formatCurrency.format(microsToAmount(rebate.amountMicros))}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className='grid gap-4 lg:grid-cols-2'>
           <Card className='rounded-lg'>

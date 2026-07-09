@@ -7,6 +7,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/affiliatesetting"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
@@ -833,6 +837,2104 @@ func (i *APIKeyProfileTemplateWhereInput) P() (predicate.APIKeyProfileTemplate, 
 		return predicates[0], nil
 	default:
 		return apikeyprofiletemplate.And(predicates...), nil
+	}
+}
+
+// AffiliateInvitationWhereInput represents a where input for filtering AffiliateInvitation queries.
+type AffiliateInvitationWhereInput struct {
+	Predicates []predicate.AffiliateInvitation  `json:"-"`
+	Not        *AffiliateInvitationWhereInput   `json:"not,omitempty"`
+	Or         []*AffiliateInvitationWhereInput `json:"or,omitempty"`
+	And        []*AffiliateInvitationWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "inviter_user_id" field predicates.
+	InviterUserID      *int  `json:"inviterUserID,omitempty"`
+	InviterUserIDNEQ   *int  `json:"inviterUserIDNEQ,omitempty"`
+	InviterUserIDIn    []int `json:"inviterUserIDIn,omitempty"`
+	InviterUserIDNotIn []int `json:"inviterUserIDNotIn,omitempty"`
+
+	// "invitee_user_id" field predicates.
+	InviteeUserID      *int  `json:"inviteeUserID,omitempty"`
+	InviteeUserIDNEQ   *int  `json:"inviteeUserIDNEQ,omitempty"`
+	InviteeUserIDIn    []int `json:"inviteeUserIDIn,omitempty"`
+	InviteeUserIDNotIn []int `json:"inviteeUserIDNotIn,omitempty"`
+
+	// "invite_code" field predicates.
+	InviteCode             *string  `json:"inviteCode,omitempty"`
+	InviteCodeNEQ          *string  `json:"inviteCodeNEQ,omitempty"`
+	InviteCodeIn           []string `json:"inviteCodeIn,omitempty"`
+	InviteCodeNotIn        []string `json:"inviteCodeNotIn,omitempty"`
+	InviteCodeGT           *string  `json:"inviteCodeGT,omitempty"`
+	InviteCodeGTE          *string  `json:"inviteCodeGTE,omitempty"`
+	InviteCodeLT           *string  `json:"inviteCodeLT,omitempty"`
+	InviteCodeLTE          *string  `json:"inviteCodeLTE,omitempty"`
+	InviteCodeContains     *string  `json:"inviteCodeContains,omitempty"`
+	InviteCodeHasPrefix    *string  `json:"inviteCodeHasPrefix,omitempty"`
+	InviteCodeHasSuffix    *string  `json:"inviteCodeHasSuffix,omitempty"`
+	InviteCodeEqualFold    *string  `json:"inviteCodeEqualFold,omitempty"`
+	InviteCodeContainsFold *string  `json:"inviteCodeContainsFold,omitempty"`
+
+	// "status" field predicates.
+	Status      *affiliateinvitation.Status  `json:"status,omitempty"`
+	StatusNEQ   *affiliateinvitation.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []affiliateinvitation.Status `json:"statusIn,omitempty"`
+	StatusNotIn []affiliateinvitation.Status `json:"statusNotIn,omitempty"`
+
+	// "notes" field predicates.
+	Notes             *string  `json:"notes,omitempty"`
+	NotesNEQ          *string  `json:"notesNEQ,omitempty"`
+	NotesIn           []string `json:"notesIn,omitempty"`
+	NotesNotIn        []string `json:"notesNotIn,omitempty"`
+	NotesGT           *string  `json:"notesGT,omitempty"`
+	NotesGTE          *string  `json:"notesGTE,omitempty"`
+	NotesLT           *string  `json:"notesLT,omitempty"`
+	NotesLTE          *string  `json:"notesLTE,omitempty"`
+	NotesContains     *string  `json:"notesContains,omitempty"`
+	NotesHasPrefix    *string  `json:"notesHasPrefix,omitempty"`
+	NotesHasSuffix    *string  `json:"notesHasSuffix,omitempty"`
+	NotesEqualFold    *string  `json:"notesEqualFold,omitempty"`
+	NotesContainsFold *string  `json:"notesContainsFold,omitempty"`
+
+	// "inviter" edge predicates.
+	HasInviter     *bool             `json:"hasInviter,omitempty"`
+	HasInviterWith []*UserWhereInput `json:"hasInviterWith,omitempty"`
+
+	// "invitee" edge predicates.
+	HasInvitee     *bool             `json:"hasInvitee,omitempty"`
+	HasInviteeWith []*UserWhereInput `json:"hasInviteeWith,omitempty"`
+
+	// "rebates" edge predicates.
+	HasRebates     *bool                        `json:"hasRebates,omitempty"`
+	HasRebatesWith []*AffiliateRebateWhereInput `json:"hasRebatesWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *AffiliateInvitationWhereInput) AddPredicates(predicates ...predicate.AffiliateInvitation) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the AffiliateInvitationWhereInput filter on the AffiliateInvitationQuery builder.
+func (i *AffiliateInvitationWhereInput) Filter(q *AffiliateInvitationQuery) (*AffiliateInvitationQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyAffiliateInvitationWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyAffiliateInvitationWhereInput is returned in case the AffiliateInvitationWhereInput is empty.
+var ErrEmptyAffiliateInvitationWhereInput = errors.New("ent: empty predicate AffiliateInvitationWhereInput")
+
+// P returns a predicate for filtering affiliateinvitations.
+// An error is returned if the input is empty or invalid.
+func (i *AffiliateInvitationWhereInput) P() (predicate.AffiliateInvitation, error) {
+	var predicates []predicate.AffiliateInvitation
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, affiliateinvitation.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.AffiliateInvitation, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, affiliateinvitation.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.AffiliateInvitation, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, affiliateinvitation.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, affiliateinvitation.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, affiliateinvitation.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, affiliateinvitation.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, affiliateinvitation.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, affiliateinvitation.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, affiliateinvitation.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, affiliateinvitation.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, affiliateinvitation.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, affiliateinvitation.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, affiliateinvitation.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, affiliateinvitation.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, affiliateinvitation.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, affiliateinvitation.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, affiliateinvitation.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, affiliateinvitation.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, affiliateinvitation.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, affiliateinvitation.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, affiliateinvitation.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.InviterUserID != nil {
+		predicates = append(predicates, affiliateinvitation.InviterUserIDEQ(*i.InviterUserID))
+	}
+	if i.InviterUserIDNEQ != nil {
+		predicates = append(predicates, affiliateinvitation.InviterUserIDNEQ(*i.InviterUserIDNEQ))
+	}
+	if len(i.InviterUserIDIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.InviterUserIDIn(i.InviterUserIDIn...))
+	}
+	if len(i.InviterUserIDNotIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.InviterUserIDNotIn(i.InviterUserIDNotIn...))
+	}
+	if i.InviteeUserID != nil {
+		predicates = append(predicates, affiliateinvitation.InviteeUserIDEQ(*i.InviteeUserID))
+	}
+	if i.InviteeUserIDNEQ != nil {
+		predicates = append(predicates, affiliateinvitation.InviteeUserIDNEQ(*i.InviteeUserIDNEQ))
+	}
+	if len(i.InviteeUserIDIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.InviteeUserIDIn(i.InviteeUserIDIn...))
+	}
+	if len(i.InviteeUserIDNotIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.InviteeUserIDNotIn(i.InviteeUserIDNotIn...))
+	}
+	if i.InviteCode != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeEQ(*i.InviteCode))
+	}
+	if i.InviteCodeNEQ != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeNEQ(*i.InviteCodeNEQ))
+	}
+	if len(i.InviteCodeIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.InviteCodeIn(i.InviteCodeIn...))
+	}
+	if len(i.InviteCodeNotIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.InviteCodeNotIn(i.InviteCodeNotIn...))
+	}
+	if i.InviteCodeGT != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeGT(*i.InviteCodeGT))
+	}
+	if i.InviteCodeGTE != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeGTE(*i.InviteCodeGTE))
+	}
+	if i.InviteCodeLT != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeLT(*i.InviteCodeLT))
+	}
+	if i.InviteCodeLTE != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeLTE(*i.InviteCodeLTE))
+	}
+	if i.InviteCodeContains != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeContains(*i.InviteCodeContains))
+	}
+	if i.InviteCodeHasPrefix != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeHasPrefix(*i.InviteCodeHasPrefix))
+	}
+	if i.InviteCodeHasSuffix != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeHasSuffix(*i.InviteCodeHasSuffix))
+	}
+	if i.InviteCodeEqualFold != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeEqualFold(*i.InviteCodeEqualFold))
+	}
+	if i.InviteCodeContainsFold != nil {
+		predicates = append(predicates, affiliateinvitation.InviteCodeContainsFold(*i.InviteCodeContainsFold))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, affiliateinvitation.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, affiliateinvitation.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.Notes != nil {
+		predicates = append(predicates, affiliateinvitation.NotesEQ(*i.Notes))
+	}
+	if i.NotesNEQ != nil {
+		predicates = append(predicates, affiliateinvitation.NotesNEQ(*i.NotesNEQ))
+	}
+	if len(i.NotesIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.NotesIn(i.NotesIn...))
+	}
+	if len(i.NotesNotIn) > 0 {
+		predicates = append(predicates, affiliateinvitation.NotesNotIn(i.NotesNotIn...))
+	}
+	if i.NotesGT != nil {
+		predicates = append(predicates, affiliateinvitation.NotesGT(*i.NotesGT))
+	}
+	if i.NotesGTE != nil {
+		predicates = append(predicates, affiliateinvitation.NotesGTE(*i.NotesGTE))
+	}
+	if i.NotesLT != nil {
+		predicates = append(predicates, affiliateinvitation.NotesLT(*i.NotesLT))
+	}
+	if i.NotesLTE != nil {
+		predicates = append(predicates, affiliateinvitation.NotesLTE(*i.NotesLTE))
+	}
+	if i.NotesContains != nil {
+		predicates = append(predicates, affiliateinvitation.NotesContains(*i.NotesContains))
+	}
+	if i.NotesHasPrefix != nil {
+		predicates = append(predicates, affiliateinvitation.NotesHasPrefix(*i.NotesHasPrefix))
+	}
+	if i.NotesHasSuffix != nil {
+		predicates = append(predicates, affiliateinvitation.NotesHasSuffix(*i.NotesHasSuffix))
+	}
+	if i.NotesEqualFold != nil {
+		predicates = append(predicates, affiliateinvitation.NotesEqualFold(*i.NotesEqualFold))
+	}
+	if i.NotesContainsFold != nil {
+		predicates = append(predicates, affiliateinvitation.NotesContainsFold(*i.NotesContainsFold))
+	}
+
+	if i.HasInviter != nil {
+		p := affiliateinvitation.HasInviter()
+		if !*i.HasInviter {
+			p = affiliateinvitation.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasInviterWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasInviterWith))
+		for _, w := range i.HasInviterWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasInviterWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliateinvitation.HasInviterWith(with...))
+	}
+	if i.HasInvitee != nil {
+		p := affiliateinvitation.HasInvitee()
+		if !*i.HasInvitee {
+			p = affiliateinvitation.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasInviteeWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasInviteeWith))
+		for _, w := range i.HasInviteeWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasInviteeWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliateinvitation.HasInviteeWith(with...))
+	}
+	if i.HasRebates != nil {
+		p := affiliateinvitation.HasRebates()
+		if !*i.HasRebates {
+			p = affiliateinvitation.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasRebatesWith) > 0 {
+		with := make([]predicate.AffiliateRebate, 0, len(i.HasRebatesWith))
+		for _, w := range i.HasRebatesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasRebatesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliateinvitation.HasRebatesWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyAffiliateInvitationWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return affiliateinvitation.And(predicates...), nil
+	}
+}
+
+// AffiliateProfileWhereInput represents a where input for filtering AffiliateProfile queries.
+type AffiliateProfileWhereInput struct {
+	Predicates []predicate.AffiliateProfile  `json:"-"`
+	Not        *AffiliateProfileWhereInput   `json:"not,omitempty"`
+	Or         []*AffiliateProfileWhereInput `json:"or,omitempty"`
+	And        []*AffiliateProfileWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "user_id" field predicates.
+	UserID      *int  `json:"userID,omitempty"`
+	UserIDNEQ   *int  `json:"userIDNEQ,omitempty"`
+	UserIDIn    []int `json:"userIDIn,omitempty"`
+	UserIDNotIn []int `json:"userIDNotIn,omitempty"`
+
+	// "invite_code" field predicates.
+	InviteCode             *string  `json:"inviteCode,omitempty"`
+	InviteCodeNEQ          *string  `json:"inviteCodeNEQ,omitempty"`
+	InviteCodeIn           []string `json:"inviteCodeIn,omitempty"`
+	InviteCodeNotIn        []string `json:"inviteCodeNotIn,omitempty"`
+	InviteCodeGT           *string  `json:"inviteCodeGT,omitempty"`
+	InviteCodeGTE          *string  `json:"inviteCodeGTE,omitempty"`
+	InviteCodeLT           *string  `json:"inviteCodeLT,omitempty"`
+	InviteCodeLTE          *string  `json:"inviteCodeLTE,omitempty"`
+	InviteCodeContains     *string  `json:"inviteCodeContains,omitempty"`
+	InviteCodeHasPrefix    *string  `json:"inviteCodeHasPrefix,omitempty"`
+	InviteCodeHasSuffix    *string  `json:"inviteCodeHasSuffix,omitempty"`
+	InviteCodeEqualFold    *string  `json:"inviteCodeEqualFold,omitempty"`
+	InviteCodeContainsFold *string  `json:"inviteCodeContainsFold,omitempty"`
+
+	// "status" field predicates.
+	Status      *affiliateprofile.Status  `json:"status,omitempty"`
+	StatusNEQ   *affiliateprofile.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []affiliateprofile.Status `json:"statusIn,omitempty"`
+	StatusNotIn []affiliateprofile.Status `json:"statusNotIn,omitempty"`
+
+	// "rebate_rate_override_bps" field predicates.
+	RebateRateOverrideBps       *int  `json:"rebateRateOverrideBps,omitempty"`
+	RebateRateOverrideBpsNEQ    *int  `json:"rebateRateOverrideBpsNEQ,omitempty"`
+	RebateRateOverrideBpsIn     []int `json:"rebateRateOverrideBpsIn,omitempty"`
+	RebateRateOverrideBpsNotIn  []int `json:"rebateRateOverrideBpsNotIn,omitempty"`
+	RebateRateOverrideBpsGT     *int  `json:"rebateRateOverrideBpsGT,omitempty"`
+	RebateRateOverrideBpsGTE    *int  `json:"rebateRateOverrideBpsGTE,omitempty"`
+	RebateRateOverrideBpsLT     *int  `json:"rebateRateOverrideBpsLT,omitempty"`
+	RebateRateOverrideBpsLTE    *int  `json:"rebateRateOverrideBpsLTE,omitempty"`
+	RebateRateOverrideBpsIsNil  bool  `json:"rebateRateOverrideBpsIsNil,omitempty"`
+	RebateRateOverrideBpsNotNil bool  `json:"rebateRateOverrideBpsNotNil,omitempty"`
+
+	// "notes" field predicates.
+	Notes             *string  `json:"notes,omitempty"`
+	NotesNEQ          *string  `json:"notesNEQ,omitempty"`
+	NotesIn           []string `json:"notesIn,omitempty"`
+	NotesNotIn        []string `json:"notesNotIn,omitempty"`
+	NotesGT           *string  `json:"notesGT,omitempty"`
+	NotesGTE          *string  `json:"notesGTE,omitempty"`
+	NotesLT           *string  `json:"notesLT,omitempty"`
+	NotesLTE          *string  `json:"notesLTE,omitempty"`
+	NotesContains     *string  `json:"notesContains,omitempty"`
+	NotesHasPrefix    *string  `json:"notesHasPrefix,omitempty"`
+	NotesHasSuffix    *string  `json:"notesHasSuffix,omitempty"`
+	NotesEqualFold    *string  `json:"notesEqualFold,omitempty"`
+	NotesContainsFold *string  `json:"notesContainsFold,omitempty"`
+
+	// "user" edge predicates.
+	HasUser     *bool             `json:"hasUser,omitempty"`
+	HasUserWith []*UserWhereInput `json:"hasUserWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *AffiliateProfileWhereInput) AddPredicates(predicates ...predicate.AffiliateProfile) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the AffiliateProfileWhereInput filter on the AffiliateProfileQuery builder.
+func (i *AffiliateProfileWhereInput) Filter(q *AffiliateProfileQuery) (*AffiliateProfileQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyAffiliateProfileWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyAffiliateProfileWhereInput is returned in case the AffiliateProfileWhereInput is empty.
+var ErrEmptyAffiliateProfileWhereInput = errors.New("ent: empty predicate AffiliateProfileWhereInput")
+
+// P returns a predicate for filtering affiliateprofiles.
+// An error is returned if the input is empty or invalid.
+func (i *AffiliateProfileWhereInput) P() (predicate.AffiliateProfile, error) {
+	var predicates []predicate.AffiliateProfile
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, affiliateprofile.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.AffiliateProfile, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, affiliateprofile.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.AffiliateProfile, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, affiliateprofile.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, affiliateprofile.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, affiliateprofile.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, affiliateprofile.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, affiliateprofile.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, affiliateprofile.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, affiliateprofile.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, affiliateprofile.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, affiliateprofile.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, affiliateprofile.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, affiliateprofile.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, affiliateprofile.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, affiliateprofile.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, affiliateprofile.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, affiliateprofile.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, affiliateprofile.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, affiliateprofile.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, affiliateprofile.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, affiliateprofile.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, affiliateprofile.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, affiliateprofile.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, affiliateprofile.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, affiliateprofile.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, affiliateprofile.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, affiliateprofile.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.UserID != nil {
+		predicates = append(predicates, affiliateprofile.UserIDEQ(*i.UserID))
+	}
+	if i.UserIDNEQ != nil {
+		predicates = append(predicates, affiliateprofile.UserIDNEQ(*i.UserIDNEQ))
+	}
+	if len(i.UserIDIn) > 0 {
+		predicates = append(predicates, affiliateprofile.UserIDIn(i.UserIDIn...))
+	}
+	if len(i.UserIDNotIn) > 0 {
+		predicates = append(predicates, affiliateprofile.UserIDNotIn(i.UserIDNotIn...))
+	}
+	if i.InviteCode != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeEQ(*i.InviteCode))
+	}
+	if i.InviteCodeNEQ != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeNEQ(*i.InviteCodeNEQ))
+	}
+	if len(i.InviteCodeIn) > 0 {
+		predicates = append(predicates, affiliateprofile.InviteCodeIn(i.InviteCodeIn...))
+	}
+	if len(i.InviteCodeNotIn) > 0 {
+		predicates = append(predicates, affiliateprofile.InviteCodeNotIn(i.InviteCodeNotIn...))
+	}
+	if i.InviteCodeGT != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeGT(*i.InviteCodeGT))
+	}
+	if i.InviteCodeGTE != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeGTE(*i.InviteCodeGTE))
+	}
+	if i.InviteCodeLT != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeLT(*i.InviteCodeLT))
+	}
+	if i.InviteCodeLTE != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeLTE(*i.InviteCodeLTE))
+	}
+	if i.InviteCodeContains != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeContains(*i.InviteCodeContains))
+	}
+	if i.InviteCodeHasPrefix != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeHasPrefix(*i.InviteCodeHasPrefix))
+	}
+	if i.InviteCodeHasSuffix != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeHasSuffix(*i.InviteCodeHasSuffix))
+	}
+	if i.InviteCodeEqualFold != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeEqualFold(*i.InviteCodeEqualFold))
+	}
+	if i.InviteCodeContainsFold != nil {
+		predicates = append(predicates, affiliateprofile.InviteCodeContainsFold(*i.InviteCodeContainsFold))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, affiliateprofile.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, affiliateprofile.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, affiliateprofile.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, affiliateprofile.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.RebateRateOverrideBps != nil {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsEQ(*i.RebateRateOverrideBps))
+	}
+	if i.RebateRateOverrideBpsNEQ != nil {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsNEQ(*i.RebateRateOverrideBpsNEQ))
+	}
+	if len(i.RebateRateOverrideBpsIn) > 0 {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsIn(i.RebateRateOverrideBpsIn...))
+	}
+	if len(i.RebateRateOverrideBpsNotIn) > 0 {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsNotIn(i.RebateRateOverrideBpsNotIn...))
+	}
+	if i.RebateRateOverrideBpsGT != nil {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsGT(*i.RebateRateOverrideBpsGT))
+	}
+	if i.RebateRateOverrideBpsGTE != nil {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsGTE(*i.RebateRateOverrideBpsGTE))
+	}
+	if i.RebateRateOverrideBpsLT != nil {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsLT(*i.RebateRateOverrideBpsLT))
+	}
+	if i.RebateRateOverrideBpsLTE != nil {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsLTE(*i.RebateRateOverrideBpsLTE))
+	}
+	if i.RebateRateOverrideBpsIsNil {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsIsNil())
+	}
+	if i.RebateRateOverrideBpsNotNil {
+		predicates = append(predicates, affiliateprofile.RebateRateOverrideBpsNotNil())
+	}
+	if i.Notes != nil {
+		predicates = append(predicates, affiliateprofile.NotesEQ(*i.Notes))
+	}
+	if i.NotesNEQ != nil {
+		predicates = append(predicates, affiliateprofile.NotesNEQ(*i.NotesNEQ))
+	}
+	if len(i.NotesIn) > 0 {
+		predicates = append(predicates, affiliateprofile.NotesIn(i.NotesIn...))
+	}
+	if len(i.NotesNotIn) > 0 {
+		predicates = append(predicates, affiliateprofile.NotesNotIn(i.NotesNotIn...))
+	}
+	if i.NotesGT != nil {
+		predicates = append(predicates, affiliateprofile.NotesGT(*i.NotesGT))
+	}
+	if i.NotesGTE != nil {
+		predicates = append(predicates, affiliateprofile.NotesGTE(*i.NotesGTE))
+	}
+	if i.NotesLT != nil {
+		predicates = append(predicates, affiliateprofile.NotesLT(*i.NotesLT))
+	}
+	if i.NotesLTE != nil {
+		predicates = append(predicates, affiliateprofile.NotesLTE(*i.NotesLTE))
+	}
+	if i.NotesContains != nil {
+		predicates = append(predicates, affiliateprofile.NotesContains(*i.NotesContains))
+	}
+	if i.NotesHasPrefix != nil {
+		predicates = append(predicates, affiliateprofile.NotesHasPrefix(*i.NotesHasPrefix))
+	}
+	if i.NotesHasSuffix != nil {
+		predicates = append(predicates, affiliateprofile.NotesHasSuffix(*i.NotesHasSuffix))
+	}
+	if i.NotesEqualFold != nil {
+		predicates = append(predicates, affiliateprofile.NotesEqualFold(*i.NotesEqualFold))
+	}
+	if i.NotesContainsFold != nil {
+		predicates = append(predicates, affiliateprofile.NotesContainsFold(*i.NotesContainsFold))
+	}
+
+	if i.HasUser != nil {
+		p := affiliateprofile.HasUser()
+		if !*i.HasUser {
+			p = affiliateprofile.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUserWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasUserWith))
+		for _, w := range i.HasUserWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUserWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliateprofile.HasUserWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyAffiliateProfileWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return affiliateprofile.And(predicates...), nil
+	}
+}
+
+// AffiliateRebateWhereInput represents a where input for filtering AffiliateRebate queries.
+type AffiliateRebateWhereInput struct {
+	Predicates []predicate.AffiliateRebate  `json:"-"`
+	Not        *AffiliateRebateWhereInput   `json:"not,omitempty"`
+	Or         []*AffiliateRebateWhereInput `json:"or,omitempty"`
+	And        []*AffiliateRebateWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "invitation_id" field predicates.
+	InvitationID      *int  `json:"invitationID,omitempty"`
+	InvitationIDNEQ   *int  `json:"invitationIDNEQ,omitempty"`
+	InvitationIDIn    []int `json:"invitationIDIn,omitempty"`
+	InvitationIDNotIn []int `json:"invitationIDNotIn,omitempty"`
+
+	// "inviter_user_id" field predicates.
+	InviterUserID      *int  `json:"inviterUserID,omitempty"`
+	InviterUserIDNEQ   *int  `json:"inviterUserIDNEQ,omitempty"`
+	InviterUserIDIn    []int `json:"inviterUserIDIn,omitempty"`
+	InviterUserIDNotIn []int `json:"inviterUserIDNotIn,omitempty"`
+
+	// "invitee_user_id" field predicates.
+	InviteeUserID      *int  `json:"inviteeUserID,omitempty"`
+	InviteeUserIDNEQ   *int  `json:"inviteeUserIDNEQ,omitempty"`
+	InviteeUserIDIn    []int `json:"inviteeUserIDIn,omitempty"`
+	InviteeUserIDNotIn []int `json:"inviteeUserIDNotIn,omitempty"`
+
+	// "source_type" field predicates.
+	SourceType      *affiliaterebate.SourceType  `json:"sourceType,omitempty"`
+	SourceTypeNEQ   *affiliaterebate.SourceType  `json:"sourceTypeNEQ,omitempty"`
+	SourceTypeIn    []affiliaterebate.SourceType `json:"sourceTypeIn,omitempty"`
+	SourceTypeNotIn []affiliaterebate.SourceType `json:"sourceTypeNotIn,omitempty"`
+
+	// "source_id" field predicates.
+	SourceID      *int  `json:"sourceID,omitempty"`
+	SourceIDNEQ   *int  `json:"sourceIDNEQ,omitempty"`
+	SourceIDIn    []int `json:"sourceIDIn,omitempty"`
+	SourceIDNotIn []int `json:"sourceIDNotIn,omitempty"`
+	SourceIDGT    *int  `json:"sourceIDGT,omitempty"`
+	SourceIDGTE   *int  `json:"sourceIDGTE,omitempty"`
+	SourceIDLT    *int  `json:"sourceIDLT,omitempty"`
+	SourceIDLTE   *int  `json:"sourceIDLTE,omitempty"`
+
+	// "payment_order_id" field predicates.
+	PaymentOrderID       *int  `json:"paymentOrderID,omitempty"`
+	PaymentOrderIDNEQ    *int  `json:"paymentOrderIDNEQ,omitempty"`
+	PaymentOrderIDIn     []int `json:"paymentOrderIDIn,omitempty"`
+	PaymentOrderIDNotIn  []int `json:"paymentOrderIDNotIn,omitempty"`
+	PaymentOrderIDIsNil  bool  `json:"paymentOrderIDIsNil,omitempty"`
+	PaymentOrderIDNotNil bool  `json:"paymentOrderIDNotNil,omitempty"`
+
+	// "user_subscription_id" field predicates.
+	UserSubscriptionID       *int  `json:"userSubscriptionID,omitempty"`
+	UserSubscriptionIDNEQ    *int  `json:"userSubscriptionIDNEQ,omitempty"`
+	UserSubscriptionIDIn     []int `json:"userSubscriptionIDIn,omitempty"`
+	UserSubscriptionIDNotIn  []int `json:"userSubscriptionIDNotIn,omitempty"`
+	UserSubscriptionIDIsNil  bool  `json:"userSubscriptionIDIsNil,omitempty"`
+	UserSubscriptionIDNotNil bool  `json:"userSubscriptionIDNotNil,omitempty"`
+
+	// "base_amount_micros" field predicates.
+	BaseAmountMicros      *int64  `json:"baseAmountMicros,omitempty"`
+	BaseAmountMicrosNEQ   *int64  `json:"baseAmountMicrosNEQ,omitempty"`
+	BaseAmountMicrosIn    []int64 `json:"baseAmountMicrosIn,omitempty"`
+	BaseAmountMicrosNotIn []int64 `json:"baseAmountMicrosNotIn,omitempty"`
+	BaseAmountMicrosGT    *int64  `json:"baseAmountMicrosGT,omitempty"`
+	BaseAmountMicrosGTE   *int64  `json:"baseAmountMicrosGTE,omitempty"`
+	BaseAmountMicrosLT    *int64  `json:"baseAmountMicrosLT,omitempty"`
+	BaseAmountMicrosLTE   *int64  `json:"baseAmountMicrosLTE,omitempty"`
+
+	// "amount_micros" field predicates.
+	AmountMicros      *int64  `json:"amountMicros,omitempty"`
+	AmountMicrosNEQ   *int64  `json:"amountMicrosNEQ,omitempty"`
+	AmountMicrosIn    []int64 `json:"amountMicrosIn,omitempty"`
+	AmountMicrosNotIn []int64 `json:"amountMicrosNotIn,omitempty"`
+	AmountMicrosGT    *int64  `json:"amountMicrosGT,omitempty"`
+	AmountMicrosGTE   *int64  `json:"amountMicrosGTE,omitempty"`
+	AmountMicrosLT    *int64  `json:"amountMicrosLT,omitempty"`
+	AmountMicrosLTE   *int64  `json:"amountMicrosLTE,omitempty"`
+
+	// "rate_bps" field predicates.
+	RateBps      *int  `json:"rateBps,omitempty"`
+	RateBpsNEQ   *int  `json:"rateBpsNEQ,omitempty"`
+	RateBpsIn    []int `json:"rateBpsIn,omitempty"`
+	RateBpsNotIn []int `json:"rateBpsNotIn,omitempty"`
+	RateBpsGT    *int  `json:"rateBpsGT,omitempty"`
+	RateBpsGTE   *int  `json:"rateBpsGTE,omitempty"`
+	RateBpsLT    *int  `json:"rateBpsLT,omitempty"`
+	RateBpsLTE   *int  `json:"rateBpsLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "status" field predicates.
+	Status      *affiliaterebate.Status  `json:"status,omitempty"`
+	StatusNEQ   *affiliaterebate.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []affiliaterebate.Status `json:"statusIn,omitempty"`
+	StatusNotIn []affiliaterebate.Status `json:"statusNotIn,omitempty"`
+
+	// "freeze_until" field predicates.
+	FreezeUntil      *time.Time  `json:"freezeUntil,omitempty"`
+	FreezeUntilNEQ   *time.Time  `json:"freezeUntilNEQ,omitempty"`
+	FreezeUntilIn    []time.Time `json:"freezeUntilIn,omitempty"`
+	FreezeUntilNotIn []time.Time `json:"freezeUntilNotIn,omitempty"`
+	FreezeUntilGT    *time.Time  `json:"freezeUntilGT,omitempty"`
+	FreezeUntilGTE   *time.Time  `json:"freezeUntilGTE,omitempty"`
+	FreezeUntilLT    *time.Time  `json:"freezeUntilLT,omitempty"`
+	FreezeUntilLTE   *time.Time  `json:"freezeUntilLTE,omitempty"`
+
+	// "transferred_at" field predicates.
+	TransferredAt       *time.Time  `json:"transferredAt,omitempty"`
+	TransferredAtNEQ    *time.Time  `json:"transferredAtNEQ,omitempty"`
+	TransferredAtIn     []time.Time `json:"transferredAtIn,omitempty"`
+	TransferredAtNotIn  []time.Time `json:"transferredAtNotIn,omitempty"`
+	TransferredAtGT     *time.Time  `json:"transferredAtGT,omitempty"`
+	TransferredAtGTE    *time.Time  `json:"transferredAtGTE,omitempty"`
+	TransferredAtLT     *time.Time  `json:"transferredAtLT,omitempty"`
+	TransferredAtLTE    *time.Time  `json:"transferredAtLTE,omitempty"`
+	TransferredAtIsNil  bool        `json:"transferredAtIsNil,omitempty"`
+	TransferredAtNotNil bool        `json:"transferredAtNotNil,omitempty"`
+
+	// "ledger_transaction_id" field predicates.
+	LedgerTransactionID       *int  `json:"ledgerTransactionID,omitempty"`
+	LedgerTransactionIDNEQ    *int  `json:"ledgerTransactionIDNEQ,omitempty"`
+	LedgerTransactionIDIn     []int `json:"ledgerTransactionIDIn,omitempty"`
+	LedgerTransactionIDNotIn  []int `json:"ledgerTransactionIDNotIn,omitempty"`
+	LedgerTransactionIDIsNil  bool  `json:"ledgerTransactionIDIsNil,omitempty"`
+	LedgerTransactionIDNotNil bool  `json:"ledgerTransactionIDNotNil,omitempty"`
+
+	// "idempotency_key" field predicates.
+	IdempotencyKey             *string  `json:"idempotencyKey,omitempty"`
+	IdempotencyKeyNEQ          *string  `json:"idempotencyKeyNEQ,omitempty"`
+	IdempotencyKeyIn           []string `json:"idempotencyKeyIn,omitempty"`
+	IdempotencyKeyNotIn        []string `json:"idempotencyKeyNotIn,omitempty"`
+	IdempotencyKeyGT           *string  `json:"idempotencyKeyGT,omitempty"`
+	IdempotencyKeyGTE          *string  `json:"idempotencyKeyGTE,omitempty"`
+	IdempotencyKeyLT           *string  `json:"idempotencyKeyLT,omitempty"`
+	IdempotencyKeyLTE          *string  `json:"idempotencyKeyLTE,omitempty"`
+	IdempotencyKeyContains     *string  `json:"idempotencyKeyContains,omitempty"`
+	IdempotencyKeyHasPrefix    *string  `json:"idempotencyKeyHasPrefix,omitempty"`
+	IdempotencyKeyHasSuffix    *string  `json:"idempotencyKeyHasSuffix,omitempty"`
+	IdempotencyKeyEqualFold    *string  `json:"idempotencyKeyEqualFold,omitempty"`
+	IdempotencyKeyContainsFold *string  `json:"idempotencyKeyContainsFold,omitempty"`
+
+	// "notes" field predicates.
+	Notes             *string  `json:"notes,omitempty"`
+	NotesNEQ          *string  `json:"notesNEQ,omitempty"`
+	NotesIn           []string `json:"notesIn,omitempty"`
+	NotesNotIn        []string `json:"notesNotIn,omitempty"`
+	NotesGT           *string  `json:"notesGT,omitempty"`
+	NotesGTE          *string  `json:"notesGTE,omitempty"`
+	NotesLT           *string  `json:"notesLT,omitempty"`
+	NotesLTE          *string  `json:"notesLTE,omitempty"`
+	NotesContains     *string  `json:"notesContains,omitempty"`
+	NotesHasPrefix    *string  `json:"notesHasPrefix,omitempty"`
+	NotesHasSuffix    *string  `json:"notesHasSuffix,omitempty"`
+	NotesEqualFold    *string  `json:"notesEqualFold,omitempty"`
+	NotesContainsFold *string  `json:"notesContainsFold,omitempty"`
+
+	// "invitation" edge predicates.
+	HasInvitation     *bool                            `json:"hasInvitation,omitempty"`
+	HasInvitationWith []*AffiliateInvitationWhereInput `json:"hasInvitationWith,omitempty"`
+
+	// "inviter" edge predicates.
+	HasInviter     *bool             `json:"hasInviter,omitempty"`
+	HasInviterWith []*UserWhereInput `json:"hasInviterWith,omitempty"`
+
+	// "invitee" edge predicates.
+	HasInvitee     *bool             `json:"hasInvitee,omitempty"`
+	HasInviteeWith []*UserWhereInput `json:"hasInviteeWith,omitempty"`
+
+	// "payment_order" edge predicates.
+	HasPaymentOrder     *bool                     `json:"hasPaymentOrder,omitempty"`
+	HasPaymentOrderWith []*PaymentOrderWhereInput `json:"hasPaymentOrderWith,omitempty"`
+
+	// "user_subscription" edge predicates.
+	HasUserSubscription     *bool                         `json:"hasUserSubscription,omitempty"`
+	HasUserSubscriptionWith []*UserSubscriptionWhereInput `json:"hasUserSubscriptionWith,omitempty"`
+
+	// "ledger_transaction" edge predicates.
+	HasLedgerTransaction     *bool                          `json:"hasLedgerTransaction,omitempty"`
+	HasLedgerTransactionWith []*LedgerTransactionWhereInput `json:"hasLedgerTransactionWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *AffiliateRebateWhereInput) AddPredicates(predicates ...predicate.AffiliateRebate) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the AffiliateRebateWhereInput filter on the AffiliateRebateQuery builder.
+func (i *AffiliateRebateWhereInput) Filter(q *AffiliateRebateQuery) (*AffiliateRebateQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyAffiliateRebateWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyAffiliateRebateWhereInput is returned in case the AffiliateRebateWhereInput is empty.
+var ErrEmptyAffiliateRebateWhereInput = errors.New("ent: empty predicate AffiliateRebateWhereInput")
+
+// P returns a predicate for filtering affiliaterebates.
+// An error is returned if the input is empty or invalid.
+func (i *AffiliateRebateWhereInput) P() (predicate.AffiliateRebate, error) {
+	var predicates []predicate.AffiliateRebate
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, affiliaterebate.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.AffiliateRebate, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, affiliaterebate.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.AffiliateRebate, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, affiliaterebate.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, affiliaterebate.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, affiliaterebate.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, affiliaterebate.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, affiliaterebate.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, affiliaterebate.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, affiliaterebate.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, affiliaterebate.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, affiliaterebate.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, affiliaterebate.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, affiliaterebate.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, affiliaterebate.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, affiliaterebate.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, affiliaterebate.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, affiliaterebate.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, affiliaterebate.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, affiliaterebate.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, affiliaterebate.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, affiliaterebate.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, affiliaterebate.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, affiliaterebate.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, affiliaterebate.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.InvitationID != nil {
+		predicates = append(predicates, affiliaterebate.InvitationIDEQ(*i.InvitationID))
+	}
+	if i.InvitationIDNEQ != nil {
+		predicates = append(predicates, affiliaterebate.InvitationIDNEQ(*i.InvitationIDNEQ))
+	}
+	if len(i.InvitationIDIn) > 0 {
+		predicates = append(predicates, affiliaterebate.InvitationIDIn(i.InvitationIDIn...))
+	}
+	if len(i.InvitationIDNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.InvitationIDNotIn(i.InvitationIDNotIn...))
+	}
+	if i.InviterUserID != nil {
+		predicates = append(predicates, affiliaterebate.InviterUserIDEQ(*i.InviterUserID))
+	}
+	if i.InviterUserIDNEQ != nil {
+		predicates = append(predicates, affiliaterebate.InviterUserIDNEQ(*i.InviterUserIDNEQ))
+	}
+	if len(i.InviterUserIDIn) > 0 {
+		predicates = append(predicates, affiliaterebate.InviterUserIDIn(i.InviterUserIDIn...))
+	}
+	if len(i.InviterUserIDNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.InviterUserIDNotIn(i.InviterUserIDNotIn...))
+	}
+	if i.InviteeUserID != nil {
+		predicates = append(predicates, affiliaterebate.InviteeUserIDEQ(*i.InviteeUserID))
+	}
+	if i.InviteeUserIDNEQ != nil {
+		predicates = append(predicates, affiliaterebate.InviteeUserIDNEQ(*i.InviteeUserIDNEQ))
+	}
+	if len(i.InviteeUserIDIn) > 0 {
+		predicates = append(predicates, affiliaterebate.InviteeUserIDIn(i.InviteeUserIDIn...))
+	}
+	if len(i.InviteeUserIDNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.InviteeUserIDNotIn(i.InviteeUserIDNotIn...))
+	}
+	if i.SourceType != nil {
+		predicates = append(predicates, affiliaterebate.SourceTypeEQ(*i.SourceType))
+	}
+	if i.SourceTypeNEQ != nil {
+		predicates = append(predicates, affiliaterebate.SourceTypeNEQ(*i.SourceTypeNEQ))
+	}
+	if len(i.SourceTypeIn) > 0 {
+		predicates = append(predicates, affiliaterebate.SourceTypeIn(i.SourceTypeIn...))
+	}
+	if len(i.SourceTypeNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.SourceTypeNotIn(i.SourceTypeNotIn...))
+	}
+	if i.SourceID != nil {
+		predicates = append(predicates, affiliaterebate.SourceIDEQ(*i.SourceID))
+	}
+	if i.SourceIDNEQ != nil {
+		predicates = append(predicates, affiliaterebate.SourceIDNEQ(*i.SourceIDNEQ))
+	}
+	if len(i.SourceIDIn) > 0 {
+		predicates = append(predicates, affiliaterebate.SourceIDIn(i.SourceIDIn...))
+	}
+	if len(i.SourceIDNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.SourceIDNotIn(i.SourceIDNotIn...))
+	}
+	if i.SourceIDGT != nil {
+		predicates = append(predicates, affiliaterebate.SourceIDGT(*i.SourceIDGT))
+	}
+	if i.SourceIDGTE != nil {
+		predicates = append(predicates, affiliaterebate.SourceIDGTE(*i.SourceIDGTE))
+	}
+	if i.SourceIDLT != nil {
+		predicates = append(predicates, affiliaterebate.SourceIDLT(*i.SourceIDLT))
+	}
+	if i.SourceIDLTE != nil {
+		predicates = append(predicates, affiliaterebate.SourceIDLTE(*i.SourceIDLTE))
+	}
+	if i.PaymentOrderID != nil {
+		predicates = append(predicates, affiliaterebate.PaymentOrderIDEQ(*i.PaymentOrderID))
+	}
+	if i.PaymentOrderIDNEQ != nil {
+		predicates = append(predicates, affiliaterebate.PaymentOrderIDNEQ(*i.PaymentOrderIDNEQ))
+	}
+	if len(i.PaymentOrderIDIn) > 0 {
+		predicates = append(predicates, affiliaterebate.PaymentOrderIDIn(i.PaymentOrderIDIn...))
+	}
+	if len(i.PaymentOrderIDNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.PaymentOrderIDNotIn(i.PaymentOrderIDNotIn...))
+	}
+	if i.PaymentOrderIDIsNil {
+		predicates = append(predicates, affiliaterebate.PaymentOrderIDIsNil())
+	}
+	if i.PaymentOrderIDNotNil {
+		predicates = append(predicates, affiliaterebate.PaymentOrderIDNotNil())
+	}
+	if i.UserSubscriptionID != nil {
+		predicates = append(predicates, affiliaterebate.UserSubscriptionIDEQ(*i.UserSubscriptionID))
+	}
+	if i.UserSubscriptionIDNEQ != nil {
+		predicates = append(predicates, affiliaterebate.UserSubscriptionIDNEQ(*i.UserSubscriptionIDNEQ))
+	}
+	if len(i.UserSubscriptionIDIn) > 0 {
+		predicates = append(predicates, affiliaterebate.UserSubscriptionIDIn(i.UserSubscriptionIDIn...))
+	}
+	if len(i.UserSubscriptionIDNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.UserSubscriptionIDNotIn(i.UserSubscriptionIDNotIn...))
+	}
+	if i.UserSubscriptionIDIsNil {
+		predicates = append(predicates, affiliaterebate.UserSubscriptionIDIsNil())
+	}
+	if i.UserSubscriptionIDNotNil {
+		predicates = append(predicates, affiliaterebate.UserSubscriptionIDNotNil())
+	}
+	if i.BaseAmountMicros != nil {
+		predicates = append(predicates, affiliaterebate.BaseAmountMicrosEQ(*i.BaseAmountMicros))
+	}
+	if i.BaseAmountMicrosNEQ != nil {
+		predicates = append(predicates, affiliaterebate.BaseAmountMicrosNEQ(*i.BaseAmountMicrosNEQ))
+	}
+	if len(i.BaseAmountMicrosIn) > 0 {
+		predicates = append(predicates, affiliaterebate.BaseAmountMicrosIn(i.BaseAmountMicrosIn...))
+	}
+	if len(i.BaseAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.BaseAmountMicrosNotIn(i.BaseAmountMicrosNotIn...))
+	}
+	if i.BaseAmountMicrosGT != nil {
+		predicates = append(predicates, affiliaterebate.BaseAmountMicrosGT(*i.BaseAmountMicrosGT))
+	}
+	if i.BaseAmountMicrosGTE != nil {
+		predicates = append(predicates, affiliaterebate.BaseAmountMicrosGTE(*i.BaseAmountMicrosGTE))
+	}
+	if i.BaseAmountMicrosLT != nil {
+		predicates = append(predicates, affiliaterebate.BaseAmountMicrosLT(*i.BaseAmountMicrosLT))
+	}
+	if i.BaseAmountMicrosLTE != nil {
+		predicates = append(predicates, affiliaterebate.BaseAmountMicrosLTE(*i.BaseAmountMicrosLTE))
+	}
+	if i.AmountMicros != nil {
+		predicates = append(predicates, affiliaterebate.AmountMicrosEQ(*i.AmountMicros))
+	}
+	if i.AmountMicrosNEQ != nil {
+		predicates = append(predicates, affiliaterebate.AmountMicrosNEQ(*i.AmountMicrosNEQ))
+	}
+	if len(i.AmountMicrosIn) > 0 {
+		predicates = append(predicates, affiliaterebate.AmountMicrosIn(i.AmountMicrosIn...))
+	}
+	if len(i.AmountMicrosNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.AmountMicrosNotIn(i.AmountMicrosNotIn...))
+	}
+	if i.AmountMicrosGT != nil {
+		predicates = append(predicates, affiliaterebate.AmountMicrosGT(*i.AmountMicrosGT))
+	}
+	if i.AmountMicrosGTE != nil {
+		predicates = append(predicates, affiliaterebate.AmountMicrosGTE(*i.AmountMicrosGTE))
+	}
+	if i.AmountMicrosLT != nil {
+		predicates = append(predicates, affiliaterebate.AmountMicrosLT(*i.AmountMicrosLT))
+	}
+	if i.AmountMicrosLTE != nil {
+		predicates = append(predicates, affiliaterebate.AmountMicrosLTE(*i.AmountMicrosLTE))
+	}
+	if i.RateBps != nil {
+		predicates = append(predicates, affiliaterebate.RateBpsEQ(*i.RateBps))
+	}
+	if i.RateBpsNEQ != nil {
+		predicates = append(predicates, affiliaterebate.RateBpsNEQ(*i.RateBpsNEQ))
+	}
+	if len(i.RateBpsIn) > 0 {
+		predicates = append(predicates, affiliaterebate.RateBpsIn(i.RateBpsIn...))
+	}
+	if len(i.RateBpsNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.RateBpsNotIn(i.RateBpsNotIn...))
+	}
+	if i.RateBpsGT != nil {
+		predicates = append(predicates, affiliaterebate.RateBpsGT(*i.RateBpsGT))
+	}
+	if i.RateBpsGTE != nil {
+		predicates = append(predicates, affiliaterebate.RateBpsGTE(*i.RateBpsGTE))
+	}
+	if i.RateBpsLT != nil {
+		predicates = append(predicates, affiliaterebate.RateBpsLT(*i.RateBpsLT))
+	}
+	if i.RateBpsLTE != nil {
+		predicates = append(predicates, affiliaterebate.RateBpsLTE(*i.RateBpsLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, affiliaterebate.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, affiliaterebate.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, affiliaterebate.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, affiliaterebate.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, affiliaterebate.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.FreezeUntil != nil {
+		predicates = append(predicates, affiliaterebate.FreezeUntilEQ(*i.FreezeUntil))
+	}
+	if i.FreezeUntilNEQ != nil {
+		predicates = append(predicates, affiliaterebate.FreezeUntilNEQ(*i.FreezeUntilNEQ))
+	}
+	if len(i.FreezeUntilIn) > 0 {
+		predicates = append(predicates, affiliaterebate.FreezeUntilIn(i.FreezeUntilIn...))
+	}
+	if len(i.FreezeUntilNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.FreezeUntilNotIn(i.FreezeUntilNotIn...))
+	}
+	if i.FreezeUntilGT != nil {
+		predicates = append(predicates, affiliaterebate.FreezeUntilGT(*i.FreezeUntilGT))
+	}
+	if i.FreezeUntilGTE != nil {
+		predicates = append(predicates, affiliaterebate.FreezeUntilGTE(*i.FreezeUntilGTE))
+	}
+	if i.FreezeUntilLT != nil {
+		predicates = append(predicates, affiliaterebate.FreezeUntilLT(*i.FreezeUntilLT))
+	}
+	if i.FreezeUntilLTE != nil {
+		predicates = append(predicates, affiliaterebate.FreezeUntilLTE(*i.FreezeUntilLTE))
+	}
+	if i.TransferredAt != nil {
+		predicates = append(predicates, affiliaterebate.TransferredAtEQ(*i.TransferredAt))
+	}
+	if i.TransferredAtNEQ != nil {
+		predicates = append(predicates, affiliaterebate.TransferredAtNEQ(*i.TransferredAtNEQ))
+	}
+	if len(i.TransferredAtIn) > 0 {
+		predicates = append(predicates, affiliaterebate.TransferredAtIn(i.TransferredAtIn...))
+	}
+	if len(i.TransferredAtNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.TransferredAtNotIn(i.TransferredAtNotIn...))
+	}
+	if i.TransferredAtGT != nil {
+		predicates = append(predicates, affiliaterebate.TransferredAtGT(*i.TransferredAtGT))
+	}
+	if i.TransferredAtGTE != nil {
+		predicates = append(predicates, affiliaterebate.TransferredAtGTE(*i.TransferredAtGTE))
+	}
+	if i.TransferredAtLT != nil {
+		predicates = append(predicates, affiliaterebate.TransferredAtLT(*i.TransferredAtLT))
+	}
+	if i.TransferredAtLTE != nil {
+		predicates = append(predicates, affiliaterebate.TransferredAtLTE(*i.TransferredAtLTE))
+	}
+	if i.TransferredAtIsNil {
+		predicates = append(predicates, affiliaterebate.TransferredAtIsNil())
+	}
+	if i.TransferredAtNotNil {
+		predicates = append(predicates, affiliaterebate.TransferredAtNotNil())
+	}
+	if i.LedgerTransactionID != nil {
+		predicates = append(predicates, affiliaterebate.LedgerTransactionIDEQ(*i.LedgerTransactionID))
+	}
+	if i.LedgerTransactionIDNEQ != nil {
+		predicates = append(predicates, affiliaterebate.LedgerTransactionIDNEQ(*i.LedgerTransactionIDNEQ))
+	}
+	if len(i.LedgerTransactionIDIn) > 0 {
+		predicates = append(predicates, affiliaterebate.LedgerTransactionIDIn(i.LedgerTransactionIDIn...))
+	}
+	if len(i.LedgerTransactionIDNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.LedgerTransactionIDNotIn(i.LedgerTransactionIDNotIn...))
+	}
+	if i.LedgerTransactionIDIsNil {
+		predicates = append(predicates, affiliaterebate.LedgerTransactionIDIsNil())
+	}
+	if i.LedgerTransactionIDNotNil {
+		predicates = append(predicates, affiliaterebate.LedgerTransactionIDNotNil())
+	}
+	if i.IdempotencyKey != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyEQ(*i.IdempotencyKey))
+	}
+	if i.IdempotencyKeyNEQ != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyNEQ(*i.IdempotencyKeyNEQ))
+	}
+	if len(i.IdempotencyKeyIn) > 0 {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyIn(i.IdempotencyKeyIn...))
+	}
+	if len(i.IdempotencyKeyNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyNotIn(i.IdempotencyKeyNotIn...))
+	}
+	if i.IdempotencyKeyGT != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyGT(*i.IdempotencyKeyGT))
+	}
+	if i.IdempotencyKeyGTE != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyGTE(*i.IdempotencyKeyGTE))
+	}
+	if i.IdempotencyKeyLT != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyLT(*i.IdempotencyKeyLT))
+	}
+	if i.IdempotencyKeyLTE != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyLTE(*i.IdempotencyKeyLTE))
+	}
+	if i.IdempotencyKeyContains != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyContains(*i.IdempotencyKeyContains))
+	}
+	if i.IdempotencyKeyHasPrefix != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyHasPrefix(*i.IdempotencyKeyHasPrefix))
+	}
+	if i.IdempotencyKeyHasSuffix != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyHasSuffix(*i.IdempotencyKeyHasSuffix))
+	}
+	if i.IdempotencyKeyEqualFold != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyEqualFold(*i.IdempotencyKeyEqualFold))
+	}
+	if i.IdempotencyKeyContainsFold != nil {
+		predicates = append(predicates, affiliaterebate.IdempotencyKeyContainsFold(*i.IdempotencyKeyContainsFold))
+	}
+	if i.Notes != nil {
+		predicates = append(predicates, affiliaterebate.NotesEQ(*i.Notes))
+	}
+	if i.NotesNEQ != nil {
+		predicates = append(predicates, affiliaterebate.NotesNEQ(*i.NotesNEQ))
+	}
+	if len(i.NotesIn) > 0 {
+		predicates = append(predicates, affiliaterebate.NotesIn(i.NotesIn...))
+	}
+	if len(i.NotesNotIn) > 0 {
+		predicates = append(predicates, affiliaterebate.NotesNotIn(i.NotesNotIn...))
+	}
+	if i.NotesGT != nil {
+		predicates = append(predicates, affiliaterebate.NotesGT(*i.NotesGT))
+	}
+	if i.NotesGTE != nil {
+		predicates = append(predicates, affiliaterebate.NotesGTE(*i.NotesGTE))
+	}
+	if i.NotesLT != nil {
+		predicates = append(predicates, affiliaterebate.NotesLT(*i.NotesLT))
+	}
+	if i.NotesLTE != nil {
+		predicates = append(predicates, affiliaterebate.NotesLTE(*i.NotesLTE))
+	}
+	if i.NotesContains != nil {
+		predicates = append(predicates, affiliaterebate.NotesContains(*i.NotesContains))
+	}
+	if i.NotesHasPrefix != nil {
+		predicates = append(predicates, affiliaterebate.NotesHasPrefix(*i.NotesHasPrefix))
+	}
+	if i.NotesHasSuffix != nil {
+		predicates = append(predicates, affiliaterebate.NotesHasSuffix(*i.NotesHasSuffix))
+	}
+	if i.NotesEqualFold != nil {
+		predicates = append(predicates, affiliaterebate.NotesEqualFold(*i.NotesEqualFold))
+	}
+	if i.NotesContainsFold != nil {
+		predicates = append(predicates, affiliaterebate.NotesContainsFold(*i.NotesContainsFold))
+	}
+
+	if i.HasInvitation != nil {
+		p := affiliaterebate.HasInvitation()
+		if !*i.HasInvitation {
+			p = affiliaterebate.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasInvitationWith) > 0 {
+		with := make([]predicate.AffiliateInvitation, 0, len(i.HasInvitationWith))
+		for _, w := range i.HasInvitationWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasInvitationWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliaterebate.HasInvitationWith(with...))
+	}
+	if i.HasInviter != nil {
+		p := affiliaterebate.HasInviter()
+		if !*i.HasInviter {
+			p = affiliaterebate.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasInviterWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasInviterWith))
+		for _, w := range i.HasInviterWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasInviterWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliaterebate.HasInviterWith(with...))
+	}
+	if i.HasInvitee != nil {
+		p := affiliaterebate.HasInvitee()
+		if !*i.HasInvitee {
+			p = affiliaterebate.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasInviteeWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasInviteeWith))
+		for _, w := range i.HasInviteeWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasInviteeWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliaterebate.HasInviteeWith(with...))
+	}
+	if i.HasPaymentOrder != nil {
+		p := affiliaterebate.HasPaymentOrder()
+		if !*i.HasPaymentOrder {
+			p = affiliaterebate.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentOrderWith) > 0 {
+		with := make([]predicate.PaymentOrder, 0, len(i.HasPaymentOrderWith))
+		for _, w := range i.HasPaymentOrderWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentOrderWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliaterebate.HasPaymentOrderWith(with...))
+	}
+	if i.HasUserSubscription != nil {
+		p := affiliaterebate.HasUserSubscription()
+		if !*i.HasUserSubscription {
+			p = affiliaterebate.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUserSubscriptionWith) > 0 {
+		with := make([]predicate.UserSubscription, 0, len(i.HasUserSubscriptionWith))
+		for _, w := range i.HasUserSubscriptionWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUserSubscriptionWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliaterebate.HasUserSubscriptionWith(with...))
+	}
+	if i.HasLedgerTransaction != nil {
+		p := affiliaterebate.HasLedgerTransaction()
+		if !*i.HasLedgerTransaction {
+			p = affiliaterebate.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasLedgerTransactionWith) > 0 {
+		with := make([]predicate.LedgerTransaction, 0, len(i.HasLedgerTransactionWith))
+		for _, w := range i.HasLedgerTransactionWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasLedgerTransactionWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, affiliaterebate.HasLedgerTransactionWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyAffiliateRebateWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return affiliaterebate.And(predicates...), nil
+	}
+}
+
+// AffiliateSettingWhereInput represents a where input for filtering AffiliateSetting queries.
+type AffiliateSettingWhereInput struct {
+	Predicates []predicate.AffiliateSetting  `json:"-"`
+	Not        *AffiliateSettingWhereInput   `json:"not,omitempty"`
+	Or         []*AffiliateSettingWhereInput `json:"or,omitempty"`
+	And        []*AffiliateSettingWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "key" field predicates.
+	Key             *string  `json:"key,omitempty"`
+	KeyNEQ          *string  `json:"keyNEQ,omitempty"`
+	KeyIn           []string `json:"keyIn,omitempty"`
+	KeyNotIn        []string `json:"keyNotIn,omitempty"`
+	KeyGT           *string  `json:"keyGT,omitempty"`
+	KeyGTE          *string  `json:"keyGTE,omitempty"`
+	KeyLT           *string  `json:"keyLT,omitempty"`
+	KeyLTE          *string  `json:"keyLTE,omitempty"`
+	KeyContains     *string  `json:"keyContains,omitempty"`
+	KeyHasPrefix    *string  `json:"keyHasPrefix,omitempty"`
+	KeyHasSuffix    *string  `json:"keyHasSuffix,omitempty"`
+	KeyEqualFold    *string  `json:"keyEqualFold,omitempty"`
+	KeyContainsFold *string  `json:"keyContainsFold,omitempty"`
+
+	// "enabled" field predicates.
+	Enabled    *bool `json:"enabled,omitempty"`
+	EnabledNEQ *bool `json:"enabledNEQ,omitempty"`
+
+	// "default_rebate_rate_bps" field predicates.
+	DefaultRebateRateBps      *int  `json:"defaultRebateRateBps,omitempty"`
+	DefaultRebateRateBpsNEQ   *int  `json:"defaultRebateRateBpsNEQ,omitempty"`
+	DefaultRebateRateBpsIn    []int `json:"defaultRebateRateBpsIn,omitempty"`
+	DefaultRebateRateBpsNotIn []int `json:"defaultRebateRateBpsNotIn,omitempty"`
+	DefaultRebateRateBpsGT    *int  `json:"defaultRebateRateBpsGT,omitempty"`
+	DefaultRebateRateBpsGTE   *int  `json:"defaultRebateRateBpsGTE,omitempty"`
+	DefaultRebateRateBpsLT    *int  `json:"defaultRebateRateBpsLT,omitempty"`
+	DefaultRebateRateBpsLTE   *int  `json:"defaultRebateRateBpsLTE,omitempty"`
+
+	// "freeze_days" field predicates.
+	FreezeDays      *int  `json:"freezeDays,omitempty"`
+	FreezeDaysNEQ   *int  `json:"freezeDaysNEQ,omitempty"`
+	FreezeDaysIn    []int `json:"freezeDaysIn,omitempty"`
+	FreezeDaysNotIn []int `json:"freezeDaysNotIn,omitempty"`
+	FreezeDaysGT    *int  `json:"freezeDaysGT,omitempty"`
+	FreezeDaysGTE   *int  `json:"freezeDaysGTE,omitempty"`
+	FreezeDaysLT    *int  `json:"freezeDaysLT,omitempty"`
+	FreezeDaysLTE   *int  `json:"freezeDaysLTE,omitempty"`
+
+	// "min_transfer_micros" field predicates.
+	MinTransferMicros      *int64  `json:"minTransferMicros,omitempty"`
+	MinTransferMicrosNEQ   *int64  `json:"minTransferMicrosNEQ,omitempty"`
+	MinTransferMicrosIn    []int64 `json:"minTransferMicrosIn,omitempty"`
+	MinTransferMicrosNotIn []int64 `json:"minTransferMicrosNotIn,omitempty"`
+	MinTransferMicrosGT    *int64  `json:"minTransferMicrosGT,omitempty"`
+	MinTransferMicrosGTE   *int64  `json:"minTransferMicrosGTE,omitempty"`
+	MinTransferMicrosLT    *int64  `json:"minTransferMicrosLT,omitempty"`
+	MinTransferMicrosLTE   *int64  `json:"minTransferMicrosLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *AffiliateSettingWhereInput) AddPredicates(predicates ...predicate.AffiliateSetting) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the AffiliateSettingWhereInput filter on the AffiliateSettingQuery builder.
+func (i *AffiliateSettingWhereInput) Filter(q *AffiliateSettingQuery) (*AffiliateSettingQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyAffiliateSettingWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyAffiliateSettingWhereInput is returned in case the AffiliateSettingWhereInput is empty.
+var ErrEmptyAffiliateSettingWhereInput = errors.New("ent: empty predicate AffiliateSettingWhereInput")
+
+// P returns a predicate for filtering affiliatesettings.
+// An error is returned if the input is empty or invalid.
+func (i *AffiliateSettingWhereInput) P() (predicate.AffiliateSetting, error) {
+	var predicates []predicate.AffiliateSetting
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, affiliatesetting.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.AffiliateSetting, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, affiliatesetting.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.AffiliateSetting, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, affiliatesetting.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, affiliatesetting.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, affiliatesetting.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, affiliatesetting.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, affiliatesetting.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, affiliatesetting.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, affiliatesetting.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, affiliatesetting.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, affiliatesetting.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, affiliatesetting.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, affiliatesetting.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, affiliatesetting.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, affiliatesetting.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, affiliatesetting.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, affiliatesetting.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, affiliatesetting.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, affiliatesetting.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, affiliatesetting.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, affiliatesetting.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, affiliatesetting.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, affiliatesetting.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, affiliatesetting.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, affiliatesetting.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, affiliatesetting.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, affiliatesetting.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.Key != nil {
+		predicates = append(predicates, affiliatesetting.KeyEQ(*i.Key))
+	}
+	if i.KeyNEQ != nil {
+		predicates = append(predicates, affiliatesetting.KeyNEQ(*i.KeyNEQ))
+	}
+	if len(i.KeyIn) > 0 {
+		predicates = append(predicates, affiliatesetting.KeyIn(i.KeyIn...))
+	}
+	if len(i.KeyNotIn) > 0 {
+		predicates = append(predicates, affiliatesetting.KeyNotIn(i.KeyNotIn...))
+	}
+	if i.KeyGT != nil {
+		predicates = append(predicates, affiliatesetting.KeyGT(*i.KeyGT))
+	}
+	if i.KeyGTE != nil {
+		predicates = append(predicates, affiliatesetting.KeyGTE(*i.KeyGTE))
+	}
+	if i.KeyLT != nil {
+		predicates = append(predicates, affiliatesetting.KeyLT(*i.KeyLT))
+	}
+	if i.KeyLTE != nil {
+		predicates = append(predicates, affiliatesetting.KeyLTE(*i.KeyLTE))
+	}
+	if i.KeyContains != nil {
+		predicates = append(predicates, affiliatesetting.KeyContains(*i.KeyContains))
+	}
+	if i.KeyHasPrefix != nil {
+		predicates = append(predicates, affiliatesetting.KeyHasPrefix(*i.KeyHasPrefix))
+	}
+	if i.KeyHasSuffix != nil {
+		predicates = append(predicates, affiliatesetting.KeyHasSuffix(*i.KeyHasSuffix))
+	}
+	if i.KeyEqualFold != nil {
+		predicates = append(predicates, affiliatesetting.KeyEqualFold(*i.KeyEqualFold))
+	}
+	if i.KeyContainsFold != nil {
+		predicates = append(predicates, affiliatesetting.KeyContainsFold(*i.KeyContainsFold))
+	}
+	if i.Enabled != nil {
+		predicates = append(predicates, affiliatesetting.EnabledEQ(*i.Enabled))
+	}
+	if i.EnabledNEQ != nil {
+		predicates = append(predicates, affiliatesetting.EnabledNEQ(*i.EnabledNEQ))
+	}
+	if i.DefaultRebateRateBps != nil {
+		predicates = append(predicates, affiliatesetting.DefaultRebateRateBpsEQ(*i.DefaultRebateRateBps))
+	}
+	if i.DefaultRebateRateBpsNEQ != nil {
+		predicates = append(predicates, affiliatesetting.DefaultRebateRateBpsNEQ(*i.DefaultRebateRateBpsNEQ))
+	}
+	if len(i.DefaultRebateRateBpsIn) > 0 {
+		predicates = append(predicates, affiliatesetting.DefaultRebateRateBpsIn(i.DefaultRebateRateBpsIn...))
+	}
+	if len(i.DefaultRebateRateBpsNotIn) > 0 {
+		predicates = append(predicates, affiliatesetting.DefaultRebateRateBpsNotIn(i.DefaultRebateRateBpsNotIn...))
+	}
+	if i.DefaultRebateRateBpsGT != nil {
+		predicates = append(predicates, affiliatesetting.DefaultRebateRateBpsGT(*i.DefaultRebateRateBpsGT))
+	}
+	if i.DefaultRebateRateBpsGTE != nil {
+		predicates = append(predicates, affiliatesetting.DefaultRebateRateBpsGTE(*i.DefaultRebateRateBpsGTE))
+	}
+	if i.DefaultRebateRateBpsLT != nil {
+		predicates = append(predicates, affiliatesetting.DefaultRebateRateBpsLT(*i.DefaultRebateRateBpsLT))
+	}
+	if i.DefaultRebateRateBpsLTE != nil {
+		predicates = append(predicates, affiliatesetting.DefaultRebateRateBpsLTE(*i.DefaultRebateRateBpsLTE))
+	}
+	if i.FreezeDays != nil {
+		predicates = append(predicates, affiliatesetting.FreezeDaysEQ(*i.FreezeDays))
+	}
+	if i.FreezeDaysNEQ != nil {
+		predicates = append(predicates, affiliatesetting.FreezeDaysNEQ(*i.FreezeDaysNEQ))
+	}
+	if len(i.FreezeDaysIn) > 0 {
+		predicates = append(predicates, affiliatesetting.FreezeDaysIn(i.FreezeDaysIn...))
+	}
+	if len(i.FreezeDaysNotIn) > 0 {
+		predicates = append(predicates, affiliatesetting.FreezeDaysNotIn(i.FreezeDaysNotIn...))
+	}
+	if i.FreezeDaysGT != nil {
+		predicates = append(predicates, affiliatesetting.FreezeDaysGT(*i.FreezeDaysGT))
+	}
+	if i.FreezeDaysGTE != nil {
+		predicates = append(predicates, affiliatesetting.FreezeDaysGTE(*i.FreezeDaysGTE))
+	}
+	if i.FreezeDaysLT != nil {
+		predicates = append(predicates, affiliatesetting.FreezeDaysLT(*i.FreezeDaysLT))
+	}
+	if i.FreezeDaysLTE != nil {
+		predicates = append(predicates, affiliatesetting.FreezeDaysLTE(*i.FreezeDaysLTE))
+	}
+	if i.MinTransferMicros != nil {
+		predicates = append(predicates, affiliatesetting.MinTransferMicrosEQ(*i.MinTransferMicros))
+	}
+	if i.MinTransferMicrosNEQ != nil {
+		predicates = append(predicates, affiliatesetting.MinTransferMicrosNEQ(*i.MinTransferMicrosNEQ))
+	}
+	if len(i.MinTransferMicrosIn) > 0 {
+		predicates = append(predicates, affiliatesetting.MinTransferMicrosIn(i.MinTransferMicrosIn...))
+	}
+	if len(i.MinTransferMicrosNotIn) > 0 {
+		predicates = append(predicates, affiliatesetting.MinTransferMicrosNotIn(i.MinTransferMicrosNotIn...))
+	}
+	if i.MinTransferMicrosGT != nil {
+		predicates = append(predicates, affiliatesetting.MinTransferMicrosGT(*i.MinTransferMicrosGT))
+	}
+	if i.MinTransferMicrosGTE != nil {
+		predicates = append(predicates, affiliatesetting.MinTransferMicrosGTE(*i.MinTransferMicrosGTE))
+	}
+	if i.MinTransferMicrosLT != nil {
+		predicates = append(predicates, affiliatesetting.MinTransferMicrosLT(*i.MinTransferMicrosLT))
+	}
+	if i.MinTransferMicrosLTE != nil {
+		predicates = append(predicates, affiliatesetting.MinTransferMicrosLTE(*i.MinTransferMicrosLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, affiliatesetting.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, affiliatesetting.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, affiliatesetting.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyAffiliateSettingWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return affiliatesetting.And(predicates...), nil
 	}
 }
 
@@ -6982,6 +9084,10 @@ type LedgerTransactionWhereInput struct {
 	// "promo_usages" edge predicates.
 	HasPromoUsages     *bool                   `json:"hasPromoUsages,omitempty"`
 	HasPromoUsagesWith []*PromoUsageWhereInput `json:"hasPromoUsagesWith,omitempty"`
+
+	// "affiliate_rebates" edge predicates.
+	HasAffiliateRebates     *bool                        `json:"hasAffiliateRebates,omitempty"`
+	HasAffiliateRebatesWith []*AffiliateRebateWhereInput `json:"hasAffiliateRebatesWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -7589,6 +9695,24 @@ func (i *LedgerTransactionWhereInput) P() (predicate.LedgerTransaction, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, ledgertransaction.HasPromoUsagesWith(with...))
+	}
+	if i.HasAffiliateRebates != nil {
+		p := ledgertransaction.HasAffiliateRebates()
+		if !*i.HasAffiliateRebates {
+			p = ledgertransaction.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasAffiliateRebatesWith) > 0 {
+		with := make([]predicate.AffiliateRebate, 0, len(i.HasAffiliateRebatesWith))
+		for _, w := range i.HasAffiliateRebatesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasAffiliateRebatesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, ledgertransaction.HasAffiliateRebatesWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -9465,6 +11589,10 @@ type PaymentOrderWhereInput struct {
 	// "payment_events" edge predicates.
 	HasPaymentEvents     *bool                     `json:"hasPaymentEvents,omitempty"`
 	HasPaymentEventsWith []*PaymentEventWhereInput `json:"hasPaymentEventsWith,omitempty"`
+
+	// "affiliate_rebates" edge predicates.
+	HasAffiliateRebates     *bool                        `json:"hasAffiliateRebates,omitempty"`
+	HasAffiliateRebatesWith []*AffiliateRebateWhereInput `json:"hasAffiliateRebatesWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -10339,6 +12467,24 @@ func (i *PaymentOrderWhereInput) P() (predicate.PaymentOrder, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, paymentorder.HasPaymentEventsWith(with...))
+	}
+	if i.HasAffiliateRebates != nil {
+		p := paymentorder.HasAffiliateRebates()
+		if !*i.HasAffiliateRebates {
+			p = paymentorder.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasAffiliateRebatesWith) > 0 {
+		with := make([]predicate.AffiliateRebate, 0, len(i.HasAffiliateRebatesWith))
+		for _, w := range i.HasAffiliateRebatesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasAffiliateRebatesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentorder.HasAffiliateRebatesWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -20865,6 +23011,26 @@ type UserWhereInput struct {
 	HasPromoUsages     *bool                   `json:"hasPromoUsages,omitempty"`
 	HasPromoUsagesWith []*PromoUsageWhereInput `json:"hasPromoUsagesWith,omitempty"`
 
+	// "affiliate_profiles" edge predicates.
+	HasAffiliateProfiles     *bool                         `json:"hasAffiliateProfiles,omitempty"`
+	HasAffiliateProfilesWith []*AffiliateProfileWhereInput `json:"hasAffiliateProfilesWith,omitempty"`
+
+	// "affiliate_inviters" edge predicates.
+	HasAffiliateInviters     *bool                            `json:"hasAffiliateInviters,omitempty"`
+	HasAffiliateInvitersWith []*AffiliateInvitationWhereInput `json:"hasAffiliateInvitersWith,omitempty"`
+
+	// "affiliate_invitees" edge predicates.
+	HasAffiliateInvitees     *bool                            `json:"hasAffiliateInvitees,omitempty"`
+	HasAffiliateInviteesWith []*AffiliateInvitationWhereInput `json:"hasAffiliateInviteesWith,omitempty"`
+
+	// "affiliate_rebates_earned" edge predicates.
+	HasAffiliateRebatesEarned     *bool                        `json:"hasAffiliateRebatesEarned,omitempty"`
+	HasAffiliateRebatesEarnedWith []*AffiliateRebateWhereInput `json:"hasAffiliateRebatesEarnedWith,omitempty"`
+
+	// "affiliate_rebates_generated" edge predicates.
+	HasAffiliateRebatesGenerated     *bool                        `json:"hasAffiliateRebatesGenerated,omitempty"`
+	HasAffiliateRebatesGeneratedWith []*AffiliateRebateWhereInput `json:"hasAffiliateRebatesGeneratedWith,omitempty"`
+
 	// "project_users" edge predicates.
 	HasProjectUsers     *bool                    `json:"hasProjectUsers,omitempty"`
 	HasProjectUsersWith []*UserProjectWhereInput `json:"hasProjectUsersWith,omitempty"`
@@ -21455,6 +23621,96 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasPromoUsagesWith(with...))
+	}
+	if i.HasAffiliateProfiles != nil {
+		p := user.HasAffiliateProfiles()
+		if !*i.HasAffiliateProfiles {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasAffiliateProfilesWith) > 0 {
+		with := make([]predicate.AffiliateProfile, 0, len(i.HasAffiliateProfilesWith))
+		for _, w := range i.HasAffiliateProfilesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasAffiliateProfilesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasAffiliateProfilesWith(with...))
+	}
+	if i.HasAffiliateInviters != nil {
+		p := user.HasAffiliateInviters()
+		if !*i.HasAffiliateInviters {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasAffiliateInvitersWith) > 0 {
+		with := make([]predicate.AffiliateInvitation, 0, len(i.HasAffiliateInvitersWith))
+		for _, w := range i.HasAffiliateInvitersWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasAffiliateInvitersWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasAffiliateInvitersWith(with...))
+	}
+	if i.HasAffiliateInvitees != nil {
+		p := user.HasAffiliateInvitees()
+		if !*i.HasAffiliateInvitees {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasAffiliateInviteesWith) > 0 {
+		with := make([]predicate.AffiliateInvitation, 0, len(i.HasAffiliateInviteesWith))
+		for _, w := range i.HasAffiliateInviteesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasAffiliateInviteesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasAffiliateInviteesWith(with...))
+	}
+	if i.HasAffiliateRebatesEarned != nil {
+		p := user.HasAffiliateRebatesEarned()
+		if !*i.HasAffiliateRebatesEarned {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasAffiliateRebatesEarnedWith) > 0 {
+		with := make([]predicate.AffiliateRebate, 0, len(i.HasAffiliateRebatesEarnedWith))
+		for _, w := range i.HasAffiliateRebatesEarnedWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasAffiliateRebatesEarnedWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasAffiliateRebatesEarnedWith(with...))
+	}
+	if i.HasAffiliateRebatesGenerated != nil {
+		p := user.HasAffiliateRebatesGenerated()
+		if !*i.HasAffiliateRebatesGenerated {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasAffiliateRebatesGeneratedWith) > 0 {
+		with := make([]predicate.AffiliateRebate, 0, len(i.HasAffiliateRebatesGeneratedWith))
+		for _, w := range i.HasAffiliateRebatesGeneratedWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasAffiliateRebatesGeneratedWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasAffiliateRebatesGeneratedWith(with...))
 	}
 	if i.HasProjectUsers != nil {
 		p := user.HasProjectUsers()
@@ -22339,6 +24595,10 @@ type UserSubscriptionWhereInput struct {
 	// "usage_billing_records" edge predicates.
 	HasUsageBillingRecords     *bool                           `json:"hasUsageBillingRecords,omitempty"`
 	HasUsageBillingRecordsWith []*UsageBillingRecordWhereInput `json:"hasUsageBillingRecordsWith,omitempty"`
+
+	// "affiliate_rebates" edge predicates.
+	HasAffiliateRebates     *bool                        `json:"hasAffiliateRebates,omitempty"`
+	HasAffiliateRebatesWith []*AffiliateRebateWhereInput `json:"hasAffiliateRebatesWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -23093,6 +25353,24 @@ func (i *UserSubscriptionWhereInput) P() (predicate.UserSubscription, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, usersubscription.HasUsageBillingRecordsWith(with...))
+	}
+	if i.HasAffiliateRebates != nil {
+		p := usersubscription.HasAffiliateRebates()
+		if !*i.HasAffiliateRebates {
+			p = usersubscription.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasAffiliateRebatesWith) > 0 {
+		with := make([]predicate.AffiliateRebate, 0, len(i.HasAffiliateRebatesWith))
+		for _, w := range i.HasAffiliateRebatesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasAffiliateRebatesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usersubscription.HasAffiliateRebatesWith(with...))
 	}
 	switch len(predicates) {
 	case 0:

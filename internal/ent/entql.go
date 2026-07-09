@@ -3,6 +3,10 @@
 package ent
 
 import (
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/affiliatesetting"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
@@ -53,7 +57,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 40)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 44)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -101,6 +105,99 @@ var schemaGraph = func() *sqlgraph.Schema {
 	}
 	graph.Nodes[2] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
+			Table:   affiliateinvitation.Table,
+			Columns: affiliateinvitation.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: affiliateinvitation.FieldID,
+			},
+		},
+		Type: "AffiliateInvitation",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			affiliateinvitation.FieldCreatedAt:     {Type: field.TypeTime, Column: affiliateinvitation.FieldCreatedAt},
+			affiliateinvitation.FieldUpdatedAt:     {Type: field.TypeTime, Column: affiliateinvitation.FieldUpdatedAt},
+			affiliateinvitation.FieldInviterUserID: {Type: field.TypeInt, Column: affiliateinvitation.FieldInviterUserID},
+			affiliateinvitation.FieldInviteeUserID: {Type: field.TypeInt, Column: affiliateinvitation.FieldInviteeUserID},
+			affiliateinvitation.FieldInviteCode:    {Type: field.TypeString, Column: affiliateinvitation.FieldInviteCode},
+			affiliateinvitation.FieldStatus:        {Type: field.TypeEnum, Column: affiliateinvitation.FieldStatus},
+			affiliateinvitation.FieldNotes:         {Type: field.TypeString, Column: affiliateinvitation.FieldNotes},
+		},
+	}
+	graph.Nodes[3] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   affiliateprofile.Table,
+			Columns: affiliateprofile.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: affiliateprofile.FieldID,
+			},
+		},
+		Type: "AffiliateProfile",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			affiliateprofile.FieldCreatedAt:             {Type: field.TypeTime, Column: affiliateprofile.FieldCreatedAt},
+			affiliateprofile.FieldUpdatedAt:             {Type: field.TypeTime, Column: affiliateprofile.FieldUpdatedAt},
+			affiliateprofile.FieldUserID:                {Type: field.TypeInt, Column: affiliateprofile.FieldUserID},
+			affiliateprofile.FieldInviteCode:            {Type: field.TypeString, Column: affiliateprofile.FieldInviteCode},
+			affiliateprofile.FieldStatus:                {Type: field.TypeEnum, Column: affiliateprofile.FieldStatus},
+			affiliateprofile.FieldRebateRateOverrideBps: {Type: field.TypeInt, Column: affiliateprofile.FieldRebateRateOverrideBps},
+			affiliateprofile.FieldNotes:                 {Type: field.TypeString, Column: affiliateprofile.FieldNotes},
+		},
+	}
+	graph.Nodes[4] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   affiliaterebate.Table,
+			Columns: affiliaterebate.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: affiliaterebate.FieldID,
+			},
+		},
+		Type: "AffiliateRebate",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			affiliaterebate.FieldCreatedAt:           {Type: field.TypeTime, Column: affiliaterebate.FieldCreatedAt},
+			affiliaterebate.FieldUpdatedAt:           {Type: field.TypeTime, Column: affiliaterebate.FieldUpdatedAt},
+			affiliaterebate.FieldInvitationID:        {Type: field.TypeInt, Column: affiliaterebate.FieldInvitationID},
+			affiliaterebate.FieldInviterUserID:       {Type: field.TypeInt, Column: affiliaterebate.FieldInviterUserID},
+			affiliaterebate.FieldInviteeUserID:       {Type: field.TypeInt, Column: affiliaterebate.FieldInviteeUserID},
+			affiliaterebate.FieldSourceType:          {Type: field.TypeEnum, Column: affiliaterebate.FieldSourceType},
+			affiliaterebate.FieldSourceID:            {Type: field.TypeInt, Column: affiliaterebate.FieldSourceID},
+			affiliaterebate.FieldPaymentOrderID:      {Type: field.TypeInt, Column: affiliaterebate.FieldPaymentOrderID},
+			affiliaterebate.FieldUserSubscriptionID:  {Type: field.TypeInt, Column: affiliaterebate.FieldUserSubscriptionID},
+			affiliaterebate.FieldBaseAmountMicros:    {Type: field.TypeInt64, Column: affiliaterebate.FieldBaseAmountMicros},
+			affiliaterebate.FieldAmountMicros:        {Type: field.TypeInt64, Column: affiliaterebate.FieldAmountMicros},
+			affiliaterebate.FieldRateBps:             {Type: field.TypeInt, Column: affiliaterebate.FieldRateBps},
+			affiliaterebate.FieldCurrency:            {Type: field.TypeString, Column: affiliaterebate.FieldCurrency},
+			affiliaterebate.FieldStatus:              {Type: field.TypeEnum, Column: affiliaterebate.FieldStatus},
+			affiliaterebate.FieldFreezeUntil:         {Type: field.TypeTime, Column: affiliaterebate.FieldFreezeUntil},
+			affiliaterebate.FieldTransferredAt:       {Type: field.TypeTime, Column: affiliaterebate.FieldTransferredAt},
+			affiliaterebate.FieldLedgerTransactionID: {Type: field.TypeInt, Column: affiliaterebate.FieldLedgerTransactionID},
+			affiliaterebate.FieldIdempotencyKey:      {Type: field.TypeString, Column: affiliaterebate.FieldIdempotencyKey},
+			affiliaterebate.FieldNotes:               {Type: field.TypeString, Column: affiliaterebate.FieldNotes},
+		},
+	}
+	graph.Nodes[5] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   affiliatesetting.Table,
+			Columns: affiliatesetting.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: affiliatesetting.FieldID,
+			},
+		},
+		Type: "AffiliateSetting",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			affiliatesetting.FieldCreatedAt:            {Type: field.TypeTime, Column: affiliatesetting.FieldCreatedAt},
+			affiliatesetting.FieldUpdatedAt:            {Type: field.TypeTime, Column: affiliatesetting.FieldUpdatedAt},
+			affiliatesetting.FieldKey:                  {Type: field.TypeString, Column: affiliatesetting.FieldKey},
+			affiliatesetting.FieldEnabled:              {Type: field.TypeBool, Column: affiliatesetting.FieldEnabled},
+			affiliatesetting.FieldDefaultRebateRateBps: {Type: field.TypeInt, Column: affiliatesetting.FieldDefaultRebateRateBps},
+			affiliatesetting.FieldFreezeDays:           {Type: field.TypeInt, Column: affiliatesetting.FieldFreezeDays},
+			affiliatesetting.FieldMinTransferMicros:    {Type: field.TypeInt64, Column: affiliatesetting.FieldMinTransferMicros},
+			affiliatesetting.FieldCurrency:             {Type: field.TypeString, Column: affiliatesetting.FieldCurrency},
+		},
+	}
+	graph.Nodes[6] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
 			Table:   billingaccount.Table,
 			Columns: billingaccount.Columns,
 			ID: &sqlgraph.FieldSpec{
@@ -121,7 +218,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billingaccount.FieldStatus:            {Type: field.TypeEnum, Column: billingaccount.FieldStatus},
 		},
 	}
-	graph.Nodes[3] = &sqlgraph.Node{
+	graph.Nodes[7] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   billingaccountbinding.Table,
 			Columns: billingaccountbinding.Columns,
@@ -140,7 +237,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billingaccountbinding.FieldRelation:         {Type: field.TypeString, Column: billingaccountbinding.FieldRelation},
 		},
 	}
-	graph.Nodes[4] = &sqlgraph.Node{
+	graph.Nodes[8] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   billinghold.Table,
 			Columns: billinghold.Columns,
@@ -176,7 +273,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billinghold.FieldReleasedAt:                  {Type: field.TypeTime, Column: billinghold.FieldReleasedAt},
 		},
 	}
-	graph.Nodes[5] = &sqlgraph.Node{
+	graph.Nodes[9] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   billingoutbox.Table,
 			Columns: billingoutbox.Columns,
@@ -198,7 +295,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billingoutbox.FieldLastError:     {Type: field.TypeString, Column: billingoutbox.FieldLastError},
 		},
 	}
-	graph.Nodes[6] = &sqlgraph.Node{
+	graph.Nodes[10] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   billingpricerule.Table,
 			Columns: billingpricerule.Columns,
@@ -221,7 +318,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billingpricerule.FieldReferenceID:  {Type: field.TypeString, Column: billingpricerule.FieldReferenceID},
 		},
 	}
-	graph.Nodes[7] = &sqlgraph.Node{
+	graph.Nodes[11] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channel.Table,
 			Columns: channel.Columns,
@@ -255,7 +352,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channel.FieldEndpoints:               {Type: field.TypeJSON, Column: channel.FieldEndpoints},
 		},
 	}
-	graph.Nodes[8] = &sqlgraph.Node{
+	graph.Nodes[12] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channelmodelprice.Table,
 			Columns: channelmodelprice.Columns,
@@ -275,7 +372,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channelmodelprice.FieldReferenceID: {Type: field.TypeString, Column: channelmodelprice.FieldReferenceID},
 		},
 	}
-	graph.Nodes[9] = &sqlgraph.Node{
+	graph.Nodes[13] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channelmodelpriceversion.Table,
 			Columns: channelmodelpriceversion.Columns,
@@ -298,7 +395,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channelmodelpriceversion.FieldReferenceID:         {Type: field.TypeString, Column: channelmodelpriceversion.FieldReferenceID},
 		},
 	}
-	graph.Nodes[10] = &sqlgraph.Node{
+	graph.Nodes[14] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channeloverridetemplate.Table,
 			Columns: channeloverridetemplate.Columns,
@@ -321,7 +418,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channeloverridetemplate.FieldBodyOverrideOperations:   {Type: field.TypeJSON, Column: channeloverridetemplate.FieldBodyOverrideOperations},
 		},
 	}
-	graph.Nodes[11] = &sqlgraph.Node{
+	graph.Nodes[15] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channelprobe.Table,
 			Columns: channelprobe.Columns,
@@ -340,7 +437,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channelprobe.FieldTimestamp:             {Type: field.TypeInt64, Column: channelprobe.FieldTimestamp},
 		},
 	}
-	graph.Nodes[12] = &sqlgraph.Node{
+	graph.Nodes[16] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   datastorage.Table,
 			Columns: datastorage.Columns,
@@ -362,7 +459,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			datastorage.FieldStatus:      {Type: field.TypeEnum, Column: datastorage.FieldStatus},
 		},
 	}
-	graph.Nodes[13] = &sqlgraph.Node{
+	graph.Nodes[17] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   ledgerentry.Table,
 			Columns: ledgerentry.Columns,
@@ -382,7 +479,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			ledgerentry.FieldCurrency:            {Type: field.TypeString, Column: ledgerentry.FieldCurrency},
 		},
 	}
-	graph.Nodes[14] = &sqlgraph.Node{
+	graph.Nodes[18] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   ledgertransaction.Table,
 			Columns: ledgertransaction.Columns,
@@ -409,7 +506,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			ledgertransaction.FieldCreatedByID:      {Type: field.TypeString, Column: ledgertransaction.FieldCreatedByID},
 		},
 	}
-	graph.Nodes[15] = &sqlgraph.Node{
+	graph.Nodes[19] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   model.Table,
 			Columns: model.Columns,
@@ -435,7 +532,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			model.FieldRemark:    {Type: field.TypeString, Column: model.FieldRemark},
 		},
 	}
-	graph.Nodes[16] = &sqlgraph.Node{
+	graph.Nodes[20] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   oidcidentity.Table,
 			Columns: oidcidentity.Columns,
@@ -457,7 +554,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			oidcidentity.FieldUserID:      {Type: field.TypeInt, Column: oidcidentity.FieldUserID},
 		},
 	}
-	graph.Nodes[17] = &sqlgraph.Node{
+	graph.Nodes[21] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   paymentevent.Table,
 			Columns: paymentevent.Columns,
@@ -480,7 +577,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentevent.FieldError:              {Type: field.TypeString, Column: paymentevent.FieldError},
 		},
 	}
-	graph.Nodes[18] = &sqlgraph.Node{
+	graph.Nodes[22] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   paymentorder.Table,
 			Columns: paymentorder.Columns,
@@ -519,7 +616,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentorder.FieldMetadata:             {Type: field.TypeJSON, Column: paymentorder.FieldMetadata},
 		},
 	}
-	graph.Nodes[19] = &sqlgraph.Node{
+	graph.Nodes[23] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   paymentproviderinstance.Table,
 			Columns: paymentproviderinstance.Columns,
@@ -539,7 +636,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentproviderinstance.FieldConfig:       {Type: field.TypeJSON, Column: paymentproviderinstance.FieldConfig},
 		},
 	}
-	graph.Nodes[20] = &sqlgraph.Node{
+	graph.Nodes[24] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   project.Table,
 			Columns: project.Columns,
@@ -559,7 +656,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			project.FieldProfiles:    {Type: field.TypeJSON, Column: project.FieldProfiles},
 		},
 	}
-	graph.Nodes[21] = &sqlgraph.Node{
+	graph.Nodes[25] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   promocode.Table,
 			Columns: promocode.Columns,
@@ -590,7 +687,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			promocode.FieldMetadata:             {Type: field.TypeJSON, Column: promocode.FieldMetadata},
 		},
 	}
-	graph.Nodes[22] = &sqlgraph.Node{
+	graph.Nodes[26] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   promousage.Table,
 			Columns: promousage.Columns,
@@ -621,7 +718,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			promousage.FieldFailureReason:        {Type: field.TypeString, Column: promousage.FieldFailureReason},
 		},
 	}
-	graph.Nodes[23] = &sqlgraph.Node{
+	graph.Nodes[27] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   prompt.Table,
 			Columns: prompt.Columns,
@@ -645,7 +742,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			prompt.FieldSettings:    {Type: field.TypeJSON, Column: prompt.FieldSettings},
 		},
 	}
-	graph.Nodes[24] = &sqlgraph.Node{
+	graph.Nodes[28] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   promptprotectionrule.Table,
 			Columns: promptprotectionrule.Columns,
@@ -666,7 +763,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			promptprotectionrule.FieldSettings:    {Type: field.TypeJSON, Column: promptprotectionrule.FieldSettings},
 		},
 	}
-	graph.Nodes[25] = &sqlgraph.Node{
+	graph.Nodes[29] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   providerquotastatus.Table,
 			Columns: providerquotastatus.Columns,
@@ -689,7 +786,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			providerquotastatus.FieldNextCheckAt:  {Type: field.TypeTime, Column: providerquotastatus.FieldNextCheckAt},
 		},
 	}
-	graph.Nodes[26] = &sqlgraph.Node{
+	graph.Nodes[30] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   redeemcode.Table,
 			Columns: redeemcode.Columns,
@@ -716,7 +813,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			redeemcode.FieldBatchID:             {Type: field.TypeString, Column: redeemcode.FieldBatchID},
 		},
 	}
-	graph.Nodes[27] = &sqlgraph.Node{
+	graph.Nodes[31] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   request.Table,
 			Columns: request.Columns,
@@ -755,7 +852,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			request.FieldContentSavedAt:             {Type: field.TypeTime, Column: request.FieldContentSavedAt},
 		},
 	}
-	graph.Nodes[28] = &sqlgraph.Node{
+	graph.Nodes[32] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   requestexecution.Table,
 			Columns: requestexecution.Columns,
@@ -790,7 +887,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			requestexecution.FieldPassThroughApplied:         {Type: field.TypeBool, Column: requestexecution.FieldPassThroughApplied},
 		},
 	}
-	graph.Nodes[29] = &sqlgraph.Node{
+	graph.Nodes[33] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   role.Table,
 			Columns: role.Columns,
@@ -810,7 +907,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			role.FieldScopes:    {Type: field.TypeJSON, Column: role.FieldScopes},
 		},
 	}
-	graph.Nodes[30] = &sqlgraph.Node{
+	graph.Nodes[34] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   subscriptionplan.Table,
 			Columns: subscriptionplan.Columns,
@@ -839,7 +936,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			subscriptionplan.FieldMetadata:             {Type: field.TypeJSON, Column: subscriptionplan.FieldMetadata},
 		},
 	}
-	graph.Nodes[31] = &sqlgraph.Node{
+	graph.Nodes[35] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   system.Table,
 			Columns: system.Columns,
@@ -857,7 +954,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			system.FieldValue:     {Type: field.TypeString, Column: system.FieldValue},
 		},
 	}
-	graph.Nodes[32] = &sqlgraph.Node{
+	graph.Nodes[36] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   thread.Table,
 			Columns: thread.Columns,
@@ -874,7 +971,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			thread.FieldThreadID:  {Type: field.TypeString, Column: thread.FieldThreadID},
 		},
 	}
-	graph.Nodes[33] = &sqlgraph.Node{
+	graph.Nodes[37] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   trace.Table,
 			Columns: trace.Columns,
@@ -892,7 +989,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			trace.FieldThreadID:  {Type: field.TypeInt, Column: trace.FieldThreadID},
 		},
 	}
-	graph.Nodes[34] = &sqlgraph.Node{
+	graph.Nodes[38] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagebillingrecord.Table,
 			Columns: usagebillingrecord.Columns,
@@ -926,7 +1023,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagebillingrecord.FieldError:               {Type: field.TypeString, Column: usagebillingrecord.FieldError},
 		},
 	}
-	graph.Nodes[35] = &sqlgraph.Node{
+	graph.Nodes[39] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagelog.Table,
 			Columns: usagelog.Columns,
@@ -963,7 +1060,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagelog.FieldCostPriceReferenceID:               {Type: field.TypeString, Column: usagelog.FieldCostPriceReferenceID},
 		},
 	}
-	graph.Nodes[36] = &sqlgraph.Node{
+	graph.Nodes[40] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -988,7 +1085,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldScopes:         {Type: field.TypeJSON, Column: user.FieldScopes},
 		},
 	}
-	graph.Nodes[37] = &sqlgraph.Node{
+	graph.Nodes[41] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userproject.Table,
 			Columns: userproject.Columns,
@@ -1007,7 +1104,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userproject.FieldScopes:    {Type: field.TypeJSON, Column: userproject.FieldScopes},
 		},
 	}
-	graph.Nodes[38] = &sqlgraph.Node{
+	graph.Nodes[42] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userrole.Table,
 			Columns: userrole.Columns,
@@ -1024,7 +1121,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userrole.FieldUpdatedAt: {Type: field.TypeTime, Column: userrole.FieldUpdatedAt},
 		},
 	}
-	graph.Nodes[39] = &sqlgraph.Node{
+	graph.Nodes[43] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usersubscription.Table,
 			Columns: usersubscription.Columns,
@@ -1111,6 +1208,126 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"APIKeyProfileTemplate",
 		"Project",
+	)
+	graph.MustAddE(
+		"inviter",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   affiliateinvitation.InviterTable,
+			Columns: []string{affiliateinvitation.InviterColumn},
+			Bidi:    false,
+		},
+		"AffiliateInvitation",
+		"User",
+	)
+	graph.MustAddE(
+		"invitee",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   affiliateinvitation.InviteeTable,
+			Columns: []string{affiliateinvitation.InviteeColumn},
+			Bidi:    false,
+		},
+		"AffiliateInvitation",
+		"User",
+	)
+	graph.MustAddE(
+		"rebates",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   affiliateinvitation.RebatesTable,
+			Columns: []string{affiliateinvitation.RebatesColumn},
+			Bidi:    false,
+		},
+		"AffiliateInvitation",
+		"AffiliateRebate",
+	)
+	graph.MustAddE(
+		"user",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   affiliateprofile.UserTable,
+			Columns: []string{affiliateprofile.UserColumn},
+			Bidi:    false,
+		},
+		"AffiliateProfile",
+		"User",
+	)
+	graph.MustAddE(
+		"invitation",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   affiliaterebate.InvitationTable,
+			Columns: []string{affiliaterebate.InvitationColumn},
+			Bidi:    false,
+		},
+		"AffiliateRebate",
+		"AffiliateInvitation",
+	)
+	graph.MustAddE(
+		"inviter",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   affiliaterebate.InviterTable,
+			Columns: []string{affiliaterebate.InviterColumn},
+			Bidi:    false,
+		},
+		"AffiliateRebate",
+		"User",
+	)
+	graph.MustAddE(
+		"invitee",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   affiliaterebate.InviteeTable,
+			Columns: []string{affiliaterebate.InviteeColumn},
+			Bidi:    false,
+		},
+		"AffiliateRebate",
+		"User",
+	)
+	graph.MustAddE(
+		"payment_order",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   affiliaterebate.PaymentOrderTable,
+			Columns: []string{affiliaterebate.PaymentOrderColumn},
+			Bidi:    false,
+		},
+		"AffiliateRebate",
+		"PaymentOrder",
+	)
+	graph.MustAddE(
+		"user_subscription",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   affiliaterebate.UserSubscriptionTable,
+			Columns: []string{affiliaterebate.UserSubscriptionColumn},
+			Bidi:    false,
+		},
+		"AffiliateRebate",
+		"UserSubscription",
+	)
+	graph.MustAddE(
+		"ledger_transaction",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   affiliaterebate.LedgerTransactionTable,
+			Columns: []string{affiliaterebate.LedgerTransactionColumn},
+			Bidi:    false,
+		},
+		"AffiliateRebate",
+		"LedgerTransaction",
 	)
 	graph.MustAddE(
 		"bindings",
@@ -1509,6 +1726,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"PromoUsage",
 	)
 	graph.MustAddE(
+		"affiliate_rebates",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.AffiliateRebatesTable,
+			Columns: []string{ledgertransaction.AffiliateRebatesColumn},
+			Bidi:    false,
+		},
+		"LedgerTransaction",
+		"AffiliateRebate",
+	)
+	graph.MustAddE(
 		"user",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -1615,6 +1844,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"PaymentOrder",
 		"PaymentEvent",
+	)
+	graph.MustAddE(
+		"affiliate_rebates",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AffiliateRebatesTable,
+			Columns: []string{paymentorder.AffiliateRebatesColumn},
+			Bidi:    false,
+		},
+		"PaymentOrder",
+		"AffiliateRebate",
 	)
 	graph.MustAddE(
 		"payment_orders",
@@ -2397,6 +2638,66 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"PromoUsage",
 	)
 	graph.MustAddE(
+		"affiliate_profiles",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateProfilesTable,
+			Columns: []string{user.AffiliateProfilesColumn},
+			Bidi:    false,
+		},
+		"User",
+		"AffiliateProfile",
+	)
+	graph.MustAddE(
+		"affiliate_inviters",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInvitersTable,
+			Columns: []string{user.AffiliateInvitersColumn},
+			Bidi:    false,
+		},
+		"User",
+		"AffiliateInvitation",
+	)
+	graph.MustAddE(
+		"affiliate_invitees",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInviteesTable,
+			Columns: []string{user.AffiliateInviteesColumn},
+			Bidi:    false,
+		},
+		"User",
+		"AffiliateInvitation",
+	)
+	graph.MustAddE(
+		"affiliate_rebates_earned",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesEarnedTable,
+			Columns: []string{user.AffiliateRebatesEarnedColumn},
+			Bidi:    false,
+		},
+		"User",
+		"AffiliateRebate",
+	)
+	graph.MustAddE(
+		"affiliate_rebates_generated",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesGeneratedTable,
+			Columns: []string{user.AffiliateRebatesGeneratedColumn},
+			Bidi:    false,
+		},
+		"User",
+		"AffiliateRebate",
+	)
+	graph.MustAddE(
 		"project_users",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -2551,6 +2852,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"UserSubscription",
 		"UsageBillingRecord",
+	)
+	graph.MustAddE(
+		"affiliate_rebates",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.AffiliateRebatesTable,
+			Columns: []string{usersubscription.AffiliateRebatesColumn},
+			Bidi:    false,
+		},
+		"UserSubscription",
+		"AffiliateRebate",
 	)
 	return graph
 }()
@@ -2793,6 +3106,511 @@ func (f *APIKeyProfileTemplateFilter) WhereHasProjectWith(preds ...predicate.Pro
 }
 
 // addPredicate implements the predicateAdder interface.
+func (_q *AffiliateInvitationQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the AffiliateInvitationQuery builder.
+func (_q *AffiliateInvitationQuery) Filter() *AffiliateInvitationFilter {
+	return &AffiliateInvitationFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *AffiliateInvitationMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the AffiliateInvitationMutation builder.
+func (m *AffiliateInvitationMutation) Filter() *AffiliateInvitationFilter {
+	return &AffiliateInvitationFilter{config: m.config, predicateAdder: m}
+}
+
+// AffiliateInvitationFilter provides a generic filtering capability at runtime for AffiliateInvitationQuery.
+type AffiliateInvitationFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *AffiliateInvitationFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *AffiliateInvitationFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(affiliateinvitation.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *AffiliateInvitationFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(affiliateinvitation.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *AffiliateInvitationFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(affiliateinvitation.FieldUpdatedAt))
+}
+
+// WhereInviterUserID applies the entql int predicate on the inviter_user_id field.
+func (f *AffiliateInvitationFilter) WhereInviterUserID(p entql.IntP) {
+	f.Where(p.Field(affiliateinvitation.FieldInviterUserID))
+}
+
+// WhereInviteeUserID applies the entql int predicate on the invitee_user_id field.
+func (f *AffiliateInvitationFilter) WhereInviteeUserID(p entql.IntP) {
+	f.Where(p.Field(affiliateinvitation.FieldInviteeUserID))
+}
+
+// WhereInviteCode applies the entql string predicate on the invite_code field.
+func (f *AffiliateInvitationFilter) WhereInviteCode(p entql.StringP) {
+	f.Where(p.Field(affiliateinvitation.FieldInviteCode))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *AffiliateInvitationFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(affiliateinvitation.FieldStatus))
+}
+
+// WhereNotes applies the entql string predicate on the notes field.
+func (f *AffiliateInvitationFilter) WhereNotes(p entql.StringP) {
+	f.Where(p.Field(affiliateinvitation.FieldNotes))
+}
+
+// WhereHasInviter applies a predicate to check if query has an edge inviter.
+func (f *AffiliateInvitationFilter) WhereHasInviter() {
+	f.Where(entql.HasEdge("inviter"))
+}
+
+// WhereHasInviterWith applies a predicate to check if query has an edge inviter with a given conditions (other predicates).
+func (f *AffiliateInvitationFilter) WhereHasInviterWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("inviter", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasInvitee applies a predicate to check if query has an edge invitee.
+func (f *AffiliateInvitationFilter) WhereHasInvitee() {
+	f.Where(entql.HasEdge("invitee"))
+}
+
+// WhereHasInviteeWith applies a predicate to check if query has an edge invitee with a given conditions (other predicates).
+func (f *AffiliateInvitationFilter) WhereHasInviteeWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("invitee", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasRebates applies a predicate to check if query has an edge rebates.
+func (f *AffiliateInvitationFilter) WhereHasRebates() {
+	f.Where(entql.HasEdge("rebates"))
+}
+
+// WhereHasRebatesWith applies a predicate to check if query has an edge rebates with a given conditions (other predicates).
+func (f *AffiliateInvitationFilter) WhereHasRebatesWith(preds ...predicate.AffiliateRebate) {
+	f.Where(entql.HasEdgeWith("rebates", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (_q *AffiliateProfileQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the AffiliateProfileQuery builder.
+func (_q *AffiliateProfileQuery) Filter() *AffiliateProfileFilter {
+	return &AffiliateProfileFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *AffiliateProfileMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the AffiliateProfileMutation builder.
+func (m *AffiliateProfileMutation) Filter() *AffiliateProfileFilter {
+	return &AffiliateProfileFilter{config: m.config, predicateAdder: m}
+}
+
+// AffiliateProfileFilter provides a generic filtering capability at runtime for AffiliateProfileQuery.
+type AffiliateProfileFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *AffiliateProfileFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *AffiliateProfileFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(affiliateprofile.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *AffiliateProfileFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(affiliateprofile.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *AffiliateProfileFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(affiliateprofile.FieldUpdatedAt))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *AffiliateProfileFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(affiliateprofile.FieldUserID))
+}
+
+// WhereInviteCode applies the entql string predicate on the invite_code field.
+func (f *AffiliateProfileFilter) WhereInviteCode(p entql.StringP) {
+	f.Where(p.Field(affiliateprofile.FieldInviteCode))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *AffiliateProfileFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(affiliateprofile.FieldStatus))
+}
+
+// WhereRebateRateOverrideBps applies the entql int predicate on the rebate_rate_override_bps field.
+func (f *AffiliateProfileFilter) WhereRebateRateOverrideBps(p entql.IntP) {
+	f.Where(p.Field(affiliateprofile.FieldRebateRateOverrideBps))
+}
+
+// WhereNotes applies the entql string predicate on the notes field.
+func (f *AffiliateProfileFilter) WhereNotes(p entql.StringP) {
+	f.Where(p.Field(affiliateprofile.FieldNotes))
+}
+
+// WhereHasUser applies a predicate to check if query has an edge user.
+func (f *AffiliateProfileFilter) WhereHasUser() {
+	f.Where(entql.HasEdge("user"))
+}
+
+// WhereHasUserWith applies a predicate to check if query has an edge user with a given conditions (other predicates).
+func (f *AffiliateProfileFilter) WhereHasUserWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("user", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (_q *AffiliateRebateQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the AffiliateRebateQuery builder.
+func (_q *AffiliateRebateQuery) Filter() *AffiliateRebateFilter {
+	return &AffiliateRebateFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *AffiliateRebateMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the AffiliateRebateMutation builder.
+func (m *AffiliateRebateMutation) Filter() *AffiliateRebateFilter {
+	return &AffiliateRebateFilter{config: m.config, predicateAdder: m}
+}
+
+// AffiliateRebateFilter provides a generic filtering capability at runtime for AffiliateRebateQuery.
+type AffiliateRebateFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *AffiliateRebateFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[4].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *AffiliateRebateFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(affiliaterebate.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *AffiliateRebateFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(affiliaterebate.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *AffiliateRebateFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(affiliaterebate.FieldUpdatedAt))
+}
+
+// WhereInvitationID applies the entql int predicate on the invitation_id field.
+func (f *AffiliateRebateFilter) WhereInvitationID(p entql.IntP) {
+	f.Where(p.Field(affiliaterebate.FieldInvitationID))
+}
+
+// WhereInviterUserID applies the entql int predicate on the inviter_user_id field.
+func (f *AffiliateRebateFilter) WhereInviterUserID(p entql.IntP) {
+	f.Where(p.Field(affiliaterebate.FieldInviterUserID))
+}
+
+// WhereInviteeUserID applies the entql int predicate on the invitee_user_id field.
+func (f *AffiliateRebateFilter) WhereInviteeUserID(p entql.IntP) {
+	f.Where(p.Field(affiliaterebate.FieldInviteeUserID))
+}
+
+// WhereSourceType applies the entql string predicate on the source_type field.
+func (f *AffiliateRebateFilter) WhereSourceType(p entql.StringP) {
+	f.Where(p.Field(affiliaterebate.FieldSourceType))
+}
+
+// WhereSourceID applies the entql int predicate on the source_id field.
+func (f *AffiliateRebateFilter) WhereSourceID(p entql.IntP) {
+	f.Where(p.Field(affiliaterebate.FieldSourceID))
+}
+
+// WherePaymentOrderID applies the entql int predicate on the payment_order_id field.
+func (f *AffiliateRebateFilter) WherePaymentOrderID(p entql.IntP) {
+	f.Where(p.Field(affiliaterebate.FieldPaymentOrderID))
+}
+
+// WhereUserSubscriptionID applies the entql int predicate on the user_subscription_id field.
+func (f *AffiliateRebateFilter) WhereUserSubscriptionID(p entql.IntP) {
+	f.Where(p.Field(affiliaterebate.FieldUserSubscriptionID))
+}
+
+// WhereBaseAmountMicros applies the entql int64 predicate on the base_amount_micros field.
+func (f *AffiliateRebateFilter) WhereBaseAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(affiliaterebate.FieldBaseAmountMicros))
+}
+
+// WhereAmountMicros applies the entql int64 predicate on the amount_micros field.
+func (f *AffiliateRebateFilter) WhereAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(affiliaterebate.FieldAmountMicros))
+}
+
+// WhereRateBps applies the entql int predicate on the rate_bps field.
+func (f *AffiliateRebateFilter) WhereRateBps(p entql.IntP) {
+	f.Where(p.Field(affiliaterebate.FieldRateBps))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *AffiliateRebateFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(affiliaterebate.FieldCurrency))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *AffiliateRebateFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(affiliaterebate.FieldStatus))
+}
+
+// WhereFreezeUntil applies the entql time.Time predicate on the freeze_until field.
+func (f *AffiliateRebateFilter) WhereFreezeUntil(p entql.TimeP) {
+	f.Where(p.Field(affiliaterebate.FieldFreezeUntil))
+}
+
+// WhereTransferredAt applies the entql time.Time predicate on the transferred_at field.
+func (f *AffiliateRebateFilter) WhereTransferredAt(p entql.TimeP) {
+	f.Where(p.Field(affiliaterebate.FieldTransferredAt))
+}
+
+// WhereLedgerTransactionID applies the entql int predicate on the ledger_transaction_id field.
+func (f *AffiliateRebateFilter) WhereLedgerTransactionID(p entql.IntP) {
+	f.Where(p.Field(affiliaterebate.FieldLedgerTransactionID))
+}
+
+// WhereIdempotencyKey applies the entql string predicate on the idempotency_key field.
+func (f *AffiliateRebateFilter) WhereIdempotencyKey(p entql.StringP) {
+	f.Where(p.Field(affiliaterebate.FieldIdempotencyKey))
+}
+
+// WhereNotes applies the entql string predicate on the notes field.
+func (f *AffiliateRebateFilter) WhereNotes(p entql.StringP) {
+	f.Where(p.Field(affiliaterebate.FieldNotes))
+}
+
+// WhereHasInvitation applies a predicate to check if query has an edge invitation.
+func (f *AffiliateRebateFilter) WhereHasInvitation() {
+	f.Where(entql.HasEdge("invitation"))
+}
+
+// WhereHasInvitationWith applies a predicate to check if query has an edge invitation with a given conditions (other predicates).
+func (f *AffiliateRebateFilter) WhereHasInvitationWith(preds ...predicate.AffiliateInvitation) {
+	f.Where(entql.HasEdgeWith("invitation", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasInviter applies a predicate to check if query has an edge inviter.
+func (f *AffiliateRebateFilter) WhereHasInviter() {
+	f.Where(entql.HasEdge("inviter"))
+}
+
+// WhereHasInviterWith applies a predicate to check if query has an edge inviter with a given conditions (other predicates).
+func (f *AffiliateRebateFilter) WhereHasInviterWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("inviter", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasInvitee applies a predicate to check if query has an edge invitee.
+func (f *AffiliateRebateFilter) WhereHasInvitee() {
+	f.Where(entql.HasEdge("invitee"))
+}
+
+// WhereHasInviteeWith applies a predicate to check if query has an edge invitee with a given conditions (other predicates).
+func (f *AffiliateRebateFilter) WhereHasInviteeWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("invitee", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPaymentOrder applies a predicate to check if query has an edge payment_order.
+func (f *AffiliateRebateFilter) WhereHasPaymentOrder() {
+	f.Where(entql.HasEdge("payment_order"))
+}
+
+// WhereHasPaymentOrderWith applies a predicate to check if query has an edge payment_order with a given conditions (other predicates).
+func (f *AffiliateRebateFilter) WhereHasPaymentOrderWith(preds ...predicate.PaymentOrder) {
+	f.Where(entql.HasEdgeWith("payment_order", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUserSubscription applies a predicate to check if query has an edge user_subscription.
+func (f *AffiliateRebateFilter) WhereHasUserSubscription() {
+	f.Where(entql.HasEdge("user_subscription"))
+}
+
+// WhereHasUserSubscriptionWith applies a predicate to check if query has an edge user_subscription with a given conditions (other predicates).
+func (f *AffiliateRebateFilter) WhereHasUserSubscriptionWith(preds ...predicate.UserSubscription) {
+	f.Where(entql.HasEdgeWith("user_subscription", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasLedgerTransaction applies a predicate to check if query has an edge ledger_transaction.
+func (f *AffiliateRebateFilter) WhereHasLedgerTransaction() {
+	f.Where(entql.HasEdge("ledger_transaction"))
+}
+
+// WhereHasLedgerTransactionWith applies a predicate to check if query has an edge ledger_transaction with a given conditions (other predicates).
+func (f *AffiliateRebateFilter) WhereHasLedgerTransactionWith(preds ...predicate.LedgerTransaction) {
+	f.Where(entql.HasEdgeWith("ledger_transaction", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (_q *AffiliateSettingQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the AffiliateSettingQuery builder.
+func (_q *AffiliateSettingQuery) Filter() *AffiliateSettingFilter {
+	return &AffiliateSettingFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *AffiliateSettingMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the AffiliateSettingMutation builder.
+func (m *AffiliateSettingMutation) Filter() *AffiliateSettingFilter {
+	return &AffiliateSettingFilter{config: m.config, predicateAdder: m}
+}
+
+// AffiliateSettingFilter provides a generic filtering capability at runtime for AffiliateSettingQuery.
+type AffiliateSettingFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *AffiliateSettingFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[5].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *AffiliateSettingFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(affiliatesetting.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *AffiliateSettingFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(affiliatesetting.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *AffiliateSettingFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(affiliatesetting.FieldUpdatedAt))
+}
+
+// WhereKey applies the entql string predicate on the key field.
+func (f *AffiliateSettingFilter) WhereKey(p entql.StringP) {
+	f.Where(p.Field(affiliatesetting.FieldKey))
+}
+
+// WhereEnabled applies the entql bool predicate on the enabled field.
+func (f *AffiliateSettingFilter) WhereEnabled(p entql.BoolP) {
+	f.Where(p.Field(affiliatesetting.FieldEnabled))
+}
+
+// WhereDefaultRebateRateBps applies the entql int predicate on the default_rebate_rate_bps field.
+func (f *AffiliateSettingFilter) WhereDefaultRebateRateBps(p entql.IntP) {
+	f.Where(p.Field(affiliatesetting.FieldDefaultRebateRateBps))
+}
+
+// WhereFreezeDays applies the entql int predicate on the freeze_days field.
+func (f *AffiliateSettingFilter) WhereFreezeDays(p entql.IntP) {
+	f.Where(p.Field(affiliatesetting.FieldFreezeDays))
+}
+
+// WhereMinTransferMicros applies the entql int64 predicate on the min_transfer_micros field.
+func (f *AffiliateSettingFilter) WhereMinTransferMicros(p entql.Int64P) {
+	f.Where(p.Field(affiliatesetting.FieldMinTransferMicros))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *AffiliateSettingFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(affiliatesetting.FieldCurrency))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (_q *BillingAccountQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
 }
@@ -2821,7 +3639,7 @@ type BillingAccountFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *BillingAccountFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[6].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -2990,7 +3808,7 @@ type BillingAccountBindingFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *BillingAccountBindingFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[7].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3074,7 +3892,7 @@ type BillingHoldFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *BillingHoldFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[4].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[8].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3285,7 +4103,7 @@ type BillingOutboxFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *BillingOutboxFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[5].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[9].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3370,7 +4188,7 @@ type BillingPriceRuleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *BillingPriceRuleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[6].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[10].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3460,7 +4278,7 @@ type ChannelFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[7].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[11].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3689,7 +4507,7 @@ type ChannelModelPriceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelModelPriceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[8].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[12].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3792,7 +4610,7 @@ type ChannelModelPriceVersionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelModelPriceVersionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[9].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[13].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -3896,7 +4714,7 @@ type ChannelOverrideTemplateFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelOverrideTemplateFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[10].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[14].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4000,7 +4818,7 @@ type ChannelProbeFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelProbeFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[11].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[15].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4084,7 +4902,7 @@ type DataStorageFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *DataStorageFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[12].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[16].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4197,7 +5015,7 @@ type LedgerEntryFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *LedgerEntryFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[13].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[17].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4286,7 +5104,7 @@ type LedgerTransactionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *LedgerTransactionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[14].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[18].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4479,6 +5297,20 @@ func (f *LedgerTransactionFilter) WhereHasPromoUsagesWith(preds ...predicate.Pro
 	})))
 }
 
+// WhereHasAffiliateRebates applies a predicate to check if query has an edge affiliate_rebates.
+func (f *LedgerTransactionFilter) WhereHasAffiliateRebates() {
+	f.Where(entql.HasEdge("affiliate_rebates"))
+}
+
+// WhereHasAffiliateRebatesWith applies a predicate to check if query has an edge affiliate_rebates with a given conditions (other predicates).
+func (f *LedgerTransactionFilter) WhereHasAffiliateRebatesWith(preds ...predicate.AffiliateRebate) {
+	f.Where(entql.HasEdgeWith("affiliate_rebates", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *ModelQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -4508,7 +5340,7 @@ type ModelFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ModelFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[15].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[19].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4613,7 +5445,7 @@ type OIDCIdentityFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *OIDCIdentityFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[16].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[20].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4712,7 +5544,7 @@ type PaymentEventFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PaymentEventFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[17].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[21].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4830,7 +5662,7 @@ type PaymentOrderFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PaymentOrderFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[18].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[22].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5055,6 +5887,20 @@ func (f *PaymentOrderFilter) WhereHasPaymentEventsWith(preds ...predicate.Paymen
 	})))
 }
 
+// WhereHasAffiliateRebates applies a predicate to check if query has an edge affiliate_rebates.
+func (f *PaymentOrderFilter) WhereHasAffiliateRebates() {
+	f.Where(entql.HasEdge("affiliate_rebates"))
+}
+
+// WhereHasAffiliateRebatesWith applies a predicate to check if query has an edge affiliate_rebates with a given conditions (other predicates).
+func (f *PaymentOrderFilter) WhereHasAffiliateRebatesWith(preds ...predicate.AffiliateRebate) {
+	f.Where(entql.HasEdgeWith("affiliate_rebates", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *PaymentProviderInstanceQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -5084,7 +5930,7 @@ type PaymentProviderInstanceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PaymentProviderInstanceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[19].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5187,7 +6033,7 @@ type ProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[20].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5402,7 +6248,7 @@ type PromoCodeFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromoCodeFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[21].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5574,7 +6420,7 @@ type PromoUsageFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromoUsageFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[22].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5788,7 +6634,7 @@ type PromptFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromptFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5897,7 +6743,7 @@ type PromptProtectionRuleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromptProtectionRuleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5977,7 +6823,7 @@ type ProviderQuotaStatusFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ProviderQuotaStatusFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6081,7 +6927,7 @@ type RedeemCodeFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RedeemCodeFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6233,7 +7079,7 @@ type RequestFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6515,7 +7361,7 @@ type RequestExecutionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestExecutionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6707,7 +7553,7 @@ type RoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6824,7 +7670,7 @@ type SubscriptionPlanFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SubscriptionPlanFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[34].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6958,7 +7804,7 @@ type SystemFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SystemFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[35].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7023,7 +7869,7 @@ type ThreadFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ThreadFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[36].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7111,7 +7957,7 @@ type TraceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *TraceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[37].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7218,7 +8064,7 @@ type UsageBillingRecordFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageBillingRecordFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[34].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[38].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7419,7 +8265,7 @@ type UsageLogFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageLogFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[35].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[39].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7649,7 +8495,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[36].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[40].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7860,6 +8706,76 @@ func (f *UserFilter) WhereHasPromoUsagesWith(preds ...predicate.PromoUsage) {
 	})))
 }
 
+// WhereHasAffiliateProfiles applies a predicate to check if query has an edge affiliate_profiles.
+func (f *UserFilter) WhereHasAffiliateProfiles() {
+	f.Where(entql.HasEdge("affiliate_profiles"))
+}
+
+// WhereHasAffiliateProfilesWith applies a predicate to check if query has an edge affiliate_profiles with a given conditions (other predicates).
+func (f *UserFilter) WhereHasAffiliateProfilesWith(preds ...predicate.AffiliateProfile) {
+	f.Where(entql.HasEdgeWith("affiliate_profiles", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasAffiliateInviters applies a predicate to check if query has an edge affiliate_inviters.
+func (f *UserFilter) WhereHasAffiliateInviters() {
+	f.Where(entql.HasEdge("affiliate_inviters"))
+}
+
+// WhereHasAffiliateInvitersWith applies a predicate to check if query has an edge affiliate_inviters with a given conditions (other predicates).
+func (f *UserFilter) WhereHasAffiliateInvitersWith(preds ...predicate.AffiliateInvitation) {
+	f.Where(entql.HasEdgeWith("affiliate_inviters", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasAffiliateInvitees applies a predicate to check if query has an edge affiliate_invitees.
+func (f *UserFilter) WhereHasAffiliateInvitees() {
+	f.Where(entql.HasEdge("affiliate_invitees"))
+}
+
+// WhereHasAffiliateInviteesWith applies a predicate to check if query has an edge affiliate_invitees with a given conditions (other predicates).
+func (f *UserFilter) WhereHasAffiliateInviteesWith(preds ...predicate.AffiliateInvitation) {
+	f.Where(entql.HasEdgeWith("affiliate_invitees", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasAffiliateRebatesEarned applies a predicate to check if query has an edge affiliate_rebates_earned.
+func (f *UserFilter) WhereHasAffiliateRebatesEarned() {
+	f.Where(entql.HasEdge("affiliate_rebates_earned"))
+}
+
+// WhereHasAffiliateRebatesEarnedWith applies a predicate to check if query has an edge affiliate_rebates_earned with a given conditions (other predicates).
+func (f *UserFilter) WhereHasAffiliateRebatesEarnedWith(preds ...predicate.AffiliateRebate) {
+	f.Where(entql.HasEdgeWith("affiliate_rebates_earned", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasAffiliateRebatesGenerated applies a predicate to check if query has an edge affiliate_rebates_generated.
+func (f *UserFilter) WhereHasAffiliateRebatesGenerated() {
+	f.Where(entql.HasEdge("affiliate_rebates_generated"))
+}
+
+// WhereHasAffiliateRebatesGeneratedWith applies a predicate to check if query has an edge affiliate_rebates_generated with a given conditions (other predicates).
+func (f *UserFilter) WhereHasAffiliateRebatesGeneratedWith(preds ...predicate.AffiliateRebate) {
+	f.Where(entql.HasEdgeWith("affiliate_rebates_generated", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasProjectUsers applies a predicate to check if query has an edge project_users.
 func (f *UserFilter) WhereHasProjectUsers() {
 	f.Where(entql.HasEdge("project_users"))
@@ -7917,7 +8833,7 @@ type UserProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[37].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[41].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -8015,7 +8931,7 @@ type UserRoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserRoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[38].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[42].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -8103,7 +9019,7 @@ type UserSubscriptionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserSubscriptionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[39].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[43].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -8341,6 +9257,20 @@ func (f *UserSubscriptionFilter) WhereHasUsageBillingRecords() {
 // WhereHasUsageBillingRecordsWith applies a predicate to check if query has an edge usage_billing_records with a given conditions (other predicates).
 func (f *UserSubscriptionFilter) WhereHasUsageBillingRecordsWith(preds ...predicate.UsageBillingRecord) {
 	f.Where(entql.HasEdgeWith("usage_billing_records", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasAffiliateRebates applies a predicate to check if query has an edge affiliate_rebates.
+func (f *UserSubscriptionFilter) WhereHasAffiliateRebates() {
+	f.Where(entql.HasEdge("affiliate_rebates"))
+}
+
+// WhereHasAffiliateRebatesWith applies a predicate to check if query has an edge affiliate_rebates with a given conditions (other predicates).
+func (f *UserSubscriptionFilter) WhereHasAffiliateRebatesWith(preds ...predicate.AffiliateRebate) {
+	f.Where(entql.HasEdgeWith("affiliate_rebates", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}

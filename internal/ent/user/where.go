@@ -895,6 +895,121 @@ func HasPromoUsagesWith(preds ...predicate.PromoUsage) predicate.User {
 	})
 }
 
+// HasAffiliateProfiles applies the HasEdge predicate on the "affiliate_profiles" edge.
+func HasAffiliateProfiles() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AffiliateProfilesTable, AffiliateProfilesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAffiliateProfilesWith applies the HasEdge predicate on the "affiliate_profiles" edge with a given conditions (other predicates).
+func HasAffiliateProfilesWith(preds ...predicate.AffiliateProfile) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAffiliateProfilesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAffiliateInviters applies the HasEdge predicate on the "affiliate_inviters" edge.
+func HasAffiliateInviters() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AffiliateInvitersTable, AffiliateInvitersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAffiliateInvitersWith applies the HasEdge predicate on the "affiliate_inviters" edge with a given conditions (other predicates).
+func HasAffiliateInvitersWith(preds ...predicate.AffiliateInvitation) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAffiliateInvitersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAffiliateInvitees applies the HasEdge predicate on the "affiliate_invitees" edge.
+func HasAffiliateInvitees() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AffiliateInviteesTable, AffiliateInviteesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAffiliateInviteesWith applies the HasEdge predicate on the "affiliate_invitees" edge with a given conditions (other predicates).
+func HasAffiliateInviteesWith(preds ...predicate.AffiliateInvitation) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAffiliateInviteesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAffiliateRebatesEarned applies the HasEdge predicate on the "affiliate_rebates_earned" edge.
+func HasAffiliateRebatesEarned() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AffiliateRebatesEarnedTable, AffiliateRebatesEarnedColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAffiliateRebatesEarnedWith applies the HasEdge predicate on the "affiliate_rebates_earned" edge with a given conditions (other predicates).
+func HasAffiliateRebatesEarnedWith(preds ...predicate.AffiliateRebate) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAffiliateRebatesEarnedStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAffiliateRebatesGenerated applies the HasEdge predicate on the "affiliate_rebates_generated" edge.
+func HasAffiliateRebatesGenerated() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AffiliateRebatesGeneratedTable, AffiliateRebatesGeneratedColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAffiliateRebatesGeneratedWith applies the HasEdge predicate on the "affiliate_rebates_generated" edge with a given conditions (other predicates).
+func HasAffiliateRebatesGeneratedWith(preds ...predicate.AffiliateRebate) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAffiliateRebatesGeneratedStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasProjectUsers applies the HasEdge predicate on the "project_users" edge.
 func HasProjectUsers() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

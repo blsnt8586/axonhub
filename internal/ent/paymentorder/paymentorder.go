@@ -82,6 +82,8 @@ const (
 	EdgePromoUsages = "promo_usages"
 	// EdgePaymentEvents holds the string denoting the payment_events edge name in mutations.
 	EdgePaymentEvents = "payment_events"
+	// EdgeAffiliateRebates holds the string denoting the affiliate_rebates edge name in mutations.
+	EdgeAffiliateRebates = "affiliate_rebates"
 	// Table holds the table name of the paymentorder in the database.
 	Table = "payment_orders"
 	// BillingAccountTable is the table that holds the billing_account relation/edge.
@@ -126,6 +128,13 @@ const (
 	PaymentEventsInverseTable = "payment_events"
 	// PaymentEventsColumn is the table column denoting the payment_events relation/edge.
 	PaymentEventsColumn = "payment_order_id"
+	// AffiliateRebatesTable is the table that holds the affiliate_rebates relation/edge.
+	AffiliateRebatesTable = "affiliate_rebates"
+	// AffiliateRebatesInverseTable is the table name for the AffiliateRebate entity.
+	// It exists in this package in order to avoid circular dependency with the "affiliaterebate" package.
+	AffiliateRebatesInverseTable = "affiliate_rebates"
+	// AffiliateRebatesColumn is the table column denoting the affiliate_rebates relation/edge.
+	AffiliateRebatesColumn = "payment_order_id"
 )
 
 // Columns holds all SQL columns for paymentorder fields.
@@ -478,6 +487,20 @@ func ByPaymentEvents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPaymentEventsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAffiliateRebatesCount orders the results by affiliate_rebates count.
+func ByAffiliateRebatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffiliateRebatesStep(), opts...)
+	}
+}
+
+// ByAffiliateRebates orders the results by affiliate_rebates terms.
+func ByAffiliateRebates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffiliateRebatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBillingAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -518,6 +541,13 @@ func newPaymentEventsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PaymentEventsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PaymentEventsTable, PaymentEventsColumn),
+	)
+}
+func newAffiliateRebatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffiliateRebatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AffiliateRebatesTable, AffiliateRebatesColumn),
 	)
 }
 

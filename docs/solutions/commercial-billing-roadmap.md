@@ -260,31 +260,31 @@ Verification:
 
 ## Stage 8: Affiliate And Rebates
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: support referral growth and partner-style rebate settlement.
 
 Backend scope:
 
-- [ ] Add affiliate profile and invitation binding.
-- [ ] Add rebate records tied to payment orders or subscription purchases.
-- [ ] Support rebate freeze period.
-- [ ] Support transferring thawed rebate to wallet through ledger credit.
-- [ ] Support per-user rebate rate override.
-- [ ] Prevent self-invite and circular inviter relationships.
+- [x] Add affiliate profile and invitation binding.
+- [x] Add rebate records tied to payment orders or subscription purchases.
+- [x] Support rebate freeze period.
+- [x] Support transferring thawed rebate to wallet through ledger credit.
+- [x] Support per-user rebate rate override.
+- [x] Prevent self-invite and circular inviter relationships.
 
 Frontend scope:
 
-- [ ] User affiliate page with invite code, invitees, frozen rebate, available rebate, and transfer action.
-- [ ] Admin affiliate settings.
-- [ ] Admin invite records, rebate records, transfer records, and per-user rate overrides.
+- [x] User affiliate page with invite code, invitees, frozen rebate, available rebate, and transfer action.
+- [x] Admin affiliate settings.
+- [x] Admin invite records, rebate records, transfer records, and per-user rate overrides.
 
 Verification:
 
-- [ ] Duplicate payment notification does not create duplicate rebate.
-- [ ] Frozen rebate cannot be transferred early.
-- [ ] Rebate transfer posts ledger transaction exactly once.
-- [ ] Commit completed stage.
+- [x] Duplicate payment notification does not create duplicate rebate.
+- [x] Frozen rebate cannot be transferred early.
+- [x] Rebate transfer posts ledger transaction exactly once.
+- [x] Commit completed stage.
 
 ## Stage 9: Billing Notifications
 
@@ -354,7 +354,7 @@ Verification:
 - [x] Stage 5: Redeem Codes
 - [x] Stage 6: Subscription Plans
 - [x] Stage 7: Promo Codes
-- [ ] Stage 8: Affiliate And Rebates
+- [x] Stage 8: Affiliate And Rebates
 - [ ] Stage 9: Billing Notifications
 - [ ] Stage 10: Production Operations And Security Closure
 

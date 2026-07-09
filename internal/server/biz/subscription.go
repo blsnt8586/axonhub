@@ -32,6 +32,7 @@ type SubscriptionServiceParams struct {
 	BillingAccountService *BillingAccountService
 	LedgerService         *LedgerService
 	PromoCodeService      *PromoCodeService `optional:"true"`
+	AffiliateService      *AffiliateService `optional:"true"`
 }
 
 type SubscriptionService struct {
@@ -40,6 +41,7 @@ type SubscriptionService struct {
 	billingAccountService *BillingAccountService
 	ledgerService         *LedgerService
 	promoCodeService      *PromoCodeService
+	affiliateService      *AffiliateService
 }
 
 func NewSubscriptionService(params SubscriptionServiceParams) *SubscriptionService {
@@ -48,6 +50,7 @@ func NewSubscriptionService(params SubscriptionServiceParams) *SubscriptionServi
 		billingAccountService: params.BillingAccountService,
 		ledgerService:         params.LedgerService,
 		promoCodeService:      params.PromoCodeService,
+		affiliateService:      params.AffiliateService,
 	}
 }
 
@@ -101,9 +104,9 @@ type SaveSubscriptionPlanInput struct {
 }
 
 type PurchaseSubscriptionPlanInput struct {
-	UserID int
-	PlanID int
-	Now    time.Time
+	UserID    int
+	PlanID    int
+	Now       time.Time
 	PromoCode string
 }
 
@@ -327,6 +330,11 @@ func (s *SubscriptionService) PurchasePlan(ctx context.Context, input PurchaseSu
 			}
 			if _, err := update.Save(ctx); err != nil {
 				return fmt.Errorf("failed to attach promo usage to subscription: %w", err)
+			}
+		}
+		if s.affiliateService != nil {
+			if _, err := s.affiliateService.CreateRebateForSubscription(ctx, entity); err != nil {
+				return err
 			}
 		}
 		created = entity

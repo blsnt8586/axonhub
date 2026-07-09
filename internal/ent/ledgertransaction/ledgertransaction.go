@@ -62,6 +62,8 @@ const (
 	EdgePurchasedUserSubscriptions = "purchased_user_subscriptions"
 	// EdgePromoUsages holds the string denoting the promo_usages edge name in mutations.
 	EdgePromoUsages = "promo_usages"
+	// EdgeAffiliateRebates holds the string denoting the affiliate_rebates edge name in mutations.
+	EdgeAffiliateRebates = "affiliate_rebates"
 	// Table holds the table name of the ledgertransaction in the database.
 	Table = "ledger_transactions"
 	// BillingAccountTable is the table that holds the billing_account relation/edge.
@@ -120,6 +122,13 @@ const (
 	PromoUsagesInverseTable = "promo_usages"
 	// PromoUsagesColumn is the table column denoting the promo_usages relation/edge.
 	PromoUsagesColumn = "ledger_transaction_id"
+	// AffiliateRebatesTable is the table that holds the affiliate_rebates relation/edge.
+	AffiliateRebatesTable = "affiliate_rebates"
+	// AffiliateRebatesInverseTable is the table name for the AffiliateRebate entity.
+	// It exists in this package in order to avoid circular dependency with the "affiliaterebate" package.
+	AffiliateRebatesInverseTable = "affiliate_rebates"
+	// AffiliateRebatesColumn is the table column denoting the affiliate_rebates relation/edge.
+	AffiliateRebatesColumn = "ledger_transaction_id"
 )
 
 // Columns holds all SQL columns for ledgertransaction fields.
@@ -215,6 +224,7 @@ const (
 	TypeSubscriptionGrant  Type = "subscription_grant"
 	TypeSubscriptionDeduct Type = "subscription_deduct"
 	TypeRedeemCode         Type = "redeem_code"
+	TypeAffiliateRebate    Type = "affiliate_rebate"
 )
 
 func (_type Type) String() string {
@@ -224,7 +234,7 @@ func (_type Type) String() string {
 // TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
 func TypeValidator(_type Type) error {
 	switch _type {
-	case TypePaymentRecharge, TypeUsageCharge, TypeAdminAdjustment, TypeRefund, TypeChargeback, TypeSubscriptionGrant, TypeSubscriptionDeduct, TypeRedeemCode:
+	case TypePaymentRecharge, TypeUsageCharge, TypeAdminAdjustment, TypeRefund, TypeChargeback, TypeSubscriptionGrant, TypeSubscriptionDeduct, TypeRedeemCode, TypeAffiliateRebate:
 		return nil
 	default:
 		return fmt.Errorf("ledgertransaction: invalid enum value for type field: %q", _type)
@@ -466,6 +476,20 @@ func ByPromoUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPromoUsagesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAffiliateRebatesCount orders the results by affiliate_rebates count.
+func ByAffiliateRebatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffiliateRebatesStep(), opts...)
+	}
+}
+
+// ByAffiliateRebates orders the results by affiliate_rebates terms.
+func ByAffiliateRebates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffiliateRebatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBillingAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -520,6 +544,13 @@ func newPromoUsagesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PromoUsagesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PromoUsagesTable, PromoUsagesColumn),
+	)
+}
+func newAffiliateRebatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffiliateRebatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AffiliateRebatesTable, AffiliateRebatesColumn),
 	)
 }
 

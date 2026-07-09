@@ -14,6 +14,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/errcode"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/affiliatesetting"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
@@ -760,6 +764,1262 @@ func (_m *APIKeyProfileTemplate) ToEdge(order *APIKeyProfileTemplateOrder) *APIK
 		order = DefaultAPIKeyProfileTemplateOrder
 	}
 	return &APIKeyProfileTemplateEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// AffiliateInvitationEdge is the edge representation of AffiliateInvitation.
+type AffiliateInvitationEdge struct {
+	Node   *AffiliateInvitation `json:"node"`
+	Cursor Cursor               `json:"cursor"`
+}
+
+// AffiliateInvitationConnection is the connection containing edges to AffiliateInvitation.
+type AffiliateInvitationConnection struct {
+	Edges      []*AffiliateInvitationEdge `json:"edges"`
+	PageInfo   PageInfo                   `json:"pageInfo"`
+	TotalCount int                        `json:"totalCount"`
+}
+
+func (c *AffiliateInvitationConnection) build(nodes []*AffiliateInvitation, pager *affiliateinvitationPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *AffiliateInvitation
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *AffiliateInvitation {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *AffiliateInvitation {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*AffiliateInvitationEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &AffiliateInvitationEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// AffiliateInvitationPaginateOption enables pagination customization.
+type AffiliateInvitationPaginateOption func(*affiliateinvitationPager) error
+
+// WithAffiliateInvitationOrder configures pagination ordering.
+func WithAffiliateInvitationOrder(order *AffiliateInvitationOrder) AffiliateInvitationPaginateOption {
+	if order == nil {
+		order = DefaultAffiliateInvitationOrder
+	}
+	o := *order
+	return func(pager *affiliateinvitationPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultAffiliateInvitationOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithAffiliateInvitationFilter configures pagination filter.
+func WithAffiliateInvitationFilter(filter func(*AffiliateInvitationQuery) (*AffiliateInvitationQuery, error)) AffiliateInvitationPaginateOption {
+	return func(pager *affiliateinvitationPager) error {
+		if filter == nil {
+			return errors.New("AffiliateInvitationQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type affiliateinvitationPager struct {
+	reverse bool
+	order   *AffiliateInvitationOrder
+	filter  func(*AffiliateInvitationQuery) (*AffiliateInvitationQuery, error)
+}
+
+func newAffiliateInvitationPager(opts []AffiliateInvitationPaginateOption, reverse bool) (*affiliateinvitationPager, error) {
+	pager := &affiliateinvitationPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultAffiliateInvitationOrder
+	}
+	return pager, nil
+}
+
+func (p *affiliateinvitationPager) applyFilter(query *AffiliateInvitationQuery) (*AffiliateInvitationQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *affiliateinvitationPager) toCursor(_m *AffiliateInvitation) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *affiliateinvitationPager) applyCursors(query *AffiliateInvitationQuery, after, before *Cursor) (*AffiliateInvitationQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultAffiliateInvitationOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *affiliateinvitationPager) applyOrder(query *AffiliateInvitationQuery) *AffiliateInvitationQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultAffiliateInvitationOrder.Field {
+		query = query.Order(DefaultAffiliateInvitationOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *affiliateinvitationPager) orderExpr(query *AffiliateInvitationQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultAffiliateInvitationOrder.Field {
+			b.Comma().Ident(DefaultAffiliateInvitationOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to AffiliateInvitation.
+func (_m *AffiliateInvitationQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...AffiliateInvitationPaginateOption,
+) (*AffiliateInvitationConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newAffiliateInvitationPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &AffiliateInvitationConnection{Edges: []*AffiliateInvitationEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// AffiliateInvitationOrderFieldCreatedAt orders AffiliateInvitation by created_at.
+	AffiliateInvitationOrderFieldCreatedAt = &AffiliateInvitationOrderField{
+		Value: func(_m *AffiliateInvitation) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: affiliateinvitation.FieldCreatedAt,
+		toTerm: affiliateinvitation.ByCreatedAt,
+		toCursor: func(_m *AffiliateInvitation) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// AffiliateInvitationOrderFieldUpdatedAt orders AffiliateInvitation by updated_at.
+	AffiliateInvitationOrderFieldUpdatedAt = &AffiliateInvitationOrderField{
+		Value: func(_m *AffiliateInvitation) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: affiliateinvitation.FieldUpdatedAt,
+		toTerm: affiliateinvitation.ByUpdatedAt,
+		toCursor: func(_m *AffiliateInvitation) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f AffiliateInvitationOrderField) String() string {
+	var str string
+	switch f.column {
+	case AffiliateInvitationOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case AffiliateInvitationOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f AffiliateInvitationOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *AffiliateInvitationOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("AffiliateInvitationOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *AffiliateInvitationOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *AffiliateInvitationOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid AffiliateInvitationOrderField", str)
+	}
+	return nil
+}
+
+// AffiliateInvitationOrderField defines the ordering field of AffiliateInvitation.
+type AffiliateInvitationOrderField struct {
+	// Value extracts the ordering value from the given AffiliateInvitation.
+	Value    func(*AffiliateInvitation) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) affiliateinvitation.OrderOption
+	toCursor func(*AffiliateInvitation) Cursor
+}
+
+// AffiliateInvitationOrder defines the ordering of AffiliateInvitation.
+type AffiliateInvitationOrder struct {
+	Direction OrderDirection                 `json:"direction"`
+	Field     *AffiliateInvitationOrderField `json:"field"`
+}
+
+// DefaultAffiliateInvitationOrder is the default ordering of AffiliateInvitation.
+var DefaultAffiliateInvitationOrder = &AffiliateInvitationOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &AffiliateInvitationOrderField{
+		Value: func(_m *AffiliateInvitation) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: affiliateinvitation.FieldID,
+		toTerm: affiliateinvitation.ByID,
+		toCursor: func(_m *AffiliateInvitation) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts AffiliateInvitation into AffiliateInvitationEdge.
+func (_m *AffiliateInvitation) ToEdge(order *AffiliateInvitationOrder) *AffiliateInvitationEdge {
+	if order == nil {
+		order = DefaultAffiliateInvitationOrder
+	}
+	return &AffiliateInvitationEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// AffiliateProfileEdge is the edge representation of AffiliateProfile.
+type AffiliateProfileEdge struct {
+	Node   *AffiliateProfile `json:"node"`
+	Cursor Cursor            `json:"cursor"`
+}
+
+// AffiliateProfileConnection is the connection containing edges to AffiliateProfile.
+type AffiliateProfileConnection struct {
+	Edges      []*AffiliateProfileEdge `json:"edges"`
+	PageInfo   PageInfo                `json:"pageInfo"`
+	TotalCount int                     `json:"totalCount"`
+}
+
+func (c *AffiliateProfileConnection) build(nodes []*AffiliateProfile, pager *affiliateprofilePager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *AffiliateProfile
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *AffiliateProfile {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *AffiliateProfile {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*AffiliateProfileEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &AffiliateProfileEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// AffiliateProfilePaginateOption enables pagination customization.
+type AffiliateProfilePaginateOption func(*affiliateprofilePager) error
+
+// WithAffiliateProfileOrder configures pagination ordering.
+func WithAffiliateProfileOrder(order *AffiliateProfileOrder) AffiliateProfilePaginateOption {
+	if order == nil {
+		order = DefaultAffiliateProfileOrder
+	}
+	o := *order
+	return func(pager *affiliateprofilePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultAffiliateProfileOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithAffiliateProfileFilter configures pagination filter.
+func WithAffiliateProfileFilter(filter func(*AffiliateProfileQuery) (*AffiliateProfileQuery, error)) AffiliateProfilePaginateOption {
+	return func(pager *affiliateprofilePager) error {
+		if filter == nil {
+			return errors.New("AffiliateProfileQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type affiliateprofilePager struct {
+	reverse bool
+	order   *AffiliateProfileOrder
+	filter  func(*AffiliateProfileQuery) (*AffiliateProfileQuery, error)
+}
+
+func newAffiliateProfilePager(opts []AffiliateProfilePaginateOption, reverse bool) (*affiliateprofilePager, error) {
+	pager := &affiliateprofilePager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultAffiliateProfileOrder
+	}
+	return pager, nil
+}
+
+func (p *affiliateprofilePager) applyFilter(query *AffiliateProfileQuery) (*AffiliateProfileQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *affiliateprofilePager) toCursor(_m *AffiliateProfile) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *affiliateprofilePager) applyCursors(query *AffiliateProfileQuery, after, before *Cursor) (*AffiliateProfileQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultAffiliateProfileOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *affiliateprofilePager) applyOrder(query *AffiliateProfileQuery) *AffiliateProfileQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultAffiliateProfileOrder.Field {
+		query = query.Order(DefaultAffiliateProfileOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *affiliateprofilePager) orderExpr(query *AffiliateProfileQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultAffiliateProfileOrder.Field {
+			b.Comma().Ident(DefaultAffiliateProfileOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to AffiliateProfile.
+func (_m *AffiliateProfileQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...AffiliateProfilePaginateOption,
+) (*AffiliateProfileConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newAffiliateProfilePager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &AffiliateProfileConnection{Edges: []*AffiliateProfileEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// AffiliateProfileOrderFieldCreatedAt orders AffiliateProfile by created_at.
+	AffiliateProfileOrderFieldCreatedAt = &AffiliateProfileOrderField{
+		Value: func(_m *AffiliateProfile) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: affiliateprofile.FieldCreatedAt,
+		toTerm: affiliateprofile.ByCreatedAt,
+		toCursor: func(_m *AffiliateProfile) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// AffiliateProfileOrderFieldUpdatedAt orders AffiliateProfile by updated_at.
+	AffiliateProfileOrderFieldUpdatedAt = &AffiliateProfileOrderField{
+		Value: func(_m *AffiliateProfile) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: affiliateprofile.FieldUpdatedAt,
+		toTerm: affiliateprofile.ByUpdatedAt,
+		toCursor: func(_m *AffiliateProfile) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f AffiliateProfileOrderField) String() string {
+	var str string
+	switch f.column {
+	case AffiliateProfileOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case AffiliateProfileOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f AffiliateProfileOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *AffiliateProfileOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("AffiliateProfileOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *AffiliateProfileOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *AffiliateProfileOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid AffiliateProfileOrderField", str)
+	}
+	return nil
+}
+
+// AffiliateProfileOrderField defines the ordering field of AffiliateProfile.
+type AffiliateProfileOrderField struct {
+	// Value extracts the ordering value from the given AffiliateProfile.
+	Value    func(*AffiliateProfile) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) affiliateprofile.OrderOption
+	toCursor func(*AffiliateProfile) Cursor
+}
+
+// AffiliateProfileOrder defines the ordering of AffiliateProfile.
+type AffiliateProfileOrder struct {
+	Direction OrderDirection              `json:"direction"`
+	Field     *AffiliateProfileOrderField `json:"field"`
+}
+
+// DefaultAffiliateProfileOrder is the default ordering of AffiliateProfile.
+var DefaultAffiliateProfileOrder = &AffiliateProfileOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &AffiliateProfileOrderField{
+		Value: func(_m *AffiliateProfile) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: affiliateprofile.FieldID,
+		toTerm: affiliateprofile.ByID,
+		toCursor: func(_m *AffiliateProfile) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts AffiliateProfile into AffiliateProfileEdge.
+func (_m *AffiliateProfile) ToEdge(order *AffiliateProfileOrder) *AffiliateProfileEdge {
+	if order == nil {
+		order = DefaultAffiliateProfileOrder
+	}
+	return &AffiliateProfileEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// AffiliateRebateEdge is the edge representation of AffiliateRebate.
+type AffiliateRebateEdge struct {
+	Node   *AffiliateRebate `json:"node"`
+	Cursor Cursor           `json:"cursor"`
+}
+
+// AffiliateRebateConnection is the connection containing edges to AffiliateRebate.
+type AffiliateRebateConnection struct {
+	Edges      []*AffiliateRebateEdge `json:"edges"`
+	PageInfo   PageInfo               `json:"pageInfo"`
+	TotalCount int                    `json:"totalCount"`
+}
+
+func (c *AffiliateRebateConnection) build(nodes []*AffiliateRebate, pager *affiliaterebatePager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *AffiliateRebate
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *AffiliateRebate {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *AffiliateRebate {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*AffiliateRebateEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &AffiliateRebateEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// AffiliateRebatePaginateOption enables pagination customization.
+type AffiliateRebatePaginateOption func(*affiliaterebatePager) error
+
+// WithAffiliateRebateOrder configures pagination ordering.
+func WithAffiliateRebateOrder(order *AffiliateRebateOrder) AffiliateRebatePaginateOption {
+	if order == nil {
+		order = DefaultAffiliateRebateOrder
+	}
+	o := *order
+	return func(pager *affiliaterebatePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultAffiliateRebateOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithAffiliateRebateFilter configures pagination filter.
+func WithAffiliateRebateFilter(filter func(*AffiliateRebateQuery) (*AffiliateRebateQuery, error)) AffiliateRebatePaginateOption {
+	return func(pager *affiliaterebatePager) error {
+		if filter == nil {
+			return errors.New("AffiliateRebateQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type affiliaterebatePager struct {
+	reverse bool
+	order   *AffiliateRebateOrder
+	filter  func(*AffiliateRebateQuery) (*AffiliateRebateQuery, error)
+}
+
+func newAffiliateRebatePager(opts []AffiliateRebatePaginateOption, reverse bool) (*affiliaterebatePager, error) {
+	pager := &affiliaterebatePager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultAffiliateRebateOrder
+	}
+	return pager, nil
+}
+
+func (p *affiliaterebatePager) applyFilter(query *AffiliateRebateQuery) (*AffiliateRebateQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *affiliaterebatePager) toCursor(_m *AffiliateRebate) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *affiliaterebatePager) applyCursors(query *AffiliateRebateQuery, after, before *Cursor) (*AffiliateRebateQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultAffiliateRebateOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *affiliaterebatePager) applyOrder(query *AffiliateRebateQuery) *AffiliateRebateQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultAffiliateRebateOrder.Field {
+		query = query.Order(DefaultAffiliateRebateOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *affiliaterebatePager) orderExpr(query *AffiliateRebateQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultAffiliateRebateOrder.Field {
+			b.Comma().Ident(DefaultAffiliateRebateOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to AffiliateRebate.
+func (_m *AffiliateRebateQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...AffiliateRebatePaginateOption,
+) (*AffiliateRebateConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newAffiliateRebatePager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &AffiliateRebateConnection{Edges: []*AffiliateRebateEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// AffiliateRebateOrderFieldCreatedAt orders AffiliateRebate by created_at.
+	AffiliateRebateOrderFieldCreatedAt = &AffiliateRebateOrderField{
+		Value: func(_m *AffiliateRebate) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: affiliaterebate.FieldCreatedAt,
+		toTerm: affiliaterebate.ByCreatedAt,
+		toCursor: func(_m *AffiliateRebate) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// AffiliateRebateOrderFieldUpdatedAt orders AffiliateRebate by updated_at.
+	AffiliateRebateOrderFieldUpdatedAt = &AffiliateRebateOrderField{
+		Value: func(_m *AffiliateRebate) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: affiliaterebate.FieldUpdatedAt,
+		toTerm: affiliaterebate.ByUpdatedAt,
+		toCursor: func(_m *AffiliateRebate) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f AffiliateRebateOrderField) String() string {
+	var str string
+	switch f.column {
+	case AffiliateRebateOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case AffiliateRebateOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f AffiliateRebateOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *AffiliateRebateOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("AffiliateRebateOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *AffiliateRebateOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *AffiliateRebateOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid AffiliateRebateOrderField", str)
+	}
+	return nil
+}
+
+// AffiliateRebateOrderField defines the ordering field of AffiliateRebate.
+type AffiliateRebateOrderField struct {
+	// Value extracts the ordering value from the given AffiliateRebate.
+	Value    func(*AffiliateRebate) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) affiliaterebate.OrderOption
+	toCursor func(*AffiliateRebate) Cursor
+}
+
+// AffiliateRebateOrder defines the ordering of AffiliateRebate.
+type AffiliateRebateOrder struct {
+	Direction OrderDirection             `json:"direction"`
+	Field     *AffiliateRebateOrderField `json:"field"`
+}
+
+// DefaultAffiliateRebateOrder is the default ordering of AffiliateRebate.
+var DefaultAffiliateRebateOrder = &AffiliateRebateOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &AffiliateRebateOrderField{
+		Value: func(_m *AffiliateRebate) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: affiliaterebate.FieldID,
+		toTerm: affiliaterebate.ByID,
+		toCursor: func(_m *AffiliateRebate) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts AffiliateRebate into AffiliateRebateEdge.
+func (_m *AffiliateRebate) ToEdge(order *AffiliateRebateOrder) *AffiliateRebateEdge {
+	if order == nil {
+		order = DefaultAffiliateRebateOrder
+	}
+	return &AffiliateRebateEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// AffiliateSettingEdge is the edge representation of AffiliateSetting.
+type AffiliateSettingEdge struct {
+	Node   *AffiliateSetting `json:"node"`
+	Cursor Cursor            `json:"cursor"`
+}
+
+// AffiliateSettingConnection is the connection containing edges to AffiliateSetting.
+type AffiliateSettingConnection struct {
+	Edges      []*AffiliateSettingEdge `json:"edges"`
+	PageInfo   PageInfo                `json:"pageInfo"`
+	TotalCount int                     `json:"totalCount"`
+}
+
+func (c *AffiliateSettingConnection) build(nodes []*AffiliateSetting, pager *affiliatesettingPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *AffiliateSetting
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *AffiliateSetting {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *AffiliateSetting {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*AffiliateSettingEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &AffiliateSettingEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// AffiliateSettingPaginateOption enables pagination customization.
+type AffiliateSettingPaginateOption func(*affiliatesettingPager) error
+
+// WithAffiliateSettingOrder configures pagination ordering.
+func WithAffiliateSettingOrder(order *AffiliateSettingOrder) AffiliateSettingPaginateOption {
+	if order == nil {
+		order = DefaultAffiliateSettingOrder
+	}
+	o := *order
+	return func(pager *affiliatesettingPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultAffiliateSettingOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithAffiliateSettingFilter configures pagination filter.
+func WithAffiliateSettingFilter(filter func(*AffiliateSettingQuery) (*AffiliateSettingQuery, error)) AffiliateSettingPaginateOption {
+	return func(pager *affiliatesettingPager) error {
+		if filter == nil {
+			return errors.New("AffiliateSettingQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type affiliatesettingPager struct {
+	reverse bool
+	order   *AffiliateSettingOrder
+	filter  func(*AffiliateSettingQuery) (*AffiliateSettingQuery, error)
+}
+
+func newAffiliateSettingPager(opts []AffiliateSettingPaginateOption, reverse bool) (*affiliatesettingPager, error) {
+	pager := &affiliatesettingPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultAffiliateSettingOrder
+	}
+	return pager, nil
+}
+
+func (p *affiliatesettingPager) applyFilter(query *AffiliateSettingQuery) (*AffiliateSettingQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *affiliatesettingPager) toCursor(_m *AffiliateSetting) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *affiliatesettingPager) applyCursors(query *AffiliateSettingQuery, after, before *Cursor) (*AffiliateSettingQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultAffiliateSettingOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *affiliatesettingPager) applyOrder(query *AffiliateSettingQuery) *AffiliateSettingQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultAffiliateSettingOrder.Field {
+		query = query.Order(DefaultAffiliateSettingOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *affiliatesettingPager) orderExpr(query *AffiliateSettingQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultAffiliateSettingOrder.Field {
+			b.Comma().Ident(DefaultAffiliateSettingOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to AffiliateSetting.
+func (_m *AffiliateSettingQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...AffiliateSettingPaginateOption,
+) (*AffiliateSettingConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newAffiliateSettingPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &AffiliateSettingConnection{Edges: []*AffiliateSettingEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// AffiliateSettingOrderFieldCreatedAt orders AffiliateSetting by created_at.
+	AffiliateSettingOrderFieldCreatedAt = &AffiliateSettingOrderField{
+		Value: func(_m *AffiliateSetting) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: affiliatesetting.FieldCreatedAt,
+		toTerm: affiliatesetting.ByCreatedAt,
+		toCursor: func(_m *AffiliateSetting) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// AffiliateSettingOrderFieldUpdatedAt orders AffiliateSetting by updated_at.
+	AffiliateSettingOrderFieldUpdatedAt = &AffiliateSettingOrderField{
+		Value: func(_m *AffiliateSetting) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: affiliatesetting.FieldUpdatedAt,
+		toTerm: affiliatesetting.ByUpdatedAt,
+		toCursor: func(_m *AffiliateSetting) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f AffiliateSettingOrderField) String() string {
+	var str string
+	switch f.column {
+	case AffiliateSettingOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case AffiliateSettingOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f AffiliateSettingOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *AffiliateSettingOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("AffiliateSettingOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *AffiliateSettingOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *AffiliateSettingOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid AffiliateSettingOrderField", str)
+	}
+	return nil
+}
+
+// AffiliateSettingOrderField defines the ordering field of AffiliateSetting.
+type AffiliateSettingOrderField struct {
+	// Value extracts the ordering value from the given AffiliateSetting.
+	Value    func(*AffiliateSetting) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) affiliatesetting.OrderOption
+	toCursor func(*AffiliateSetting) Cursor
+}
+
+// AffiliateSettingOrder defines the ordering of AffiliateSetting.
+type AffiliateSettingOrder struct {
+	Direction OrderDirection              `json:"direction"`
+	Field     *AffiliateSettingOrderField `json:"field"`
+}
+
+// DefaultAffiliateSettingOrder is the default ordering of AffiliateSetting.
+var DefaultAffiliateSettingOrder = &AffiliateSettingOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &AffiliateSettingOrderField{
+		Value: func(_m *AffiliateSetting) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: affiliatesetting.FieldID,
+		toTerm: affiliatesetting.ByID,
+		toCursor: func(_m *AffiliateSetting) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts AffiliateSetting into AffiliateSettingEdge.
+func (_m *AffiliateSetting) ToEdge(order *AffiliateSettingOrder) *AffiliateSettingEdge {
+	if order == nil {
+		order = DefaultAffiliateSettingOrder
+	}
+	return &AffiliateSettingEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

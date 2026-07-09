@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/promocode"
 	"github.com/looplj/axonhub/internal/ent/promousage"
@@ -380,6 +381,21 @@ func (_c *UserSubscriptionCreate) AddUsageBillingRecords(v ...*UsageBillingRecor
 		ids[i] = v[i].ID
 	}
 	return _c.AddUsageBillingRecordIDs(ids...)
+}
+
+// AddAffiliateRebateIDs adds the "affiliate_rebates" edge to the AffiliateRebate entity by IDs.
+func (_c *UserSubscriptionCreate) AddAffiliateRebateIDs(ids ...int) *UserSubscriptionCreate {
+	_c.mutation.AddAffiliateRebateIDs(ids...)
+	return _c
+}
+
+// AddAffiliateRebates adds the "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_c *UserSubscriptionCreate) AddAffiliateRebates(v ...*AffiliateRebate) *UserSubscriptionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAffiliateRebateIDs(ids...)
 }
 
 // Mutation returns the UserSubscriptionMutation object of the builder.
@@ -802,6 +818,22 @@ func (_c *UserSubscriptionCreate) createSpec() (*UserSubscription, *sqlgraph.Cre
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AffiliateRebatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.AffiliateRebatesTable,
+			Columns: []string{usersubscription.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

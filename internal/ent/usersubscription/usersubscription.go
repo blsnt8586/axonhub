@@ -86,6 +86,8 @@ const (
 	EdgePromoUsages = "promo_usages"
 	// EdgeUsageBillingRecords holds the string denoting the usage_billing_records edge name in mutations.
 	EdgeUsageBillingRecords = "usage_billing_records"
+	// EdgeAffiliateRebates holds the string denoting the affiliate_rebates edge name in mutations.
+	EdgeAffiliateRebates = "affiliate_rebates"
 	// Table holds the table name of the usersubscription in the database.
 	Table = "user_subscriptions"
 	// UserTable is the table that holds the user relation/edge.
@@ -137,6 +139,13 @@ const (
 	UsageBillingRecordsInverseTable = "usage_billing_records"
 	// UsageBillingRecordsColumn is the table column denoting the usage_billing_records relation/edge.
 	UsageBillingRecordsColumn = "user_subscription_id"
+	// AffiliateRebatesTable is the table that holds the affiliate_rebates relation/edge.
+	AffiliateRebatesTable = "affiliate_rebates"
+	// AffiliateRebatesInverseTable is the table name for the AffiliateRebate entity.
+	// It exists in this package in order to avoid circular dependency with the "affiliaterebate" package.
+	AffiliateRebatesInverseTable = "affiliate_rebates"
+	// AffiliateRebatesColumn is the table column denoting the affiliate_rebates relation/edge.
+	AffiliateRebatesColumn = "user_subscription_id"
 )
 
 // Columns holds all SQL columns for usersubscription fields.
@@ -442,6 +451,20 @@ func ByUsageBillingRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpti
 		sqlgraph.OrderByNeighborTerms(s, newUsageBillingRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAffiliateRebatesCount orders the results by affiliate_rebates count.
+func ByAffiliateRebatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffiliateRebatesStep(), opts...)
+	}
+}
+
+// ByAffiliateRebates orders the results by affiliate_rebates terms.
+func ByAffiliateRebates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffiliateRebatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -489,6 +512,13 @@ func newUsageBillingRecordsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsageBillingRecordsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UsageBillingRecordsTable, UsageBillingRecordsColumn),
+	)
+}
+func newAffiliateRebatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffiliateRebatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AffiliateRebatesTable, AffiliateRebatesColumn),
 	)
 }
 

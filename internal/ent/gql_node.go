@@ -14,6 +14,10 @@ import (
 	"entgo.io/ent/dialect/sql/schema"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/hashicorp/go-multierror"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/affiliatesetting"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
@@ -72,6 +76,26 @@ var apikeyprofiletemplateImplementors = []string{"APIKeyProfileTemplate", "Node"
 
 // IsNode implements the Node interface check for GQLGen.
 func (*APIKeyProfileTemplate) IsNode() {}
+
+var affiliateinvitationImplementors = []string{"AffiliateInvitation", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*AffiliateInvitation) IsNode() {}
+
+var affiliateprofileImplementors = []string{"AffiliateProfile", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*AffiliateProfile) IsNode() {}
+
+var affiliaterebateImplementors = []string{"AffiliateRebate", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*AffiliateRebate) IsNode() {}
+
+var affiliatesettingImplementors = []string{"AffiliateSetting", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*AffiliateSetting) IsNode() {}
 
 var billingaccountImplementors = []string{"BillingAccount", "Node"}
 
@@ -335,6 +359,42 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(apikeyprofiletemplate.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, apikeyprofiletemplateImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case affiliateinvitation.Table:
+		query := c.AffiliateInvitation.Query().
+			Where(affiliateinvitation.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, affiliateinvitationImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case affiliateprofile.Table:
+		query := c.AffiliateProfile.Query().
+			Where(affiliateprofile.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, affiliateprofileImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case affiliaterebate.Table:
+		query := c.AffiliateRebate.Query().
+			Where(affiliaterebate.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, affiliaterebateImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case affiliatesetting.Table:
+		query := c.AffiliateSetting.Query().
+			Where(affiliatesetting.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, affiliatesettingImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -774,6 +834,70 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.APIKeyProfileTemplate.Query().
 			Where(apikeyprofiletemplate.IDIn(ids...))
 		query, err := query.CollectFields(ctx, apikeyprofiletemplateImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case affiliateinvitation.Table:
+		query := c.AffiliateInvitation.Query().
+			Where(affiliateinvitation.IDIn(ids...))
+		query, err := query.CollectFields(ctx, affiliateinvitationImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case affiliateprofile.Table:
+		query := c.AffiliateProfile.Query().
+			Where(affiliateprofile.IDIn(ids...))
+		query, err := query.CollectFields(ctx, affiliateprofileImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case affiliaterebate.Table:
+		query := c.AffiliateRebate.Query().
+			Where(affiliaterebate.IDIn(ids...))
+		query, err := query.CollectFields(ctx, affiliaterebateImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case affiliatesetting.Table:
+		query := c.AffiliateSetting.Query().
+			Where(affiliatesetting.IDIn(ids...))
+		query, err := query.CollectFields(ctx, affiliatesettingImplementors...)
 		if err != nil {
 			return nil, err
 		}

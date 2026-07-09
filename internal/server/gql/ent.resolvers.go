@@ -63,6 +63,80 @@ func (r *aPIKeyProfileTemplateResolver) ProjectID(ctx context.Context, obj *ent.
 }
 
 // ID is the resolver for the id field.
+func (r *affiliateInvitationResolver) ID(ctx context.Context, obj *ent.AffiliateInvitation) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeAffiliateInvitation, ID: obj.ID}, nil
+}
+
+// InviterUserID is the resolver for the inviterUserID field.
+func (r *affiliateInvitationResolver) InviterUserID(ctx context.Context, obj *ent.AffiliateInvitation) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUser, ID: obj.InviterUserID}, nil
+}
+
+// InviteeUserID is the resolver for the inviteeUserID field.
+func (r *affiliateInvitationResolver) InviteeUserID(ctx context.Context, obj *ent.AffiliateInvitation) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUser, ID: obj.InviteeUserID}, nil
+}
+
+// ID is the resolver for the id field.
+func (r *affiliateProfileResolver) ID(ctx context.Context, obj *ent.AffiliateProfile) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeAffiliateProfile, ID: obj.ID}, nil
+}
+
+// UserID is the resolver for the userID field.
+func (r *affiliateProfileResolver) UserID(ctx context.Context, obj *ent.AffiliateProfile) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUser, ID: obj.UserID}, nil
+}
+
+// ID is the resolver for the id field.
+func (r *affiliateRebateResolver) ID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeAffiliateRebate, ID: obj.ID}, nil
+}
+
+// InvitationID is the resolver for the invitationID field.
+func (r *affiliateRebateResolver) InvitationID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeAffiliateInvitation, ID: obj.InvitationID}, nil
+}
+
+// InviterUserID is the resolver for the inviterUserID field.
+func (r *affiliateRebateResolver) InviterUserID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUser, ID: obj.InviterUserID}, nil
+}
+
+// InviteeUserID is the resolver for the inviteeUserID field.
+func (r *affiliateRebateResolver) InviteeUserID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUser, ID: obj.InviteeUserID}, nil
+}
+
+// PaymentOrderID is the resolver for the paymentOrderID field.
+func (r *affiliateRebateResolver) PaymentOrderID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error) {
+	if obj.PaymentOrderID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypePaymentOrder, ID: *obj.PaymentOrderID}, nil
+}
+
+// UserSubscriptionID is the resolver for the userSubscriptionID field.
+func (r *affiliateRebateResolver) UserSubscriptionID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error) {
+	if obj.UserSubscriptionID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeUserSubscription, ID: *obj.UserSubscriptionID}, nil
+}
+
+// LedgerTransactionID is the resolver for the ledgerTransactionID field.
+func (r *affiliateRebateResolver) LedgerTransactionID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error) {
+	if obj.LedgerTransactionID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeLedgerTransaction, ID: *obj.LedgerTransactionID}, nil
+}
+
+// ID is the resolver for the id field.
+func (r *affiliateSettingResolver) ID(ctx context.Context, obj *ent.AffiliateSetting) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeAffiliateSetting, ID: obj.ID}, nil
+}
+
+// ID is the resolver for the id field.
 func (r *billingAccountResolver) ID(ctx context.Context, obj *ent.BillingAccount) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeBillingAccount,
@@ -560,6 +634,50 @@ func (r *queryResolver) APIKeyProfileTemplates(ctx context.Context, after *entgq
 	return r.client.APIKeyProfileTemplate.Query().Paginate(ctx, after, first, before, last,
 		ent.WithAPIKeyProfileTemplateOrder(orderBy),
 		ent.WithAPIKeyProfileTemplateFilter(where.Filter),
+	)
+}
+
+// AffiliateInvitations is the resolver for the affiliateInvitations field.
+func (r *queryResolver) AffiliateInvitations(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) (*ent.AffiliateInvitationConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return r.client.AffiliateInvitation.Query().Paginate(ctx, after, first, before, last,
+		ent.WithAffiliateInvitationOrder(orderBy),
+		ent.WithAffiliateInvitationFilter(where.Filter),
+	)
+}
+
+// AffiliateProfiles is the resolver for the affiliateProfiles field.
+func (r *queryResolver) AffiliateProfiles(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder, where *ent.AffiliateProfileWhereInput) (*ent.AffiliateProfileConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return r.client.AffiliateProfile.Query().Paginate(ctx, after, first, before, last,
+		ent.WithAffiliateProfileOrder(orderBy),
+		ent.WithAffiliateProfileFilter(where.Filter),
+	)
+}
+
+// AffiliateRebates is the resolver for the affiliateRebates field.
+func (r *queryResolver) AffiliateRebates(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) (*ent.AffiliateRebateConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return r.client.AffiliateRebate.Query().Paginate(ctx, after, first, before, last,
+		ent.WithAffiliateRebateOrder(orderBy),
+		ent.WithAffiliateRebateFilter(where.Filter),
+	)
+}
+
+// AffiliateSettings is the resolver for the affiliateSettings field.
+func (r *queryResolver) AffiliateSettings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateSettingOrder, where *ent.AffiliateSettingWhereInput) (*ent.AffiliateSettingConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return r.client.AffiliateSetting.Query().Paginate(ctx, after, first, before, last,
+		ent.WithAffiliateSettingOrder(orderBy),
+		ent.WithAffiliateSettingFilter(where.Filter),
 	)
 }
 
@@ -1504,6 +1622,20 @@ func (r *Resolver) APIKeyProfileTemplate() APIKeyProfileTemplateResolver {
 	return &aPIKeyProfileTemplateResolver{r}
 }
 
+// AffiliateInvitation returns AffiliateInvitationResolver implementation.
+func (r *Resolver) AffiliateInvitation() AffiliateInvitationResolver {
+	return &affiliateInvitationResolver{r}
+}
+
+// AffiliateProfile returns AffiliateProfileResolver implementation.
+func (r *Resolver) AffiliateProfile() AffiliateProfileResolver { return &affiliateProfileResolver{r} }
+
+// AffiliateRebate returns AffiliateRebateResolver implementation.
+func (r *Resolver) AffiliateRebate() AffiliateRebateResolver { return &affiliateRebateResolver{r} }
+
+// AffiliateSetting returns AffiliateSettingResolver implementation.
+func (r *Resolver) AffiliateSetting() AffiliateSettingResolver { return &affiliateSettingResolver{r} }
+
 // BillingAccount returns BillingAccountResolver implementation.
 func (r *Resolver) BillingAccount() BillingAccountResolver { return &billingAccountResolver{r} }
 
@@ -1641,6 +1773,10 @@ func (r *Resolver) UserSubscription() UserSubscriptionResolver { return &userSub
 
 type aPIKeyResolver struct{ *Resolver }
 type aPIKeyProfileTemplateResolver struct{ *Resolver }
+type affiliateInvitationResolver struct{ *Resolver }
+type affiliateProfileResolver struct{ *Resolver }
+type affiliateRebateResolver struct{ *Resolver }
+type affiliateSettingResolver struct{ *Resolver }
 type billingAccountResolver struct{ *Resolver }
 type billingAccountBindingResolver struct{ *Resolver }
 type billingHoldResolver struct{ *Resolver }

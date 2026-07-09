@@ -12,6 +12,18 @@ type APIKey func(*sql.Selector)
 // APIKeyProfileTemplate is the predicate function for apikeyprofiletemplate builders.
 type APIKeyProfileTemplate func(*sql.Selector)
 
+// AffiliateInvitation is the predicate function for affiliateinvitation builders.
+type AffiliateInvitation func(*sql.Selector)
+
+// AffiliateProfile is the predicate function for affiliateprofile builders.
+type AffiliateProfile func(*sql.Selector)
+
+// AffiliateRebate is the predicate function for affiliaterebate builders.
+type AffiliateRebate func(*sql.Selector)
+
+// AffiliateSetting is the predicate function for affiliatesetting builders.
+type AffiliateSetting func(*sql.Selector)
+
 // BillingAccount is the predicate function for billingaccount builders.
 type BillingAccount func(*sql.Selector)
 

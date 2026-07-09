@@ -159,6 +159,102 @@ func (f APIKeyProfileTemplateMutationRuleFunc) EvalMutation(ctx context.Context,
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.APIKeyProfileTemplateMutation", m)
 }
 
+// The AffiliateInvitationQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type AffiliateInvitationQueryRuleFunc func(context.Context, *ent.AffiliateInvitationQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f AffiliateInvitationQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AffiliateInvitationQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.AffiliateInvitationQuery", q)
+}
+
+// The AffiliateInvitationMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type AffiliateInvitationMutationRuleFunc func(context.Context, *ent.AffiliateInvitationMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f AffiliateInvitationMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.AffiliateInvitationMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.AffiliateInvitationMutation", m)
+}
+
+// The AffiliateProfileQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type AffiliateProfileQueryRuleFunc func(context.Context, *ent.AffiliateProfileQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f AffiliateProfileQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AffiliateProfileQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.AffiliateProfileQuery", q)
+}
+
+// The AffiliateProfileMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type AffiliateProfileMutationRuleFunc func(context.Context, *ent.AffiliateProfileMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f AffiliateProfileMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.AffiliateProfileMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.AffiliateProfileMutation", m)
+}
+
+// The AffiliateRebateQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type AffiliateRebateQueryRuleFunc func(context.Context, *ent.AffiliateRebateQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f AffiliateRebateQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AffiliateRebateQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.AffiliateRebateQuery", q)
+}
+
+// The AffiliateRebateMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type AffiliateRebateMutationRuleFunc func(context.Context, *ent.AffiliateRebateMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f AffiliateRebateMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.AffiliateRebateMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.AffiliateRebateMutation", m)
+}
+
+// The AffiliateSettingQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type AffiliateSettingQueryRuleFunc func(context.Context, *ent.AffiliateSettingQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f AffiliateSettingQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AffiliateSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.AffiliateSettingQuery", q)
+}
+
+// The AffiliateSettingMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type AffiliateSettingMutationRuleFunc func(context.Context, *ent.AffiliateSettingMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f AffiliateSettingMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.AffiliateSettingMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.AffiliateSettingMutation", m)
+}
+
 // The BillingAccountQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type BillingAccountQueryRuleFunc func(context.Context, *ent.BillingAccountQuery) error
@@ -1110,6 +1206,14 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.APIKeyProfileTemplateQuery:
 		return q.Filter(), nil
+	case *ent.AffiliateInvitationQuery:
+		return q.Filter(), nil
+	case *ent.AffiliateProfileQuery:
+		return q.Filter(), nil
+	case *ent.AffiliateRebateQuery:
+		return q.Filter(), nil
+	case *ent.AffiliateSettingQuery:
+		return q.Filter(), nil
 	case *ent.BillingAccountQuery:
 		return q.Filter(), nil
 	case *ent.BillingAccountBindingQuery:
@@ -1196,6 +1300,14 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.APIKeyMutation:
 		return m.Filter(), nil
 	case *ent.APIKeyProfileTemplateMutation:
+		return m.Filter(), nil
+	case *ent.AffiliateInvitationMutation:
+		return m.Filter(), nil
+	case *ent.AffiliateProfileMutation:
+		return m.Filter(), nil
+	case *ent.AffiliateRebateMutation:
+		return m.Filter(), nil
+	case *ent.AffiliateSettingMutation:
 		return m.Filter(), nil
 	case *ent.BillingAccountMutation:
 		return m.Filter(), nil

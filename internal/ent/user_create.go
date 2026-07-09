@@ -11,6 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
@@ -324,6 +327,81 @@ func (_c *UserCreate) AddPromoUsages(v ...*PromoUsage) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddPromoUsageIDs(ids...)
+}
+
+// AddAffiliateProfileIDs adds the "affiliate_profiles" edge to the AffiliateProfile entity by IDs.
+func (_c *UserCreate) AddAffiliateProfileIDs(ids ...int) *UserCreate {
+	_c.mutation.AddAffiliateProfileIDs(ids...)
+	return _c
+}
+
+// AddAffiliateProfiles adds the "affiliate_profiles" edges to the AffiliateProfile entity.
+func (_c *UserCreate) AddAffiliateProfiles(v ...*AffiliateProfile) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAffiliateProfileIDs(ids...)
+}
+
+// AddAffiliateInviterIDs adds the "affiliate_inviters" edge to the AffiliateInvitation entity by IDs.
+func (_c *UserCreate) AddAffiliateInviterIDs(ids ...int) *UserCreate {
+	_c.mutation.AddAffiliateInviterIDs(ids...)
+	return _c
+}
+
+// AddAffiliateInviters adds the "affiliate_inviters" edges to the AffiliateInvitation entity.
+func (_c *UserCreate) AddAffiliateInviters(v ...*AffiliateInvitation) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAffiliateInviterIDs(ids...)
+}
+
+// AddAffiliateInviteeIDs adds the "affiliate_invitees" edge to the AffiliateInvitation entity by IDs.
+func (_c *UserCreate) AddAffiliateInviteeIDs(ids ...int) *UserCreate {
+	_c.mutation.AddAffiliateInviteeIDs(ids...)
+	return _c
+}
+
+// AddAffiliateInvitees adds the "affiliate_invitees" edges to the AffiliateInvitation entity.
+func (_c *UserCreate) AddAffiliateInvitees(v ...*AffiliateInvitation) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAffiliateInviteeIDs(ids...)
+}
+
+// AddAffiliateRebatesEarnedIDs adds the "affiliate_rebates_earned" edge to the AffiliateRebate entity by IDs.
+func (_c *UserCreate) AddAffiliateRebatesEarnedIDs(ids ...int) *UserCreate {
+	_c.mutation.AddAffiliateRebatesEarnedIDs(ids...)
+	return _c
+}
+
+// AddAffiliateRebatesEarned adds the "affiliate_rebates_earned" edges to the AffiliateRebate entity.
+func (_c *UserCreate) AddAffiliateRebatesEarned(v ...*AffiliateRebate) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAffiliateRebatesEarnedIDs(ids...)
+}
+
+// AddAffiliateRebatesGeneratedIDs adds the "affiliate_rebates_generated" edge to the AffiliateRebate entity by IDs.
+func (_c *UserCreate) AddAffiliateRebatesGeneratedIDs(ids ...int) *UserCreate {
+	_c.mutation.AddAffiliateRebatesGeneratedIDs(ids...)
+	return _c
+}
+
+// AddAffiliateRebatesGenerated adds the "affiliate_rebates_generated" edges to the AffiliateRebate entity.
+func (_c *UserCreate) AddAffiliateRebatesGenerated(v ...*AffiliateRebate) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAffiliateRebatesGeneratedIDs(ids...)
 }
 
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
@@ -705,6 +783,86 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AffiliateProfilesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateProfilesTable,
+			Columns: []string{user.AffiliateProfilesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AffiliateInvitersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInvitersTable,
+			Columns: []string{user.AffiliateInvitersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AffiliateInviteesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInviteesTable,
+			Columns: []string{user.AffiliateInviteesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AffiliateRebatesEarnedIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesEarnedTable,
+			Columns: []string{user.AffiliateRebatesEarnedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AffiliateRebatesGeneratedIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesGeneratedTable,
+			Columns: []string{user.AffiliateRebatesGeneratedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

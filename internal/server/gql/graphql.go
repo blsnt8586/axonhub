@@ -80,6 +80,7 @@ type Dependencies struct {
 	PaymentService                 *biz.PaymentService
 	PricingService                 *biz.PricingService
 	PromoCodeService               *biz.PromoCodeService
+	AffiliateService               *biz.AffiliateService
 	RedeemCodeService              *biz.RedeemCodeService
 	SubscriptionService            *biz.SubscriptionService
 	Scheduler                      *scheduler.Scheduler
@@ -127,6 +128,7 @@ func NewGraphqlHandlers(deps Dependencies) *GraphqlHandler {
 			deps.PaymentService,
 			deps.PricingService,
 			deps.PromoCodeService,
+			deps.AffiliateService,
 			deps.RedeemCodeService,
 			deps.SubscriptionService,
 			deps.Scheduler,

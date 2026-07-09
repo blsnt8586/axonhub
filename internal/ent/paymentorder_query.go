@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
@@ -26,20 +27,22 @@ import (
 // PaymentOrderQuery is the builder for querying PaymentOrder entities.
 type PaymentOrderQuery struct {
 	config
-	ctx                    *QueryContext
-	order                  []paymentorder.OrderOption
-	inters                 []Interceptor
-	predicates             []predicate.PaymentOrder
-	withBillingAccount     *BillingAccountQuery
-	withProviderInstance   *PaymentProviderInstanceQuery
-	withLedgerTransaction  *LedgerTransactionQuery
-	withPromoCode          *PromoCodeQuery
-	withPromoUsages        *PromoUsageQuery
-	withPaymentEvents      *PaymentEventQuery
-	loadTotal              []func(context.Context, []*PaymentOrder) error
-	modifiers              []func(*sql.Selector)
-	withNamedPromoUsages   map[string]*PromoUsageQuery
-	withNamedPaymentEvents map[string]*PaymentEventQuery
+	ctx                       *QueryContext
+	order                     []paymentorder.OrderOption
+	inters                    []Interceptor
+	predicates                []predicate.PaymentOrder
+	withBillingAccount        *BillingAccountQuery
+	withProviderInstance      *PaymentProviderInstanceQuery
+	withLedgerTransaction     *LedgerTransactionQuery
+	withPromoCode             *PromoCodeQuery
+	withPromoUsages           *PromoUsageQuery
+	withPaymentEvents         *PaymentEventQuery
+	withAffiliateRebates      *AffiliateRebateQuery
+	loadTotal                 []func(context.Context, []*PaymentOrder) error
+	modifiers                 []func(*sql.Selector)
+	withNamedPromoUsages      map[string]*PromoUsageQuery
+	withNamedPaymentEvents    map[string]*PaymentEventQuery
+	withNamedAffiliateRebates map[string]*AffiliateRebateQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -201,6 +204,28 @@ func (_q *PaymentOrderQuery) QueryPaymentEvents() *PaymentEventQuery {
 			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
 			sqlgraph.To(paymentevent.Table, paymentevent.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.PaymentEventsTable, paymentorder.PaymentEventsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAffiliateRebates chains the current query on the "affiliate_rebates" edge.
+func (_q *PaymentOrderQuery) QueryAffiliateRebates() *AffiliateRebateQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
+			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.AffiliateRebatesTable, paymentorder.AffiliateRebatesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -406,6 +431,7 @@ func (_q *PaymentOrderQuery) Clone() *PaymentOrderQuery {
 		withPromoCode:         _q.withPromoCode.Clone(),
 		withPromoUsages:       _q.withPromoUsages.Clone(),
 		withPaymentEvents:     _q.withPaymentEvents.Clone(),
+		withAffiliateRebates:  _q.withAffiliateRebates.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -476,6 +502,17 @@ func (_q *PaymentOrderQuery) WithPaymentEvents(opts ...func(*PaymentEventQuery))
 		opt(query)
 	}
 	_q.withPaymentEvents = query
+	return _q
+}
+
+// WithAffiliateRebates tells the query-builder to eager-load the nodes that are connected to
+// the "affiliate_rebates" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *PaymentOrderQuery) WithAffiliateRebates(opts ...func(*AffiliateRebateQuery)) *PaymentOrderQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAffiliateRebates = query
 	return _q
 }
 
@@ -563,13 +600,14 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*PaymentOrder{}
 		_spec       = _q.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [7]bool{
 			_q.withBillingAccount != nil,
 			_q.withProviderInstance != nil,
 			_q.withLedgerTransaction != nil,
 			_q.withPromoCode != nil,
 			_q.withPromoUsages != nil,
 			_q.withPaymentEvents != nil,
+			_q.withAffiliateRebates != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -631,6 +669,15 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			return nil, err
 		}
 	}
+	if query := _q.withAffiliateRebates; query != nil {
+		if err := _q.loadAffiliateRebates(ctx, query, nodes,
+			func(n *PaymentOrder) { n.Edges.AffiliateRebates = []*AffiliateRebate{} },
+			func(n *PaymentOrder, e *AffiliateRebate) {
+				n.Edges.AffiliateRebates = append(n.Edges.AffiliateRebates, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedPromoUsages {
 		if err := _q.loadPromoUsages(ctx, query, nodes,
 			func(n *PaymentOrder) { n.appendNamedPromoUsages(name) },
@@ -642,6 +689,13 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		if err := _q.loadPaymentEvents(ctx, query, nodes,
 			func(n *PaymentOrder) { n.appendNamedPaymentEvents(name) },
 			func(n *PaymentOrder, e *PaymentEvent) { n.appendNamedPaymentEvents(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAffiliateRebates {
+		if err := _q.loadAffiliateRebates(ctx, query, nodes,
+			func(n *PaymentOrder) { n.appendNamedAffiliateRebates(name) },
+			func(n *PaymentOrder, e *AffiliateRebate) { n.appendNamedAffiliateRebates(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -844,6 +898,39 @@ func (_q *PaymentOrderQuery) loadPaymentEvents(ctx context.Context, query *Payme
 	}
 	return nil
 }
+func (_q *PaymentOrderQuery) loadAffiliateRebates(ctx context.Context, query *AffiliateRebateQuery, nodes []*PaymentOrder, init func(*PaymentOrder), assign func(*PaymentOrder, *AffiliateRebate)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*PaymentOrder)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(affiliaterebate.FieldPaymentOrderID)
+	}
+	query.Where(predicate.AffiliateRebate(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(paymentorder.AffiliateRebatesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.PaymentOrderID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "payment_order_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "payment_order_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *PaymentOrderQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -975,6 +1062,20 @@ func (_q *PaymentOrderQuery) WithNamedPaymentEvents(name string, opts ...func(*P
 		_q.withNamedPaymentEvents = make(map[string]*PaymentEventQuery)
 	}
 	_q.withNamedPaymentEvents[name] = query
+	return _q
+}
+
+// WithNamedAffiliateRebates tells the query-builder to eager-load the nodes that are connected to the "affiliate_rebates"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *PaymentOrderQuery) WithNamedAffiliateRebates(name string, opts ...func(*AffiliateRebateQuery)) *PaymentOrderQuery {
+	query := (&AffiliateRebateClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAffiliateRebates == nil {
+		_q.withNamedAffiliateRebates = make(map[string]*AffiliateRebateQuery)
+	}
+	_q.withNamedAffiliateRebates[name] = query
 	return _q
 }
 

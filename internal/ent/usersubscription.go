@@ -99,14 +99,17 @@ type UserSubscriptionEdges struct {
 	PromoUsages []*PromoUsage `json:"promo_usages,omitempty"`
 	// UsageBillingRecords holds the value of the usage_billing_records edge.
 	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
+	// AffiliateRebates holds the value of the affiliate_rebates edge.
+	AffiliateRebates []*AffiliateRebate `json:"affiliate_rebates,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 	// totalCount holds the count of the edges above.
-	totalCount [7]map[string]int
+	totalCount [8]map[string]int
 
 	namedPromoUsages         map[string][]*PromoUsage
 	namedUsageBillingRecords map[string][]*UsageBillingRecord
+	namedAffiliateRebates    map[string][]*AffiliateRebate
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -180,6 +183,15 @@ func (e UserSubscriptionEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecord
 		return e.UsageBillingRecords, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_billing_records"}
+}
+
+// AffiliateRebatesOrErr returns the AffiliateRebates value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserSubscriptionEdges) AffiliateRebatesOrErr() ([]*AffiliateRebate, error) {
+	if e.loadedTypes[7] {
+		return e.AffiliateRebates, nil
+	}
+	return nil, &NotLoadedError{edge: "affiliate_rebates"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -437,6 +449,11 @@ func (_m *UserSubscription) QueryUsageBillingRecords() *UsageBillingRecordQuery 
 	return NewUserSubscriptionClient(_m.config).QueryUsageBillingRecords(_m)
 }
 
+// QueryAffiliateRebates queries the "affiliate_rebates" edge of the UserSubscription entity.
+func (_m *UserSubscription) QueryAffiliateRebates() *AffiliateRebateQuery {
+	return NewUserSubscriptionClient(_m.config).QueryAffiliateRebates(_m)
+}
+
 // Update returns a builder for updating this UserSubscription.
 // Note that you need to call UserSubscription.Unwrap() before calling this method if this UserSubscription
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -591,6 +608,30 @@ func (_m *UserSubscription) appendNamedUsageBillingRecords(name string, edges ..
 		_m.Edges.namedUsageBillingRecords[name] = []*UsageBillingRecord{}
 	} else {
 		_m.Edges.namedUsageBillingRecords[name] = append(_m.Edges.namedUsageBillingRecords[name], edges...)
+	}
+}
+
+// NamedAffiliateRebates returns the AffiliateRebates named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UserSubscription) NamedAffiliateRebates(name string) ([]*AffiliateRebate, error) {
+	if _m.Edges.namedAffiliateRebates == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAffiliateRebates[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UserSubscription) appendNamedAffiliateRebates(name string, edges ...*AffiliateRebate) {
+	if _m.Edges.namedAffiliateRebates == nil {
+		_m.Edges.namedAffiliateRebates = make(map[string][]*AffiliateRebate)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAffiliateRebates[name] = []*AffiliateRebate{}
+	} else {
+		_m.Edges.namedAffiliateRebates[name] = append(_m.Edges.namedAffiliateRebates[name], edges...)
 	}
 }
 

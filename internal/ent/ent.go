@@ -12,6 +12,10 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/affiliatesetting"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
@@ -114,6 +118,10 @@ func checkColumn(t, c string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			apikey.Table:                   apikey.ValidColumn,
 			apikeyprofiletemplate.Table:    apikeyprofiletemplate.ValidColumn,
+			affiliateinvitation.Table:      affiliateinvitation.ValidColumn,
+			affiliateprofile.Table:         affiliateprofile.ValidColumn,
+			affiliaterebate.Table:          affiliaterebate.ValidColumn,
+			affiliatesetting.Table:         affiliatesetting.ValidColumn,
 			billingaccount.Table:           billingaccount.ValidColumn,
 			billingaccountbinding.Table:    billingaccountbinding.ValidColumn,
 			billinghold.Table:              billinghold.ValidColumn,

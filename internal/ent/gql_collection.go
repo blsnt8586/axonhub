@@ -10,6 +10,10 @@ import (
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/affiliatesetting"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
@@ -435,6 +439,771 @@ func newAPIKeyProfileTemplatePaginateArgs(rv map[string]any) *apikeyprofiletempl
 	}
 	if v, ok := rv[whereField].(*APIKeyProfileTemplateWhereInput); ok {
 		args.opts = append(args.opts, WithAPIKeyProfileTemplateFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *AffiliateInvitationQuery) CollectFields(ctx context.Context, satisfies ...string) (*AffiliateInvitationQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *AffiliateInvitationQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(affiliateinvitation.Columns))
+		selectedFields = []string{affiliateinvitation.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "inviter":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withInviter = query
+			if _, ok := fieldSeen[affiliateinvitation.FieldInviterUserID]; !ok {
+				selectedFields = append(selectedFields, affiliateinvitation.FieldInviterUserID)
+				fieldSeen[affiliateinvitation.FieldInviterUserID] = struct{}{}
+			}
+
+		case "invitee":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withInvitee = query
+			if _, ok := fieldSeen[affiliateinvitation.FieldInviteeUserID]; !ok {
+				selectedFields = append(selectedFields, affiliateinvitation.FieldInviteeUserID)
+				fieldSeen[affiliateinvitation.FieldInviteeUserID] = struct{}{}
+			}
+
+		case "rebates":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateRebateClient{config: _q.config}).Query()
+			)
+			args := newAffiliateRebatePaginateArgs(fieldArgs(ctx, new(AffiliateRebateWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newAffiliateRebatePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*AffiliateInvitation) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"invitation_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(affiliateinvitation.RebatesColumn), ids...))
+						})
+						if err := query.GroupBy(affiliateinvitation.RebatesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[2] == nil {
+								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[2][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*AffiliateInvitation) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.Rebates)
+							if nodes[i].Edges.totalCount[2] == nil {
+								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[2][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, affiliaterebateImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(affiliateinvitation.RebatesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedRebates(alias, func(wq *AffiliateRebateQuery) {
+				*wq = *query
+			})
+		case "createdAt":
+			if _, ok := fieldSeen[affiliateinvitation.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, affiliateinvitation.FieldCreatedAt)
+				fieldSeen[affiliateinvitation.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[affiliateinvitation.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, affiliateinvitation.FieldUpdatedAt)
+				fieldSeen[affiliateinvitation.FieldUpdatedAt] = struct{}{}
+			}
+		case "inviterUserID":
+			if _, ok := fieldSeen[affiliateinvitation.FieldInviterUserID]; !ok {
+				selectedFields = append(selectedFields, affiliateinvitation.FieldInviterUserID)
+				fieldSeen[affiliateinvitation.FieldInviterUserID] = struct{}{}
+			}
+		case "inviteeUserID":
+			if _, ok := fieldSeen[affiliateinvitation.FieldInviteeUserID]; !ok {
+				selectedFields = append(selectedFields, affiliateinvitation.FieldInviteeUserID)
+				fieldSeen[affiliateinvitation.FieldInviteeUserID] = struct{}{}
+			}
+		case "inviteCode":
+			if _, ok := fieldSeen[affiliateinvitation.FieldInviteCode]; !ok {
+				selectedFields = append(selectedFields, affiliateinvitation.FieldInviteCode)
+				fieldSeen[affiliateinvitation.FieldInviteCode] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[affiliateinvitation.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, affiliateinvitation.FieldStatus)
+				fieldSeen[affiliateinvitation.FieldStatus] = struct{}{}
+			}
+		case "notes":
+			if _, ok := fieldSeen[affiliateinvitation.FieldNotes]; !ok {
+				selectedFields = append(selectedFields, affiliateinvitation.FieldNotes)
+				fieldSeen[affiliateinvitation.FieldNotes] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type affiliateinvitationPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []AffiliateInvitationPaginateOption
+}
+
+func newAffiliateInvitationPaginateArgs(rv map[string]any) *affiliateinvitationPaginateArgs {
+	args := &affiliateinvitationPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &AffiliateInvitationOrder{Field: &AffiliateInvitationOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithAffiliateInvitationOrder(order))
+			}
+		case *AffiliateInvitationOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithAffiliateInvitationOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*AffiliateInvitationWhereInput); ok {
+		args.opts = append(args.opts, WithAffiliateInvitationFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *AffiliateProfileQuery) CollectFields(ctx context.Context, satisfies ...string) (*AffiliateProfileQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *AffiliateProfileQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(affiliateprofile.Columns))
+		selectedFields = []string{affiliateprofile.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "user":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withUser = query
+			if _, ok := fieldSeen[affiliateprofile.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, affiliateprofile.FieldUserID)
+				fieldSeen[affiliateprofile.FieldUserID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[affiliateprofile.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, affiliateprofile.FieldCreatedAt)
+				fieldSeen[affiliateprofile.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[affiliateprofile.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, affiliateprofile.FieldUpdatedAt)
+				fieldSeen[affiliateprofile.FieldUpdatedAt] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[affiliateprofile.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, affiliateprofile.FieldUserID)
+				fieldSeen[affiliateprofile.FieldUserID] = struct{}{}
+			}
+		case "inviteCode":
+			if _, ok := fieldSeen[affiliateprofile.FieldInviteCode]; !ok {
+				selectedFields = append(selectedFields, affiliateprofile.FieldInviteCode)
+				fieldSeen[affiliateprofile.FieldInviteCode] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[affiliateprofile.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, affiliateprofile.FieldStatus)
+				fieldSeen[affiliateprofile.FieldStatus] = struct{}{}
+			}
+		case "rebateRateOverrideBps":
+			if _, ok := fieldSeen[affiliateprofile.FieldRebateRateOverrideBps]; !ok {
+				selectedFields = append(selectedFields, affiliateprofile.FieldRebateRateOverrideBps)
+				fieldSeen[affiliateprofile.FieldRebateRateOverrideBps] = struct{}{}
+			}
+		case "notes":
+			if _, ok := fieldSeen[affiliateprofile.FieldNotes]; !ok {
+				selectedFields = append(selectedFields, affiliateprofile.FieldNotes)
+				fieldSeen[affiliateprofile.FieldNotes] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type affiliateprofilePaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []AffiliateProfilePaginateOption
+}
+
+func newAffiliateProfilePaginateArgs(rv map[string]any) *affiliateprofilePaginateArgs {
+	args := &affiliateprofilePaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &AffiliateProfileOrder{Field: &AffiliateProfileOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithAffiliateProfileOrder(order))
+			}
+		case *AffiliateProfileOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithAffiliateProfileOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*AffiliateProfileWhereInput); ok {
+		args.opts = append(args.opts, WithAffiliateProfileFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *AffiliateRebateQuery) CollectFields(ctx context.Context, satisfies ...string) (*AffiliateRebateQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *AffiliateRebateQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(affiliaterebate.Columns))
+		selectedFields = []string{affiliaterebate.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "invitation":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateInvitationClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, affiliateinvitationImplementors)...); err != nil {
+				return err
+			}
+			_q.withInvitation = query
+			if _, ok := fieldSeen[affiliaterebate.FieldInvitationID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldInvitationID)
+				fieldSeen[affiliaterebate.FieldInvitationID] = struct{}{}
+			}
+
+		case "inviter":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withInviter = query
+			if _, ok := fieldSeen[affiliaterebate.FieldInviterUserID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldInviterUserID)
+				fieldSeen[affiliaterebate.FieldInviterUserID] = struct{}{}
+			}
+
+		case "invitee":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withInvitee = query
+			if _, ok := fieldSeen[affiliaterebate.FieldInviteeUserID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldInviteeUserID)
+				fieldSeen[affiliaterebate.FieldInviteeUserID] = struct{}{}
+			}
+
+		case "paymentOrder":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PaymentOrderClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, paymentorderImplementors)...); err != nil {
+				return err
+			}
+			_q.withPaymentOrder = query
+			if _, ok := fieldSeen[affiliaterebate.FieldPaymentOrderID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldPaymentOrderID)
+				fieldSeen[affiliaterebate.FieldPaymentOrderID] = struct{}{}
+			}
+
+		case "userSubscription":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserSubscriptionClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, usersubscriptionImplementors)...); err != nil {
+				return err
+			}
+			_q.withUserSubscription = query
+			if _, ok := fieldSeen[affiliaterebate.FieldUserSubscriptionID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldUserSubscriptionID)
+				fieldSeen[affiliaterebate.FieldUserSubscriptionID] = struct{}{}
+			}
+
+		case "ledgerTransaction":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&LedgerTransactionClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, ledgertransactionImplementors)...); err != nil {
+				return err
+			}
+			_q.withLedgerTransaction = query
+			if _, ok := fieldSeen[affiliaterebate.FieldLedgerTransactionID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldLedgerTransactionID)
+				fieldSeen[affiliaterebate.FieldLedgerTransactionID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[affiliaterebate.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldCreatedAt)
+				fieldSeen[affiliaterebate.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[affiliaterebate.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldUpdatedAt)
+				fieldSeen[affiliaterebate.FieldUpdatedAt] = struct{}{}
+			}
+		case "invitationID":
+			if _, ok := fieldSeen[affiliaterebate.FieldInvitationID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldInvitationID)
+				fieldSeen[affiliaterebate.FieldInvitationID] = struct{}{}
+			}
+		case "inviterUserID":
+			if _, ok := fieldSeen[affiliaterebate.FieldInviterUserID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldInviterUserID)
+				fieldSeen[affiliaterebate.FieldInviterUserID] = struct{}{}
+			}
+		case "inviteeUserID":
+			if _, ok := fieldSeen[affiliaterebate.FieldInviteeUserID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldInviteeUserID)
+				fieldSeen[affiliaterebate.FieldInviteeUserID] = struct{}{}
+			}
+		case "sourceType":
+			if _, ok := fieldSeen[affiliaterebate.FieldSourceType]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldSourceType)
+				fieldSeen[affiliaterebate.FieldSourceType] = struct{}{}
+			}
+		case "sourceID":
+			if _, ok := fieldSeen[affiliaterebate.FieldSourceID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldSourceID)
+				fieldSeen[affiliaterebate.FieldSourceID] = struct{}{}
+			}
+		case "paymentOrderID":
+			if _, ok := fieldSeen[affiliaterebate.FieldPaymentOrderID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldPaymentOrderID)
+				fieldSeen[affiliaterebate.FieldPaymentOrderID] = struct{}{}
+			}
+		case "userSubscriptionID":
+			if _, ok := fieldSeen[affiliaterebate.FieldUserSubscriptionID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldUserSubscriptionID)
+				fieldSeen[affiliaterebate.FieldUserSubscriptionID] = struct{}{}
+			}
+		case "baseAmountMicros":
+			if _, ok := fieldSeen[affiliaterebate.FieldBaseAmountMicros]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldBaseAmountMicros)
+				fieldSeen[affiliaterebate.FieldBaseAmountMicros] = struct{}{}
+			}
+		case "amountMicros":
+			if _, ok := fieldSeen[affiliaterebate.FieldAmountMicros]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldAmountMicros)
+				fieldSeen[affiliaterebate.FieldAmountMicros] = struct{}{}
+			}
+		case "rateBps":
+			if _, ok := fieldSeen[affiliaterebate.FieldRateBps]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldRateBps)
+				fieldSeen[affiliaterebate.FieldRateBps] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[affiliaterebate.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldCurrency)
+				fieldSeen[affiliaterebate.FieldCurrency] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[affiliaterebate.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldStatus)
+				fieldSeen[affiliaterebate.FieldStatus] = struct{}{}
+			}
+		case "freezeUntil":
+			if _, ok := fieldSeen[affiliaterebate.FieldFreezeUntil]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldFreezeUntil)
+				fieldSeen[affiliaterebate.FieldFreezeUntil] = struct{}{}
+			}
+		case "transferredAt":
+			if _, ok := fieldSeen[affiliaterebate.FieldTransferredAt]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldTransferredAt)
+				fieldSeen[affiliaterebate.FieldTransferredAt] = struct{}{}
+			}
+		case "ledgerTransactionID":
+			if _, ok := fieldSeen[affiliaterebate.FieldLedgerTransactionID]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldLedgerTransactionID)
+				fieldSeen[affiliaterebate.FieldLedgerTransactionID] = struct{}{}
+			}
+		case "idempotencyKey":
+			if _, ok := fieldSeen[affiliaterebate.FieldIdempotencyKey]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldIdempotencyKey)
+				fieldSeen[affiliaterebate.FieldIdempotencyKey] = struct{}{}
+			}
+		case "notes":
+			if _, ok := fieldSeen[affiliaterebate.FieldNotes]; !ok {
+				selectedFields = append(selectedFields, affiliaterebate.FieldNotes)
+				fieldSeen[affiliaterebate.FieldNotes] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type affiliaterebatePaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []AffiliateRebatePaginateOption
+}
+
+func newAffiliateRebatePaginateArgs(rv map[string]any) *affiliaterebatePaginateArgs {
+	args := &affiliaterebatePaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &AffiliateRebateOrder{Field: &AffiliateRebateOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithAffiliateRebateOrder(order))
+			}
+		case *AffiliateRebateOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithAffiliateRebateOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*AffiliateRebateWhereInput); ok {
+		args.opts = append(args.opts, WithAffiliateRebateFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *AffiliateSettingQuery) CollectFields(ctx context.Context, satisfies ...string) (*AffiliateSettingQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *AffiliateSettingQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(affiliatesetting.Columns))
+		selectedFields = []string{affiliatesetting.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+		case "createdAt":
+			if _, ok := fieldSeen[affiliatesetting.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, affiliatesetting.FieldCreatedAt)
+				fieldSeen[affiliatesetting.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[affiliatesetting.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, affiliatesetting.FieldUpdatedAt)
+				fieldSeen[affiliatesetting.FieldUpdatedAt] = struct{}{}
+			}
+		case "key":
+			if _, ok := fieldSeen[affiliatesetting.FieldKey]; !ok {
+				selectedFields = append(selectedFields, affiliatesetting.FieldKey)
+				fieldSeen[affiliatesetting.FieldKey] = struct{}{}
+			}
+		case "enabled":
+			if _, ok := fieldSeen[affiliatesetting.FieldEnabled]; !ok {
+				selectedFields = append(selectedFields, affiliatesetting.FieldEnabled)
+				fieldSeen[affiliatesetting.FieldEnabled] = struct{}{}
+			}
+		case "defaultRebateRateBps":
+			if _, ok := fieldSeen[affiliatesetting.FieldDefaultRebateRateBps]; !ok {
+				selectedFields = append(selectedFields, affiliatesetting.FieldDefaultRebateRateBps)
+				fieldSeen[affiliatesetting.FieldDefaultRebateRateBps] = struct{}{}
+			}
+		case "freezeDays":
+			if _, ok := fieldSeen[affiliatesetting.FieldFreezeDays]; !ok {
+				selectedFields = append(selectedFields, affiliatesetting.FieldFreezeDays)
+				fieldSeen[affiliatesetting.FieldFreezeDays] = struct{}{}
+			}
+		case "minTransferMicros":
+			if _, ok := fieldSeen[affiliatesetting.FieldMinTransferMicros]; !ok {
+				selectedFields = append(selectedFields, affiliatesetting.FieldMinTransferMicros)
+				fieldSeen[affiliatesetting.FieldMinTransferMicros] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[affiliatesetting.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, affiliatesetting.FieldCurrency)
+				fieldSeen[affiliatesetting.FieldCurrency] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type affiliatesettingPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []AffiliateSettingPaginateOption
+}
+
+func newAffiliateSettingPaginateArgs(rv map[string]any) *affiliatesettingPaginateArgs {
+	args := &affiliatesettingPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &AffiliateSettingOrder{Field: &AffiliateSettingOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithAffiliateSettingOrder(order))
+			}
+		case *AffiliateSettingOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithAffiliateSettingOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*AffiliateSettingWhereInput); ok {
+		args.opts = append(args.opts, WithAffiliateSettingFilter(v.Filter))
 	}
 	return args
 }
@@ -3868,6 +4637,95 @@ func (_q *LedgerTransactionQuery) collectField(ctx context.Context, oneNode bool
 			_q.WithNamedPromoUsages(alias, func(wq *PromoUsageQuery) {
 				*wq = *query
 			})
+
+		case "affiliateRebates":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateRebateClient{config: _q.config}).Query()
+			)
+			args := newAffiliateRebatePaginateArgs(fieldArgs(ctx, new(AffiliateRebateWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newAffiliateRebatePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*LedgerTransaction) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"ledger_transaction_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(ledgertransaction.AffiliateRebatesColumn), ids...))
+						})
+						if err := query.GroupBy(ledgertransaction.AffiliateRebatesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[8][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*LedgerTransaction) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.AffiliateRebates)
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[8][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, affiliaterebateImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(ledgertransaction.AffiliateRebatesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedAffiliateRebates(alias, func(wq *AffiliateRebateQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[ledgertransaction.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, ledgertransaction.FieldCreatedAt)
@@ -4705,6 +5563,95 @@ func (_q *PaymentOrderQuery) collectField(ctx context.Context, oneNode bool, opC
 				query = pager.applyOrder(query)
 			}
 			_q.WithNamedPaymentEvents(alias, func(wq *PaymentEventQuery) {
+				*wq = *query
+			})
+
+		case "affiliateRebates":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateRebateClient{config: _q.config}).Query()
+			)
+			args := newAffiliateRebatePaginateArgs(fieldArgs(ctx, new(AffiliateRebateWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newAffiliateRebatePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*PaymentOrder) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"payment_order_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(paymentorder.AffiliateRebatesColumn), ids...))
+						})
+						if err := query.GroupBy(paymentorder.AffiliateRebatesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[6][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*PaymentOrder) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.AffiliateRebates)
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[6][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, affiliaterebateImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(paymentorder.AffiliateRebatesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedAffiliateRebates(alias, func(wq *AffiliateRebateQuery) {
 				*wq = *query
 			})
 		case "createdAt":
@@ -11093,6 +12040,451 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				*wq = *query
 			})
 
+		case "affiliateProfiles":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateProfileClient{config: _q.config}).Query()
+			)
+			args := newAffiliateProfilePaginateArgs(fieldArgs(ctx, new(AffiliateProfileWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newAffiliateProfilePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"user_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.AffiliateProfilesColumn), ids...))
+						})
+						if err := query.GroupBy(user.AffiliateProfilesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[10] == nil {
+								nodes[i].Edges.totalCount[10] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[10][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.AffiliateProfiles)
+							if nodes[i].Edges.totalCount[10] == nil {
+								nodes[i].Edges.totalCount[10] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[10][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, affiliateprofileImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.AffiliateProfilesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedAffiliateProfiles(alias, func(wq *AffiliateProfileQuery) {
+				*wq = *query
+			})
+
+		case "affiliateInviters":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateInvitationClient{config: _q.config}).Query()
+			)
+			args := newAffiliateInvitationPaginateArgs(fieldArgs(ctx, new(AffiliateInvitationWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newAffiliateInvitationPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"inviter_user_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.AffiliateInvitersColumn), ids...))
+						})
+						if err := query.GroupBy(user.AffiliateInvitersColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[11] == nil {
+								nodes[i].Edges.totalCount[11] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[11][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.AffiliateInviters)
+							if nodes[i].Edges.totalCount[11] == nil {
+								nodes[i].Edges.totalCount[11] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[11][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, affiliateinvitationImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.AffiliateInvitersColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedAffiliateInviters(alias, func(wq *AffiliateInvitationQuery) {
+				*wq = *query
+			})
+
+		case "affiliateInvitees":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateInvitationClient{config: _q.config}).Query()
+			)
+			args := newAffiliateInvitationPaginateArgs(fieldArgs(ctx, new(AffiliateInvitationWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newAffiliateInvitationPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"invitee_user_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.AffiliateInviteesColumn), ids...))
+						})
+						if err := query.GroupBy(user.AffiliateInviteesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[12] == nil {
+								nodes[i].Edges.totalCount[12] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[12][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.AffiliateInvitees)
+							if nodes[i].Edges.totalCount[12] == nil {
+								nodes[i].Edges.totalCount[12] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[12][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, affiliateinvitationImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.AffiliateInviteesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedAffiliateInvitees(alias, func(wq *AffiliateInvitationQuery) {
+				*wq = *query
+			})
+
+		case "affiliateRebatesEarned":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateRebateClient{config: _q.config}).Query()
+			)
+			args := newAffiliateRebatePaginateArgs(fieldArgs(ctx, new(AffiliateRebateWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newAffiliateRebatePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"inviter_user_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.AffiliateRebatesEarnedColumn), ids...))
+						})
+						if err := query.GroupBy(user.AffiliateRebatesEarnedColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[13] == nil {
+								nodes[i].Edges.totalCount[13] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[13][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.AffiliateRebatesEarned)
+							if nodes[i].Edges.totalCount[13] == nil {
+								nodes[i].Edges.totalCount[13] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[13][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, affiliaterebateImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.AffiliateRebatesEarnedColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedAffiliateRebatesEarned(alias, func(wq *AffiliateRebateQuery) {
+				*wq = *query
+			})
+
+		case "affiliateRebatesGenerated":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateRebateClient{config: _q.config}).Query()
+			)
+			args := newAffiliateRebatePaginateArgs(fieldArgs(ctx, new(AffiliateRebateWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newAffiliateRebatePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"invitee_user_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.AffiliateRebatesGeneratedColumn), ids...))
+						})
+						if err := query.GroupBy(user.AffiliateRebatesGeneratedColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[14] == nil {
+								nodes[i].Edges.totalCount[14] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[14][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.AffiliateRebatesGenerated)
+							if nodes[i].Edges.totalCount[14] == nil {
+								nodes[i].Edges.totalCount[14] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[14][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, affiliaterebateImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.AffiliateRebatesGeneratedColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedAffiliateRebatesGenerated(alias, func(wq *AffiliateRebateQuery) {
+				*wq = *query
+			})
+
 		case "projectUsers":
 			var (
 				alias = field.Alias
@@ -11136,10 +12528,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[10] == nil {
-								nodes[i].Edges.totalCount[10] = make(map[string]int)
+							if nodes[i].Edges.totalCount[15] == nil {
+								nodes[i].Edges.totalCount[15] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[10][alias] = n
+							nodes[i].Edges.totalCount[15][alias] = n
 						}
 						return nil
 					})
@@ -11147,10 +12539,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.ProjectUsers)
-							if nodes[i].Edges.totalCount[10] == nil {
-								nodes[i].Edges.totalCount[10] = make(map[string]int)
+							if nodes[i].Edges.totalCount[15] == nil {
+								nodes[i].Edges.totalCount[15] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[10][alias] = n
+							nodes[i].Edges.totalCount[15][alias] = n
 						}
 						return nil
 					})
@@ -11225,10 +12617,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[11] == nil {
-								nodes[i].Edges.totalCount[11] = make(map[string]int)
+							if nodes[i].Edges.totalCount[16] == nil {
+								nodes[i].Edges.totalCount[16] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[11][alias] = n
+							nodes[i].Edges.totalCount[16][alias] = n
 						}
 						return nil
 					})
@@ -11236,10 +12628,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UserRoles)
-							if nodes[i].Edges.totalCount[11] == nil {
-								nodes[i].Edges.totalCount[11] = make(map[string]int)
+							if nodes[i].Edges.totalCount[16] == nil {
+								nodes[i].Edges.totalCount[16] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[11][alias] = n
+							nodes[i].Edges.totalCount[16][alias] = n
 						}
 						return nil
 					})
@@ -11933,6 +13325,95 @@ func (_q *UserSubscriptionQuery) collectField(ctx context.Context, oneNode bool,
 				query = pager.applyOrder(query)
 			}
 			_q.WithNamedUsageBillingRecords(alias, func(wq *UsageBillingRecordQuery) {
+				*wq = *query
+			})
+
+		case "affiliateRebates":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&AffiliateRebateClient{config: _q.config}).Query()
+			)
+			args := newAffiliateRebatePaginateArgs(fieldArgs(ctx, new(AffiliateRebateWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newAffiliateRebatePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UserSubscription) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"user_subscription_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(usersubscription.AffiliateRebatesColumn), ids...))
+						})
+						if err := query.GroupBy(usersubscription.AffiliateRebatesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UserSubscription) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.AffiliateRebates)
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, affiliaterebateImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(usersubscription.AffiliateRebatesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedAffiliateRebates(alias, func(wq *AffiliateRebateQuery) {
 				*wq = *query
 			})
 		case "createdAt":

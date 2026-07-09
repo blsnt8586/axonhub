@@ -93,6 +93,195 @@ var (
 			},
 		},
 	}
+	// AffiliateInvitationsColumns holds the columns for the "affiliate_invitations" table.
+	AffiliateInvitationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "invite_code", Type: field.TypeString},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "canceled"}, Default: "active"},
+		{Name: "notes", Type: field.TypeString, Default: ""},
+		{Name: "inviter_user_id", Type: field.TypeInt},
+		{Name: "invitee_user_id", Type: field.TypeInt},
+	}
+	// AffiliateInvitationsTable holds the schema information for the "affiliate_invitations" table.
+	AffiliateInvitationsTable = &schema.Table{
+		Name:       "affiliate_invitations",
+		Columns:    AffiliateInvitationsColumns,
+		PrimaryKey: []*schema.Column{AffiliateInvitationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "affiliate_invitations_users_affiliate_inviters",
+				Columns:    []*schema.Column{AffiliateInvitationsColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "affiliate_invitations_users_affiliate_invitees",
+				Columns:    []*schema.Column{AffiliateInvitationsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "affiliate_invitations_by_invitee",
+				Unique:  true,
+				Columns: []*schema.Column{AffiliateInvitationsColumns[7]},
+			},
+			{
+				Name:    "affiliate_invitations_by_inviter_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AffiliateInvitationsColumns[6], AffiliateInvitationsColumns[1]},
+			},
+		},
+	}
+	// AffiliateProfilesColumns holds the columns for the "affiliate_profiles" table.
+	AffiliateProfilesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "invite_code", Type: field.TypeString},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
+		{Name: "rebate_rate_override_bps", Type: field.TypeInt, Nullable: true},
+		{Name: "notes", Type: field.TypeString, Default: ""},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// AffiliateProfilesTable holds the schema information for the "affiliate_profiles" table.
+	AffiliateProfilesTable = &schema.Table{
+		Name:       "affiliate_profiles",
+		Columns:    AffiliateProfilesColumns,
+		PrimaryKey: []*schema.Column{AffiliateProfilesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "affiliate_profiles_users_affiliate_profiles",
+				Columns:    []*schema.Column{AffiliateProfilesColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "affiliate_profiles_by_user",
+				Unique:  true,
+				Columns: []*schema.Column{AffiliateProfilesColumns[7]},
+			},
+			{
+				Name:    "affiliate_profiles_by_invite_code",
+				Unique:  true,
+				Columns: []*schema.Column{AffiliateProfilesColumns[3]},
+			},
+		},
+	}
+	// AffiliateRebatesColumns holds the columns for the "affiliate_rebates" table.
+	AffiliateRebatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "source_type", Type: field.TypeEnum, Enums: []string{"payment_order", "user_subscription"}},
+		{Name: "source_id", Type: field.TypeInt},
+		{Name: "base_amount_micros", Type: field.TypeInt64},
+		{Name: "amount_micros", Type: field.TypeInt64},
+		{Name: "rate_bps", Type: field.TypeInt},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"frozen", "available", "transferred", "voided"}, Default: "frozen"},
+		{Name: "freeze_until", Type: field.TypeTime},
+		{Name: "transferred_at", Type: field.TypeTime, Nullable: true},
+		{Name: "idempotency_key", Type: field.TypeString},
+		{Name: "notes", Type: field.TypeString, Default: ""},
+		{Name: "invitation_id", Type: field.TypeInt},
+		{Name: "ledger_transaction_id", Type: field.TypeInt, Nullable: true},
+		{Name: "payment_order_id", Type: field.TypeInt, Nullable: true},
+		{Name: "inviter_user_id", Type: field.TypeInt},
+		{Name: "invitee_user_id", Type: field.TypeInt},
+		{Name: "user_subscription_id", Type: field.TypeInt, Nullable: true},
+	}
+	// AffiliateRebatesTable holds the schema information for the "affiliate_rebates" table.
+	AffiliateRebatesTable = &schema.Table{
+		Name:       "affiliate_rebates",
+		Columns:    AffiliateRebatesColumns,
+		PrimaryKey: []*schema.Column{AffiliateRebatesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "affiliate_rebates_affiliate_invitations_rebates",
+				Columns:    []*schema.Column{AffiliateRebatesColumns[14]},
+				RefColumns: []*schema.Column{AffiliateInvitationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "affiliate_rebates_ledger_transactions_affiliate_rebates",
+				Columns:    []*schema.Column{AffiliateRebatesColumns[15]},
+				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "affiliate_rebates_payment_orders_affiliate_rebates",
+				Columns:    []*schema.Column{AffiliateRebatesColumns[16]},
+				RefColumns: []*schema.Column{PaymentOrdersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "affiliate_rebates_users_affiliate_rebates_earned",
+				Columns:    []*schema.Column{AffiliateRebatesColumns[17]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "affiliate_rebates_users_affiliate_rebates_generated",
+				Columns:    []*schema.Column{AffiliateRebatesColumns[18]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "affiliate_rebates_user_subscriptions_affiliate_rebates",
+				Columns:    []*schema.Column{AffiliateRebatesColumns[19]},
+				RefColumns: []*schema.Column{UserSubscriptionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "affiliate_rebates_by_idempotency_key",
+				Unique:  true,
+				Columns: []*schema.Column{AffiliateRebatesColumns[12]},
+			},
+			{
+				Name:    "affiliate_rebates_by_source",
+				Unique:  true,
+				Columns: []*schema.Column{AffiliateRebatesColumns[3], AffiliateRebatesColumns[4]},
+			},
+			{
+				Name:    "affiliate_rebates_by_inviter_status_freeze",
+				Unique:  false,
+				Columns: []*schema.Column{AffiliateRebatesColumns[17], AffiliateRebatesColumns[9], AffiliateRebatesColumns[10]},
+			},
+		},
+	}
+	// AffiliateSettingsColumns holds the columns for the "affiliate_settings" table.
+	AffiliateSettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "key", Type: field.TypeString, Default: "default"},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "default_rebate_rate_bps", Type: field.TypeInt, Default: 500},
+		{Name: "freeze_days", Type: field.TypeInt, Default: 7},
+		{Name: "min_transfer_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+	}
+	// AffiliateSettingsTable holds the schema information for the "affiliate_settings" table.
+	AffiliateSettingsTable = &schema.Table{
+		Name:       "affiliate_settings",
+		Columns:    AffiliateSettingsColumns,
+		PrimaryKey: []*schema.Column{AffiliateSettingsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "affiliate_settings_by_key",
+				Unique:  true,
+				Columns: []*schema.Column{AffiliateSettingsColumns[3]},
+			},
+		},
+	}
 	// BillingAccountsColumns holds the columns for the "billing_accounts" table.
 	BillingAccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -524,7 +713,7 @@ var (
 		{Name: "direction", Type: field.TypeEnum, Enums: []string{"credit", "debit"}},
 		{Name: "amount_micros", Type: field.TypeInt64},
 		{Name: "currency", Type: field.TypeString, Default: "CNY"},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"payment_recharge", "usage_charge", "admin_adjustment", "refund", "chargeback", "subscription_grant", "subscription_deduct", "redeem_code"}},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"payment_recharge", "usage_charge", "admin_adjustment", "refund", "chargeback", "subscription_grant", "subscription_deduct", "redeem_code", "affiliate_rebate"}},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"posted", "voided"}, Default: "posted"},
 		{Name: "idempotency_key", Type: field.TypeString},
 		{Name: "reference_type", Type: field.TypeString, Default: ""},
@@ -1859,6 +2048,10 @@ var (
 	Tables = []*schema.Table{
 		APIKeysTable,
 		APIKeyProfileTemplatesTable,
+		AffiliateInvitationsTable,
+		AffiliateProfilesTable,
+		AffiliateRebatesTable,
+		AffiliateSettingsTable,
 		BillingAccountsTable,
 		BillingAccountBindingsTable,
 		BillingHoldsTable,
@@ -1905,6 +2098,15 @@ func init() {
 	APIKeysTable.ForeignKeys[0].RefTable = ProjectsTable
 	APIKeysTable.ForeignKeys[1].RefTable = UsersTable
 	APIKeyProfileTemplatesTable.ForeignKeys[0].RefTable = ProjectsTable
+	AffiliateInvitationsTable.ForeignKeys[0].RefTable = UsersTable
+	AffiliateInvitationsTable.ForeignKeys[1].RefTable = UsersTable
+	AffiliateProfilesTable.ForeignKeys[0].RefTable = UsersTable
+	AffiliateRebatesTable.ForeignKeys[0].RefTable = AffiliateInvitationsTable
+	AffiliateRebatesTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
+	AffiliateRebatesTable.ForeignKeys[2].RefTable = PaymentOrdersTable
+	AffiliateRebatesTable.ForeignKeys[3].RefTable = UsersTable
+	AffiliateRebatesTable.ForeignKeys[4].RefTable = UsersTable
+	AffiliateRebatesTable.ForeignKeys[5].RefTable = UserSubscriptionsTable
 	BillingAccountBindingsTable.ForeignKeys[0].RefTable = BillingAccountsTable
 	BillingHoldsTable.ForeignKeys[0].RefTable = BillingAccountsTable
 	BillingHoldsTable.ForeignKeys[1].RefTable = LedgerTransactionsTable

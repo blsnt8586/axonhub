@@ -10,6 +10,10 @@ export type RedeemCodeType = 'balance' | 'credit' | 'subscription';
 export type SubscriptionPlanPeriod = 'day' | 'month' | 'year' | 'custom';
 export type SubscriptionPlanStatus = 'enabled' | 'disabled' | 'archived';
 export type UserSubscriptionStatus = 'active' | 'expired' | 'revoked' | 'canceled';
+export type AffiliateProfileStatus = 'active' | 'disabled';
+export type AffiliateInvitationStatus = 'active' | 'canceled';
+export type AffiliateRebateStatus = 'frozen' | 'available' | 'transferred' | 'voided';
+export type AffiliateRebateSourceType = 'payment_order' | 'user_subscription';
 
 export interface BillingAccount {
   id: string;
@@ -140,6 +144,69 @@ export interface PromoQuote {
   currency: string;
 }
 
+export interface AffiliateSetting {
+  id: string;
+  enabled: boolean;
+  defaultRebateRateBps: number;
+  freezeDays: number;
+  minTransferMicros: number;
+  currency: string;
+}
+
+export interface AffiliateProfile {
+  id: string;
+  userID: string;
+  inviteCode: string;
+  status: AffiliateProfileStatus;
+  rebateRateOverrideBps?: number | null;
+  notes: string;
+}
+
+export interface AffiliateInvitation {
+  id: string;
+  createdAt: string;
+  inviterUserID: string;
+  inviteeUserID: string;
+  inviteCode: string;
+  status: AffiliateInvitationStatus;
+  notes: string;
+}
+
+export interface AffiliateRebate {
+  id: string;
+  createdAt: string;
+  inviterUserID: string;
+  inviteeUserID: string;
+  sourceType: AffiliateRebateSourceType;
+  sourceID: number;
+  baseAmountMicros: number;
+  amountMicros: number;
+  rateBps: number;
+  currency: string;
+  status: AffiliateRebateStatus;
+  freezeUntil: string;
+  transferredAt?: string | null;
+  ledgerTransactionID?: string | null;
+}
+
+export interface AffiliateSummary {
+  profile: AffiliateProfile;
+  invitation?: AffiliateInvitation | null;
+  inviteeCount: number;
+  frozenMicros: number;
+  availableMicros: number;
+  transferredMicros: number;
+  currency: string;
+  setting: AffiliateSetting;
+}
+
+export interface AffiliateTransferResult {
+  transferredCount: number;
+  transferredMicros: number;
+  currency: string;
+  ledgerTransactionIDs: string[];
+}
+
 export interface BillingOverview {
   account: BillingAccount;
   paymentOrders: PaymentOrder[];
@@ -148,6 +215,9 @@ export interface BillingOverview {
   redeemCodes: RedeemCode[];
   availableSubscriptionPlans: SubscriptionPlan[];
   userSubscriptions: UserSubscription[];
+  affiliateSummary: AffiliateSummary;
+  affiliateInvitations: AffiliateInvitation[];
+  affiliateRebates: AffiliateRebate[];
 }
 
 const BILLING_OVERVIEW_QUERY = `
@@ -287,6 +357,71 @@ const BILLING_OVERVIEW_QUERY = `
         }
       }
     }
+    myAffiliateSummary {
+      inviteeCount
+      frozenMicros
+      availableMicros
+      transferredMicros
+      currency
+      profile {
+        id
+        userID
+        inviteCode
+        status
+        rebateRateOverrideBps
+        notes
+      }
+      invitation {
+        id
+        createdAt
+        inviterUserID
+        inviteeUserID
+        inviteCode
+        status
+        notes
+      }
+      setting {
+        id
+        enabled
+        defaultRebateRateBps
+        freezeDays
+        minTransferMicros
+        currency
+      }
+    }
+    myAffiliateInvitations(first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          inviterUserID
+          inviteeUserID
+          inviteCode
+          status
+          notes
+        }
+      }
+    }
+    myAffiliateRebates(first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          inviterUserID
+          inviteeUserID
+          sourceType
+          sourceID
+          baseAmountMicros
+          amountMicros
+          rateBps
+          currency
+          status
+          freezeUntil
+          transferredAt
+          ledgerTransactionID
+        }
+      }
+    }
   }
 `;
 
@@ -368,6 +503,31 @@ const PURCHASE_SUBSCRIPTION_PLAN_MUTATION = `
   }
 `;
 
+const BIND_AFFILIATE_INVITE_MUTATION = `
+  mutation BindAffiliateInvite($input: BindAffiliateInviteInput!) {
+    bindAffiliateInvite(input: $input) {
+      id
+      createdAt
+      inviterUserID
+      inviteeUserID
+      inviteCode
+      status
+      notes
+    }
+  }
+`;
+
+const TRANSFER_AFFILIATE_REBATES_MUTATION = `
+  mutation TransferAffiliateRebates {
+    transferAffiliateRebates {
+      transferredCount
+      transferredMicros
+      currency
+      ledgerTransactionIDs
+    }
+  }
+`;
+
 type Connection<T> = {
   edges?: Array<{ node?: T | null } | null> | null;
 };
@@ -388,6 +548,9 @@ export function useMyBillingOverview(first = 10) {
         myRedeemCodes: Connection<RedeemCode>;
         availableSubscriptionPlans: Connection<SubscriptionPlan>;
         myUserSubscriptions: Connection<UserSubscription>;
+        myAffiliateSummary: AffiliateSummary;
+        myAffiliateInvitations: Connection<AffiliateInvitation>;
+        myAffiliateRebates: Connection<AffiliateRebate>;
       }>(BILLING_OVERVIEW_QUERY, { first });
 
       return {
@@ -398,6 +561,9 @@ export function useMyBillingOverview(first = 10) {
         redeemCodes: nodes(data.myRedeemCodes),
         availableSubscriptionPlans: nodes(data.availableSubscriptionPlans),
         userSubscriptions: nodes(data.myUserSubscriptions),
+        affiliateSummary: data.myAffiliateSummary,
+        affiliateInvitations: nodes(data.myAffiliateInvitations),
+        affiliateRebates: nodes(data.myAffiliateRebates),
       } satisfies BillingOverview;
     },
   });
@@ -461,6 +627,34 @@ export function useQuoteSubscriptionPromo() {
     mutationFn: async (input: { planId: string; promoCode?: string }) => {
       const data = await graphqlRequest<{ quoteSubscriptionPromo: PromoQuote }>(QUOTE_SUBSCRIPTION_PROMO_QUERY, { input });
       return data.quoteSubscriptionPromo;
+    },
+  });
+}
+
+export function useBindAffiliateInvite() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { inviteCode: string; notes?: string }) => {
+      const data = await graphqlRequest<{ bindAffiliateInvite: AffiliateInvitation }>(BIND_AFFILIATE_INVITE_MUTATION, { input });
+      return data.bindAffiliateInvite;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useTransferAffiliateRebates() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const data = await graphqlRequest<{ transferAffiliateRebates: AffiliateTransferResult }>(TRANSFER_AFFILIATE_REBATES_MUTATION);
+      return data.transferAffiliateRebates;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
     },
   });
 }

@@ -286,6 +286,45 @@ input AdminPromoUsagesFilter {
   to: Time
 }
 
+input SaveAffiliateSettingInput {
+  enabled: Boolean!
+  defaultRebateRateBps: Int!
+  freezeDays: Int!
+  minTransferAmount: DecimalInput
+  currency: String
+}
+
+input SaveAffiliateProfileInput {
+  userId: ID!
+  status: AffiliateProfileStatus
+  rebateRateOverrideBps: Int
+  notes: String
+}
+
+input BindAffiliateInviteInput {
+  inviteCode: String!
+  notes: String
+}
+
+input AdminAffiliateInvitationsFilter {
+  inviterUserId: Int
+  inviteeUserId: Int
+  status: AffiliateInvitationStatus
+  inviteCode: String
+  from: Time
+  to: Time
+}
+
+input AdminAffiliateRebatesFilter {
+  inviterUserId: Int
+  inviteeUserId: Int
+  sourceType: AffiliateRebateSourceType
+  status: AffiliateRebateStatus
+  from: Time
+  to: Time
+  transferableBefore: Time
+}
+
 input AdminBillingReportFilter {
   from: Time
   to: Time
@@ -377,6 +416,24 @@ type PromoQuote {
   currency: String!
 }
 
+type AffiliateSummary {
+  profile: AffiliateProfile!
+  invitation: AffiliateInvitation
+  inviteeCount: Int!
+  frozenMicros: Int!
+  availableMicros: Int!
+  transferredMicros: Int!
+  currency: String!
+  setting: AffiliateSetting!
+}
+
+type AffiliateTransferResult {
+  transferredCount: Int!
+  transferredMicros: Int!
+  currency: String!
+  ledgerTransactionIDs: [ID!]!
+}
+
 extend type Mutation {
   createManualRechargeOrder(input: CreateManualRechargeOrderInput!): PaymentOrder!
   confirmManualPayment(input: ConfirmManualPaymentInput!): PaymentOrder!
@@ -403,6 +460,10 @@ extend type Mutation {
   revokeUserSubscription(id: ID!, reason: String): UserSubscription!
   restoreUserSubscription(id: ID!): UserSubscription!
   resetUserSubscriptionUsage(id: ID!): UserSubscription!
+  bindAffiliateInvite(input: BindAffiliateInviteInput!): AffiliateInvitation!
+  transferAffiliateRebates: AffiliateTransferResult!
+  saveAffiliateSetting(input: SaveAffiliateSettingInput!): AffiliateSetting!
+  saveAffiliateProfile(input: SaveAffiliateProfileInput!): AffiliateProfile!
   releaseBillingHold(id: ID!, reason: String!): BillingHold!
   saveBillingPriceRule(input: SaveBillingPriceRuleForm!): BillingPriceRule!
   deleteBillingPriceRule(id: ID!): Boolean!
@@ -431,6 +492,13 @@ extend type Query {
   adminRedeemCodes(filter: AdminRedeemCodesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: RedeemCodeOrder): RedeemCodeConnection!
   adminPromoCodes(filter: AdminPromoCodesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PromoCodeOrder): PromoCodeConnection!
   adminPromoUsages(filter: AdminPromoUsagesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PromoUsageOrder): PromoUsageConnection!
+  myAffiliateSummary: AffiliateSummary!
+  myAffiliateInvitations(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateInvitationOrder): AffiliateInvitationConnection!
+  myAffiliateRebates(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateRebateOrder): AffiliateRebateConnection!
+  adminAffiliateSetting: AffiliateSetting!
+  adminAffiliateProfiles(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateProfileOrder): AffiliateProfileConnection!
+  adminAffiliateInvitations(filter: AdminAffiliateInvitationsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateInvitationOrder): AffiliateInvitationConnection!
+  adminAffiliateRebates(filter: AdminAffiliateRebatesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateRebateOrder): AffiliateRebateConnection!
   adminUserSubscriptions(filter: AdminUserSubscriptionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UserSubscriptionOrder): UserSubscriptionConnection!
   adminBillingReport(filter: AdminBillingReportFilter): BillingCommercialReport!
   exportAdminBillingCSV(input: ExportAdminBillingCSVInput!): BillingCSVExportPayload!

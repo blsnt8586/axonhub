@@ -8,6 +8,10 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/affiliatesetting"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
@@ -159,6 +163,114 @@ func (f TraverseAPIKeyProfileTemplate) Traverse(ctx context.Context, q ent.Query
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.APIKeyProfileTemplateQuery", q)
+}
+
+// The AffiliateInvitationFunc type is an adapter to allow the use of ordinary function as a Querier.
+type AffiliateInvitationFunc func(context.Context, *ent.AffiliateInvitationQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f AffiliateInvitationFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.AffiliateInvitationQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.AffiliateInvitationQuery", q)
+}
+
+// The TraverseAffiliateInvitation type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseAffiliateInvitation func(context.Context, *ent.AffiliateInvitationQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseAffiliateInvitation) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseAffiliateInvitation) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AffiliateInvitationQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.AffiliateInvitationQuery", q)
+}
+
+// The AffiliateProfileFunc type is an adapter to allow the use of ordinary function as a Querier.
+type AffiliateProfileFunc func(context.Context, *ent.AffiliateProfileQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f AffiliateProfileFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.AffiliateProfileQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.AffiliateProfileQuery", q)
+}
+
+// The TraverseAffiliateProfile type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseAffiliateProfile func(context.Context, *ent.AffiliateProfileQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseAffiliateProfile) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseAffiliateProfile) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AffiliateProfileQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.AffiliateProfileQuery", q)
+}
+
+// The AffiliateRebateFunc type is an adapter to allow the use of ordinary function as a Querier.
+type AffiliateRebateFunc func(context.Context, *ent.AffiliateRebateQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f AffiliateRebateFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.AffiliateRebateQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.AffiliateRebateQuery", q)
+}
+
+// The TraverseAffiliateRebate type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseAffiliateRebate func(context.Context, *ent.AffiliateRebateQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseAffiliateRebate) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseAffiliateRebate) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AffiliateRebateQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.AffiliateRebateQuery", q)
+}
+
+// The AffiliateSettingFunc type is an adapter to allow the use of ordinary function as a Querier.
+type AffiliateSettingFunc func(context.Context, *ent.AffiliateSettingQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f AffiliateSettingFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.AffiliateSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.AffiliateSettingQuery", q)
+}
+
+// The TraverseAffiliateSetting type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseAffiliateSetting func(context.Context, *ent.AffiliateSettingQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseAffiliateSetting) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseAffiliateSetting) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AffiliateSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.AffiliateSettingQuery", q)
 }
 
 // The BillingAccountFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -1194,6 +1306,14 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.APIKeyQuery, predicate.APIKey, apikey.OrderOption]{typ: ent.TypeAPIKey, tq: q}, nil
 	case *ent.APIKeyProfileTemplateQuery:
 		return &query[*ent.APIKeyProfileTemplateQuery, predicate.APIKeyProfileTemplate, apikeyprofiletemplate.OrderOption]{typ: ent.TypeAPIKeyProfileTemplate, tq: q}, nil
+	case *ent.AffiliateInvitationQuery:
+		return &query[*ent.AffiliateInvitationQuery, predicate.AffiliateInvitation, affiliateinvitation.OrderOption]{typ: ent.TypeAffiliateInvitation, tq: q}, nil
+	case *ent.AffiliateProfileQuery:
+		return &query[*ent.AffiliateProfileQuery, predicate.AffiliateProfile, affiliateprofile.OrderOption]{typ: ent.TypeAffiliateProfile, tq: q}, nil
+	case *ent.AffiliateRebateQuery:
+		return &query[*ent.AffiliateRebateQuery, predicate.AffiliateRebate, affiliaterebate.OrderOption]{typ: ent.TypeAffiliateRebate, tq: q}, nil
+	case *ent.AffiliateSettingQuery:
+		return &query[*ent.AffiliateSettingQuery, predicate.AffiliateSetting, affiliatesetting.OrderOption]{typ: ent.TypeAffiliateSetting, tq: q}, nil
 	case *ent.BillingAccountQuery:
 		return &query[*ent.BillingAccountQuery, predicate.BillingAccount, billingaccount.OrderOption]{typ: ent.TypeBillingAccount, tq: q}, nil
 	case *ent.BillingAccountBindingQuery:

@@ -6,6 +6,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/affiliatesetting"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
@@ -150,6 +154,164 @@ func init() {
 	apikeyprofiletemplateDescProfile := apikeyprofiletemplateFields[3].Descriptor()
 	// apikeyprofiletemplate.DefaultProfile holds the default value on creation for the profile field.
 	apikeyprofiletemplate.DefaultProfile = apikeyprofiletemplateDescProfile.Default.(*objects.APIKeyProfile)
+	affiliateinvitationMixin := schema.AffiliateInvitation{}.Mixin()
+	affiliateinvitation.Policy = privacy.NewPolicies(schema.AffiliateInvitation{})
+	affiliateinvitation.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := affiliateinvitation.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	affiliateinvitationMixinFields0 := affiliateinvitationMixin[0].Fields()
+	_ = affiliateinvitationMixinFields0
+	affiliateinvitationFields := schema.AffiliateInvitation{}.Fields()
+	_ = affiliateinvitationFields
+	// affiliateinvitationDescCreatedAt is the schema descriptor for created_at field.
+	affiliateinvitationDescCreatedAt := affiliateinvitationMixinFields0[0].Descriptor()
+	// affiliateinvitation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	affiliateinvitation.DefaultCreatedAt = affiliateinvitationDescCreatedAt.Default.(func() time.Time)
+	// affiliateinvitationDescUpdatedAt is the schema descriptor for updated_at field.
+	affiliateinvitationDescUpdatedAt := affiliateinvitationMixinFields0[1].Descriptor()
+	// affiliateinvitation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	affiliateinvitation.DefaultUpdatedAt = affiliateinvitationDescUpdatedAt.Default.(func() time.Time)
+	// affiliateinvitation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	affiliateinvitation.UpdateDefaultUpdatedAt = affiliateinvitationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// affiliateinvitationDescNotes is the schema descriptor for notes field.
+	affiliateinvitationDescNotes := affiliateinvitationFields[4].Descriptor()
+	// affiliateinvitation.DefaultNotes holds the default value on creation for the notes field.
+	affiliateinvitation.DefaultNotes = affiliateinvitationDescNotes.Default.(string)
+	affiliateprofileMixin := schema.AffiliateProfile{}.Mixin()
+	affiliateprofile.Policy = privacy.NewPolicies(schema.AffiliateProfile{})
+	affiliateprofile.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := affiliateprofile.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	affiliateprofileMixinFields0 := affiliateprofileMixin[0].Fields()
+	_ = affiliateprofileMixinFields0
+	affiliateprofileFields := schema.AffiliateProfile{}.Fields()
+	_ = affiliateprofileFields
+	// affiliateprofileDescCreatedAt is the schema descriptor for created_at field.
+	affiliateprofileDescCreatedAt := affiliateprofileMixinFields0[0].Descriptor()
+	// affiliateprofile.DefaultCreatedAt holds the default value on creation for the created_at field.
+	affiliateprofile.DefaultCreatedAt = affiliateprofileDescCreatedAt.Default.(func() time.Time)
+	// affiliateprofileDescUpdatedAt is the schema descriptor for updated_at field.
+	affiliateprofileDescUpdatedAt := affiliateprofileMixinFields0[1].Descriptor()
+	// affiliateprofile.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	affiliateprofile.DefaultUpdatedAt = affiliateprofileDescUpdatedAt.Default.(func() time.Time)
+	// affiliateprofile.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	affiliateprofile.UpdateDefaultUpdatedAt = affiliateprofileDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// affiliateprofileDescRebateRateOverrideBps is the schema descriptor for rebate_rate_override_bps field.
+	affiliateprofileDescRebateRateOverrideBps := affiliateprofileFields[3].Descriptor()
+	// affiliateprofile.RebateRateOverrideBpsValidator is a validator for the "rebate_rate_override_bps" field. It is called by the builders before save.
+	affiliateprofile.RebateRateOverrideBpsValidator = affiliateprofileDescRebateRateOverrideBps.Validators[0].(func(int) error)
+	// affiliateprofileDescNotes is the schema descriptor for notes field.
+	affiliateprofileDescNotes := affiliateprofileFields[4].Descriptor()
+	// affiliateprofile.DefaultNotes holds the default value on creation for the notes field.
+	affiliateprofile.DefaultNotes = affiliateprofileDescNotes.Default.(string)
+	affiliaterebateMixin := schema.AffiliateRebate{}.Mixin()
+	affiliaterebate.Policy = privacy.NewPolicies(schema.AffiliateRebate{})
+	affiliaterebate.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := affiliaterebate.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	affiliaterebateMixinFields0 := affiliaterebateMixin[0].Fields()
+	_ = affiliaterebateMixinFields0
+	affiliaterebateFields := schema.AffiliateRebate{}.Fields()
+	_ = affiliaterebateFields
+	// affiliaterebateDescCreatedAt is the schema descriptor for created_at field.
+	affiliaterebateDescCreatedAt := affiliaterebateMixinFields0[0].Descriptor()
+	// affiliaterebate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	affiliaterebate.DefaultCreatedAt = affiliaterebateDescCreatedAt.Default.(func() time.Time)
+	// affiliaterebateDescUpdatedAt is the schema descriptor for updated_at field.
+	affiliaterebateDescUpdatedAt := affiliaterebateMixinFields0[1].Descriptor()
+	// affiliaterebate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	affiliaterebate.DefaultUpdatedAt = affiliaterebateDescUpdatedAt.Default.(func() time.Time)
+	// affiliaterebate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	affiliaterebate.UpdateDefaultUpdatedAt = affiliaterebateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// affiliaterebateDescBaseAmountMicros is the schema descriptor for base_amount_micros field.
+	affiliaterebateDescBaseAmountMicros := affiliaterebateFields[7].Descriptor()
+	// affiliaterebate.BaseAmountMicrosValidator is a validator for the "base_amount_micros" field. It is called by the builders before save.
+	affiliaterebate.BaseAmountMicrosValidator = affiliaterebateDescBaseAmountMicros.Validators[0].(func(int64) error)
+	// affiliaterebateDescAmountMicros is the schema descriptor for amount_micros field.
+	affiliaterebateDescAmountMicros := affiliaterebateFields[8].Descriptor()
+	// affiliaterebate.AmountMicrosValidator is a validator for the "amount_micros" field. It is called by the builders before save.
+	affiliaterebate.AmountMicrosValidator = affiliaterebateDescAmountMicros.Validators[0].(func(int64) error)
+	// affiliaterebateDescRateBps is the schema descriptor for rate_bps field.
+	affiliaterebateDescRateBps := affiliaterebateFields[9].Descriptor()
+	// affiliaterebate.RateBpsValidator is a validator for the "rate_bps" field. It is called by the builders before save.
+	affiliaterebate.RateBpsValidator = affiliaterebateDescRateBps.Validators[0].(func(int) error)
+	// affiliaterebateDescCurrency is the schema descriptor for currency field.
+	affiliaterebateDescCurrency := affiliaterebateFields[10].Descriptor()
+	// affiliaterebate.DefaultCurrency holds the default value on creation for the currency field.
+	affiliaterebate.DefaultCurrency = affiliaterebateDescCurrency.Default.(string)
+	// affiliaterebateDescNotes is the schema descriptor for notes field.
+	affiliaterebateDescNotes := affiliaterebateFields[16].Descriptor()
+	// affiliaterebate.DefaultNotes holds the default value on creation for the notes field.
+	affiliaterebate.DefaultNotes = affiliaterebateDescNotes.Default.(string)
+	affiliatesettingMixin := schema.AffiliateSetting{}.Mixin()
+	affiliatesetting.Policy = privacy.NewPolicies(schema.AffiliateSetting{})
+	affiliatesetting.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := affiliatesetting.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	affiliatesettingMixinFields0 := affiliatesettingMixin[0].Fields()
+	_ = affiliatesettingMixinFields0
+	affiliatesettingFields := schema.AffiliateSetting{}.Fields()
+	_ = affiliatesettingFields
+	// affiliatesettingDescCreatedAt is the schema descriptor for created_at field.
+	affiliatesettingDescCreatedAt := affiliatesettingMixinFields0[0].Descriptor()
+	// affiliatesetting.DefaultCreatedAt holds the default value on creation for the created_at field.
+	affiliatesetting.DefaultCreatedAt = affiliatesettingDescCreatedAt.Default.(func() time.Time)
+	// affiliatesettingDescUpdatedAt is the schema descriptor for updated_at field.
+	affiliatesettingDescUpdatedAt := affiliatesettingMixinFields0[1].Descriptor()
+	// affiliatesetting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	affiliatesetting.DefaultUpdatedAt = affiliatesettingDescUpdatedAt.Default.(func() time.Time)
+	// affiliatesetting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	affiliatesetting.UpdateDefaultUpdatedAt = affiliatesettingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// affiliatesettingDescKey is the schema descriptor for key field.
+	affiliatesettingDescKey := affiliatesettingFields[0].Descriptor()
+	// affiliatesetting.DefaultKey holds the default value on creation for the key field.
+	affiliatesetting.DefaultKey = affiliatesettingDescKey.Default.(string)
+	// affiliatesettingDescEnabled is the schema descriptor for enabled field.
+	affiliatesettingDescEnabled := affiliatesettingFields[1].Descriptor()
+	// affiliatesetting.DefaultEnabled holds the default value on creation for the enabled field.
+	affiliatesetting.DefaultEnabled = affiliatesettingDescEnabled.Default.(bool)
+	// affiliatesettingDescDefaultRebateRateBps is the schema descriptor for default_rebate_rate_bps field.
+	affiliatesettingDescDefaultRebateRateBps := affiliatesettingFields[2].Descriptor()
+	// affiliatesetting.DefaultDefaultRebateRateBps holds the default value on creation for the default_rebate_rate_bps field.
+	affiliatesetting.DefaultDefaultRebateRateBps = affiliatesettingDescDefaultRebateRateBps.Default.(int)
+	// affiliatesetting.DefaultRebateRateBpsValidator is a validator for the "default_rebate_rate_bps" field. It is called by the builders before save.
+	affiliatesetting.DefaultRebateRateBpsValidator = affiliatesettingDescDefaultRebateRateBps.Validators[0].(func(int) error)
+	// affiliatesettingDescFreezeDays is the schema descriptor for freeze_days field.
+	affiliatesettingDescFreezeDays := affiliatesettingFields[3].Descriptor()
+	// affiliatesetting.DefaultFreezeDays holds the default value on creation for the freeze_days field.
+	affiliatesetting.DefaultFreezeDays = affiliatesettingDescFreezeDays.Default.(int)
+	// affiliatesetting.FreezeDaysValidator is a validator for the "freeze_days" field. It is called by the builders before save.
+	affiliatesetting.FreezeDaysValidator = affiliatesettingDescFreezeDays.Validators[0].(func(int) error)
+	// affiliatesettingDescMinTransferMicros is the schema descriptor for min_transfer_micros field.
+	affiliatesettingDescMinTransferMicros := affiliatesettingFields[4].Descriptor()
+	// affiliatesetting.DefaultMinTransferMicros holds the default value on creation for the min_transfer_micros field.
+	affiliatesetting.DefaultMinTransferMicros = affiliatesettingDescMinTransferMicros.Default.(int64)
+	// affiliatesetting.MinTransferMicrosValidator is a validator for the "min_transfer_micros" field. It is called by the builders before save.
+	affiliatesetting.MinTransferMicrosValidator = affiliatesettingDescMinTransferMicros.Validators[0].(func(int64) error)
+	// affiliatesettingDescCurrency is the schema descriptor for currency field.
+	affiliatesettingDescCurrency := affiliatesettingFields[5].Descriptor()
+	// affiliatesetting.DefaultCurrency holds the default value on creation for the currency field.
+	affiliatesetting.DefaultCurrency = affiliatesettingDescCurrency.Default.(string)
 	billingaccountMixin := schema.BillingAccount{}.Mixin()
 	billingaccount.Policy = privacy.NewPolicies(schema.BillingAccount{})
 	billingaccount.Hooks[0] = func(next ent.Mutator) ent.Mutator {

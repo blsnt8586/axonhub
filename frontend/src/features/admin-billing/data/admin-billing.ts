@@ -14,7 +14,8 @@ export type LedgerTransactionType =
   | 'chargeback'
   | 'subscription_grant'
   | 'subscription_deduct'
-  | 'redeem_code';
+  | 'redeem_code'
+  | 'affiliate_rebate';
 export type UsageBillingRecordStatus = 'pending' | 'charged' | 'skipped' | 'failed' | 'refunded';
 export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
 export type PaymentProviderType = 'manual' | 'epay' | 'stripe' | 'custom';
@@ -30,6 +31,10 @@ export type PromoCodeScope = 'all' | 'recharge' | 'subscription';
 export type PromoCodeDiscountType = 'amount' | 'percent';
 export type PromoUsageStatus = 'reserved' | 'applied' | 'voided';
 export type PromoUsageScope = 'recharge' | 'subscription';
+export type AffiliateProfileStatus = 'active' | 'disabled';
+export type AffiliateInvitationStatus = 'active' | 'canceled';
+export type AffiliateRebateStatus = 'frozen' | 'available' | 'transferred' | 'voided';
+export type AffiliateRebateSourceType = 'payment_order' | 'user_subscription';
 
 export interface BillingAccount {
   id: string;
@@ -272,6 +277,60 @@ export interface PromoUsage {
   idempotencyKey: string;
 }
 
+export interface AffiliateSetting {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  enabled: boolean;
+  defaultRebateRateBps: number;
+  freezeDays: number;
+  minTransferMicros: number;
+  currency: string;
+}
+
+export interface AffiliateProfile {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  userID: string;
+  inviteCode: string;
+  status: AffiliateProfileStatus;
+  rebateRateOverrideBps?: number | null;
+  notes: string;
+}
+
+export interface AffiliateInvitation {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  inviterUserID: string;
+  inviteeUserID: string;
+  inviteCode: string;
+  status: AffiliateInvitationStatus;
+  notes: string;
+}
+
+export interface AffiliateRebate {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  invitationID: string;
+  inviterUserID: string;
+  inviteeUserID: string;
+  sourceType: AffiliateRebateSourceType;
+  sourceID: number;
+  paymentOrderID?: string | null;
+  userSubscriptionID?: string | null;
+  ledgerTransactionID?: string | null;
+  baseAmountMicros: number;
+  amountMicros: number;
+  rateBps: number;
+  currency: string;
+  status: AffiliateRebateStatus;
+  freezeUntil: string;
+  transferredAt?: string | null;
+}
+
 export interface AdminLedgerTransactionsFilter {
   userId?: number;
   billingAccountId?: number;
@@ -371,6 +430,25 @@ export interface AdminPromoUsagesFilter {
   code?: string;
   from?: string;
   to?: string;
+}
+
+export interface AdminAffiliateInvitationsFilter {
+  inviterUserId?: number;
+  inviteeUserId?: number;
+  status?: AffiliateInvitationStatus;
+  inviteCode?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface AdminAffiliateRebatesFilter {
+  inviterUserId?: number;
+  inviteeUserId?: number;
+  sourceType?: AffiliateRebateSourceType;
+  status?: AffiliateRebateStatus;
+  from?: string;
+  to?: string;
+  transferableBefore?: string;
 }
 
 export interface AdminBillingReportFilter {
@@ -800,6 +878,88 @@ const ADMIN_PROMO_USAGES_QUERY = `
   }
 `;
 
+const ADMIN_AFFILIATE_SETTING_QUERY = `
+  query AdminAffiliateSetting {
+    adminAffiliateSetting {
+      id
+      createdAt
+      updatedAt
+      enabled
+      defaultRebateRateBps
+      freezeDays
+      minTransferMicros
+      currency
+    }
+  }
+`;
+
+const ADMIN_AFFILIATE_PROFILES_QUERY = `
+  query AdminAffiliateProfiles($first: Int!) {
+    adminAffiliateProfiles(first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          userID
+          inviteCode
+          status
+          rebateRateOverrideBps
+          notes
+        }
+      }
+    }
+  }
+`;
+
+const ADMIN_AFFILIATE_INVITATIONS_QUERY = `
+  query AdminAffiliateInvitations($filter: AdminAffiliateInvitationsFilter, $first: Int!) {
+    adminAffiliateInvitations(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          inviterUserID
+          inviteeUserID
+          inviteCode
+          status
+          notes
+        }
+      }
+    }
+  }
+`;
+
+const ADMIN_AFFILIATE_REBATES_QUERY = `
+  query AdminAffiliateRebates($filter: AdminAffiliateRebatesFilter, $first: Int!) {
+    adminAffiliateRebates(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          invitationID
+          inviterUserID
+          inviteeUserID
+          sourceType
+          sourceID
+          paymentOrderID
+          userSubscriptionID
+          ledgerTransactionID
+          baseAmountMicros
+          amountMicros
+          rateBps
+          currency
+          status
+          freezeUntil
+          transferredAt
+        }
+      }
+    }
+  }
+`;
+
 const ADMIN_SUBSCRIPTION_PLANS_QUERY = `
   query AdminSubscriptionPlans($first: Int!) {
     subscriptionPlans(first: $first, orderBy: { field: CREATED_AT, direction: ASC }) {
@@ -1145,6 +1305,36 @@ const DELETE_PROMO_CODE_MUTATION = `
   }
 `;
 
+const SAVE_AFFILIATE_SETTING_MUTATION = `
+  mutation SaveAffiliateSetting($input: SaveAffiliateSettingInput!) {
+    saveAffiliateSetting(input: $input) {
+      id
+      createdAt
+      updatedAt
+      enabled
+      defaultRebateRateBps
+      freezeDays
+      minTransferMicros
+      currency
+    }
+  }
+`;
+
+const SAVE_AFFILIATE_PROFILE_MUTATION = `
+  mutation SaveAffiliateProfile($input: SaveAffiliateProfileInput!) {
+    saveAffiliateProfile(input: $input) {
+      id
+      createdAt
+      updatedAt
+      userID
+      inviteCode
+      status
+      rebateRateOverrideBps
+      notes
+    }
+  }
+`;
+
 const SAVE_SUBSCRIPTION_PLAN_MUTATION = `
   mutation SaveSubscriptionPlan($input: SaveSubscriptionPlanInput!) {
     saveSubscriptionPlan(input: $input) {
@@ -1354,6 +1544,46 @@ export function useAdminPromoUsages(filter: AdminPromoUsagesFilter = {}, first =
     queryFn: async () => {
       const data = await graphqlRequest<{ adminPromoUsages: Connection<PromoUsage> }>(ADMIN_PROMO_USAGES_QUERY, { filter, first });
       return nodes(data.adminPromoUsages);
+    },
+  });
+}
+
+export function useAdminAffiliateSetting() {
+  return useQuery({
+    queryKey: ['admin-billing', 'affiliate-setting'],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminAffiliateSetting: AffiliateSetting }>(ADMIN_AFFILIATE_SETTING_QUERY);
+      return data.adminAffiliateSetting;
+    },
+  });
+}
+
+export function useAdminAffiliateProfiles(first = 50) {
+  return useQuery({
+    queryKey: ['admin-billing', 'affiliate-profiles', first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminAffiliateProfiles: Connection<AffiliateProfile> }>(ADMIN_AFFILIATE_PROFILES_QUERY, { first });
+      return nodes(data.adminAffiliateProfiles);
+    },
+  });
+}
+
+export function useAdminAffiliateInvitations(filter: AdminAffiliateInvitationsFilter = {}, first = 50) {
+  return useQuery({
+    queryKey: ['admin-billing', 'affiliate-invitations', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminAffiliateInvitations: Connection<AffiliateInvitation> }>(ADMIN_AFFILIATE_INVITATIONS_QUERY, { filter, first });
+      return nodes(data.adminAffiliateInvitations);
+    },
+  });
+}
+
+export function useAdminAffiliateRebates(filter: AdminAffiliateRebatesFilter = {}, first = 50) {
+  return useQuery({
+    queryKey: ['admin-billing', 'affiliate-rebates', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminAffiliateRebates: Connection<AffiliateRebate> }>(ADMIN_AFFILIATE_REBATES_QUERY, { filter, first });
+      return nodes(data.adminAffiliateRebates);
     },
   });
 }
@@ -1665,6 +1895,48 @@ export function useDeletePromoCode() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'promo-codes'] });
+    },
+  });
+}
+
+export function useSaveAffiliateSetting() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      enabled: boolean;
+      defaultRebateRateBps: number;
+      freezeDays: number;
+      minTransferAmount?: string;
+      currency?: string;
+    }) => {
+      const data = await graphqlRequest<{ saveAffiliateSetting: AffiliateSetting }>(SAVE_AFFILIATE_SETTING_MUTATION, { input });
+      return data.saveAffiliateSetting;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'affiliate-setting'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useSaveAffiliateProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      userId: string;
+      status?: AffiliateProfileStatus;
+      rebateRateOverrideBps?: number | null;
+      notes?: string;
+    }) => {
+      const data = await graphqlRequest<{ saveAffiliateProfile: AffiliateProfile }>(SAVE_AFFILIATE_PROFILE_MUTATION, { input });
+      return data.saveAffiliateProfile;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'affiliate-profiles'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'affiliate-rebates'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
     },
   });
 }

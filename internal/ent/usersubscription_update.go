@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/promousage"
@@ -359,6 +360,21 @@ func (_u *UserSubscriptionUpdate) AddUsageBillingRecords(v ...*UsageBillingRecor
 	return _u.AddUsageBillingRecordIDs(ids...)
 }
 
+// AddAffiliateRebateIDs adds the "affiliate_rebates" edge to the AffiliateRebate entity by IDs.
+func (_u *UserSubscriptionUpdate) AddAffiliateRebateIDs(ids ...int) *UserSubscriptionUpdate {
+	_u.mutation.AddAffiliateRebateIDs(ids...)
+	return _u
+}
+
+// AddAffiliateRebates adds the "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_u *UserSubscriptionUpdate) AddAffiliateRebates(v ...*AffiliateRebate) *UserSubscriptionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateRebateIDs(ids...)
+}
+
 // Mutation returns the UserSubscriptionMutation object of the builder.
 func (_u *UserSubscriptionUpdate) Mutation() *UserSubscriptionMutation {
 	return _u.mutation
@@ -416,6 +432,27 @@ func (_u *UserSubscriptionUpdate) RemoveUsageBillingRecords(v ...*UsageBillingRe
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageBillingRecordIDs(ids...)
+}
+
+// ClearAffiliateRebates clears all "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_u *UserSubscriptionUpdate) ClearAffiliateRebates() *UserSubscriptionUpdate {
+	_u.mutation.ClearAffiliateRebates()
+	return _u
+}
+
+// RemoveAffiliateRebateIDs removes the "affiliate_rebates" edge to AffiliateRebate entities by IDs.
+func (_u *UserSubscriptionUpdate) RemoveAffiliateRebateIDs(ids ...int) *UserSubscriptionUpdate {
+	_u.mutation.RemoveAffiliateRebateIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateRebates removes "affiliate_rebates" edges to AffiliateRebate entities.
+func (_u *UserSubscriptionUpdate) RemoveAffiliateRebates(v ...*AffiliateRebate) *UserSubscriptionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateRebateIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -710,6 +747,51 @@ func (_u *UserSubscriptionUpdate) sqlSave(ctx context.Context) (_node int, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateRebatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.AffiliateRebatesTable,
+			Columns: []string{usersubscription.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateRebatesIDs(); len(nodes) > 0 && !_u.mutation.AffiliateRebatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.AffiliateRebatesTable,
+			Columns: []string{usersubscription.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateRebatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.AffiliateRebatesTable,
+			Columns: []string{usersubscription.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1064,6 +1146,21 @@ func (_u *UserSubscriptionUpdateOne) AddUsageBillingRecords(v ...*UsageBillingRe
 	return _u.AddUsageBillingRecordIDs(ids...)
 }
 
+// AddAffiliateRebateIDs adds the "affiliate_rebates" edge to the AffiliateRebate entity by IDs.
+func (_u *UserSubscriptionUpdateOne) AddAffiliateRebateIDs(ids ...int) *UserSubscriptionUpdateOne {
+	_u.mutation.AddAffiliateRebateIDs(ids...)
+	return _u
+}
+
+// AddAffiliateRebates adds the "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_u *UserSubscriptionUpdateOne) AddAffiliateRebates(v ...*AffiliateRebate) *UserSubscriptionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateRebateIDs(ids...)
+}
+
 // Mutation returns the UserSubscriptionMutation object of the builder.
 func (_u *UserSubscriptionUpdateOne) Mutation() *UserSubscriptionMutation {
 	return _u.mutation
@@ -1121,6 +1218,27 @@ func (_u *UserSubscriptionUpdateOne) RemoveUsageBillingRecords(v ...*UsageBillin
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageBillingRecordIDs(ids...)
+}
+
+// ClearAffiliateRebates clears all "affiliate_rebates" edges to the AffiliateRebate entity.
+func (_u *UserSubscriptionUpdateOne) ClearAffiliateRebates() *UserSubscriptionUpdateOne {
+	_u.mutation.ClearAffiliateRebates()
+	return _u
+}
+
+// RemoveAffiliateRebateIDs removes the "affiliate_rebates" edge to AffiliateRebate entities by IDs.
+func (_u *UserSubscriptionUpdateOne) RemoveAffiliateRebateIDs(ids ...int) *UserSubscriptionUpdateOne {
+	_u.mutation.RemoveAffiliateRebateIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateRebates removes "affiliate_rebates" edges to AffiliateRebate entities.
+func (_u *UserSubscriptionUpdateOne) RemoveAffiliateRebates(v ...*AffiliateRebate) *UserSubscriptionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateRebateIDs(ids...)
 }
 
 // Where appends a list predicates to the UserSubscriptionUpdate builder.
@@ -1445,6 +1563,51 @@ func (_u *UserSubscriptionUpdateOne) sqlSave(ctx context.Context) (_node *UserSu
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagebillingrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateRebatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.AffiliateRebatesTable,
+			Columns: []string{usersubscription.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateRebatesIDs(); len(nodes) > 0 && !_u.mutation.AffiliateRebatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.AffiliateRebatesTable,
+			Columns: []string{usersubscription.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateRebatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.AffiliateRebatesTable,
+			Columns: []string{usersubscription.AffiliateRebatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

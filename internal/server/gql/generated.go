@@ -18,6 +18,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/looplj/axonhub/internal/build"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
@@ -81,6 +84,11 @@ type Config struct {
 type ResolverRoot interface {
 	APIKey() APIKeyResolver
 	APIKeyProfileTemplate() APIKeyProfileTemplateResolver
+	AffiliateInvitation() AffiliateInvitationResolver
+	AffiliateProfile() AffiliateProfileResolver
+	AffiliateRebate() AffiliateRebateResolver
+	AffiliateSetting() AffiliateSettingResolver
+	AffiliateTransferResult() AffiliateTransferResultResolver
 	BillingAccount() BillingAccountResolver
 	BillingAccountBinding() BillingAccountBindingResolver
 	BillingHold() BillingHoldResolver
@@ -275,6 +283,135 @@ type ComplexityRoot struct {
 		OutputTokens    func(childComplexity int) int
 		ReasoningTokens func(childComplexity int) int
 		TopModels       func(childComplexity int) int
+	}
+
+	AffiliateInvitation struct {
+		CreatedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		InviteCode    func(childComplexity int) int
+		Invitee       func(childComplexity int) int
+		InviteeUserID func(childComplexity int) int
+		Inviter       func(childComplexity int) int
+		InviterUserID func(childComplexity int) int
+		Notes         func(childComplexity int) int
+		Rebates       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
+		Status        func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+	}
+
+	AffiliateInvitationConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	AffiliateInvitationEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	AffiliateProfile struct {
+		CreatedAt             func(childComplexity int) int
+		ID                    func(childComplexity int) int
+		InviteCode            func(childComplexity int) int
+		Notes                 func(childComplexity int) int
+		RebateRateOverrideBps func(childComplexity int) int
+		Status                func(childComplexity int) int
+		UpdatedAt             func(childComplexity int) int
+		User                  func(childComplexity int) int
+		UserID                func(childComplexity int) int
+	}
+
+	AffiliateProfileConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	AffiliateProfileEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	AffiliateRebate struct {
+		AmountMicros        func(childComplexity int) int
+		BaseAmountMicros    func(childComplexity int) int
+		CreatedAt           func(childComplexity int) int
+		Currency            func(childComplexity int) int
+		FreezeUntil         func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		IdempotencyKey      func(childComplexity int) int
+		Invitation          func(childComplexity int) int
+		InvitationID        func(childComplexity int) int
+		Invitee             func(childComplexity int) int
+		InviteeUserID       func(childComplexity int) int
+		Inviter             func(childComplexity int) int
+		InviterUserID       func(childComplexity int) int
+		LedgerTransaction   func(childComplexity int) int
+		LedgerTransactionID func(childComplexity int) int
+		Notes               func(childComplexity int) int
+		PaymentOrder        func(childComplexity int) int
+		PaymentOrderID      func(childComplexity int) int
+		RateBps             func(childComplexity int) int
+		SourceID            func(childComplexity int) int
+		SourceType          func(childComplexity int) int
+		Status              func(childComplexity int) int
+		TransferredAt       func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
+		UserSubscription    func(childComplexity int) int
+		UserSubscriptionID  func(childComplexity int) int
+	}
+
+	AffiliateRebateConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	AffiliateRebateEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	AffiliateSetting struct {
+		CreatedAt            func(childComplexity int) int
+		Currency             func(childComplexity int) int
+		DefaultRebateRateBps func(childComplexity int) int
+		Enabled              func(childComplexity int) int
+		FreezeDays           func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		Key                  func(childComplexity int) int
+		MinTransferMicros    func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
+	}
+
+	AffiliateSettingConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	AffiliateSettingEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	AffiliateSummary struct {
+		AvailableMicros   func(childComplexity int) int
+		Currency          func(childComplexity int) int
+		FrozenMicros      func(childComplexity int) int
+		Invitation        func(childComplexity int) int
+		InviteeCount      func(childComplexity int) int
+		Profile           func(childComplexity int) int
+		Setting           func(childComplexity int) int
+		TransferredMicros func(childComplexity int) int
+	}
+
+	AffiliateTransferResult struct {
+		Currency             func(childComplexity int) int
+		LedgerTransactionIDs func(childComplexity int) int
+		TransferredCount     func(childComplexity int) int
+		TransferredMicros    func(childComplexity int) int
 	}
 
 	ApplyChannelOverrideTemplatePayload struct {
@@ -1018,6 +1155,7 @@ type ComplexityRoot struct {
 	}
 
 	LedgerTransaction struct {
+		AffiliateRebates           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
 		AmountMicros               func(childComplexity int) int
 		BillingAccount             func(childComplexity int) int
 		BillingAccountID           func(childComplexity int) int
@@ -1198,6 +1336,7 @@ type ComplexityRoot struct {
 		AdminCreateAndRedeemCode             func(childComplexity int, input biz.AdminCreateAndRedeemCodeInput) int
 		ApplyChannelOverrideTemplate         func(childComplexity int, input ApplyChannelOverrideTemplateInput) int
 		Backup                               func(childComplexity int, input backup.BackupOptions) int
+		BindAffiliateInvite                  func(childComplexity int, input biz.BindAffiliateInviteInput) int
 		BulkArchiveAPIKeys                   func(childComplexity int, ids []*objects.GUID) int
 		BulkArchiveChannels                  func(childComplexity int, ids []*objects.GUID) int
 		BulkArchiveModels                    func(childComplexity int, ids []*objects.GUID) int
@@ -1278,6 +1417,8 @@ type ComplexityRoot struct {
 		RestoreUserSubscription              func(childComplexity int, id objects.GUID) int
 		RevokeUserSubscription               func(childComplexity int, id objects.GUID, reason *string) int
 		RotateAPIKey                         func(childComplexity int, id objects.GUID) int
+		SaveAffiliateProfile                 func(childComplexity int, input biz.SaveAffiliateProfileInput) int
+		SaveAffiliateSetting                 func(childComplexity int, input biz.SaveAffiliateSettingInput) int
 		SaveBillingPriceRule                 func(childComplexity int, input SaveBillingPriceRuleForm) int
 		SaveChannelEndpoints                 func(childComplexity int, input biz.SaveChannelEndpointsInput) int
 		SaveChannelModelPrices               func(childComplexity int, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) int
@@ -1288,6 +1429,7 @@ type ComplexityRoot struct {
 		TestChannel                          func(childComplexity int, input TestChannelInput) int
 		TestChannelAPIKey                    func(childComplexity int, channelID objects.GUID, key string, modelID *string) int
 		TestChannelAPIKeys                   func(childComplexity int, channelID objects.GUID, modelID *string) int
+		TransferAffiliateRebates             func(childComplexity int) int
 		TriggerAutoBackup                    func(childComplexity int) int
 		TriggerGcCleanup                     func(childComplexity int, input gc.TriggerGcCleanupInput) int
 		UnlinkOIDCIdentity                   func(childComplexity int, id objects.GUID) int
@@ -1453,6 +1595,7 @@ type ComplexityRoot struct {
 	}
 
 	PaymentOrder struct {
+		AffiliateRebates     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
 		AmountMicros         func(childComplexity int) int
 		BillingAccount       func(childComplexity int) int
 		BillingAccountID     func(childComplexity int) int
@@ -1778,6 +1921,10 @@ type ComplexityRoot struct {
 		APIKeyQuotaUsages            func(childComplexity int, apiKeyID objects.GUID) int
 		APIKeyTokenUsageStats        func(childComplexity int, input *APIKeyTokenUsageStatsInput) int
 		APIKeys                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyOrder, where *ent.APIKeyWhereInput) int
+		AdminAffiliateInvitations    func(childComplexity int, filter *AdminAffiliateInvitationsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) int
+		AdminAffiliateProfiles       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder) int
+		AdminAffiliateRebates        func(childComplexity int, filter *AdminAffiliateRebatesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) int
+		AdminAffiliateSetting        func(childComplexity int) int
 		AdminBillingHolds            func(childComplexity int, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) int
 		AdminBillingReport           func(childComplexity int, filter *AdminBillingReportFilter) int
 		AdminLedgerTransactions      func(childComplexity int, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
@@ -1788,6 +1935,10 @@ type ComplexityRoot struct {
 		AdminRedeemCodes             func(childComplexity int, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) int
 		AdminUsageBillingRecords     func(childComplexity int, filter *AdminUsageBillingRecordsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
 		AdminUserSubscriptions       func(childComplexity int, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) int
+		AffiliateInvitations         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) int
+		AffiliateProfiles            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder, where *ent.AffiliateProfileWhereInput) int
+		AffiliateRebates             func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
+		AffiliateSettings            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateSettingOrder, where *ent.AffiliateSettingWhereInput) int
 		AllChannelSummarys           func(childComplexity int, includeArchived *bool) int
 		AllChannelTags               func(childComplexity int) int
 		AllScopes                    func(childComplexity int, level *string) int
@@ -1823,6 +1974,9 @@ type ComplexityRoot struct {
 		Me                           func(childComplexity int) int
 		ModelPerformanceStats        func(childComplexity int) int
 		Models                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ModelOrder, where *ent.ModelWhereInput) int
+		MyAffiliateInvitations       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) int
+		MyAffiliateRebates           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) int
+		MyAffiliateSummary           func(childComplexity int) int
 		MyBillingAccount             func(childComplexity int) int
 		MyLedgerTransactions         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
 		MyPaymentOrders              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
@@ -2556,6 +2710,11 @@ type ComplexityRoot struct {
 
 	User struct {
 		APIKeys                   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyOrder, where *ent.APIKeyWhereInput) int
+		AffiliateInvitees         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) int
+		AffiliateInviters         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) int
+		AffiliateProfiles         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder, where *ent.AffiliateProfileWhereInput) int
+		AffiliateRebatesEarned    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
+		AffiliateRebatesGenerated func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
 		AssignedUserSubscriptions func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) int
 		Avatar                    func(childComplexity int) int
 		ChannelOverrideTemplates  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOverrideTemplateOrder, where *ent.ChannelOverrideTemplateWhereInput) int
@@ -2640,6 +2799,7 @@ type ComplexityRoot struct {
 	}
 
 	UserSubscription struct {
+		AffiliateRebates            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
 		AllowWalletFallback         func(childComplexity int) int
 		AssignedBy                  func(childComplexity int) int
 		AssignedByID                func(childComplexity int) int
@@ -2743,6 +2903,35 @@ type APIKeyProfileTemplateResolver interface {
 	ID(ctx context.Context, obj *ent.APIKeyProfileTemplate) (*objects.GUID, error)
 
 	ProjectID(ctx context.Context, obj *ent.APIKeyProfileTemplate) (*objects.GUID, error)
+}
+type AffiliateInvitationResolver interface {
+	ID(ctx context.Context, obj *ent.AffiliateInvitation) (*objects.GUID, error)
+
+	InviterUserID(ctx context.Context, obj *ent.AffiliateInvitation) (*objects.GUID, error)
+	InviteeUserID(ctx context.Context, obj *ent.AffiliateInvitation) (*objects.GUID, error)
+}
+type AffiliateProfileResolver interface {
+	ID(ctx context.Context, obj *ent.AffiliateProfile) (*objects.GUID, error)
+
+	UserID(ctx context.Context, obj *ent.AffiliateProfile) (*objects.GUID, error)
+}
+type AffiliateRebateResolver interface {
+	ID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error)
+
+	InvitationID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error)
+	InviterUserID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error)
+	InviteeUserID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error)
+
+	PaymentOrderID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error)
+	UserSubscriptionID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error)
+
+	LedgerTransactionID(ctx context.Context, obj *ent.AffiliateRebate) (*objects.GUID, error)
+}
+type AffiliateSettingResolver interface {
+	ID(ctx context.Context, obj *ent.AffiliateSetting) (*objects.GUID, error)
+}
+type AffiliateTransferResultResolver interface {
+	LedgerTransactionIDs(ctx context.Context, obj *biz.AffiliateTransferResult) ([]*objects.GUID, error)
 }
 type BillingAccountResolver interface {
 	ID(ctx context.Context, obj *ent.BillingAccount) (*objects.GUID, error)
@@ -2965,6 +3154,10 @@ type MutationResolver interface {
 	RevokeUserSubscription(ctx context.Context, id objects.GUID, reason *string) (*ent.UserSubscription, error)
 	RestoreUserSubscription(ctx context.Context, id objects.GUID) (*ent.UserSubscription, error)
 	ResetUserSubscriptionUsage(ctx context.Context, id objects.GUID) (*ent.UserSubscription, error)
+	BindAffiliateInvite(ctx context.Context, input biz.BindAffiliateInviteInput) (*ent.AffiliateInvitation, error)
+	TransferAffiliateRebates(ctx context.Context) (*biz.AffiliateTransferResult, error)
+	SaveAffiliateSetting(ctx context.Context, input biz.SaveAffiliateSettingInput) (*ent.AffiliateSetting, error)
+	SaveAffiliateProfile(ctx context.Context, input biz.SaveAffiliateProfileInput) (*ent.AffiliateProfile, error)
 	ReleaseBillingHold(ctx context.Context, id objects.GUID, reason string) (*ent.BillingHold, error)
 	SaveBillingPriceRule(ctx context.Context, input SaveBillingPriceRuleForm) (*ent.BillingPriceRule, error)
 	DeleteBillingPriceRule(ctx context.Context, id objects.GUID) (bool, error)
@@ -3028,6 +3221,10 @@ type QueryResolver interface {
 	Nodes(ctx context.Context, ids []*objects.GUID) ([]ent.Noder, error)
 	APIKeys(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyOrder, where *ent.APIKeyWhereInput) (*ent.APIKeyConnection, error)
 	APIKeyProfileTemplates(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyProfileTemplateOrder, where *ent.APIKeyProfileTemplateWhereInput) (*ent.APIKeyProfileTemplateConnection, error)
+	AffiliateInvitations(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) (*ent.AffiliateInvitationConnection, error)
+	AffiliateProfiles(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder, where *ent.AffiliateProfileWhereInput) (*ent.AffiliateProfileConnection, error)
+	AffiliateRebates(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) (*ent.AffiliateRebateConnection, error)
+	AffiliateSettings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateSettingOrder, where *ent.AffiliateSettingWhereInput) (*ent.AffiliateSettingConnection, error)
 	BillingAccounts(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountOrder, where *ent.BillingAccountWhereInput) (*ent.BillingAccountConnection, error)
 	BillingAccountBindings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) (*ent.BillingAccountBindingConnection, error)
 	BillingHolds(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) (*ent.BillingHoldConnection, error)
@@ -3137,6 +3334,13 @@ type QueryResolver interface {
 	AdminRedeemCodes(ctx context.Context, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) (*ent.RedeemCodeConnection, error)
 	AdminPromoCodes(ctx context.Context, filter *AdminPromoCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder) (*ent.PromoCodeConnection, error)
 	AdminPromoUsages(ctx context.Context, filter *AdminPromoUsagesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder) (*ent.PromoUsageConnection, error)
+	MyAffiliateSummary(ctx context.Context) (*biz.AffiliateSummary, error)
+	MyAffiliateInvitations(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) (*ent.AffiliateInvitationConnection, error)
+	MyAffiliateRebates(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) (*ent.AffiliateRebateConnection, error)
+	AdminAffiliateSetting(ctx context.Context) (*ent.AffiliateSetting, error)
+	AdminAffiliateProfiles(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder) (*ent.AffiliateProfileConnection, error)
+	AdminAffiliateInvitations(ctx context.Context, filter *AdminAffiliateInvitationsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) (*ent.AffiliateInvitationConnection, error)
+	AdminAffiliateRebates(ctx context.Context, filter *AdminAffiliateRebatesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) (*ent.AffiliateRebateConnection, error)
 	AdminUserSubscriptions(ctx context.Context, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) (*ent.UserSubscriptionConnection, error)
 	AdminBillingReport(ctx context.Context, filter *AdminBillingReportFilter) (*biz.BillingCommercialReport, error)
 	ExportAdminBillingCSV(ctx context.Context, input ExportAdminBillingCSVInput) (*biz.BillingCSVExportPayload, error)
@@ -3838,6 +4042,547 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.APIKeyTokenUsageStats.TopModels(childComplexity), true
+
+	case "AffiliateInvitation.createdAt":
+		if e.complexity.AffiliateInvitation.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.CreatedAt(childComplexity), true
+	case "AffiliateInvitation.id":
+		if e.complexity.AffiliateInvitation.ID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.ID(childComplexity), true
+	case "AffiliateInvitation.inviteCode":
+		if e.complexity.AffiliateInvitation.InviteCode == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.InviteCode(childComplexity), true
+	case "AffiliateInvitation.invitee":
+		if e.complexity.AffiliateInvitation.Invitee == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.Invitee(childComplexity), true
+	case "AffiliateInvitation.inviteeUserID":
+		if e.complexity.AffiliateInvitation.InviteeUserID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.InviteeUserID(childComplexity), true
+	case "AffiliateInvitation.inviter":
+		if e.complexity.AffiliateInvitation.Inviter == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.Inviter(childComplexity), true
+	case "AffiliateInvitation.inviterUserID":
+		if e.complexity.AffiliateInvitation.InviterUserID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.InviterUserID(childComplexity), true
+	case "AffiliateInvitation.notes":
+		if e.complexity.AffiliateInvitation.Notes == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.Notes(childComplexity), true
+	case "AffiliateInvitation.rebates":
+		if e.complexity.AffiliateInvitation.Rebates == nil {
+			break
+		}
+
+		args, err := ec.field_AffiliateInvitation_rebates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.AffiliateInvitation.Rebates(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateRebateOrder), args["where"].(*ent.AffiliateRebateWhereInput)), true
+	case "AffiliateInvitation.status":
+		if e.complexity.AffiliateInvitation.Status == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.Status(childComplexity), true
+	case "AffiliateInvitation.updatedAt":
+		if e.complexity.AffiliateInvitation.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitation.UpdatedAt(childComplexity), true
+
+	case "AffiliateInvitationConnection.edges":
+		if e.complexity.AffiliateInvitationConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitationConnection.Edges(childComplexity), true
+	case "AffiliateInvitationConnection.pageInfo":
+		if e.complexity.AffiliateInvitationConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitationConnection.PageInfo(childComplexity), true
+	case "AffiliateInvitationConnection.totalCount":
+		if e.complexity.AffiliateInvitationConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitationConnection.TotalCount(childComplexity), true
+
+	case "AffiliateInvitationEdge.cursor":
+		if e.complexity.AffiliateInvitationEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitationEdge.Cursor(childComplexity), true
+	case "AffiliateInvitationEdge.node":
+		if e.complexity.AffiliateInvitationEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.AffiliateInvitationEdge.Node(childComplexity), true
+
+	case "AffiliateProfile.createdAt":
+		if e.complexity.AffiliateProfile.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfile.CreatedAt(childComplexity), true
+	case "AffiliateProfile.id":
+		if e.complexity.AffiliateProfile.ID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfile.ID(childComplexity), true
+	case "AffiliateProfile.inviteCode":
+		if e.complexity.AffiliateProfile.InviteCode == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfile.InviteCode(childComplexity), true
+	case "AffiliateProfile.notes":
+		if e.complexity.AffiliateProfile.Notes == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfile.Notes(childComplexity), true
+	case "AffiliateProfile.rebateRateOverrideBps":
+		if e.complexity.AffiliateProfile.RebateRateOverrideBps == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfile.RebateRateOverrideBps(childComplexity), true
+	case "AffiliateProfile.status":
+		if e.complexity.AffiliateProfile.Status == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfile.Status(childComplexity), true
+	case "AffiliateProfile.updatedAt":
+		if e.complexity.AffiliateProfile.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfile.UpdatedAt(childComplexity), true
+	case "AffiliateProfile.user":
+		if e.complexity.AffiliateProfile.User == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfile.User(childComplexity), true
+	case "AffiliateProfile.userID":
+		if e.complexity.AffiliateProfile.UserID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfile.UserID(childComplexity), true
+
+	case "AffiliateProfileConnection.edges":
+		if e.complexity.AffiliateProfileConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfileConnection.Edges(childComplexity), true
+	case "AffiliateProfileConnection.pageInfo":
+		if e.complexity.AffiliateProfileConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfileConnection.PageInfo(childComplexity), true
+	case "AffiliateProfileConnection.totalCount":
+		if e.complexity.AffiliateProfileConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfileConnection.TotalCount(childComplexity), true
+
+	case "AffiliateProfileEdge.cursor":
+		if e.complexity.AffiliateProfileEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfileEdge.Cursor(childComplexity), true
+	case "AffiliateProfileEdge.node":
+		if e.complexity.AffiliateProfileEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.AffiliateProfileEdge.Node(childComplexity), true
+
+	case "AffiliateRebate.amountMicros":
+		if e.complexity.AffiliateRebate.AmountMicros == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.AmountMicros(childComplexity), true
+	case "AffiliateRebate.baseAmountMicros":
+		if e.complexity.AffiliateRebate.BaseAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.BaseAmountMicros(childComplexity), true
+	case "AffiliateRebate.createdAt":
+		if e.complexity.AffiliateRebate.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.CreatedAt(childComplexity), true
+	case "AffiliateRebate.currency":
+		if e.complexity.AffiliateRebate.Currency == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.Currency(childComplexity), true
+	case "AffiliateRebate.freezeUntil":
+		if e.complexity.AffiliateRebate.FreezeUntil == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.FreezeUntil(childComplexity), true
+	case "AffiliateRebate.id":
+		if e.complexity.AffiliateRebate.ID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.ID(childComplexity), true
+	case "AffiliateRebate.idempotencyKey":
+		if e.complexity.AffiliateRebate.IdempotencyKey == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.IdempotencyKey(childComplexity), true
+	case "AffiliateRebate.invitation":
+		if e.complexity.AffiliateRebate.Invitation == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.Invitation(childComplexity), true
+	case "AffiliateRebate.invitationID":
+		if e.complexity.AffiliateRebate.InvitationID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.InvitationID(childComplexity), true
+	case "AffiliateRebate.invitee":
+		if e.complexity.AffiliateRebate.Invitee == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.Invitee(childComplexity), true
+	case "AffiliateRebate.inviteeUserID":
+		if e.complexity.AffiliateRebate.InviteeUserID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.InviteeUserID(childComplexity), true
+	case "AffiliateRebate.inviter":
+		if e.complexity.AffiliateRebate.Inviter == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.Inviter(childComplexity), true
+	case "AffiliateRebate.inviterUserID":
+		if e.complexity.AffiliateRebate.InviterUserID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.InviterUserID(childComplexity), true
+	case "AffiliateRebate.ledgerTransaction":
+		if e.complexity.AffiliateRebate.LedgerTransaction == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.LedgerTransaction(childComplexity), true
+	case "AffiliateRebate.ledgerTransactionID":
+		if e.complexity.AffiliateRebate.LedgerTransactionID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.LedgerTransactionID(childComplexity), true
+	case "AffiliateRebate.notes":
+		if e.complexity.AffiliateRebate.Notes == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.Notes(childComplexity), true
+	case "AffiliateRebate.paymentOrder":
+		if e.complexity.AffiliateRebate.PaymentOrder == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.PaymentOrder(childComplexity), true
+	case "AffiliateRebate.paymentOrderID":
+		if e.complexity.AffiliateRebate.PaymentOrderID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.PaymentOrderID(childComplexity), true
+	case "AffiliateRebate.rateBps":
+		if e.complexity.AffiliateRebate.RateBps == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.RateBps(childComplexity), true
+	case "AffiliateRebate.sourceID":
+		if e.complexity.AffiliateRebate.SourceID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.SourceID(childComplexity), true
+	case "AffiliateRebate.sourceType":
+		if e.complexity.AffiliateRebate.SourceType == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.SourceType(childComplexity), true
+	case "AffiliateRebate.status":
+		if e.complexity.AffiliateRebate.Status == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.Status(childComplexity), true
+	case "AffiliateRebate.transferredAt":
+		if e.complexity.AffiliateRebate.TransferredAt == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.TransferredAt(childComplexity), true
+	case "AffiliateRebate.updatedAt":
+		if e.complexity.AffiliateRebate.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.UpdatedAt(childComplexity), true
+	case "AffiliateRebate.userSubscription":
+		if e.complexity.AffiliateRebate.UserSubscription == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.UserSubscription(childComplexity), true
+	case "AffiliateRebate.userSubscriptionID":
+		if e.complexity.AffiliateRebate.UserSubscriptionID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebate.UserSubscriptionID(childComplexity), true
+
+	case "AffiliateRebateConnection.edges":
+		if e.complexity.AffiliateRebateConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebateConnection.Edges(childComplexity), true
+	case "AffiliateRebateConnection.pageInfo":
+		if e.complexity.AffiliateRebateConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebateConnection.PageInfo(childComplexity), true
+	case "AffiliateRebateConnection.totalCount":
+		if e.complexity.AffiliateRebateConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebateConnection.TotalCount(childComplexity), true
+
+	case "AffiliateRebateEdge.cursor":
+		if e.complexity.AffiliateRebateEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebateEdge.Cursor(childComplexity), true
+	case "AffiliateRebateEdge.node":
+		if e.complexity.AffiliateRebateEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.AffiliateRebateEdge.Node(childComplexity), true
+
+	case "AffiliateSetting.createdAt":
+		if e.complexity.AffiliateSetting.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSetting.CreatedAt(childComplexity), true
+	case "AffiliateSetting.currency":
+		if e.complexity.AffiliateSetting.Currency == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSetting.Currency(childComplexity), true
+	case "AffiliateSetting.defaultRebateRateBps":
+		if e.complexity.AffiliateSetting.DefaultRebateRateBps == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSetting.DefaultRebateRateBps(childComplexity), true
+	case "AffiliateSetting.enabled":
+		if e.complexity.AffiliateSetting.Enabled == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSetting.Enabled(childComplexity), true
+	case "AffiliateSetting.freezeDays":
+		if e.complexity.AffiliateSetting.FreezeDays == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSetting.FreezeDays(childComplexity), true
+	case "AffiliateSetting.id":
+		if e.complexity.AffiliateSetting.ID == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSetting.ID(childComplexity), true
+	case "AffiliateSetting.key":
+		if e.complexity.AffiliateSetting.Key == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSetting.Key(childComplexity), true
+	case "AffiliateSetting.minTransferMicros":
+		if e.complexity.AffiliateSetting.MinTransferMicros == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSetting.MinTransferMicros(childComplexity), true
+	case "AffiliateSetting.updatedAt":
+		if e.complexity.AffiliateSetting.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSetting.UpdatedAt(childComplexity), true
+
+	case "AffiliateSettingConnection.edges":
+		if e.complexity.AffiliateSettingConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSettingConnection.Edges(childComplexity), true
+	case "AffiliateSettingConnection.pageInfo":
+		if e.complexity.AffiliateSettingConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSettingConnection.PageInfo(childComplexity), true
+	case "AffiliateSettingConnection.totalCount":
+		if e.complexity.AffiliateSettingConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSettingConnection.TotalCount(childComplexity), true
+
+	case "AffiliateSettingEdge.cursor":
+		if e.complexity.AffiliateSettingEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSettingEdge.Cursor(childComplexity), true
+	case "AffiliateSettingEdge.node":
+		if e.complexity.AffiliateSettingEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSettingEdge.Node(childComplexity), true
+
+	case "AffiliateSummary.availableMicros":
+		if e.complexity.AffiliateSummary.AvailableMicros == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSummary.AvailableMicros(childComplexity), true
+	case "AffiliateSummary.currency":
+		if e.complexity.AffiliateSummary.Currency == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSummary.Currency(childComplexity), true
+	case "AffiliateSummary.frozenMicros":
+		if e.complexity.AffiliateSummary.FrozenMicros == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSummary.FrozenMicros(childComplexity), true
+	case "AffiliateSummary.invitation":
+		if e.complexity.AffiliateSummary.Invitation == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSummary.Invitation(childComplexity), true
+	case "AffiliateSummary.inviteeCount":
+		if e.complexity.AffiliateSummary.InviteeCount == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSummary.InviteeCount(childComplexity), true
+	case "AffiliateSummary.profile":
+		if e.complexity.AffiliateSummary.Profile == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSummary.Profile(childComplexity), true
+	case "AffiliateSummary.setting":
+		if e.complexity.AffiliateSummary.Setting == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSummary.Setting(childComplexity), true
+	case "AffiliateSummary.transferredMicros":
+		if e.complexity.AffiliateSummary.TransferredMicros == nil {
+			break
+		}
+
+		return e.complexity.AffiliateSummary.TransferredMicros(childComplexity), true
+
+	case "AffiliateTransferResult.currency":
+		if e.complexity.AffiliateTransferResult.Currency == nil {
+			break
+		}
+
+		return e.complexity.AffiliateTransferResult.Currency(childComplexity), true
+	case "AffiliateTransferResult.ledgerTransactionIDs":
+		if e.complexity.AffiliateTransferResult.LedgerTransactionIDs == nil {
+			break
+		}
+
+		return e.complexity.AffiliateTransferResult.LedgerTransactionIDs(childComplexity), true
+	case "AffiliateTransferResult.transferredCount":
+		if e.complexity.AffiliateTransferResult.TransferredCount == nil {
+			break
+		}
+
+		return e.complexity.AffiliateTransferResult.TransferredCount(childComplexity), true
+	case "AffiliateTransferResult.transferredMicros":
+		if e.complexity.AffiliateTransferResult.TransferredMicros == nil {
+			break
+		}
+
+		return e.complexity.AffiliateTransferResult.TransferredMicros(childComplexity), true
 
 	case "ApplyChannelOverrideTemplatePayload.channels":
 		if e.complexity.ApplyChannelOverrideTemplatePayload.Channels == nil {
@@ -6702,6 +7447,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.LedgerEntryEdge.Node(childComplexity), true
 
+	case "LedgerTransaction.affiliateRebates":
+		if e.complexity.LedgerTransaction.AffiliateRebates == nil {
+			break
+		}
+
+		args, err := ec.field_LedgerTransaction_affiliateRebates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.LedgerTransaction.AffiliateRebates(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateRebateOrder), args["where"].(*ent.AffiliateRebateWhereInput)), true
 	case "LedgerTransaction.amountMicros":
 		if e.complexity.LedgerTransaction.AmountMicros == nil {
 			break
@@ -7456,6 +8212,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.Backup(childComplexity, args["input"].(backup.BackupOptions)), true
+	case "Mutation.bindAffiliateInvite":
+		if e.complexity.Mutation.BindAffiliateInvite == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_bindAffiliateInvite_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.BindAffiliateInvite(childComplexity, args["input"].(biz.BindAffiliateInviteInput)), true
 	case "Mutation.bulkArchiveAPIKeys":
 		if e.complexity.Mutation.BulkArchiveAPIKeys == nil {
 			break
@@ -8331,6 +9098,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.RotateAPIKey(childComplexity, args["id"].(objects.GUID)), true
+	case "Mutation.saveAffiliateProfile":
+		if e.complexity.Mutation.SaveAffiliateProfile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_saveAffiliateProfile_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SaveAffiliateProfile(childComplexity, args["input"].(biz.SaveAffiliateProfileInput)), true
+	case "Mutation.saveAffiliateSetting":
+		if e.complexity.Mutation.SaveAffiliateSetting == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_saveAffiliateSetting_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SaveAffiliateSetting(childComplexity, args["input"].(biz.SaveAffiliateSettingInput)), true
 	case "Mutation.saveBillingPriceRule":
 		if e.complexity.Mutation.SaveBillingPriceRule == nil {
 			break
@@ -8441,6 +9230,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.TestChannelAPIKeys(childComplexity, args["channelID"].(objects.GUID), args["modelID"].(*string)), true
+	case "Mutation.transferAffiliateRebates":
+		if e.complexity.Mutation.TransferAffiliateRebates == nil {
+			break
+		}
+
+		return e.complexity.Mutation.TransferAffiliateRebates(childComplexity), true
 	case "Mutation.triggerAutoBackup":
 		if e.complexity.Mutation.TriggerAutoBackup == nil {
 			break
@@ -9374,6 +10169,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PaymentEventEdge.Node(childComplexity), true
 
+	case "PaymentOrder.affiliateRebates":
+		if e.complexity.PaymentOrder.AffiliateRebates == nil {
+			break
+		}
+
+		args, err := ec.field_PaymentOrder_affiliateRebates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.PaymentOrder.AffiliateRebates(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateRebateOrder), args["where"].(*ent.AffiliateRebateWhereInput)), true
 	case "PaymentOrder.amountMicros":
 		if e.complexity.PaymentOrder.AmountMicros == nil {
 			break
@@ -10822,6 +11628,45 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.APIKeys(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.APIKeyOrder), args["where"].(*ent.APIKeyWhereInput)), true
+	case "Query.adminAffiliateInvitations":
+		if e.complexity.Query.AdminAffiliateInvitations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminAffiliateInvitations_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminAffiliateInvitations(childComplexity, args["filter"].(*AdminAffiliateInvitationsFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateInvitationOrder)), true
+	case "Query.adminAffiliateProfiles":
+		if e.complexity.Query.AdminAffiliateProfiles == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminAffiliateProfiles_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminAffiliateProfiles(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateProfileOrder)), true
+	case "Query.adminAffiliateRebates":
+		if e.complexity.Query.AdminAffiliateRebates == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminAffiliateRebates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminAffiliateRebates(childComplexity, args["filter"].(*AdminAffiliateRebatesFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateRebateOrder)), true
+	case "Query.adminAffiliateSetting":
+		if e.complexity.Query.AdminAffiliateSetting == nil {
+			break
+		}
+
+		return e.complexity.Query.AdminAffiliateSetting(childComplexity), true
 	case "Query.adminBillingHolds":
 		if e.complexity.Query.AdminBillingHolds == nil {
 			break
@@ -10932,6 +11777,50 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.AdminUserSubscriptions(childComplexity, args["filter"].(*AdminUserSubscriptionsFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.UserSubscriptionOrder)), true
+	case "Query.affiliateInvitations":
+		if e.complexity.Query.AffiliateInvitations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_affiliateInvitations_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AffiliateInvitations(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateInvitationOrder), args["where"].(*ent.AffiliateInvitationWhereInput)), true
+	case "Query.affiliateProfiles":
+		if e.complexity.Query.AffiliateProfiles == nil {
+			break
+		}
+
+		args, err := ec.field_Query_affiliateProfiles_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AffiliateProfiles(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateProfileOrder), args["where"].(*ent.AffiliateProfileWhereInput)), true
+	case "Query.affiliateRebates":
+		if e.complexity.Query.AffiliateRebates == nil {
+			break
+		}
+
+		args, err := ec.field_Query_affiliateRebates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AffiliateRebates(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateRebateOrder), args["where"].(*ent.AffiliateRebateWhereInput)), true
+	case "Query.affiliateSettings":
+		if e.complexity.Query.AffiliateSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Query_affiliateSettings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AffiliateSettings(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateSettingOrder), args["where"].(*ent.AffiliateSettingWhereInput)), true
 	case "Query.allChannelSummarys":
 		if e.complexity.Query.AllChannelSummarys == nil {
 			break
@@ -11267,6 +12156,34 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Models(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.ModelOrder), args["where"].(*ent.ModelWhereInput)), true
+	case "Query.myAffiliateInvitations":
+		if e.complexity.Query.MyAffiliateInvitations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myAffiliateInvitations_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyAffiliateInvitations(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateInvitationOrder)), true
+	case "Query.myAffiliateRebates":
+		if e.complexity.Query.MyAffiliateRebates == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myAffiliateRebates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyAffiliateRebates(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateRebateOrder)), true
+	case "Query.myAffiliateSummary":
+		if e.complexity.Query.MyAffiliateSummary == nil {
+			break
+		}
+
+		return e.complexity.Query.MyAffiliateSummary(childComplexity), true
 	case "Query.myBillingAccount":
 		if e.complexity.Query.MyBillingAccount == nil {
 			break
@@ -14563,6 +15480,61 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.APIKeys(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.APIKeyOrder), args["where"].(*ent.APIKeyWhereInput)), true
+	case "User.affiliateInvitees":
+		if e.complexity.User.AffiliateInvitees == nil {
+			break
+		}
+
+		args, err := ec.field_User_affiliateInvitees_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.AffiliateInvitees(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateInvitationOrder), args["where"].(*ent.AffiliateInvitationWhereInput)), true
+	case "User.affiliateInviters":
+		if e.complexity.User.AffiliateInviters == nil {
+			break
+		}
+
+		args, err := ec.field_User_affiliateInviters_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.AffiliateInviters(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateInvitationOrder), args["where"].(*ent.AffiliateInvitationWhereInput)), true
+	case "User.affiliateProfiles":
+		if e.complexity.User.AffiliateProfiles == nil {
+			break
+		}
+
+		args, err := ec.field_User_affiliateProfiles_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.AffiliateProfiles(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateProfileOrder), args["where"].(*ent.AffiliateProfileWhereInput)), true
+	case "User.affiliateRebatesEarned":
+		if e.complexity.User.AffiliateRebatesEarned == nil {
+			break
+		}
+
+		args, err := ec.field_User_affiliateRebatesEarned_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.AffiliateRebatesEarned(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateRebateOrder), args["where"].(*ent.AffiliateRebateWhereInput)), true
+	case "User.affiliateRebatesGenerated":
+		if e.complexity.User.AffiliateRebatesGenerated == nil {
+			break
+		}
+
+		args, err := ec.field_User_affiliateRebatesGenerated_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.AffiliateRebatesGenerated(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateRebateOrder), args["where"].(*ent.AffiliateRebateWhereInput)), true
 	case "User.assignedUserSubscriptions":
 		if e.complexity.User.AssignedUserSubscriptions == nil {
 			break
@@ -14976,6 +15948,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.UserRole.UserID(childComplexity), true
 
+	case "UserSubscription.affiliateRebates":
+		if e.complexity.UserSubscription.AffiliateRebates == nil {
+			break
+		}
+
+		args, err := ec.field_UserSubscription_affiliateRebates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.UserSubscription.AffiliateRebates(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.AffiliateRebateOrder), args["where"].(*ent.AffiliateRebateWhereInput)), true
 	case "UserSubscription.allowWalletFallback":
 		if e.complexity.UserSubscription.AllowWalletFallback == nil {
 			break
@@ -15400,6 +16383,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAPIKeyWhereInput,
 		ec.unmarshalInputAddUserToProjectInput,
 		ec.unmarshalInputAdjustUserBalanceInput,
+		ec.unmarshalInputAdminAffiliateInvitationsFilter,
+		ec.unmarshalInputAdminAffiliateRebatesFilter,
 		ec.unmarshalInputAdminAssignSubscriptionInput,
 		ec.unmarshalInputAdminBillingHoldsFilter,
 		ec.unmarshalInputAdminBillingReportFilter,
@@ -15412,6 +16397,14 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAdminRedeemCodesFilter,
 		ec.unmarshalInputAdminUsageBillingRecordsFilter,
 		ec.unmarshalInputAdminUserSubscriptionsFilter,
+		ec.unmarshalInputAffiliateInvitationOrder,
+		ec.unmarshalInputAffiliateInvitationWhereInput,
+		ec.unmarshalInputAffiliateProfileOrder,
+		ec.unmarshalInputAffiliateProfileWhereInput,
+		ec.unmarshalInputAffiliateRebateOrder,
+		ec.unmarshalInputAffiliateRebateWhereInput,
+		ec.unmarshalInputAffiliateSettingOrder,
+		ec.unmarshalInputAffiliateSettingWhereInput,
 		ec.unmarshalInputApplyChannelOverrideTemplateInput,
 		ec.unmarshalInputAutoDisableChannelInput,
 		ec.unmarshalInputAutoDisableChannelStatusInput,
@@ -15426,6 +16419,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputBillingOutboxWhereInput,
 		ec.unmarshalInputBillingPriceRuleOrder,
 		ec.unmarshalInputBillingPriceRuleWhereInput,
+		ec.unmarshalInputBindAffiliateInviteInput,
 		ec.unmarshalInputBulkCreateChannelsInput,
 		ec.unmarshalInputBulkImportChannelItem,
 		ec.unmarshalInputBulkImportChannelsInput,
@@ -15571,6 +16565,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputRoleOrder,
 		ec.unmarshalInputRoleWhereInput,
 		ec.unmarshalInputS3Input,
+		ec.unmarshalInputSaveAffiliateProfileInput,
+		ec.unmarshalInputSaveAffiliateSettingInput,
 		ec.unmarshalInputSaveBillingPriceRuleForm,
 		ec.unmarshalInputSaveChannelEndpointsInput,
 		ec.unmarshalInputSaveChannelModelPriceInput,
@@ -15809,6 +16805,42 @@ func (ec *executionContext) field_APIKey_requests_args(ctx context.Context, rawA
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalORequestWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRequestWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_AffiliateInvitation_rebates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -16212,6 +17244,42 @@ func (ec *executionContext) field_DataStorage_requests_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_LedgerTransaction_affiliateRebates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_LedgerTransaction_billingHolds_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -16523,6 +17591,17 @@ func (ec *executionContext) field_Mutation_backup_args(ctx context.Context, rawA
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNBackupOptionsInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbackupᚐBackupOptions)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_bindAffiliateInvite_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNBindAffiliateInviteInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBindAffiliateInviteInput)
 	if err != nil {
 		return nil, err
 	}
@@ -17444,6 +18523,28 @@ func (ec *executionContext) field_Mutation_rotateAPIKey_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_saveAffiliateProfile_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSaveAffiliateProfileInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveAffiliateProfileInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_saveAffiliateSetting_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSaveAffiliateSettingInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveAffiliateSettingInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_saveBillingPriceRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -18157,6 +19258,42 @@ func (ec *executionContext) field_Mutation_upsertEPayPaymentProvider_args(ctx co
 	return args, nil
 }
 
+func (ec *executionContext) field_PaymentOrder_affiliateRebates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_PaymentOrder_paymentEvents_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -18780,6 +19917,109 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_adminAffiliateInvitations_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOAdminAffiliateInvitationsFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminAffiliateInvitationsFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateInvitationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_adminAffiliateProfiles_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateProfileOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_adminAffiliateRebates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOAdminAffiliateRebatesFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminAffiliateRebatesFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_adminBillingHolds_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -19112,6 +20352,150 @@ func (ec *executionContext) field_Query_adminUserSubscriptions_args(ctx context.
 		return nil, err
 	}
 	args["orderBy"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_affiliateInvitations_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateInvitationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateInvitationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_affiliateProfiles_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateProfileOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateProfileWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_affiliateRebates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_affiliateSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateSettingOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
 	return args, nil
 }
 
@@ -19792,6 +21176,68 @@ func (ec *executionContext) field_Query_models_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myAffiliateInvitations_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateInvitationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myAffiliateRebates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
 	return args, nil
 }
 
@@ -21289,6 +22735,42 @@ func (ec *executionContext) field_UsageLog_usageBillingRecords_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_UserSubscription_affiliateRebates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_UserSubscription_promoUsages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -21354,6 +22836,186 @@ func (ec *executionContext) field_UserSubscription_usageBillingRecords_args(ctx 
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOUsageBillingRecordWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUsageBillingRecordWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_User_affiliateInvitees_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateInvitationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateInvitationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_User_affiliateInviters_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateInvitationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateInvitationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_User_affiliateProfiles_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateProfileOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateProfileWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_User_affiliateRebatesEarned_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_User_affiliateRebatesGenerated_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -22209,6 +23871,16 @@ func (ec *executionContext) fieldContext_APIKey_user(_ context.Context, field gr
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -24683,6 +26355,3303 @@ func (ec *executionContext) fieldContext_APIKeyTokenUsageStats_topModels(_ conte
 				return ec.fieldContext_ModelTokenUsageStats_reasoningTokens(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ModelTokenUsageStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_id(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateInvitation().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_inviterUserID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_inviterUserID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateInvitation().InviterUserID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_inviterUserID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_inviteeUserID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_inviteeUserID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateInvitation().InviteeUserID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_inviteeUserID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_inviteCode(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_inviteCode,
+		func(ctx context.Context) (any, error) {
+			return obj.InviteCode, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_inviteCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_status(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNAffiliateInvitationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AffiliateInvitationStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_notes(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_notes,
+		func(ctx context.Context) (any, error) {
+			return obj.Notes, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_inviter(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_inviter,
+		func(ctx context.Context) (any, error) {
+			return obj.Inviter(ctx)
+		},
+		nil,
+		ec.marshalNUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_inviter(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_User_userSubscriptions(ctx, field)
+			case "assignedUserSubscriptions":
+				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_invitee(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_invitee,
+		func(ctx context.Context) (any, error) {
+			return obj.Invitee(ctx)
+		},
+		nil,
+		ec.marshalNUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_invitee(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_User_userSubscriptions(ctx, field)
+			case "assignedUserSubscriptions":
+				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitation_rebates(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitation_rebates,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.Rebates(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateRebateOrder), fc.Args["where"].(*ent.AffiliateRebateWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitation_rebates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateRebateConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateRebateConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateRebateConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_AffiliateInvitation_rebates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitationConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitationConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitationConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOAffiliateInvitationEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitationConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitationConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_AffiliateInvitationEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_AffiliateInvitationEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitationEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitationConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitationConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitationConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitationConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitationConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitationConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitationConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitationConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitationConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitationConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitationEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitationEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitationEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOAffiliateInvitation2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitation,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitationEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitationEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateInvitation_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateInvitation_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateInvitation_updatedAt(ctx, field)
+			case "inviterUserID":
+				return ec.fieldContext_AffiliateInvitation_inviterUserID(ctx, field)
+			case "inviteeUserID":
+				return ec.fieldContext_AffiliateInvitation_inviteeUserID(ctx, field)
+			case "inviteCode":
+				return ec.fieldContext_AffiliateInvitation_inviteCode(ctx, field)
+			case "status":
+				return ec.fieldContext_AffiliateInvitation_status(ctx, field)
+			case "notes":
+				return ec.fieldContext_AffiliateInvitation_notes(ctx, field)
+			case "inviter":
+				return ec.fieldContext_AffiliateInvitation_inviter(ctx, field)
+			case "invitee":
+				return ec.fieldContext_AffiliateInvitation_invitee(ctx, field)
+			case "rebates":
+				return ec.fieldContext_AffiliateInvitation_rebates(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateInvitationEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateInvitationEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateInvitationEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateInvitationEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateInvitationEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfile_id(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfile_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateProfile().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfile_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfile",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfile_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfile_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfile_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfile_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfile_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfile_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfile_userID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfile_userID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateProfile().UserID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfile_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfile",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfile_inviteCode(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfile_inviteCode,
+		func(ctx context.Context) (any, error) {
+			return obj.InviteCode, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfile_inviteCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfile_status(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfile_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNAffiliateProfileStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfile_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AffiliateProfileStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfile_rebateRateOverrideBps(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfile_rebateRateOverrideBps,
+		func(ctx context.Context) (any, error) {
+			return obj.RebateRateOverrideBps, nil
+		},
+		nil,
+		ec.marshalOInt2ᚖint,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfile_rebateRateOverrideBps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfile_notes(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfile_notes,
+		func(ctx context.Context) (any, error) {
+			return obj.Notes, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfile_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfile_user(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfile_user,
+		func(ctx context.Context) (any, error) {
+			return obj.User(ctx)
+		},
+		nil,
+		ec.marshalNUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfile_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfile",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_User_userSubscriptions(ctx, field)
+			case "assignedUserSubscriptions":
+				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfileConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfileConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfileConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOAffiliateProfileEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfileConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfileConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_AffiliateProfileEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_AffiliateProfileEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateProfileEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfileConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfileConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfileConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfileConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfileConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfileConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfileConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfileConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfileConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfileConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfileEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfileEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfileEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOAffiliateProfile2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfile,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfileEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfileEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateProfile_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateProfile_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateProfile_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_AffiliateProfile_userID(ctx, field)
+			case "inviteCode":
+				return ec.fieldContext_AffiliateProfile_inviteCode(ctx, field)
+			case "status":
+				return ec.fieldContext_AffiliateProfile_status(ctx, field)
+			case "rebateRateOverrideBps":
+				return ec.fieldContext_AffiliateProfile_rebateRateOverrideBps(ctx, field)
+			case "notes":
+				return ec.fieldContext_AffiliateProfile_notes(ctx, field)
+			case "user":
+				return ec.fieldContext_AffiliateProfile_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateProfile", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateProfileEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateProfileEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateProfileEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateProfileEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateProfileEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_id(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateRebate().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_invitationID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_invitationID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateRebate().InvitationID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_invitationID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_inviterUserID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_inviterUserID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateRebate().InviterUserID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_inviterUserID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_inviteeUserID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_inviteeUserID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateRebate().InviteeUserID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_inviteeUserID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_sourceType(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_sourceType,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceType, nil
+		},
+		nil,
+		ec.marshalNAffiliateRebateSourceType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_sourceType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AffiliateRebateSourceType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_sourceID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_sourceID,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_sourceID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_paymentOrderID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_paymentOrderID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateRebate().PaymentOrderID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_paymentOrderID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_userSubscriptionID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_userSubscriptionID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateRebate().UserSubscriptionID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_userSubscriptionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_baseAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_baseAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.BaseAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_baseAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_amountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_amountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.AmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_amountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_rateBps(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_rateBps,
+		func(ctx context.Context) (any, error) {
+			return obj.RateBps, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_rateBps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_currency(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_status(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNAffiliateRebateStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AffiliateRebateStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_freezeUntil(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_freezeUntil,
+		func(ctx context.Context) (any, error) {
+			return obj.FreezeUntil, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_freezeUntil(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_transferredAt(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_transferredAt,
+		func(ctx context.Context) (any, error) {
+			return obj.TransferredAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_transferredAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_ledgerTransactionID(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_ledgerTransactionID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateRebate().LedgerTransactionID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_ledgerTransactionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_idempotencyKey(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_idempotencyKey,
+		func(ctx context.Context) (any, error) {
+			return obj.IdempotencyKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_idempotencyKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_notes(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_notes,
+		func(ctx context.Context) (any, error) {
+			return obj.Notes, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_invitation(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_invitation,
+		func(ctx context.Context) (any, error) {
+			return obj.Invitation(ctx)
+		},
+		nil,
+		ec.marshalNAffiliateInvitation2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitation,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_invitation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateInvitation_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateInvitation_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateInvitation_updatedAt(ctx, field)
+			case "inviterUserID":
+				return ec.fieldContext_AffiliateInvitation_inviterUserID(ctx, field)
+			case "inviteeUserID":
+				return ec.fieldContext_AffiliateInvitation_inviteeUserID(ctx, field)
+			case "inviteCode":
+				return ec.fieldContext_AffiliateInvitation_inviteCode(ctx, field)
+			case "status":
+				return ec.fieldContext_AffiliateInvitation_status(ctx, field)
+			case "notes":
+				return ec.fieldContext_AffiliateInvitation_notes(ctx, field)
+			case "inviter":
+				return ec.fieldContext_AffiliateInvitation_inviter(ctx, field)
+			case "invitee":
+				return ec.fieldContext_AffiliateInvitation_invitee(ctx, field)
+			case "rebates":
+				return ec.fieldContext_AffiliateInvitation_rebates(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_inviter(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_inviter,
+		func(ctx context.Context) (any, error) {
+			return obj.Inviter(ctx)
+		},
+		nil,
+		ec.marshalNUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_inviter(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_User_userSubscriptions(ctx, field)
+			case "assignedUserSubscriptions":
+				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_invitee(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_invitee,
+		func(ctx context.Context) (any, error) {
+			return obj.Invitee(ctx)
+		},
+		nil,
+		ec.marshalNUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_invitee(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_User_userSubscriptions(ctx, field)
+			case "assignedUserSubscriptions":
+				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_paymentOrder(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_paymentOrder,
+		func(ctx context.Context) (any, error) {
+			return obj.PaymentOrder(ctx)
+		},
+		nil,
+		ec.marshalOPaymentOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrder,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_paymentOrder(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PaymentOrder_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PaymentOrder_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PaymentOrder_updatedAt(ctx, field)
+			case "orderNo":
+				return ec.fieldContext_PaymentOrder_orderNo(ctx, field)
+			case "projectID":
+				return ec.fieldContext_PaymentOrder_projectID(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_PaymentOrder_billingAccountID(ctx, field)
+			case "providerInstanceID":
+				return ec.fieldContext_PaymentOrder_providerInstanceID(ctx, field)
+			case "providerType":
+				return ec.fieldContext_PaymentOrder_providerType(ctx, field)
+			case "purpose":
+				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PaymentOrder_payableAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PaymentOrder_discountAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PaymentOrder_promoCodeID(ctx, field)
+			case "currency":
+				return ec.fieldContext_PaymentOrder_currency(ctx, field)
+			case "status":
+				return ec.fieldContext_PaymentOrder_status(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PaymentOrder_expiresAt(ctx, field)
+			case "canceledAt":
+				return ec.fieldContext_PaymentOrder_canceledAt(ctx, field)
+			case "cancelReason":
+				return ec.fieldContext_PaymentOrder_cancelReason(ctx, field)
+			case "makeupReason":
+				return ec.fieldContext_PaymentOrder_makeupReason(ctx, field)
+			case "failureReason":
+				return ec.fieldContext_PaymentOrder_failureReason(ctx, field)
+			case "refundedAt":
+				return ec.fieldContext_PaymentOrder_refundedAt(ctx, field)
+			case "refundReason":
+				return ec.fieldContext_PaymentOrder_refundReason(ctx, field)
+			case "refundAmountMicros":
+				return ec.fieldContext_PaymentOrder_refundAmountMicros(ctx, field)
+			case "externalTradeNo":
+				return ec.fieldContext_PaymentOrder_externalTradeNo(ctx, field)
+			case "paidAt":
+				return ec.fieldContext_PaymentOrder_paidAt(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_PaymentOrder_ledgerTransactionID(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PaymentOrder_metadata(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_PaymentOrder_billingAccount(ctx, field)
+			case "providerInstance":
+				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PaymentOrder_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
+			case "paymentEvents":
+				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_userSubscription(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_userSubscription,
+		func(ctx context.Context) (any, error) {
+			return obj.UserSubscription(ctx)
+		},
+		nil,
+		ec.marshalOUserSubscription2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscription,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_userSubscription(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserSubscription_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UserSubscription_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UserSubscription_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_UserSubscription_userID(ctx, field)
+			case "planID":
+				return ec.fieldContext_UserSubscription_planID(ctx, field)
+			case "planSnapshot":
+				return ec.fieldContext_UserSubscription_planSnapshot(ctx, field)
+			case "status":
+				return ec.fieldContext_UserSubscription_status(ctx, field)
+			case "startsAt":
+				return ec.fieldContext_UserSubscription_startsAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UserSubscription_expiresAt(ctx, field)
+			case "currentPeriodStart":
+				return ec.fieldContext_UserSubscription_currentPeriodStart(ctx, field)
+			case "currentPeriodEnd":
+				return ec.fieldContext_UserSubscription_currentPeriodEnd(ctx, field)
+			case "resetAt":
+				return ec.fieldContext_UserSubscription_resetAt(ctx, field)
+			case "periodDays":
+				return ec.fieldContext_UserSubscription_periodDays(ctx, field)
+			case "includedAmountMicros":
+				return ec.fieldContext_UserSubscription_includedAmountMicros(ctx, field)
+			case "usedAmountMicros":
+				return ec.fieldContext_UserSubscription_usedAmountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_UserSubscription_currency(ctx, field)
+			case "supportedModelIds":
+				return ec.fieldContext_UserSubscription_supportedModelIds(ctx, field)
+			case "supportedProjectIds":
+				return ec.fieldContext_UserSubscription_supportedProjectIds(ctx, field)
+			case "supportedGroupIds":
+				return ec.fieldContext_UserSubscription_supportedGroupIds(ctx, field)
+			case "allowWalletFallback":
+				return ec.fieldContext_UserSubscription_allowWalletFallback(ctx, field)
+			case "assignedByID":
+				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
+			case "purchaseLedgerTransactionID":
+				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
+			case "notes":
+				return ec.fieldContext_UserSubscription_notes(ctx, field)
+			case "revokeReason":
+				return ec.fieldContext_UserSubscription_revokeReason(ctx, field)
+			case "user":
+				return ec.fieldContext_UserSubscription_user(ctx, field)
+			case "plan":
+				return ec.fieldContext_UserSubscription_plan(ctx, field)
+			case "assignedBy":
+				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
+			case "purchaseLedgerTransaction":
+				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebate_ledgerTransaction(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebate_ledgerTransaction,
+		func(ctx context.Context) (any, error) {
+			return obj.LedgerTransaction(ctx)
+		},
+		nil,
+		ec.marshalOLedgerTransaction2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐLedgerTransaction,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebate_ledgerTransaction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LedgerTransaction_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_LedgerTransaction_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LedgerTransaction_updatedAt(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_LedgerTransaction_billingAccountID(ctx, field)
+			case "direction":
+				return ec.fieldContext_LedgerTransaction_direction(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_LedgerTransaction_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_LedgerTransaction_currency(ctx, field)
+			case "type":
+				return ec.fieldContext_LedgerTransaction_type(ctx, field)
+			case "status":
+				return ec.fieldContext_LedgerTransaction_status(ctx, field)
+			case "idempotencyKey":
+				return ec.fieldContext_LedgerTransaction_idempotencyKey(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_LedgerTransaction_referenceType(ctx, field)
+			case "referenceID":
+				return ec.fieldContext_LedgerTransaction_referenceID(ctx, field)
+			case "memo":
+				return ec.fieldContext_LedgerTransaction_memo(ctx, field)
+			case "createdByType":
+				return ec.fieldContext_LedgerTransaction_createdByType(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_LedgerTransaction_createdByID(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_LedgerTransaction_billingAccount(ctx, field)
+			case "entries":
+				return ec.fieldContext_LedgerTransaction_entries(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_LedgerTransaction_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			case "redeemCodes":
+				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
+			case "purchasedUserSubscriptions":
+				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebateConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebateConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebateConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOAffiliateRebateEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebateConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebateConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_AffiliateRebateEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_AffiliateRebateEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebateConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebateConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebateConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebateConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebateConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebateConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebateConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebateConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebateConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebateConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebateEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebateEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebateEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOAffiliateRebate2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebate,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebateEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebateEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateRebate_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateRebate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateRebate_updatedAt(ctx, field)
+			case "invitationID":
+				return ec.fieldContext_AffiliateRebate_invitationID(ctx, field)
+			case "inviterUserID":
+				return ec.fieldContext_AffiliateRebate_inviterUserID(ctx, field)
+			case "inviteeUserID":
+				return ec.fieldContext_AffiliateRebate_inviteeUserID(ctx, field)
+			case "sourceType":
+				return ec.fieldContext_AffiliateRebate_sourceType(ctx, field)
+			case "sourceID":
+				return ec.fieldContext_AffiliateRebate_sourceID(ctx, field)
+			case "paymentOrderID":
+				return ec.fieldContext_AffiliateRebate_paymentOrderID(ctx, field)
+			case "userSubscriptionID":
+				return ec.fieldContext_AffiliateRebate_userSubscriptionID(ctx, field)
+			case "baseAmountMicros":
+				return ec.fieldContext_AffiliateRebate_baseAmountMicros(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_AffiliateRebate_amountMicros(ctx, field)
+			case "rateBps":
+				return ec.fieldContext_AffiliateRebate_rateBps(ctx, field)
+			case "currency":
+				return ec.fieldContext_AffiliateRebate_currency(ctx, field)
+			case "status":
+				return ec.fieldContext_AffiliateRebate_status(ctx, field)
+			case "freezeUntil":
+				return ec.fieldContext_AffiliateRebate_freezeUntil(ctx, field)
+			case "transferredAt":
+				return ec.fieldContext_AffiliateRebate_transferredAt(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_AffiliateRebate_ledgerTransactionID(ctx, field)
+			case "idempotencyKey":
+				return ec.fieldContext_AffiliateRebate_idempotencyKey(ctx, field)
+			case "notes":
+				return ec.fieldContext_AffiliateRebate_notes(ctx, field)
+			case "invitation":
+				return ec.fieldContext_AffiliateRebate_invitation(ctx, field)
+			case "inviter":
+				return ec.fieldContext_AffiliateRebate_inviter(ctx, field)
+			case "invitee":
+				return ec.fieldContext_AffiliateRebate_invitee(ctx, field)
+			case "paymentOrder":
+				return ec.fieldContext_AffiliateRebate_paymentOrder(ctx, field)
+			case "userSubscription":
+				return ec.fieldContext_AffiliateRebate_userSubscription(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_AffiliateRebate_ledgerTransaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateRebateEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateRebateEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateRebateEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateRebateEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateRebateEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSetting_id(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSetting_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateSetting().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSetting_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSetting",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSetting_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSetting_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSetting_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSetting_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSetting_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSetting_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSetting_key(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSetting_key,
+		func(ctx context.Context) (any, error) {
+			return obj.Key, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSetting_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSetting_enabled(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSetting_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSetting_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSetting_defaultRebateRateBps(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSetting_defaultRebateRateBps,
+		func(ctx context.Context) (any, error) {
+			return obj.DefaultRebateRateBps, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSetting_defaultRebateRateBps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSetting_freezeDays(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSetting_freezeDays,
+		func(ctx context.Context) (any, error) {
+			return obj.FreezeDays, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSetting_freezeDays(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSetting_minTransferMicros(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSetting_minTransferMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.MinTransferMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSetting_minTransferMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSetting_currency(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSetting_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSetting_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSettingConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSettingConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSettingConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOAffiliateSettingEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSettingConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSettingConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_AffiliateSettingEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_AffiliateSettingEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateSettingEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSettingConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSettingConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSettingConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSettingConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSettingConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSettingConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSettingConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSettingConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSettingConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSettingConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSettingEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSettingEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSettingEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOAffiliateSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSetting,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSettingEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSettingEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateSetting_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateSetting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateSetting_updatedAt(ctx, field)
+			case "key":
+				return ec.fieldContext_AffiliateSetting_key(ctx, field)
+			case "enabled":
+				return ec.fieldContext_AffiliateSetting_enabled(ctx, field)
+			case "defaultRebateRateBps":
+				return ec.fieldContext_AffiliateSetting_defaultRebateRateBps(ctx, field)
+			case "freezeDays":
+				return ec.fieldContext_AffiliateSetting_freezeDays(ctx, field)
+			case "minTransferMicros":
+				return ec.fieldContext_AffiliateSetting_minTransferMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_AffiliateSetting_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateSetting", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSettingEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.AffiliateSettingEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSettingEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSettingEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSettingEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSummary_profile(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSummary_profile,
+		func(ctx context.Context) (any, error) {
+			return obj.Profile, nil
+		},
+		nil,
+		ec.marshalNAffiliateProfile2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfile,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSummary_profile(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateProfile_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateProfile_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateProfile_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_AffiliateProfile_userID(ctx, field)
+			case "inviteCode":
+				return ec.fieldContext_AffiliateProfile_inviteCode(ctx, field)
+			case "status":
+				return ec.fieldContext_AffiliateProfile_status(ctx, field)
+			case "rebateRateOverrideBps":
+				return ec.fieldContext_AffiliateProfile_rebateRateOverrideBps(ctx, field)
+			case "notes":
+				return ec.fieldContext_AffiliateProfile_notes(ctx, field)
+			case "user":
+				return ec.fieldContext_AffiliateProfile_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateProfile", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSummary_invitation(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSummary_invitation,
+		func(ctx context.Context) (any, error) {
+			return obj.Invitation, nil
+		},
+		nil,
+		ec.marshalOAffiliateInvitation2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitation,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSummary_invitation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateInvitation_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateInvitation_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateInvitation_updatedAt(ctx, field)
+			case "inviterUserID":
+				return ec.fieldContext_AffiliateInvitation_inviterUserID(ctx, field)
+			case "inviteeUserID":
+				return ec.fieldContext_AffiliateInvitation_inviteeUserID(ctx, field)
+			case "inviteCode":
+				return ec.fieldContext_AffiliateInvitation_inviteCode(ctx, field)
+			case "status":
+				return ec.fieldContext_AffiliateInvitation_status(ctx, field)
+			case "notes":
+				return ec.fieldContext_AffiliateInvitation_notes(ctx, field)
+			case "inviter":
+				return ec.fieldContext_AffiliateInvitation_inviter(ctx, field)
+			case "invitee":
+				return ec.fieldContext_AffiliateInvitation_invitee(ctx, field)
+			case "rebates":
+				return ec.fieldContext_AffiliateInvitation_rebates(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSummary_inviteeCount(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSummary_inviteeCount,
+		func(ctx context.Context) (any, error) {
+			return obj.InviteeCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSummary_inviteeCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSummary_frozenMicros(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSummary_frozenMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.FrozenMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSummary_frozenMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSummary_availableMicros(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSummary_availableMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.AvailableMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSummary_availableMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSummary_transferredMicros(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSummary_transferredMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.TransferredMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSummary_transferredMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSummary_currency(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSummary_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSummary_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateSummary_setting(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateSummary_setting,
+		func(ctx context.Context) (any, error) {
+			return obj.Setting, nil
+		},
+		nil,
+		ec.marshalNAffiliateSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSetting,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateSummary_setting(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateSetting_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateSetting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateSetting_updatedAt(ctx, field)
+			case "key":
+				return ec.fieldContext_AffiliateSetting_key(ctx, field)
+			case "enabled":
+				return ec.fieldContext_AffiliateSetting_enabled(ctx, field)
+			case "defaultRebateRateBps":
+				return ec.fieldContext_AffiliateSetting_defaultRebateRateBps(ctx, field)
+			case "freezeDays":
+				return ec.fieldContext_AffiliateSetting_freezeDays(ctx, field)
+			case "minTransferMicros":
+				return ec.fieldContext_AffiliateSetting_minTransferMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_AffiliateSetting_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateSetting", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateTransferResult_transferredCount(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateTransferResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateTransferResult_transferredCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TransferredCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateTransferResult_transferredCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateTransferResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateTransferResult_transferredMicros(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateTransferResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateTransferResult_transferredMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.TransferredMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateTransferResult_transferredMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateTransferResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateTransferResult_currency(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateTransferResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateTransferResult_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateTransferResult_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateTransferResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AffiliateTransferResult_ledgerTransactionIDs(ctx context.Context, field graphql.CollectedField, obj *biz.AffiliateTransferResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AffiliateTransferResult_ledgerTransactionIDs,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.AffiliateTransferResult().LedgerTransactionIDs(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AffiliateTransferResult_ledgerTransactionIDs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AffiliateTransferResult",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -28374,6 +33343,8 @@ func (ec *executionContext) fieldContext_BillingHold_capturedLedgerTransaction(_
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -33954,6 +38925,16 @@ func (ec *executionContext) fieldContext_ChannelOverrideTemplate_user(_ context.
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -39318,6 +44299,16 @@ func (ec *executionContext) fieldContext_InitializeSystemPayload_user(_ context.
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -39660,6 +44651,8 @@ func (ec *executionContext) fieldContext_LedgerEntry_ledgerTransaction(_ context
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -40689,6 +45682,55 @@ func (ec *executionContext) fieldContext_LedgerTransaction_promoUsages(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _LedgerTransaction_affiliateRebates(ctx context.Context, field graphql.CollectedField, obj *ent.LedgerTransaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LedgerTransaction_affiliateRebates,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.AffiliateRebates(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateRebateOrder), fc.Args["where"].(*ent.AffiliateRebateWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LedgerTransaction_affiliateRebates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LedgerTransaction",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateRebateConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateRebateConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateRebateConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_LedgerTransaction_affiliateRebates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LedgerTransactionConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.LedgerTransactionConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -40862,6 +45904,8 @@ func (ec *executionContext) fieldContext_LedgerTransactionEdge_node(_ context.Co
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -45302,6 +50346,16 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -45391,6 +50445,16 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -45480,6 +50544,16 @@ func (ec *executionContext) fieldContext_Mutation_updateUserStatus(ctx context.C
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -47026,6 +52100,16 @@ func (ec *executionContext) fieldContext_Mutation_updateMe(ctx context.Context, 
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -49520,6 +54604,8 @@ func (ec *executionContext) fieldContext_Mutation_createManualRechargeOrder(ctx 
 				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -49629,6 +54715,8 @@ func (ec *executionContext) fieldContext_Mutation_confirmManualPayment(ctx conte
 				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -49738,6 +54826,8 @@ func (ec *executionContext) fieldContext_Mutation_cancelPaymentOrder(ctx context
 				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -49847,6 +54937,8 @@ func (ec *executionContext) fieldContext_Mutation_makeUpPaymentOrder(ctx context
 				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -50111,6 +55203,8 @@ func (ec *executionContext) fieldContext_Mutation_adjustUserBalance(ctx context.
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -50991,6 +56085,8 @@ func (ec *executionContext) fieldContext_Mutation_purchaseSubscriptionPlan(ctx c
 				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -51104,6 +56200,8 @@ func (ec *executionContext) fieldContext_Mutation_adminAssignSubscription(ctx co
 				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -51217,6 +56315,8 @@ func (ec *executionContext) fieldContext_Mutation_extendUserSubscription(ctx con
 				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -51330,6 +56430,8 @@ func (ec *executionContext) fieldContext_Mutation_revokeUserSubscription(ctx con
 				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -51443,6 +56545,8 @@ func (ec *executionContext) fieldContext_Mutation_restoreUserSubscription(ctx co
 				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -51556,6 +56660,8 @@ func (ec *executionContext) fieldContext_Mutation_resetUserSubscriptionUsage(ctx
 				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -51568,6 +56674,232 @@ func (ec *executionContext) fieldContext_Mutation_resetUserSubscriptionUsage(ctx
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_resetUserSubscriptionUsage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_bindAffiliateInvite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_bindAffiliateInvite,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().BindAffiliateInvite(ctx, fc.Args["input"].(biz.BindAffiliateInviteInput))
+		},
+		nil,
+		ec.marshalNAffiliateInvitation2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitation,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_bindAffiliateInvite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateInvitation_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateInvitation_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateInvitation_updatedAt(ctx, field)
+			case "inviterUserID":
+				return ec.fieldContext_AffiliateInvitation_inviterUserID(ctx, field)
+			case "inviteeUserID":
+				return ec.fieldContext_AffiliateInvitation_inviteeUserID(ctx, field)
+			case "inviteCode":
+				return ec.fieldContext_AffiliateInvitation_inviteCode(ctx, field)
+			case "status":
+				return ec.fieldContext_AffiliateInvitation_status(ctx, field)
+			case "notes":
+				return ec.fieldContext_AffiliateInvitation_notes(ctx, field)
+			case "inviter":
+				return ec.fieldContext_AffiliateInvitation_inviter(ctx, field)
+			case "invitee":
+				return ec.fieldContext_AffiliateInvitation_invitee(ctx, field)
+			case "rebates":
+				return ec.fieldContext_AffiliateInvitation_rebates(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitation", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_bindAffiliateInvite_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_transferAffiliateRebates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_transferAffiliateRebates,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().TransferAffiliateRebates(ctx)
+		},
+		nil,
+		ec.marshalNAffiliateTransferResult2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAffiliateTransferResult,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_transferAffiliateRebates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "transferredCount":
+				return ec.fieldContext_AffiliateTransferResult_transferredCount(ctx, field)
+			case "transferredMicros":
+				return ec.fieldContext_AffiliateTransferResult_transferredMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_AffiliateTransferResult_currency(ctx, field)
+			case "ledgerTransactionIDs":
+				return ec.fieldContext_AffiliateTransferResult_ledgerTransactionIDs(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateTransferResult", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_saveAffiliateSetting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_saveAffiliateSetting,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SaveAffiliateSetting(ctx, fc.Args["input"].(biz.SaveAffiliateSettingInput))
+		},
+		nil,
+		ec.marshalNAffiliateSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSetting,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_saveAffiliateSetting(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateSetting_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateSetting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateSetting_updatedAt(ctx, field)
+			case "key":
+				return ec.fieldContext_AffiliateSetting_key(ctx, field)
+			case "enabled":
+				return ec.fieldContext_AffiliateSetting_enabled(ctx, field)
+			case "defaultRebateRateBps":
+				return ec.fieldContext_AffiliateSetting_defaultRebateRateBps(ctx, field)
+			case "freezeDays":
+				return ec.fieldContext_AffiliateSetting_freezeDays(ctx, field)
+			case "minTransferMicros":
+				return ec.fieldContext_AffiliateSetting_minTransferMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_AffiliateSetting_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateSetting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_saveAffiliateSetting_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_saveAffiliateProfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_saveAffiliateProfile,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SaveAffiliateProfile(ctx, fc.Args["input"].(biz.SaveAffiliateProfileInput))
+		},
+		nil,
+		ec.marshalNAffiliateProfile2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfile,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_saveAffiliateProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateProfile_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateProfile_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateProfile_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_AffiliateProfile_userID(ctx, field)
+			case "inviteCode":
+				return ec.fieldContext_AffiliateProfile_inviteCode(ctx, field)
+			case "status":
+				return ec.fieldContext_AffiliateProfile_status(ctx, field)
+			case "rebateRateOverrideBps":
+				return ec.fieldContext_AffiliateProfile_rebateRateOverrideBps(ctx, field)
+			case "notes":
+				return ec.fieldContext_AffiliateProfile_notes(ctx, field)
+			case "user":
+				return ec.fieldContext_AffiliateProfile_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateProfile", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_saveAffiliateProfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -52280,6 +57612,16 @@ func (ec *executionContext) fieldContext_OIDCIdentity_user(_ context.Context, fi
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -53887,6 +59229,8 @@ func (ec *executionContext) fieldContext_PaymentEvent_paymentOrder(_ context.Con
 				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -55097,6 +60441,8 @@ func (ec *executionContext) fieldContext_PaymentOrder_ledgerTransaction(_ contex
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -55271,6 +60617,55 @@ func (ec *executionContext) fieldContext_PaymentOrder_paymentEvents(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_PaymentOrder_paymentEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentOrder_affiliateRebates(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentOrder) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentOrder_affiliateRebates,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.AffiliateRebates(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateRebateOrder), fc.Args["where"].(*ent.AffiliateRebateWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentOrder_affiliateRebates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentOrder",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateRebateConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateRebateConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateRebateConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_PaymentOrder_affiliateRebates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -55470,6 +60865,8 @@ func (ec *executionContext) fieldContext_PaymentOrderEdge_node(_ context.Context
 				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -58988,6 +64385,16 @@ func (ec *executionContext) fieldContext_PromoUsage_user(_ context.Context, fiel
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -59152,6 +64559,8 @@ func (ec *executionContext) fieldContext_PromoUsage_paymentOrder(_ context.Conte
 				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -59253,6 +64662,8 @@ func (ec *executionContext) fieldContext_PromoUsage_userSubscription(_ context.C
 				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -59330,6 +64741,8 @@ func (ec *executionContext) fieldContext_PromoUsage_ledgerTransaction(_ context.
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -61780,6 +67193,202 @@ func (ec *executionContext) fieldContext_Query_apiKeyProfileTemplates(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_apiKeyProfileTemplates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_affiliateInvitations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_affiliateInvitations,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AffiliateInvitations(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateInvitationOrder), fc.Args["where"].(*ent.AffiliateInvitationWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateInvitationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_affiliateInvitations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateInvitationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateInvitationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateInvitationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_affiliateInvitations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_affiliateProfiles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_affiliateProfiles,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AffiliateProfiles(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateProfileOrder), fc.Args["where"].(*ent.AffiliateProfileWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateProfileConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_affiliateProfiles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateProfileConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateProfileConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateProfileConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateProfileConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_affiliateProfiles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_affiliateRebates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_affiliateRebates,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AffiliateRebates(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateRebateOrder), fc.Args["where"].(*ent.AffiliateRebateWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_affiliateRebates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateRebateConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateRebateConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateRebateConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_affiliateRebates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_affiliateSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_affiliateSettings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AffiliateSettings(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateSettingOrder), fc.Args["where"].(*ent.AffiliateSettingWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateSettingConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_affiliateSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateSettingConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateSettingConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateSettingConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateSettingConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_affiliateSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -67051,6 +72660,347 @@ func (ec *executionContext) fieldContext_Query_adminPromoUsages(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_myAffiliateSummary(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myAffiliateSummary,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyAffiliateSummary(ctx)
+		},
+		nil,
+		ec.marshalNAffiliateSummary2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAffiliateSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myAffiliateSummary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "profile":
+				return ec.fieldContext_AffiliateSummary_profile(ctx, field)
+			case "invitation":
+				return ec.fieldContext_AffiliateSummary_invitation(ctx, field)
+			case "inviteeCount":
+				return ec.fieldContext_AffiliateSummary_inviteeCount(ctx, field)
+			case "frozenMicros":
+				return ec.fieldContext_AffiliateSummary_frozenMicros(ctx, field)
+			case "availableMicros":
+				return ec.fieldContext_AffiliateSummary_availableMicros(ctx, field)
+			case "transferredMicros":
+				return ec.fieldContext_AffiliateSummary_transferredMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_AffiliateSummary_currency(ctx, field)
+			case "setting":
+				return ec.fieldContext_AffiliateSummary_setting(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myAffiliateInvitations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myAffiliateInvitations,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyAffiliateInvitations(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateInvitationOrder))
+		},
+		nil,
+		ec.marshalNAffiliateInvitationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myAffiliateInvitations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateInvitationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateInvitationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateInvitationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myAffiliateInvitations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myAffiliateRebates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myAffiliateRebates,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyAffiliateRebates(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateRebateOrder))
+		},
+		nil,
+		ec.marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myAffiliateRebates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateRebateConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateRebateConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateRebateConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myAffiliateRebates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminAffiliateSetting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminAffiliateSetting,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().AdminAffiliateSetting(ctx)
+		},
+		nil,
+		ec.marshalNAffiliateSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSetting,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminAffiliateSetting(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AffiliateSetting_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AffiliateSetting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AffiliateSetting_updatedAt(ctx, field)
+			case "key":
+				return ec.fieldContext_AffiliateSetting_key(ctx, field)
+			case "enabled":
+				return ec.fieldContext_AffiliateSetting_enabled(ctx, field)
+			case "defaultRebateRateBps":
+				return ec.fieldContext_AffiliateSetting_defaultRebateRateBps(ctx, field)
+			case "freezeDays":
+				return ec.fieldContext_AffiliateSetting_freezeDays(ctx, field)
+			case "minTransferMicros":
+				return ec.fieldContext_AffiliateSetting_minTransferMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_AffiliateSetting_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateSetting", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminAffiliateProfiles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminAffiliateProfiles,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AdminAffiliateProfiles(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateProfileOrder))
+		},
+		nil,
+		ec.marshalNAffiliateProfileConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminAffiliateProfiles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateProfileConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateProfileConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateProfileConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateProfileConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminAffiliateProfiles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminAffiliateInvitations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminAffiliateInvitations,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AdminAffiliateInvitations(ctx, fc.Args["filter"].(*AdminAffiliateInvitationsFilter), fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateInvitationOrder))
+		},
+		nil,
+		ec.marshalNAffiliateInvitationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminAffiliateInvitations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateInvitationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateInvitationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateInvitationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminAffiliateInvitations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminAffiliateRebates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminAffiliateRebates,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AdminAffiliateRebates(ctx, fc.Args["filter"].(*AdminAffiliateRebatesFilter), fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateRebateOrder))
+		},
+		nil,
+		ec.marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminAffiliateRebates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateRebateConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateRebateConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateRebateConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminAffiliateRebates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_adminUserSubscriptions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -67875,6 +73825,16 @@ func (ec *executionContext) fieldContext_RedeemCode_createdBy(_ context.Context,
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -67952,6 +73912,16 @@ func (ec *executionContext) fieldContext_RedeemCode_usedBy(_ context.Context, fi
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -68033,6 +74003,8 @@ func (ec *executionContext) fieldContext_RedeemCode_ledgerTransaction(_ context.
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -73055,6 +79027,16 @@ func (ec *executionContext) fieldContext_SignInPayload_user(_ context.Context, f
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -79748,6 +85730,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_ledgerTransaction(_ 
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -79849,6 +85833,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_userSubscription(_ c
 				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -82512,6 +88498,251 @@ func (ec *executionContext) fieldContext_User_promoUsages(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _User_affiliateProfiles(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_affiliateProfiles,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.AffiliateProfiles(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateProfileOrder), fc.Args["where"].(*ent.AffiliateProfileWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateProfileConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_affiliateProfiles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateProfileConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateProfileConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateProfileConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateProfileConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_affiliateProfiles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_affiliateInviters(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_affiliateInviters,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.AffiliateInviters(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateInvitationOrder), fc.Args["where"].(*ent.AffiliateInvitationWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateInvitationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_affiliateInviters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateInvitationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateInvitationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateInvitationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_affiliateInviters_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_affiliateInvitees(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_affiliateInvitees,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.AffiliateInvitees(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateInvitationOrder), fc.Args["where"].(*ent.AffiliateInvitationWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateInvitationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_affiliateInvitees(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateInvitationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateInvitationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateInvitationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateInvitationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_affiliateInvitees_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_affiliateRebatesEarned(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_affiliateRebatesEarned,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.AffiliateRebatesEarned(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateRebateOrder), fc.Args["where"].(*ent.AffiliateRebateWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_affiliateRebatesEarned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateRebateConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateRebateConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateRebateConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_affiliateRebatesEarned_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_affiliateRebatesGenerated(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_affiliateRebatesGenerated,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.AffiliateRebatesGenerated(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateRebateOrder), fc.Args["where"].(*ent.AffiliateRebateWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_affiliateRebatesGenerated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateRebateConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateRebateConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateRebateConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_affiliateRebatesGenerated_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_projectUsers(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -82804,6 +89035,16 @@ func (ec *executionContext) fieldContext_UserEdge_node(_ context.Context, field 
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -83487,6 +89728,16 @@ func (ec *executionContext) fieldContext_UserProject_user(_ context.Context, fie
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -83894,6 +90145,16 @@ func (ec *executionContext) fieldContext_UserRole_user(_ context.Context, field 
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -84834,6 +91095,16 @@ func (ec *executionContext) fieldContext_UserSubscription_user(_ context.Context
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -84978,6 +91249,16 @@ func (ec *executionContext) fieldContext_UserSubscription_assignedBy(_ context.C
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -85059,6 +91340,8 @@ func (ec *executionContext) fieldContext_UserSubscription_purchaseLedgerTransact
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_LedgerTransaction_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -85233,6 +91516,55 @@ func (ec *executionContext) fieldContext_UserSubscription_usageBillingRecords(ct
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_UserSubscription_usageBillingRecords_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserSubscription_affiliateRebates(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserSubscription_affiliateRebates,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.AffiliateRebates(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.AffiliateRebateOrder), fc.Args["where"].(*ent.AffiliateRebateWhereInput))
+		},
+		nil,
+		ec.marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserSubscription_affiliateRebates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserSubscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_AffiliateRebateConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_AffiliateRebateConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_AffiliateRebateConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AffiliateRebateConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_UserSubscription_affiliateRebates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -85436,6 +91768,8 @@ func (ec *executionContext) fieldContext_UserSubscriptionEdge_node(_ context.Con
 				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -89289,6 +95623,137 @@ func (ec *executionContext) unmarshalInputAdjustUserBalanceInput(ctx context.Con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAdminAffiliateInvitationsFilter(ctx context.Context, obj any) (AdminAffiliateInvitationsFilter, error) {
+	var it AdminAffiliateInvitationsFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"inviterUserId", "inviteeUserId", "status", "inviteCode", "from", "to"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "inviterUserId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviterUserID = data
+		case "inviteeUserId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteeUserID = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOAffiliateInvitationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "inviteCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCode = data
+		case "from":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.From = data
+		case "to":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.To = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAdminAffiliateRebatesFilter(ctx context.Context, obj any) (AdminAffiliateRebatesFilter, error) {
+	var it AdminAffiliateRebatesFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"inviterUserId", "inviteeUserId", "sourceType", "status", "from", "to", "transferableBefore"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "inviterUserId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviterUserID = data
+		case "inviteeUserId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteeUserID = data
+		case "sourceType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceType"))
+			data, err := ec.unmarshalOAffiliateRebateSourceType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceType = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOAffiliateRebateStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "from":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.From = data
+		case "to":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.To = data
+		case "transferableBefore":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferableBefore"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferableBefore = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAdminAssignSubscriptionInput(ctx context.Context, obj any) (biz.AdminAssignSubscriptionInput, error) {
 	var it biz.AdminAssignSubscriptionInput
 	asMap := map[string]any{}
@@ -90151,6 +96616,3233 @@ func (ec *executionContext) unmarshalInputAdminUserSubscriptionsFilter(ctx conte
 				return it, err
 			}
 			it.ExpiresBefore = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAffiliateInvitationOrder(ctx context.Context, obj any) (ent.AffiliateInvitationOrder, error) {
+	var it ent.AffiliateInvitationOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNAffiliateInvitationOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAffiliateInvitationWhereInput(ctx context.Context, obj any) (ent.AffiliateInvitationWhereInput, error) {
+	var it ent.AffiliateInvitationWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "inviterUserID", "inviterUserIDNEQ", "inviterUserIDIn", "inviterUserIDNotIn", "inviteeUserID", "inviteeUserIDNEQ", "inviteeUserIDIn", "inviteeUserIDNotIn", "inviteCode", "inviteCodeNEQ", "inviteCodeIn", "inviteCodeNotIn", "inviteCodeGT", "inviteCodeGTE", "inviteCodeLT", "inviteCodeLTE", "inviteCodeContains", "inviteCodeHasPrefix", "inviteCodeHasSuffix", "inviteCodeEqualFold", "inviteCodeContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "hasInviter", "hasInviterWith", "hasInvitee", "hasInviteeWith", "hasRebates", "hasRebatesWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOAffiliateInvitationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOAffiliateInvitationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOAffiliateInvitationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "inviterUserID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviterUserID = converted
+		case "inviterUserIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviterUserIDNEQ = converted
+		case "inviterUserIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviterUserIDIn = converted
+		case "inviterUserIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviterUserIDNotIn = converted
+		case "inviteeUserID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviteeUserID = converted
+		case "inviteeUserIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviteeUserIDNEQ = converted
+		case "inviteeUserIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviteeUserIDIn = converted
+		case "inviteeUserIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviteeUserIDNotIn = converted
+		case "inviteCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCode = data
+		case "inviteCodeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeNEQ = data
+		case "inviteCodeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeIn = data
+		case "inviteCodeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeNotIn = data
+		case "inviteCodeGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeGT = data
+		case "inviteCodeGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeGTE = data
+		case "inviteCodeLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeLT = data
+		case "inviteCodeLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeLTE = data
+		case "inviteCodeContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeContains = data
+		case "inviteCodeHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeHasPrefix = data
+		case "inviteCodeHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeHasSuffix = data
+		case "inviteCodeEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeEqualFold = data
+		case "inviteCodeContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeContainsFold = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOAffiliateInvitationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOAffiliateInvitationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOAffiliateInvitationStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOAffiliateInvitationStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "notesNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNEQ = data
+		case "notesIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesIn = data
+		case "notesNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNotIn = data
+		case "notesGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGT = data
+		case "notesGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGTE = data
+		case "notesLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLT = data
+		case "notesLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLTE = data
+		case "notesContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContains = data
+		case "notesHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasPrefix = data
+		case "notesHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasSuffix = data
+		case "notesEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesEqualFold = data
+		case "notesContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContainsFold = data
+		case "hasInviter":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInviter"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInviter = data
+		case "hasInviterWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInviterWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInviterWith = data
+		case "hasInvitee":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInvitee"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInvitee = data
+		case "hasInviteeWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInviteeWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInviteeWith = data
+		case "hasRebates":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasRebates"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasRebates = data
+		case "hasRebatesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasRebatesWith"))
+			data, err := ec.unmarshalOAffiliateRebateWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasRebatesWith = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAffiliateProfileOrder(ctx context.Context, obj any) (ent.AffiliateProfileOrder, error) {
+	var it ent.AffiliateProfileOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNAffiliateProfileOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAffiliateProfileWhereInput(ctx context.Context, obj any) (ent.AffiliateProfileWhereInput, error) {
+	var it ent.AffiliateProfileWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "inviteCode", "inviteCodeNEQ", "inviteCodeIn", "inviteCodeNotIn", "inviteCodeGT", "inviteCodeGTE", "inviteCodeLT", "inviteCodeLTE", "inviteCodeContains", "inviteCodeHasPrefix", "inviteCodeHasSuffix", "inviteCodeEqualFold", "inviteCodeContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "rebateRateOverrideBps", "rebateRateOverrideBpsNEQ", "rebateRateOverrideBpsIn", "rebateRateOverrideBpsNotIn", "rebateRateOverrideBpsGT", "rebateRateOverrideBpsGTE", "rebateRateOverrideBpsLT", "rebateRateOverrideBpsLTE", "rebateRateOverrideBpsIsNil", "rebateRateOverrideBpsNotNil", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "hasUser", "hasUserWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOAffiliateProfileWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOAffiliateProfileWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOAffiliateProfileWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "userID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserID = converted
+		case "userIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDNEQ = converted
+		case "userIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDIn = converted
+		case "userIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDNotIn = converted
+		case "inviteCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCode = data
+		case "inviteCodeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeNEQ = data
+		case "inviteCodeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeIn = data
+		case "inviteCodeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeNotIn = data
+		case "inviteCodeGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeGT = data
+		case "inviteCodeGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeGTE = data
+		case "inviteCodeLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeLT = data
+		case "inviteCodeLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeLTE = data
+		case "inviteCodeContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeContains = data
+		case "inviteCodeHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeHasPrefix = data
+		case "inviteCodeHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeHasSuffix = data
+		case "inviteCodeEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeEqualFold = data
+		case "inviteCodeContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCodeContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCodeContainsFold = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOAffiliateProfileStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOAffiliateProfileStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOAffiliateProfileStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOAffiliateProfileStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "rebateRateOverrideBps":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBps"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBps = data
+		case "rebateRateOverrideBpsNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBpsNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBpsNEQ = data
+		case "rebateRateOverrideBpsIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBpsIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBpsIn = data
+		case "rebateRateOverrideBpsNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBpsNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBpsNotIn = data
+		case "rebateRateOverrideBpsGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBpsGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBpsGT = data
+		case "rebateRateOverrideBpsGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBpsGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBpsGTE = data
+		case "rebateRateOverrideBpsLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBpsLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBpsLT = data
+		case "rebateRateOverrideBpsLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBpsLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBpsLTE = data
+		case "rebateRateOverrideBpsIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBpsIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBpsIsNil = data
+		case "rebateRateOverrideBpsNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBpsNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBpsNotNil = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "notesNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNEQ = data
+		case "notesIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesIn = data
+		case "notesNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNotIn = data
+		case "notesGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGT = data
+		case "notesGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGTE = data
+		case "notesLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLT = data
+		case "notesLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLTE = data
+		case "notesContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContains = data
+		case "notesHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasPrefix = data
+		case "notesHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasSuffix = data
+		case "notesEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesEqualFold = data
+		case "notesContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContainsFold = data
+		case "hasUser":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUser"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUser = data
+		case "hasUserWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserWith = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAffiliateRebateOrder(ctx context.Context, obj any) (ent.AffiliateRebateOrder, error) {
+	var it ent.AffiliateRebateOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNAffiliateRebateOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAffiliateRebateWhereInput(ctx context.Context, obj any) (ent.AffiliateRebateWhereInput, error) {
+	var it ent.AffiliateRebateWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "invitationID", "invitationIDNEQ", "invitationIDIn", "invitationIDNotIn", "inviterUserID", "inviterUserIDNEQ", "inviterUserIDIn", "inviterUserIDNotIn", "inviteeUserID", "inviteeUserIDNEQ", "inviteeUserIDIn", "inviteeUserIDNotIn", "sourceType", "sourceTypeNEQ", "sourceTypeIn", "sourceTypeNotIn", "sourceID", "sourceIDNEQ", "sourceIDIn", "sourceIDNotIn", "sourceIDGT", "sourceIDGTE", "sourceIDLT", "sourceIDLTE", "paymentOrderID", "paymentOrderIDNEQ", "paymentOrderIDIn", "paymentOrderIDNotIn", "paymentOrderIDIsNil", "paymentOrderIDNotNil", "userSubscriptionID", "userSubscriptionIDNEQ", "userSubscriptionIDIn", "userSubscriptionIDNotIn", "userSubscriptionIDIsNil", "userSubscriptionIDNotNil", "baseAmountMicros", "baseAmountMicrosNEQ", "baseAmountMicrosIn", "baseAmountMicrosNotIn", "baseAmountMicrosGT", "baseAmountMicrosGTE", "baseAmountMicrosLT", "baseAmountMicrosLTE", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "rateBps", "rateBpsNEQ", "rateBpsIn", "rateBpsNotIn", "rateBpsGT", "rateBpsGTE", "rateBpsLT", "rateBpsLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "freezeUntil", "freezeUntilNEQ", "freezeUntilIn", "freezeUntilNotIn", "freezeUntilGT", "freezeUntilGTE", "freezeUntilLT", "freezeUntilLTE", "transferredAt", "transferredAtNEQ", "transferredAtIn", "transferredAtNotIn", "transferredAtGT", "transferredAtGTE", "transferredAtLT", "transferredAtLTE", "transferredAtIsNil", "transferredAtNotNil", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "hasInvitation", "hasInvitationWith", "hasInviter", "hasInviterWith", "hasInvitee", "hasInviteeWith", "hasPaymentOrder", "hasPaymentOrderWith", "hasUserSubscription", "hasUserSubscriptionWith", "hasLedgerTransaction", "hasLedgerTransactionWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOAffiliateRebateWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOAffiliateRebateWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "invitationID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invitationID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InvitationID = converted
+		case "invitationIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invitationIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InvitationIDNEQ = converted
+		case "invitationIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invitationIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InvitationIDIn = converted
+		case "invitationIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invitationIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InvitationIDNotIn = converted
+		case "inviterUserID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviterUserID = converted
+		case "inviterUserIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviterUserIDNEQ = converted
+		case "inviterUserIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviterUserIDIn = converted
+		case "inviterUserIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviterUserIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviterUserIDNotIn = converted
+		case "inviteeUserID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviteeUserID = converted
+		case "inviteeUserIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviteeUserIDNEQ = converted
+		case "inviteeUserIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviteeUserIDIn = converted
+		case "inviteeUserIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteeUserIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.InviteeUserIDNotIn = converted
+		case "sourceType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceType"))
+			data, err := ec.unmarshalOAffiliateRebateSourceType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceType = data
+		case "sourceTypeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceTypeNEQ"))
+			data, err := ec.unmarshalOAffiliateRebateSourceType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceTypeNEQ = data
+		case "sourceTypeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceTypeIn"))
+			data, err := ec.unmarshalOAffiliateRebateSourceType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceTypeIn = data
+		case "sourceTypeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceTypeNotIn"))
+			data, err := ec.unmarshalOAffiliateRebateSourceType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceTypeNotIn = data
+		case "sourceID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceID"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceID = data
+		case "sourceIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceIDNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceIDNEQ = data
+		case "sourceIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceIDIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceIDIn = data
+		case "sourceIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceIDNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceIDNotIn = data
+		case "sourceIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceIDGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceIDGT = data
+		case "sourceIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceIDGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceIDGTE = data
+		case "sourceIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceIDLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceIDLT = data
+		case "sourceIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceIDLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceIDLTE = data
+		case "paymentOrderID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderID = converted
+		case "paymentOrderIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderIDNEQ = converted
+		case "paymentOrderIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderIDIn = converted
+		case "paymentOrderIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderIDNotIn = converted
+		case "paymentOrderIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentOrderIDIsNil = data
+		case "paymentOrderIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentOrderIDNotNil = data
+		case "userSubscriptionID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionID = converted
+		case "userSubscriptionIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionIDNEQ = converted
+		case "userSubscriptionIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionIDIn = converted
+		case "userSubscriptionIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionIDNotIn = converted
+		case "userSubscriptionIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserSubscriptionIDIsNil = data
+		case "userSubscriptionIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserSubscriptionIDNotNil = data
+		case "baseAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseAmountMicros = data
+		case "baseAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseAmountMicrosNEQ = data
+		case "baseAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseAmountMicrosIn = data
+		case "baseAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseAmountMicrosNotIn = data
+		case "baseAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseAmountMicrosGT = data
+		case "baseAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseAmountMicrosGTE = data
+		case "baseAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseAmountMicrosLT = data
+		case "baseAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseAmountMicrosLTE = data
+		case "amountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicros = data
+		case "amountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosNEQ = data
+		case "amountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosIn = data
+		case "amountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosNotIn = data
+		case "amountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosGT = data
+		case "amountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosGTE = data
+		case "amountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosLT = data
+		case "amountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosLTE = data
+		case "rateBps":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateBps"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateBps = data
+		case "rateBpsNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateBpsNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateBpsNEQ = data
+		case "rateBpsIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateBpsIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateBpsIn = data
+		case "rateBpsNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateBpsNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateBpsNotIn = data
+		case "rateBpsGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateBpsGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateBpsGT = data
+		case "rateBpsGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateBpsGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateBpsGTE = data
+		case "rateBpsLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateBpsLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateBpsLT = data
+		case "rateBpsLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateBpsLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateBpsLTE = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "currencyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNEQ = data
+		case "currencyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyIn = data
+		case "currencyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNotIn = data
+		case "currencyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGT = data
+		case "currencyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGTE = data
+		case "currencyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLT = data
+		case "currencyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLTE = data
+		case "currencyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContains = data
+		case "currencyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasPrefix = data
+		case "currencyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasSuffix = data
+		case "currencyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyEqualFold = data
+		case "currencyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContainsFold = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOAffiliateRebateStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOAffiliateRebateStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOAffiliateRebateStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOAffiliateRebateStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "freezeUntil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeUntil"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeUntil = data
+		case "freezeUntilNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeUntilNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeUntilNEQ = data
+		case "freezeUntilIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeUntilIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeUntilIn = data
+		case "freezeUntilNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeUntilNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeUntilNotIn = data
+		case "freezeUntilGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeUntilGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeUntilGT = data
+		case "freezeUntilGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeUntilGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeUntilGTE = data
+		case "freezeUntilLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeUntilLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeUntilLT = data
+		case "freezeUntilLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeUntilLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeUntilLTE = data
+		case "transferredAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAt = data
+		case "transferredAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAtNEQ = data
+		case "transferredAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAtIn = data
+		case "transferredAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAtNotIn = data
+		case "transferredAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAtGT = data
+		case "transferredAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAtGTE = data
+		case "transferredAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAtLT = data
+		case "transferredAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAtLTE = data
+		case "transferredAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAtIsNil = data
+		case "transferredAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transferredAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransferredAtNotNil = data
+		case "ledgerTransactionID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionID = converted
+		case "ledgerTransactionIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionIDNEQ = converted
+		case "ledgerTransactionIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionIDIn = converted
+		case "ledgerTransactionIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionIDNotIn = converted
+		case "ledgerTransactionIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LedgerTransactionIDIsNil = data
+		case "ledgerTransactionIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LedgerTransactionIDNotNil = data
+		case "idempotencyKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKey = data
+		case "idempotencyKeyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyNEQ = data
+		case "idempotencyKeyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyIn = data
+		case "idempotencyKeyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyNotIn = data
+		case "idempotencyKeyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyGT = data
+		case "idempotencyKeyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyGTE = data
+		case "idempotencyKeyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyLT = data
+		case "idempotencyKeyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyLTE = data
+		case "idempotencyKeyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyContains = data
+		case "idempotencyKeyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyHasPrefix = data
+		case "idempotencyKeyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyHasSuffix = data
+		case "idempotencyKeyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyEqualFold = data
+		case "idempotencyKeyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyContainsFold = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "notesNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNEQ = data
+		case "notesIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesIn = data
+		case "notesNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNotIn = data
+		case "notesGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGT = data
+		case "notesGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGTE = data
+		case "notesLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLT = data
+		case "notesLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLTE = data
+		case "notesContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContains = data
+		case "notesHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasPrefix = data
+		case "notesHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasSuffix = data
+		case "notesEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesEqualFold = data
+		case "notesContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContainsFold = data
+		case "hasInvitation":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInvitation"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInvitation = data
+		case "hasInvitationWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInvitationWith"))
+			data, err := ec.unmarshalOAffiliateInvitationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInvitationWith = data
+		case "hasInviter":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInviter"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInviter = data
+		case "hasInviterWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInviterWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInviterWith = data
+		case "hasInvitee":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInvitee"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInvitee = data
+		case "hasInviteeWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasInviteeWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasInviteeWith = data
+		case "hasPaymentOrder":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentOrder"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPaymentOrder = data
+		case "hasPaymentOrderWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentOrderWith"))
+			data, err := ec.unmarshalOPaymentOrderWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPaymentOrderWith = data
+		case "hasUserSubscription":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserSubscription"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserSubscription = data
+		case "hasUserSubscriptionWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserSubscriptionWith"))
+			data, err := ec.unmarshalOUserSubscriptionWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscriptionWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserSubscriptionWith = data
+		case "hasLedgerTransaction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLedgerTransaction"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasLedgerTransaction = data
+		case "hasLedgerTransactionWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLedgerTransactionWith"))
+			data, err := ec.unmarshalOLedgerTransactionWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐLedgerTransactionWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasLedgerTransactionWith = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAffiliateSettingOrder(ctx context.Context, obj any) (ent.AffiliateSettingOrder, error) {
+	var it ent.AffiliateSettingOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNAffiliateSettingOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAffiliateSettingWhereInput(ctx context.Context, obj any) (ent.AffiliateSettingWhereInput, error) {
+	var it ent.AffiliateSettingWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "key", "keyNEQ", "keyIn", "keyNotIn", "keyGT", "keyGTE", "keyLT", "keyLTE", "keyContains", "keyHasPrefix", "keyHasSuffix", "keyEqualFold", "keyContainsFold", "enabled", "enabledNEQ", "defaultRebateRateBps", "defaultRebateRateBpsNEQ", "defaultRebateRateBpsIn", "defaultRebateRateBpsNotIn", "defaultRebateRateBpsGT", "defaultRebateRateBpsGTE", "defaultRebateRateBpsLT", "defaultRebateRateBpsLTE", "freezeDays", "freezeDaysNEQ", "freezeDaysIn", "freezeDaysNotIn", "freezeDaysGT", "freezeDaysGTE", "freezeDaysLT", "freezeDaysLTE", "minTransferMicros", "minTransferMicrosNEQ", "minTransferMicrosIn", "minTransferMicrosNotIn", "minTransferMicrosGT", "minTransferMicrosGTE", "minTransferMicrosLT", "minTransferMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOAffiliateSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOAffiliateSettingWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOAffiliateSettingWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "key":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Key = data
+		case "keyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyNEQ = data
+		case "keyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyIn = data
+		case "keyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyNotIn = data
+		case "keyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyGT = data
+		case "keyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyGTE = data
+		case "keyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyLT = data
+		case "keyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyLTE = data
+		case "keyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyContains = data
+		case "keyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyHasPrefix = data
+		case "keyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyHasSuffix = data
+		case "keyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyEqualFold = data
+		case "keyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyContainsFold = data
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "enabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EnabledNEQ = data
+		case "defaultRebateRateBps":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultRebateRateBps"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultRebateRateBps = data
+		case "defaultRebateRateBpsNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultRebateRateBpsNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultRebateRateBpsNEQ = data
+		case "defaultRebateRateBpsIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultRebateRateBpsIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultRebateRateBpsIn = data
+		case "defaultRebateRateBpsNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultRebateRateBpsNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultRebateRateBpsNotIn = data
+		case "defaultRebateRateBpsGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultRebateRateBpsGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultRebateRateBpsGT = data
+		case "defaultRebateRateBpsGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultRebateRateBpsGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultRebateRateBpsGTE = data
+		case "defaultRebateRateBpsLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultRebateRateBpsLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultRebateRateBpsLT = data
+		case "defaultRebateRateBpsLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultRebateRateBpsLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultRebateRateBpsLTE = data
+		case "freezeDays":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeDays"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeDays = data
+		case "freezeDaysNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeDaysNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeDaysNEQ = data
+		case "freezeDaysIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeDaysIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeDaysIn = data
+		case "freezeDaysNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeDaysNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeDaysNotIn = data
+		case "freezeDaysGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeDaysGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeDaysGT = data
+		case "freezeDaysGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeDaysGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeDaysGTE = data
+		case "freezeDaysLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeDaysLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeDaysLT = data
+		case "freezeDaysLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeDaysLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeDaysLTE = data
+		case "minTransferMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minTransferMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinTransferMicros = data
+		case "minTransferMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minTransferMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinTransferMicrosNEQ = data
+		case "minTransferMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minTransferMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinTransferMicrosIn = data
+		case "minTransferMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minTransferMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinTransferMicrosNotIn = data
+		case "minTransferMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minTransferMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinTransferMicrosGT = data
+		case "minTransferMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minTransferMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinTransferMicrosGTE = data
+		case "minTransferMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minTransferMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinTransferMicrosLT = data
+		case "minTransferMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minTransferMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinTransferMicrosLTE = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "currencyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNEQ = data
+		case "currencyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyIn = data
+		case "currencyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNotIn = data
+		case "currencyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGT = data
+		case "currencyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGTE = data
+		case "currencyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLT = data
+		case "currencyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLTE = data
+		case "currencyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContains = data
+		case "currencyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasPrefix = data
+		case "currencyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasSuffix = data
+		case "currencyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyEqualFold = data
+		case "currencyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContainsFold = data
 		}
 	}
 
@@ -94691,6 +104383,40 @@ func (ec *executionContext) unmarshalInputBillingPriceRuleWhereInput(ctx context
 				return it, err
 			}
 			it.ReferenceIDContainsFold = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBindAffiliateInviteInput(ctx context.Context, obj any) (biz.BindAffiliateInviteInput, error) {
+	var it biz.BindAffiliateInviteInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"inviteCode", "notes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "inviteCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCode"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCode = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
 		}
 	}
 
@@ -102601,7 +112327,7 @@ func (ec *executionContext) unmarshalInputLedgerTransactionWhereInput(ctx contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "direction", "directionNEQ", "directionIn", "directionNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "referenceType", "referenceTypeNEQ", "referenceTypeIn", "referenceTypeNotIn", "referenceTypeGT", "referenceTypeGTE", "referenceTypeLT", "referenceTypeLTE", "referenceTypeContains", "referenceTypeHasPrefix", "referenceTypeHasSuffix", "referenceTypeEqualFold", "referenceTypeContainsFold", "referenceID", "referenceIDNEQ", "referenceIDIn", "referenceIDNotIn", "referenceIDGT", "referenceIDGTE", "referenceIDLT", "referenceIDLTE", "referenceIDContains", "referenceIDHasPrefix", "referenceIDHasSuffix", "referenceIDEqualFold", "referenceIDContainsFold", "memo", "memoNEQ", "memoIn", "memoNotIn", "memoGT", "memoGTE", "memoLT", "memoLTE", "memoContains", "memoHasPrefix", "memoHasSuffix", "memoEqualFold", "memoContainsFold", "createdByType", "createdByTypeNEQ", "createdByTypeIn", "createdByTypeNotIn", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDGT", "createdByIDGTE", "createdByIDLT", "createdByIDLTE", "createdByIDContains", "createdByIDHasPrefix", "createdByIDHasSuffix", "createdByIDEqualFold", "createdByIDContainsFold", "hasBillingAccount", "hasBillingAccountWith", "hasEntries", "hasEntriesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasPaymentOrders", "hasPaymentOrdersWith", "hasRedeemCodes", "hasRedeemCodesWith", "hasPurchasedUserSubscriptions", "hasPurchasedUserSubscriptionsWith", "hasPromoUsages", "hasPromoUsagesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "direction", "directionNEQ", "directionIn", "directionNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "referenceType", "referenceTypeNEQ", "referenceTypeIn", "referenceTypeNotIn", "referenceTypeGT", "referenceTypeGTE", "referenceTypeLT", "referenceTypeLTE", "referenceTypeContains", "referenceTypeHasPrefix", "referenceTypeHasSuffix", "referenceTypeEqualFold", "referenceTypeContainsFold", "referenceID", "referenceIDNEQ", "referenceIDIn", "referenceIDNotIn", "referenceIDGT", "referenceIDGTE", "referenceIDLT", "referenceIDLTE", "referenceIDContains", "referenceIDHasPrefix", "referenceIDHasSuffix", "referenceIDEqualFold", "referenceIDContainsFold", "memo", "memoNEQ", "memoIn", "memoNotIn", "memoGT", "memoGTE", "memoLT", "memoLTE", "memoContains", "memoHasPrefix", "memoHasSuffix", "memoEqualFold", "memoContainsFold", "createdByType", "createdByTypeNEQ", "createdByTypeIn", "createdByTypeNotIn", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDGT", "createdByIDGTE", "createdByIDLT", "createdByIDLTE", "createdByIDContains", "createdByIDHasPrefix", "createdByIDHasSuffix", "createdByIDEqualFold", "createdByIDContainsFold", "hasBillingAccount", "hasBillingAccountWith", "hasEntries", "hasEntriesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasPaymentOrders", "hasPaymentOrdersWith", "hasRedeemCodes", "hasRedeemCodesWith", "hasPurchasedUserSubscriptions", "hasPurchasedUserSubscriptionsWith", "hasPromoUsages", "hasPromoUsagesWith", "hasAffiliateRebates", "hasAffiliateRebatesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -103699,6 +113425,20 @@ func (ec *executionContext) unmarshalInputLedgerTransactionWhereInput(ctx contex
 				return it, err
 			}
 			it.HasPromoUsagesWith = data
+		case "hasAffiliateRebates":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebates"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebates = data
+		case "hasAffiliateRebatesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebatesWith"))
+			data, err := ec.unmarshalOAffiliateRebateWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebatesWith = data
 		}
 	}
 
@@ -107018,7 +116758,7 @@ func (ec *executionContext) unmarshalInputPaymentOrderWhereInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "orderNo", "orderNoNEQ", "orderNoIn", "orderNoNotIn", "orderNoGT", "orderNoGTE", "orderNoLT", "orderNoLTE", "orderNoContains", "orderNoHasPrefix", "orderNoHasSuffix", "orderNoEqualFold", "orderNoContainsFold", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "providerInstanceID", "providerInstanceIDNEQ", "providerInstanceIDIn", "providerInstanceIDNotIn", "providerInstanceIDIsNil", "providerInstanceIDNotNil", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "purpose", "purposeNEQ", "purposeIn", "purposeNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "expiresAtIsNil", "expiresAtNotNil", "canceledAt", "canceledAtNEQ", "canceledAtIn", "canceledAtNotIn", "canceledAtGT", "canceledAtGTE", "canceledAtLT", "canceledAtLTE", "canceledAtIsNil", "canceledAtNotNil", "cancelReason", "cancelReasonNEQ", "cancelReasonIn", "cancelReasonNotIn", "cancelReasonGT", "cancelReasonGTE", "cancelReasonLT", "cancelReasonLTE", "cancelReasonContains", "cancelReasonHasPrefix", "cancelReasonHasSuffix", "cancelReasonEqualFold", "cancelReasonContainsFold", "makeupReason", "makeupReasonNEQ", "makeupReasonIn", "makeupReasonNotIn", "makeupReasonGT", "makeupReasonGTE", "makeupReasonLT", "makeupReasonLTE", "makeupReasonContains", "makeupReasonHasPrefix", "makeupReasonHasSuffix", "makeupReasonEqualFold", "makeupReasonContainsFold", "failureReason", "failureReasonNEQ", "failureReasonIn", "failureReasonNotIn", "failureReasonGT", "failureReasonGTE", "failureReasonLT", "failureReasonLTE", "failureReasonContains", "failureReasonHasPrefix", "failureReasonHasSuffix", "failureReasonEqualFold", "failureReasonContainsFold", "refundedAt", "refundedAtNEQ", "refundedAtIn", "refundedAtNotIn", "refundedAtGT", "refundedAtGTE", "refundedAtLT", "refundedAtLTE", "refundedAtIsNil", "refundedAtNotNil", "refundReason", "refundReasonNEQ", "refundReasonIn", "refundReasonNotIn", "refundReasonGT", "refundReasonGTE", "refundReasonLT", "refundReasonLTE", "refundReasonContains", "refundReasonHasPrefix", "refundReasonHasSuffix", "refundReasonEqualFold", "refundReasonContainsFold", "refundAmountMicros", "refundAmountMicrosNEQ", "refundAmountMicrosIn", "refundAmountMicrosNotIn", "refundAmountMicrosGT", "refundAmountMicrosGTE", "refundAmountMicrosLT", "refundAmountMicrosLTE", "externalTradeNo", "externalTradeNoNEQ", "externalTradeNoIn", "externalTradeNoNotIn", "externalTradeNoGT", "externalTradeNoGTE", "externalTradeNoLT", "externalTradeNoLTE", "externalTradeNoContains", "externalTradeNoHasPrefix", "externalTradeNoHasSuffix", "externalTradeNoIsNil", "externalTradeNoNotNil", "externalTradeNoEqualFold", "externalTradeNoContainsFold", "paidAt", "paidAtNEQ", "paidAtIn", "paidAtNotIn", "paidAtGT", "paidAtGTE", "paidAtLT", "paidAtLTE", "paidAtIsNil", "paidAtNotNil", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "hasBillingAccount", "hasBillingAccountWith", "hasProviderInstance", "hasProviderInstanceWith", "hasLedgerTransaction", "hasLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasPaymentEvents", "hasPaymentEventsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "orderNo", "orderNoNEQ", "orderNoIn", "orderNoNotIn", "orderNoGT", "orderNoGTE", "orderNoLT", "orderNoLTE", "orderNoContains", "orderNoHasPrefix", "orderNoHasSuffix", "orderNoEqualFold", "orderNoContainsFold", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "providerInstanceID", "providerInstanceIDNEQ", "providerInstanceIDIn", "providerInstanceIDNotIn", "providerInstanceIDIsNil", "providerInstanceIDNotNil", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "purpose", "purposeNEQ", "purposeIn", "purposeNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "expiresAtIsNil", "expiresAtNotNil", "canceledAt", "canceledAtNEQ", "canceledAtIn", "canceledAtNotIn", "canceledAtGT", "canceledAtGTE", "canceledAtLT", "canceledAtLTE", "canceledAtIsNil", "canceledAtNotNil", "cancelReason", "cancelReasonNEQ", "cancelReasonIn", "cancelReasonNotIn", "cancelReasonGT", "cancelReasonGTE", "cancelReasonLT", "cancelReasonLTE", "cancelReasonContains", "cancelReasonHasPrefix", "cancelReasonHasSuffix", "cancelReasonEqualFold", "cancelReasonContainsFold", "makeupReason", "makeupReasonNEQ", "makeupReasonIn", "makeupReasonNotIn", "makeupReasonGT", "makeupReasonGTE", "makeupReasonLT", "makeupReasonLTE", "makeupReasonContains", "makeupReasonHasPrefix", "makeupReasonHasSuffix", "makeupReasonEqualFold", "makeupReasonContainsFold", "failureReason", "failureReasonNEQ", "failureReasonIn", "failureReasonNotIn", "failureReasonGT", "failureReasonGTE", "failureReasonLT", "failureReasonLTE", "failureReasonContains", "failureReasonHasPrefix", "failureReasonHasSuffix", "failureReasonEqualFold", "failureReasonContainsFold", "refundedAt", "refundedAtNEQ", "refundedAtIn", "refundedAtNotIn", "refundedAtGT", "refundedAtGTE", "refundedAtLT", "refundedAtLTE", "refundedAtIsNil", "refundedAtNotNil", "refundReason", "refundReasonNEQ", "refundReasonIn", "refundReasonNotIn", "refundReasonGT", "refundReasonGTE", "refundReasonLT", "refundReasonLTE", "refundReasonContains", "refundReasonHasPrefix", "refundReasonHasSuffix", "refundReasonEqualFold", "refundReasonContainsFold", "refundAmountMicros", "refundAmountMicrosNEQ", "refundAmountMicrosIn", "refundAmountMicrosNotIn", "refundAmountMicrosGT", "refundAmountMicrosGTE", "refundAmountMicrosLT", "refundAmountMicrosLTE", "externalTradeNo", "externalTradeNoNEQ", "externalTradeNoIn", "externalTradeNoNotIn", "externalTradeNoGT", "externalTradeNoGTE", "externalTradeNoLT", "externalTradeNoLTE", "externalTradeNoContains", "externalTradeNoHasPrefix", "externalTradeNoHasSuffix", "externalTradeNoIsNil", "externalTradeNoNotNil", "externalTradeNoEqualFold", "externalTradeNoContainsFold", "paidAt", "paidAtNEQ", "paidAtIn", "paidAtNotIn", "paidAtGT", "paidAtGTE", "paidAtLT", "paidAtLTE", "paidAtIsNil", "paidAtNotNil", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "hasBillingAccount", "hasBillingAccountWith", "hasProviderInstance", "hasProviderInstanceWith", "hasLedgerTransaction", "hasLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasPaymentEvents", "hasPaymentEventsWith", "hasAffiliateRebates", "hasAffiliateRebatesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -108843,6 +118583,20 @@ func (ec *executionContext) unmarshalInputPaymentOrderWhereInput(ctx context.Con
 				return it, err
 			}
 			it.HasPaymentEventsWith = data
+		case "hasAffiliateRebates":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebates"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebates = data
+		case "hasAffiliateRebatesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebatesWith"))
+			data, err := ec.unmarshalOAffiliateRebateWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebatesWith = data
 		}
 	}
 
@@ -120111,6 +129865,113 @@ func (ec *executionContext) unmarshalInputS3Input(ctx context.Context, obj any) 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSaveAffiliateProfileInput(ctx context.Context, obj any) (biz.SaveAffiliateProfileInput, error) {
+	var it biz.SaveAffiliateProfileInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userId", "status", "rebateRateOverrideBps", "notes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserID = converted
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOAffiliateProfileStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "rebateRateOverrideBps":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rebateRateOverrideBps"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RebateRateOverrideBps = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSaveAffiliateSettingInput(ctx context.Context, obj any) (biz.SaveAffiliateSettingInput, error) {
+	var it biz.SaveAffiliateSettingInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"enabled", "defaultRebateRateBps", "freezeDays", "minTransferAmount", "currency"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "defaultRebateRateBps":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultRebateRateBps"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultRebateRateBps = data
+		case "freezeDays":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("freezeDays"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FreezeDays = data
+		case "minTransferAmount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minTransferAmount"))
+			data, err := ec.unmarshalODecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinTransferAmount = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSaveBillingPriceRuleForm(ctx context.Context, obj any) (SaveBillingPriceRuleForm, error) {
 	var it SaveBillingPriceRuleForm
 	asMap := map[string]any{}
@@ -129641,7 +139502,7 @@ func (ec *executionContext) unmarshalInputUserSubscriptionWhereInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "planID", "planIDNEQ", "planIDIn", "planIDNotIn", "planIDIsNil", "planIDNotNil", "status", "statusNEQ", "statusIn", "statusNotIn", "startsAt", "startsAtNEQ", "startsAtIn", "startsAtNotIn", "startsAtGT", "startsAtGTE", "startsAtLT", "startsAtLTE", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "currentPeriodStart", "currentPeriodStartNEQ", "currentPeriodStartIn", "currentPeriodStartNotIn", "currentPeriodStartGT", "currentPeriodStartGTE", "currentPeriodStartLT", "currentPeriodStartLTE", "currentPeriodEnd", "currentPeriodEndNEQ", "currentPeriodEndIn", "currentPeriodEndNotIn", "currentPeriodEndGT", "currentPeriodEndGTE", "currentPeriodEndLT", "currentPeriodEndLTE", "resetAt", "resetAtNEQ", "resetAtIn", "resetAtNotIn", "resetAtGT", "resetAtGTE", "resetAtLT", "resetAtLTE", "periodDays", "periodDaysNEQ", "periodDaysIn", "periodDaysNotIn", "periodDaysGT", "periodDaysGTE", "periodDaysLT", "periodDaysLTE", "includedAmountMicros", "includedAmountMicrosNEQ", "includedAmountMicrosIn", "includedAmountMicrosNotIn", "includedAmountMicrosGT", "includedAmountMicrosGTE", "includedAmountMicrosLT", "includedAmountMicrosLTE", "usedAmountMicros", "usedAmountMicrosNEQ", "usedAmountMicrosIn", "usedAmountMicrosNotIn", "usedAmountMicrosGT", "usedAmountMicrosGTE", "usedAmountMicrosLT", "usedAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "allowWalletFallback", "allowWalletFallbackNEQ", "assignedByID", "assignedByIDNEQ", "assignedByIDIn", "assignedByIDNotIn", "assignedByIDIsNil", "assignedByIDNotNil", "purchaseLedgerTransactionID", "purchaseLedgerTransactionIDNEQ", "purchaseLedgerTransactionIDIn", "purchaseLedgerTransactionIDNotIn", "purchaseLedgerTransactionIDIsNil", "purchaseLedgerTransactionIDNotNil", "originalPriceMicros", "originalPriceMicrosNEQ", "originalPriceMicrosIn", "originalPriceMicrosNotIn", "originalPriceMicrosGT", "originalPriceMicrosGTE", "originalPriceMicrosLT", "originalPriceMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "revokeReason", "revokeReasonNEQ", "revokeReasonIn", "revokeReasonNotIn", "revokeReasonGT", "revokeReasonGTE", "revokeReasonLT", "revokeReasonLTE", "revokeReasonContains", "revokeReasonHasPrefix", "revokeReasonHasSuffix", "revokeReasonEqualFold", "revokeReasonContainsFold", "hasUser", "hasUserWith", "hasPlan", "hasPlanWith", "hasAssignedBy", "hasAssignedByWith", "hasPurchaseLedgerTransaction", "hasPurchaseLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "planID", "planIDNEQ", "planIDIn", "planIDNotIn", "planIDIsNil", "planIDNotNil", "status", "statusNEQ", "statusIn", "statusNotIn", "startsAt", "startsAtNEQ", "startsAtIn", "startsAtNotIn", "startsAtGT", "startsAtGTE", "startsAtLT", "startsAtLTE", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "currentPeriodStart", "currentPeriodStartNEQ", "currentPeriodStartIn", "currentPeriodStartNotIn", "currentPeriodStartGT", "currentPeriodStartGTE", "currentPeriodStartLT", "currentPeriodStartLTE", "currentPeriodEnd", "currentPeriodEndNEQ", "currentPeriodEndIn", "currentPeriodEndNotIn", "currentPeriodEndGT", "currentPeriodEndGTE", "currentPeriodEndLT", "currentPeriodEndLTE", "resetAt", "resetAtNEQ", "resetAtIn", "resetAtNotIn", "resetAtGT", "resetAtGTE", "resetAtLT", "resetAtLTE", "periodDays", "periodDaysNEQ", "periodDaysIn", "periodDaysNotIn", "periodDaysGT", "periodDaysGTE", "periodDaysLT", "periodDaysLTE", "includedAmountMicros", "includedAmountMicrosNEQ", "includedAmountMicrosIn", "includedAmountMicrosNotIn", "includedAmountMicrosGT", "includedAmountMicrosGTE", "includedAmountMicrosLT", "includedAmountMicrosLTE", "usedAmountMicros", "usedAmountMicrosNEQ", "usedAmountMicrosIn", "usedAmountMicrosNotIn", "usedAmountMicrosGT", "usedAmountMicrosGTE", "usedAmountMicrosLT", "usedAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "allowWalletFallback", "allowWalletFallbackNEQ", "assignedByID", "assignedByIDNEQ", "assignedByIDIn", "assignedByIDNotIn", "assignedByIDIsNil", "assignedByIDNotNil", "purchaseLedgerTransactionID", "purchaseLedgerTransactionIDNEQ", "purchaseLedgerTransactionIDIn", "purchaseLedgerTransactionIDNotIn", "purchaseLedgerTransactionIDIsNil", "purchaseLedgerTransactionIDNotNil", "originalPriceMicros", "originalPriceMicrosNEQ", "originalPriceMicrosIn", "originalPriceMicrosNotIn", "originalPriceMicrosGT", "originalPriceMicrosGTE", "originalPriceMicrosLT", "originalPriceMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "revokeReason", "revokeReasonNEQ", "revokeReasonIn", "revokeReasonNotIn", "revokeReasonGT", "revokeReasonGTE", "revokeReasonLT", "revokeReasonLTE", "revokeReasonContains", "revokeReasonHasPrefix", "revokeReasonHasSuffix", "revokeReasonEqualFold", "revokeReasonContainsFold", "hasUser", "hasUserWith", "hasPlan", "hasPlanWith", "hasAssignedBy", "hasAssignedByWith", "hasPurchaseLedgerTransaction", "hasPurchaseLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasAffiliateRebates", "hasAffiliateRebatesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -131174,6 +141035,20 @@ func (ec *executionContext) unmarshalInputUserSubscriptionWhereInput(ctx context
 				return it, err
 			}
 			it.HasUsageBillingRecordsWith = data
+		case "hasAffiliateRebates":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebates"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebates = data
+		case "hasAffiliateRebatesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebatesWith"))
+			data, err := ec.unmarshalOAffiliateRebateWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebatesWith = data
 		}
 	}
 
@@ -131187,7 +141062,7 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "hasProjects", "hasProjectsWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasCreatedRedeemCodes", "hasCreatedRedeemCodesWith", "hasUsedRedeemCodes", "hasUsedRedeemCodesWith", "hasUserSubscriptions", "hasUserSubscriptionsWith", "hasAssignedUserSubscriptions", "hasAssignedUserSubscriptionsWith", "hasPromoUsages", "hasPromoUsagesWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "hasProjects", "hasProjectsWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasCreatedRedeemCodes", "hasCreatedRedeemCodesWith", "hasUsedRedeemCodes", "hasUsedRedeemCodesWith", "hasUserSubscriptions", "hasUserSubscriptionsWith", "hasAssignedUserSubscriptions", "hasAssignedUserSubscriptionsWith", "hasPromoUsages", "hasPromoUsagesWith", "hasAffiliateProfiles", "hasAffiliateProfilesWith", "hasAffiliateInviters", "hasAffiliateInvitersWith", "hasAffiliateInvitees", "hasAffiliateInviteesWith", "hasAffiliateRebatesEarned", "hasAffiliateRebatesEarnedWith", "hasAffiliateRebatesGenerated", "hasAffiliateRebatesGeneratedWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -132066,6 +141941,76 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 				return it, err
 			}
 			it.HasPromoUsagesWith = data
+		case "hasAffiliateProfiles":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateProfiles"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateProfiles = data
+		case "hasAffiliateProfilesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateProfilesWith"))
+			data, err := ec.unmarshalOAffiliateProfileWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateProfilesWith = data
+		case "hasAffiliateInviters":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateInviters"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateInviters = data
+		case "hasAffiliateInvitersWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateInvitersWith"))
+			data, err := ec.unmarshalOAffiliateInvitationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateInvitersWith = data
+		case "hasAffiliateInvitees":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateInvitees"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateInvitees = data
+		case "hasAffiliateInviteesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateInviteesWith"))
+			data, err := ec.unmarshalOAffiliateInvitationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateInviteesWith = data
+		case "hasAffiliateRebatesEarned":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebatesEarned"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebatesEarned = data
+		case "hasAffiliateRebatesEarnedWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebatesEarnedWith"))
+			data, err := ec.unmarshalOAffiliateRebateWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebatesEarnedWith = data
+		case "hasAffiliateRebatesGenerated":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebatesGenerated"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebatesGenerated = data
+		case "hasAffiliateRebatesGeneratedWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAffiliateRebatesGeneratedWith"))
+			data, err := ec.unmarshalOAffiliateRebateWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAffiliateRebatesGeneratedWith = data
 		case "hasProjectUsers":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasProjectUsers"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -132490,6 +142435,26 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._BillingAccount(ctx, sel, obj)
+	case *ent.AffiliateSetting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._AffiliateSetting(ctx, sel, obj)
+	case *ent.AffiliateRebate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._AffiliateRebate(ctx, sel, obj)
+	case *ent.AffiliateProfile:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._AffiliateProfile(ctx, sel, obj)
+	case *ent.AffiliateInvitation:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._AffiliateInvitation(ctx, sel, obj)
 	case *ent.APIKeyProfileTemplate:
 		if obj == nil {
 			return graphql.Null
@@ -133744,6 +143709,1610 @@ func (ec *executionContext) _APIKeyTokenUsageStats(ctx context.Context, sel ast.
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateInvitationImplementors = []string{"AffiliateInvitation", "Node"}
+
+func (ec *executionContext) _AffiliateInvitation(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateInvitation) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateInvitationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateInvitation")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateInvitation_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._AffiliateInvitation_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._AffiliateInvitation_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "inviterUserID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateInvitation_inviterUserID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "inviteeUserID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateInvitation_inviteeUserID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "inviteCode":
+			out.Values[i] = ec._AffiliateInvitation_inviteCode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._AffiliateInvitation_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "notes":
+			out.Values[i] = ec._AffiliateInvitation_notes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "inviter":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateInvitation_inviter(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "invitee":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateInvitation_invitee(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "rebates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateInvitation_rebates(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateInvitationConnectionImplementors = []string{"AffiliateInvitationConnection"}
+
+func (ec *executionContext) _AffiliateInvitationConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateInvitationConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateInvitationConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateInvitationConnection")
+		case "edges":
+			out.Values[i] = ec._AffiliateInvitationConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._AffiliateInvitationConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._AffiliateInvitationConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateInvitationEdgeImplementors = []string{"AffiliateInvitationEdge"}
+
+func (ec *executionContext) _AffiliateInvitationEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateInvitationEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateInvitationEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateInvitationEdge")
+		case "node":
+			out.Values[i] = ec._AffiliateInvitationEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._AffiliateInvitationEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateProfileImplementors = []string{"AffiliateProfile", "Node"}
+
+func (ec *executionContext) _AffiliateProfile(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateProfile) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateProfileImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateProfile")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateProfile_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._AffiliateProfile_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._AffiliateProfile_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "userID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateProfile_userID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "inviteCode":
+			out.Values[i] = ec._AffiliateProfile_inviteCode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._AffiliateProfile_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "rebateRateOverrideBps":
+			out.Values[i] = ec._AffiliateProfile_rebateRateOverrideBps(ctx, field, obj)
+		case "notes":
+			out.Values[i] = ec._AffiliateProfile_notes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateProfile_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateProfileConnectionImplementors = []string{"AffiliateProfileConnection"}
+
+func (ec *executionContext) _AffiliateProfileConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateProfileConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateProfileConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateProfileConnection")
+		case "edges":
+			out.Values[i] = ec._AffiliateProfileConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._AffiliateProfileConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._AffiliateProfileConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateProfileEdgeImplementors = []string{"AffiliateProfileEdge"}
+
+func (ec *executionContext) _AffiliateProfileEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateProfileEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateProfileEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateProfileEdge")
+		case "node":
+			out.Values[i] = ec._AffiliateProfileEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._AffiliateProfileEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateRebateImplementors = []string{"AffiliateRebate", "Node"}
+
+func (ec *executionContext) _AffiliateRebate(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateRebate) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateRebateImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateRebate")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._AffiliateRebate_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._AffiliateRebate_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "invitationID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_invitationID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "inviterUserID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_inviterUserID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "inviteeUserID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_inviteeUserID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "sourceType":
+			out.Values[i] = ec._AffiliateRebate_sourceType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sourceID":
+			out.Values[i] = ec._AffiliateRebate_sourceID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "paymentOrderID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_paymentOrderID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "userSubscriptionID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_userSubscriptionID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "baseAmountMicros":
+			out.Values[i] = ec._AffiliateRebate_baseAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "amountMicros":
+			out.Values[i] = ec._AffiliateRebate_amountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "rateBps":
+			out.Values[i] = ec._AffiliateRebate_rateBps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "currency":
+			out.Values[i] = ec._AffiliateRebate_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._AffiliateRebate_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "freezeUntil":
+			out.Values[i] = ec._AffiliateRebate_freezeUntil(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "transferredAt":
+			out.Values[i] = ec._AffiliateRebate_transferredAt(ctx, field, obj)
+		case "ledgerTransactionID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_ledgerTransactionID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "idempotencyKey":
+			out.Values[i] = ec._AffiliateRebate_idempotencyKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "notes":
+			out.Values[i] = ec._AffiliateRebate_notes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "invitation":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_invitation(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "inviter":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_inviter(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "invitee":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_invitee(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "paymentOrder":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_paymentOrder(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "userSubscription":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_userSubscription(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "ledgerTransaction":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateRebate_ledgerTransaction(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateRebateConnectionImplementors = []string{"AffiliateRebateConnection"}
+
+func (ec *executionContext) _AffiliateRebateConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateRebateConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateRebateConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateRebateConnection")
+		case "edges":
+			out.Values[i] = ec._AffiliateRebateConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._AffiliateRebateConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._AffiliateRebateConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateRebateEdgeImplementors = []string{"AffiliateRebateEdge"}
+
+func (ec *executionContext) _AffiliateRebateEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateRebateEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateRebateEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateRebateEdge")
+		case "node":
+			out.Values[i] = ec._AffiliateRebateEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._AffiliateRebateEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateSettingImplementors = []string{"AffiliateSetting", "Node"}
+
+func (ec *executionContext) _AffiliateSetting(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateSetting) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateSettingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateSetting")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateSetting_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._AffiliateSetting_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._AffiliateSetting_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "key":
+			out.Values[i] = ec._AffiliateSetting_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "enabled":
+			out.Values[i] = ec._AffiliateSetting_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "defaultRebateRateBps":
+			out.Values[i] = ec._AffiliateSetting_defaultRebateRateBps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "freezeDays":
+			out.Values[i] = ec._AffiliateSetting_freezeDays(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "minTransferMicros":
+			out.Values[i] = ec._AffiliateSetting_minTransferMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "currency":
+			out.Values[i] = ec._AffiliateSetting_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateSettingConnectionImplementors = []string{"AffiliateSettingConnection"}
+
+func (ec *executionContext) _AffiliateSettingConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateSettingConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateSettingConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateSettingConnection")
+		case "edges":
+			out.Values[i] = ec._AffiliateSettingConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._AffiliateSettingConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._AffiliateSettingConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateSettingEdgeImplementors = []string{"AffiliateSettingEdge"}
+
+func (ec *executionContext) _AffiliateSettingEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.AffiliateSettingEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateSettingEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateSettingEdge")
+		case "node":
+			out.Values[i] = ec._AffiliateSettingEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._AffiliateSettingEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateSummaryImplementors = []string{"AffiliateSummary"}
+
+func (ec *executionContext) _AffiliateSummary(ctx context.Context, sel ast.SelectionSet, obj *biz.AffiliateSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateSummary")
+		case "profile":
+			out.Values[i] = ec._AffiliateSummary_profile(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "invitation":
+			out.Values[i] = ec._AffiliateSummary_invitation(ctx, field, obj)
+		case "inviteeCount":
+			out.Values[i] = ec._AffiliateSummary_inviteeCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "frozenMicros":
+			out.Values[i] = ec._AffiliateSummary_frozenMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "availableMicros":
+			out.Values[i] = ec._AffiliateSummary_availableMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "transferredMicros":
+			out.Values[i] = ec._AffiliateSummary_transferredMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currency":
+			out.Values[i] = ec._AffiliateSummary_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setting":
+			out.Values[i] = ec._AffiliateSummary_setting(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var affiliateTransferResultImplementors = []string{"AffiliateTransferResult"}
+
+func (ec *executionContext) _AffiliateTransferResult(ctx context.Context, sel ast.SelectionSet, obj *biz.AffiliateTransferResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, affiliateTransferResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AffiliateTransferResult")
+		case "transferredCount":
+			out.Values[i] = ec._AffiliateTransferResult_transferredCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "transferredMicros":
+			out.Values[i] = ec._AffiliateTransferResult_transferredMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "currency":
+			out.Values[i] = ec._AffiliateTransferResult_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "ledgerTransactionIDs":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AffiliateTransferResult_ledgerTransactionIDs(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -141159,6 +152728,42 @@ func (ec *executionContext) _LedgerTransaction(ctx context.Context, sel ast.Sele
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "affiliateRebates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LedgerTransaction_affiliateRebates(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -143317,6 +154922,34 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "bindAffiliateInvite":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_bindAffiliateInvite(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "transferAffiliateRebates":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_transferAffiliateRebates(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "saveAffiliateSetting":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_saveAffiliateSetting(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "saveAffiliateProfile":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_saveAffiliateProfile(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "releaseBillingHold":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_releaseBillingHold(ctx, field)
@@ -144834,6 +156467,42 @@ func (ec *executionContext) _PaymentOrder(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._PaymentOrder_paymentEvents(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "affiliateRebates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PaymentOrder_affiliateRebates(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -148060,6 +159729,94 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "affiliateInvitations":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_affiliateInvitations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "affiliateProfiles":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_affiliateProfiles(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "affiliateRebates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_affiliateRebates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "affiliateSettings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_affiliateSettings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "billingAccounts":
 			field := field
 
@@ -150440,6 +162197,160 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_adminPromoUsages(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myAffiliateSummary":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myAffiliateSummary(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myAffiliateInvitations":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myAffiliateInvitations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myAffiliateRebates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myAffiliateRebates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminAffiliateSetting":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminAffiliateSetting(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminAffiliateProfiles":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminAffiliateProfiles(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminAffiliateInvitations":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminAffiliateInvitations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminAffiliateRebates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminAffiliateRebates(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -157876,6 +169787,186 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "affiliateProfiles":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_affiliateProfiles(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "affiliateInviters":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_affiliateInviters(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "affiliateInvitees":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_affiliateInvitees(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "affiliateRebatesEarned":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_affiliateRebatesEarned(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "affiliateRebatesGenerated":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_affiliateRebatesGenerated(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "projectUsers":
 			field := field
 
@@ -159278,6 +171369,42 @@ func (ec *executionContext) _UserSubscription(ctx context.Context, sel ast.Selec
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "affiliateRebates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserSubscription_affiliateRebates(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -160401,6 +172528,256 @@ func (ec *executionContext) unmarshalNAdminCreateAndRedeemCodeInput2githubᚗcom
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNAffiliateInvitation2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitation(ctx context.Context, sel ast.SelectionSet, v ent.AffiliateInvitation) graphql.Marshaler {
+	return ec._AffiliateInvitation(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAffiliateInvitation2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitation(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateInvitation) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AffiliateInvitation(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAffiliateInvitationConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationConnection(ctx context.Context, sel ast.SelectionSet, v ent.AffiliateInvitationConnection) graphql.Marshaler {
+	return ec._AffiliateInvitationConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAffiliateInvitationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationConnection(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateInvitationConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AffiliateInvitationConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAffiliateInvitationOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationOrderField(ctx context.Context, v any) (*ent.AffiliateInvitationOrderField, error) {
+	var res = new(ent.AffiliateInvitationOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateInvitationOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateInvitationOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNAffiliateInvitationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus(ctx context.Context, v any) (affiliateinvitation.Status, error) {
+	var res affiliateinvitation.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateInvitationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus(ctx context.Context, sel ast.SelectionSet, v affiliateinvitation.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNAffiliateInvitationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInput(ctx context.Context, v any) (*ent.AffiliateInvitationWhereInput, error) {
+	res, err := ec.unmarshalInputAffiliateInvitationWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateProfile2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfile(ctx context.Context, sel ast.SelectionSet, v ent.AffiliateProfile) graphql.Marshaler {
+	return ec._AffiliateProfile(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAffiliateProfile2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfile(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateProfile) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AffiliateProfile(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAffiliateProfileConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileConnection(ctx context.Context, sel ast.SelectionSet, v ent.AffiliateProfileConnection) graphql.Marshaler {
+	return ec._AffiliateProfileConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAffiliateProfileConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileConnection(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateProfileConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AffiliateProfileConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAffiliateProfileOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileOrderField(ctx context.Context, v any) (*ent.AffiliateProfileOrderField, error) {
+	var res = new(ent.AffiliateProfileOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateProfileOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateProfileOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNAffiliateProfileStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx context.Context, v any) (affiliateprofile.Status, error) {
+	var res affiliateprofile.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateProfileStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx context.Context, sel ast.SelectionSet, v affiliateprofile.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNAffiliateProfileWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInput(ctx context.Context, v any) (*ent.AffiliateProfileWhereInput, error) {
+	res, err := ec.unmarshalInputAffiliateProfileWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateRebateConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection(ctx context.Context, sel ast.SelectionSet, v ent.AffiliateRebateConnection) graphql.Marshaler {
+	return ec._AffiliateRebateConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAffiliateRebateConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateConnection(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateRebateConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AffiliateRebateConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAffiliateRebateOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrderField(ctx context.Context, v any) (*ent.AffiliateRebateOrderField, error) {
+	var res = new(ent.AffiliateRebateOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateRebateOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateRebateOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNAffiliateRebateSourceType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType(ctx context.Context, v any) (affiliaterebate.SourceType, error) {
+	var res affiliaterebate.SourceType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateRebateSourceType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType(ctx context.Context, sel ast.SelectionSet, v affiliaterebate.SourceType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNAffiliateRebateStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus(ctx context.Context, v any) (affiliaterebate.Status, error) {
+	var res affiliaterebate.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateRebateStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus(ctx context.Context, sel ast.SelectionSet, v affiliaterebate.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput(ctx context.Context, v any) (*ent.AffiliateRebateWhereInput, error) {
+	res, err := ec.unmarshalInputAffiliateRebateWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateSetting2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSetting(ctx context.Context, sel ast.SelectionSet, v ent.AffiliateSetting) graphql.Marshaler {
+	return ec._AffiliateSetting(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAffiliateSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSetting(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateSetting) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AffiliateSetting(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAffiliateSettingConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingConnection(ctx context.Context, sel ast.SelectionSet, v ent.AffiliateSettingConnection) graphql.Marshaler {
+	return ec._AffiliateSettingConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAffiliateSettingConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingConnection(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateSettingConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AffiliateSettingConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAffiliateSettingOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingOrderField(ctx context.Context, v any) (*ent.AffiliateSettingOrderField, error) {
+	var res = new(ent.AffiliateSettingOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateSettingOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateSettingOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNAffiliateSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingWhereInput(ctx context.Context, v any) (*ent.AffiliateSettingWhereInput, error) {
+	res, err := ec.unmarshalInputAffiliateSettingWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAffiliateSummary2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAffiliateSummary(ctx context.Context, sel ast.SelectionSet, v biz.AffiliateSummary) graphql.Marshaler {
+	return ec._AffiliateSummary(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAffiliateSummary2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAffiliateSummary(ctx context.Context, sel ast.SelectionSet, v *biz.AffiliateSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AffiliateSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAffiliateTransferResult2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAffiliateTransferResult(ctx context.Context, sel ast.SelectionSet, v biz.AffiliateTransferResult) graphql.Marshaler {
+	return ec._AffiliateTransferResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAffiliateTransferResult2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐAffiliateTransferResult(ctx context.Context, sel ast.SelectionSet, v *biz.AffiliateTransferResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AffiliateTransferResult(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNApplyChannelOverrideTemplateInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐApplyChannelOverrideTemplateInput(ctx context.Context, v any) (ApplyChannelOverrideTemplateInput, error) {
 	res, err := ec.unmarshalInputApplyChannelOverrideTemplateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -161127,6 +173504,11 @@ func (ec *executionContext) marshalNBillingTopUserReportRow2ᚕgithubᚗcomᚋlo
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNBindAffiliateInviteInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐBindAffiliateInviteInput(ctx context.Context, v any) (biz.BindAffiliateInviteInput, error) {
+	res, err := ec.unmarshalInputBindAffiliateInviteInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
@@ -165910,6 +178292,16 @@ func (ec *executionContext) unmarshalNRoleWhereInput2ᚖgithubᚗcomᚋloopljᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNSaveAffiliateProfileInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveAffiliateProfileInput(ctx context.Context, v any) (biz.SaveAffiliateProfileInput, error) {
+	res, err := ec.unmarshalInputSaveAffiliateProfileInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSaveAffiliateSettingInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveAffiliateSettingInput(ctx context.Context, v any) (biz.SaveAffiliateSettingInput, error) {
+	res, err := ec.unmarshalInputSaveAffiliateSettingInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNSaveBillingPriceRuleForm2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐSaveBillingPriceRuleForm(ctx context.Context, v any) (SaveBillingPriceRuleForm, error) {
 	res, err := ec.unmarshalInputSaveBillingPriceRuleForm(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -168284,6 +180676,22 @@ func (ec *executionContext) unmarshalOAPIKeyWhereInput2ᚖgithubᚗcomᚋlooplj�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOAdminAffiliateInvitationsFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminAffiliateInvitationsFilter(ctx context.Context, v any) (*AdminAffiliateInvitationsFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAdminAffiliateInvitationsFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAdminAffiliateRebatesFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminAffiliateRebatesFilter(ctx context.Context, v any) (*AdminAffiliateRebatesFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAdminAffiliateRebatesFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOAdminBillingHoldsFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminBillingHoldsFilter(ctx context.Context, v any) (*AdminBillingHoldsFilter, error) {
 	if v == nil {
 		return nil, nil
@@ -168361,6 +180769,696 @@ func (ec *executionContext) unmarshalOAdminUserSubscriptionsFilter2ᚖgithubᚗc
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputAdminUserSubscriptionsFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAffiliateInvitation2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitation(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateInvitation) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AffiliateInvitation(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOAffiliateInvitationEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.AffiliateInvitationEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOAffiliateInvitationEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOAffiliateInvitationEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationEdge(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateInvitationEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AffiliateInvitationEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAffiliateInvitationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationOrder(ctx context.Context, v any) (*ent.AffiliateInvitationOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAffiliateInvitationOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAffiliateInvitationStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatusᚄ(ctx context.Context, v any) ([]affiliateinvitation.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]affiliateinvitation.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAffiliateInvitationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOAffiliateInvitationStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []affiliateinvitation.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAffiliateInvitationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOAffiliateInvitationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus(ctx context.Context, v any) (*affiliateinvitation.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(affiliateinvitation.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAffiliateInvitationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateinvitationᚐStatus(ctx context.Context, sel ast.SelectionSet, v *affiliateinvitation.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOAffiliateInvitationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInputᚄ(ctx context.Context, v any) ([]*ent.AffiliateInvitationWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.AffiliateInvitationWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAffiliateInvitationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOAffiliateInvitationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateInvitationWhereInput(ctx context.Context, v any) (*ent.AffiliateInvitationWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAffiliateInvitationWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAffiliateProfile2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfile(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateProfile) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AffiliateProfile(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOAffiliateProfileEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.AffiliateProfileEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOAffiliateProfileEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOAffiliateProfileEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileEdge(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateProfileEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AffiliateProfileEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAffiliateProfileOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileOrder(ctx context.Context, v any) (*ent.AffiliateProfileOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAffiliateProfileOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAffiliateProfileStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx context.Context, v any) (affiliateprofile.Status, error) {
+	var res affiliateprofile.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAffiliateProfileStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx context.Context, sel ast.SelectionSet, v affiliateprofile.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOAffiliateProfileStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatusᚄ(ctx context.Context, v any) ([]affiliateprofile.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]affiliateprofile.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAffiliateProfileStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOAffiliateProfileStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []affiliateprofile.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAffiliateProfileStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOAffiliateProfileStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx context.Context, v any) (*affiliateprofile.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(affiliateprofile.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAffiliateProfileStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliateprofileᚐStatus(ctx context.Context, sel ast.SelectionSet, v *affiliateprofile.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOAffiliateProfileWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInputᚄ(ctx context.Context, v any) ([]*ent.AffiliateProfileWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.AffiliateProfileWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAffiliateProfileWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOAffiliateProfileWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateProfileWhereInput(ctx context.Context, v any) (*ent.AffiliateProfileWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAffiliateProfileWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAffiliateRebate2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebate(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateRebate) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AffiliateRebate(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOAffiliateRebateEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.AffiliateRebateEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOAffiliateRebateEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOAffiliateRebateEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateEdge(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateRebateEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AffiliateRebateEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder(ctx context.Context, v any) (*ent.AffiliateRebateOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAffiliateRebateOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAffiliateRebateSourceType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceTypeᚄ(ctx context.Context, v any) ([]affiliaterebate.SourceType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]affiliaterebate.SourceType, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAffiliateRebateSourceType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOAffiliateRebateSourceType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []affiliaterebate.SourceType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAffiliateRebateSourceType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOAffiliateRebateSourceType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType(ctx context.Context, v any) (*affiliaterebate.SourceType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(affiliaterebate.SourceType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAffiliateRebateSourceType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐSourceType(ctx context.Context, sel ast.SelectionSet, v *affiliaterebate.SourceType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOAffiliateRebateStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatusᚄ(ctx context.Context, v any) ([]affiliaterebate.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]affiliaterebate.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAffiliateRebateStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOAffiliateRebateStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []affiliaterebate.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAffiliateRebateStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOAffiliateRebateStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus(ctx context.Context, v any) (*affiliaterebate.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(affiliaterebate.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAffiliateRebateStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋaffiliaterebateᚐStatus(ctx context.Context, sel ast.SelectionSet, v *affiliaterebate.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOAffiliateRebateWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInputᚄ(ctx context.Context, v any) ([]*ent.AffiliateRebateWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.AffiliateRebateWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput(ctx context.Context, v any) (*ent.AffiliateRebateWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAffiliateRebateWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAffiliateSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSetting(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateSetting) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AffiliateSetting(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOAffiliateSettingEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.AffiliateSettingEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOAffiliateSettingEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOAffiliateSettingEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingEdge(ctx context.Context, sel ast.SelectionSet, v *ent.AffiliateSettingEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AffiliateSettingEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAffiliateSettingOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingOrder(ctx context.Context, v any) (*ent.AffiliateSettingOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAffiliateSettingOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAffiliateSettingWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingWhereInputᚄ(ctx context.Context, v any) ([]*ent.AffiliateSettingWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.AffiliateSettingWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAffiliateSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOAffiliateSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateSettingWhereInput(ctx context.Context, v any) (*ent.AffiliateSettingWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAffiliateSettingWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -170912,6 +184010,18 @@ func (ec *executionContext) marshalODecimal2ᚖgithubᚗcomᚋshopspringᚋdecim
 	_ = sel
 	_ = ctx
 	res := objects.MarshalDecimal(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalODecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx context.Context, v any) (decimal.Decimal, error) {
+	res, err := objects.UnmarshalDecimal(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx context.Context, sel ast.SelectionSet, v decimal.Decimal) graphql.Marshaler {
+	_ = sel
+	_ = ctx
+	res := objects.MarshalDecimal(v)
 	return res
 }
 

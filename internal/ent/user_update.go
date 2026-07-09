@@ -12,6 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
@@ -353,6 +356,81 @@ func (_u *UserUpdate) AddPromoUsages(v ...*PromoUsage) *UserUpdate {
 	return _u.AddPromoUsageIDs(ids...)
 }
 
+// AddAffiliateProfileIDs adds the "affiliate_profiles" edge to the AffiliateProfile entity by IDs.
+func (_u *UserUpdate) AddAffiliateProfileIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddAffiliateProfileIDs(ids...)
+	return _u
+}
+
+// AddAffiliateProfiles adds the "affiliate_profiles" edges to the AffiliateProfile entity.
+func (_u *UserUpdate) AddAffiliateProfiles(v ...*AffiliateProfile) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateProfileIDs(ids...)
+}
+
+// AddAffiliateInviterIDs adds the "affiliate_inviters" edge to the AffiliateInvitation entity by IDs.
+func (_u *UserUpdate) AddAffiliateInviterIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddAffiliateInviterIDs(ids...)
+	return _u
+}
+
+// AddAffiliateInviters adds the "affiliate_inviters" edges to the AffiliateInvitation entity.
+func (_u *UserUpdate) AddAffiliateInviters(v ...*AffiliateInvitation) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateInviterIDs(ids...)
+}
+
+// AddAffiliateInviteeIDs adds the "affiliate_invitees" edge to the AffiliateInvitation entity by IDs.
+func (_u *UserUpdate) AddAffiliateInviteeIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddAffiliateInviteeIDs(ids...)
+	return _u
+}
+
+// AddAffiliateInvitees adds the "affiliate_invitees" edges to the AffiliateInvitation entity.
+func (_u *UserUpdate) AddAffiliateInvitees(v ...*AffiliateInvitation) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateInviteeIDs(ids...)
+}
+
+// AddAffiliateRebatesEarnedIDs adds the "affiliate_rebates_earned" edge to the AffiliateRebate entity by IDs.
+func (_u *UserUpdate) AddAffiliateRebatesEarnedIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddAffiliateRebatesEarnedIDs(ids...)
+	return _u
+}
+
+// AddAffiliateRebatesEarned adds the "affiliate_rebates_earned" edges to the AffiliateRebate entity.
+func (_u *UserUpdate) AddAffiliateRebatesEarned(v ...*AffiliateRebate) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateRebatesEarnedIDs(ids...)
+}
+
+// AddAffiliateRebatesGeneratedIDs adds the "affiliate_rebates_generated" edge to the AffiliateRebate entity by IDs.
+func (_u *UserUpdate) AddAffiliateRebatesGeneratedIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddAffiliateRebatesGeneratedIDs(ids...)
+	return _u
+}
+
+// AddAffiliateRebatesGenerated adds the "affiliate_rebates_generated" edges to the AffiliateRebate entity.
+func (_u *UserUpdate) AddAffiliateRebatesGenerated(v ...*AffiliateRebate) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateRebatesGeneratedIDs(ids...)
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
 func (_u *UserUpdate) AddProjectUserIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddProjectUserIDs(ids...)
@@ -596,6 +674,111 @@ func (_u *UserUpdate) RemovePromoUsages(v ...*PromoUsage) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePromoUsageIDs(ids...)
+}
+
+// ClearAffiliateProfiles clears all "affiliate_profiles" edges to the AffiliateProfile entity.
+func (_u *UserUpdate) ClearAffiliateProfiles() *UserUpdate {
+	_u.mutation.ClearAffiliateProfiles()
+	return _u
+}
+
+// RemoveAffiliateProfileIDs removes the "affiliate_profiles" edge to AffiliateProfile entities by IDs.
+func (_u *UserUpdate) RemoveAffiliateProfileIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveAffiliateProfileIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateProfiles removes "affiliate_profiles" edges to AffiliateProfile entities.
+func (_u *UserUpdate) RemoveAffiliateProfiles(v ...*AffiliateProfile) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateProfileIDs(ids...)
+}
+
+// ClearAffiliateInviters clears all "affiliate_inviters" edges to the AffiliateInvitation entity.
+func (_u *UserUpdate) ClearAffiliateInviters() *UserUpdate {
+	_u.mutation.ClearAffiliateInviters()
+	return _u
+}
+
+// RemoveAffiliateInviterIDs removes the "affiliate_inviters" edge to AffiliateInvitation entities by IDs.
+func (_u *UserUpdate) RemoveAffiliateInviterIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveAffiliateInviterIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateInviters removes "affiliate_inviters" edges to AffiliateInvitation entities.
+func (_u *UserUpdate) RemoveAffiliateInviters(v ...*AffiliateInvitation) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateInviterIDs(ids...)
+}
+
+// ClearAffiliateInvitees clears all "affiliate_invitees" edges to the AffiliateInvitation entity.
+func (_u *UserUpdate) ClearAffiliateInvitees() *UserUpdate {
+	_u.mutation.ClearAffiliateInvitees()
+	return _u
+}
+
+// RemoveAffiliateInviteeIDs removes the "affiliate_invitees" edge to AffiliateInvitation entities by IDs.
+func (_u *UserUpdate) RemoveAffiliateInviteeIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveAffiliateInviteeIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateInvitees removes "affiliate_invitees" edges to AffiliateInvitation entities.
+func (_u *UserUpdate) RemoveAffiliateInvitees(v ...*AffiliateInvitation) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateInviteeIDs(ids...)
+}
+
+// ClearAffiliateRebatesEarned clears all "affiliate_rebates_earned" edges to the AffiliateRebate entity.
+func (_u *UserUpdate) ClearAffiliateRebatesEarned() *UserUpdate {
+	_u.mutation.ClearAffiliateRebatesEarned()
+	return _u
+}
+
+// RemoveAffiliateRebatesEarnedIDs removes the "affiliate_rebates_earned" edge to AffiliateRebate entities by IDs.
+func (_u *UserUpdate) RemoveAffiliateRebatesEarnedIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveAffiliateRebatesEarnedIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateRebatesEarned removes "affiliate_rebates_earned" edges to AffiliateRebate entities.
+func (_u *UserUpdate) RemoveAffiliateRebatesEarned(v ...*AffiliateRebate) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateRebatesEarnedIDs(ids...)
+}
+
+// ClearAffiliateRebatesGenerated clears all "affiliate_rebates_generated" edges to the AffiliateRebate entity.
+func (_u *UserUpdate) ClearAffiliateRebatesGenerated() *UserUpdate {
+	_u.mutation.ClearAffiliateRebatesGenerated()
+	return _u
+}
+
+// RemoveAffiliateRebatesGeneratedIDs removes the "affiliate_rebates_generated" edge to AffiliateRebate entities by IDs.
+func (_u *UserUpdate) RemoveAffiliateRebatesGeneratedIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveAffiliateRebatesGeneratedIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateRebatesGenerated removes "affiliate_rebates_generated" edges to AffiliateRebate entities.
+func (_u *UserUpdate) RemoveAffiliateRebatesGenerated(v ...*AffiliateRebate) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateRebatesGeneratedIDs(ids...)
 }
 
 // ClearProjectUsers clears all "project_users" edges to the UserProject entity.
@@ -1231,6 +1414,231 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.AffiliateProfilesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateProfilesTable,
+			Columns: []string{user.AffiliateProfilesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateprofile.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateProfilesIDs(); len(nodes) > 0 && !_u.mutation.AffiliateProfilesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateProfilesTable,
+			Columns: []string{user.AffiliateProfilesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateProfilesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateProfilesTable,
+			Columns: []string{user.AffiliateProfilesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateInvitersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInvitersTable,
+			Columns: []string{user.AffiliateInvitersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateInvitersIDs(); len(nodes) > 0 && !_u.mutation.AffiliateInvitersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInvitersTable,
+			Columns: []string{user.AffiliateInvitersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateInvitersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInvitersTable,
+			Columns: []string{user.AffiliateInvitersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateInviteesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInviteesTable,
+			Columns: []string{user.AffiliateInviteesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateInviteesIDs(); len(nodes) > 0 && !_u.mutation.AffiliateInviteesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInviteesTable,
+			Columns: []string{user.AffiliateInviteesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateInviteesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInviteesTable,
+			Columns: []string{user.AffiliateInviteesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateRebatesEarnedCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesEarnedTable,
+			Columns: []string{user.AffiliateRebatesEarnedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateRebatesEarnedIDs(); len(nodes) > 0 && !_u.mutation.AffiliateRebatesEarnedCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesEarnedTable,
+			Columns: []string{user.AffiliateRebatesEarnedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateRebatesEarnedIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesEarnedTable,
+			Columns: []string{user.AffiliateRebatesEarnedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateRebatesGeneratedCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesGeneratedTable,
+			Columns: []string{user.AffiliateRebatesGeneratedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateRebatesGeneratedIDs(); len(nodes) > 0 && !_u.mutation.AffiliateRebatesGeneratedCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesGeneratedTable,
+			Columns: []string{user.AffiliateRebatesGeneratedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateRebatesGeneratedIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesGeneratedTable,
+			Columns: []string{user.AffiliateRebatesGeneratedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.ProjectUsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1656,6 +2064,81 @@ func (_u *UserUpdateOne) AddPromoUsages(v ...*PromoUsage) *UserUpdateOne {
 	return _u.AddPromoUsageIDs(ids...)
 }
 
+// AddAffiliateProfileIDs adds the "affiliate_profiles" edge to the AffiliateProfile entity by IDs.
+func (_u *UserUpdateOne) AddAffiliateProfileIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddAffiliateProfileIDs(ids...)
+	return _u
+}
+
+// AddAffiliateProfiles adds the "affiliate_profiles" edges to the AffiliateProfile entity.
+func (_u *UserUpdateOne) AddAffiliateProfiles(v ...*AffiliateProfile) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateProfileIDs(ids...)
+}
+
+// AddAffiliateInviterIDs adds the "affiliate_inviters" edge to the AffiliateInvitation entity by IDs.
+func (_u *UserUpdateOne) AddAffiliateInviterIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddAffiliateInviterIDs(ids...)
+	return _u
+}
+
+// AddAffiliateInviters adds the "affiliate_inviters" edges to the AffiliateInvitation entity.
+func (_u *UserUpdateOne) AddAffiliateInviters(v ...*AffiliateInvitation) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateInviterIDs(ids...)
+}
+
+// AddAffiliateInviteeIDs adds the "affiliate_invitees" edge to the AffiliateInvitation entity by IDs.
+func (_u *UserUpdateOne) AddAffiliateInviteeIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddAffiliateInviteeIDs(ids...)
+	return _u
+}
+
+// AddAffiliateInvitees adds the "affiliate_invitees" edges to the AffiliateInvitation entity.
+func (_u *UserUpdateOne) AddAffiliateInvitees(v ...*AffiliateInvitation) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateInviteeIDs(ids...)
+}
+
+// AddAffiliateRebatesEarnedIDs adds the "affiliate_rebates_earned" edge to the AffiliateRebate entity by IDs.
+func (_u *UserUpdateOne) AddAffiliateRebatesEarnedIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddAffiliateRebatesEarnedIDs(ids...)
+	return _u
+}
+
+// AddAffiliateRebatesEarned adds the "affiliate_rebates_earned" edges to the AffiliateRebate entity.
+func (_u *UserUpdateOne) AddAffiliateRebatesEarned(v ...*AffiliateRebate) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateRebatesEarnedIDs(ids...)
+}
+
+// AddAffiliateRebatesGeneratedIDs adds the "affiliate_rebates_generated" edge to the AffiliateRebate entity by IDs.
+func (_u *UserUpdateOne) AddAffiliateRebatesGeneratedIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddAffiliateRebatesGeneratedIDs(ids...)
+	return _u
+}
+
+// AddAffiliateRebatesGenerated adds the "affiliate_rebates_generated" edges to the AffiliateRebate entity.
+func (_u *UserUpdateOne) AddAffiliateRebatesGenerated(v ...*AffiliateRebate) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffiliateRebatesGeneratedIDs(ids...)
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
 func (_u *UserUpdateOne) AddProjectUserIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddProjectUserIDs(ids...)
@@ -1899,6 +2382,111 @@ func (_u *UserUpdateOne) RemovePromoUsages(v ...*PromoUsage) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePromoUsageIDs(ids...)
+}
+
+// ClearAffiliateProfiles clears all "affiliate_profiles" edges to the AffiliateProfile entity.
+func (_u *UserUpdateOne) ClearAffiliateProfiles() *UserUpdateOne {
+	_u.mutation.ClearAffiliateProfiles()
+	return _u
+}
+
+// RemoveAffiliateProfileIDs removes the "affiliate_profiles" edge to AffiliateProfile entities by IDs.
+func (_u *UserUpdateOne) RemoveAffiliateProfileIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveAffiliateProfileIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateProfiles removes "affiliate_profiles" edges to AffiliateProfile entities.
+func (_u *UserUpdateOne) RemoveAffiliateProfiles(v ...*AffiliateProfile) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateProfileIDs(ids...)
+}
+
+// ClearAffiliateInviters clears all "affiliate_inviters" edges to the AffiliateInvitation entity.
+func (_u *UserUpdateOne) ClearAffiliateInviters() *UserUpdateOne {
+	_u.mutation.ClearAffiliateInviters()
+	return _u
+}
+
+// RemoveAffiliateInviterIDs removes the "affiliate_inviters" edge to AffiliateInvitation entities by IDs.
+func (_u *UserUpdateOne) RemoveAffiliateInviterIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveAffiliateInviterIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateInviters removes "affiliate_inviters" edges to AffiliateInvitation entities.
+func (_u *UserUpdateOne) RemoveAffiliateInviters(v ...*AffiliateInvitation) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateInviterIDs(ids...)
+}
+
+// ClearAffiliateInvitees clears all "affiliate_invitees" edges to the AffiliateInvitation entity.
+func (_u *UserUpdateOne) ClearAffiliateInvitees() *UserUpdateOne {
+	_u.mutation.ClearAffiliateInvitees()
+	return _u
+}
+
+// RemoveAffiliateInviteeIDs removes the "affiliate_invitees" edge to AffiliateInvitation entities by IDs.
+func (_u *UserUpdateOne) RemoveAffiliateInviteeIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveAffiliateInviteeIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateInvitees removes "affiliate_invitees" edges to AffiliateInvitation entities.
+func (_u *UserUpdateOne) RemoveAffiliateInvitees(v ...*AffiliateInvitation) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateInviteeIDs(ids...)
+}
+
+// ClearAffiliateRebatesEarned clears all "affiliate_rebates_earned" edges to the AffiliateRebate entity.
+func (_u *UserUpdateOne) ClearAffiliateRebatesEarned() *UserUpdateOne {
+	_u.mutation.ClearAffiliateRebatesEarned()
+	return _u
+}
+
+// RemoveAffiliateRebatesEarnedIDs removes the "affiliate_rebates_earned" edge to AffiliateRebate entities by IDs.
+func (_u *UserUpdateOne) RemoveAffiliateRebatesEarnedIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveAffiliateRebatesEarnedIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateRebatesEarned removes "affiliate_rebates_earned" edges to AffiliateRebate entities.
+func (_u *UserUpdateOne) RemoveAffiliateRebatesEarned(v ...*AffiliateRebate) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateRebatesEarnedIDs(ids...)
+}
+
+// ClearAffiliateRebatesGenerated clears all "affiliate_rebates_generated" edges to the AffiliateRebate entity.
+func (_u *UserUpdateOne) ClearAffiliateRebatesGenerated() *UserUpdateOne {
+	_u.mutation.ClearAffiliateRebatesGenerated()
+	return _u
+}
+
+// RemoveAffiliateRebatesGeneratedIDs removes the "affiliate_rebates_generated" edge to AffiliateRebate entities by IDs.
+func (_u *UserUpdateOne) RemoveAffiliateRebatesGeneratedIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveAffiliateRebatesGeneratedIDs(ids...)
+	return _u
+}
+
+// RemoveAffiliateRebatesGenerated removes "affiliate_rebates_generated" edges to AffiliateRebate entities.
+func (_u *UserUpdateOne) RemoveAffiliateRebatesGenerated(v ...*AffiliateRebate) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffiliateRebatesGeneratedIDs(ids...)
 }
 
 // ClearProjectUsers clears all "project_users" edges to the UserProject entity.
@@ -2557,6 +3145,231 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateProfilesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateProfilesTable,
+			Columns: []string{user.AffiliateProfilesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateprofile.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateProfilesIDs(); len(nodes) > 0 && !_u.mutation.AffiliateProfilesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateProfilesTable,
+			Columns: []string{user.AffiliateProfilesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateProfilesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateProfilesTable,
+			Columns: []string{user.AffiliateProfilesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateInvitersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInvitersTable,
+			Columns: []string{user.AffiliateInvitersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateInvitersIDs(); len(nodes) > 0 && !_u.mutation.AffiliateInvitersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInvitersTable,
+			Columns: []string{user.AffiliateInvitersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateInvitersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInvitersTable,
+			Columns: []string{user.AffiliateInvitersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateInviteesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInviteesTable,
+			Columns: []string{user.AffiliateInviteesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateInviteesIDs(); len(nodes) > 0 && !_u.mutation.AffiliateInviteesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInviteesTable,
+			Columns: []string{user.AffiliateInviteesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateInviteesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateInviteesTable,
+			Columns: []string{user.AffiliateInviteesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliateinvitation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateRebatesEarnedCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesEarnedTable,
+			Columns: []string{user.AffiliateRebatesEarnedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateRebatesEarnedIDs(); len(nodes) > 0 && !_u.mutation.AffiliateRebatesEarnedCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesEarnedTable,
+			Columns: []string{user.AffiliateRebatesEarnedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateRebatesEarnedIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesEarnedTable,
+			Columns: []string{user.AffiliateRebatesEarnedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffiliateRebatesGeneratedCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesGeneratedTable,
+			Columns: []string{user.AffiliateRebatesGeneratedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffiliateRebatesGeneratedIDs(); len(nodes) > 0 && !_u.mutation.AffiliateRebatesGeneratedCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesGeneratedTable,
+			Columns: []string{user.AffiliateRebatesGeneratedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffiliateRebatesGeneratedIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AffiliateRebatesGeneratedTable,
+			Columns: []string{user.AffiliateRebatesGeneratedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

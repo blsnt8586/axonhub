@@ -62,6 +62,16 @@ const (
 	EdgeAssignedUserSubscriptions = "assigned_user_subscriptions"
 	// EdgePromoUsages holds the string denoting the promo_usages edge name in mutations.
 	EdgePromoUsages = "promo_usages"
+	// EdgeAffiliateProfiles holds the string denoting the affiliate_profiles edge name in mutations.
+	EdgeAffiliateProfiles = "affiliate_profiles"
+	// EdgeAffiliateInviters holds the string denoting the affiliate_inviters edge name in mutations.
+	EdgeAffiliateInviters = "affiliate_inviters"
+	// EdgeAffiliateInvitees holds the string denoting the affiliate_invitees edge name in mutations.
+	EdgeAffiliateInvitees = "affiliate_invitees"
+	// EdgeAffiliateRebatesEarned holds the string denoting the affiliate_rebates_earned edge name in mutations.
+	EdgeAffiliateRebatesEarned = "affiliate_rebates_earned"
+	// EdgeAffiliateRebatesGenerated holds the string denoting the affiliate_rebates_generated edge name in mutations.
+	EdgeAffiliateRebatesGenerated = "affiliate_rebates_generated"
 	// EdgeProjectUsers holds the string denoting the project_users edge name in mutations.
 	EdgeProjectUsers = "project_users"
 	// EdgeUserRoles holds the string denoting the user_roles edge name in mutations.
@@ -134,6 +144,41 @@ const (
 	PromoUsagesInverseTable = "promo_usages"
 	// PromoUsagesColumn is the table column denoting the promo_usages relation/edge.
 	PromoUsagesColumn = "user_id"
+	// AffiliateProfilesTable is the table that holds the affiliate_profiles relation/edge.
+	AffiliateProfilesTable = "affiliate_profiles"
+	// AffiliateProfilesInverseTable is the table name for the AffiliateProfile entity.
+	// It exists in this package in order to avoid circular dependency with the "affiliateprofile" package.
+	AffiliateProfilesInverseTable = "affiliate_profiles"
+	// AffiliateProfilesColumn is the table column denoting the affiliate_profiles relation/edge.
+	AffiliateProfilesColumn = "user_id"
+	// AffiliateInvitersTable is the table that holds the affiliate_inviters relation/edge.
+	AffiliateInvitersTable = "affiliate_invitations"
+	// AffiliateInvitersInverseTable is the table name for the AffiliateInvitation entity.
+	// It exists in this package in order to avoid circular dependency with the "affiliateinvitation" package.
+	AffiliateInvitersInverseTable = "affiliate_invitations"
+	// AffiliateInvitersColumn is the table column denoting the affiliate_inviters relation/edge.
+	AffiliateInvitersColumn = "inviter_user_id"
+	// AffiliateInviteesTable is the table that holds the affiliate_invitees relation/edge.
+	AffiliateInviteesTable = "affiliate_invitations"
+	// AffiliateInviteesInverseTable is the table name for the AffiliateInvitation entity.
+	// It exists in this package in order to avoid circular dependency with the "affiliateinvitation" package.
+	AffiliateInviteesInverseTable = "affiliate_invitations"
+	// AffiliateInviteesColumn is the table column denoting the affiliate_invitees relation/edge.
+	AffiliateInviteesColumn = "invitee_user_id"
+	// AffiliateRebatesEarnedTable is the table that holds the affiliate_rebates_earned relation/edge.
+	AffiliateRebatesEarnedTable = "affiliate_rebates"
+	// AffiliateRebatesEarnedInverseTable is the table name for the AffiliateRebate entity.
+	// It exists in this package in order to avoid circular dependency with the "affiliaterebate" package.
+	AffiliateRebatesEarnedInverseTable = "affiliate_rebates"
+	// AffiliateRebatesEarnedColumn is the table column denoting the affiliate_rebates_earned relation/edge.
+	AffiliateRebatesEarnedColumn = "inviter_user_id"
+	// AffiliateRebatesGeneratedTable is the table that holds the affiliate_rebates_generated relation/edge.
+	AffiliateRebatesGeneratedTable = "affiliate_rebates"
+	// AffiliateRebatesGeneratedInverseTable is the table name for the AffiliateRebate entity.
+	// It exists in this package in order to avoid circular dependency with the "affiliaterebate" package.
+	AffiliateRebatesGeneratedInverseTable = "affiliate_rebates"
+	// AffiliateRebatesGeneratedColumn is the table column denoting the affiliate_rebates_generated relation/edge.
+	AffiliateRebatesGeneratedColumn = "invitee_user_id"
 	// ProjectUsersTable is the table that holds the project_users relation/edge.
 	ProjectUsersTable = "user_projects"
 	// ProjectUsersInverseTable is the table name for the UserProject entity.
@@ -444,6 +489,76 @@ func ByPromoUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByAffiliateProfilesCount orders the results by affiliate_profiles count.
+func ByAffiliateProfilesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffiliateProfilesStep(), opts...)
+	}
+}
+
+// ByAffiliateProfiles orders the results by affiliate_profiles terms.
+func ByAffiliateProfiles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffiliateProfilesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAffiliateInvitersCount orders the results by affiliate_inviters count.
+func ByAffiliateInvitersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffiliateInvitersStep(), opts...)
+	}
+}
+
+// ByAffiliateInviters orders the results by affiliate_inviters terms.
+func ByAffiliateInviters(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffiliateInvitersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAffiliateInviteesCount orders the results by affiliate_invitees count.
+func ByAffiliateInviteesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffiliateInviteesStep(), opts...)
+	}
+}
+
+// ByAffiliateInvitees orders the results by affiliate_invitees terms.
+func ByAffiliateInvitees(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffiliateInviteesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAffiliateRebatesEarnedCount orders the results by affiliate_rebates_earned count.
+func ByAffiliateRebatesEarnedCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffiliateRebatesEarnedStep(), opts...)
+	}
+}
+
+// ByAffiliateRebatesEarned orders the results by affiliate_rebates_earned terms.
+func ByAffiliateRebatesEarned(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffiliateRebatesEarnedStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAffiliateRebatesGeneratedCount orders the results by affiliate_rebates_generated count.
+func ByAffiliateRebatesGeneratedCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffiliateRebatesGeneratedStep(), opts...)
+	}
+}
+
+// ByAffiliateRebatesGenerated orders the results by affiliate_rebates_generated terms.
+func ByAffiliateRebatesGenerated(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffiliateRebatesGeneratedStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProjectUsersCount orders the results by project_users count.
 func ByProjectUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -539,6 +654,41 @@ func newPromoUsagesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PromoUsagesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PromoUsagesTable, PromoUsagesColumn),
+	)
+}
+func newAffiliateProfilesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffiliateProfilesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AffiliateProfilesTable, AffiliateProfilesColumn),
+	)
+}
+func newAffiliateInvitersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffiliateInvitersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AffiliateInvitersTable, AffiliateInvitersColumn),
+	)
+}
+func newAffiliateInviteesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffiliateInviteesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AffiliateInviteesTable, AffiliateInviteesColumn),
+	)
+}
+func newAffiliateRebatesEarnedStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffiliateRebatesEarnedInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AffiliateRebatesEarnedTable, AffiliateRebatesEarnedColumn),
+	)
+}
+func newAffiliateRebatesGeneratedStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffiliateRebatesGeneratedInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AffiliateRebatesGeneratedTable, AffiliateRebatesGeneratedColumn),
 	)
 }
 func newProjectUsersStep() *sqlgraph.Step {

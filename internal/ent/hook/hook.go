@@ -33,6 +33,54 @@ func (f APIKeyProfileTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.APIKeyProfileTemplateMutation", m)
 }
 
+// The AffiliateInvitationFunc type is an adapter to allow the use of ordinary
+// function as AffiliateInvitation mutator.
+type AffiliateInvitationFunc func(context.Context, *ent.AffiliateInvitationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AffiliateInvitationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AffiliateInvitationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AffiliateInvitationMutation", m)
+}
+
+// The AffiliateProfileFunc type is an adapter to allow the use of ordinary
+// function as AffiliateProfile mutator.
+type AffiliateProfileFunc func(context.Context, *ent.AffiliateProfileMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AffiliateProfileFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AffiliateProfileMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AffiliateProfileMutation", m)
+}
+
+// The AffiliateRebateFunc type is an adapter to allow the use of ordinary
+// function as AffiliateRebate mutator.
+type AffiliateRebateFunc func(context.Context, *ent.AffiliateRebateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AffiliateRebateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AffiliateRebateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AffiliateRebateMutation", m)
+}
+
+// The AffiliateSettingFunc type is an adapter to allow the use of ordinary
+// function as AffiliateSetting mutator.
+type AffiliateSettingFunc func(context.Context, *ent.AffiliateSettingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AffiliateSettingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AffiliateSettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AffiliateSettingMutation", m)
+}
+
 // The BillingAccountFunc type is an adapter to allow the use of ordinary
 // function as BillingAccount mutator.
 type BillingAccountFunc func(context.Context, *ent.BillingAccountMutation) (ent.Value, error)

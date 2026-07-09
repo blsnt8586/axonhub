@@ -15,6 +15,8 @@ import (
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
+	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/promocode"
@@ -24,6 +26,15 @@ import (
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
 )
+
+// LedgerTransactionIDs is the resolver for the ledgerTransactionIDs field.
+func (r *affiliateTransferResultResolver) LedgerTransactionIDs(ctx context.Context, obj *biz.AffiliateTransferResult) ([]*objects.GUID, error) {
+	ids := make([]*objects.GUID, 0, len(obj.LedgerTransactionIDs))
+	for _, id := range obj.LedgerTransactionIDs {
+		ids = append(ids, &objects.GUID{Type: ent.TypeLedgerTransaction, ID: id})
+	}
+	return ids, nil
+}
 
 // CreateManualRechargeOrder is the resolver for the createManualRechargeOrder field.
 func (r *mutationResolver) CreateManualRechargeOrder(ctx context.Context, input biz.CreateManualRechargeOrderInput) (*ent.PaymentOrder, error) {
@@ -428,6 +439,67 @@ func (r *mutationResolver) ResetUserSubscriptionUsage(ctx context.Context, id ob
 	})
 }
 
+// BindAffiliateInvite is the resolver for the bindAffiliateInvite field.
+func (r *mutationResolver) BindAffiliateInvite(ctx context.Context, input biz.BindAffiliateInviteInput) (*ent.AffiliateInvitation, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if r.affiliateService == nil {
+		return nil, fmt.Errorf("affiliate service is not configured")
+	}
+	input.InviteeUserID = user.ID
+
+	return authz.RunWithSystemBypass(ctx, "billing-bind-affiliate-invite", func(ctx context.Context) (*ent.AffiliateInvitation, error) {
+		return r.affiliateService.BindInvite(ctx, input)
+	})
+}
+
+// TransferAffiliateRebates is the resolver for the transferAffiliateRebates field.
+func (r *mutationResolver) TransferAffiliateRebates(ctx context.Context) (*biz.AffiliateTransferResult, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if r.affiliateService == nil {
+		return nil, fmt.Errorf("affiliate service is not configured")
+	}
+
+	result, err := authz.RunWithSystemBypass(ctx, "billing-transfer-affiliate-rebates", func(ctx context.Context) (biz.AffiliateTransferResult, error) {
+		return r.affiliateService.TransferAvailable(ctx, biz.TransferAffiliateRebatesInput{UserID: user.ID})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// SaveAffiliateSetting is the resolver for the saveAffiliateSetting field.
+func (r *mutationResolver) SaveAffiliateSetting(ctx context.Context, input biz.SaveAffiliateSettingInput) (*ent.AffiliateSetting, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if r.affiliateService == nil {
+		return nil, fmt.Errorf("affiliate service is not configured")
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-save-affiliate-setting", func(ctx context.Context) (*ent.AffiliateSetting, error) {
+		return r.affiliateService.SaveSetting(ctx, input)
+	})
+}
+
+// SaveAffiliateProfile is the resolver for the saveAffiliateProfile field.
+func (r *mutationResolver) SaveAffiliateProfile(ctx context.Context, input biz.SaveAffiliateProfileInput) (*ent.AffiliateProfile, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if r.affiliateService == nil {
+		return nil, fmt.Errorf("affiliate service is not configured")
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-save-affiliate-profile", func(ctx context.Context) (*ent.AffiliateProfile, error) {
+		return r.affiliateService.SaveProfile(ctx, input)
+	})
+}
+
 // ReleaseBillingHold is the resolver for the releaseBillingHold field.
 func (r *mutationResolver) ReleaseBillingHold(ctx context.Context, id objects.GUID, reason string) (*ent.BillingHold, error) {
 	actor, err := requireOwnerUser(ctx)
@@ -793,6 +865,153 @@ func (r *queryResolver) AdminPromoUsages(ctx context.Context, filter *AdminPromo
 	})
 }
 
+// MyAffiliateSummary is the resolver for the myAffiliateSummary field.
+func (r *queryResolver) MyAffiliateSummary(ctx context.Context) (*biz.AffiliateSummary, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if r.affiliateService == nil {
+		return nil, fmt.Errorf("affiliate service is not configured")
+	}
+	summary, err := authz.RunWithSystemBypass(ctx, "billing-my-affiliate-summary", func(ctx context.Context) (biz.AffiliateSummary, error) {
+		return r.affiliateService.Summary(ctx, user.ID, time.Now().UTC())
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &summary, nil
+}
+
+// MyAffiliateInvitations is the resolver for the myAffiliateInvitations field.
+func (r *queryResolver) MyAffiliateInvitations(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) (*ent.AffiliateInvitationConnection, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-my-affiliate-invitations", func(ctx context.Context) (*ent.AffiliateInvitationConnection, error) {
+		return r.client.AffiliateInvitation.Query().
+			Where(affiliateinvitation.InviterUserIDEQ(user.ID)).
+			Paginate(ctx, after, first, before, last, ent.WithAffiliateInvitationOrder(orderBy))
+	})
+}
+
+// MyAffiliateRebates is the resolver for the myAffiliateRebates field.
+func (r *queryResolver) MyAffiliateRebates(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) (*ent.AffiliateRebateConnection, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-my-affiliate-rebates", func(ctx context.Context) (*ent.AffiliateRebateConnection, error) {
+		return r.client.AffiliateRebate.Query().
+			Where(affiliaterebate.InviterUserIDEQ(user.ID)).
+			Paginate(ctx, after, first, before, last, ent.WithAffiliateRebateOrder(orderBy))
+	})
+}
+
+// AdminAffiliateSetting is the resolver for the adminAffiliateSetting field.
+func (r *queryResolver) AdminAffiliateSetting(ctx context.Context) (*ent.AffiliateSetting, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if r.affiliateService == nil {
+		return nil, fmt.Errorf("affiliate service is not configured")
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-admin-affiliate-setting", func(ctx context.Context) (*ent.AffiliateSetting, error) {
+		return r.affiliateService.GetOrCreateSetting(ctx)
+	})
+}
+
+// AdminAffiliateProfiles is the resolver for the adminAffiliateProfiles field.
+func (r *queryResolver) AdminAffiliateProfiles(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder) (*ent.AffiliateProfileConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-admin-affiliate-profiles", func(ctx context.Context) (*ent.AffiliateProfileConnection, error) {
+		return r.client.AffiliateProfile.Query().Paginate(ctx, after, first, before, last, ent.WithAffiliateProfileOrder(orderBy))
+	})
+}
+
+// AdminAffiliateInvitations is the resolver for the adminAffiliateInvitations field.
+func (r *queryResolver) AdminAffiliateInvitations(ctx context.Context, filter *AdminAffiliateInvitationsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) (*ent.AffiliateInvitationConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-admin-affiliate-invitations", func(ctx context.Context) (*ent.AffiliateInvitationConnection, error) {
+		query := r.client.AffiliateInvitation.Query()
+		if filter != nil {
+			if filter.InviterUserID != nil {
+				query.Where(affiliateinvitation.InviterUserIDEQ(*filter.InviterUserID))
+			}
+			if filter.InviteeUserID != nil {
+				query.Where(affiliateinvitation.InviteeUserIDEQ(*filter.InviteeUserID))
+			}
+			if filter.Status != nil {
+				query.Where(affiliateinvitation.StatusEQ(*filter.Status))
+			}
+			if filter.InviteCode != nil && strings.TrimSpace(*filter.InviteCode) != "" {
+				query.Where(affiliateinvitation.InviteCodeContainsFold(strings.TrimSpace(*filter.InviteCode)))
+			}
+			if filter.From != nil {
+				query.Where(affiliateinvitation.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(affiliateinvitation.CreatedAtLTE(*filter.To))
+			}
+		}
+		return query.Paginate(ctx, after, first, before, last, ent.WithAffiliateInvitationOrder(orderBy))
+	})
+}
+
+// AdminAffiliateRebates is the resolver for the adminAffiliateRebates field.
+func (r *queryResolver) AdminAffiliateRebates(ctx context.Context, filter *AdminAffiliateRebatesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) (*ent.AffiliateRebateConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-admin-affiliate-rebates", func(ctx context.Context) (*ent.AffiliateRebateConnection, error) {
+		query := r.client.AffiliateRebate.Query()
+		if filter != nil {
+			if filter.InviterUserID != nil {
+				query.Where(affiliaterebate.InviterUserIDEQ(*filter.InviterUserID))
+			}
+			if filter.InviteeUserID != nil {
+				query.Where(affiliaterebate.InviteeUserIDEQ(*filter.InviteeUserID))
+			}
+			if filter.SourceType != nil {
+				query.Where(affiliaterebate.SourceTypeEQ(*filter.SourceType))
+			}
+			if filter.Status != nil {
+				query.Where(affiliaterebate.StatusEQ(*filter.Status))
+			}
+			if filter.From != nil {
+				query.Where(affiliaterebate.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(affiliaterebate.CreatedAtLTE(*filter.To))
+			}
+			if filter.TransferableBefore != nil {
+				query.Where(affiliaterebate.FreezeUntilLTE(*filter.TransferableBefore))
+			}
+		}
+		return query.Paginate(ctx, after, first, before, last, ent.WithAffiliateRebateOrder(orderBy))
+	})
+}
+
 // AdminUserSubscriptions is the resolver for the adminUserSubscriptions field.
 func (r *queryResolver) AdminUserSubscriptions(ctx context.Context, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) (*ent.UserSubscriptionConnection, error) {
 	if err := requireOwner(ctx); err != nil {
@@ -883,6 +1102,11 @@ func (r *quoteSubscriptionPromoInputResolver) PromoCode(ctx context.Context, obj
 	return nil
 }
 
+// AffiliateTransferResult returns AffiliateTransferResultResolver implementation.
+func (r *Resolver) AffiliateTransferResult() AffiliateTransferResultResolver {
+	return &affiliateTransferResultResolver{r}
+}
+
 // QuoteRechargePromoInput returns QuoteRechargePromoInputResolver implementation.
 func (r *Resolver) QuoteRechargePromoInput() QuoteRechargePromoInputResolver {
 	return &quoteRechargePromoInputResolver{r}
@@ -893,5 +1117,6 @@ func (r *Resolver) QuoteSubscriptionPromoInput() QuoteSubscriptionPromoInputReso
 	return &quoteSubscriptionPromoInputResolver{r}
 }
 
+type affiliateTransferResultResolver struct{ *Resolver }
 type quoteRechargePromoInputResolver struct{ *Resolver }
 type quoteSubscriptionPromoInputResolver struct{ *Resolver }
