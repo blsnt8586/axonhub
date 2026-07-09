@@ -272,39 +272,45 @@ Verification:
 
 ## Stage 18: Commercial Operations Final Acceptance
 
-Status: [ ] Planned
+Status: [x] Completed - automated backend acceptance added; Docker/PostgreSQL
+and browser smoke remain release-gate checks in
+`commercial-final-acceptance.md`.
 
 Goal: verify the enhanced commercial platform as a coherent product, not only a
 set of backend features.
 
 Backend acceptance:
 
-- [ ] Public registration, login, wallet recharge, redeem, subscription purchase,
+- [x] Public registration, login, wallet recharge, redeem, subscription purchase,
   API key limits, billing admission, usage billing, account-pool scheduling, and
   account switching work together.
 - [ ] Docker/PostgreSQL startup works with all commercial and account-pool tables.
-- [ ] SQLite single-node development mode still works.
-- [ ] Logs do not contain payment secrets, upstream account secrets, or full API
-  keys.
-- [ ] Aggregate rebuild and maintenance workers are repeatable.
-- [ ] Any unresolved Stage 11 production checklist items are either completed or
+- [x] SQLite single-node development mode still works.
+- [ ] Runtime logs do not contain payment secrets, upstream account secrets, or
+  full API keys.
+- [x] Persisted payment provider config does not contain ePay secrets in
+  plaintext.
+- [x] Aggregate rebuild and maintenance workers are repeatable.
+- [x] Any unresolved Stage 11 production checklist items are either completed or
   explicitly carried as production risks.
 
 Frontend acceptance:
 
-- [ ] User can register, sign in, recharge, create an API key, call the API, and
-  view wallet/usage/billing data.
-- [ ] Owner can inspect users, ledgers, usage charges, reports, account pools,
-  account switching, and account health.
+- [ ] User browser smoke confirms registration, sign-in, recharge, API key
+  creation, API call, and wallet/usage/billing views.
+- [ ] Owner browser smoke confirms users, ledgers, usage charges, reports,
+  account pools, account switching, and account health views.
 - [ ] Desktop and mobile layouts are usable.
-- [ ] Production build passes.
+- [x] Production build passes.
 
 Verification:
 
-- [ ] Focused backend tests for changed business services pass.
-- [ ] Orchestrator account-pool tests pass.
-- [ ] GraphQL authorization tests pass.
-- [ ] Frontend typecheck, targeted lint, and build pass.
+- [x] Focused backend tests for changed business services pass.
+- [x] Orchestrator account-pool tests pass.
+- [x] GraphQL authorization tests pass.
+- [x] Frontend typecheck and build pass.
+- [ ] Frontend lint is clean; full `pnpm lint` is currently blocked by existing
+  repository-wide lint debt outside this stage.
 - [ ] Browser smoke tests cover owner and normal user flows.
 
 ## Completion Log
@@ -315,3 +321,4 @@ Append one line per completed enhancement stage.
 | --- | --- | --- | --- |
 | Stage 12 | this commit | 2026-07-09 | Added public registration settings, real sign-up API/UI, user wallet initialization, optional default project/API key, signup grant, rate limiting, audit log, and focused tests. |
 | Stage 17 | this commit | 2026-07-09 | Added upstream-account usage dimensions, switch history, owner monitoring/detail pages, and focused backend/frontend verification. |
+| Stage 18 | this commit | 2026-07-09 | Added final commercial lifecycle acceptance test, Stage 18 acceptance evidence, and release-gate checklist for remaining deployment/browser smoke. |
