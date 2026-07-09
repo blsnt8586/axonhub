@@ -14,6 +14,9 @@ export type AffiliateProfileStatus = 'active' | 'disabled';
 export type AffiliateInvitationStatus = 'active' | 'canceled';
 export type AffiliateRebateStatus = 'frozen' | 'available' | 'transferred' | 'voided';
 export type AffiliateRebateSourceType = 'payment_order' | 'user_subscription';
+export type BillingNotificationStatus = 'unread' | 'read' | 'dismissed';
+export type BillingNotificationCategory = 'low_balance' | 'payment' | 'subscription' | 'large_consumption' | 'operator_alert';
+export type BillingNotificationSeverity = 'info' | 'warning' | 'error';
 
 export interface BillingAccount {
   id: string;
@@ -207,6 +210,31 @@ export interface AffiliateTransferResult {
   ledgerTransactionIDs: string[];
 }
 
+export interface BillingNotificationPreference {
+  id: string;
+  enabled: boolean;
+  lowBalanceEnabled: boolean;
+  paymentEnabled: boolean;
+  subscriptionEnabled: boolean;
+  largeConsumptionEnabled: boolean;
+}
+
+export interface BillingNotification {
+  id: string;
+  createdAt: string;
+  category: BillingNotificationCategory;
+  severity: BillingNotificationSeverity;
+  status: BillingNotificationStatus;
+  title: string;
+  message: string;
+  currency: string;
+  amountMicros?: number | null;
+  paymentOrderID?: string | null;
+  userSubscriptionID?: string | null;
+  usageBillingRecordID?: string | null;
+  readAt?: string | null;
+}
+
 export interface BillingOverview {
   account: BillingAccount;
   paymentOrders: PaymentOrder[];
@@ -218,6 +246,8 @@ export interface BillingOverview {
   affiliateSummary: AffiliateSummary;
   affiliateInvitations: AffiliateInvitation[];
   affiliateRebates: AffiliateRebate[];
+  notificationPreference: BillingNotificationPreference;
+  notifications: BillingNotification[];
 }
 
 const BILLING_OVERVIEW_QUERY = `
@@ -422,6 +452,33 @@ const BILLING_OVERVIEW_QUERY = `
         }
       }
     }
+    myBillingNotificationPreference {
+      id
+      enabled
+      lowBalanceEnabled
+      paymentEnabled
+      subscriptionEnabled
+      largeConsumptionEnabled
+    }
+    myBillingNotifications(first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          category
+          severity
+          status
+          title
+          message
+          currency
+          amountMicros
+          paymentOrderID
+          userSubscriptionID
+          usageBillingRecordID
+          readAt
+        }
+      }
+    }
   }
 `;
 
@@ -528,6 +585,35 @@ const TRANSFER_AFFILIATE_REBATES_MUTATION = `
   }
 `;
 
+const SAVE_MY_BILLING_NOTIFICATION_PREFERENCE_MUTATION = `
+  mutation SaveMyBillingNotificationPreference($input: SaveBillingNotificationPreferenceInput!) {
+    saveMyBillingNotificationPreference(input: $input) {
+      id
+      enabled
+      lowBalanceEnabled
+      paymentEnabled
+      subscriptionEnabled
+      largeConsumptionEnabled
+    }
+  }
+`;
+
+const MARK_BILLING_NOTIFICATION_READ_MUTATION = `
+  mutation MarkBillingNotificationRead($id: ID!) {
+    markBillingNotificationRead(id: $id) {
+      id
+      status
+      readAt
+    }
+  }
+`;
+
+const MARK_ALL_BILLING_NOTIFICATIONS_READ_MUTATION = `
+  mutation MarkAllBillingNotificationsRead {
+    markAllBillingNotificationsRead
+  }
+`;
+
 type Connection<T> = {
   edges?: Array<{ node?: T | null } | null> | null;
 };
@@ -551,6 +637,8 @@ export function useMyBillingOverview(first = 10) {
         myAffiliateSummary: AffiliateSummary;
         myAffiliateInvitations: Connection<AffiliateInvitation>;
         myAffiliateRebates: Connection<AffiliateRebate>;
+        myBillingNotificationPreference: BillingNotificationPreference;
+        myBillingNotifications: Connection<BillingNotification>;
       }>(BILLING_OVERVIEW_QUERY, { first });
 
       return {
@@ -564,6 +652,8 @@ export function useMyBillingOverview(first = 10) {
         affiliateSummary: data.myAffiliateSummary,
         affiliateInvitations: nodes(data.myAffiliateInvitations),
         affiliateRebates: nodes(data.myAffiliateRebates),
+        notificationPreference: data.myBillingNotificationPreference,
+        notifications: nodes(data.myBillingNotifications),
       } satisfies BillingOverview;
     },
   });
@@ -652,6 +742,54 @@ export function useTransferAffiliateRebates() {
     mutationFn: async () => {
       const data = await graphqlRequest<{ transferAffiliateRebates: AffiliateTransferResult }>(TRANSFER_AFFILIATE_REBATES_MUTATION);
       return data.transferAffiliateRebates;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useSaveMyBillingNotificationPreference() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: Omit<BillingNotificationPreference, 'id'>) => {
+      const data = await graphqlRequest<{ saveMyBillingNotificationPreference: BillingNotificationPreference }>(
+        SAVE_MY_BILLING_NOTIFICATION_PREFERENCE_MUTATION,
+        { input }
+      );
+      return data.saveMyBillingNotificationPreference;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useMarkBillingNotificationRead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const data = await graphqlRequest<{ markBillingNotificationRead: Pick<BillingNotification, 'id' | 'status' | 'readAt'> }>(
+        MARK_BILLING_NOTIFICATION_READ_MUTATION,
+        { id }
+      );
+      return data.markBillingNotificationRead;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useMarkAllBillingNotificationsRead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const data = await graphqlRequest<{ markAllBillingNotificationsRead: number }>(MARK_ALL_BILLING_NOTIFICATIONS_READ_MUTATION);
+      return data.markAllBillingNotificationsRead;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });

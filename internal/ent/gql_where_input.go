@@ -16,6 +16,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationsetting"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -3065,6 +3068,10 @@ type BillingAccountWhereInput struct {
 	// "promo_usages" edge predicates.
 	HasPromoUsages     *bool                   `json:"hasPromoUsages,omitempty"`
 	HasPromoUsagesWith []*PromoUsageWhereInput `json:"hasPromoUsagesWith,omitempty"`
+
+	// "billing_notifications" edge predicates.
+	HasBillingNotifications     *bool                            `json:"hasBillingNotifications,omitempty"`
+	HasBillingNotificationsWith []*BillingNotificationWhereInput `json:"hasBillingNotificationsWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -3477,6 +3484,24 @@ func (i *BillingAccountWhereInput) P() (predicate.BillingAccount, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, billingaccount.HasPromoUsagesWith(with...))
+	}
+	if i.HasBillingNotifications != nil {
+		p := billingaccount.HasBillingNotifications()
+		if !*i.HasBillingNotifications {
+			p = billingaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingNotificationsWith) > 0 {
+		with := make([]predicate.BillingNotification, 0, len(i.HasBillingNotificationsWith))
+		for _, w := range i.HasBillingNotificationsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingNotificationsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingaccount.HasBillingNotificationsWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -4925,6 +4950,1524 @@ func (i *BillingHoldWhereInput) P() (predicate.BillingHold, error) {
 		return predicates[0], nil
 	default:
 		return billinghold.And(predicates...), nil
+	}
+}
+
+// BillingNotificationWhereInput represents a where input for filtering BillingNotification queries.
+type BillingNotificationWhereInput struct {
+	Predicates []predicate.BillingNotification  `json:"-"`
+	Not        *BillingNotificationWhereInput   `json:"not,omitempty"`
+	Or         []*BillingNotificationWhereInput `json:"or,omitempty"`
+	And        []*BillingNotificationWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "user_id" field predicates.
+	UserID       *int  `json:"userID,omitempty"`
+	UserIDNEQ    *int  `json:"userIDNEQ,omitempty"`
+	UserIDIn     []int `json:"userIDIn,omitempty"`
+	UserIDNotIn  []int `json:"userIDNotIn,omitempty"`
+	UserIDIsNil  bool  `json:"userIDIsNil,omitempty"`
+	UserIDNotNil bool  `json:"userIDNotNil,omitempty"`
+
+	// "audience" field predicates.
+	Audience      *billingnotification.Audience  `json:"audience,omitempty"`
+	AudienceNEQ   *billingnotification.Audience  `json:"audienceNEQ,omitempty"`
+	AudienceIn    []billingnotification.Audience `json:"audienceIn,omitempty"`
+	AudienceNotIn []billingnotification.Audience `json:"audienceNotIn,omitempty"`
+
+	// "category" field predicates.
+	Category      *billingnotification.Category  `json:"category,omitempty"`
+	CategoryNEQ   *billingnotification.Category  `json:"categoryNEQ,omitempty"`
+	CategoryIn    []billingnotification.Category `json:"categoryIn,omitempty"`
+	CategoryNotIn []billingnotification.Category `json:"categoryNotIn,omitempty"`
+
+	// "severity" field predicates.
+	Severity      *billingnotification.Severity  `json:"severity,omitempty"`
+	SeverityNEQ   *billingnotification.Severity  `json:"severityNEQ,omitempty"`
+	SeverityIn    []billingnotification.Severity `json:"severityIn,omitempty"`
+	SeverityNotIn []billingnotification.Severity `json:"severityNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *billingnotification.Status  `json:"status,omitempty"`
+	StatusNEQ   *billingnotification.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []billingnotification.Status `json:"statusIn,omitempty"`
+	StatusNotIn []billingnotification.Status `json:"statusNotIn,omitempty"`
+
+	// "event_key" field predicates.
+	EventKey             *string  `json:"eventKey,omitempty"`
+	EventKeyNEQ          *string  `json:"eventKeyNEQ,omitempty"`
+	EventKeyIn           []string `json:"eventKeyIn,omitempty"`
+	EventKeyNotIn        []string `json:"eventKeyNotIn,omitempty"`
+	EventKeyGT           *string  `json:"eventKeyGT,omitempty"`
+	EventKeyGTE          *string  `json:"eventKeyGTE,omitempty"`
+	EventKeyLT           *string  `json:"eventKeyLT,omitempty"`
+	EventKeyLTE          *string  `json:"eventKeyLTE,omitempty"`
+	EventKeyContains     *string  `json:"eventKeyContains,omitempty"`
+	EventKeyHasPrefix    *string  `json:"eventKeyHasPrefix,omitempty"`
+	EventKeyHasSuffix    *string  `json:"eventKeyHasSuffix,omitempty"`
+	EventKeyEqualFold    *string  `json:"eventKeyEqualFold,omitempty"`
+	EventKeyContainsFold *string  `json:"eventKeyContainsFold,omitempty"`
+
+	// "title" field predicates.
+	Title             *string  `json:"title,omitempty"`
+	TitleNEQ          *string  `json:"titleNEQ,omitempty"`
+	TitleIn           []string `json:"titleIn,omitempty"`
+	TitleNotIn        []string `json:"titleNotIn,omitempty"`
+	TitleGT           *string  `json:"titleGT,omitempty"`
+	TitleGTE          *string  `json:"titleGTE,omitempty"`
+	TitleLT           *string  `json:"titleLT,omitempty"`
+	TitleLTE          *string  `json:"titleLTE,omitempty"`
+	TitleContains     *string  `json:"titleContains,omitempty"`
+	TitleHasPrefix    *string  `json:"titleHasPrefix,omitempty"`
+	TitleHasSuffix    *string  `json:"titleHasSuffix,omitempty"`
+	TitleEqualFold    *string  `json:"titleEqualFold,omitempty"`
+	TitleContainsFold *string  `json:"titleContainsFold,omitempty"`
+
+	// "message" field predicates.
+	Message             *string  `json:"message,omitempty"`
+	MessageNEQ          *string  `json:"messageNEQ,omitempty"`
+	MessageIn           []string `json:"messageIn,omitempty"`
+	MessageNotIn        []string `json:"messageNotIn,omitempty"`
+	MessageGT           *string  `json:"messageGT,omitempty"`
+	MessageGTE          *string  `json:"messageGTE,omitempty"`
+	MessageLT           *string  `json:"messageLT,omitempty"`
+	MessageLTE          *string  `json:"messageLTE,omitempty"`
+	MessageContains     *string  `json:"messageContains,omitempty"`
+	MessageHasPrefix    *string  `json:"messageHasPrefix,omitempty"`
+	MessageHasSuffix    *string  `json:"messageHasSuffix,omitempty"`
+	MessageEqualFold    *string  `json:"messageEqualFold,omitempty"`
+	MessageContainsFold *string  `json:"messageContainsFold,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "amount_micros" field predicates.
+	AmountMicros       *int64  `json:"amountMicros,omitempty"`
+	AmountMicrosNEQ    *int64  `json:"amountMicrosNEQ,omitempty"`
+	AmountMicrosIn     []int64 `json:"amountMicrosIn,omitempty"`
+	AmountMicrosNotIn  []int64 `json:"amountMicrosNotIn,omitempty"`
+	AmountMicrosGT     *int64  `json:"amountMicrosGT,omitempty"`
+	AmountMicrosGTE    *int64  `json:"amountMicrosGTE,omitempty"`
+	AmountMicrosLT     *int64  `json:"amountMicrosLT,omitempty"`
+	AmountMicrosLTE    *int64  `json:"amountMicrosLTE,omitempty"`
+	AmountMicrosIsNil  bool    `json:"amountMicrosIsNil,omitempty"`
+	AmountMicrosNotNil bool    `json:"amountMicrosNotNil,omitempty"`
+
+	// "billing_account_id" field predicates.
+	BillingAccountID       *int  `json:"billingAccountID,omitempty"`
+	BillingAccountIDNEQ    *int  `json:"billingAccountIDNEQ,omitempty"`
+	BillingAccountIDIn     []int `json:"billingAccountIDIn,omitempty"`
+	BillingAccountIDNotIn  []int `json:"billingAccountIDNotIn,omitempty"`
+	BillingAccountIDIsNil  bool  `json:"billingAccountIDIsNil,omitempty"`
+	BillingAccountIDNotNil bool  `json:"billingAccountIDNotNil,omitempty"`
+
+	// "payment_order_id" field predicates.
+	PaymentOrderID       *int  `json:"paymentOrderID,omitempty"`
+	PaymentOrderIDNEQ    *int  `json:"paymentOrderIDNEQ,omitempty"`
+	PaymentOrderIDIn     []int `json:"paymentOrderIDIn,omitempty"`
+	PaymentOrderIDNotIn  []int `json:"paymentOrderIDNotIn,omitempty"`
+	PaymentOrderIDIsNil  bool  `json:"paymentOrderIDIsNil,omitempty"`
+	PaymentOrderIDNotNil bool  `json:"paymentOrderIDNotNil,omitempty"`
+
+	// "user_subscription_id" field predicates.
+	UserSubscriptionID       *int  `json:"userSubscriptionID,omitempty"`
+	UserSubscriptionIDNEQ    *int  `json:"userSubscriptionIDNEQ,omitempty"`
+	UserSubscriptionIDIn     []int `json:"userSubscriptionIDIn,omitempty"`
+	UserSubscriptionIDNotIn  []int `json:"userSubscriptionIDNotIn,omitempty"`
+	UserSubscriptionIDIsNil  bool  `json:"userSubscriptionIDIsNil,omitempty"`
+	UserSubscriptionIDNotNil bool  `json:"userSubscriptionIDNotNil,omitempty"`
+
+	// "usage_billing_record_id" field predicates.
+	UsageBillingRecordID       *int  `json:"usageBillingRecordID,omitempty"`
+	UsageBillingRecordIDNEQ    *int  `json:"usageBillingRecordIDNEQ,omitempty"`
+	UsageBillingRecordIDIn     []int `json:"usageBillingRecordIDIn,omitempty"`
+	UsageBillingRecordIDNotIn  []int `json:"usageBillingRecordIDNotIn,omitempty"`
+	UsageBillingRecordIDIsNil  bool  `json:"usageBillingRecordIDIsNil,omitempty"`
+	UsageBillingRecordIDNotNil bool  `json:"usageBillingRecordIDNotNil,omitempty"`
+
+	// "read_at" field predicates.
+	ReadAt       *time.Time  `json:"readAt,omitempty"`
+	ReadAtNEQ    *time.Time  `json:"readAtNEQ,omitempty"`
+	ReadAtIn     []time.Time `json:"readAtIn,omitempty"`
+	ReadAtNotIn  []time.Time `json:"readAtNotIn,omitempty"`
+	ReadAtGT     *time.Time  `json:"readAtGT,omitempty"`
+	ReadAtGTE    *time.Time  `json:"readAtGTE,omitempty"`
+	ReadAtLT     *time.Time  `json:"readAtLT,omitempty"`
+	ReadAtLTE    *time.Time  `json:"readAtLTE,omitempty"`
+	ReadAtIsNil  bool        `json:"readAtIsNil,omitempty"`
+	ReadAtNotNil bool        `json:"readAtNotNil,omitempty"`
+
+	// "user" edge predicates.
+	HasUser     *bool             `json:"hasUser,omitempty"`
+	HasUserWith []*UserWhereInput `json:"hasUserWith,omitempty"`
+
+	// "billing_account" edge predicates.
+	HasBillingAccount     *bool                       `json:"hasBillingAccount,omitempty"`
+	HasBillingAccountWith []*BillingAccountWhereInput `json:"hasBillingAccountWith,omitempty"`
+
+	// "payment_order" edge predicates.
+	HasPaymentOrder     *bool                     `json:"hasPaymentOrder,omitempty"`
+	HasPaymentOrderWith []*PaymentOrderWhereInput `json:"hasPaymentOrderWith,omitempty"`
+
+	// "user_subscription" edge predicates.
+	HasUserSubscription     *bool                         `json:"hasUserSubscription,omitempty"`
+	HasUserSubscriptionWith []*UserSubscriptionWhereInput `json:"hasUserSubscriptionWith,omitempty"`
+
+	// "usage_billing_record" edge predicates.
+	HasUsageBillingRecord     *bool                           `json:"hasUsageBillingRecord,omitempty"`
+	HasUsageBillingRecordWith []*UsageBillingRecordWhereInput `json:"hasUsageBillingRecordWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *BillingNotificationWhereInput) AddPredicates(predicates ...predicate.BillingNotification) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the BillingNotificationWhereInput filter on the BillingNotificationQuery builder.
+func (i *BillingNotificationWhereInput) Filter(q *BillingNotificationQuery) (*BillingNotificationQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyBillingNotificationWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyBillingNotificationWhereInput is returned in case the BillingNotificationWhereInput is empty.
+var ErrEmptyBillingNotificationWhereInput = errors.New("ent: empty predicate BillingNotificationWhereInput")
+
+// P returns a predicate for filtering billingnotifications.
+// An error is returned if the input is empty or invalid.
+func (i *BillingNotificationWhereInput) P() (predicate.BillingNotification, error) {
+	var predicates []predicate.BillingNotification
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, billingnotification.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.BillingNotification, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, billingnotification.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.BillingNotification, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, billingnotification.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, billingnotification.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, billingnotification.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, billingnotification.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, billingnotification.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, billingnotification.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, billingnotification.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, billingnotification.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, billingnotification.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, billingnotification.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, billingnotification.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, billingnotification.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, billingnotification.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, billingnotification.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, billingnotification.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, billingnotification.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, billingnotification.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, billingnotification.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, billingnotification.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, billingnotification.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, billingnotification.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, billingnotification.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, billingnotification.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, billingnotification.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, billingnotification.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.UserID != nil {
+		predicates = append(predicates, billingnotification.UserIDEQ(*i.UserID))
+	}
+	if i.UserIDNEQ != nil {
+		predicates = append(predicates, billingnotification.UserIDNEQ(*i.UserIDNEQ))
+	}
+	if len(i.UserIDIn) > 0 {
+		predicates = append(predicates, billingnotification.UserIDIn(i.UserIDIn...))
+	}
+	if len(i.UserIDNotIn) > 0 {
+		predicates = append(predicates, billingnotification.UserIDNotIn(i.UserIDNotIn...))
+	}
+	if i.UserIDIsNil {
+		predicates = append(predicates, billingnotification.UserIDIsNil())
+	}
+	if i.UserIDNotNil {
+		predicates = append(predicates, billingnotification.UserIDNotNil())
+	}
+	if i.Audience != nil {
+		predicates = append(predicates, billingnotification.AudienceEQ(*i.Audience))
+	}
+	if i.AudienceNEQ != nil {
+		predicates = append(predicates, billingnotification.AudienceNEQ(*i.AudienceNEQ))
+	}
+	if len(i.AudienceIn) > 0 {
+		predicates = append(predicates, billingnotification.AudienceIn(i.AudienceIn...))
+	}
+	if len(i.AudienceNotIn) > 0 {
+		predicates = append(predicates, billingnotification.AudienceNotIn(i.AudienceNotIn...))
+	}
+	if i.Category != nil {
+		predicates = append(predicates, billingnotification.CategoryEQ(*i.Category))
+	}
+	if i.CategoryNEQ != nil {
+		predicates = append(predicates, billingnotification.CategoryNEQ(*i.CategoryNEQ))
+	}
+	if len(i.CategoryIn) > 0 {
+		predicates = append(predicates, billingnotification.CategoryIn(i.CategoryIn...))
+	}
+	if len(i.CategoryNotIn) > 0 {
+		predicates = append(predicates, billingnotification.CategoryNotIn(i.CategoryNotIn...))
+	}
+	if i.Severity != nil {
+		predicates = append(predicates, billingnotification.SeverityEQ(*i.Severity))
+	}
+	if i.SeverityNEQ != nil {
+		predicates = append(predicates, billingnotification.SeverityNEQ(*i.SeverityNEQ))
+	}
+	if len(i.SeverityIn) > 0 {
+		predicates = append(predicates, billingnotification.SeverityIn(i.SeverityIn...))
+	}
+	if len(i.SeverityNotIn) > 0 {
+		predicates = append(predicates, billingnotification.SeverityNotIn(i.SeverityNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, billingnotification.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, billingnotification.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, billingnotification.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, billingnotification.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.EventKey != nil {
+		predicates = append(predicates, billingnotification.EventKeyEQ(*i.EventKey))
+	}
+	if i.EventKeyNEQ != nil {
+		predicates = append(predicates, billingnotification.EventKeyNEQ(*i.EventKeyNEQ))
+	}
+	if len(i.EventKeyIn) > 0 {
+		predicates = append(predicates, billingnotification.EventKeyIn(i.EventKeyIn...))
+	}
+	if len(i.EventKeyNotIn) > 0 {
+		predicates = append(predicates, billingnotification.EventKeyNotIn(i.EventKeyNotIn...))
+	}
+	if i.EventKeyGT != nil {
+		predicates = append(predicates, billingnotification.EventKeyGT(*i.EventKeyGT))
+	}
+	if i.EventKeyGTE != nil {
+		predicates = append(predicates, billingnotification.EventKeyGTE(*i.EventKeyGTE))
+	}
+	if i.EventKeyLT != nil {
+		predicates = append(predicates, billingnotification.EventKeyLT(*i.EventKeyLT))
+	}
+	if i.EventKeyLTE != nil {
+		predicates = append(predicates, billingnotification.EventKeyLTE(*i.EventKeyLTE))
+	}
+	if i.EventKeyContains != nil {
+		predicates = append(predicates, billingnotification.EventKeyContains(*i.EventKeyContains))
+	}
+	if i.EventKeyHasPrefix != nil {
+		predicates = append(predicates, billingnotification.EventKeyHasPrefix(*i.EventKeyHasPrefix))
+	}
+	if i.EventKeyHasSuffix != nil {
+		predicates = append(predicates, billingnotification.EventKeyHasSuffix(*i.EventKeyHasSuffix))
+	}
+	if i.EventKeyEqualFold != nil {
+		predicates = append(predicates, billingnotification.EventKeyEqualFold(*i.EventKeyEqualFold))
+	}
+	if i.EventKeyContainsFold != nil {
+		predicates = append(predicates, billingnotification.EventKeyContainsFold(*i.EventKeyContainsFold))
+	}
+	if i.Title != nil {
+		predicates = append(predicates, billingnotification.TitleEQ(*i.Title))
+	}
+	if i.TitleNEQ != nil {
+		predicates = append(predicates, billingnotification.TitleNEQ(*i.TitleNEQ))
+	}
+	if len(i.TitleIn) > 0 {
+		predicates = append(predicates, billingnotification.TitleIn(i.TitleIn...))
+	}
+	if len(i.TitleNotIn) > 0 {
+		predicates = append(predicates, billingnotification.TitleNotIn(i.TitleNotIn...))
+	}
+	if i.TitleGT != nil {
+		predicates = append(predicates, billingnotification.TitleGT(*i.TitleGT))
+	}
+	if i.TitleGTE != nil {
+		predicates = append(predicates, billingnotification.TitleGTE(*i.TitleGTE))
+	}
+	if i.TitleLT != nil {
+		predicates = append(predicates, billingnotification.TitleLT(*i.TitleLT))
+	}
+	if i.TitleLTE != nil {
+		predicates = append(predicates, billingnotification.TitleLTE(*i.TitleLTE))
+	}
+	if i.TitleContains != nil {
+		predicates = append(predicates, billingnotification.TitleContains(*i.TitleContains))
+	}
+	if i.TitleHasPrefix != nil {
+		predicates = append(predicates, billingnotification.TitleHasPrefix(*i.TitleHasPrefix))
+	}
+	if i.TitleHasSuffix != nil {
+		predicates = append(predicates, billingnotification.TitleHasSuffix(*i.TitleHasSuffix))
+	}
+	if i.TitleEqualFold != nil {
+		predicates = append(predicates, billingnotification.TitleEqualFold(*i.TitleEqualFold))
+	}
+	if i.TitleContainsFold != nil {
+		predicates = append(predicates, billingnotification.TitleContainsFold(*i.TitleContainsFold))
+	}
+	if i.Message != nil {
+		predicates = append(predicates, billingnotification.MessageEQ(*i.Message))
+	}
+	if i.MessageNEQ != nil {
+		predicates = append(predicates, billingnotification.MessageNEQ(*i.MessageNEQ))
+	}
+	if len(i.MessageIn) > 0 {
+		predicates = append(predicates, billingnotification.MessageIn(i.MessageIn...))
+	}
+	if len(i.MessageNotIn) > 0 {
+		predicates = append(predicates, billingnotification.MessageNotIn(i.MessageNotIn...))
+	}
+	if i.MessageGT != nil {
+		predicates = append(predicates, billingnotification.MessageGT(*i.MessageGT))
+	}
+	if i.MessageGTE != nil {
+		predicates = append(predicates, billingnotification.MessageGTE(*i.MessageGTE))
+	}
+	if i.MessageLT != nil {
+		predicates = append(predicates, billingnotification.MessageLT(*i.MessageLT))
+	}
+	if i.MessageLTE != nil {
+		predicates = append(predicates, billingnotification.MessageLTE(*i.MessageLTE))
+	}
+	if i.MessageContains != nil {
+		predicates = append(predicates, billingnotification.MessageContains(*i.MessageContains))
+	}
+	if i.MessageHasPrefix != nil {
+		predicates = append(predicates, billingnotification.MessageHasPrefix(*i.MessageHasPrefix))
+	}
+	if i.MessageHasSuffix != nil {
+		predicates = append(predicates, billingnotification.MessageHasSuffix(*i.MessageHasSuffix))
+	}
+	if i.MessageEqualFold != nil {
+		predicates = append(predicates, billingnotification.MessageEqualFold(*i.MessageEqualFold))
+	}
+	if i.MessageContainsFold != nil {
+		predicates = append(predicates, billingnotification.MessageContainsFold(*i.MessageContainsFold))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, billingnotification.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, billingnotification.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, billingnotification.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, billingnotification.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, billingnotification.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, billingnotification.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, billingnotification.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, billingnotification.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, billingnotification.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, billingnotification.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, billingnotification.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, billingnotification.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, billingnotification.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.AmountMicros != nil {
+		predicates = append(predicates, billingnotification.AmountMicrosEQ(*i.AmountMicros))
+	}
+	if i.AmountMicrosNEQ != nil {
+		predicates = append(predicates, billingnotification.AmountMicrosNEQ(*i.AmountMicrosNEQ))
+	}
+	if len(i.AmountMicrosIn) > 0 {
+		predicates = append(predicates, billingnotification.AmountMicrosIn(i.AmountMicrosIn...))
+	}
+	if len(i.AmountMicrosNotIn) > 0 {
+		predicates = append(predicates, billingnotification.AmountMicrosNotIn(i.AmountMicrosNotIn...))
+	}
+	if i.AmountMicrosGT != nil {
+		predicates = append(predicates, billingnotification.AmountMicrosGT(*i.AmountMicrosGT))
+	}
+	if i.AmountMicrosGTE != nil {
+		predicates = append(predicates, billingnotification.AmountMicrosGTE(*i.AmountMicrosGTE))
+	}
+	if i.AmountMicrosLT != nil {
+		predicates = append(predicates, billingnotification.AmountMicrosLT(*i.AmountMicrosLT))
+	}
+	if i.AmountMicrosLTE != nil {
+		predicates = append(predicates, billingnotification.AmountMicrosLTE(*i.AmountMicrosLTE))
+	}
+	if i.AmountMicrosIsNil {
+		predicates = append(predicates, billingnotification.AmountMicrosIsNil())
+	}
+	if i.AmountMicrosNotNil {
+		predicates = append(predicates, billingnotification.AmountMicrosNotNil())
+	}
+	if i.BillingAccountID != nil {
+		predicates = append(predicates, billingnotification.BillingAccountIDEQ(*i.BillingAccountID))
+	}
+	if i.BillingAccountIDNEQ != nil {
+		predicates = append(predicates, billingnotification.BillingAccountIDNEQ(*i.BillingAccountIDNEQ))
+	}
+	if len(i.BillingAccountIDIn) > 0 {
+		predicates = append(predicates, billingnotification.BillingAccountIDIn(i.BillingAccountIDIn...))
+	}
+	if len(i.BillingAccountIDNotIn) > 0 {
+		predicates = append(predicates, billingnotification.BillingAccountIDNotIn(i.BillingAccountIDNotIn...))
+	}
+	if i.BillingAccountIDIsNil {
+		predicates = append(predicates, billingnotification.BillingAccountIDIsNil())
+	}
+	if i.BillingAccountIDNotNil {
+		predicates = append(predicates, billingnotification.BillingAccountIDNotNil())
+	}
+	if i.PaymentOrderID != nil {
+		predicates = append(predicates, billingnotification.PaymentOrderIDEQ(*i.PaymentOrderID))
+	}
+	if i.PaymentOrderIDNEQ != nil {
+		predicates = append(predicates, billingnotification.PaymentOrderIDNEQ(*i.PaymentOrderIDNEQ))
+	}
+	if len(i.PaymentOrderIDIn) > 0 {
+		predicates = append(predicates, billingnotification.PaymentOrderIDIn(i.PaymentOrderIDIn...))
+	}
+	if len(i.PaymentOrderIDNotIn) > 0 {
+		predicates = append(predicates, billingnotification.PaymentOrderIDNotIn(i.PaymentOrderIDNotIn...))
+	}
+	if i.PaymentOrderIDIsNil {
+		predicates = append(predicates, billingnotification.PaymentOrderIDIsNil())
+	}
+	if i.PaymentOrderIDNotNil {
+		predicates = append(predicates, billingnotification.PaymentOrderIDNotNil())
+	}
+	if i.UserSubscriptionID != nil {
+		predicates = append(predicates, billingnotification.UserSubscriptionIDEQ(*i.UserSubscriptionID))
+	}
+	if i.UserSubscriptionIDNEQ != nil {
+		predicates = append(predicates, billingnotification.UserSubscriptionIDNEQ(*i.UserSubscriptionIDNEQ))
+	}
+	if len(i.UserSubscriptionIDIn) > 0 {
+		predicates = append(predicates, billingnotification.UserSubscriptionIDIn(i.UserSubscriptionIDIn...))
+	}
+	if len(i.UserSubscriptionIDNotIn) > 0 {
+		predicates = append(predicates, billingnotification.UserSubscriptionIDNotIn(i.UserSubscriptionIDNotIn...))
+	}
+	if i.UserSubscriptionIDIsNil {
+		predicates = append(predicates, billingnotification.UserSubscriptionIDIsNil())
+	}
+	if i.UserSubscriptionIDNotNil {
+		predicates = append(predicates, billingnotification.UserSubscriptionIDNotNil())
+	}
+	if i.UsageBillingRecordID != nil {
+		predicates = append(predicates, billingnotification.UsageBillingRecordIDEQ(*i.UsageBillingRecordID))
+	}
+	if i.UsageBillingRecordIDNEQ != nil {
+		predicates = append(predicates, billingnotification.UsageBillingRecordIDNEQ(*i.UsageBillingRecordIDNEQ))
+	}
+	if len(i.UsageBillingRecordIDIn) > 0 {
+		predicates = append(predicates, billingnotification.UsageBillingRecordIDIn(i.UsageBillingRecordIDIn...))
+	}
+	if len(i.UsageBillingRecordIDNotIn) > 0 {
+		predicates = append(predicates, billingnotification.UsageBillingRecordIDNotIn(i.UsageBillingRecordIDNotIn...))
+	}
+	if i.UsageBillingRecordIDIsNil {
+		predicates = append(predicates, billingnotification.UsageBillingRecordIDIsNil())
+	}
+	if i.UsageBillingRecordIDNotNil {
+		predicates = append(predicates, billingnotification.UsageBillingRecordIDNotNil())
+	}
+	if i.ReadAt != nil {
+		predicates = append(predicates, billingnotification.ReadAtEQ(*i.ReadAt))
+	}
+	if i.ReadAtNEQ != nil {
+		predicates = append(predicates, billingnotification.ReadAtNEQ(*i.ReadAtNEQ))
+	}
+	if len(i.ReadAtIn) > 0 {
+		predicates = append(predicates, billingnotification.ReadAtIn(i.ReadAtIn...))
+	}
+	if len(i.ReadAtNotIn) > 0 {
+		predicates = append(predicates, billingnotification.ReadAtNotIn(i.ReadAtNotIn...))
+	}
+	if i.ReadAtGT != nil {
+		predicates = append(predicates, billingnotification.ReadAtGT(*i.ReadAtGT))
+	}
+	if i.ReadAtGTE != nil {
+		predicates = append(predicates, billingnotification.ReadAtGTE(*i.ReadAtGTE))
+	}
+	if i.ReadAtLT != nil {
+		predicates = append(predicates, billingnotification.ReadAtLT(*i.ReadAtLT))
+	}
+	if i.ReadAtLTE != nil {
+		predicates = append(predicates, billingnotification.ReadAtLTE(*i.ReadAtLTE))
+	}
+	if i.ReadAtIsNil {
+		predicates = append(predicates, billingnotification.ReadAtIsNil())
+	}
+	if i.ReadAtNotNil {
+		predicates = append(predicates, billingnotification.ReadAtNotNil())
+	}
+
+	if i.HasUser != nil {
+		p := billingnotification.HasUser()
+		if !*i.HasUser {
+			p = billingnotification.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUserWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasUserWith))
+		for _, w := range i.HasUserWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUserWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingnotification.HasUserWith(with...))
+	}
+	if i.HasBillingAccount != nil {
+		p := billingnotification.HasBillingAccount()
+		if !*i.HasBillingAccount {
+			p = billingnotification.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingAccountWith) > 0 {
+		with := make([]predicate.BillingAccount, 0, len(i.HasBillingAccountWith))
+		for _, w := range i.HasBillingAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingnotification.HasBillingAccountWith(with...))
+	}
+	if i.HasPaymentOrder != nil {
+		p := billingnotification.HasPaymentOrder()
+		if !*i.HasPaymentOrder {
+			p = billingnotification.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentOrderWith) > 0 {
+		with := make([]predicate.PaymentOrder, 0, len(i.HasPaymentOrderWith))
+		for _, w := range i.HasPaymentOrderWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentOrderWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingnotification.HasPaymentOrderWith(with...))
+	}
+	if i.HasUserSubscription != nil {
+		p := billingnotification.HasUserSubscription()
+		if !*i.HasUserSubscription {
+			p = billingnotification.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUserSubscriptionWith) > 0 {
+		with := make([]predicate.UserSubscription, 0, len(i.HasUserSubscriptionWith))
+		for _, w := range i.HasUserSubscriptionWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUserSubscriptionWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingnotification.HasUserSubscriptionWith(with...))
+	}
+	if i.HasUsageBillingRecord != nil {
+		p := billingnotification.HasUsageBillingRecord()
+		if !*i.HasUsageBillingRecord {
+			p = billingnotification.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUsageBillingRecordWith) > 0 {
+		with := make([]predicate.UsageBillingRecord, 0, len(i.HasUsageBillingRecordWith))
+		for _, w := range i.HasUsageBillingRecordWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUsageBillingRecordWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingnotification.HasUsageBillingRecordWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyBillingNotificationWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return billingnotification.And(predicates...), nil
+	}
+}
+
+// BillingNotificationPreferenceWhereInput represents a where input for filtering BillingNotificationPreference queries.
+type BillingNotificationPreferenceWhereInput struct {
+	Predicates []predicate.BillingNotificationPreference  `json:"-"`
+	Not        *BillingNotificationPreferenceWhereInput   `json:"not,omitempty"`
+	Or         []*BillingNotificationPreferenceWhereInput `json:"or,omitempty"`
+	And        []*BillingNotificationPreferenceWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "user_id" field predicates.
+	UserID      *int  `json:"userID,omitempty"`
+	UserIDNEQ   *int  `json:"userIDNEQ,omitempty"`
+	UserIDIn    []int `json:"userIDIn,omitempty"`
+	UserIDNotIn []int `json:"userIDNotIn,omitempty"`
+
+	// "enabled" field predicates.
+	Enabled    *bool `json:"enabled,omitempty"`
+	EnabledNEQ *bool `json:"enabledNEQ,omitempty"`
+
+	// "low_balance_enabled" field predicates.
+	LowBalanceEnabled    *bool `json:"lowBalanceEnabled,omitempty"`
+	LowBalanceEnabledNEQ *bool `json:"lowBalanceEnabledNEQ,omitempty"`
+
+	// "payment_enabled" field predicates.
+	PaymentEnabled    *bool `json:"paymentEnabled,omitempty"`
+	PaymentEnabledNEQ *bool `json:"paymentEnabledNEQ,omitempty"`
+
+	// "subscription_enabled" field predicates.
+	SubscriptionEnabled    *bool `json:"subscriptionEnabled,omitempty"`
+	SubscriptionEnabledNEQ *bool `json:"subscriptionEnabledNEQ,omitempty"`
+
+	// "large_consumption_enabled" field predicates.
+	LargeConsumptionEnabled    *bool `json:"largeConsumptionEnabled,omitempty"`
+	LargeConsumptionEnabledNEQ *bool `json:"largeConsumptionEnabledNEQ,omitempty"`
+
+	// "user" edge predicates.
+	HasUser     *bool             `json:"hasUser,omitempty"`
+	HasUserWith []*UserWhereInput `json:"hasUserWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *BillingNotificationPreferenceWhereInput) AddPredicates(predicates ...predicate.BillingNotificationPreference) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the BillingNotificationPreferenceWhereInput filter on the BillingNotificationPreferenceQuery builder.
+func (i *BillingNotificationPreferenceWhereInput) Filter(q *BillingNotificationPreferenceQuery) (*BillingNotificationPreferenceQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyBillingNotificationPreferenceWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyBillingNotificationPreferenceWhereInput is returned in case the BillingNotificationPreferenceWhereInput is empty.
+var ErrEmptyBillingNotificationPreferenceWhereInput = errors.New("ent: empty predicate BillingNotificationPreferenceWhereInput")
+
+// P returns a predicate for filtering billingnotificationpreferences.
+// An error is returned if the input is empty or invalid.
+func (i *BillingNotificationPreferenceWhereInput) P() (predicate.BillingNotificationPreference, error) {
+	var predicates []predicate.BillingNotificationPreference
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, billingnotificationpreference.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.BillingNotificationPreference, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, billingnotificationpreference.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.BillingNotificationPreference, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, billingnotificationpreference.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, billingnotificationpreference.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, billingnotificationpreference.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, billingnotificationpreference.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, billingnotificationpreference.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, billingnotificationpreference.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, billingnotificationpreference.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, billingnotificationpreference.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, billingnotificationpreference.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, billingnotificationpreference.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, billingnotificationpreference.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, billingnotificationpreference.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, billingnotificationpreference.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, billingnotificationpreference.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, billingnotificationpreference.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, billingnotificationpreference.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, billingnotificationpreference.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, billingnotificationpreference.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, billingnotificationpreference.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, billingnotificationpreference.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, billingnotificationpreference.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, billingnotificationpreference.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, billingnotificationpreference.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, billingnotificationpreference.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, billingnotificationpreference.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.UserID != nil {
+		predicates = append(predicates, billingnotificationpreference.UserIDEQ(*i.UserID))
+	}
+	if i.UserIDNEQ != nil {
+		predicates = append(predicates, billingnotificationpreference.UserIDNEQ(*i.UserIDNEQ))
+	}
+	if len(i.UserIDIn) > 0 {
+		predicates = append(predicates, billingnotificationpreference.UserIDIn(i.UserIDIn...))
+	}
+	if len(i.UserIDNotIn) > 0 {
+		predicates = append(predicates, billingnotificationpreference.UserIDNotIn(i.UserIDNotIn...))
+	}
+	if i.Enabled != nil {
+		predicates = append(predicates, billingnotificationpreference.EnabledEQ(*i.Enabled))
+	}
+	if i.EnabledNEQ != nil {
+		predicates = append(predicates, billingnotificationpreference.EnabledNEQ(*i.EnabledNEQ))
+	}
+	if i.LowBalanceEnabled != nil {
+		predicates = append(predicates, billingnotificationpreference.LowBalanceEnabledEQ(*i.LowBalanceEnabled))
+	}
+	if i.LowBalanceEnabledNEQ != nil {
+		predicates = append(predicates, billingnotificationpreference.LowBalanceEnabledNEQ(*i.LowBalanceEnabledNEQ))
+	}
+	if i.PaymentEnabled != nil {
+		predicates = append(predicates, billingnotificationpreference.PaymentEnabledEQ(*i.PaymentEnabled))
+	}
+	if i.PaymentEnabledNEQ != nil {
+		predicates = append(predicates, billingnotificationpreference.PaymentEnabledNEQ(*i.PaymentEnabledNEQ))
+	}
+	if i.SubscriptionEnabled != nil {
+		predicates = append(predicates, billingnotificationpreference.SubscriptionEnabledEQ(*i.SubscriptionEnabled))
+	}
+	if i.SubscriptionEnabledNEQ != nil {
+		predicates = append(predicates, billingnotificationpreference.SubscriptionEnabledNEQ(*i.SubscriptionEnabledNEQ))
+	}
+	if i.LargeConsumptionEnabled != nil {
+		predicates = append(predicates, billingnotificationpreference.LargeConsumptionEnabledEQ(*i.LargeConsumptionEnabled))
+	}
+	if i.LargeConsumptionEnabledNEQ != nil {
+		predicates = append(predicates, billingnotificationpreference.LargeConsumptionEnabledNEQ(*i.LargeConsumptionEnabledNEQ))
+	}
+
+	if i.HasUser != nil {
+		p := billingnotificationpreference.HasUser()
+		if !*i.HasUser {
+			p = billingnotificationpreference.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUserWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasUserWith))
+		for _, w := range i.HasUserWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUserWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingnotificationpreference.HasUserWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyBillingNotificationPreferenceWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return billingnotificationpreference.And(predicates...), nil
+	}
+}
+
+// BillingNotificationSettingWhereInput represents a where input for filtering BillingNotificationSetting queries.
+type BillingNotificationSettingWhereInput struct {
+	Predicates []predicate.BillingNotificationSetting  `json:"-"`
+	Not        *BillingNotificationSettingWhereInput   `json:"not,omitempty"`
+	Or         []*BillingNotificationSettingWhereInput `json:"or,omitempty"`
+	And        []*BillingNotificationSettingWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "key" field predicates.
+	Key             *string  `json:"key,omitempty"`
+	KeyNEQ          *string  `json:"keyNEQ,omitempty"`
+	KeyIn           []string `json:"keyIn,omitempty"`
+	KeyNotIn        []string `json:"keyNotIn,omitempty"`
+	KeyGT           *string  `json:"keyGT,omitempty"`
+	KeyGTE          *string  `json:"keyGTE,omitempty"`
+	KeyLT           *string  `json:"keyLT,omitempty"`
+	KeyLTE          *string  `json:"keyLTE,omitempty"`
+	KeyContains     *string  `json:"keyContains,omitempty"`
+	KeyHasPrefix    *string  `json:"keyHasPrefix,omitempty"`
+	KeyHasSuffix    *string  `json:"keyHasSuffix,omitempty"`
+	KeyEqualFold    *string  `json:"keyEqualFold,omitempty"`
+	KeyContainsFold *string  `json:"keyContainsFold,omitempty"`
+
+	// "enabled" field predicates.
+	Enabled    *bool `json:"enabled,omitempty"`
+	EnabledNEQ *bool `json:"enabledNEQ,omitempty"`
+
+	// "user_notifications_enabled" field predicates.
+	UserNotificationsEnabled    *bool `json:"userNotificationsEnabled,omitempty"`
+	UserNotificationsEnabledNEQ *bool `json:"userNotificationsEnabledNEQ,omitempty"`
+
+	// "operator_alerts_enabled" field predicates.
+	OperatorAlertsEnabled    *bool `json:"operatorAlertsEnabled,omitempty"`
+	OperatorAlertsEnabledNEQ *bool `json:"operatorAlertsEnabledNEQ,omitempty"`
+
+	// "low_balance_threshold_micros" field predicates.
+	LowBalanceThresholdMicros      *int64  `json:"lowBalanceThresholdMicros,omitempty"`
+	LowBalanceThresholdMicrosNEQ   *int64  `json:"lowBalanceThresholdMicrosNEQ,omitempty"`
+	LowBalanceThresholdMicrosIn    []int64 `json:"lowBalanceThresholdMicrosIn,omitempty"`
+	LowBalanceThresholdMicrosNotIn []int64 `json:"lowBalanceThresholdMicrosNotIn,omitempty"`
+	LowBalanceThresholdMicrosGT    *int64  `json:"lowBalanceThresholdMicrosGT,omitempty"`
+	LowBalanceThresholdMicrosGTE   *int64  `json:"lowBalanceThresholdMicrosGTE,omitempty"`
+	LowBalanceThresholdMicrosLT    *int64  `json:"lowBalanceThresholdMicrosLT,omitempty"`
+	LowBalanceThresholdMicrosLTE   *int64  `json:"lowBalanceThresholdMicrosLTE,omitempty"`
+
+	// "large_consumption_threshold_micros" field predicates.
+	LargeConsumptionThresholdMicros      *int64  `json:"largeConsumptionThresholdMicros,omitempty"`
+	LargeConsumptionThresholdMicrosNEQ   *int64  `json:"largeConsumptionThresholdMicrosNEQ,omitempty"`
+	LargeConsumptionThresholdMicrosIn    []int64 `json:"largeConsumptionThresholdMicrosIn,omitempty"`
+	LargeConsumptionThresholdMicrosNotIn []int64 `json:"largeConsumptionThresholdMicrosNotIn,omitempty"`
+	LargeConsumptionThresholdMicrosGT    *int64  `json:"largeConsumptionThresholdMicrosGT,omitempty"`
+	LargeConsumptionThresholdMicrosGTE   *int64  `json:"largeConsumptionThresholdMicrosGTE,omitempty"`
+	LargeConsumptionThresholdMicrosLT    *int64  `json:"largeConsumptionThresholdMicrosLT,omitempty"`
+	LargeConsumptionThresholdMicrosLTE   *int64  `json:"largeConsumptionThresholdMicrosLTE,omitempty"`
+
+	// "subscription_expiry_warning_days" field predicates.
+	SubscriptionExpiryWarningDays      *int  `json:"subscriptionExpiryWarningDays,omitempty"`
+	SubscriptionExpiryWarningDaysNEQ   *int  `json:"subscriptionExpiryWarningDaysNEQ,omitempty"`
+	SubscriptionExpiryWarningDaysIn    []int `json:"subscriptionExpiryWarningDaysIn,omitempty"`
+	SubscriptionExpiryWarningDaysNotIn []int `json:"subscriptionExpiryWarningDaysNotIn,omitempty"`
+	SubscriptionExpiryWarningDaysGT    *int  `json:"subscriptionExpiryWarningDaysGT,omitempty"`
+	SubscriptionExpiryWarningDaysGTE   *int  `json:"subscriptionExpiryWarningDaysGTE,omitempty"`
+	SubscriptionExpiryWarningDaysLT    *int  `json:"subscriptionExpiryWarningDaysLT,omitempty"`
+	SubscriptionExpiryWarningDaysLTE   *int  `json:"subscriptionExpiryWarningDaysLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *BillingNotificationSettingWhereInput) AddPredicates(predicates ...predicate.BillingNotificationSetting) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the BillingNotificationSettingWhereInput filter on the BillingNotificationSettingQuery builder.
+func (i *BillingNotificationSettingWhereInput) Filter(q *BillingNotificationSettingQuery) (*BillingNotificationSettingQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyBillingNotificationSettingWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyBillingNotificationSettingWhereInput is returned in case the BillingNotificationSettingWhereInput is empty.
+var ErrEmptyBillingNotificationSettingWhereInput = errors.New("ent: empty predicate BillingNotificationSettingWhereInput")
+
+// P returns a predicate for filtering billingnotificationsettings.
+// An error is returned if the input is empty or invalid.
+func (i *BillingNotificationSettingWhereInput) P() (predicate.BillingNotificationSetting, error) {
+	var predicates []predicate.BillingNotificationSetting
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, billingnotificationsetting.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.BillingNotificationSetting, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, billingnotificationsetting.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.BillingNotificationSetting, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, billingnotificationsetting.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, billingnotificationsetting.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, billingnotificationsetting.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, billingnotificationsetting.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, billingnotificationsetting.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, billingnotificationsetting.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, billingnotificationsetting.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, billingnotificationsetting.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, billingnotificationsetting.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, billingnotificationsetting.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, billingnotificationsetting.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, billingnotificationsetting.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, billingnotificationsetting.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, billingnotificationsetting.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, billingnotificationsetting.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, billingnotificationsetting.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.Key != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyEQ(*i.Key))
+	}
+	if i.KeyNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyNEQ(*i.KeyNEQ))
+	}
+	if len(i.KeyIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.KeyIn(i.KeyIn...))
+	}
+	if len(i.KeyNotIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.KeyNotIn(i.KeyNotIn...))
+	}
+	if i.KeyGT != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyGT(*i.KeyGT))
+	}
+	if i.KeyGTE != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyGTE(*i.KeyGTE))
+	}
+	if i.KeyLT != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyLT(*i.KeyLT))
+	}
+	if i.KeyLTE != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyLTE(*i.KeyLTE))
+	}
+	if i.KeyContains != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyContains(*i.KeyContains))
+	}
+	if i.KeyHasPrefix != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyHasPrefix(*i.KeyHasPrefix))
+	}
+	if i.KeyHasSuffix != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyHasSuffix(*i.KeyHasSuffix))
+	}
+	if i.KeyEqualFold != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyEqualFold(*i.KeyEqualFold))
+	}
+	if i.KeyContainsFold != nil {
+		predicates = append(predicates, billingnotificationsetting.KeyContainsFold(*i.KeyContainsFold))
+	}
+	if i.Enabled != nil {
+		predicates = append(predicates, billingnotificationsetting.EnabledEQ(*i.Enabled))
+	}
+	if i.EnabledNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.EnabledNEQ(*i.EnabledNEQ))
+	}
+	if i.UserNotificationsEnabled != nil {
+		predicates = append(predicates, billingnotificationsetting.UserNotificationsEnabledEQ(*i.UserNotificationsEnabled))
+	}
+	if i.UserNotificationsEnabledNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.UserNotificationsEnabledNEQ(*i.UserNotificationsEnabledNEQ))
+	}
+	if i.OperatorAlertsEnabled != nil {
+		predicates = append(predicates, billingnotificationsetting.OperatorAlertsEnabledEQ(*i.OperatorAlertsEnabled))
+	}
+	if i.OperatorAlertsEnabledNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.OperatorAlertsEnabledNEQ(*i.OperatorAlertsEnabledNEQ))
+	}
+	if i.LowBalanceThresholdMicros != nil {
+		predicates = append(predicates, billingnotificationsetting.LowBalanceThresholdMicrosEQ(*i.LowBalanceThresholdMicros))
+	}
+	if i.LowBalanceThresholdMicrosNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.LowBalanceThresholdMicrosNEQ(*i.LowBalanceThresholdMicrosNEQ))
+	}
+	if len(i.LowBalanceThresholdMicrosIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.LowBalanceThresholdMicrosIn(i.LowBalanceThresholdMicrosIn...))
+	}
+	if len(i.LowBalanceThresholdMicrosNotIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.LowBalanceThresholdMicrosNotIn(i.LowBalanceThresholdMicrosNotIn...))
+	}
+	if i.LowBalanceThresholdMicrosGT != nil {
+		predicates = append(predicates, billingnotificationsetting.LowBalanceThresholdMicrosGT(*i.LowBalanceThresholdMicrosGT))
+	}
+	if i.LowBalanceThresholdMicrosGTE != nil {
+		predicates = append(predicates, billingnotificationsetting.LowBalanceThresholdMicrosGTE(*i.LowBalanceThresholdMicrosGTE))
+	}
+	if i.LowBalanceThresholdMicrosLT != nil {
+		predicates = append(predicates, billingnotificationsetting.LowBalanceThresholdMicrosLT(*i.LowBalanceThresholdMicrosLT))
+	}
+	if i.LowBalanceThresholdMicrosLTE != nil {
+		predicates = append(predicates, billingnotificationsetting.LowBalanceThresholdMicrosLTE(*i.LowBalanceThresholdMicrosLTE))
+	}
+	if i.LargeConsumptionThresholdMicros != nil {
+		predicates = append(predicates, billingnotificationsetting.LargeConsumptionThresholdMicrosEQ(*i.LargeConsumptionThresholdMicros))
+	}
+	if i.LargeConsumptionThresholdMicrosNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.LargeConsumptionThresholdMicrosNEQ(*i.LargeConsumptionThresholdMicrosNEQ))
+	}
+	if len(i.LargeConsumptionThresholdMicrosIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.LargeConsumptionThresholdMicrosIn(i.LargeConsumptionThresholdMicrosIn...))
+	}
+	if len(i.LargeConsumptionThresholdMicrosNotIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.LargeConsumptionThresholdMicrosNotIn(i.LargeConsumptionThresholdMicrosNotIn...))
+	}
+	if i.LargeConsumptionThresholdMicrosGT != nil {
+		predicates = append(predicates, billingnotificationsetting.LargeConsumptionThresholdMicrosGT(*i.LargeConsumptionThresholdMicrosGT))
+	}
+	if i.LargeConsumptionThresholdMicrosGTE != nil {
+		predicates = append(predicates, billingnotificationsetting.LargeConsumptionThresholdMicrosGTE(*i.LargeConsumptionThresholdMicrosGTE))
+	}
+	if i.LargeConsumptionThresholdMicrosLT != nil {
+		predicates = append(predicates, billingnotificationsetting.LargeConsumptionThresholdMicrosLT(*i.LargeConsumptionThresholdMicrosLT))
+	}
+	if i.LargeConsumptionThresholdMicrosLTE != nil {
+		predicates = append(predicates, billingnotificationsetting.LargeConsumptionThresholdMicrosLTE(*i.LargeConsumptionThresholdMicrosLTE))
+	}
+	if i.SubscriptionExpiryWarningDays != nil {
+		predicates = append(predicates, billingnotificationsetting.SubscriptionExpiryWarningDaysEQ(*i.SubscriptionExpiryWarningDays))
+	}
+	if i.SubscriptionExpiryWarningDaysNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.SubscriptionExpiryWarningDaysNEQ(*i.SubscriptionExpiryWarningDaysNEQ))
+	}
+	if len(i.SubscriptionExpiryWarningDaysIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.SubscriptionExpiryWarningDaysIn(i.SubscriptionExpiryWarningDaysIn...))
+	}
+	if len(i.SubscriptionExpiryWarningDaysNotIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.SubscriptionExpiryWarningDaysNotIn(i.SubscriptionExpiryWarningDaysNotIn...))
+	}
+	if i.SubscriptionExpiryWarningDaysGT != nil {
+		predicates = append(predicates, billingnotificationsetting.SubscriptionExpiryWarningDaysGT(*i.SubscriptionExpiryWarningDaysGT))
+	}
+	if i.SubscriptionExpiryWarningDaysGTE != nil {
+		predicates = append(predicates, billingnotificationsetting.SubscriptionExpiryWarningDaysGTE(*i.SubscriptionExpiryWarningDaysGTE))
+	}
+	if i.SubscriptionExpiryWarningDaysLT != nil {
+		predicates = append(predicates, billingnotificationsetting.SubscriptionExpiryWarningDaysLT(*i.SubscriptionExpiryWarningDaysLT))
+	}
+	if i.SubscriptionExpiryWarningDaysLTE != nil {
+		predicates = append(predicates, billingnotificationsetting.SubscriptionExpiryWarningDaysLTE(*i.SubscriptionExpiryWarningDaysLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, billingnotificationsetting.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, billingnotificationsetting.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyBillingNotificationSettingWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return billingnotificationsetting.And(predicates...), nil
 	}
 }
 
@@ -11593,6 +13136,10 @@ type PaymentOrderWhereInput struct {
 	// "affiliate_rebates" edge predicates.
 	HasAffiliateRebates     *bool                        `json:"hasAffiliateRebates,omitempty"`
 	HasAffiliateRebatesWith []*AffiliateRebateWhereInput `json:"hasAffiliateRebatesWith,omitempty"`
+
+	// "billing_notifications" edge predicates.
+	HasBillingNotifications     *bool                            `json:"hasBillingNotifications,omitempty"`
+	HasBillingNotificationsWith []*BillingNotificationWhereInput `json:"hasBillingNotificationsWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -12485,6 +14032,24 @@ func (i *PaymentOrderWhereInput) P() (predicate.PaymentOrder, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, paymentorder.HasAffiliateRebatesWith(with...))
+	}
+	if i.HasBillingNotifications != nil {
+		p := paymentorder.HasBillingNotifications()
+		if !*i.HasBillingNotifications {
+			p = paymentorder.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingNotificationsWith) > 0 {
+		with := make([]predicate.BillingNotification, 0, len(i.HasBillingNotificationsWith))
+		for _, w := range i.HasBillingNotificationsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingNotificationsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentorder.HasBillingNotificationsWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -21077,6 +22642,10 @@ type UsageBillingRecordWhereInput struct {
 	// "user_subscription" edge predicates.
 	HasUserSubscription     *bool                         `json:"hasUserSubscription,omitempty"`
 	HasUserSubscriptionWith []*UserSubscriptionWhereInput `json:"hasUserSubscriptionWith,omitempty"`
+
+	// "billing_notifications" edge predicates.
+	HasBillingNotifications     *bool                            `json:"hasBillingNotifications,omitempty"`
+	HasBillingNotificationsWith []*BillingNotificationWhereInput `json:"hasBillingNotificationsWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -21705,6 +23274,24 @@ func (i *UsageBillingRecordWhereInput) P() (predicate.UsageBillingRecord, error)
 			with = append(with, p)
 		}
 		predicates = append(predicates, usagebillingrecord.HasUserSubscriptionWith(with...))
+	}
+	if i.HasBillingNotifications != nil {
+		p := usagebillingrecord.HasBillingNotifications()
+		if !*i.HasBillingNotifications {
+			p = usagebillingrecord.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingNotificationsWith) > 0 {
+		with := make([]predicate.BillingNotification, 0, len(i.HasBillingNotificationsWith))
+		for _, w := range i.HasBillingNotificationsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingNotificationsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usagebillingrecord.HasBillingNotificationsWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -23031,6 +24618,14 @@ type UserWhereInput struct {
 	HasAffiliateRebatesGenerated     *bool                        `json:"hasAffiliateRebatesGenerated,omitempty"`
 	HasAffiliateRebatesGeneratedWith []*AffiliateRebateWhereInput `json:"hasAffiliateRebatesGeneratedWith,omitempty"`
 
+	// "billing_notification_preferences" edge predicates.
+	HasBillingNotificationPreferences     *bool                                      `json:"hasBillingNotificationPreferences,omitempty"`
+	HasBillingNotificationPreferencesWith []*BillingNotificationPreferenceWhereInput `json:"hasBillingNotificationPreferencesWith,omitempty"`
+
+	// "billing_notifications" edge predicates.
+	HasBillingNotifications     *bool                            `json:"hasBillingNotifications,omitempty"`
+	HasBillingNotificationsWith []*BillingNotificationWhereInput `json:"hasBillingNotificationsWith,omitempty"`
+
 	// "project_users" edge predicates.
 	HasProjectUsers     *bool                    `json:"hasProjectUsers,omitempty"`
 	HasProjectUsersWith []*UserProjectWhereInput `json:"hasProjectUsersWith,omitempty"`
@@ -23711,6 +25306,42 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasAffiliateRebatesGeneratedWith(with...))
+	}
+	if i.HasBillingNotificationPreferences != nil {
+		p := user.HasBillingNotificationPreferences()
+		if !*i.HasBillingNotificationPreferences {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingNotificationPreferencesWith) > 0 {
+		with := make([]predicate.BillingNotificationPreference, 0, len(i.HasBillingNotificationPreferencesWith))
+		for _, w := range i.HasBillingNotificationPreferencesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingNotificationPreferencesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasBillingNotificationPreferencesWith(with...))
+	}
+	if i.HasBillingNotifications != nil {
+		p := user.HasBillingNotifications()
+		if !*i.HasBillingNotifications {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingNotificationsWith) > 0 {
+		with := make([]predicate.BillingNotification, 0, len(i.HasBillingNotificationsWith))
+		for _, w := range i.HasBillingNotificationsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingNotificationsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasBillingNotificationsWith(with...))
 	}
 	if i.HasProjectUsers != nil {
 		p := user.HasProjectUsers()
@@ -24599,6 +26230,10 @@ type UserSubscriptionWhereInput struct {
 	// "affiliate_rebates" edge predicates.
 	HasAffiliateRebates     *bool                        `json:"hasAffiliateRebates,omitempty"`
 	HasAffiliateRebatesWith []*AffiliateRebateWhereInput `json:"hasAffiliateRebatesWith,omitempty"`
+
+	// "billing_notifications" edge predicates.
+	HasBillingNotifications     *bool                            `json:"hasBillingNotifications,omitempty"`
+	HasBillingNotificationsWith []*BillingNotificationWhereInput `json:"hasBillingNotificationsWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -25371,6 +27006,24 @@ func (i *UserSubscriptionWhereInput) P() (predicate.UserSubscription, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, usersubscription.HasAffiliateRebatesWith(with...))
+	}
+	if i.HasBillingNotifications != nil {
+		p := usersubscription.HasBillingNotifications()
+		if !*i.HasBillingNotifications {
+			p = usersubscription.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingNotificationsWith) > 0 {
+		with := make([]predicate.BillingNotification, 0, len(i.HasBillingNotificationsWith))
+		for _, w := range i.HasBillingNotificationsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingNotificationsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usersubscription.HasBillingNotificationsWith(with...))
 	}
 	switch len(predicates) {
 	case 0:

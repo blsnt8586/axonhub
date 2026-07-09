@@ -1002,6 +1002,29 @@ func HasUserSubscriptionWith(preds ...predicate.UserSubscription) predicate.Usag
 	})
 }
 
+// HasBillingNotifications applies the HasEdge predicate on the "billing_notifications" edge.
+func HasBillingNotifications() predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BillingNotificationsTable, BillingNotificationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBillingNotificationsWith applies the HasEdge predicate on the "billing_notifications" edge with a given conditions (other predicates).
+func HasBillingNotificationsWith(preds ...predicate.BillingNotification) predicate.UsageBillingRecord {
+	return predicate.UsageBillingRecord(func(s *sql.Selector) {
+		step := newBillingNotificationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.UsageBillingRecord) predicate.UsageBillingRecord {
 	return predicate.UsageBillingRecord(sql.AndPredicates(predicates...))

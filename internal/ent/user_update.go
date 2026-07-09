@@ -16,6 +16,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/apikey"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/predicate"
@@ -431,6 +433,36 @@ func (_u *UserUpdate) AddAffiliateRebatesGenerated(v ...*AffiliateRebate) *UserU
 	return _u.AddAffiliateRebatesGeneratedIDs(ids...)
 }
 
+// AddBillingNotificationPreferenceIDs adds the "billing_notification_preferences" edge to the BillingNotificationPreference entity by IDs.
+func (_u *UserUpdate) AddBillingNotificationPreferenceIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddBillingNotificationPreferenceIDs(ids...)
+	return _u
+}
+
+// AddBillingNotificationPreferences adds the "billing_notification_preferences" edges to the BillingNotificationPreference entity.
+func (_u *UserUpdate) AddBillingNotificationPreferences(v ...*BillingNotificationPreference) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingNotificationPreferenceIDs(ids...)
+}
+
+// AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by IDs.
+func (_u *UserUpdate) AddBillingNotificationIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddBillingNotificationIDs(ids...)
+	return _u
+}
+
+// AddBillingNotifications adds the "billing_notifications" edges to the BillingNotification entity.
+func (_u *UserUpdate) AddBillingNotifications(v ...*BillingNotification) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingNotificationIDs(ids...)
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
 func (_u *UserUpdate) AddProjectUserIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddProjectUserIDs(ids...)
@@ -779,6 +811,48 @@ func (_u *UserUpdate) RemoveAffiliateRebatesGenerated(v ...*AffiliateRebate) *Us
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAffiliateRebatesGeneratedIDs(ids...)
+}
+
+// ClearBillingNotificationPreferences clears all "billing_notification_preferences" edges to the BillingNotificationPreference entity.
+func (_u *UserUpdate) ClearBillingNotificationPreferences() *UserUpdate {
+	_u.mutation.ClearBillingNotificationPreferences()
+	return _u
+}
+
+// RemoveBillingNotificationPreferenceIDs removes the "billing_notification_preferences" edge to BillingNotificationPreference entities by IDs.
+func (_u *UserUpdate) RemoveBillingNotificationPreferenceIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveBillingNotificationPreferenceIDs(ids...)
+	return _u
+}
+
+// RemoveBillingNotificationPreferences removes "billing_notification_preferences" edges to BillingNotificationPreference entities.
+func (_u *UserUpdate) RemoveBillingNotificationPreferences(v ...*BillingNotificationPreference) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingNotificationPreferenceIDs(ids...)
+}
+
+// ClearBillingNotifications clears all "billing_notifications" edges to the BillingNotification entity.
+func (_u *UserUpdate) ClearBillingNotifications() *UserUpdate {
+	_u.mutation.ClearBillingNotifications()
+	return _u
+}
+
+// RemoveBillingNotificationIDs removes the "billing_notifications" edge to BillingNotification entities by IDs.
+func (_u *UserUpdate) RemoveBillingNotificationIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveBillingNotificationIDs(ids...)
+	return _u
+}
+
+// RemoveBillingNotifications removes "billing_notifications" edges to BillingNotification entities.
+func (_u *UserUpdate) RemoveBillingNotifications(v ...*BillingNotification) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingNotificationIDs(ids...)
 }
 
 // ClearProjectUsers clears all "project_users" edges to the UserProject entity.
@@ -1639,6 +1713,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.BillingNotificationPreferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationPreferencesTable,
+			Columns: []string{user.BillingNotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotificationpreference.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingNotificationPreferencesIDs(); len(nodes) > 0 && !_u.mutation.BillingNotificationPreferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationPreferencesTable,
+			Columns: []string{user.BillingNotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotificationpreference.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingNotificationPreferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationPreferencesTable,
+			Columns: []string{user.BillingNotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotificationpreference.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingNotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationsTable,
+			Columns: []string{user.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingNotificationsIDs(); len(nodes) > 0 && !_u.mutation.BillingNotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationsTable,
+			Columns: []string{user.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingNotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationsTable,
+			Columns: []string{user.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.ProjectUsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -2139,6 +2303,36 @@ func (_u *UserUpdateOne) AddAffiliateRebatesGenerated(v ...*AffiliateRebate) *Us
 	return _u.AddAffiliateRebatesGeneratedIDs(ids...)
 }
 
+// AddBillingNotificationPreferenceIDs adds the "billing_notification_preferences" edge to the BillingNotificationPreference entity by IDs.
+func (_u *UserUpdateOne) AddBillingNotificationPreferenceIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddBillingNotificationPreferenceIDs(ids...)
+	return _u
+}
+
+// AddBillingNotificationPreferences adds the "billing_notification_preferences" edges to the BillingNotificationPreference entity.
+func (_u *UserUpdateOne) AddBillingNotificationPreferences(v ...*BillingNotificationPreference) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingNotificationPreferenceIDs(ids...)
+}
+
+// AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by IDs.
+func (_u *UserUpdateOne) AddBillingNotificationIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddBillingNotificationIDs(ids...)
+	return _u
+}
+
+// AddBillingNotifications adds the "billing_notifications" edges to the BillingNotification entity.
+func (_u *UserUpdateOne) AddBillingNotifications(v ...*BillingNotification) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingNotificationIDs(ids...)
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
 func (_u *UserUpdateOne) AddProjectUserIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddProjectUserIDs(ids...)
@@ -2487,6 +2681,48 @@ func (_u *UserUpdateOne) RemoveAffiliateRebatesGenerated(v ...*AffiliateRebate) 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAffiliateRebatesGeneratedIDs(ids...)
+}
+
+// ClearBillingNotificationPreferences clears all "billing_notification_preferences" edges to the BillingNotificationPreference entity.
+func (_u *UserUpdateOne) ClearBillingNotificationPreferences() *UserUpdateOne {
+	_u.mutation.ClearBillingNotificationPreferences()
+	return _u
+}
+
+// RemoveBillingNotificationPreferenceIDs removes the "billing_notification_preferences" edge to BillingNotificationPreference entities by IDs.
+func (_u *UserUpdateOne) RemoveBillingNotificationPreferenceIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveBillingNotificationPreferenceIDs(ids...)
+	return _u
+}
+
+// RemoveBillingNotificationPreferences removes "billing_notification_preferences" edges to BillingNotificationPreference entities.
+func (_u *UserUpdateOne) RemoveBillingNotificationPreferences(v ...*BillingNotificationPreference) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingNotificationPreferenceIDs(ids...)
+}
+
+// ClearBillingNotifications clears all "billing_notifications" edges to the BillingNotification entity.
+func (_u *UserUpdateOne) ClearBillingNotifications() *UserUpdateOne {
+	_u.mutation.ClearBillingNotifications()
+	return _u
+}
+
+// RemoveBillingNotificationIDs removes the "billing_notifications" edge to BillingNotification entities by IDs.
+func (_u *UserUpdateOne) RemoveBillingNotificationIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveBillingNotificationIDs(ids...)
+	return _u
+}
+
+// RemoveBillingNotifications removes "billing_notifications" edges to BillingNotification entities.
+func (_u *UserUpdateOne) RemoveBillingNotifications(v ...*BillingNotification) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingNotificationIDs(ids...)
 }
 
 // ClearProjectUsers clears all "project_users" edges to the UserProject entity.
@@ -3370,6 +3606,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingNotificationPreferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationPreferencesTable,
+			Columns: []string{user.BillingNotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotificationpreference.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingNotificationPreferencesIDs(); len(nodes) > 0 && !_u.mutation.BillingNotificationPreferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationPreferencesTable,
+			Columns: []string{user.BillingNotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotificationpreference.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingNotificationPreferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationPreferencesTable,
+			Columns: []string{user.BillingNotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotificationpreference.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingNotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationsTable,
+			Columns: []string{user.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingNotificationsIDs(); len(nodes) > 0 && !_u.mutation.BillingNotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationsTable,
+			Columns: []string{user.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingNotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationsTable,
+			Columns: []string{user.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -33,8 +33,9 @@ type PaymentServiceParams struct {
 	BillingAccountService *BillingAccountService
 	LedgerService         *LedgerService
 	ProviderRegistry      *PaymentProviderRegistry
-	PromoCodeService      *PromoCodeService `optional:"true"`
-	AffiliateService      *AffiliateService `optional:"true"`
+	PromoCodeService      *PromoCodeService           `optional:"true"`
+	AffiliateService      *AffiliateService           `optional:"true"`
+	NotificationService   *BillingNotificationService `optional:"true"`
 }
 
 type PaymentService struct {
@@ -45,6 +46,7 @@ type PaymentService struct {
 	providerRegistry      *PaymentProviderRegistry
 	promoCodeService      *PromoCodeService
 	affiliateService      *AffiliateService
+	notificationService   *BillingNotificationService
 }
 
 func NewPaymentService(params PaymentServiceParams) *PaymentService {
@@ -55,6 +57,7 @@ func NewPaymentService(params PaymentServiceParams) *PaymentService {
 		providerRegistry:      params.ProviderRegistry,
 		promoCodeService:      params.PromoCodeService,
 		affiliateService:      params.AffiliateService,
+		notificationService:   params.NotificationService,
 	}
 }
 
@@ -656,6 +659,20 @@ func (s *PaymentService) recordFailedEPayNotify(ctx context.Context, input recor
 	} else if err != nil {
 		return err
 	}
+	if s.notificationService != nil {
+		s.notifyNonBlocking(ctx, "notify payment failure", func() error {
+			return s.notificationService.NotifyPaymentFailure(ctx, input.Order, input.Reason)
+		})
+		s.notifyNonBlocking(ctx, "notify operator payment callback failure", func() error {
+			return s.notificationService.NotifyOperatorAlert(
+				ctx,
+				"operator_payment_callback_failure:"+eventKey,
+				"Payment callback failed",
+				fmt.Sprintf("ePay callback failed with reason %s: %s", input.Reason, message),
+				"",
+			)
+		})
+	}
 
 	return nil
 }
@@ -844,7 +861,7 @@ func (s *PaymentService) AdjustUserBalance(ctx context.Context, input AdjustUser
 		return nil, fmt.Errorf("ledger currency %s does not match account currency %s", input.Currency, account.Currency)
 	}
 
-	return s.ledgerService.Post(ctx, LedgerPostInput{
+	ledgerTx, err := s.ledgerService.Post(ctx, LedgerPostInput{
 		BillingAccountID: account.ID,
 		Direction:        input.Direction,
 		Amount:           input.Amount,
@@ -857,6 +874,18 @@ func (s *PaymentService) AdjustUserBalance(ctx context.Context, input AdjustUser
 		CreatedByType:    ledgertransaction.CreatedByTypeAdmin,
 		CreatedByID:      input.ActorID,
 	})
+	if err != nil {
+		return nil, err
+	}
+	if s.notificationService != nil && input.Direction == ledgertransaction.DirectionDebit {
+		updatedAccount, loadErr := s.entFromContext(ctx).BillingAccount.Get(ctx, account.ID)
+		if loadErr == nil {
+			s.notifyNonBlocking(ctx, "notify low balance after admin adjustment", func() error {
+				return s.notificationService.NotifyLowBalance(ctx, updatedAccount)
+			})
+		}
+	}
+	return ledgerTx, nil
 }
 
 func (s *PaymentService) ConfirmManualPayment(ctx context.Context, input ConfirmManualPaymentInput) (*ent.PaymentOrder, error) {
@@ -1011,6 +1040,11 @@ func (s *PaymentService) ExpirePendingPaymentOrders(ctx context.Context, now tim
 		}
 		if updated > 0 {
 			expired++
+			if s.notificationService != nil {
+				s.notifyNonBlocking(ctx, "notify expired payment order", func() error {
+					return s.notificationService.NotifyPaymentFailure(ctx, order, "expired")
+				})
+			}
 		}
 	}
 
@@ -1173,8 +1207,19 @@ func (s *PaymentService) confirmPaidOrder(ctx context.Context, input confirmPaid
 	if terminalErr != nil {
 		return nil, terminalErr
 	}
+	if s.notificationService != nil && paidOrder != nil {
+		s.notifyNonBlocking(ctx, "notify payment success", func() error {
+			return s.notificationService.NotifyPaymentSuccess(ctx, paidOrder)
+		})
+	}
 
 	return paidOrder, nil
+}
+
+func (s *PaymentService) notifyNonBlocking(ctx context.Context, action string, fn func() error) {
+	if err := fn(); err != nil {
+		log.Warn(ctx, action+" failed", log.Cause(err))
+	}
 }
 
 func (s *PaymentService) recordIgnoredPaymentEvent(ctx context.Context, order *ent.PaymentOrder, input confirmPaidOrderInput, cause error) error {

@@ -24,6 +24,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationsetting"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -84,6 +87,12 @@ type Client struct {
 	BillingAccountBinding *BillingAccountBindingClient
 	// BillingHold is the client for interacting with the BillingHold builders.
 	BillingHold *BillingHoldClient
+	// BillingNotification is the client for interacting with the BillingNotification builders.
+	BillingNotification *BillingNotificationClient
+	// BillingNotificationPreference is the client for interacting with the BillingNotificationPreference builders.
+	BillingNotificationPreference *BillingNotificationPreferenceClient
+	// BillingNotificationSetting is the client for interacting with the BillingNotificationSetting builders.
+	BillingNotificationSetting *BillingNotificationSettingClient
 	// BillingOutbox is the client for interacting with the BillingOutbox builders.
 	BillingOutbox *BillingOutboxClient
 	// BillingPriceRule is the client for interacting with the BillingPriceRule builders.
@@ -176,6 +185,9 @@ func (c *Client) init() {
 	c.BillingAccount = NewBillingAccountClient(c.config)
 	c.BillingAccountBinding = NewBillingAccountBindingClient(c.config)
 	c.BillingHold = NewBillingHoldClient(c.config)
+	c.BillingNotification = NewBillingNotificationClient(c.config)
+	c.BillingNotificationPreference = NewBillingNotificationPreferenceClient(c.config)
+	c.BillingNotificationSetting = NewBillingNotificationSettingClient(c.config)
 	c.BillingOutbox = NewBillingOutboxClient(c.config)
 	c.BillingPriceRule = NewBillingPriceRuleClient(c.config)
 	c.Channel = NewChannelClient(c.config)
@@ -301,52 +313,55 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                      ctx,
-		config:                   cfg,
-		APIKey:                   NewAPIKeyClient(cfg),
-		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
-		AffiliateInvitation:      NewAffiliateInvitationClient(cfg),
-		AffiliateProfile:         NewAffiliateProfileClient(cfg),
-		AffiliateRebate:          NewAffiliateRebateClient(cfg),
-		AffiliateSetting:         NewAffiliateSettingClient(cfg),
-		BillingAccount:           NewBillingAccountClient(cfg),
-		BillingAccountBinding:    NewBillingAccountBindingClient(cfg),
-		BillingHold:              NewBillingHoldClient(cfg),
-		BillingOutbox:            NewBillingOutboxClient(cfg),
-		BillingPriceRule:         NewBillingPriceRuleClient(cfg),
-		Channel:                  NewChannelClient(cfg),
-		ChannelModelPrice:        NewChannelModelPriceClient(cfg),
-		ChannelModelPriceVersion: NewChannelModelPriceVersionClient(cfg),
-		ChannelOverrideTemplate:  NewChannelOverrideTemplateClient(cfg),
-		ChannelProbe:             NewChannelProbeClient(cfg),
-		DataStorage:              NewDataStorageClient(cfg),
-		LedgerEntry:              NewLedgerEntryClient(cfg),
-		LedgerTransaction:        NewLedgerTransactionClient(cfg),
-		Model:                    NewModelClient(cfg),
-		OIDCIdentity:             NewOIDCIdentityClient(cfg),
-		PaymentEvent:             NewPaymentEventClient(cfg),
-		PaymentOrder:             NewPaymentOrderClient(cfg),
-		PaymentProviderInstance:  NewPaymentProviderInstanceClient(cfg),
-		Project:                  NewProjectClient(cfg),
-		PromoCode:                NewPromoCodeClient(cfg),
-		PromoUsage:               NewPromoUsageClient(cfg),
-		Prompt:                   NewPromptClient(cfg),
-		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
-		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
-		RedeemCode:               NewRedeemCodeClient(cfg),
-		Request:                  NewRequestClient(cfg),
-		RequestExecution:         NewRequestExecutionClient(cfg),
-		Role:                     NewRoleClient(cfg),
-		SubscriptionPlan:         NewSubscriptionPlanClient(cfg),
-		System:                   NewSystemClient(cfg),
-		Thread:                   NewThreadClient(cfg),
-		Trace:                    NewTraceClient(cfg),
-		UsageBillingRecord:       NewUsageBillingRecordClient(cfg),
-		UsageLog:                 NewUsageLogClient(cfg),
-		User:                     NewUserClient(cfg),
-		UserProject:              NewUserProjectClient(cfg),
-		UserRole:                 NewUserRoleClient(cfg),
-		UserSubscription:         NewUserSubscriptionClient(cfg),
+		ctx:                           ctx,
+		config:                        cfg,
+		APIKey:                        NewAPIKeyClient(cfg),
+		APIKeyProfileTemplate:         NewAPIKeyProfileTemplateClient(cfg),
+		AffiliateInvitation:           NewAffiliateInvitationClient(cfg),
+		AffiliateProfile:              NewAffiliateProfileClient(cfg),
+		AffiliateRebate:               NewAffiliateRebateClient(cfg),
+		AffiliateSetting:              NewAffiliateSettingClient(cfg),
+		BillingAccount:                NewBillingAccountClient(cfg),
+		BillingAccountBinding:         NewBillingAccountBindingClient(cfg),
+		BillingHold:                   NewBillingHoldClient(cfg),
+		BillingNotification:           NewBillingNotificationClient(cfg),
+		BillingNotificationPreference: NewBillingNotificationPreferenceClient(cfg),
+		BillingNotificationSetting:    NewBillingNotificationSettingClient(cfg),
+		BillingOutbox:                 NewBillingOutboxClient(cfg),
+		BillingPriceRule:              NewBillingPriceRuleClient(cfg),
+		Channel:                       NewChannelClient(cfg),
+		ChannelModelPrice:             NewChannelModelPriceClient(cfg),
+		ChannelModelPriceVersion:      NewChannelModelPriceVersionClient(cfg),
+		ChannelOverrideTemplate:       NewChannelOverrideTemplateClient(cfg),
+		ChannelProbe:                  NewChannelProbeClient(cfg),
+		DataStorage:                   NewDataStorageClient(cfg),
+		LedgerEntry:                   NewLedgerEntryClient(cfg),
+		LedgerTransaction:             NewLedgerTransactionClient(cfg),
+		Model:                         NewModelClient(cfg),
+		OIDCIdentity:                  NewOIDCIdentityClient(cfg),
+		PaymentEvent:                  NewPaymentEventClient(cfg),
+		PaymentOrder:                  NewPaymentOrderClient(cfg),
+		PaymentProviderInstance:       NewPaymentProviderInstanceClient(cfg),
+		Project:                       NewProjectClient(cfg),
+		PromoCode:                     NewPromoCodeClient(cfg),
+		PromoUsage:                    NewPromoUsageClient(cfg),
+		Prompt:                        NewPromptClient(cfg),
+		PromptProtectionRule:          NewPromptProtectionRuleClient(cfg),
+		ProviderQuotaStatus:           NewProviderQuotaStatusClient(cfg),
+		RedeemCode:                    NewRedeemCodeClient(cfg),
+		Request:                       NewRequestClient(cfg),
+		RequestExecution:              NewRequestExecutionClient(cfg),
+		Role:                          NewRoleClient(cfg),
+		SubscriptionPlan:              NewSubscriptionPlanClient(cfg),
+		System:                        NewSystemClient(cfg),
+		Thread:                        NewThreadClient(cfg),
+		Trace:                         NewTraceClient(cfg),
+		UsageBillingRecord:            NewUsageBillingRecordClient(cfg),
+		UsageLog:                      NewUsageLogClient(cfg),
+		User:                          NewUserClient(cfg),
+		UserProject:                   NewUserProjectClient(cfg),
+		UserRole:                      NewUserRoleClient(cfg),
+		UserSubscription:              NewUserSubscriptionClient(cfg),
 	}, nil
 }
 
@@ -364,52 +379,55 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                      ctx,
-		config:                   cfg,
-		APIKey:                   NewAPIKeyClient(cfg),
-		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
-		AffiliateInvitation:      NewAffiliateInvitationClient(cfg),
-		AffiliateProfile:         NewAffiliateProfileClient(cfg),
-		AffiliateRebate:          NewAffiliateRebateClient(cfg),
-		AffiliateSetting:         NewAffiliateSettingClient(cfg),
-		BillingAccount:           NewBillingAccountClient(cfg),
-		BillingAccountBinding:    NewBillingAccountBindingClient(cfg),
-		BillingHold:              NewBillingHoldClient(cfg),
-		BillingOutbox:            NewBillingOutboxClient(cfg),
-		BillingPriceRule:         NewBillingPriceRuleClient(cfg),
-		Channel:                  NewChannelClient(cfg),
-		ChannelModelPrice:        NewChannelModelPriceClient(cfg),
-		ChannelModelPriceVersion: NewChannelModelPriceVersionClient(cfg),
-		ChannelOverrideTemplate:  NewChannelOverrideTemplateClient(cfg),
-		ChannelProbe:             NewChannelProbeClient(cfg),
-		DataStorage:              NewDataStorageClient(cfg),
-		LedgerEntry:              NewLedgerEntryClient(cfg),
-		LedgerTransaction:        NewLedgerTransactionClient(cfg),
-		Model:                    NewModelClient(cfg),
-		OIDCIdentity:             NewOIDCIdentityClient(cfg),
-		PaymentEvent:             NewPaymentEventClient(cfg),
-		PaymentOrder:             NewPaymentOrderClient(cfg),
-		PaymentProviderInstance:  NewPaymentProviderInstanceClient(cfg),
-		Project:                  NewProjectClient(cfg),
-		PromoCode:                NewPromoCodeClient(cfg),
-		PromoUsage:               NewPromoUsageClient(cfg),
-		Prompt:                   NewPromptClient(cfg),
-		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
-		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
-		RedeemCode:               NewRedeemCodeClient(cfg),
-		Request:                  NewRequestClient(cfg),
-		RequestExecution:         NewRequestExecutionClient(cfg),
-		Role:                     NewRoleClient(cfg),
-		SubscriptionPlan:         NewSubscriptionPlanClient(cfg),
-		System:                   NewSystemClient(cfg),
-		Thread:                   NewThreadClient(cfg),
-		Trace:                    NewTraceClient(cfg),
-		UsageBillingRecord:       NewUsageBillingRecordClient(cfg),
-		UsageLog:                 NewUsageLogClient(cfg),
-		User:                     NewUserClient(cfg),
-		UserProject:              NewUserProjectClient(cfg),
-		UserRole:                 NewUserRoleClient(cfg),
-		UserSubscription:         NewUserSubscriptionClient(cfg),
+		ctx:                           ctx,
+		config:                        cfg,
+		APIKey:                        NewAPIKeyClient(cfg),
+		APIKeyProfileTemplate:         NewAPIKeyProfileTemplateClient(cfg),
+		AffiliateInvitation:           NewAffiliateInvitationClient(cfg),
+		AffiliateProfile:              NewAffiliateProfileClient(cfg),
+		AffiliateRebate:               NewAffiliateRebateClient(cfg),
+		AffiliateSetting:              NewAffiliateSettingClient(cfg),
+		BillingAccount:                NewBillingAccountClient(cfg),
+		BillingAccountBinding:         NewBillingAccountBindingClient(cfg),
+		BillingHold:                   NewBillingHoldClient(cfg),
+		BillingNotification:           NewBillingNotificationClient(cfg),
+		BillingNotificationPreference: NewBillingNotificationPreferenceClient(cfg),
+		BillingNotificationSetting:    NewBillingNotificationSettingClient(cfg),
+		BillingOutbox:                 NewBillingOutboxClient(cfg),
+		BillingPriceRule:              NewBillingPriceRuleClient(cfg),
+		Channel:                       NewChannelClient(cfg),
+		ChannelModelPrice:             NewChannelModelPriceClient(cfg),
+		ChannelModelPriceVersion:      NewChannelModelPriceVersionClient(cfg),
+		ChannelOverrideTemplate:       NewChannelOverrideTemplateClient(cfg),
+		ChannelProbe:                  NewChannelProbeClient(cfg),
+		DataStorage:                   NewDataStorageClient(cfg),
+		LedgerEntry:                   NewLedgerEntryClient(cfg),
+		LedgerTransaction:             NewLedgerTransactionClient(cfg),
+		Model:                         NewModelClient(cfg),
+		OIDCIdentity:                  NewOIDCIdentityClient(cfg),
+		PaymentEvent:                  NewPaymentEventClient(cfg),
+		PaymentOrder:                  NewPaymentOrderClient(cfg),
+		PaymentProviderInstance:       NewPaymentProviderInstanceClient(cfg),
+		Project:                       NewProjectClient(cfg),
+		PromoCode:                     NewPromoCodeClient(cfg),
+		PromoUsage:                    NewPromoUsageClient(cfg),
+		Prompt:                        NewPromptClient(cfg),
+		PromptProtectionRule:          NewPromptProtectionRuleClient(cfg),
+		ProviderQuotaStatus:           NewProviderQuotaStatusClient(cfg),
+		RedeemCode:                    NewRedeemCodeClient(cfg),
+		Request:                       NewRequestClient(cfg),
+		RequestExecution:              NewRequestExecutionClient(cfg),
+		Role:                          NewRoleClient(cfg),
+		SubscriptionPlan:              NewSubscriptionPlanClient(cfg),
+		System:                        NewSystemClient(cfg),
+		Thread:                        NewThreadClient(cfg),
+		Trace:                         NewTraceClient(cfg),
+		UsageBillingRecord:            NewUsageBillingRecordClient(cfg),
+		UsageLog:                      NewUsageLogClient(cfg),
+		User:                          NewUserClient(cfg),
+		UserProject:                   NewUserProjectClient(cfg),
+		UserRole:                      NewUserRoleClient(cfg),
+		UserSubscription:              NewUserSubscriptionClient(cfg),
 	}, nil
 }
 
@@ -441,8 +459,9 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.AffiliateInvitation, c.AffiliateProfile,
 		c.AffiliateRebate, c.AffiliateSetting, c.BillingAccount,
-		c.BillingAccountBinding, c.BillingHold, c.BillingOutbox, c.BillingPriceRule,
-		c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
+		c.BillingAccountBinding, c.BillingHold, c.BillingNotification,
+		c.BillingNotificationPreference, c.BillingNotificationSetting, c.BillingOutbox,
+		c.BillingPriceRule, c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
 		c.ChannelOverrideTemplate, c.ChannelProbe, c.DataStorage, c.LedgerEntry,
 		c.LedgerTransaction, c.Model, c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder,
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
@@ -461,8 +480,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.AffiliateInvitation, c.AffiliateProfile,
 		c.AffiliateRebate, c.AffiliateSetting, c.BillingAccount,
-		c.BillingAccountBinding, c.BillingHold, c.BillingOutbox, c.BillingPriceRule,
-		c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
+		c.BillingAccountBinding, c.BillingHold, c.BillingNotification,
+		c.BillingNotificationPreference, c.BillingNotificationSetting, c.BillingOutbox,
+		c.BillingPriceRule, c.Channel, c.ChannelModelPrice, c.ChannelModelPriceVersion,
 		c.ChannelOverrideTemplate, c.ChannelProbe, c.DataStorage, c.LedgerEntry,
 		c.LedgerTransaction, c.Model, c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder,
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
@@ -496,6 +516,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.BillingAccountBinding.mutate(ctx, m)
 	case *BillingHoldMutation:
 		return c.BillingHold.mutate(ctx, m)
+	case *BillingNotificationMutation:
+		return c.BillingNotification.mutate(ctx, m)
+	case *BillingNotificationPreferenceMutation:
+		return c.BillingNotificationPreference.mutate(ctx, m)
+	case *BillingNotificationSettingMutation:
+		return c.BillingNotificationSetting.mutate(ctx, m)
 	case *BillingOutboxMutation:
 		return c.BillingOutbox.mutate(ctx, m)
 	case *BillingPriceRuleMutation:
@@ -1805,6 +1831,22 @@ func (c *BillingAccountClient) QueryPromoUsages(_m *BillingAccount) *PromoUsageQ
 	return query
 }
 
+// QueryBillingNotifications queries the billing_notifications edge of a BillingAccount.
+func (c *BillingAccountClient) QueryBillingNotifications(_m *BillingAccount) *BillingNotificationQuery {
+	query := (&BillingNotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, id),
+			sqlgraph.To(billingnotification.Table, billingnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.BillingNotificationsTable, billingaccount.BillingNotificationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *BillingAccountClient) Hooks() []Hook {
 	hooks := c.hooks.BillingAccount
@@ -2176,6 +2218,504 @@ func (c *BillingHoldClient) mutate(ctx context.Context, m *BillingHoldMutation) 
 		return (&BillingHoldDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown BillingHold mutation op: %q", m.Op())
+	}
+}
+
+// BillingNotificationClient is a client for the BillingNotification schema.
+type BillingNotificationClient struct {
+	config
+}
+
+// NewBillingNotificationClient returns a client for the BillingNotification from the given config.
+func NewBillingNotificationClient(c config) *BillingNotificationClient {
+	return &BillingNotificationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `billingnotification.Hooks(f(g(h())))`.
+func (c *BillingNotificationClient) Use(hooks ...Hook) {
+	c.hooks.BillingNotification = append(c.hooks.BillingNotification, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `billingnotification.Intercept(f(g(h())))`.
+func (c *BillingNotificationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BillingNotification = append(c.inters.BillingNotification, interceptors...)
+}
+
+// Create returns a builder for creating a BillingNotification entity.
+func (c *BillingNotificationClient) Create() *BillingNotificationCreate {
+	mutation := newBillingNotificationMutation(c.config, OpCreate)
+	return &BillingNotificationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BillingNotification entities.
+func (c *BillingNotificationClient) CreateBulk(builders ...*BillingNotificationCreate) *BillingNotificationCreateBulk {
+	return &BillingNotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BillingNotificationClient) MapCreateBulk(slice any, setFunc func(*BillingNotificationCreate, int)) *BillingNotificationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BillingNotificationCreateBulk{err: fmt.Errorf("calling to BillingNotificationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BillingNotificationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BillingNotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BillingNotification.
+func (c *BillingNotificationClient) Update() *BillingNotificationUpdate {
+	mutation := newBillingNotificationMutation(c.config, OpUpdate)
+	return &BillingNotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BillingNotificationClient) UpdateOne(_m *BillingNotification) *BillingNotificationUpdateOne {
+	mutation := newBillingNotificationMutation(c.config, OpUpdateOne, withBillingNotification(_m))
+	return &BillingNotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BillingNotificationClient) UpdateOneID(id int) *BillingNotificationUpdateOne {
+	mutation := newBillingNotificationMutation(c.config, OpUpdateOne, withBillingNotificationID(id))
+	return &BillingNotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BillingNotification.
+func (c *BillingNotificationClient) Delete() *BillingNotificationDelete {
+	mutation := newBillingNotificationMutation(c.config, OpDelete)
+	return &BillingNotificationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BillingNotificationClient) DeleteOne(_m *BillingNotification) *BillingNotificationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BillingNotificationClient) DeleteOneID(id int) *BillingNotificationDeleteOne {
+	builder := c.Delete().Where(billingnotification.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BillingNotificationDeleteOne{builder}
+}
+
+// Query returns a query builder for BillingNotification.
+func (c *BillingNotificationClient) Query() *BillingNotificationQuery {
+	return &BillingNotificationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBillingNotification},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BillingNotification entity by its id.
+func (c *BillingNotificationClient) Get(ctx context.Context, id int) (*BillingNotification, error) {
+	return c.Query().Where(billingnotification.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BillingNotificationClient) GetX(ctx context.Context, id int) *BillingNotification {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a BillingNotification.
+func (c *BillingNotificationClient) QueryUser(_m *BillingNotification) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingnotification.Table, billingnotification.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billingnotification.UserTable, billingnotification.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBillingAccount queries the billing_account edge of a BillingNotification.
+func (c *BillingNotificationClient) QueryBillingAccount(_m *BillingNotification) *BillingAccountQuery {
+	query := (&BillingAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingnotification.Table, billingnotification.FieldID, id),
+			sqlgraph.To(billingaccount.Table, billingaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billingnotification.BillingAccountTable, billingnotification.BillingAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPaymentOrder queries the payment_order edge of a BillingNotification.
+func (c *BillingNotificationClient) QueryPaymentOrder(_m *BillingNotification) *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingnotification.Table, billingnotification.FieldID, id),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billingnotification.PaymentOrderTable, billingnotification.PaymentOrderColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserSubscription queries the user_subscription edge of a BillingNotification.
+func (c *BillingNotificationClient) QueryUserSubscription(_m *BillingNotification) *UserSubscriptionQuery {
+	query := (&UserSubscriptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingnotification.Table, billingnotification.FieldID, id),
+			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billingnotification.UserSubscriptionTable, billingnotification.UserSubscriptionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsageBillingRecord queries the usage_billing_record edge of a BillingNotification.
+func (c *BillingNotificationClient) QueryUsageBillingRecord(_m *BillingNotification) *UsageBillingRecordQuery {
+	query := (&UsageBillingRecordClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingnotification.Table, billingnotification.FieldID, id),
+			sqlgraph.To(usagebillingrecord.Table, usagebillingrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billingnotification.UsageBillingRecordTable, billingnotification.UsageBillingRecordColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *BillingNotificationClient) Hooks() []Hook {
+	hooks := c.hooks.BillingNotification
+	return append(hooks[:len(hooks):len(hooks)], billingnotification.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BillingNotificationClient) Interceptors() []Interceptor {
+	return c.inters.BillingNotification
+}
+
+func (c *BillingNotificationClient) mutate(ctx context.Context, m *BillingNotificationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BillingNotificationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BillingNotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BillingNotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BillingNotificationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BillingNotification mutation op: %q", m.Op())
+	}
+}
+
+// BillingNotificationPreferenceClient is a client for the BillingNotificationPreference schema.
+type BillingNotificationPreferenceClient struct {
+	config
+}
+
+// NewBillingNotificationPreferenceClient returns a client for the BillingNotificationPreference from the given config.
+func NewBillingNotificationPreferenceClient(c config) *BillingNotificationPreferenceClient {
+	return &BillingNotificationPreferenceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `billingnotificationpreference.Hooks(f(g(h())))`.
+func (c *BillingNotificationPreferenceClient) Use(hooks ...Hook) {
+	c.hooks.BillingNotificationPreference = append(c.hooks.BillingNotificationPreference, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `billingnotificationpreference.Intercept(f(g(h())))`.
+func (c *BillingNotificationPreferenceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BillingNotificationPreference = append(c.inters.BillingNotificationPreference, interceptors...)
+}
+
+// Create returns a builder for creating a BillingNotificationPreference entity.
+func (c *BillingNotificationPreferenceClient) Create() *BillingNotificationPreferenceCreate {
+	mutation := newBillingNotificationPreferenceMutation(c.config, OpCreate)
+	return &BillingNotificationPreferenceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BillingNotificationPreference entities.
+func (c *BillingNotificationPreferenceClient) CreateBulk(builders ...*BillingNotificationPreferenceCreate) *BillingNotificationPreferenceCreateBulk {
+	return &BillingNotificationPreferenceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BillingNotificationPreferenceClient) MapCreateBulk(slice any, setFunc func(*BillingNotificationPreferenceCreate, int)) *BillingNotificationPreferenceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BillingNotificationPreferenceCreateBulk{err: fmt.Errorf("calling to BillingNotificationPreferenceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BillingNotificationPreferenceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BillingNotificationPreferenceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BillingNotificationPreference.
+func (c *BillingNotificationPreferenceClient) Update() *BillingNotificationPreferenceUpdate {
+	mutation := newBillingNotificationPreferenceMutation(c.config, OpUpdate)
+	return &BillingNotificationPreferenceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BillingNotificationPreferenceClient) UpdateOne(_m *BillingNotificationPreference) *BillingNotificationPreferenceUpdateOne {
+	mutation := newBillingNotificationPreferenceMutation(c.config, OpUpdateOne, withBillingNotificationPreference(_m))
+	return &BillingNotificationPreferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BillingNotificationPreferenceClient) UpdateOneID(id int) *BillingNotificationPreferenceUpdateOne {
+	mutation := newBillingNotificationPreferenceMutation(c.config, OpUpdateOne, withBillingNotificationPreferenceID(id))
+	return &BillingNotificationPreferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BillingNotificationPreference.
+func (c *BillingNotificationPreferenceClient) Delete() *BillingNotificationPreferenceDelete {
+	mutation := newBillingNotificationPreferenceMutation(c.config, OpDelete)
+	return &BillingNotificationPreferenceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BillingNotificationPreferenceClient) DeleteOne(_m *BillingNotificationPreference) *BillingNotificationPreferenceDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BillingNotificationPreferenceClient) DeleteOneID(id int) *BillingNotificationPreferenceDeleteOne {
+	builder := c.Delete().Where(billingnotificationpreference.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BillingNotificationPreferenceDeleteOne{builder}
+}
+
+// Query returns a query builder for BillingNotificationPreference.
+func (c *BillingNotificationPreferenceClient) Query() *BillingNotificationPreferenceQuery {
+	return &BillingNotificationPreferenceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBillingNotificationPreference},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BillingNotificationPreference entity by its id.
+func (c *BillingNotificationPreferenceClient) Get(ctx context.Context, id int) (*BillingNotificationPreference, error) {
+	return c.Query().Where(billingnotificationpreference.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BillingNotificationPreferenceClient) GetX(ctx context.Context, id int) *BillingNotificationPreference {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a BillingNotificationPreference.
+func (c *BillingNotificationPreferenceClient) QueryUser(_m *BillingNotificationPreference) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingnotificationpreference.Table, billingnotificationpreference.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, billingnotificationpreference.UserTable, billingnotificationpreference.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *BillingNotificationPreferenceClient) Hooks() []Hook {
+	hooks := c.hooks.BillingNotificationPreference
+	return append(hooks[:len(hooks):len(hooks)], billingnotificationpreference.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BillingNotificationPreferenceClient) Interceptors() []Interceptor {
+	return c.inters.BillingNotificationPreference
+}
+
+func (c *BillingNotificationPreferenceClient) mutate(ctx context.Context, m *BillingNotificationPreferenceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BillingNotificationPreferenceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BillingNotificationPreferenceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BillingNotificationPreferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BillingNotificationPreferenceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BillingNotificationPreference mutation op: %q", m.Op())
+	}
+}
+
+// BillingNotificationSettingClient is a client for the BillingNotificationSetting schema.
+type BillingNotificationSettingClient struct {
+	config
+}
+
+// NewBillingNotificationSettingClient returns a client for the BillingNotificationSetting from the given config.
+func NewBillingNotificationSettingClient(c config) *BillingNotificationSettingClient {
+	return &BillingNotificationSettingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `billingnotificationsetting.Hooks(f(g(h())))`.
+func (c *BillingNotificationSettingClient) Use(hooks ...Hook) {
+	c.hooks.BillingNotificationSetting = append(c.hooks.BillingNotificationSetting, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `billingnotificationsetting.Intercept(f(g(h())))`.
+func (c *BillingNotificationSettingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BillingNotificationSetting = append(c.inters.BillingNotificationSetting, interceptors...)
+}
+
+// Create returns a builder for creating a BillingNotificationSetting entity.
+func (c *BillingNotificationSettingClient) Create() *BillingNotificationSettingCreate {
+	mutation := newBillingNotificationSettingMutation(c.config, OpCreate)
+	return &BillingNotificationSettingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BillingNotificationSetting entities.
+func (c *BillingNotificationSettingClient) CreateBulk(builders ...*BillingNotificationSettingCreate) *BillingNotificationSettingCreateBulk {
+	return &BillingNotificationSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BillingNotificationSettingClient) MapCreateBulk(slice any, setFunc func(*BillingNotificationSettingCreate, int)) *BillingNotificationSettingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BillingNotificationSettingCreateBulk{err: fmt.Errorf("calling to BillingNotificationSettingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BillingNotificationSettingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BillingNotificationSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BillingNotificationSetting.
+func (c *BillingNotificationSettingClient) Update() *BillingNotificationSettingUpdate {
+	mutation := newBillingNotificationSettingMutation(c.config, OpUpdate)
+	return &BillingNotificationSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BillingNotificationSettingClient) UpdateOne(_m *BillingNotificationSetting) *BillingNotificationSettingUpdateOne {
+	mutation := newBillingNotificationSettingMutation(c.config, OpUpdateOne, withBillingNotificationSetting(_m))
+	return &BillingNotificationSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BillingNotificationSettingClient) UpdateOneID(id int) *BillingNotificationSettingUpdateOne {
+	mutation := newBillingNotificationSettingMutation(c.config, OpUpdateOne, withBillingNotificationSettingID(id))
+	return &BillingNotificationSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BillingNotificationSetting.
+func (c *BillingNotificationSettingClient) Delete() *BillingNotificationSettingDelete {
+	mutation := newBillingNotificationSettingMutation(c.config, OpDelete)
+	return &BillingNotificationSettingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BillingNotificationSettingClient) DeleteOne(_m *BillingNotificationSetting) *BillingNotificationSettingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BillingNotificationSettingClient) DeleteOneID(id int) *BillingNotificationSettingDeleteOne {
+	builder := c.Delete().Where(billingnotificationsetting.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BillingNotificationSettingDeleteOne{builder}
+}
+
+// Query returns a query builder for BillingNotificationSetting.
+func (c *BillingNotificationSettingClient) Query() *BillingNotificationSettingQuery {
+	return &BillingNotificationSettingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBillingNotificationSetting},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BillingNotificationSetting entity by its id.
+func (c *BillingNotificationSettingClient) Get(ctx context.Context, id int) (*BillingNotificationSetting, error) {
+	return c.Query().Where(billingnotificationsetting.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BillingNotificationSettingClient) GetX(ctx context.Context, id int) *BillingNotificationSetting {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BillingNotificationSettingClient) Hooks() []Hook {
+	hooks := c.hooks.BillingNotificationSetting
+	return append(hooks[:len(hooks):len(hooks)], billingnotificationsetting.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BillingNotificationSettingClient) Interceptors() []Interceptor {
+	return c.inters.BillingNotificationSetting
+}
+
+func (c *BillingNotificationSettingClient) mutate(ctx context.Context, m *BillingNotificationSettingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BillingNotificationSettingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BillingNotificationSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BillingNotificationSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BillingNotificationSettingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BillingNotificationSetting mutation op: %q", m.Op())
 	}
 }
 
@@ -4555,6 +5095,22 @@ func (c *PaymentOrderClient) QueryAffiliateRebates(_m *PaymentOrder) *AffiliateR
 			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
 			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.AffiliateRebatesTable, paymentorder.AffiliateRebatesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBillingNotifications queries the billing_notifications edge of a PaymentOrder.
+func (c *PaymentOrderClient) QueryBillingNotifications(_m *PaymentOrder) *BillingNotificationQuery {
+	query := (&BillingNotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
+			sqlgraph.To(billingnotification.Table, billingnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.BillingNotificationsTable, paymentorder.BillingNotificationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -7511,6 +8067,22 @@ func (c *UsageBillingRecordClient) QueryUserSubscription(_m *UsageBillingRecord)
 	return query
 }
 
+// QueryBillingNotifications queries the billing_notifications edge of a UsageBillingRecord.
+func (c *UsageBillingRecordClient) QueryBillingNotifications(_m *UsageBillingRecord) *BillingNotificationQuery {
+	query := (&BillingNotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagebillingrecord.Table, usagebillingrecord.FieldID, id),
+			sqlgraph.To(billingnotification.Table, billingnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usagebillingrecord.BillingNotificationsTable, usagebillingrecord.BillingNotificationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UsageBillingRecordClient) Hooks() []Hook {
 	hooks := c.hooks.UsageBillingRecord
@@ -8092,6 +8664,38 @@ func (c *UserClient) QueryAffiliateRebatesGenerated(_m *User) *AffiliateRebateQu
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AffiliateRebatesGeneratedTable, user.AffiliateRebatesGeneratedColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBillingNotificationPreferences queries the billing_notification_preferences edge of a User.
+func (c *UserClient) QueryBillingNotificationPreferences(_m *User) *BillingNotificationPreferenceQuery {
+	query := (&BillingNotificationPreferenceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(billingnotificationpreference.Table, billingnotificationpreference.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.BillingNotificationPreferencesTable, user.BillingNotificationPreferencesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBillingNotifications queries the billing_notifications edge of a User.
+func (c *UserClient) QueryBillingNotifications(_m *User) *BillingNotificationQuery {
+	query := (&BillingNotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(billingnotification.Table, billingnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.BillingNotificationsTable, user.BillingNotificationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -8725,6 +9329,22 @@ func (c *UserSubscriptionClient) QueryAffiliateRebates(_m *UserSubscription) *Af
 	return query
 }
 
+// QueryBillingNotifications queries the billing_notifications edge of a UserSubscription.
+func (c *UserSubscriptionClient) QueryBillingNotifications(_m *UserSubscription) *BillingNotificationQuery {
+	query := (&BillingNotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usersubscription.Table, usersubscription.FieldID, id),
+			sqlgraph.To(billingnotification.Table, billingnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usersubscription.BillingNotificationsTable, usersubscription.BillingNotificationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserSubscriptionClient) Hooks() []Hook {
 	hooks := c.hooks.UserSubscription
@@ -8756,24 +9376,26 @@ type (
 	hooks struct {
 		APIKey, APIKeyProfileTemplate, AffiliateInvitation, AffiliateProfile,
 		AffiliateRebate, AffiliateSetting, BillingAccount, BillingAccountBinding,
-		BillingHold, BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
-		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
-		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
-		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
-		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
-		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
+		BillingHold, BillingNotification, BillingNotificationPreference,
+		BillingNotificationSetting, BillingOutbox, BillingPriceRule, Channel,
+		ChannelModelPrice, ChannelModelPriceVersion, ChannelOverrideTemplate,
+		ChannelProbe, DataStorage, LedgerEntry, LedgerTransaction, Model, OIDCIdentity,
+		PaymentEvent, PaymentOrder, PaymentProviderInstance, Project, PromoCode,
+		PromoUsage, Prompt, PromptProtectionRule, ProviderQuotaStatus, RedeemCode,
+		Request, RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
 		UsageBillingRecord, UsageLog, User, UserProject, UserRole,
 		UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, AffiliateInvitation, AffiliateProfile,
 		AffiliateRebate, AffiliateSetting, BillingAccount, BillingAccountBinding,
-		BillingHold, BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
-		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
-		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
-		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
-		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
-		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
+		BillingHold, BillingNotification, BillingNotificationPreference,
+		BillingNotificationSetting, BillingOutbox, BillingPriceRule, Channel,
+		ChannelModelPrice, ChannelModelPriceVersion, ChannelOverrideTemplate,
+		ChannelProbe, DataStorage, LedgerEntry, LedgerTransaction, Model, OIDCIdentity,
+		PaymentEvent, PaymentOrder, PaymentProviderInstance, Project, PromoCode,
+		PromoUsage, Prompt, PromptProtectionRule, ProviderQuotaStatus, RedeemCode,
+		Request, RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
 		UsageBillingRecord, UsageLog, User, UserProject, UserRole,
 		UserSubscription []ent.Interceptor
 	}

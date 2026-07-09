@@ -80,33 +80,39 @@ type UserEdges struct {
 	AffiliateRebatesEarned []*AffiliateRebate `json:"affiliate_rebates_earned,omitempty"`
 	// AffiliateRebatesGenerated holds the value of the affiliate_rebates_generated edge.
 	AffiliateRebatesGenerated []*AffiliateRebate `json:"affiliate_rebates_generated,omitempty"`
+	// BillingNotificationPreferences holds the value of the billing_notification_preferences edge.
+	BillingNotificationPreferences []*BillingNotificationPreference `json:"billing_notification_preferences,omitempty"`
+	// BillingNotifications holds the value of the billing_notifications edge.
+	BillingNotifications []*BillingNotification `json:"billing_notifications,omitempty"`
 	// ProjectUsers holds the value of the project_users edge.
 	ProjectUsers []*UserProject `json:"project_users,omitempty"`
 	// UserRoles holds the value of the user_roles edge.
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [17]bool
+	loadedTypes [19]bool
 	// totalCount holds the count of the edges above.
-	totalCount [17]map[string]int
+	totalCount [19]map[string]int
 
-	namedProjects                  map[string][]*Project
-	namedAPIKeys                   map[string][]*APIKey
-	namedRoles                     map[string][]*Role
-	namedChannelOverrideTemplates  map[string][]*ChannelOverrideTemplate
-	namedOidcIdentities            map[string][]*OIDCIdentity
-	namedCreatedRedeemCodes        map[string][]*RedeemCode
-	namedUsedRedeemCodes           map[string][]*RedeemCode
-	namedUserSubscriptions         map[string][]*UserSubscription
-	namedAssignedUserSubscriptions map[string][]*UserSubscription
-	namedPromoUsages               map[string][]*PromoUsage
-	namedAffiliateProfiles         map[string][]*AffiliateProfile
-	namedAffiliateInviters         map[string][]*AffiliateInvitation
-	namedAffiliateInvitees         map[string][]*AffiliateInvitation
-	namedAffiliateRebatesEarned    map[string][]*AffiliateRebate
-	namedAffiliateRebatesGenerated map[string][]*AffiliateRebate
-	namedProjectUsers              map[string][]*UserProject
-	namedUserRoles                 map[string][]*UserRole
+	namedProjects                       map[string][]*Project
+	namedAPIKeys                        map[string][]*APIKey
+	namedRoles                          map[string][]*Role
+	namedChannelOverrideTemplates       map[string][]*ChannelOverrideTemplate
+	namedOidcIdentities                 map[string][]*OIDCIdentity
+	namedCreatedRedeemCodes             map[string][]*RedeemCode
+	namedUsedRedeemCodes                map[string][]*RedeemCode
+	namedUserSubscriptions              map[string][]*UserSubscription
+	namedAssignedUserSubscriptions      map[string][]*UserSubscription
+	namedPromoUsages                    map[string][]*PromoUsage
+	namedAffiliateProfiles              map[string][]*AffiliateProfile
+	namedAffiliateInviters              map[string][]*AffiliateInvitation
+	namedAffiliateInvitees              map[string][]*AffiliateInvitation
+	namedAffiliateRebatesEarned         map[string][]*AffiliateRebate
+	namedAffiliateRebatesGenerated      map[string][]*AffiliateRebate
+	namedBillingNotificationPreferences map[string][]*BillingNotificationPreference
+	namedBillingNotifications           map[string][]*BillingNotification
+	namedProjectUsers                   map[string][]*UserProject
+	namedUserRoles                      map[string][]*UserRole
 }
 
 // ProjectsOrErr returns the Projects value or an error if the edge
@@ -244,10 +250,28 @@ func (e UserEdges) AffiliateRebatesGeneratedOrErr() ([]*AffiliateRebate, error) 
 	return nil, &NotLoadedError{edge: "affiliate_rebates_generated"}
 }
 
+// BillingNotificationPreferencesOrErr returns the BillingNotificationPreferences value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) BillingNotificationPreferencesOrErr() ([]*BillingNotificationPreference, error) {
+	if e.loadedTypes[15] {
+		return e.BillingNotificationPreferences, nil
+	}
+	return nil, &NotLoadedError{edge: "billing_notification_preferences"}
+}
+
+// BillingNotificationsOrErr returns the BillingNotifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) BillingNotificationsOrErr() ([]*BillingNotification, error) {
+	if e.loadedTypes[16] {
+		return e.BillingNotifications, nil
+	}
+	return nil, &NotLoadedError{edge: "billing_notifications"}
+}
+
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[15] {
+	if e.loadedTypes[17] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -256,7 +280,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[16] {
+	if e.loadedTypes[18] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -458,6 +482,16 @@ func (_m *User) QueryAffiliateRebatesEarned() *AffiliateRebateQuery {
 // QueryAffiliateRebatesGenerated queries the "affiliate_rebates_generated" edge of the User entity.
 func (_m *User) QueryAffiliateRebatesGenerated() *AffiliateRebateQuery {
 	return NewUserClient(_m.config).QueryAffiliateRebatesGenerated(_m)
+}
+
+// QueryBillingNotificationPreferences queries the "billing_notification_preferences" edge of the User entity.
+func (_m *User) QueryBillingNotificationPreferences() *BillingNotificationPreferenceQuery {
+	return NewUserClient(_m.config).QueryBillingNotificationPreferences(_m)
+}
+
+// QueryBillingNotifications queries the "billing_notifications" edge of the User entity.
+func (_m *User) QueryBillingNotifications() *BillingNotificationQuery {
+	return NewUserClient(_m.config).QueryBillingNotifications(_m)
 }
 
 // QueryProjectUsers queries the "project_users" edge of the User entity.
@@ -888,6 +922,54 @@ func (_m *User) appendNamedAffiliateRebatesGenerated(name string, edges ...*Affi
 		_m.Edges.namedAffiliateRebatesGenerated[name] = []*AffiliateRebate{}
 	} else {
 		_m.Edges.namedAffiliateRebatesGenerated[name] = append(_m.Edges.namedAffiliateRebatesGenerated[name], edges...)
+	}
+}
+
+// NamedBillingNotificationPreferences returns the BillingNotificationPreferences named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedBillingNotificationPreferences(name string) ([]*BillingNotificationPreference, error) {
+	if _m.Edges.namedBillingNotificationPreferences == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedBillingNotificationPreferences[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedBillingNotificationPreferences(name string, edges ...*BillingNotificationPreference) {
+	if _m.Edges.namedBillingNotificationPreferences == nil {
+		_m.Edges.namedBillingNotificationPreferences = make(map[string][]*BillingNotificationPreference)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedBillingNotificationPreferences[name] = []*BillingNotificationPreference{}
+	} else {
+		_m.Edges.namedBillingNotificationPreferences[name] = append(_m.Edges.namedBillingNotificationPreferences[name], edges...)
+	}
+}
+
+// NamedBillingNotifications returns the BillingNotifications named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedBillingNotifications(name string) ([]*BillingNotification, error) {
+	if _m.Edges.namedBillingNotifications == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedBillingNotifications[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedBillingNotifications(name string, edges ...*BillingNotification) {
+	if _m.Edges.namedBillingNotifications == nil {
+		_m.Edges.namedBillingNotifications = make(map[string][]*BillingNotification)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedBillingNotifications[name] = []*BillingNotification{}
+	} else {
+		_m.Edges.namedBillingNotifications[name] = append(_m.Edges.namedBillingNotifications[name], edges...)
 	}
 }
 

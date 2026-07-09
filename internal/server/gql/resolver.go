@@ -48,6 +48,7 @@ type Resolver struct {
 	providerQuotaService           *biz.ProviderQuotaService
 	billingAccountService          *biz.BillingAccountService
 	billingHoldService             *biz.BillingHoldService
+	billingNotificationService     *biz.BillingNotificationService
 	paymentService                 *biz.PaymentService
 	pricingService                 *biz.PricingService
 	promoCodeService               *biz.PromoCodeService
@@ -91,6 +92,7 @@ func NewSchema(
 	providerQuotaService *biz.ProviderQuotaService,
 	billingAccountService *biz.BillingAccountService,
 	billingHoldService *biz.BillingHoldService,
+	billingNotificationService *biz.BillingNotificationService,
 	paymentService *biz.PaymentService,
 	pricingService *biz.PricingService,
 	promoCodeService *biz.PromoCodeService,
@@ -133,6 +135,7 @@ func NewSchema(
 			providerQuotaService:           providerQuotaService,
 			billingAccountService:          billingAccountService,
 			billingHoldService:             billingHoldService,
+			billingNotificationService:     billingNotificationService,
 			paymentService:                 paymentService,
 			pricingService:                 pricingService,
 			promoCodeService:               promoCodeService,

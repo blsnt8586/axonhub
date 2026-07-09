@@ -81,11 +81,15 @@ type UsageBillingRecordEdges struct {
 	LedgerTransaction *LedgerTransaction `json:"ledger_transaction,omitempty"`
 	// UserSubscription holds the value of the user_subscription edge.
 	UserSubscription *UserSubscription `json:"user_subscription,omitempty"`
+	// BillingNotifications holds the value of the billing_notifications edge.
+	BillingNotifications []*BillingNotification `json:"billing_notifications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 	// totalCount holds the count of the edges above.
-	totalCount [4]map[string]int
+	totalCount [5]map[string]int
+
+	namedBillingNotifications map[string][]*BillingNotification
 }
 
 // UsageLogOrErr returns the UsageLog value or an error if the edge
@@ -130,6 +134,15 @@ func (e UsageBillingRecordEdges) UserSubscriptionOrErr() (*UserSubscription, err
 		return nil, &NotFoundError{label: usersubscription.Label}
 	}
 	return nil, &NotLoadedError{edge: "user_subscription"}
+}
+
+// BillingNotificationsOrErr returns the BillingNotifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e UsageBillingRecordEdges) BillingNotificationsOrErr() ([]*BillingNotification, error) {
+	if e.loadedTypes[4] {
+		return e.BillingNotifications, nil
+	}
+	return nil, &NotLoadedError{edge: "billing_notifications"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -331,6 +344,11 @@ func (_m *UsageBillingRecord) QueryUserSubscription() *UserSubscriptionQuery {
 	return NewUsageBillingRecordClient(_m.config).QueryUserSubscription(_m)
 }
 
+// QueryBillingNotifications queries the "billing_notifications" edge of the UsageBillingRecord entity.
+func (_m *UsageBillingRecord) QueryBillingNotifications() *BillingNotificationQuery {
+	return NewUsageBillingRecordClient(_m.config).QueryBillingNotifications(_m)
+}
+
 // Update returns a builder for updating this UsageBillingRecord.
 // Note that you need to call UsageBillingRecord.Unwrap() before calling this method if this UsageBillingRecord
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -418,6 +436,30 @@ func (_m *UsageBillingRecord) String() string {
 	builder.WriteString(_m.Error)
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedBillingNotifications returns the BillingNotifications named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UsageBillingRecord) NamedBillingNotifications(name string) ([]*BillingNotification, error) {
+	if _m.Edges.namedBillingNotifications == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedBillingNotifications[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UsageBillingRecord) appendNamedBillingNotifications(name string, edges ...*BillingNotification) {
+	if _m.Edges.namedBillingNotifications == nil {
+		_m.Edges.namedBillingNotifications = make(map[string][]*BillingNotification)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedBillingNotifications[name] = []*BillingNotification{}
+	} else {
+		_m.Edges.namedBillingNotifications[name] = append(_m.Edges.namedBillingNotifications[name], edges...)
+	}
 }
 
 // UsageBillingRecords is a parsable slice of UsageBillingRecord.

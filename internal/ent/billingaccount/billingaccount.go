@@ -48,6 +48,8 @@ const (
 	EdgePaymentOrders = "payment_orders"
 	// EdgePromoUsages holds the string denoting the promo_usages edge name in mutations.
 	EdgePromoUsages = "promo_usages"
+	// EdgeBillingNotifications holds the string denoting the billing_notifications edge name in mutations.
+	EdgeBillingNotifications = "billing_notifications"
 	// Table holds the table name of the billingaccount in the database.
 	Table = "billing_accounts"
 	// BindingsTable is the table that holds the bindings relation/edge.
@@ -92,6 +94,13 @@ const (
 	PromoUsagesInverseTable = "promo_usages"
 	// PromoUsagesColumn is the table column denoting the promo_usages relation/edge.
 	PromoUsagesColumn = "billing_account_id"
+	// BillingNotificationsTable is the table that holds the billing_notifications relation/edge.
+	BillingNotificationsTable = "billing_notifications"
+	// BillingNotificationsInverseTable is the table name for the BillingNotification entity.
+	// It exists in this package in order to avoid circular dependency with the "billingnotification" package.
+	BillingNotificationsInverseTable = "billing_notifications"
+	// BillingNotificationsColumn is the table column denoting the billing_notifications relation/edge.
+	BillingNotificationsColumn = "billing_account_id"
 )
 
 // Columns holds all SQL columns for billingaccount fields.
@@ -331,6 +340,20 @@ func ByPromoUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPromoUsagesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByBillingNotificationsCount orders the results by billing_notifications count.
+func ByBillingNotificationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBillingNotificationsStep(), opts...)
+	}
+}
+
+// ByBillingNotifications orders the results by billing_notifications terms.
+func ByBillingNotifications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBillingNotificationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBindingsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -371,6 +394,13 @@ func newPromoUsagesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PromoUsagesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PromoUsagesTable, PromoUsagesColumn),
+	)
+}
+func newBillingNotificationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BillingNotificationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BillingNotificationsTable, BillingNotificationsColumn),
 	)
 }
 

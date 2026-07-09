@@ -15,6 +15,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/apikey"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/project"
@@ -402,6 +404,36 @@ func (_c *UserCreate) AddAffiliateRebatesGenerated(v ...*AffiliateRebate) *UserC
 		ids[i] = v[i].ID
 	}
 	return _c.AddAffiliateRebatesGeneratedIDs(ids...)
+}
+
+// AddBillingNotificationPreferenceIDs adds the "billing_notification_preferences" edge to the BillingNotificationPreference entity by IDs.
+func (_c *UserCreate) AddBillingNotificationPreferenceIDs(ids ...int) *UserCreate {
+	_c.mutation.AddBillingNotificationPreferenceIDs(ids...)
+	return _c
+}
+
+// AddBillingNotificationPreferences adds the "billing_notification_preferences" edges to the BillingNotificationPreference entity.
+func (_c *UserCreate) AddBillingNotificationPreferences(v ...*BillingNotificationPreference) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBillingNotificationPreferenceIDs(ids...)
+}
+
+// AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by IDs.
+func (_c *UserCreate) AddBillingNotificationIDs(ids ...int) *UserCreate {
+	_c.mutation.AddBillingNotificationIDs(ids...)
+	return _c
+}
+
+// AddBillingNotifications adds the "billing_notifications" edges to the BillingNotification entity.
+func (_c *UserCreate) AddBillingNotifications(v ...*BillingNotification) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBillingNotificationIDs(ids...)
 }
 
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
@@ -863,6 +895,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BillingNotificationPreferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationPreferencesTable,
+			Columns: []string{user.BillingNotificationPreferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotificationpreference.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BillingNotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationsTable,
+			Columns: []string{user.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

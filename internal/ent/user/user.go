@@ -72,6 +72,10 @@ const (
 	EdgeAffiliateRebatesEarned = "affiliate_rebates_earned"
 	// EdgeAffiliateRebatesGenerated holds the string denoting the affiliate_rebates_generated edge name in mutations.
 	EdgeAffiliateRebatesGenerated = "affiliate_rebates_generated"
+	// EdgeBillingNotificationPreferences holds the string denoting the billing_notification_preferences edge name in mutations.
+	EdgeBillingNotificationPreferences = "billing_notification_preferences"
+	// EdgeBillingNotifications holds the string denoting the billing_notifications edge name in mutations.
+	EdgeBillingNotifications = "billing_notifications"
 	// EdgeProjectUsers holds the string denoting the project_users edge name in mutations.
 	EdgeProjectUsers = "project_users"
 	// EdgeUserRoles holds the string denoting the user_roles edge name in mutations.
@@ -179,6 +183,20 @@ const (
 	AffiliateRebatesGeneratedInverseTable = "affiliate_rebates"
 	// AffiliateRebatesGeneratedColumn is the table column denoting the affiliate_rebates_generated relation/edge.
 	AffiliateRebatesGeneratedColumn = "invitee_user_id"
+	// BillingNotificationPreferencesTable is the table that holds the billing_notification_preferences relation/edge.
+	BillingNotificationPreferencesTable = "billing_notification_preferences"
+	// BillingNotificationPreferencesInverseTable is the table name for the BillingNotificationPreference entity.
+	// It exists in this package in order to avoid circular dependency with the "billingnotificationpreference" package.
+	BillingNotificationPreferencesInverseTable = "billing_notification_preferences"
+	// BillingNotificationPreferencesColumn is the table column denoting the billing_notification_preferences relation/edge.
+	BillingNotificationPreferencesColumn = "user_id"
+	// BillingNotificationsTable is the table that holds the billing_notifications relation/edge.
+	BillingNotificationsTable = "billing_notifications"
+	// BillingNotificationsInverseTable is the table name for the BillingNotification entity.
+	// It exists in this package in order to avoid circular dependency with the "billingnotification" package.
+	BillingNotificationsInverseTable = "billing_notifications"
+	// BillingNotificationsColumn is the table column denoting the billing_notifications relation/edge.
+	BillingNotificationsColumn = "user_id"
 	// ProjectUsersTable is the table that holds the project_users relation/edge.
 	ProjectUsersTable = "user_projects"
 	// ProjectUsersInverseTable is the table name for the UserProject entity.
@@ -559,6 +577,34 @@ func ByAffiliateRebatesGenerated(term sql.OrderTerm, terms ...sql.OrderTerm) Ord
 	}
 }
 
+// ByBillingNotificationPreferencesCount orders the results by billing_notification_preferences count.
+func ByBillingNotificationPreferencesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBillingNotificationPreferencesStep(), opts...)
+	}
+}
+
+// ByBillingNotificationPreferences orders the results by billing_notification_preferences terms.
+func ByBillingNotificationPreferences(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBillingNotificationPreferencesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByBillingNotificationsCount orders the results by billing_notifications count.
+func ByBillingNotificationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBillingNotificationsStep(), opts...)
+	}
+}
+
+// ByBillingNotifications orders the results by billing_notifications terms.
+func ByBillingNotifications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBillingNotificationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProjectUsersCount orders the results by project_users count.
 func ByProjectUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -689,6 +735,20 @@ func newAffiliateRebatesGeneratedStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AffiliateRebatesGeneratedInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AffiliateRebatesGeneratedTable, AffiliateRebatesGeneratedColumn),
+	)
+}
+func newBillingNotificationPreferencesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BillingNotificationPreferencesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BillingNotificationPreferencesTable, BillingNotificationPreferencesColumn),
+	)
+}
+func newBillingNotificationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BillingNotificationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BillingNotificationsTable, BillingNotificationsColumn),
 	)
 }
 func newProjectUsersStep() *sqlgraph.Step {

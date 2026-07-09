@@ -15,6 +15,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationsetting"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -436,6 +439,144 @@ func init() {
 	billingholdDescReleasedByID := billingholdFields[17].Descriptor()
 	// billinghold.DefaultReleasedByID holds the default value on creation for the released_by_id field.
 	billinghold.DefaultReleasedByID = billingholdDescReleasedByID.Default.(string)
+	billingnotificationMixin := schema.BillingNotification{}.Mixin()
+	billingnotification.Policy = privacy.NewPolicies(schema.BillingNotification{})
+	billingnotification.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := billingnotification.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	billingnotificationMixinFields0 := billingnotificationMixin[0].Fields()
+	_ = billingnotificationMixinFields0
+	billingnotificationFields := schema.BillingNotification{}.Fields()
+	_ = billingnotificationFields
+	// billingnotificationDescCreatedAt is the schema descriptor for created_at field.
+	billingnotificationDescCreatedAt := billingnotificationMixinFields0[0].Descriptor()
+	// billingnotification.DefaultCreatedAt holds the default value on creation for the created_at field.
+	billingnotification.DefaultCreatedAt = billingnotificationDescCreatedAt.Default.(func() time.Time)
+	// billingnotificationDescUpdatedAt is the schema descriptor for updated_at field.
+	billingnotificationDescUpdatedAt := billingnotificationMixinFields0[1].Descriptor()
+	// billingnotification.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	billingnotification.DefaultUpdatedAt = billingnotificationDescUpdatedAt.Default.(func() time.Time)
+	// billingnotification.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	billingnotification.UpdateDefaultUpdatedAt = billingnotificationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// billingnotificationDescMessage is the schema descriptor for message field.
+	billingnotificationDescMessage := billingnotificationFields[7].Descriptor()
+	// billingnotification.DefaultMessage holds the default value on creation for the message field.
+	billingnotification.DefaultMessage = billingnotificationDescMessage.Default.(string)
+	// billingnotificationDescCurrency is the schema descriptor for currency field.
+	billingnotificationDescCurrency := billingnotificationFields[8].Descriptor()
+	// billingnotification.DefaultCurrency holds the default value on creation for the currency field.
+	billingnotification.DefaultCurrency = billingnotificationDescCurrency.Default.(string)
+	billingnotificationpreferenceMixin := schema.BillingNotificationPreference{}.Mixin()
+	billingnotificationpreference.Policy = privacy.NewPolicies(schema.BillingNotificationPreference{})
+	billingnotificationpreference.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := billingnotificationpreference.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	billingnotificationpreferenceMixinFields0 := billingnotificationpreferenceMixin[0].Fields()
+	_ = billingnotificationpreferenceMixinFields0
+	billingnotificationpreferenceFields := schema.BillingNotificationPreference{}.Fields()
+	_ = billingnotificationpreferenceFields
+	// billingnotificationpreferenceDescCreatedAt is the schema descriptor for created_at field.
+	billingnotificationpreferenceDescCreatedAt := billingnotificationpreferenceMixinFields0[0].Descriptor()
+	// billingnotificationpreference.DefaultCreatedAt holds the default value on creation for the created_at field.
+	billingnotificationpreference.DefaultCreatedAt = billingnotificationpreferenceDescCreatedAt.Default.(func() time.Time)
+	// billingnotificationpreferenceDescUpdatedAt is the schema descriptor for updated_at field.
+	billingnotificationpreferenceDescUpdatedAt := billingnotificationpreferenceMixinFields0[1].Descriptor()
+	// billingnotificationpreference.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	billingnotificationpreference.DefaultUpdatedAt = billingnotificationpreferenceDescUpdatedAt.Default.(func() time.Time)
+	// billingnotificationpreference.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	billingnotificationpreference.UpdateDefaultUpdatedAt = billingnotificationpreferenceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// billingnotificationpreferenceDescEnabled is the schema descriptor for enabled field.
+	billingnotificationpreferenceDescEnabled := billingnotificationpreferenceFields[1].Descriptor()
+	// billingnotificationpreference.DefaultEnabled holds the default value on creation for the enabled field.
+	billingnotificationpreference.DefaultEnabled = billingnotificationpreferenceDescEnabled.Default.(bool)
+	// billingnotificationpreferenceDescLowBalanceEnabled is the schema descriptor for low_balance_enabled field.
+	billingnotificationpreferenceDescLowBalanceEnabled := billingnotificationpreferenceFields[2].Descriptor()
+	// billingnotificationpreference.DefaultLowBalanceEnabled holds the default value on creation for the low_balance_enabled field.
+	billingnotificationpreference.DefaultLowBalanceEnabled = billingnotificationpreferenceDescLowBalanceEnabled.Default.(bool)
+	// billingnotificationpreferenceDescPaymentEnabled is the schema descriptor for payment_enabled field.
+	billingnotificationpreferenceDescPaymentEnabled := billingnotificationpreferenceFields[3].Descriptor()
+	// billingnotificationpreference.DefaultPaymentEnabled holds the default value on creation for the payment_enabled field.
+	billingnotificationpreference.DefaultPaymentEnabled = billingnotificationpreferenceDescPaymentEnabled.Default.(bool)
+	// billingnotificationpreferenceDescSubscriptionEnabled is the schema descriptor for subscription_enabled field.
+	billingnotificationpreferenceDescSubscriptionEnabled := billingnotificationpreferenceFields[4].Descriptor()
+	// billingnotificationpreference.DefaultSubscriptionEnabled holds the default value on creation for the subscription_enabled field.
+	billingnotificationpreference.DefaultSubscriptionEnabled = billingnotificationpreferenceDescSubscriptionEnabled.Default.(bool)
+	// billingnotificationpreferenceDescLargeConsumptionEnabled is the schema descriptor for large_consumption_enabled field.
+	billingnotificationpreferenceDescLargeConsumptionEnabled := billingnotificationpreferenceFields[5].Descriptor()
+	// billingnotificationpreference.DefaultLargeConsumptionEnabled holds the default value on creation for the large_consumption_enabled field.
+	billingnotificationpreference.DefaultLargeConsumptionEnabled = billingnotificationpreferenceDescLargeConsumptionEnabled.Default.(bool)
+	billingnotificationsettingMixin := schema.BillingNotificationSetting{}.Mixin()
+	billingnotificationsetting.Policy = privacy.NewPolicies(schema.BillingNotificationSetting{})
+	billingnotificationsetting.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := billingnotificationsetting.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	billingnotificationsettingMixinFields0 := billingnotificationsettingMixin[0].Fields()
+	_ = billingnotificationsettingMixinFields0
+	billingnotificationsettingFields := schema.BillingNotificationSetting{}.Fields()
+	_ = billingnotificationsettingFields
+	// billingnotificationsettingDescCreatedAt is the schema descriptor for created_at field.
+	billingnotificationsettingDescCreatedAt := billingnotificationsettingMixinFields0[0].Descriptor()
+	// billingnotificationsetting.DefaultCreatedAt holds the default value on creation for the created_at field.
+	billingnotificationsetting.DefaultCreatedAt = billingnotificationsettingDescCreatedAt.Default.(func() time.Time)
+	// billingnotificationsettingDescUpdatedAt is the schema descriptor for updated_at field.
+	billingnotificationsettingDescUpdatedAt := billingnotificationsettingMixinFields0[1].Descriptor()
+	// billingnotificationsetting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	billingnotificationsetting.DefaultUpdatedAt = billingnotificationsettingDescUpdatedAt.Default.(func() time.Time)
+	// billingnotificationsetting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	billingnotificationsetting.UpdateDefaultUpdatedAt = billingnotificationsettingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// billingnotificationsettingDescKey is the schema descriptor for key field.
+	billingnotificationsettingDescKey := billingnotificationsettingFields[0].Descriptor()
+	// billingnotificationsetting.DefaultKey holds the default value on creation for the key field.
+	billingnotificationsetting.DefaultKey = billingnotificationsettingDescKey.Default.(string)
+	// billingnotificationsettingDescEnabled is the schema descriptor for enabled field.
+	billingnotificationsettingDescEnabled := billingnotificationsettingFields[1].Descriptor()
+	// billingnotificationsetting.DefaultEnabled holds the default value on creation for the enabled field.
+	billingnotificationsetting.DefaultEnabled = billingnotificationsettingDescEnabled.Default.(bool)
+	// billingnotificationsettingDescUserNotificationsEnabled is the schema descriptor for user_notifications_enabled field.
+	billingnotificationsettingDescUserNotificationsEnabled := billingnotificationsettingFields[2].Descriptor()
+	// billingnotificationsetting.DefaultUserNotificationsEnabled holds the default value on creation for the user_notifications_enabled field.
+	billingnotificationsetting.DefaultUserNotificationsEnabled = billingnotificationsettingDescUserNotificationsEnabled.Default.(bool)
+	// billingnotificationsettingDescOperatorAlertsEnabled is the schema descriptor for operator_alerts_enabled field.
+	billingnotificationsettingDescOperatorAlertsEnabled := billingnotificationsettingFields[3].Descriptor()
+	// billingnotificationsetting.DefaultOperatorAlertsEnabled holds the default value on creation for the operator_alerts_enabled field.
+	billingnotificationsetting.DefaultOperatorAlertsEnabled = billingnotificationsettingDescOperatorAlertsEnabled.Default.(bool)
+	// billingnotificationsettingDescLowBalanceThresholdMicros is the schema descriptor for low_balance_threshold_micros field.
+	billingnotificationsettingDescLowBalanceThresholdMicros := billingnotificationsettingFields[4].Descriptor()
+	// billingnotificationsetting.DefaultLowBalanceThresholdMicros holds the default value on creation for the low_balance_threshold_micros field.
+	billingnotificationsetting.DefaultLowBalanceThresholdMicros = billingnotificationsettingDescLowBalanceThresholdMicros.Default.(int64)
+	// billingnotificationsetting.LowBalanceThresholdMicrosValidator is a validator for the "low_balance_threshold_micros" field. It is called by the builders before save.
+	billingnotificationsetting.LowBalanceThresholdMicrosValidator = billingnotificationsettingDescLowBalanceThresholdMicros.Validators[0].(func(int64) error)
+	// billingnotificationsettingDescLargeConsumptionThresholdMicros is the schema descriptor for large_consumption_threshold_micros field.
+	billingnotificationsettingDescLargeConsumptionThresholdMicros := billingnotificationsettingFields[5].Descriptor()
+	// billingnotificationsetting.DefaultLargeConsumptionThresholdMicros holds the default value on creation for the large_consumption_threshold_micros field.
+	billingnotificationsetting.DefaultLargeConsumptionThresholdMicros = billingnotificationsettingDescLargeConsumptionThresholdMicros.Default.(int64)
+	// billingnotificationsetting.LargeConsumptionThresholdMicrosValidator is a validator for the "large_consumption_threshold_micros" field. It is called by the builders before save.
+	billingnotificationsetting.LargeConsumptionThresholdMicrosValidator = billingnotificationsettingDescLargeConsumptionThresholdMicros.Validators[0].(func(int64) error)
+	// billingnotificationsettingDescSubscriptionExpiryWarningDays is the schema descriptor for subscription_expiry_warning_days field.
+	billingnotificationsettingDescSubscriptionExpiryWarningDays := billingnotificationsettingFields[6].Descriptor()
+	// billingnotificationsetting.DefaultSubscriptionExpiryWarningDays holds the default value on creation for the subscription_expiry_warning_days field.
+	billingnotificationsetting.DefaultSubscriptionExpiryWarningDays = billingnotificationsettingDescSubscriptionExpiryWarningDays.Default.(int)
+	// billingnotificationsetting.SubscriptionExpiryWarningDaysValidator is a validator for the "subscription_expiry_warning_days" field. It is called by the builders before save.
+	billingnotificationsetting.SubscriptionExpiryWarningDaysValidator = billingnotificationsettingDescSubscriptionExpiryWarningDays.Validators[0].(func(int) error)
+	// billingnotificationsettingDescCurrency is the schema descriptor for currency field.
+	billingnotificationsettingDescCurrency := billingnotificationsettingFields[7].Descriptor()
+	// billingnotificationsetting.DefaultCurrency holds the default value on creation for the currency field.
+	billingnotificationsetting.DefaultCurrency = billingnotificationsettingDescCurrency.Default.(string)
 	billingoutboxMixin := schema.BillingOutbox{}.Mixin()
 	billingoutbox.Policy = privacy.NewPolicies(schema.BillingOutbox{})
 	billingoutbox.Hooks[0] = func(next ent.Mutator) ent.Mutator {

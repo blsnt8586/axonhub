@@ -288,31 +288,31 @@ Verification:
 
 ## Stage 9: Billing Notifications
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: notify users and operators about balance, payment, subscription, and abnormal billing events.
 
 Backend scope:
 
-- [ ] Low wallet balance notifications.
-- [ ] Payment success/failure notifications.
-- [ ] Subscription expiry and expired notifications.
-- [ ] Large consumption notification.
-- [ ] Operator alerts for repeated payment callback failures and failed usage billing.
-- [ ] Deduplicate notifications with event keys.
+- [x] Low wallet balance notifications.
+- [x] Payment success/failure notifications.
+- [x] Subscription expiry and expired notifications.
+- [x] Large consumption notification.
+- [x] Operator alerts for repeated payment callback failures and failed usage billing.
+- [x] Deduplicate notifications with event keys.
 
 Frontend scope:
 
-- [ ] User billing notification preferences.
-- [ ] Admin commercial notification settings.
-- [ ] Notification status visibility on relevant records where useful.
+- [x] User billing notification preferences.
+- [x] Admin commercial notification settings.
+- [x] Notification status visibility on relevant records where useful.
 
 Verification:
 
-- [ ] Notifications trigger at thresholds.
-- [ ] Disabled preferences suppress notification.
-- [ ] Repeated worker runs do not duplicate notifications.
-- [ ] Commit completed stage.
+- [x] Notifications trigger at thresholds.
+- [x] Disabled preferences suppress notification.
+- [x] Repeated worker runs do not duplicate notifications.
+- [x] Commit completed stage.
 
 ## Stage 10: Production Operations And Security Closure
 
@@ -355,7 +355,7 @@ Verification:
 - [x] Stage 6: Subscription Plans
 - [x] Stage 7: Promo Codes
 - [x] Stage 8: Affiliate And Rebates
-- [ ] Stage 9: Billing Notifications
+- [x] Stage 9: Billing Notifications
 - [ ] Stage 10: Production Operations And Security Closure
 
 ## Completion Log
@@ -369,3 +369,4 @@ Append one line per completed stage.
 | Stage 1 | `94106a72` | 2026-07-08 | Added wallet holds, request pre-authorization, hold capture/release/expiry, admin hold operations, and held/available wallet UI. |
 | Stage 2 | `bf4368b5` | 2026-07-08 | Hardened payment order lifecycle with expiry, cancel, admin make-up, callback audit, read-only return page, event payload summaries, and refund reserve fields. |
 | Stage 3 | `482fad12` | 2026-07-08 | Added owner-only commercial reports, ledger-backed reconciliation totals, ranked model/project/user tables, CSV exports, admin report dashboard, and frontend verification. |
+| Stage 9 | current stage commit | 2026-07-09 | Added station billing notifications, user preferences, admin notification settings and logs, event-key deduplication, business triggers, and frontend verification. |

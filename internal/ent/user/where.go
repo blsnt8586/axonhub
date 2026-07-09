@@ -1010,6 +1010,52 @@ func HasAffiliateRebatesGeneratedWith(preds ...predicate.AffiliateRebate) predic
 	})
 }
 
+// HasBillingNotificationPreferences applies the HasEdge predicate on the "billing_notification_preferences" edge.
+func HasBillingNotificationPreferences() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BillingNotificationPreferencesTable, BillingNotificationPreferencesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBillingNotificationPreferencesWith applies the HasEdge predicate on the "billing_notification_preferences" edge with a given conditions (other predicates).
+func HasBillingNotificationPreferencesWith(preds ...predicate.BillingNotificationPreference) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newBillingNotificationPreferencesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasBillingNotifications applies the HasEdge predicate on the "billing_notifications" edge.
+func HasBillingNotifications() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BillingNotificationsTable, BillingNotificationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBillingNotificationsWith applies the HasEdge predicate on the "billing_notifications" edge with a given conditions (other predicates).
+func HasBillingNotificationsWith(preds ...predicate.BillingNotification) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newBillingNotificationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasProjectUsers applies the HasEdge predicate on the "project_users" edge.
 func HasProjectUsers() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

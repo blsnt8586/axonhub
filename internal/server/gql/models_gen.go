@@ -13,6 +13,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
@@ -118,6 +119,21 @@ type AdminBillingHoldsFilter struct {
 	From             *time.Time          `json:"from,omitempty"`
 	To               *time.Time          `json:"to,omitempty"`
 	ExpiresBefore    *time.Time          `json:"expiresBefore,omitempty"`
+}
+
+type AdminBillingNotificationsFilter struct {
+	UserID               *int                          `json:"userId,omitempty"`
+	Audience             *billingnotification.Audience `json:"audience,omitempty"`
+	Category             *billingnotification.Category `json:"category,omitempty"`
+	Severity             *billingnotification.Severity `json:"severity,omitempty"`
+	Status               *billingnotification.Status   `json:"status,omitempty"`
+	EventKey             *string                       `json:"eventKey,omitempty"`
+	BillingAccountID     *int                          `json:"billingAccountId,omitempty"`
+	PaymentOrderID       *int                          `json:"paymentOrderId,omitempty"`
+	UserSubscriptionID   *int                          `json:"userSubscriptionId,omitempty"`
+	UsageBillingRecordID *int                          `json:"usageBillingRecordId,omitempty"`
+	From                 *time.Time                    `json:"from,omitempty"`
+	To                   *time.Time                    `json:"to,omitempty"`
 }
 
 type AdminBillingReportFilter struct {

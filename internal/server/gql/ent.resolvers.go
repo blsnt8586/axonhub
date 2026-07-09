@@ -186,6 +186,51 @@ func (r *billingHoldResolver) CapturedLedgerTransactionID(ctx context.Context, o
 }
 
 // ID is the resolver for the id field.
+func (r *billingNotificationResolver) ID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// UserID is the resolver for the userID field.
+func (r *billingNotificationResolver) UserID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: UserID - userID"))
+}
+
+// BillingAccountID is the resolver for the billingAccountID field.
+func (r *billingNotificationResolver) BillingAccountID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+}
+
+// PaymentOrderID is the resolver for the paymentOrderID field.
+func (r *billingNotificationResolver) PaymentOrderID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: PaymentOrderID - paymentOrderID"))
+}
+
+// UserSubscriptionID is the resolver for the userSubscriptionID field.
+func (r *billingNotificationResolver) UserSubscriptionID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: UserSubscriptionID - userSubscriptionID"))
+}
+
+// UsageBillingRecordID is the resolver for the usageBillingRecordID field.
+func (r *billingNotificationResolver) UsageBillingRecordID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: UsageBillingRecordID - usageBillingRecordID"))
+}
+
+// ID is the resolver for the id field.
+func (r *billingNotificationPreferenceResolver) ID(ctx context.Context, obj *ent.BillingNotificationPreference) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// UserID is the resolver for the userID field.
+func (r *billingNotificationPreferenceResolver) UserID(ctx context.Context, obj *ent.BillingNotificationPreference) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: UserID - userID"))
+}
+
+// ID is the resolver for the id field.
+func (r *billingNotificationSettingResolver) ID(ctx context.Context, obj *ent.BillingNotificationSetting) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ID is the resolver for the id field.
 func (r *billingOutboxResolver) ID(ctx context.Context, obj *ent.BillingOutbox) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeBillingOutbox,
@@ -708,6 +753,39 @@ func (r *queryResolver) BillingAccountBindings(ctx context.Context, after *entgq
 // BillingHolds is the resolver for the billingHolds field.
 func (r *queryResolver) BillingHolds(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) (*ent.BillingHoldConnection, error) {
 	panic(fmt.Errorf("not implemented: BillingHolds - billingHolds"))
+}
+
+// BillingNotifications is the resolver for the billingNotifications field.
+func (r *queryResolver) BillingNotifications(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder, where *ent.BillingNotificationWhereInput) (*ent.BillingNotificationConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	return r.client.BillingNotification.Query().Paginate(ctx, after, first, before, last,
+		ent.WithBillingNotificationOrder(orderBy),
+		ent.WithBillingNotificationFilter(where.Filter),
+	)
+}
+
+// BillingNotificationPreferences is the resolver for the billingNotificationPreferences field.
+func (r *queryResolver) BillingNotificationPreferences(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationPreferenceOrder, where *ent.BillingNotificationPreferenceWhereInput) (*ent.BillingNotificationPreferenceConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	return r.client.BillingNotificationPreference.Query().Paginate(ctx, after, first, before, last,
+		ent.WithBillingNotificationPreferenceOrder(orderBy),
+		ent.WithBillingNotificationPreferenceFilter(where.Filter),
+	)
+}
+
+// BillingNotificationSettings is the resolver for the billingNotificationSettings field.
+func (r *queryResolver) BillingNotificationSettings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationSettingOrder, where *ent.BillingNotificationSettingWhereInput) (*ent.BillingNotificationSettingConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	return r.client.BillingNotificationSetting.Query().Paginate(ctx, after, first, before, last,
+		ent.WithBillingNotificationSettingOrder(orderBy),
+		ent.WithBillingNotificationSettingFilter(where.Filter),
+	)
 }
 
 // BillingOutboxes is the resolver for the billingOutboxes field.
@@ -1647,6 +1725,21 @@ func (r *Resolver) BillingAccountBinding() BillingAccountBindingResolver {
 // BillingHold returns BillingHoldResolver implementation.
 func (r *Resolver) BillingHold() BillingHoldResolver { return &billingHoldResolver{r} }
 
+// BillingNotification returns BillingNotificationResolver implementation.
+func (r *Resolver) BillingNotification() BillingNotificationResolver {
+	return &billingNotificationResolver{r}
+}
+
+// BillingNotificationPreference returns BillingNotificationPreferenceResolver implementation.
+func (r *Resolver) BillingNotificationPreference() BillingNotificationPreferenceResolver {
+	return &billingNotificationPreferenceResolver{r}
+}
+
+// BillingNotificationSetting returns BillingNotificationSettingResolver implementation.
+func (r *Resolver) BillingNotificationSetting() BillingNotificationSettingResolver {
+	return &billingNotificationSettingResolver{r}
+}
+
 // BillingOutbox returns BillingOutboxResolver implementation.
 func (r *Resolver) BillingOutbox() BillingOutboxResolver { return &billingOutboxResolver{r} }
 
@@ -1780,6 +1873,9 @@ type affiliateSettingResolver struct{ *Resolver }
 type billingAccountResolver struct{ *Resolver }
 type billingAccountBindingResolver struct{ *Resolver }
 type billingHoldResolver struct{ *Resolver }
+type billingNotificationResolver struct{ *Resolver }
+type billingNotificationPreferenceResolver struct{ *Resolver }
+type billingNotificationSettingResolver struct{ *Resolver }
 type billingOutboxResolver struct{ *Resolver }
 type billingPriceRuleResolver struct{ *Resolver }
 type channelResolver struct{ *Resolver }

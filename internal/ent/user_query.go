@@ -17,6 +17,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/affiliateprofile"
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/apikey"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/oidcidentity"
 	"github.com/looplj/axonhub/internal/ent/predicate"
@@ -33,46 +35,50 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                                *QueryContext
-	order                              []user.OrderOption
-	inters                             []Interceptor
-	predicates                         []predicate.User
-	withProjects                       *ProjectQuery
-	withAPIKeys                        *APIKeyQuery
-	withRoles                          *RoleQuery
-	withChannelOverrideTemplates       *ChannelOverrideTemplateQuery
-	withOidcIdentities                 *OIDCIdentityQuery
-	withCreatedRedeemCodes             *RedeemCodeQuery
-	withUsedRedeemCodes                *RedeemCodeQuery
-	withUserSubscriptions              *UserSubscriptionQuery
-	withAssignedUserSubscriptions      *UserSubscriptionQuery
-	withPromoUsages                    *PromoUsageQuery
-	withAffiliateProfiles              *AffiliateProfileQuery
-	withAffiliateInviters              *AffiliateInvitationQuery
-	withAffiliateInvitees              *AffiliateInvitationQuery
-	withAffiliateRebatesEarned         *AffiliateRebateQuery
-	withAffiliateRebatesGenerated      *AffiliateRebateQuery
-	withProjectUsers                   *UserProjectQuery
-	withUserRoles                      *UserRoleQuery
-	loadTotal                          []func(context.Context, []*User) error
-	modifiers                          []func(*sql.Selector)
-	withNamedProjects                  map[string]*ProjectQuery
-	withNamedAPIKeys                   map[string]*APIKeyQuery
-	withNamedRoles                     map[string]*RoleQuery
-	withNamedChannelOverrideTemplates  map[string]*ChannelOverrideTemplateQuery
-	withNamedOidcIdentities            map[string]*OIDCIdentityQuery
-	withNamedCreatedRedeemCodes        map[string]*RedeemCodeQuery
-	withNamedUsedRedeemCodes           map[string]*RedeemCodeQuery
-	withNamedUserSubscriptions         map[string]*UserSubscriptionQuery
-	withNamedAssignedUserSubscriptions map[string]*UserSubscriptionQuery
-	withNamedPromoUsages               map[string]*PromoUsageQuery
-	withNamedAffiliateProfiles         map[string]*AffiliateProfileQuery
-	withNamedAffiliateInviters         map[string]*AffiliateInvitationQuery
-	withNamedAffiliateInvitees         map[string]*AffiliateInvitationQuery
-	withNamedAffiliateRebatesEarned    map[string]*AffiliateRebateQuery
-	withNamedAffiliateRebatesGenerated map[string]*AffiliateRebateQuery
-	withNamedProjectUsers              map[string]*UserProjectQuery
-	withNamedUserRoles                 map[string]*UserRoleQuery
+	ctx                                     *QueryContext
+	order                                   []user.OrderOption
+	inters                                  []Interceptor
+	predicates                              []predicate.User
+	withProjects                            *ProjectQuery
+	withAPIKeys                             *APIKeyQuery
+	withRoles                               *RoleQuery
+	withChannelOverrideTemplates            *ChannelOverrideTemplateQuery
+	withOidcIdentities                      *OIDCIdentityQuery
+	withCreatedRedeemCodes                  *RedeemCodeQuery
+	withUsedRedeemCodes                     *RedeemCodeQuery
+	withUserSubscriptions                   *UserSubscriptionQuery
+	withAssignedUserSubscriptions           *UserSubscriptionQuery
+	withPromoUsages                         *PromoUsageQuery
+	withAffiliateProfiles                   *AffiliateProfileQuery
+	withAffiliateInviters                   *AffiliateInvitationQuery
+	withAffiliateInvitees                   *AffiliateInvitationQuery
+	withAffiliateRebatesEarned              *AffiliateRebateQuery
+	withAffiliateRebatesGenerated           *AffiliateRebateQuery
+	withBillingNotificationPreferences      *BillingNotificationPreferenceQuery
+	withBillingNotifications                *BillingNotificationQuery
+	withProjectUsers                        *UserProjectQuery
+	withUserRoles                           *UserRoleQuery
+	loadTotal                               []func(context.Context, []*User) error
+	modifiers                               []func(*sql.Selector)
+	withNamedProjects                       map[string]*ProjectQuery
+	withNamedAPIKeys                        map[string]*APIKeyQuery
+	withNamedRoles                          map[string]*RoleQuery
+	withNamedChannelOverrideTemplates       map[string]*ChannelOverrideTemplateQuery
+	withNamedOidcIdentities                 map[string]*OIDCIdentityQuery
+	withNamedCreatedRedeemCodes             map[string]*RedeemCodeQuery
+	withNamedUsedRedeemCodes                map[string]*RedeemCodeQuery
+	withNamedUserSubscriptions              map[string]*UserSubscriptionQuery
+	withNamedAssignedUserSubscriptions      map[string]*UserSubscriptionQuery
+	withNamedPromoUsages                    map[string]*PromoUsageQuery
+	withNamedAffiliateProfiles              map[string]*AffiliateProfileQuery
+	withNamedAffiliateInviters              map[string]*AffiliateInvitationQuery
+	withNamedAffiliateInvitees              map[string]*AffiliateInvitationQuery
+	withNamedAffiliateRebatesEarned         map[string]*AffiliateRebateQuery
+	withNamedAffiliateRebatesGenerated      map[string]*AffiliateRebateQuery
+	withNamedBillingNotificationPreferences map[string]*BillingNotificationPreferenceQuery
+	withNamedBillingNotifications           map[string]*BillingNotificationQuery
+	withNamedProjectUsers                   map[string]*UserProjectQuery
+	withNamedUserRoles                      map[string]*UserRoleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -439,6 +445,50 @@ func (_q *UserQuery) QueryAffiliateRebatesGenerated() *AffiliateRebateQuery {
 	return query
 }
 
+// QueryBillingNotificationPreferences chains the current query on the "billing_notification_preferences" edge.
+func (_q *UserQuery) QueryBillingNotificationPreferences() *BillingNotificationPreferenceQuery {
+	query := (&BillingNotificationPreferenceClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(billingnotificationpreference.Table, billingnotificationpreference.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.BillingNotificationPreferencesTable, user.BillingNotificationPreferencesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBillingNotifications chains the current query on the "billing_notifications" edge.
+func (_q *UserQuery) QueryBillingNotifications() *BillingNotificationQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(billingnotification.Table, billingnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.BillingNotificationsTable, user.BillingNotificationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryProjectUsers chains the current query on the "project_users" edge.
 func (_q *UserQuery) QueryProjectUsers() *UserProjectQuery {
 	query := (&UserProjectClient{config: _q.config}).Query()
@@ -670,28 +720,30 @@ func (_q *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:                        _q.config,
-		ctx:                           _q.ctx.Clone(),
-		order:                         append([]user.OrderOption{}, _q.order...),
-		inters:                        append([]Interceptor{}, _q.inters...),
-		predicates:                    append([]predicate.User{}, _q.predicates...),
-		withProjects:                  _q.withProjects.Clone(),
-		withAPIKeys:                   _q.withAPIKeys.Clone(),
-		withRoles:                     _q.withRoles.Clone(),
-		withChannelOverrideTemplates:  _q.withChannelOverrideTemplates.Clone(),
-		withOidcIdentities:            _q.withOidcIdentities.Clone(),
-		withCreatedRedeemCodes:        _q.withCreatedRedeemCodes.Clone(),
-		withUsedRedeemCodes:           _q.withUsedRedeemCodes.Clone(),
-		withUserSubscriptions:         _q.withUserSubscriptions.Clone(),
-		withAssignedUserSubscriptions: _q.withAssignedUserSubscriptions.Clone(),
-		withPromoUsages:               _q.withPromoUsages.Clone(),
-		withAffiliateProfiles:         _q.withAffiliateProfiles.Clone(),
-		withAffiliateInviters:         _q.withAffiliateInviters.Clone(),
-		withAffiliateInvitees:         _q.withAffiliateInvitees.Clone(),
-		withAffiliateRebatesEarned:    _q.withAffiliateRebatesEarned.Clone(),
-		withAffiliateRebatesGenerated: _q.withAffiliateRebatesGenerated.Clone(),
-		withProjectUsers:              _q.withProjectUsers.Clone(),
-		withUserRoles:                 _q.withUserRoles.Clone(),
+		config:                             _q.config,
+		ctx:                                _q.ctx.Clone(),
+		order:                              append([]user.OrderOption{}, _q.order...),
+		inters:                             append([]Interceptor{}, _q.inters...),
+		predicates:                         append([]predicate.User{}, _q.predicates...),
+		withProjects:                       _q.withProjects.Clone(),
+		withAPIKeys:                        _q.withAPIKeys.Clone(),
+		withRoles:                          _q.withRoles.Clone(),
+		withChannelOverrideTemplates:       _q.withChannelOverrideTemplates.Clone(),
+		withOidcIdentities:                 _q.withOidcIdentities.Clone(),
+		withCreatedRedeemCodes:             _q.withCreatedRedeemCodes.Clone(),
+		withUsedRedeemCodes:                _q.withUsedRedeemCodes.Clone(),
+		withUserSubscriptions:              _q.withUserSubscriptions.Clone(),
+		withAssignedUserSubscriptions:      _q.withAssignedUserSubscriptions.Clone(),
+		withPromoUsages:                    _q.withPromoUsages.Clone(),
+		withAffiliateProfiles:              _q.withAffiliateProfiles.Clone(),
+		withAffiliateInviters:              _q.withAffiliateInviters.Clone(),
+		withAffiliateInvitees:              _q.withAffiliateInvitees.Clone(),
+		withAffiliateRebatesEarned:         _q.withAffiliateRebatesEarned.Clone(),
+		withAffiliateRebatesGenerated:      _q.withAffiliateRebatesGenerated.Clone(),
+		withBillingNotificationPreferences: _q.withBillingNotificationPreferences.Clone(),
+		withBillingNotifications:           _q.withBillingNotifications.Clone(),
+		withProjectUsers:                   _q.withProjectUsers.Clone(),
+		withUserRoles:                      _q.withUserRoles.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -864,6 +916,28 @@ func (_q *UserQuery) WithAffiliateRebatesGenerated(opts ...func(*AffiliateRebate
 	return _q
 }
 
+// WithBillingNotificationPreferences tells the query-builder to eager-load the nodes that are connected to
+// the "billing_notification_preferences" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithBillingNotificationPreferences(opts ...func(*BillingNotificationPreferenceQuery)) *UserQuery {
+	query := (&BillingNotificationPreferenceClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withBillingNotificationPreferences = query
+	return _q
+}
+
+// WithBillingNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "billing_notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithBillingNotifications(opts ...func(*BillingNotificationQuery)) *UserQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withBillingNotifications = query
+	return _q
+}
+
 // WithProjectUsers tells the query-builder to eager-load the nodes that are connected to
 // the "project_users" edge. The optional arguments are used to configure the query builder of the edge.
 func (_q *UserQuery) WithProjectUsers(opts ...func(*UserProjectQuery)) *UserQuery {
@@ -970,7 +1044,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [17]bool{
+		loadedTypes = [19]bool{
 			_q.withProjects != nil,
 			_q.withAPIKeys != nil,
 			_q.withRoles != nil,
@@ -986,6 +1060,8 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withAffiliateInvitees != nil,
 			_q.withAffiliateRebatesEarned != nil,
 			_q.withAffiliateRebatesGenerated != nil,
+			_q.withBillingNotificationPreferences != nil,
+			_q.withBillingNotifications != nil,
 			_q.withProjectUsers != nil,
 			_q.withUserRoles != nil,
 		}
@@ -1128,6 +1204,24 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withBillingNotificationPreferences; query != nil {
+		if err := _q.loadBillingNotificationPreferences(ctx, query, nodes,
+			func(n *User) { n.Edges.BillingNotificationPreferences = []*BillingNotificationPreference{} },
+			func(n *User, e *BillingNotificationPreference) {
+				n.Edges.BillingNotificationPreferences = append(n.Edges.BillingNotificationPreferences, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withBillingNotifications; query != nil {
+		if err := _q.loadBillingNotifications(ctx, query, nodes,
+			func(n *User) { n.Edges.BillingNotifications = []*BillingNotification{} },
+			func(n *User, e *BillingNotification) {
+				n.Edges.BillingNotifications = append(n.Edges.BillingNotifications, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withProjectUsers; query != nil {
 		if err := _q.loadProjectUsers(ctx, query, nodes,
 			func(n *User) { n.Edges.ProjectUsers = []*UserProject{} },
@@ -1244,6 +1338,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadAffiliateRebatesGenerated(ctx, query, nodes,
 			func(n *User) { n.appendNamedAffiliateRebatesGenerated(name) },
 			func(n *User, e *AffiliateRebate) { n.appendNamedAffiliateRebatesGenerated(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedBillingNotificationPreferences {
+		if err := _q.loadBillingNotificationPreferences(ctx, query, nodes,
+			func(n *User) { n.appendNamedBillingNotificationPreferences(name) },
+			func(n *User, e *BillingNotificationPreference) { n.appendNamedBillingNotificationPreferences(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedBillingNotifications {
+		if err := _q.loadBillingNotifications(ctx, query, nodes,
+			func(n *User) { n.appendNamedBillingNotifications(name) },
+			func(n *User, e *BillingNotification) { n.appendNamedBillingNotifications(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1790,6 +1898,69 @@ func (_q *UserQuery) loadAffiliateRebatesGenerated(ctx context.Context, query *A
 	}
 	return nil
 }
+func (_q *UserQuery) loadBillingNotificationPreferences(ctx context.Context, query *BillingNotificationPreferenceQuery, nodes []*User, init func(*User), assign func(*User, *BillingNotificationPreference)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(billingnotificationpreference.FieldUserID)
+	}
+	query.Where(predicate.BillingNotificationPreference(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.BillingNotificationPreferencesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadBillingNotifications(ctx context.Context, query *BillingNotificationQuery, nodes []*User, init func(*User), assign func(*User, *BillingNotification)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(billingnotification.FieldUserID)
+	}
+	query.Where(predicate.BillingNotification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.BillingNotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *UserQuery) loadProjectUsers(ctx context.Context, query *UserProjectQuery, nodes []*User, init func(*User), assign func(*User, *UserProject)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -2151,6 +2322,34 @@ func (_q *UserQuery) WithNamedAffiliateRebatesGenerated(name string, opts ...fun
 		_q.withNamedAffiliateRebatesGenerated = make(map[string]*AffiliateRebateQuery)
 	}
 	_q.withNamedAffiliateRebatesGenerated[name] = query
+	return _q
+}
+
+// WithNamedBillingNotificationPreferences tells the query-builder to eager-load the nodes that are connected to the "billing_notification_preferences"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedBillingNotificationPreferences(name string, opts ...func(*BillingNotificationPreferenceQuery)) *UserQuery {
+	query := (&BillingNotificationPreferenceClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedBillingNotificationPreferences == nil {
+		_q.withNamedBillingNotificationPreferences = make(map[string]*BillingNotificationPreferenceQuery)
+	}
+	_q.withNamedBillingNotificationPreferences[name] = query
+	return _q
+}
+
+// WithNamedBillingNotifications tells the query-builder to eager-load the nodes that are connected to the "billing_notifications"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedBillingNotifications(name string, opts ...func(*BillingNotificationQuery)) *UserQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedBillingNotifications == nil {
+		_q.withNamedBillingNotifications = make(map[string]*BillingNotificationQuery)
+	}
+	_q.withNamedBillingNotifications[name] = query
 	return _q
 }
 

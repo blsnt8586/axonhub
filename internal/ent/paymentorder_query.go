@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
@@ -27,22 +28,24 @@ import (
 // PaymentOrderQuery is the builder for querying PaymentOrder entities.
 type PaymentOrderQuery struct {
 	config
-	ctx                       *QueryContext
-	order                     []paymentorder.OrderOption
-	inters                    []Interceptor
-	predicates                []predicate.PaymentOrder
-	withBillingAccount        *BillingAccountQuery
-	withProviderInstance      *PaymentProviderInstanceQuery
-	withLedgerTransaction     *LedgerTransactionQuery
-	withPromoCode             *PromoCodeQuery
-	withPromoUsages           *PromoUsageQuery
-	withPaymentEvents         *PaymentEventQuery
-	withAffiliateRebates      *AffiliateRebateQuery
-	loadTotal                 []func(context.Context, []*PaymentOrder) error
-	modifiers                 []func(*sql.Selector)
-	withNamedPromoUsages      map[string]*PromoUsageQuery
-	withNamedPaymentEvents    map[string]*PaymentEventQuery
-	withNamedAffiliateRebates map[string]*AffiliateRebateQuery
+	ctx                           *QueryContext
+	order                         []paymentorder.OrderOption
+	inters                        []Interceptor
+	predicates                    []predicate.PaymentOrder
+	withBillingAccount            *BillingAccountQuery
+	withProviderInstance          *PaymentProviderInstanceQuery
+	withLedgerTransaction         *LedgerTransactionQuery
+	withPromoCode                 *PromoCodeQuery
+	withPromoUsages               *PromoUsageQuery
+	withPaymentEvents             *PaymentEventQuery
+	withAffiliateRebates          *AffiliateRebateQuery
+	withBillingNotifications      *BillingNotificationQuery
+	loadTotal                     []func(context.Context, []*PaymentOrder) error
+	modifiers                     []func(*sql.Selector)
+	withNamedPromoUsages          map[string]*PromoUsageQuery
+	withNamedPaymentEvents        map[string]*PaymentEventQuery
+	withNamedAffiliateRebates     map[string]*AffiliateRebateQuery
+	withNamedBillingNotifications map[string]*BillingNotificationQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -226,6 +229,28 @@ func (_q *PaymentOrderQuery) QueryAffiliateRebates() *AffiliateRebateQuery {
 			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
 			sqlgraph.To(affiliaterebate.Table, affiliaterebate.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.AffiliateRebatesTable, paymentorder.AffiliateRebatesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBillingNotifications chains the current query on the "billing_notifications" edge.
+func (_q *PaymentOrderQuery) QueryBillingNotifications() *BillingNotificationQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
+			sqlgraph.To(billingnotification.Table, billingnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.BillingNotificationsTable, paymentorder.BillingNotificationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -420,18 +445,19 @@ func (_q *PaymentOrderQuery) Clone() *PaymentOrderQuery {
 		return nil
 	}
 	return &PaymentOrderQuery{
-		config:                _q.config,
-		ctx:                   _q.ctx.Clone(),
-		order:                 append([]paymentorder.OrderOption{}, _q.order...),
-		inters:                append([]Interceptor{}, _q.inters...),
-		predicates:            append([]predicate.PaymentOrder{}, _q.predicates...),
-		withBillingAccount:    _q.withBillingAccount.Clone(),
-		withProviderInstance:  _q.withProviderInstance.Clone(),
-		withLedgerTransaction: _q.withLedgerTransaction.Clone(),
-		withPromoCode:         _q.withPromoCode.Clone(),
-		withPromoUsages:       _q.withPromoUsages.Clone(),
-		withPaymentEvents:     _q.withPaymentEvents.Clone(),
-		withAffiliateRebates:  _q.withAffiliateRebates.Clone(),
+		config:                   _q.config,
+		ctx:                      _q.ctx.Clone(),
+		order:                    append([]paymentorder.OrderOption{}, _q.order...),
+		inters:                   append([]Interceptor{}, _q.inters...),
+		predicates:               append([]predicate.PaymentOrder{}, _q.predicates...),
+		withBillingAccount:       _q.withBillingAccount.Clone(),
+		withProviderInstance:     _q.withProviderInstance.Clone(),
+		withLedgerTransaction:    _q.withLedgerTransaction.Clone(),
+		withPromoCode:            _q.withPromoCode.Clone(),
+		withPromoUsages:          _q.withPromoUsages.Clone(),
+		withPaymentEvents:        _q.withPaymentEvents.Clone(),
+		withAffiliateRebates:     _q.withAffiliateRebates.Clone(),
+		withBillingNotifications: _q.withBillingNotifications.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -513,6 +539,17 @@ func (_q *PaymentOrderQuery) WithAffiliateRebates(opts ...func(*AffiliateRebateQ
 		opt(query)
 	}
 	_q.withAffiliateRebates = query
+	return _q
+}
+
+// WithBillingNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "billing_notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *PaymentOrderQuery) WithBillingNotifications(opts ...func(*BillingNotificationQuery)) *PaymentOrderQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withBillingNotifications = query
 	return _q
 }
 
@@ -600,7 +637,7 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*PaymentOrder{}
 		_spec       = _q.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [8]bool{
 			_q.withBillingAccount != nil,
 			_q.withProviderInstance != nil,
 			_q.withLedgerTransaction != nil,
@@ -608,6 +645,7 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			_q.withPromoUsages != nil,
 			_q.withPaymentEvents != nil,
 			_q.withAffiliateRebates != nil,
+			_q.withBillingNotifications != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -678,6 +716,15 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			return nil, err
 		}
 	}
+	if query := _q.withBillingNotifications; query != nil {
+		if err := _q.loadBillingNotifications(ctx, query, nodes,
+			func(n *PaymentOrder) { n.Edges.BillingNotifications = []*BillingNotification{} },
+			func(n *PaymentOrder, e *BillingNotification) {
+				n.Edges.BillingNotifications = append(n.Edges.BillingNotifications, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedPromoUsages {
 		if err := _q.loadPromoUsages(ctx, query, nodes,
 			func(n *PaymentOrder) { n.appendNamedPromoUsages(name) },
@@ -696,6 +743,13 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		if err := _q.loadAffiliateRebates(ctx, query, nodes,
 			func(n *PaymentOrder) { n.appendNamedAffiliateRebates(name) },
 			func(n *PaymentOrder, e *AffiliateRebate) { n.appendNamedAffiliateRebates(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedBillingNotifications {
+		if err := _q.loadBillingNotifications(ctx, query, nodes,
+			func(n *PaymentOrder) { n.appendNamedBillingNotifications(name) },
+			func(n *PaymentOrder, e *BillingNotification) { n.appendNamedBillingNotifications(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -931,6 +985,39 @@ func (_q *PaymentOrderQuery) loadAffiliateRebates(ctx context.Context, query *Af
 	}
 	return nil
 }
+func (_q *PaymentOrderQuery) loadBillingNotifications(ctx context.Context, query *BillingNotificationQuery, nodes []*PaymentOrder, init func(*PaymentOrder), assign func(*PaymentOrder, *BillingNotification)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*PaymentOrder)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(billingnotification.FieldPaymentOrderID)
+	}
+	query.Where(predicate.BillingNotification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(paymentorder.BillingNotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.PaymentOrderID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "payment_order_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "payment_order_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *PaymentOrderQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1076,6 +1163,20 @@ func (_q *PaymentOrderQuery) WithNamedAffiliateRebates(name string, opts ...func
 		_q.withNamedAffiliateRebates = make(map[string]*AffiliateRebateQuery)
 	}
 	_q.withNamedAffiliateRebates[name] = query
+	return _q
+}
+
+// WithNamedBillingNotifications tells the query-builder to eager-load the nodes that are connected to the "billing_notifications"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *PaymentOrderQuery) WithNamedBillingNotifications(name string, opts ...func(*BillingNotificationQuery)) *PaymentOrderQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedBillingNotifications == nil {
+		_q.withNamedBillingNotifications = make(map[string]*BillingNotificationQuery)
+	}
+	_q.withNamedBillingNotifications[name] = query
 	return _q
 }
 

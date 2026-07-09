@@ -272,6 +272,27 @@ func (_m *BillingAccount) PromoUsages(
 	return _m.QueryPromoUsages().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *BillingAccount) BillingNotifications(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingNotificationOrder, where *BillingNotificationWhereInput,
+) (*BillingNotificationConnection, error) {
+	opts := []BillingNotificationPaginateOption{
+		WithBillingNotificationOrder(orderBy),
+		WithBillingNotificationFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[6][alias]
+	if nodes, err := _m.NamedBillingNotifications(alias); err == nil || hasTotalCount {
+		pager, err := newBillingNotificationPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingNotificationConnection{Edges: []*BillingNotificationEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingNotifications().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *BillingAccountBinding) BillingAccount(ctx context.Context) (*BillingAccount, error) {
 	result, err := _m.Edges.BillingAccountOrErr()
 	if IsNotLoaded(err) {
@@ -310,6 +331,54 @@ func (_m *BillingHold) CapturedLedgerTransaction(ctx context.Context) (*LedgerTr
 		result, err = _m.QueryCapturedLedgerTransaction().Only(ctx)
 	}
 	return result, MaskNotFound(err)
+}
+
+func (_m *BillingNotification) User(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.UserOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUser().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *BillingNotification) BillingAccount(ctx context.Context) (*BillingAccount, error) {
+	result, err := _m.Edges.BillingAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryBillingAccount().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *BillingNotification) PaymentOrder(ctx context.Context) (*PaymentOrder, error) {
+	result, err := _m.Edges.PaymentOrderOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPaymentOrder().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *BillingNotification) UserSubscription(ctx context.Context) (*UserSubscription, error) {
+	result, err := _m.Edges.UserSubscriptionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUserSubscription().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *BillingNotification) UsageBillingRecord(ctx context.Context) (*UsageBillingRecord, error) {
+	result, err := _m.Edges.UsageBillingRecordOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUsageBillingRecord().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *BillingNotificationPreference) User(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.UserOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUser().Only(ctx)
+	}
+	return result, err
 }
 
 func (_m *Channel) Requests(
@@ -794,6 +863,27 @@ func (_m *PaymentOrder) AffiliateRebates(
 		return conn, nil
 	}
 	return _m.QueryAffiliateRebates().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *PaymentOrder) BillingNotifications(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingNotificationOrder, where *BillingNotificationWhereInput,
+) (*BillingNotificationConnection, error) {
+	opts := []BillingNotificationPaginateOption{
+		WithBillingNotificationOrder(orderBy),
+		WithBillingNotificationFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
+	if nodes, err := _m.NamedBillingNotifications(alias); err == nil || hasTotalCount {
+		pager, err := newBillingNotificationPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingNotificationConnection{Edges: []*BillingNotificationEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingNotifications().Paginate(ctx, after, first, before, last, opts...)
 }
 
 func (_m *PaymentProviderInstance) PaymentOrders(
@@ -1508,6 +1598,27 @@ func (_m *UsageBillingRecord) UserSubscription(ctx context.Context) (*UserSubscr
 	return result, MaskNotFound(err)
 }
 
+func (_m *UsageBillingRecord) BillingNotifications(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingNotificationOrder, where *BillingNotificationWhereInput,
+) (*BillingNotificationConnection, error) {
+	opts := []BillingNotificationPaginateOption{
+		WithBillingNotificationOrder(orderBy),
+		WithBillingNotificationFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	if nodes, err := _m.NamedBillingNotifications(alias); err == nil || hasTotalCount {
+		pager, err := newBillingNotificationPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingNotificationConnection{Edges: []*BillingNotificationEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingNotifications().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *UsageLog) Request(ctx context.Context) (*Request, error) {
 	result, err := _m.Edges.RequestOrErr()
 	if IsNotLoaded(err) {
@@ -1889,6 +2000,48 @@ func (_m *User) AffiliateRebatesGenerated(
 	return _m.QueryAffiliateRebatesGenerated().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *User) BillingNotificationPreferences(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingNotificationPreferenceOrder, where *BillingNotificationPreferenceWhereInput,
+) (*BillingNotificationPreferenceConnection, error) {
+	opts := []BillingNotificationPreferencePaginateOption{
+		WithBillingNotificationPreferenceOrder(orderBy),
+		WithBillingNotificationPreferenceFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[15][alias]
+	if nodes, err := _m.NamedBillingNotificationPreferences(alias); err == nil || hasTotalCount {
+		pager, err := newBillingNotificationPreferencePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingNotificationPreferenceConnection{Edges: []*BillingNotificationPreferenceEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingNotificationPreferences().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *User) BillingNotifications(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingNotificationOrder, where *BillingNotificationWhereInput,
+) (*BillingNotificationConnection, error) {
+	opts := []BillingNotificationPaginateOption{
+		WithBillingNotificationOrder(orderBy),
+		WithBillingNotificationFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[16][alias]
+	if nodes, err := _m.NamedBillingNotifications(alias); err == nil || hasTotalCount {
+		pager, err := newBillingNotificationPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingNotificationConnection{Edges: []*BillingNotificationEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingNotifications().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *User) ProjectUsers(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserProjectOrder, where *UserProjectWhereInput,
 ) (*UserProjectConnection, error) {
@@ -1897,7 +2050,7 @@ func (_m *User) ProjectUsers(
 		WithUserProjectFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[15][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[17][alias]
 	if nodes, err := _m.NamedProjectUsers(alias); err == nil || hasTotalCount {
 		pager, err := newUserProjectPager(opts, last != nil)
 		if err != nil {
@@ -1918,7 +2071,7 @@ func (_m *User) UserRoles(
 		WithUserRoleFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[16][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[18][alias]
 	if nodes, err := _m.NamedUserRoles(alias); err == nil || hasTotalCount {
 		pager, err := newUserRolePager(opts, last != nil)
 		if err != nil {
@@ -2064,4 +2217,25 @@ func (_m *UserSubscription) AffiliateRebates(
 		return conn, nil
 	}
 	return _m.QueryAffiliateRebates().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *UserSubscription) BillingNotifications(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *BillingNotificationOrder, where *BillingNotificationWhereInput,
+) (*BillingNotificationConnection, error) {
+	opts := []BillingNotificationPaginateOption{
+		WithBillingNotificationOrder(orderBy),
+		WithBillingNotificationFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[8][alias]
+	if nodes, err := _m.NamedBillingNotifications(alias); err == nil || hasTotalCount {
+		pager, err := newBillingNotificationPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &BillingNotificationConnection{Edges: []*BillingNotificationEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryBillingNotifications().Paginate(ctx, after, first, before, last, opts...)
 }

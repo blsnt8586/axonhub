@@ -55,18 +55,21 @@ type BillingAccountEdges struct {
 	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
 	// PromoUsages holds the value of the promo_usages edge.
 	PromoUsages []*PromoUsage `json:"promo_usages,omitempty"`
+	// BillingNotifications holds the value of the billing_notifications edge.
+	BillingNotifications []*BillingNotification `json:"billing_notifications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 	// totalCount holds the count of the edges above.
-	totalCount [6]map[string]int
+	totalCount [7]map[string]int
 
-	namedBindings            map[string][]*BillingAccountBinding
-	namedLedgerTransactions  map[string][]*LedgerTransaction
-	namedBillingHolds        map[string][]*BillingHold
-	namedUsageBillingRecords map[string][]*UsageBillingRecord
-	namedPaymentOrders       map[string][]*PaymentOrder
-	namedPromoUsages         map[string][]*PromoUsage
+	namedBindings             map[string][]*BillingAccountBinding
+	namedLedgerTransactions   map[string][]*LedgerTransaction
+	namedBillingHolds         map[string][]*BillingHold
+	namedUsageBillingRecords  map[string][]*UsageBillingRecord
+	namedPaymentOrders        map[string][]*PaymentOrder
+	namedPromoUsages          map[string][]*PromoUsage
+	namedBillingNotifications map[string][]*BillingNotification
 }
 
 // BindingsOrErr returns the Bindings value or an error if the edge
@@ -121,6 +124,15 @@ func (e BillingAccountEdges) PromoUsagesOrErr() ([]*PromoUsage, error) {
 		return e.PromoUsages, nil
 	}
 	return nil, &NotLoadedError{edge: "promo_usages"}
+}
+
+// BillingNotificationsOrErr returns the BillingNotifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e BillingAccountEdges) BillingNotificationsOrErr() ([]*BillingNotification, error) {
+	if e.loadedTypes[6] {
+		return e.BillingNotifications, nil
+	}
+	return nil, &NotLoadedError{edge: "billing_notifications"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -250,6 +262,11 @@ func (_m *BillingAccount) QueryPaymentOrders() *PaymentOrderQuery {
 // QueryPromoUsages queries the "promo_usages" edge of the BillingAccount entity.
 func (_m *BillingAccount) QueryPromoUsages() *PromoUsageQuery {
 	return NewBillingAccountClient(_m.config).QueryPromoUsages(_m)
+}
+
+// QueryBillingNotifications queries the "billing_notifications" edge of the BillingAccount entity.
+func (_m *BillingAccount) QueryBillingNotifications() *BillingNotificationQuery {
+	return NewBillingAccountClient(_m.config).QueryBillingNotifications(_m)
 }
 
 // Update returns a builder for updating this BillingAccount.
@@ -446,6 +463,30 @@ func (_m *BillingAccount) appendNamedPromoUsages(name string, edges ...*PromoUsa
 		_m.Edges.namedPromoUsages[name] = []*PromoUsage{}
 	} else {
 		_m.Edges.namedPromoUsages[name] = append(_m.Edges.namedPromoUsages[name], edges...)
+	}
+}
+
+// NamedBillingNotifications returns the BillingNotifications named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *BillingAccount) NamedBillingNotifications(name string) ([]*BillingNotification, error) {
+	if _m.Edges.namedBillingNotifications == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedBillingNotifications[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *BillingAccount) appendNamedBillingNotifications(name string, edges ...*BillingNotification) {
+	if _m.Edges.namedBillingNotifications == nil {
+		_m.Edges.namedBillingNotifications = make(map[string][]*BillingNotification)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedBillingNotifications[name] = []*BillingNotification{}
+	} else {
+		_m.Edges.namedBillingNotifications[name] = append(_m.Edges.namedBillingNotifications[name], edges...)
 	}
 }
 

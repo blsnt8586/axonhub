@@ -31,8 +31,9 @@ type SubscriptionServiceParams struct {
 	Ent                   *ent.Client
 	BillingAccountService *BillingAccountService
 	LedgerService         *LedgerService
-	PromoCodeService      *PromoCodeService `optional:"true"`
-	AffiliateService      *AffiliateService `optional:"true"`
+	PromoCodeService      *PromoCodeService           `optional:"true"`
+	AffiliateService      *AffiliateService           `optional:"true"`
+	NotificationService   *BillingNotificationService `optional:"true"`
 }
 
 type SubscriptionService struct {
@@ -42,6 +43,7 @@ type SubscriptionService struct {
 	ledgerService         *LedgerService
 	promoCodeService      *PromoCodeService
 	affiliateService      *AffiliateService
+	notificationService   *BillingNotificationService
 }
 
 func NewSubscriptionService(params SubscriptionServiceParams) *SubscriptionService {
@@ -51,6 +53,7 @@ func NewSubscriptionService(params SubscriptionServiceParams) *SubscriptionServi
 		ledgerService:         params.LedgerService,
 		promoCodeService:      params.PromoCodeService,
 		affiliateService:      params.AffiliateService,
+		notificationService:   params.NotificationService,
 	}
 }
 
@@ -70,6 +73,15 @@ func (s *SubscriptionService) runMaintenanceWithSystemContext(ctx context.Contex
 	defer cancel()
 
 	now := time.Now().UTC()
+	warnings := 0
+	if s.notificationService != nil {
+		var err error
+		warnings, err = s.notificationService.CreateSubscriptionExpiryWarnings(ctx, now, 100)
+		if err != nil {
+			log.Error(ctx, "subscription maintenance failed to create expiry notifications", log.Cause(err))
+			return
+		}
+	}
 	expired, err := s.ExpireDue(ctx, now, 100)
 	if err != nil {
 		log.Error(ctx, "subscription maintenance failed to expire subscriptions", log.Cause(err))
@@ -80,8 +92,8 @@ func (s *SubscriptionService) runMaintenanceWithSystemContext(ctx context.Contex
 		log.Error(ctx, "subscription maintenance failed to reset usage windows", log.Cause(err))
 		return
 	}
-	if expired > 0 || reset > 0 {
-		log.Info(ctx, "subscription maintenance completed", log.Int("expired", expired), log.Int("reset", reset))
+	if expired > 0 || reset > 0 || warnings > 0 {
+		log.Info(ctx, "subscription maintenance completed", log.Int("expired", expired), log.Int("reset", reset), log.Int("warnings", warnings))
 	}
 }
 
@@ -475,8 +487,19 @@ func (s *SubscriptionService) ExpireDue(ctx context.Context, now time.Time, limi
 		if _, err := s.entFromContext(ctx).UserSubscription.UpdateOneID(sub.ID).SetStatus(usersubscription.StatusExpired).Save(ctx); err != nil {
 			return 0, err
 		}
+		if s.notificationService != nil {
+			s.notifyNonBlocking(ctx, "notify expired subscription", func() error {
+				return s.notificationService.NotifySubscriptionExpired(ctx, sub)
+			})
+		}
 	}
 	return len(subs), nil
+}
+
+func (s *SubscriptionService) notifyNonBlocking(ctx context.Context, action string, fn func() error) {
+	if err := fn(); err != nil {
+		log.Warn(ctx, action+" failed", log.Cause(err))
+	}
 }
 
 func (s *SubscriptionService) ResetDueUsageWindows(ctx context.Context, now time.Time, limit int) (int, error) {

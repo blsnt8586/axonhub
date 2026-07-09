@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/log"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/llm"
 )
@@ -29,6 +30,7 @@ type UsageBillingProcessorParams struct {
 	BillingHoldService     *BillingHoldService
 	CommercialLimitService *APIKeyCommercialLimitService
 	SubscriptionService    *SubscriptionService
+	NotificationService    *BillingNotificationService `optional:"true"`
 }
 
 type UsageBillingProcessor struct {
@@ -41,6 +43,7 @@ type UsageBillingProcessor struct {
 	billingHoldService     *BillingHoldService
 	commercialLimitService *APIKeyCommercialLimitService
 	subscriptionService    *SubscriptionService
+	notificationService    *BillingNotificationService
 }
 
 func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingProcessor {
@@ -53,6 +56,7 @@ func NewUsageBillingProcessor(params UsageBillingProcessorParams) *UsageBillingP
 		billingHoldService:     params.BillingHoldService,
 		commercialLimitService: params.CommercialLimitService,
 		subscriptionService:    params.SubscriptionService,
+		notificationService:    params.NotificationService,
 	}
 }
 
@@ -76,6 +80,17 @@ func (p *UsageBillingProcessor) RequestUsageBilling(ctx context.Context, usageLo
 			Save(ctx)
 		if updateErr != nil {
 			return record, errors.Join(err, fmt.Errorf("failed to update usage billing outbox failure: %w", updateErr))
+		}
+		if p.notificationService != nil {
+			p.notifyNonBlocking(ctx, "notify operator usage billing failure", func() error {
+				return p.notificationService.NotifyOperatorAlert(
+					ctx,
+					fmt.Sprintf("operator_usage_billing_failure:%d", usageLogID),
+					"Usage billing failed",
+					err.Error(),
+					"",
+				)
+			})
 		}
 
 		return record, err
@@ -319,8 +334,19 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 	if err != nil {
 		return nil, err
 	}
+	if p.notificationService != nil && record != nil {
+		p.notifyNonBlocking(ctx, "notify usage billing result", func() error {
+			return p.notificationService.NotifyUsageCharged(ctx, record)
+		})
+	}
 
 	return record, nil
+}
+
+func (p *UsageBillingProcessor) notifyNonBlocking(ctx context.Context, action string, fn func() error) {
+	if err := fn(); err != nil {
+		log.Warn(ctx, action+" failed", log.Cause(err))
+	}
 }
 
 func usageBillingIdempotencyKey(usageLogID int) string {

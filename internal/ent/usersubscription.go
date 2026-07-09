@@ -101,15 +101,18 @@ type UserSubscriptionEdges struct {
 	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
 	// AffiliateRebates holds the value of the affiliate_rebates edge.
 	AffiliateRebates []*AffiliateRebate `json:"affiliate_rebates,omitempty"`
+	// BillingNotifications holds the value of the billing_notifications edge.
+	BillingNotifications []*BillingNotification `json:"billing_notifications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [9]bool
 	// totalCount holds the count of the edges above.
-	totalCount [8]map[string]int
+	totalCount [9]map[string]int
 
-	namedPromoUsages         map[string][]*PromoUsage
-	namedUsageBillingRecords map[string][]*UsageBillingRecord
-	namedAffiliateRebates    map[string][]*AffiliateRebate
+	namedPromoUsages          map[string][]*PromoUsage
+	namedUsageBillingRecords  map[string][]*UsageBillingRecord
+	namedAffiliateRebates     map[string][]*AffiliateRebate
+	namedBillingNotifications map[string][]*BillingNotification
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -192,6 +195,15 @@ func (e UserSubscriptionEdges) AffiliateRebatesOrErr() ([]*AffiliateRebate, erro
 		return e.AffiliateRebates, nil
 	}
 	return nil, &NotLoadedError{edge: "affiliate_rebates"}
+}
+
+// BillingNotificationsOrErr returns the BillingNotifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserSubscriptionEdges) BillingNotificationsOrErr() ([]*BillingNotification, error) {
+	if e.loadedTypes[8] {
+		return e.BillingNotifications, nil
+	}
+	return nil, &NotLoadedError{edge: "billing_notifications"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -454,6 +466,11 @@ func (_m *UserSubscription) QueryAffiliateRebates() *AffiliateRebateQuery {
 	return NewUserSubscriptionClient(_m.config).QueryAffiliateRebates(_m)
 }
 
+// QueryBillingNotifications queries the "billing_notifications" edge of the UserSubscription entity.
+func (_m *UserSubscription) QueryBillingNotifications() *BillingNotificationQuery {
+	return NewUserSubscriptionClient(_m.config).QueryBillingNotifications(_m)
+}
+
 // Update returns a builder for updating this UserSubscription.
 // Note that you need to call UserSubscription.Unwrap() before calling this method if this UserSubscription
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -632,6 +649,30 @@ func (_m *UserSubscription) appendNamedAffiliateRebates(name string, edges ...*A
 		_m.Edges.namedAffiliateRebates[name] = []*AffiliateRebate{}
 	} else {
 		_m.Edges.namedAffiliateRebates[name] = append(_m.Edges.namedAffiliateRebates[name], edges...)
+	}
+}
+
+// NamedBillingNotifications returns the BillingNotifications named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UserSubscription) NamedBillingNotifications(name string) ([]*BillingNotification, error) {
+	if _m.Edges.namedBillingNotifications == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedBillingNotifications[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UserSubscription) appendNamedBillingNotifications(name string, edges ...*BillingNotification) {
+	if _m.Edges.namedBillingNotifications == nil {
+		_m.Edges.namedBillingNotifications = make(map[string][]*BillingNotification)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedBillingNotifications[name] = []*BillingNotification{}
+	} else {
+		_m.Edges.namedBillingNotifications[name] = append(_m.Edges.namedBillingNotifications[name], edges...)
 	}
 }
 

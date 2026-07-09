@@ -27,6 +27,7 @@ import {
   type AdminPromoUsagesFilter,
   type AdminAffiliateInvitationsFilter,
   type AdminAffiliateRebatesFilter,
+  type AdminBillingNotificationsFilter,
   type AdminRedeemCodesFilter,
   type AdminUserSubscriptionsFilter,
   type AdminUsageBillingRecordsFilter,
@@ -49,6 +50,12 @@ import {
   type PromoUsageStatus,
   type AffiliateInvitation,
   type AffiliateInvitationStatus,
+  type BillingNotification,
+  type BillingNotificationAudience,
+  type BillingNotificationCategory,
+  type BillingNotificationSeverity,
+  type BillingNotificationSetting,
+  type BillingNotificationStatus,
   type AffiliateProfile,
   type AffiliateProfileStatus,
   type AffiliateRebate,
@@ -78,6 +85,8 @@ import {
   useAdminAffiliateProfiles,
   useAdminAffiliateRebates,
   useAdminAffiliateSetting,
+  useAdminBillingNotifications,
+  useAdminBillingNotificationSetting,
   useAdminRedeemCodes,
   useAdminSubscriptionPlans,
   useAdminUsageBillingRecords,
@@ -100,6 +109,7 @@ import {
   useSavePromoCode,
   useSaveAffiliateProfile,
   useSaveAffiliateSetting,
+  useSaveBillingNotificationSetting,
   useSaveSubscriptionPlan,
   useUpdatePromoCodeStatus,
   useUpdateRedeemCodeStatus,
@@ -277,6 +287,31 @@ type AffiliateRebateFilterForm = {
   from: string;
   to: string;
   transferableBefore: string;
+};
+
+type NotificationFilterForm = {
+  userId: string;
+  audience: 'all' | BillingNotificationAudience;
+  category: 'all' | BillingNotificationCategory;
+  severity: 'all' | BillingNotificationSeverity;
+  status: 'all' | BillingNotificationStatus;
+  eventKey: string;
+  billingAccountId: string;
+  paymentOrderId: string;
+  userSubscriptionId: string;
+  usageBillingRecordId: string;
+  from: string;
+  to: string;
+};
+
+type NotificationSettingForm = {
+  enabled: boolean;
+  userNotificationsEnabled: boolean;
+  operatorAlertsEnabled: boolean;
+  lowBalanceThreshold: string;
+  largeConsumptionThreshold: string;
+  subscriptionExpiryWarningDays: string;
+  currency: string;
 };
 
 type ReportFilterForm = {
@@ -643,6 +678,47 @@ function defaultAffiliateRebateFilter(): AffiliateRebateFilterForm {
   return { inviterUserId: '', inviteeUserId: '', sourceType: 'all', status: 'all', from: '', to: '', transferableBefore: '' };
 }
 
+function defaultNotificationFilter(): NotificationFilterForm {
+  return {
+    userId: '',
+    audience: 'all',
+    category: 'all',
+    severity: 'all',
+    status: 'all',
+    eventKey: '',
+    billingAccountId: '',
+    paymentOrderId: '',
+    userSubscriptionId: '',
+    usageBillingRecordId: '',
+    from: '',
+    to: '',
+  };
+}
+
+function defaultNotificationSettingForm(): NotificationSettingForm {
+  return {
+    enabled: true,
+    userNotificationsEnabled: true,
+    operatorAlertsEnabled: true,
+    lowBalanceThreshold: '10.00',
+    largeConsumptionThreshold: '100.00',
+    subscriptionExpiryWarningDays: '3',
+    currency: 'CNY',
+  };
+}
+
+function notificationSettingFormFromSetting(setting: BillingNotificationSetting): NotificationSettingForm {
+  return {
+    enabled: setting.enabled,
+    userNotificationsEnabled: setting.userNotificationsEnabled,
+    operatorAlertsEnabled: setting.operatorAlertsEnabled,
+    lowBalanceThreshold: microsToAmount(setting.lowBalanceThresholdMicros).toFixed(2),
+    largeConsumptionThreshold: microsToAmount(setting.largeConsumptionThresholdMicros).toFixed(2),
+    subscriptionExpiryWarningDays: String(setting.subscriptionExpiryWarningDays),
+    currency: setting.currency,
+  };
+}
+
 function defaultSubscriptionPlanForm(): SubscriptionPlanForm {
   return {
     name: '',
@@ -832,6 +908,23 @@ function buildAffiliateRebateFilter(form: AffiliateRebateFilterForm): AdminAffil
   };
 }
 
+function buildNotificationFilter(form: NotificationFilterForm): AdminBillingNotificationsFilter {
+  return {
+    userId: optionalInt(form.userId),
+    audience: form.audience === 'all' ? undefined : form.audience,
+    category: form.category === 'all' ? undefined : form.category,
+    severity: form.severity === 'all' ? undefined : form.severity,
+    status: form.status === 'all' ? undefined : form.status,
+    eventKey: optionalText(form.eventKey),
+    billingAccountId: optionalInt(form.billingAccountId),
+    paymentOrderId: optionalInt(form.paymentOrderId),
+    userSubscriptionId: optionalInt(form.userSubscriptionId),
+    usageBillingRecordId: optionalInt(form.usageBillingRecordId),
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+  };
+}
+
 function buildSubscriptionFilter(form: SubscriptionFilterForm): AdminUserSubscriptionsFilter {
   return {
     userId: optionalInt(form.userId),
@@ -904,6 +997,8 @@ export default function AdminBillingPage() {
   const [affiliateProfileForm, setAffiliateProfileForm] = useState<AffiliateProfileForm>(() => defaultAffiliateProfileForm());
   const [affiliateInvitationFilter, setAffiliateInvitationFilter] = useState<AffiliateInvitationFilterForm>(() => defaultAffiliateInvitationFilter());
   const [affiliateRebateFilter, setAffiliateRebateFilter] = useState<AffiliateRebateFilterForm>(() => defaultAffiliateRebateFilter());
+  const [notificationSettingForm, setNotificationSettingForm] = useState<NotificationSettingForm>(() => defaultNotificationSettingForm());
+  const [notificationFilter, setNotificationFilter] = useState<NotificationFilterForm>(() => defaultNotificationFilter());
   const [subscriptionPlanForm, setSubscriptionPlanForm] = useState<SubscriptionPlanForm>(() => defaultSubscriptionPlanForm());
   const [subscriptionAssignForm, setSubscriptionAssignForm] = useState<SubscriptionAssignForm>(() => defaultSubscriptionAssignForm());
   const [subscriptionFilter, setSubscriptionFilter] = useState<SubscriptionFilterForm>(() => defaultSubscriptionFilter());
@@ -919,6 +1014,7 @@ export default function AdminBillingPage() {
   const [appliedPromoUsageFilter, setAppliedPromoUsageFilter] = useState<AdminPromoUsagesFilter>({});
   const [appliedAffiliateInvitationFilter, setAppliedAffiliateInvitationFilter] = useState<AdminAffiliateInvitationsFilter>({});
   const [appliedAffiliateRebateFilter, setAppliedAffiliateRebateFilter] = useState<AdminAffiliateRebatesFilter>({});
+  const [appliedNotificationFilter, setAppliedNotificationFilter] = useState<AdminBillingNotificationsFilter>({});
   const [appliedSubscriptionFilter, setAppliedSubscriptionFilter] = useState<AdminUserSubscriptionsFilter>({});
   const [appliedReportFilter, setAppliedReportFilter] = useState<AdminBillingReportFilter>(() => buildReportFilter(defaultReportFilter()));
   const [holdReleaseReasons, setHoldReleaseReasons] = useState<Record<string, string>>({});
@@ -952,6 +1048,8 @@ export default function AdminBillingPage() {
   const adminAffiliateProfiles = useAdminAffiliateProfiles(50);
   const adminAffiliateInvitations = useAdminAffiliateInvitations(appliedAffiliateInvitationFilter, 50);
   const adminAffiliateRebates = useAdminAffiliateRebates(appliedAffiliateRebateFilter, 50);
+  const adminNotificationSetting = useAdminBillingNotificationSetting();
+  const adminNotifications = useAdminBillingNotifications(appliedNotificationFilter, 50);
   const adminSubscriptionPlans = useAdminSubscriptionPlans(100);
   const adminUserSubscriptions = useAdminUserSubscriptions(appliedSubscriptionFilter, 50);
   const adminReport = useAdminBillingReport(appliedReportFilter);
@@ -970,6 +1068,7 @@ export default function AdminBillingPage() {
   const deletePromoCode = useDeletePromoCode();
   const saveAffiliateSetting = useSaveAffiliateSetting();
   const saveAffiliateProfile = useSaveAffiliateProfile();
+  const saveNotificationSetting = useSaveBillingNotificationSetting();
   const saveSubscriptionPlan = useSaveSubscriptionPlan();
   const deleteSubscriptionPlan = useDeleteSubscriptionPlan();
   const adminAssignSubscription = useAdminAssignSubscription();
@@ -991,6 +1090,11 @@ export default function AdminBillingPage() {
     if (!adminAffiliateSetting.data) return;
     setAffiliateSettingForm(affiliateSettingFormFromSetting(adminAffiliateSetting.data));
   }, [adminAffiliateSetting.data]);
+
+  useEffect(() => {
+    if (!adminNotificationSetting.data) return;
+    setNotificationSettingForm(notificationSettingFormFromSetting(adminNotificationSetting.data));
+  }, [adminNotificationSetting.data]);
 
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
   const currency = selectedUserBilling.data?.account.currency || data?.accounts[0]?.currency || 'CNY';
@@ -1414,6 +1518,31 @@ export default function AdminBillingPage() {
     }
   }
 
+  async function handleSaveNotificationSetting(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const lowBalanceThreshold = normalizeNonNegativeAmount(notificationSettingForm.lowBalanceThreshold, 2);
+    const largeConsumptionThreshold = normalizeNonNegativeAmount(notificationSettingForm.largeConsumptionThreshold, 2);
+    const subscriptionExpiryWarningDays = Number(notificationSettingForm.subscriptionExpiryWarningDays);
+    if (!lowBalanceThreshold || !largeConsumptionThreshold || !Number.isInteger(subscriptionExpiryWarningDays) || subscriptionExpiryWarningDays < 0) {
+      toast.error(t('adminBilling.notifications.invalidSetting'));
+      return;
+    }
+    try {
+      await saveNotificationSetting.mutateAsync({
+        enabled: notificationSettingForm.enabled,
+        userNotificationsEnabled: notificationSettingForm.userNotificationsEnabled,
+        operatorAlertsEnabled: notificationSettingForm.operatorAlertsEnabled,
+        lowBalanceThreshold,
+        largeConsumptionThreshold,
+        subscriptionExpiryWarningDays,
+        currency: notificationSettingForm.currency.trim().toUpperCase() || 'CNY',
+      });
+      toast.success(t('adminBilling.notifications.settingSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
   async function handleSaveSubscriptionPlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const price = normalizeNonNegativeAmount(subscriptionPlanForm.price, 2);
@@ -1641,6 +1770,7 @@ export default function AdminBillingPage() {
             <TabsTrigger value='redeemCodes'>{t('adminBilling.tabs.redeemCodes')}</TabsTrigger>
             <TabsTrigger value='promoCodes'>{t('adminBilling.tabs.promoCodes')}</TabsTrigger>
             <TabsTrigger value='affiliate'>{t('adminBilling.tabs.affiliate')}</TabsTrigger>
+            <TabsTrigger value='notifications'>{t('adminBilling.tabs.notifications')}</TabsTrigger>
             <TabsTrigger value='subscriptions'>{t('adminBilling.tabs.subscriptions')}</TabsTrigger>
             <TabsTrigger value='pricing'>{t('adminBilling.tabs.pricing')}</TabsTrigger>
             <TabsTrigger value='providers'>{t('adminBilling.tabs.providers')}</TabsTrigger>
@@ -2575,6 +2705,31 @@ export default function AdminBillingPage() {
             />
           </TabsContent>
 
+          <TabsContent value='notifications' className='mt-0'>
+            <NotificationsTab
+              setting={adminNotificationSetting.data}
+              notifications={adminNotifications.data ?? []}
+              isLoading={adminNotifications.isLoading}
+              settingForm={notificationSettingForm}
+              setSettingForm={setNotificationSettingForm}
+              filter={notificationFilter}
+              setFilter={setNotificationFilter}
+              onSaveSetting={handleSaveNotificationSetting}
+              onApplyFilter={(event) => {
+                event.preventDefault();
+                setAppliedNotificationFilter(buildNotificationFilter(notificationFilter));
+              }}
+              onResetFilter={() => {
+                const next = defaultNotificationFilter();
+                setNotificationFilter(next);
+                setAppliedNotificationFilter({});
+              }}
+              isSavingSetting={saveNotificationSetting.isPending}
+              formatMicros={formatMicros}
+              formatDate={formatDate}
+            />
+          </TabsContent>
+
           <TabsContent value='subscriptions' className='mt-0'>
             <SubscriptionsTab
               users={users}
@@ -3411,6 +3566,141 @@ function PromoCodesTab({
                   <TableCell className='text-right font-mono'>{formatMicros(usage.discountAmountMicros, usage.currency)}</TableCell>
                   <TableCell className='text-right font-mono'>{formatMicros(usage.payableAmountMicros, usage.currency)}</TableCell>
                   <TableCell className='font-mono text-xs'>{usage.paymentOrderID || usage.userSubscriptionID || usage.ledgerTransactionID || '-'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function NotificationsTab({
+  setting,
+  notifications,
+  isLoading,
+  settingForm,
+  setSettingForm,
+  filter,
+  setFilter,
+  onSaveSetting,
+  onApplyFilter,
+  onResetFilter,
+  isSavingSetting,
+  formatMicros,
+  formatDate,
+}: {
+  setting?: BillingNotificationSetting;
+  notifications: BillingNotification[];
+  isLoading: boolean;
+  settingForm: NotificationSettingForm;
+  setSettingForm: (value: NotificationSettingForm | ((prev: NotificationSettingForm) => NotificationSettingForm)) => void;
+  filter: NotificationFilterForm;
+  setFilter: (value: NotificationFilterForm | ((prev: NotificationFilterForm) => NotificationFilterForm)) => void;
+  onSaveSetting: (event: FormEvent<HTMLFormElement>) => void;
+  onApplyFilter: (event: FormEvent<HTMLFormElement>) => void;
+  onResetFilter: () => void;
+  isSavingSetting: boolean;
+  formatMicros: (value: number, currency?: string, minimumFractionDigits?: number) => string;
+  formatDate: (value?: string | null) => string;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className='grid gap-4 xl:grid-cols-[420px_1fr]'>
+      <Card className='rounded-lg'>
+        <CardHeader>
+          <CardTitle className='text-base'>{t('adminBilling.notifications.settingTitle')}</CardTitle>
+          <CardDescription>{t('adminBilling.notifications.settingDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className='grid gap-3' onSubmit={onSaveSetting}>
+            <label className='flex items-center gap-2 rounded-md border p-3 text-sm'>
+              <Switch checked={settingForm.enabled} onCheckedChange={(checked) => setSettingForm((prev) => ({ ...prev, enabled: checked }))} />
+              <span>{t('adminBilling.notifications.enabled')}</span>
+            </label>
+            <label className='flex items-center gap-2 rounded-md border p-3 text-sm'>
+              <Switch checked={settingForm.userNotificationsEnabled} onCheckedChange={(checked) => setSettingForm((prev) => ({ ...prev, userNotificationsEnabled: checked }))} />
+              <span>{t('adminBilling.notifications.userEnabled')}</span>
+            </label>
+            <label className='flex items-center gap-2 rounded-md border p-3 text-sm'>
+              <Switch checked={settingForm.operatorAlertsEnabled} onCheckedChange={(checked) => setSettingForm((prev) => ({ ...prev, operatorAlertsEnabled: checked }))} />
+              <span>{t('adminBilling.notifications.operatorEnabled')}</span>
+            </label>
+            <FilterInput label={t('adminBilling.notifications.lowBalanceThreshold')} value={settingForm.lowBalanceThreshold} onChange={(value) => setSettingForm((prev) => ({ ...prev, lowBalanceThreshold: value }))} />
+            <FilterInput label={t('adminBilling.notifications.largeConsumptionThreshold')} value={settingForm.largeConsumptionThreshold} onChange={(value) => setSettingForm((prev) => ({ ...prev, largeConsumptionThreshold: value }))} />
+            <FilterInput label={t('adminBilling.notifications.expiryWarningDays')} value={settingForm.subscriptionExpiryWarningDays} onChange={(value) => setSettingForm((prev) => ({ ...prev, subscriptionExpiryWarningDays: value }))} />
+            <FilterInput label={t('adminBilling.columns.currency')} value={settingForm.currency} onChange={(value) => setSettingForm((prev) => ({ ...prev, currency: value.toUpperCase() }))} />
+            <Button type='submit' disabled={isSavingSetting}>
+              {isSavingSetting ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+              {t('adminBilling.notifications.saveSetting')}
+            </Button>
+            {setting && (
+              <div className='text-muted-foreground text-xs'>
+                {t('adminBilling.columns.updatedAt')}: {formatDate(setting.updatedAt)}
+              </div>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className='rounded-lg'>
+        <CardHeader>
+          <CardTitle className='text-base'>{t('adminBilling.notifications.logsTitle')}</CardTitle>
+          <CardDescription>{t('adminBilling.notifications.logsDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4 overflow-auto'>
+          <form className='grid gap-3 md:grid-cols-4 xl:grid-cols-6' onSubmit={onApplyFilter}>
+            <FilterInput label={t('adminBilling.filters.userId')} value={filter.userId} onChange={(value) => setFilter((prev) => ({ ...prev, userId: value }))} />
+            <FilterSelect label={t('adminBilling.notifications.audience')} value={filter.audience} onChange={(value) => setFilter((prev) => ({ ...prev, audience: value as NotificationFilterForm['audience'] }))} options={['all', 'user', 'operator']} />
+            <FilterSelect label={t('adminBilling.notifications.category')} value={filter.category} onChange={(value) => setFilter((prev) => ({ ...prev, category: value as NotificationFilterForm['category'] }))} options={['all', 'low_balance', 'payment', 'subscription', 'large_consumption', 'operator_alert']} />
+            <FilterSelect label={t('adminBilling.notifications.severity')} value={filter.severity} onChange={(value) => setFilter((prev) => ({ ...prev, severity: value as NotificationFilterForm['severity'] }))} options={['all', 'info', 'warning', 'error']} />
+            <FilterSelect label={t('adminBilling.columns.status')} value={filter.status} onChange={(value) => setFilter((prev) => ({ ...prev, status: value as NotificationFilterForm['status'] }))} options={['all', 'unread', 'read', 'dismissed']} />
+            <FilterInput label={t('adminBilling.columns.eventKey')} value={filter.eventKey} onChange={(value) => setFilter((prev) => ({ ...prev, eventKey: value }))} />
+            <FilterInput label={t('adminBilling.filters.accountId')} value={filter.billingAccountId} onChange={(value) => setFilter((prev) => ({ ...prev, billingAccountId: value }))} />
+            <FilterInput label={t('adminBilling.filters.paymentOrderId')} value={filter.paymentOrderId} onChange={(value) => setFilter((prev) => ({ ...prev, paymentOrderId: value }))} />
+            <FilterInput label={t('adminBilling.notifications.subscriptionId')} value={filter.userSubscriptionId} onChange={(value) => setFilter((prev) => ({ ...prev, userSubscriptionId: value }))} />
+            <FilterInput label={t('adminBilling.notifications.usageRecordId')} value={filter.usageBillingRecordId} onChange={(value) => setFilter((prev) => ({ ...prev, usageBillingRecordId: value }))} />
+            <FilterInput label={t('adminBilling.filters.from')} type='datetime-local' value={filter.from} onChange={(value) => setFilter((prev) => ({ ...prev, from: value }))} />
+            <FilterInput label={t('adminBilling.filters.to')} type='datetime-local' value={filter.to} onChange={(value) => setFilter((prev) => ({ ...prev, to: value }))} />
+            <FilterActions onReset={onResetFilter} />
+          </form>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                <TableHead>{t('adminBilling.columns.user')}</TableHead>
+                <TableHead>{t('adminBilling.notifications.audience')}</TableHead>
+                <TableHead>{t('adminBilling.notifications.category')}</TableHead>
+                <TableHead>{t('adminBilling.notifications.severity')}</TableHead>
+                <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                <TableHead>{t('adminBilling.notifications.titleColumn')}</TableHead>
+                <TableHead>{t('adminBilling.columns.reference')}</TableHead>
+                <TableHead className='text-right'>{t('adminBilling.columns.amount')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <DataStateRow colSpan={9} isLoading={isLoading} isEmpty={notifications.length === 0} />
+              {notifications.map((notification) => (
+                <TableRow key={notification.id}>
+                  <TableCell>{formatDate(notification.createdAt)}</TableCell>
+                  <TableCell className='font-mono text-xs'>{notification.userID || '-'}</TableCell>
+                  <TableCell>{notification.audience}</TableCell>
+                  <TableCell>{notification.category}</TableCell>
+                  <TableCell><StatusBadge value={notification.severity} positive={notification.severity === 'info'} /></TableCell>
+                  <TableCell><StatusBadge value={notification.status} positive={notification.status === 'read'} /></TableCell>
+                  <TableCell>
+                    <div className='max-w-[260px] truncate font-medium'>{notification.title}</div>
+                    <div className='text-muted-foreground max-w-[320px] truncate text-xs'>{notification.message || notification.eventKey}</div>
+                  </TableCell>
+                  <TableCell className='font-mono text-xs'>
+                    {notification.paymentOrderID || notification.userSubscriptionID || notification.usageBillingRecordID || notification.billingAccountID || '-'}
+                  </TableCell>
+                  <TableCell className='text-right font-mono'>
+                    {typeof notification.amountMicros === 'number' ? formatMicros(notification.amountMicros, notification.currency) : '-'}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

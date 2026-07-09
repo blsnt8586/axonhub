@@ -117,6 +117,42 @@ func (f BillingHoldFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingHoldMutation", m)
 }
 
+// The BillingNotificationFunc type is an adapter to allow the use of ordinary
+// function as BillingNotification mutator.
+type BillingNotificationFunc func(context.Context, *ent.BillingNotificationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BillingNotificationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BillingNotificationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingNotificationMutation", m)
+}
+
+// The BillingNotificationPreferenceFunc type is an adapter to allow the use of ordinary
+// function as BillingNotificationPreference mutator.
+type BillingNotificationPreferenceFunc func(context.Context, *ent.BillingNotificationPreferenceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BillingNotificationPreferenceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BillingNotificationPreferenceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingNotificationPreferenceMutation", m)
+}
+
+// The BillingNotificationSettingFunc type is an adapter to allow the use of ordinary
+// function as BillingNotificationSetting mutator.
+type BillingNotificationSettingFunc func(context.Context, *ent.BillingNotificationSettingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BillingNotificationSettingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BillingNotificationSettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BillingNotificationSettingMutation", m)
+}
+
 // The BillingOutboxFunc type is an adapter to allow the use of ordinary
 // function as BillingOutbox mutator.
 type BillingOutboxFunc func(context.Context, *ent.BillingOutboxMutation) (ent.Value, error)

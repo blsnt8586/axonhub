@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -13,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
@@ -23,16 +25,18 @@ import (
 // UsageBillingRecordQuery is the builder for querying UsageBillingRecord entities.
 type UsageBillingRecordQuery struct {
 	config
-	ctx                   *QueryContext
-	order                 []usagebillingrecord.OrderOption
-	inters                []Interceptor
-	predicates            []predicate.UsageBillingRecord
-	withUsageLog          *UsageLogQuery
-	withBillingAccount    *BillingAccountQuery
-	withLedgerTransaction *LedgerTransactionQuery
-	withUserSubscription  *UserSubscriptionQuery
-	loadTotal             []func(context.Context, []*UsageBillingRecord) error
-	modifiers             []func(*sql.Selector)
+	ctx                           *QueryContext
+	order                         []usagebillingrecord.OrderOption
+	inters                        []Interceptor
+	predicates                    []predicate.UsageBillingRecord
+	withUsageLog                  *UsageLogQuery
+	withBillingAccount            *BillingAccountQuery
+	withLedgerTransaction         *LedgerTransactionQuery
+	withUserSubscription          *UserSubscriptionQuery
+	withBillingNotifications      *BillingNotificationQuery
+	loadTotal                     []func(context.Context, []*UsageBillingRecord) error
+	modifiers                     []func(*sql.Selector)
+	withNamedBillingNotifications map[string]*BillingNotificationQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -150,6 +154,28 @@ func (_q *UsageBillingRecordQuery) QueryUserSubscription() *UserSubscriptionQuer
 			sqlgraph.From(usagebillingrecord.Table, usagebillingrecord.FieldID, selector),
 			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usagebillingrecord.UserSubscriptionTable, usagebillingrecord.UserSubscriptionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBillingNotifications chains the current query on the "billing_notifications" edge.
+func (_q *UsageBillingRecordQuery) QueryBillingNotifications() *BillingNotificationQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagebillingrecord.Table, usagebillingrecord.FieldID, selector),
+			sqlgraph.To(billingnotification.Table, billingnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usagebillingrecord.BillingNotificationsTable, usagebillingrecord.BillingNotificationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -344,15 +370,16 @@ func (_q *UsageBillingRecordQuery) Clone() *UsageBillingRecordQuery {
 		return nil
 	}
 	return &UsageBillingRecordQuery{
-		config:                _q.config,
-		ctx:                   _q.ctx.Clone(),
-		order:                 append([]usagebillingrecord.OrderOption{}, _q.order...),
-		inters:                append([]Interceptor{}, _q.inters...),
-		predicates:            append([]predicate.UsageBillingRecord{}, _q.predicates...),
-		withUsageLog:          _q.withUsageLog.Clone(),
-		withBillingAccount:    _q.withBillingAccount.Clone(),
-		withLedgerTransaction: _q.withLedgerTransaction.Clone(),
-		withUserSubscription:  _q.withUserSubscription.Clone(),
+		config:                   _q.config,
+		ctx:                      _q.ctx.Clone(),
+		order:                    append([]usagebillingrecord.OrderOption{}, _q.order...),
+		inters:                   append([]Interceptor{}, _q.inters...),
+		predicates:               append([]predicate.UsageBillingRecord{}, _q.predicates...),
+		withUsageLog:             _q.withUsageLog.Clone(),
+		withBillingAccount:       _q.withBillingAccount.Clone(),
+		withLedgerTransaction:    _q.withLedgerTransaction.Clone(),
+		withUserSubscription:     _q.withUserSubscription.Clone(),
+		withBillingNotifications: _q.withBillingNotifications.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -401,6 +428,17 @@ func (_q *UsageBillingRecordQuery) WithUserSubscription(opts ...func(*UserSubscr
 		opt(query)
 	}
 	_q.withUserSubscription = query
+	return _q
+}
+
+// WithBillingNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "billing_notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UsageBillingRecordQuery) WithBillingNotifications(opts ...func(*BillingNotificationQuery)) *UsageBillingRecordQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withBillingNotifications = query
 	return _q
 }
 
@@ -488,11 +526,12 @@ func (_q *UsageBillingRecordQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	var (
 		nodes       = []*UsageBillingRecord{}
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			_q.withUsageLog != nil,
 			_q.withBillingAccount != nil,
 			_q.withLedgerTransaction != nil,
 			_q.withUserSubscription != nil,
+			_q.withBillingNotifications != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -537,6 +576,22 @@ func (_q *UsageBillingRecordQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	if query := _q.withUserSubscription; query != nil {
 		if err := _q.loadUserSubscription(ctx, query, nodes, nil,
 			func(n *UsageBillingRecord, e *UserSubscription) { n.Edges.UserSubscription = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withBillingNotifications; query != nil {
+		if err := _q.loadBillingNotifications(ctx, query, nodes,
+			func(n *UsageBillingRecord) { n.Edges.BillingNotifications = []*BillingNotification{} },
+			func(n *UsageBillingRecord, e *BillingNotification) {
+				n.Edges.BillingNotifications = append(n.Edges.BillingNotifications, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedBillingNotifications {
+		if err := _q.loadBillingNotifications(ctx, query, nodes,
+			func(n *UsageBillingRecord) { n.appendNamedBillingNotifications(name) },
+			func(n *UsageBillingRecord, e *BillingNotification) { n.appendNamedBillingNotifications(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -664,6 +719,39 @@ func (_q *UsageBillingRecordQuery) loadUserSubscription(ctx context.Context, que
 	}
 	return nil
 }
+func (_q *UsageBillingRecordQuery) loadBillingNotifications(ctx context.Context, query *BillingNotificationQuery, nodes []*UsageBillingRecord, init func(*UsageBillingRecord), assign func(*UsageBillingRecord, *BillingNotification)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*UsageBillingRecord)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(billingnotification.FieldUsageBillingRecordID)
+	}
+	query.Where(predicate.BillingNotification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(usagebillingrecord.BillingNotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UsageBillingRecordID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "usage_billing_record_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "usage_billing_record_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *UsageBillingRecordQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -768,6 +856,20 @@ func (_q *UsageBillingRecordQuery) sqlQuery(ctx context.Context) *sql.Selector {
 func (_q *UsageBillingRecordQuery) Modify(modifiers ...func(s *sql.Selector)) *UsageBillingRecordSelect {
 	_q.modifiers = append(_q.modifiers, modifiers...)
 	return _q.Select()
+}
+
+// WithNamedBillingNotifications tells the query-builder to eager-load the nodes that are connected to the "billing_notifications"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UsageBillingRecordQuery) WithNamedBillingNotifications(name string, opts ...func(*BillingNotificationQuery)) *UsageBillingRecordQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedBillingNotifications == nil {
+		_q.withNamedBillingNotifications = make(map[string]*BillingNotificationQuery)
+	}
+	_q.withNamedBillingNotifications[name] = query
+	return _q
 }
 
 // UsageBillingRecordGroupBy is the group-by builder for UsageBillingRecord entities.

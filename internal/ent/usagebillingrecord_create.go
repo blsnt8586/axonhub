@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
@@ -259,6 +260,21 @@ func (_c *UsageBillingRecordCreate) SetLedgerTransaction(v *LedgerTransaction) *
 // SetUserSubscription sets the "user_subscription" edge to the UserSubscription entity.
 func (_c *UsageBillingRecordCreate) SetUserSubscription(v *UserSubscription) *UsageBillingRecordCreate {
 	return _c.SetUserSubscriptionID(v.ID)
+}
+
+// AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by IDs.
+func (_c *UsageBillingRecordCreate) AddBillingNotificationIDs(ids ...int) *UsageBillingRecordCreate {
+	_c.mutation.AddBillingNotificationIDs(ids...)
+	return _c
+}
+
+// AddBillingNotifications adds the "billing_notifications" edges to the BillingNotification entity.
+func (_c *UsageBillingRecordCreate) AddBillingNotifications(v ...*BillingNotification) *UsageBillingRecordCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBillingNotificationIDs(ids...)
 }
 
 // Mutation returns the UsageBillingRecordMutation object of the builder.
@@ -565,6 +581,22 @@ func (_c *UsageBillingRecordCreate) createSpec() (*UsageBillingRecord, *sqlgraph
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UserSubscriptionID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BillingNotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagebillingrecord.BillingNotificationsTable,
+			Columns: []string{usagebillingrecord.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

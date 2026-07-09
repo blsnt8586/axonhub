@@ -115,6 +115,11 @@ func (UsageBillingRecord) Edges() []ent.Edge {
 			Ref("usage_billing_records").
 			Field("user_subscription_id").
 			Unique(),
+		edge.To("billing_notifications", BillingNotification.Type).
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+				entgql.RelayConnection(),
+			),
 	}
 }
 

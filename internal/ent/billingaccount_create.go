@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/promousage"
@@ -234,6 +235,21 @@ func (_c *BillingAccountCreate) AddPromoUsages(v ...*PromoUsage) *BillingAccount
 		ids[i] = v[i].ID
 	}
 	return _c.AddPromoUsageIDs(ids...)
+}
+
+// AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by IDs.
+func (_c *BillingAccountCreate) AddBillingNotificationIDs(ids ...int) *BillingAccountCreate {
+	_c.mutation.AddBillingNotificationIDs(ids...)
+	return _c
+}
+
+// AddBillingNotifications adds the "billing_notifications" edges to the BillingNotification entity.
+func (_c *BillingAccountCreate) AddBillingNotifications(v ...*BillingNotification) *BillingAccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBillingNotificationIDs(ids...)
 }
 
 // Mutation returns the BillingAccountMutation object of the builder.
@@ -499,6 +515,22 @@ func (_c *BillingAccountCreate) createSpec() (*BillingAccount, *sqlgraph.CreateS
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BillingNotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingNotificationsTable,
+			Columns: []string{billingaccount.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

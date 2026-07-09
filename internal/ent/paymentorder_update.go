@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
@@ -320,6 +321,21 @@ func (_u *PaymentOrderUpdate) AddAffiliateRebates(v ...*AffiliateRebate) *Paymen
 	return _u.AddAffiliateRebateIDs(ids...)
 }
 
+// AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by IDs.
+func (_u *PaymentOrderUpdate) AddBillingNotificationIDs(ids ...int) *PaymentOrderUpdate {
+	_u.mutation.AddBillingNotificationIDs(ids...)
+	return _u
+}
+
+// AddBillingNotifications adds the "billing_notifications" edges to the BillingNotification entity.
+func (_u *PaymentOrderUpdate) AddBillingNotifications(v ...*BillingNotification) *PaymentOrderUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingNotificationIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -392,6 +408,27 @@ func (_u *PaymentOrderUpdate) RemoveAffiliateRebates(v ...*AffiliateRebate) *Pay
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAffiliateRebateIDs(ids...)
+}
+
+// ClearBillingNotifications clears all "billing_notifications" edges to the BillingNotification entity.
+func (_u *PaymentOrderUpdate) ClearBillingNotifications() *PaymentOrderUpdate {
+	_u.mutation.ClearBillingNotifications()
+	return _u
+}
+
+// RemoveBillingNotificationIDs removes the "billing_notifications" edge to BillingNotification entities by IDs.
+func (_u *PaymentOrderUpdate) RemoveBillingNotificationIDs(ids ...int) *PaymentOrderUpdate {
+	_u.mutation.RemoveBillingNotificationIDs(ids...)
+	return _u
+}
+
+// RemoveBillingNotifications removes "billing_notifications" edges to BillingNotification entities.
+func (_u *PaymentOrderUpdate) RemoveBillingNotifications(v ...*BillingNotification) *PaymentOrderUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingNotificationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -694,6 +731,51 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingNotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.BillingNotificationsTable,
+			Columns: []string{paymentorder.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingNotificationsIDs(); len(nodes) > 0 && !_u.mutation.BillingNotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.BillingNotificationsTable,
+			Columns: []string{paymentorder.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingNotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.BillingNotificationsTable,
+			Columns: []string{paymentorder.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1008,6 +1090,21 @@ func (_u *PaymentOrderUpdateOne) AddAffiliateRebates(v ...*AffiliateRebate) *Pay
 	return _u.AddAffiliateRebateIDs(ids...)
 }
 
+// AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by IDs.
+func (_u *PaymentOrderUpdateOne) AddBillingNotificationIDs(ids ...int) *PaymentOrderUpdateOne {
+	_u.mutation.AddBillingNotificationIDs(ids...)
+	return _u
+}
+
+// AddBillingNotifications adds the "billing_notifications" edges to the BillingNotification entity.
+func (_u *PaymentOrderUpdateOne) AddBillingNotifications(v ...*BillingNotification) *PaymentOrderUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddBillingNotificationIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -1080,6 +1177,27 @@ func (_u *PaymentOrderUpdateOne) RemoveAffiliateRebates(v ...*AffiliateRebate) *
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAffiliateRebateIDs(ids...)
+}
+
+// ClearBillingNotifications clears all "billing_notifications" edges to the BillingNotification entity.
+func (_u *PaymentOrderUpdateOne) ClearBillingNotifications() *PaymentOrderUpdateOne {
+	_u.mutation.ClearBillingNotifications()
+	return _u
+}
+
+// RemoveBillingNotificationIDs removes the "billing_notifications" edge to BillingNotification entities by IDs.
+func (_u *PaymentOrderUpdateOne) RemoveBillingNotificationIDs(ids ...int) *PaymentOrderUpdateOne {
+	_u.mutation.RemoveBillingNotificationIDs(ids...)
+	return _u
+}
+
+// RemoveBillingNotifications removes "billing_notifications" edges to BillingNotification entities.
+func (_u *PaymentOrderUpdateOne) RemoveBillingNotifications(v ...*BillingNotification) *PaymentOrderUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveBillingNotificationIDs(ids...)
 }
 
 // Where appends a list predicates to the PaymentOrderUpdate builder.
@@ -1412,6 +1530,51 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.BillingNotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.BillingNotificationsTable,
+			Columns: []string{paymentorder.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedBillingNotificationsIDs(); len(nodes) > 0 && !_u.mutation.BillingNotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.BillingNotificationsTable,
+			Columns: []string{paymentorder.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.BillingNotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.BillingNotificationsTable,
+			Columns: []string{paymentorder.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

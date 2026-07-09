@@ -21,6 +21,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationsetting"
 	"github.com/looplj/axonhub/internal/ent/channel"
 	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/looplj/axonhub/internal/ent/channelprobe"
@@ -77,6 +80,7 @@ type Dependencies struct {
 	ProviderQuotaService           *biz.ProviderQuotaService
 	BillingAccountService          *biz.BillingAccountService
 	BillingHoldService             *biz.BillingHoldService
+	BillingNotificationService     *biz.BillingNotificationService
 	PaymentService                 *biz.PaymentService
 	PricingService                 *biz.PricingService
 	PromoCodeService               *biz.PromoCodeService
@@ -125,6 +129,7 @@ func NewGraphqlHandlers(deps Dependencies) *GraphqlHandler {
 			deps.ProviderQuotaService,
 			deps.BillingAccountService,
 			deps.BillingHoldService,
+			deps.BillingNotificationService,
 			deps.PaymentService,
 			deps.PricingService,
 			deps.PromoCodeService,
@@ -197,26 +202,29 @@ func NewGraphqlHandlers(deps Dependencies) *GraphqlHandler {
 }
 
 var guidTypeToNodeType = map[string]string{
-	ent.TypeUser:                    user.Table,
-	ent.TypeAPIKey:                  apikey.Table,
-	ent.TypeAPIKeyProfileTemplate:   apikeyprofiletemplate.Table,
-	ent.TypeModel:                   model.Table,
-	ent.TypeChannel:                 channel.Table,
-	ent.TypeChannelProbe:            channelprobe.Table,
-	ent.TypeChannelOverrideTemplate: channeloverridetemplate.Table,
-	ent.TypeRequest:                 request.Table,
-	ent.TypeRequestExecution:        requestexecution.Table,
-	ent.TypeRole:                    role.Table,
-	ent.TypeSystem:                  system.Table,
-	ent.TypeUsageLog:                usagelog.Table,
-	ent.TypeProject:                 project.Table,
-	ent.TypeUserProject:             userproject.Table,
-	ent.TypeUserRole:                userrole.Table,
-	ent.TypeThread:                  thread.Table,
-	ent.TypeTrace:                   trace.Table,
-	ent.TypeDataStorage:             datastorage.Table,
-	ent.TypePrompt:                  prompt.Table,
-	ent.TypeRedeemCode:              redeemcode.Table,
+	ent.TypeUser:                          user.Table,
+	ent.TypeAPIKey:                        apikey.Table,
+	ent.TypeAPIKeyProfileTemplate:         apikeyprofiletemplate.Table,
+	ent.TypeModel:                         model.Table,
+	ent.TypeChannel:                       channel.Table,
+	ent.TypeChannelProbe:                  channelprobe.Table,
+	ent.TypeChannelOverrideTemplate:       channeloverridetemplate.Table,
+	ent.TypeRequest:                       request.Table,
+	ent.TypeRequestExecution:              requestexecution.Table,
+	ent.TypeRole:                          role.Table,
+	ent.TypeSystem:                        system.Table,
+	ent.TypeUsageLog:                      usagelog.Table,
+	ent.TypeProject:                       project.Table,
+	ent.TypeUserProject:                   userproject.Table,
+	ent.TypeUserRole:                      userrole.Table,
+	ent.TypeThread:                        thread.Table,
+	ent.TypeTrace:                         trace.Table,
+	ent.TypeDataStorage:                   datastorage.Table,
+	ent.TypePrompt:                        prompt.Table,
+	ent.TypeRedeemCode:                    redeemcode.Table,
+	ent.TypeBillingNotification:           billingnotification.Table,
+	ent.TypeBillingNotificationPreference: billingnotificationpreference.Table,
+	ent.TypeBillingNotificationSetting:    billingnotificationsetting.Table,
 }
 
 func getNilableChannel(ctx context.Context, client *ent.Client, channelID int) (*ent.Channel, error) {

@@ -19,6 +19,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationsetting"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -1763,6 +1766,95 @@ func (_q *BillingAccountQuery) collectField(ctx context.Context, oneNode bool, o
 			_q.WithNamedPromoUsages(alias, func(wq *PromoUsageQuery) {
 				*wq = *query
 			})
+
+		case "billingNotifications":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingNotificationClient{config: _q.config}).Query()
+			)
+			args := newBillingNotificationPaginateArgs(fieldArgs(ctx, new(BillingNotificationWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingNotificationPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*BillingAccount) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"billing_account_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(billingaccount.BillingNotificationsColumn), ids...))
+						})
+						if err := query.GroupBy(billingaccount.BillingNotificationsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[6][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*BillingAccount) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingNotifications)
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[6][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingnotificationImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(billingaccount.BillingNotificationsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingNotifications(alias, func(wq *BillingNotificationQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[billingaccount.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, billingaccount.FieldCreatedAt)
@@ -2255,6 +2347,528 @@ func newBillingHoldPaginateArgs(rv map[string]any) *billingholdPaginateArgs {
 	}
 	if v, ok := rv[whereField].(*BillingHoldWhereInput); ok {
 		args.opts = append(args.opts, WithBillingHoldFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *BillingNotificationQuery) CollectFields(ctx context.Context, satisfies ...string) (*BillingNotificationQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *BillingNotificationQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(billingnotification.Columns))
+		selectedFields = []string{billingnotification.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "user":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withUser = query
+			if _, ok := fieldSeen[billingnotification.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldUserID)
+				fieldSeen[billingnotification.FieldUserID] = struct{}{}
+			}
+
+		case "billingAccount":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, billingaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.withBillingAccount = query
+			if _, ok := fieldSeen[billingnotification.FieldBillingAccountID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldBillingAccountID)
+				fieldSeen[billingnotification.FieldBillingAccountID] = struct{}{}
+			}
+
+		case "paymentOrder":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PaymentOrderClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, paymentorderImplementors)...); err != nil {
+				return err
+			}
+			_q.withPaymentOrder = query
+			if _, ok := fieldSeen[billingnotification.FieldPaymentOrderID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldPaymentOrderID)
+				fieldSeen[billingnotification.FieldPaymentOrderID] = struct{}{}
+			}
+
+		case "userSubscription":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserSubscriptionClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, usersubscriptionImplementors)...); err != nil {
+				return err
+			}
+			_q.withUserSubscription = query
+			if _, ok := fieldSeen[billingnotification.FieldUserSubscriptionID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldUserSubscriptionID)
+				fieldSeen[billingnotification.FieldUserSubscriptionID] = struct{}{}
+			}
+
+		case "usageBillingRecord":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UsageBillingRecordClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, usagebillingrecordImplementors)...); err != nil {
+				return err
+			}
+			_q.withUsageBillingRecord = query
+			if _, ok := fieldSeen[billingnotification.FieldUsageBillingRecordID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldUsageBillingRecordID)
+				fieldSeen[billingnotification.FieldUsageBillingRecordID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[billingnotification.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldCreatedAt)
+				fieldSeen[billingnotification.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[billingnotification.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldUpdatedAt)
+				fieldSeen[billingnotification.FieldUpdatedAt] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[billingnotification.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldUserID)
+				fieldSeen[billingnotification.FieldUserID] = struct{}{}
+			}
+		case "audience":
+			if _, ok := fieldSeen[billingnotification.FieldAudience]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldAudience)
+				fieldSeen[billingnotification.FieldAudience] = struct{}{}
+			}
+		case "category":
+			if _, ok := fieldSeen[billingnotification.FieldCategory]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldCategory)
+				fieldSeen[billingnotification.FieldCategory] = struct{}{}
+			}
+		case "severity":
+			if _, ok := fieldSeen[billingnotification.FieldSeverity]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldSeverity)
+				fieldSeen[billingnotification.FieldSeverity] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[billingnotification.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldStatus)
+				fieldSeen[billingnotification.FieldStatus] = struct{}{}
+			}
+		case "eventKey":
+			if _, ok := fieldSeen[billingnotification.FieldEventKey]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldEventKey)
+				fieldSeen[billingnotification.FieldEventKey] = struct{}{}
+			}
+		case "title":
+			if _, ok := fieldSeen[billingnotification.FieldTitle]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldTitle)
+				fieldSeen[billingnotification.FieldTitle] = struct{}{}
+			}
+		case "message":
+			if _, ok := fieldSeen[billingnotification.FieldMessage]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldMessage)
+				fieldSeen[billingnotification.FieldMessage] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[billingnotification.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldCurrency)
+				fieldSeen[billingnotification.FieldCurrency] = struct{}{}
+			}
+		case "amountMicros":
+			if _, ok := fieldSeen[billingnotification.FieldAmountMicros]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldAmountMicros)
+				fieldSeen[billingnotification.FieldAmountMicros] = struct{}{}
+			}
+		case "billingAccountID":
+			if _, ok := fieldSeen[billingnotification.FieldBillingAccountID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldBillingAccountID)
+				fieldSeen[billingnotification.FieldBillingAccountID] = struct{}{}
+			}
+		case "paymentOrderID":
+			if _, ok := fieldSeen[billingnotification.FieldPaymentOrderID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldPaymentOrderID)
+				fieldSeen[billingnotification.FieldPaymentOrderID] = struct{}{}
+			}
+		case "userSubscriptionID":
+			if _, ok := fieldSeen[billingnotification.FieldUserSubscriptionID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldUserSubscriptionID)
+				fieldSeen[billingnotification.FieldUserSubscriptionID] = struct{}{}
+			}
+		case "usageBillingRecordID":
+			if _, ok := fieldSeen[billingnotification.FieldUsageBillingRecordID]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldUsageBillingRecordID)
+				fieldSeen[billingnotification.FieldUsageBillingRecordID] = struct{}{}
+			}
+		case "readAt":
+			if _, ok := fieldSeen[billingnotification.FieldReadAt]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldReadAt)
+				fieldSeen[billingnotification.FieldReadAt] = struct{}{}
+			}
+		case "metadata":
+			if _, ok := fieldSeen[billingnotification.FieldMetadata]; !ok {
+				selectedFields = append(selectedFields, billingnotification.FieldMetadata)
+				fieldSeen[billingnotification.FieldMetadata] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type billingnotificationPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []BillingNotificationPaginateOption
+}
+
+func newBillingNotificationPaginateArgs(rv map[string]any) *billingnotificationPaginateArgs {
+	args := &billingnotificationPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &BillingNotificationOrder{Field: &BillingNotificationOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithBillingNotificationOrder(order))
+			}
+		case *BillingNotificationOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithBillingNotificationOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*BillingNotificationWhereInput); ok {
+		args.opts = append(args.opts, WithBillingNotificationFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *BillingNotificationPreferenceQuery) CollectFields(ctx context.Context, satisfies ...string) (*BillingNotificationPreferenceQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *BillingNotificationPreferenceQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(billingnotificationpreference.Columns))
+		selectedFields = []string{billingnotificationpreference.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "user":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withUser = query
+			if _, ok := fieldSeen[billingnotificationpreference.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, billingnotificationpreference.FieldUserID)
+				fieldSeen[billingnotificationpreference.FieldUserID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[billingnotificationpreference.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, billingnotificationpreference.FieldCreatedAt)
+				fieldSeen[billingnotificationpreference.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[billingnotificationpreference.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, billingnotificationpreference.FieldUpdatedAt)
+				fieldSeen[billingnotificationpreference.FieldUpdatedAt] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[billingnotificationpreference.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, billingnotificationpreference.FieldUserID)
+				fieldSeen[billingnotificationpreference.FieldUserID] = struct{}{}
+			}
+		case "enabled":
+			if _, ok := fieldSeen[billingnotificationpreference.FieldEnabled]; !ok {
+				selectedFields = append(selectedFields, billingnotificationpreference.FieldEnabled)
+				fieldSeen[billingnotificationpreference.FieldEnabled] = struct{}{}
+			}
+		case "lowBalanceEnabled":
+			if _, ok := fieldSeen[billingnotificationpreference.FieldLowBalanceEnabled]; !ok {
+				selectedFields = append(selectedFields, billingnotificationpreference.FieldLowBalanceEnabled)
+				fieldSeen[billingnotificationpreference.FieldLowBalanceEnabled] = struct{}{}
+			}
+		case "paymentEnabled":
+			if _, ok := fieldSeen[billingnotificationpreference.FieldPaymentEnabled]; !ok {
+				selectedFields = append(selectedFields, billingnotificationpreference.FieldPaymentEnabled)
+				fieldSeen[billingnotificationpreference.FieldPaymentEnabled] = struct{}{}
+			}
+		case "subscriptionEnabled":
+			if _, ok := fieldSeen[billingnotificationpreference.FieldSubscriptionEnabled]; !ok {
+				selectedFields = append(selectedFields, billingnotificationpreference.FieldSubscriptionEnabled)
+				fieldSeen[billingnotificationpreference.FieldSubscriptionEnabled] = struct{}{}
+			}
+		case "largeConsumptionEnabled":
+			if _, ok := fieldSeen[billingnotificationpreference.FieldLargeConsumptionEnabled]; !ok {
+				selectedFields = append(selectedFields, billingnotificationpreference.FieldLargeConsumptionEnabled)
+				fieldSeen[billingnotificationpreference.FieldLargeConsumptionEnabled] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type billingnotificationpreferencePaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []BillingNotificationPreferencePaginateOption
+}
+
+func newBillingNotificationPreferencePaginateArgs(rv map[string]any) *billingnotificationpreferencePaginateArgs {
+	args := &billingnotificationpreferencePaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &BillingNotificationPreferenceOrder{Field: &BillingNotificationPreferenceOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithBillingNotificationPreferenceOrder(order))
+			}
+		case *BillingNotificationPreferenceOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithBillingNotificationPreferenceOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*BillingNotificationPreferenceWhereInput); ok {
+		args.opts = append(args.opts, WithBillingNotificationPreferenceFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *BillingNotificationSettingQuery) CollectFields(ctx context.Context, satisfies ...string) (*BillingNotificationSettingQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *BillingNotificationSettingQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(billingnotificationsetting.Columns))
+		selectedFields = []string{billingnotificationsetting.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+		case "createdAt":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldCreatedAt)
+				fieldSeen[billingnotificationsetting.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldUpdatedAt)
+				fieldSeen[billingnotificationsetting.FieldUpdatedAt] = struct{}{}
+			}
+		case "key":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldKey]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldKey)
+				fieldSeen[billingnotificationsetting.FieldKey] = struct{}{}
+			}
+		case "enabled":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldEnabled]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldEnabled)
+				fieldSeen[billingnotificationsetting.FieldEnabled] = struct{}{}
+			}
+		case "userNotificationsEnabled":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldUserNotificationsEnabled]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldUserNotificationsEnabled)
+				fieldSeen[billingnotificationsetting.FieldUserNotificationsEnabled] = struct{}{}
+			}
+		case "operatorAlertsEnabled":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldOperatorAlertsEnabled]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldOperatorAlertsEnabled)
+				fieldSeen[billingnotificationsetting.FieldOperatorAlertsEnabled] = struct{}{}
+			}
+		case "lowBalanceThresholdMicros":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldLowBalanceThresholdMicros]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldLowBalanceThresholdMicros)
+				fieldSeen[billingnotificationsetting.FieldLowBalanceThresholdMicros] = struct{}{}
+			}
+		case "largeConsumptionThresholdMicros":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldLargeConsumptionThresholdMicros]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldLargeConsumptionThresholdMicros)
+				fieldSeen[billingnotificationsetting.FieldLargeConsumptionThresholdMicros] = struct{}{}
+			}
+		case "subscriptionExpiryWarningDays":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldSubscriptionExpiryWarningDays]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldSubscriptionExpiryWarningDays)
+				fieldSeen[billingnotificationsetting.FieldSubscriptionExpiryWarningDays] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[billingnotificationsetting.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, billingnotificationsetting.FieldCurrency)
+				fieldSeen[billingnotificationsetting.FieldCurrency] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type billingnotificationsettingPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []BillingNotificationSettingPaginateOption
+}
+
+func newBillingNotificationSettingPaginateArgs(rv map[string]any) *billingnotificationsettingPaginateArgs {
+	args := &billingnotificationsettingPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &BillingNotificationSettingOrder{Field: &BillingNotificationSettingOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithBillingNotificationSettingOrder(order))
+			}
+		case *BillingNotificationSettingOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithBillingNotificationSettingOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*BillingNotificationSettingWhereInput); ok {
+		args.opts = append(args.opts, WithBillingNotificationSettingFilter(v.Filter))
 	}
 	return args
 }
@@ -5652,6 +6266,95 @@ func (_q *PaymentOrderQuery) collectField(ctx context.Context, oneNode bool, opC
 				query = pager.applyOrder(query)
 			}
 			_q.WithNamedAffiliateRebates(alias, func(wq *AffiliateRebateQuery) {
+				*wq = *query
+			})
+
+		case "billingNotifications":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingNotificationClient{config: _q.config}).Query()
+			)
+			args := newBillingNotificationPaginateArgs(fieldArgs(ctx, new(BillingNotificationWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingNotificationPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*PaymentOrder) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"payment_order_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(paymentorder.BillingNotificationsColumn), ids...))
+						})
+						if err := query.GroupBy(paymentorder.BillingNotificationsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*PaymentOrder) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingNotifications)
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingnotificationImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(paymentorder.BillingNotificationsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingNotifications(alias, func(wq *BillingNotificationQuery) {
 				*wq = *query
 			})
 		case "createdAt":
@@ -10525,6 +11228,95 @@ func (_q *UsageBillingRecordQuery) collectField(ctx context.Context, oneNode boo
 				selectedFields = append(selectedFields, usagebillingrecord.FieldUserSubscriptionID)
 				fieldSeen[usagebillingrecord.FieldUserSubscriptionID] = struct{}{}
 			}
+
+		case "billingNotifications":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingNotificationClient{config: _q.config}).Query()
+			)
+			args := newBillingNotificationPaginateArgs(fieldArgs(ctx, new(BillingNotificationWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingNotificationPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UsageBillingRecord) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"usage_billing_record_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(usagebillingrecord.BillingNotificationsColumn), ids...))
+						})
+						if err := query.GroupBy(usagebillingrecord.BillingNotificationsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UsageBillingRecord) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingNotifications)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingnotificationImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(usagebillingrecord.BillingNotificationsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingNotifications(alias, func(wq *BillingNotificationQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[usagebillingrecord.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, usagebillingrecord.FieldCreatedAt)
@@ -12485,6 +13277,184 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				*wq = *query
 			})
 
+		case "billingNotificationPreferences":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingNotificationPreferenceClient{config: _q.config}).Query()
+			)
+			args := newBillingNotificationPreferencePaginateArgs(fieldArgs(ctx, new(BillingNotificationPreferenceWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingNotificationPreferencePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"user_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.BillingNotificationPreferencesColumn), ids...))
+						})
+						if err := query.GroupBy(user.BillingNotificationPreferencesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[15] == nil {
+								nodes[i].Edges.totalCount[15] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[15][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingNotificationPreferences)
+							if nodes[i].Edges.totalCount[15] == nil {
+								nodes[i].Edges.totalCount[15] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[15][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingnotificationpreferenceImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.BillingNotificationPreferencesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingNotificationPreferences(alias, func(wq *BillingNotificationPreferenceQuery) {
+				*wq = *query
+			})
+
+		case "billingNotifications":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingNotificationClient{config: _q.config}).Query()
+			)
+			args := newBillingNotificationPaginateArgs(fieldArgs(ctx, new(BillingNotificationWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingNotificationPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"user_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.BillingNotificationsColumn), ids...))
+						})
+						if err := query.GroupBy(user.BillingNotificationsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[16] == nil {
+								nodes[i].Edges.totalCount[16] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[16][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingNotifications)
+							if nodes[i].Edges.totalCount[16] == nil {
+								nodes[i].Edges.totalCount[16] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[16][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingnotificationImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.BillingNotificationsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingNotifications(alias, func(wq *BillingNotificationQuery) {
+				*wq = *query
+			})
+
 		case "projectUsers":
 			var (
 				alias = field.Alias
@@ -12528,10 +13498,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[15] == nil {
-								nodes[i].Edges.totalCount[15] = make(map[string]int)
+							if nodes[i].Edges.totalCount[17] == nil {
+								nodes[i].Edges.totalCount[17] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[15][alias] = n
+							nodes[i].Edges.totalCount[17][alias] = n
 						}
 						return nil
 					})
@@ -12539,10 +13509,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.ProjectUsers)
-							if nodes[i].Edges.totalCount[15] == nil {
-								nodes[i].Edges.totalCount[15] = make(map[string]int)
+							if nodes[i].Edges.totalCount[17] == nil {
+								nodes[i].Edges.totalCount[17] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[15][alias] = n
+							nodes[i].Edges.totalCount[17][alias] = n
 						}
 						return nil
 					})
@@ -12617,10 +13587,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[16] == nil {
-								nodes[i].Edges.totalCount[16] = make(map[string]int)
+							if nodes[i].Edges.totalCount[18] == nil {
+								nodes[i].Edges.totalCount[18] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[16][alias] = n
+							nodes[i].Edges.totalCount[18][alias] = n
 						}
 						return nil
 					})
@@ -12628,10 +13598,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UserRoles)
-							if nodes[i].Edges.totalCount[16] == nil {
-								nodes[i].Edges.totalCount[16] = make(map[string]int)
+							if nodes[i].Edges.totalCount[18] == nil {
+								nodes[i].Edges.totalCount[18] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[16][alias] = n
+							nodes[i].Edges.totalCount[18][alias] = n
 						}
 						return nil
 					})
@@ -13414,6 +14384,95 @@ func (_q *UserSubscriptionQuery) collectField(ctx context.Context, oneNode bool,
 				query = pager.applyOrder(query)
 			}
 			_q.WithNamedAffiliateRebates(alias, func(wq *AffiliateRebateQuery) {
+				*wq = *query
+			})
+
+		case "billingNotifications":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingNotificationClient{config: _q.config}).Query()
+			)
+			args := newBillingNotificationPaginateArgs(fieldArgs(ctx, new(BillingNotificationWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newBillingNotificationPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UserSubscription) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"user_subscription_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(usersubscription.BillingNotificationsColumn), ids...))
+						})
+						if err := query.GroupBy(usersubscription.BillingNotificationsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[8][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UserSubscription) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.BillingNotifications)
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[8][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, billingnotificationImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(usersubscription.BillingNotificationsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedBillingNotifications(alias, func(wq *BillingNotificationQuery) {
 				*wq = *query
 			})
 		case "createdAt":

@@ -420,6 +420,158 @@ var (
 			},
 		},
 	}
+	// BillingNotificationsColumns holds the columns for the "billing_notifications" table.
+	BillingNotificationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "audience", Type: field.TypeEnum, Enums: []string{"user", "operator"}, Default: "user"},
+		{Name: "category", Type: field.TypeEnum, Enums: []string{"low_balance", "payment", "subscription", "large_consumption", "operator_alert"}},
+		{Name: "severity", Type: field.TypeEnum, Enums: []string{"info", "warning", "error"}, Default: "info"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"unread", "read", "dismissed"}, Default: "unread"},
+		{Name: "event_key", Type: field.TypeString},
+		{Name: "title", Type: field.TypeString},
+		{Name: "message", Type: field.TypeString, Default: ""},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "amount_micros", Type: field.TypeInt64, Nullable: true},
+		{Name: "read_at", Type: field.TypeTime, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "billing_account_id", Type: field.TypeInt, Nullable: true},
+		{Name: "payment_order_id", Type: field.TypeInt, Nullable: true},
+		{Name: "usage_billing_record_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_subscription_id", Type: field.TypeInt, Nullable: true},
+	}
+	// BillingNotificationsTable holds the schema information for the "billing_notifications" table.
+	BillingNotificationsTable = &schema.Table{
+		Name:       "billing_notifications",
+		Columns:    BillingNotificationsColumns,
+		PrimaryKey: []*schema.Column{BillingNotificationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "billing_notifications_billing_accounts_billing_notifications",
+				Columns:    []*schema.Column{BillingNotificationsColumns[14]},
+				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "billing_notifications_payment_orders_billing_notifications",
+				Columns:    []*schema.Column{BillingNotificationsColumns[15]},
+				RefColumns: []*schema.Column{PaymentOrdersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "billing_notifications_usage_billing_records_billing_notifications",
+				Columns:    []*schema.Column{BillingNotificationsColumns[16]},
+				RefColumns: []*schema.Column{UsageBillingRecordsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "billing_notifications_users_billing_notifications",
+				Columns:    []*schema.Column{BillingNotificationsColumns[17]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "billing_notifications_user_subscriptions_billing_notifications",
+				Columns:    []*schema.Column{BillingNotificationsColumns[18]},
+				RefColumns: []*schema.Column{UserSubscriptionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "billing_notifications_by_event_key",
+				Unique:  true,
+				Columns: []*schema.Column{BillingNotificationsColumns[7]},
+			},
+			{
+				Name:    "billing_notifications_by_user_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{BillingNotificationsColumns[17], BillingNotificationsColumns[6], BillingNotificationsColumns[1]},
+			},
+			{
+				Name:    "billing_notifications_by_audience_category_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{BillingNotificationsColumns[3], BillingNotificationsColumns[4], BillingNotificationsColumns[1]},
+			},
+			{
+				Name:    "billing_notifications_by_payment_order",
+				Unique:  false,
+				Columns: []*schema.Column{BillingNotificationsColumns[15]},
+			},
+			{
+				Name:    "billing_notifications_by_user_subscription",
+				Unique:  false,
+				Columns: []*schema.Column{BillingNotificationsColumns[18]},
+			},
+			{
+				Name:    "billing_notifications_by_usage_record",
+				Unique:  false,
+				Columns: []*schema.Column{BillingNotificationsColumns[16]},
+			},
+		},
+	}
+	// BillingNotificationPreferencesColumns holds the columns for the "billing_notification_preferences" table.
+	BillingNotificationPreferencesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "low_balance_enabled", Type: field.TypeBool, Default: true},
+		{Name: "payment_enabled", Type: field.TypeBool, Default: true},
+		{Name: "subscription_enabled", Type: field.TypeBool, Default: true},
+		{Name: "large_consumption_enabled", Type: field.TypeBool, Default: true},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// BillingNotificationPreferencesTable holds the schema information for the "billing_notification_preferences" table.
+	BillingNotificationPreferencesTable = &schema.Table{
+		Name:       "billing_notification_preferences",
+		Columns:    BillingNotificationPreferencesColumns,
+		PrimaryKey: []*schema.Column{BillingNotificationPreferencesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "billing_notification_preferences_users_billing_notification_preferences",
+				Columns:    []*schema.Column{BillingNotificationPreferencesColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "billing_notification_preferences_by_user",
+				Unique:  true,
+				Columns: []*schema.Column{BillingNotificationPreferencesColumns[8]},
+			},
+		},
+	}
+	// BillingNotificationSettingsColumns holds the columns for the "billing_notification_settings" table.
+	BillingNotificationSettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "key", Type: field.TypeString, Default: "default"},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "user_notifications_enabled", Type: field.TypeBool, Default: true},
+		{Name: "operator_alerts_enabled", Type: field.TypeBool, Default: true},
+		{Name: "low_balance_threshold_micros", Type: field.TypeInt64, Default: 10000000},
+		{Name: "large_consumption_threshold_micros", Type: field.TypeInt64, Default: 100000000},
+		{Name: "subscription_expiry_warning_days", Type: field.TypeInt, Default: 3},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+	}
+	// BillingNotificationSettingsTable holds the schema information for the "billing_notification_settings" table.
+	BillingNotificationSettingsTable = &schema.Table{
+		Name:       "billing_notification_settings",
+		Columns:    BillingNotificationSettingsColumns,
+		PrimaryKey: []*schema.Column{BillingNotificationSettingsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "billing_notification_settings_by_key",
+				Unique:  true,
+				Columns: []*schema.Column{BillingNotificationSettingsColumns[3]},
+			},
+		},
+	}
 	// BillingOutboxesColumns holds the columns for the "billing_outboxes" table.
 	BillingOutboxesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -2055,6 +2207,9 @@ var (
 		BillingAccountsTable,
 		BillingAccountBindingsTable,
 		BillingHoldsTable,
+		BillingNotificationsTable,
+		BillingNotificationPreferencesTable,
+		BillingNotificationSettingsTable,
 		BillingOutboxesTable,
 		BillingPriceRulesTable,
 		ChannelsTable,
@@ -2112,6 +2267,12 @@ func init() {
 	BillingHoldsTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
 	BillingHoldsTable.ForeignKeys[2].RefTable = RequestsTable
 	BillingHoldsTable.ForeignKeys[3].RefTable = UsageLogsTable
+	BillingNotificationsTable.ForeignKeys[0].RefTable = BillingAccountsTable
+	BillingNotificationsTable.ForeignKeys[1].RefTable = PaymentOrdersTable
+	BillingNotificationsTable.ForeignKeys[2].RefTable = UsageBillingRecordsTable
+	BillingNotificationsTable.ForeignKeys[3].RefTable = UsersTable
+	BillingNotificationsTable.ForeignKeys[4].RefTable = UserSubscriptionsTable
+	BillingNotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable
 	ChannelModelPricesTable.ForeignKeys[0].RefTable = ChannelsTable
 	ChannelModelPriceVersionsTable.ForeignKeys[0].RefTable = ChannelModelPricesTable
 	ChannelOverrideTemplatesTable.ForeignKeys[0].RefTable = UsersTable

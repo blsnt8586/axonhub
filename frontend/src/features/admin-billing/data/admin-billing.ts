@@ -35,6 +35,10 @@ export type AffiliateProfileStatus = 'active' | 'disabled';
 export type AffiliateInvitationStatus = 'active' | 'canceled';
 export type AffiliateRebateStatus = 'frozen' | 'available' | 'transferred' | 'voided';
 export type AffiliateRebateSourceType = 'payment_order' | 'user_subscription';
+export type BillingNotificationAudience = 'user' | 'operator';
+export type BillingNotificationCategory = 'low_balance' | 'payment' | 'subscription' | 'large_consumption' | 'operator_alert';
+export type BillingNotificationSeverity = 'info' | 'warning' | 'error';
+export type BillingNotificationStatus = 'unread' | 'read' | 'dismissed';
 
 export interface BillingAccount {
   id: string;
@@ -331,6 +335,40 @@ export interface AffiliateRebate {
   transferredAt?: string | null;
 }
 
+export interface BillingNotificationSetting {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  enabled: boolean;
+  userNotificationsEnabled: boolean;
+  operatorAlertsEnabled: boolean;
+  lowBalanceThresholdMicros: number;
+  largeConsumptionThresholdMicros: number;
+  subscriptionExpiryWarningDays: number;
+  currency: string;
+}
+
+export interface BillingNotification {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  userID?: string | null;
+  audience: BillingNotificationAudience;
+  category: BillingNotificationCategory;
+  severity: BillingNotificationSeverity;
+  status: BillingNotificationStatus;
+  eventKey: string;
+  title: string;
+  message: string;
+  currency: string;
+  amountMicros?: number | null;
+  billingAccountID?: string | null;
+  paymentOrderID?: string | null;
+  userSubscriptionID?: string | null;
+  usageBillingRecordID?: string | null;
+  readAt?: string | null;
+}
+
 export interface AdminLedgerTransactionsFilter {
   userId?: number;
   billingAccountId?: number;
@@ -449,6 +487,21 @@ export interface AdminAffiliateRebatesFilter {
   from?: string;
   to?: string;
   transferableBefore?: string;
+}
+
+export interface AdminBillingNotificationsFilter {
+  userId?: number;
+  audience?: BillingNotificationAudience;
+  category?: BillingNotificationCategory;
+  severity?: BillingNotificationSeverity;
+  status?: BillingNotificationStatus;
+  eventKey?: string;
+  billingAccountId?: number;
+  paymentOrderId?: number;
+  userSubscriptionId?: number;
+  usageBillingRecordId?: number;
+  from?: string;
+  to?: string;
 }
 
 export interface AdminBillingReportFilter {
@@ -960,6 +1013,52 @@ const ADMIN_AFFILIATE_REBATES_QUERY = `
   }
 `;
 
+const ADMIN_BILLING_NOTIFICATION_SETTING_QUERY = `
+  query AdminBillingNotificationSetting {
+    adminBillingNotificationSetting {
+      id
+      createdAt
+      updatedAt
+      enabled
+      userNotificationsEnabled
+      operatorAlertsEnabled
+      lowBalanceThresholdMicros
+      largeConsumptionThresholdMicros
+      subscriptionExpiryWarningDays
+      currency
+    }
+  }
+`;
+
+const ADMIN_BILLING_NOTIFICATIONS_QUERY = `
+  query AdminBillingNotifications($filter: AdminBillingNotificationsFilter, $first: Int!) {
+    adminBillingNotifications(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          userID
+          audience
+          category
+          severity
+          status
+          eventKey
+          title
+          message
+          currency
+          amountMicros
+          billingAccountID
+          paymentOrderID
+          userSubscriptionID
+          usageBillingRecordID
+          readAt
+        }
+      }
+    }
+  }
+`;
+
 const ADMIN_SUBSCRIPTION_PLANS_QUERY = `
   query AdminSubscriptionPlans($first: Int!) {
     subscriptionPlans(first: $first, orderBy: { field: CREATED_AT, direction: ASC }) {
@@ -1335,6 +1434,23 @@ const SAVE_AFFILIATE_PROFILE_MUTATION = `
   }
 `;
 
+const SAVE_BILLING_NOTIFICATION_SETTING_MUTATION = `
+  mutation SaveBillingNotificationSetting($input: SaveBillingNotificationSettingInput!) {
+    saveBillingNotificationSetting(input: $input) {
+      id
+      createdAt
+      updatedAt
+      enabled
+      userNotificationsEnabled
+      operatorAlertsEnabled
+      lowBalanceThresholdMicros
+      largeConsumptionThresholdMicros
+      subscriptionExpiryWarningDays
+      currency
+    }
+  }
+`;
+
 const SAVE_SUBSCRIPTION_PLAN_MUTATION = `
   mutation SaveSubscriptionPlan($input: SaveSubscriptionPlanInput!) {
     saveSubscriptionPlan(input: $input) {
@@ -1584,6 +1700,26 @@ export function useAdminAffiliateRebates(filter: AdminAffiliateRebatesFilter = {
     queryFn: async () => {
       const data = await graphqlRequest<{ adminAffiliateRebates: Connection<AffiliateRebate> }>(ADMIN_AFFILIATE_REBATES_QUERY, { filter, first });
       return nodes(data.adminAffiliateRebates);
+    },
+  });
+}
+
+export function useAdminBillingNotificationSetting() {
+  return useQuery({
+    queryKey: ['admin-billing', 'notification-setting'],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminBillingNotificationSetting: BillingNotificationSetting }>(ADMIN_BILLING_NOTIFICATION_SETTING_QUERY);
+      return data.adminBillingNotificationSetting;
+    },
+  });
+}
+
+export function useAdminBillingNotifications(filter: AdminBillingNotificationsFilter = {}, first = 50) {
+  return useQuery({
+    queryKey: ['admin-billing', 'notifications', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminBillingNotifications: Connection<BillingNotification> }>(ADMIN_BILLING_NOTIFICATIONS_QUERY, { filter, first });
+      return nodes(data.adminBillingNotifications);
     },
   });
 }
@@ -1936,6 +2072,33 @@ export function useSaveAffiliateProfile() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'affiliate-profiles'] });
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'affiliate-rebates'] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useSaveBillingNotificationSetting() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      enabled: boolean;
+      userNotificationsEnabled: boolean;
+      operatorAlertsEnabled: boolean;
+      lowBalanceThreshold: string;
+      largeConsumptionThreshold: string;
+      subscriptionExpiryWarningDays: number;
+      currency?: string;
+    }) => {
+      const data = await graphqlRequest<{ saveBillingNotificationSetting: BillingNotificationSetting }>(
+        SAVE_BILLING_NOTIFICATION_SETTING_MUTATION,
+        { input }
+      );
+      return data.saveBillingNotificationSetting;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'notification-setting'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'notifications'] });
       void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
     },
   });

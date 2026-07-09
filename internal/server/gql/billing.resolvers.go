@@ -18,6 +18,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/affiliateinvitation"
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/promocode"
 	"github.com/looplj/axonhub/internal/ent/promousage"
@@ -500,6 +501,53 @@ func (r *mutationResolver) SaveAffiliateProfile(ctx context.Context, input biz.S
 	})
 }
 
+// SaveMyBillingNotificationPreference is the resolver for the saveMyBillingNotificationPreference field.
+func (r *mutationResolver) SaveMyBillingNotificationPreference(ctx context.Context, input biz.SaveBillingNotificationPreferenceInput) (*ent.BillingNotificationPreference, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	input.UserID = user.ID
+	return authz.RunWithSystemBypass(ctx, "billing-save-my-notification-preference", func(ctx context.Context) (*ent.BillingNotificationPreference, error) {
+		return r.billingNotificationService.SavePreference(ctx, input)
+	})
+}
+
+// MarkBillingNotificationRead is the resolver for the markBillingNotificationRead field.
+func (r *mutationResolver) MarkBillingNotificationRead(ctx context.Context, id objects.GUID) (*ent.BillingNotification, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if id.Type != ent.TypeBillingNotification {
+		return nil, fmt.Errorf("id must be a BillingNotification ID")
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-mark-notification-read", func(ctx context.Context) (*ent.BillingNotification, error) {
+		return r.billingNotificationService.MarkRead(ctx, user.ID, id.ID)
+	})
+}
+
+// MarkAllBillingNotificationsRead is the resolver for the markAllBillingNotificationsRead field.
+func (r *mutationResolver) MarkAllBillingNotificationsRead(ctx context.Context) (int, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-mark-all-notifications-read", func(ctx context.Context) (int, error) {
+		return r.billingNotificationService.MarkAllRead(ctx, user.ID)
+	})
+}
+
+// SaveBillingNotificationSetting is the resolver for the saveBillingNotificationSetting field.
+func (r *mutationResolver) SaveBillingNotificationSetting(ctx context.Context, input biz.SaveBillingNotificationSettingInput) (*ent.BillingNotificationSetting, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-save-notification-setting", func(ctx context.Context) (*ent.BillingNotificationSetting, error) {
+		return r.billingNotificationService.SaveSetting(ctx, input)
+	})
+}
+
 // ReleaseBillingHold is the resolver for the releaseBillingHold field.
 func (r *mutationResolver) ReleaseBillingHold(ctx context.Context, id objects.GUID, reason string) (*ent.BillingHold, error) {
 	actor, err := requireOwnerUser(ctx)
@@ -915,6 +963,33 @@ func (r *queryResolver) MyAffiliateRebates(ctx context.Context, after *entgql.Cu
 	})
 }
 
+// MyBillingNotificationPreference is the resolver for the myBillingNotificationPreference field.
+func (r *queryResolver) MyBillingNotificationPreference(ctx context.Context) (*ent.BillingNotificationPreference, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-my-notification-preference", func(ctx context.Context) (*ent.BillingNotificationPreference, error) {
+		return r.billingNotificationService.PreferenceOrDefault(ctx, user.ID)
+	})
+}
+
+// MyBillingNotifications is the resolver for the myBillingNotifications field.
+func (r *queryResolver) MyBillingNotifications(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder) (*ent.BillingNotificationConnection, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-my-notifications", func(ctx context.Context) (*ent.BillingNotificationConnection, error) {
+		return r.client.BillingNotification.Query().
+			Where(billingnotification.UserIDEQ(user.ID)).
+			Paginate(ctx, after, first, before, last, ent.WithBillingNotificationOrder(orderBy))
+	})
+}
+
 // AdminAffiliateSetting is the resolver for the adminAffiliateSetting field.
 func (r *queryResolver) AdminAffiliateSetting(ctx context.Context) (*ent.AffiliateSetting, error) {
 	if err := requireOwner(ctx); err != nil {
@@ -1009,6 +1084,68 @@ func (r *queryResolver) AdminAffiliateRebates(ctx context.Context, filter *Admin
 			}
 		}
 		return query.Paginate(ctx, after, first, before, last, ent.WithAffiliateRebateOrder(orderBy))
+	})
+}
+
+// AdminBillingNotificationSetting is the resolver for the adminBillingNotificationSetting field.
+func (r *queryResolver) AdminBillingNotificationSetting(ctx context.Context) (*ent.BillingNotificationSetting, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-admin-notification-setting", func(ctx context.Context) (*ent.BillingNotificationSetting, error) {
+		return r.billingNotificationService.SettingOrDefault(ctx)
+	})
+}
+
+// AdminBillingNotifications is the resolver for the adminBillingNotifications field.
+func (r *queryResolver) AdminBillingNotifications(ctx context.Context, filter *AdminBillingNotificationsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder) (*ent.BillingNotificationConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return authz.RunWithSystemBypass(ctx, "billing-admin-notifications", func(ctx context.Context) (*ent.BillingNotificationConnection, error) {
+		query := r.client.BillingNotification.Query()
+		if filter != nil {
+			if filter.UserID != nil {
+				query.Where(billingnotification.UserIDEQ(*filter.UserID))
+			}
+			if filter.Audience != nil {
+				query.Where(billingnotification.AudienceEQ(*filter.Audience))
+			}
+			if filter.Category != nil {
+				query.Where(billingnotification.CategoryEQ(*filter.Category))
+			}
+			if filter.Severity != nil {
+				query.Where(billingnotification.SeverityEQ(*filter.Severity))
+			}
+			if filter.Status != nil {
+				query.Where(billingnotification.StatusEQ(*filter.Status))
+			}
+			if filter.EventKey != nil && strings.TrimSpace(*filter.EventKey) != "" {
+				query.Where(billingnotification.EventKeyContainsFold(strings.TrimSpace(*filter.EventKey)))
+			}
+			if filter.BillingAccountID != nil {
+				query.Where(billingnotification.BillingAccountIDEQ(*filter.BillingAccountID))
+			}
+			if filter.PaymentOrderID != nil {
+				query.Where(billingnotification.PaymentOrderIDEQ(*filter.PaymentOrderID))
+			}
+			if filter.UserSubscriptionID != nil {
+				query.Where(billingnotification.UserSubscriptionIDEQ(*filter.UserSubscriptionID))
+			}
+			if filter.UsageBillingRecordID != nil {
+				query.Where(billingnotification.UsageBillingRecordIDEQ(*filter.UsageBillingRecordID))
+			}
+			if filter.From != nil {
+				query.Where(billingnotification.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(billingnotification.CreatedAtLTE(*filter.To))
+			}
+		}
+		return query.Paginate(ctx, after, first, before, last, ent.WithBillingNotificationOrder(orderBy))
 	})
 }
 

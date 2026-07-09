@@ -325,6 +325,39 @@ input AdminAffiliateRebatesFilter {
   transferableBefore: Time
 }
 
+input SaveBillingNotificationSettingInput {
+  enabled: Boolean!
+  userNotificationsEnabled: Boolean!
+  operatorAlertsEnabled: Boolean!
+  lowBalanceThreshold: DecimalInput!
+  largeConsumptionThreshold: DecimalInput!
+  subscriptionExpiryWarningDays: Int!
+  currency: String
+}
+
+input SaveBillingNotificationPreferenceInput {
+  enabled: Boolean!
+  lowBalanceEnabled: Boolean!
+  paymentEnabled: Boolean!
+  subscriptionEnabled: Boolean!
+  largeConsumptionEnabled: Boolean!
+}
+
+input AdminBillingNotificationsFilter {
+  userId: Int
+  audience: BillingNotificationAudience
+  category: BillingNotificationCategory
+  severity: BillingNotificationSeverity
+  status: BillingNotificationStatus
+  eventKey: String
+  billingAccountId: Int
+  paymentOrderId: Int
+  userSubscriptionId: Int
+  usageBillingRecordId: Int
+  from: Time
+  to: Time
+}
+
 input AdminBillingReportFilter {
   from: Time
   to: Time
@@ -464,6 +497,10 @@ extend type Mutation {
   transferAffiliateRebates: AffiliateTransferResult!
   saveAffiliateSetting(input: SaveAffiliateSettingInput!): AffiliateSetting!
   saveAffiliateProfile(input: SaveAffiliateProfileInput!): AffiliateProfile!
+  saveMyBillingNotificationPreference(input: SaveBillingNotificationPreferenceInput!): BillingNotificationPreference!
+  markBillingNotificationRead(id: ID!): BillingNotification!
+  markAllBillingNotificationsRead: Int!
+  saveBillingNotificationSetting(input: SaveBillingNotificationSettingInput!): BillingNotificationSetting!
   releaseBillingHold(id: ID!, reason: String!): BillingHold!
   saveBillingPriceRule(input: SaveBillingPriceRuleForm!): BillingPriceRule!
   deleteBillingPriceRule(id: ID!): Boolean!
@@ -495,10 +532,14 @@ extend type Query {
   myAffiliateSummary: AffiliateSummary!
   myAffiliateInvitations(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateInvitationOrder): AffiliateInvitationConnection!
   myAffiliateRebates(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateRebateOrder): AffiliateRebateConnection!
+  myBillingNotificationPreference: BillingNotificationPreference!
+  myBillingNotifications(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: BillingNotificationOrder): BillingNotificationConnection!
   adminAffiliateSetting: AffiliateSetting!
   adminAffiliateProfiles(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateProfileOrder): AffiliateProfileConnection!
   adminAffiliateInvitations(filter: AdminAffiliateInvitationsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateInvitationOrder): AffiliateInvitationConnection!
   adminAffiliateRebates(filter: AdminAffiliateRebatesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: AffiliateRebateOrder): AffiliateRebateConnection!
+  adminBillingNotificationSetting: BillingNotificationSetting!
+  adminBillingNotifications(filter: AdminBillingNotificationsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: BillingNotificationOrder): BillingNotificationConnection!
   adminUserSubscriptions(filter: AdminUserSubscriptionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UserSubscriptionOrder): UserSubscriptionConnection!
   adminBillingReport(filter: AdminBillingReportFilter): BillingCommercialReport!
   exportAdminBillingCSV(input: ExportAdminBillingCSVInput!): BillingCSVExportPayload!

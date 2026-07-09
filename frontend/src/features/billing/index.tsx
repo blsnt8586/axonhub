@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { AlertCircle, CreditCard, ExternalLink, Loader2, PackageCheck, RefreshCw, ShieldCheck, Ticket, UserPlus, Users, Wallet } from 'lucide-react';
+import { AlertCircle, Bell, CreditCard, ExternalLink, Loader2, PackageCheck, RefreshCw, ShieldCheck, Ticket, UserPlus, Users, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -13,15 +13,19 @@ import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import {
   type PromoQuote,
+  type BillingNotificationPreference,
   type SubscriptionPlan,
   type UserSubscription,
   useCreateMyEPayRechargeCheckout,
   useBindAffiliateInvite,
+  useMarkAllBillingNotificationsRead,
+  useMarkBillingNotificationRead,
   useMyBillingOverview,
   usePurchaseSubscriptionPlan,
   useQuoteRechargePromo,
   useQuoteSubscriptionPromo,
   useRedeemCode,
+  useSaveMyBillingNotificationPreference,
   useTransferAffiliateRebates,
 } from './data/billing';
 
@@ -110,6 +114,9 @@ export default function BillingPage() {
   const purchaseSubscriptionPlan = usePurchaseSubscriptionPlan();
   const bindAffiliateInvite = useBindAffiliateInvite();
   const transferAffiliateRebates = useTransferAffiliateRebates();
+  const saveNotificationPreference = useSaveMyBillingNotificationPreference();
+  const markNotificationRead = useMarkBillingNotificationRead();
+  const markAllNotificationsRead = useMarkAllBillingNotificationsRead();
 
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
   const currency = data?.account.currency || 'CNY';
@@ -129,6 +136,7 @@ export default function BillingPage() {
   const held = data ? microsToAmount(data.account.heldBalanceMicros) : 0;
   const creditLimit = data ? microsToAmount(data.account.creditLimitMicros) : 0;
   const available = balance + creditLimit - held;
+  const unreadNotificationCount = data?.notifications.filter((notification) => notification.status === 'unread').length ?? 0;
 
   async function handleRecharge(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -214,6 +222,46 @@ export default function BillingPage() {
         count: result.transferredCount,
         amount: formatCurrency.format(microsToAmount(result.transferredMicros)),
       }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('common.errors.unknownError');
+      toast.error(message);
+    }
+  }
+
+  async function handleToggleNotificationPreference(key: keyof Omit<BillingNotificationPreference, 'id'>) {
+    if (!data?.notificationPreference) {
+      return;
+    }
+    const current = data.notificationPreference;
+    try {
+      await saveNotificationPreference.mutateAsync({
+        enabled: current.enabled,
+        lowBalanceEnabled: current.lowBalanceEnabled,
+        paymentEnabled: current.paymentEnabled,
+        subscriptionEnabled: current.subscriptionEnabled,
+        largeConsumptionEnabled: current.largeConsumptionEnabled,
+        [key]: !current[key],
+      });
+      toast.success(t('billing.notifications.preferenceSaved'));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('common.errors.unknownError');
+      toast.error(message);
+    }
+  }
+
+  async function handleMarkNotificationRead(id: string) {
+    try {
+      await markNotificationRead.mutateAsync(id);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('common.errors.unknownError');
+      toast.error(message);
+    }
+  }
+
+  async function handleMarkAllNotificationsRead() {
+    try {
+      const count = await markAllNotificationsRead.mutateAsync();
+      toast.success(t('billing.notifications.markAllSuccess', { count }));
     } catch (err) {
       const message = err instanceof Error ? err.message : t('common.errors.unknownError');
       toast.error(message);
@@ -492,6 +540,85 @@ export default function BillingPage() {
                   {transferAffiliateRebates.isPending ? <Loader2 className='size-4 animate-spin' /> : <Wallet className='size-4' />}
                   {t('billing.affiliate.transfer')}
                 </Button>
+              </CardContent>
+            </Card>
+
+            <Card className='rounded-lg'>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2 text-base'>
+                  <Bell className='size-4' />
+                  {t('billing.notifications.title')}
+                  {unreadNotificationCount > 0 && <Badge variant='destructive'>{unreadNotificationCount}</Badge>}
+                </CardTitle>
+                <CardDescription>{t('billing.notifications.description')}</CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <div className='grid gap-2 text-sm'>
+                  {[
+                    ['enabled', t('billing.notifications.pref.enabled')],
+                    ['lowBalanceEnabled', t('billing.notifications.pref.lowBalance')],
+                    ['paymentEnabled', t('billing.notifications.pref.payment')],
+                    ['subscriptionEnabled', t('billing.notifications.pref.subscription')],
+                    ['largeConsumptionEnabled', t('billing.notifications.pref.largeConsumption')],
+                  ].map(([key, label]) => (
+                    <label key={key} className='flex items-center justify-between gap-3 rounded-md border px-3 py-2'>
+                      <span>{label}</span>
+                      <input
+                        type='checkbox'
+                        className='size-4'
+                        checked={Boolean(data?.notificationPreference[key as keyof BillingNotificationPreference])}
+                        disabled={saveNotificationPreference.isPending || !data?.notificationPreference}
+                        onChange={() => void handleToggleNotificationPreference(key as keyof Omit<BillingNotificationPreference, 'id'>)}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <div className='flex justify-end'>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant='outline'
+                    disabled={markAllNotificationsRead.isPending || unreadNotificationCount === 0}
+                    onClick={() => void handleMarkAllNotificationsRead()}
+                  >
+                    {markAllNotificationsRead.isPending ? <Loader2 className='size-4 animate-spin' /> : <Bell className='size-4' />}
+                    {t('billing.notifications.markAllRead')}
+                  </Button>
+                </div>
+                <div className='space-y-2'>
+                  {(data?.notifications ?? []).length === 0 ? (
+                    <div className='text-muted-foreground rounded-md border p-4 text-center text-sm'>{isLoading ? t('common.loading') : t('common.noData')}</div>
+                  ) : (
+                    data?.notifications.slice(0, 5).map((notification) => (
+                      <div key={notification.id} className='rounded-md border p-3 text-sm'>
+                        <div className='flex items-start justify-between gap-3'>
+                          <div className='min-w-0'>
+                            <div className='flex flex-wrap items-center gap-2'>
+                              <span className='truncate font-medium'>{notification.title}</span>
+                              <Badge variant={notification.status === 'unread' ? 'default' : 'secondary'}>{notification.status}</Badge>
+                              <Badge variant={notification.severity === 'error' ? 'destructive' : 'outline'}>{notification.category}</Badge>
+                            </div>
+                            <div className='text-muted-foreground mt-1 line-clamp-2'>{notification.message || formatDate(notification.createdAt)}</div>
+                            {typeof notification.amountMicros === 'number' && (
+                              <div className='mt-1 font-mono text-xs'>{formatCurrency.format(microsToAmount(notification.amountMicros))}</div>
+                            )}
+                          </div>
+                          {notification.status === 'unread' && (
+                            <Button
+                              type='button'
+                              size='sm'
+                              variant='ghost'
+                              disabled={markNotificationRead.isPending}
+                              onClick={() => void handleMarkNotificationRead(notification.id)}
+                            >
+                              {t('billing.notifications.markRead')}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>

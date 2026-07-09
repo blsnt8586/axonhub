@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/promocode"
 	"github.com/looplj/axonhub/internal/ent/promousage"
@@ -396,6 +397,21 @@ func (_c *UserSubscriptionCreate) AddAffiliateRebates(v ...*AffiliateRebate) *Us
 		ids[i] = v[i].ID
 	}
 	return _c.AddAffiliateRebateIDs(ids...)
+}
+
+// AddBillingNotificationIDs adds the "billing_notifications" edge to the BillingNotification entity by IDs.
+func (_c *UserSubscriptionCreate) AddBillingNotificationIDs(ids ...int) *UserSubscriptionCreate {
+	_c.mutation.AddBillingNotificationIDs(ids...)
+	return _c
+}
+
+// AddBillingNotifications adds the "billing_notifications" edges to the BillingNotification entity.
+func (_c *UserSubscriptionCreate) AddBillingNotifications(v ...*BillingNotification) *UserSubscriptionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBillingNotificationIDs(ids...)
 }
 
 // Mutation returns the UserSubscriptionMutation object of the builder.
@@ -834,6 +850,22 @@ func (_c *UserSubscriptionCreate) createSpec() (*UserSubscription, *sqlgraph.Cre
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(affiliaterebate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BillingNotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.BillingNotificationsTable,
+			Columns: []string{usersubscription.BillingNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(billingnotification.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

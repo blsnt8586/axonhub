@@ -17,6 +17,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationsetting"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -352,6 +355,87 @@ func (f TraverseBillingHold) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.BillingHoldQuery", q)
+}
+
+// The BillingNotificationFunc type is an adapter to allow the use of ordinary function as a Querier.
+type BillingNotificationFunc func(context.Context, *ent.BillingNotificationQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f BillingNotificationFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.BillingNotificationQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.BillingNotificationQuery", q)
+}
+
+// The TraverseBillingNotification type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseBillingNotification func(context.Context, *ent.BillingNotificationQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseBillingNotification) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseBillingNotification) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingNotificationQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.BillingNotificationQuery", q)
+}
+
+// The BillingNotificationPreferenceFunc type is an adapter to allow the use of ordinary function as a Querier.
+type BillingNotificationPreferenceFunc func(context.Context, *ent.BillingNotificationPreferenceQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f BillingNotificationPreferenceFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.BillingNotificationPreferenceQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.BillingNotificationPreferenceQuery", q)
+}
+
+// The TraverseBillingNotificationPreference type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseBillingNotificationPreference func(context.Context, *ent.BillingNotificationPreferenceQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseBillingNotificationPreference) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseBillingNotificationPreference) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingNotificationPreferenceQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.BillingNotificationPreferenceQuery", q)
+}
+
+// The BillingNotificationSettingFunc type is an adapter to allow the use of ordinary function as a Querier.
+type BillingNotificationSettingFunc func(context.Context, *ent.BillingNotificationSettingQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f BillingNotificationSettingFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.BillingNotificationSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.BillingNotificationSettingQuery", q)
+}
+
+// The TraverseBillingNotificationSetting type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseBillingNotificationSetting func(context.Context, *ent.BillingNotificationSettingQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseBillingNotificationSetting) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseBillingNotificationSetting) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingNotificationSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.BillingNotificationSettingQuery", q)
 }
 
 // The BillingOutboxFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -1320,6 +1404,12 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.BillingAccountBindingQuery, predicate.BillingAccountBinding, billingaccountbinding.OrderOption]{typ: ent.TypeBillingAccountBinding, tq: q}, nil
 	case *ent.BillingHoldQuery:
 		return &query[*ent.BillingHoldQuery, predicate.BillingHold, billinghold.OrderOption]{typ: ent.TypeBillingHold, tq: q}, nil
+	case *ent.BillingNotificationQuery:
+		return &query[*ent.BillingNotificationQuery, predicate.BillingNotification, billingnotification.OrderOption]{typ: ent.TypeBillingNotification, tq: q}, nil
+	case *ent.BillingNotificationPreferenceQuery:
+		return &query[*ent.BillingNotificationPreferenceQuery, predicate.BillingNotificationPreference, billingnotificationpreference.OrderOption]{typ: ent.TypeBillingNotificationPreference, tq: q}, nil
+	case *ent.BillingNotificationSettingQuery:
+		return &query[*ent.BillingNotificationSettingQuery, predicate.BillingNotificationSetting, billingnotificationsetting.OrderOption]{typ: ent.TypeBillingNotificationSetting, tq: q}, nil
 	case *ent.BillingOutboxQuery:
 		return &query[*ent.BillingOutboxQuery, predicate.BillingOutbox, billingoutbox.OrderOption]{typ: ent.TypeBillingOutbox, tq: q}, nil
 	case *ent.BillingPriceRuleQuery:

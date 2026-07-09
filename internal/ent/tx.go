@@ -30,6 +30,12 @@ type Tx struct {
 	BillingAccountBinding *BillingAccountBindingClient
 	// BillingHold is the client for interacting with the BillingHold builders.
 	BillingHold *BillingHoldClient
+	// BillingNotification is the client for interacting with the BillingNotification builders.
+	BillingNotification *BillingNotificationClient
+	// BillingNotificationPreference is the client for interacting with the BillingNotificationPreference builders.
+	BillingNotificationPreference *BillingNotificationPreferenceClient
+	// BillingNotificationSetting is the client for interacting with the BillingNotificationSetting builders.
+	BillingNotificationSetting *BillingNotificationSettingClient
 	// BillingOutbox is the client for interacting with the BillingOutbox builders.
 	BillingOutbox *BillingOutboxClient
 	// BillingPriceRule is the client for interacting with the BillingPriceRule builders.
@@ -240,6 +246,9 @@ func (tx *Tx) init() {
 	tx.BillingAccount = NewBillingAccountClient(tx.config)
 	tx.BillingAccountBinding = NewBillingAccountBindingClient(tx.config)
 	tx.BillingHold = NewBillingHoldClient(tx.config)
+	tx.BillingNotification = NewBillingNotificationClient(tx.config)
+	tx.BillingNotificationPreference = NewBillingNotificationPreferenceClient(tx.config)
+	tx.BillingNotificationSetting = NewBillingNotificationSettingClient(tx.config)
 	tx.BillingOutbox = NewBillingOutboxClient(tx.config)
 	tx.BillingPriceRule = NewBillingPriceRuleClient(tx.config)
 	tx.Channel = NewChannelClient(tx.config)

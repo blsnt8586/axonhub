@@ -23,6 +23,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationsetting"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -2962,6 +2965,948 @@ func (_m *BillingHold) ToEdge(order *BillingHoldOrder) *BillingHoldEdge {
 		order = DefaultBillingHoldOrder
 	}
 	return &BillingHoldEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// BillingNotificationEdge is the edge representation of BillingNotification.
+type BillingNotificationEdge struct {
+	Node   *BillingNotification `json:"node"`
+	Cursor Cursor               `json:"cursor"`
+}
+
+// BillingNotificationConnection is the connection containing edges to BillingNotification.
+type BillingNotificationConnection struct {
+	Edges      []*BillingNotificationEdge `json:"edges"`
+	PageInfo   PageInfo                   `json:"pageInfo"`
+	TotalCount int                        `json:"totalCount"`
+}
+
+func (c *BillingNotificationConnection) build(nodes []*BillingNotification, pager *billingnotificationPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *BillingNotification
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *BillingNotification {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *BillingNotification {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*BillingNotificationEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &BillingNotificationEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// BillingNotificationPaginateOption enables pagination customization.
+type BillingNotificationPaginateOption func(*billingnotificationPager) error
+
+// WithBillingNotificationOrder configures pagination ordering.
+func WithBillingNotificationOrder(order *BillingNotificationOrder) BillingNotificationPaginateOption {
+	if order == nil {
+		order = DefaultBillingNotificationOrder
+	}
+	o := *order
+	return func(pager *billingnotificationPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultBillingNotificationOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithBillingNotificationFilter configures pagination filter.
+func WithBillingNotificationFilter(filter func(*BillingNotificationQuery) (*BillingNotificationQuery, error)) BillingNotificationPaginateOption {
+	return func(pager *billingnotificationPager) error {
+		if filter == nil {
+			return errors.New("BillingNotificationQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type billingnotificationPager struct {
+	reverse bool
+	order   *BillingNotificationOrder
+	filter  func(*BillingNotificationQuery) (*BillingNotificationQuery, error)
+}
+
+func newBillingNotificationPager(opts []BillingNotificationPaginateOption, reverse bool) (*billingnotificationPager, error) {
+	pager := &billingnotificationPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultBillingNotificationOrder
+	}
+	return pager, nil
+}
+
+func (p *billingnotificationPager) applyFilter(query *BillingNotificationQuery) (*BillingNotificationQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *billingnotificationPager) toCursor(_m *BillingNotification) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *billingnotificationPager) applyCursors(query *BillingNotificationQuery, after, before *Cursor) (*BillingNotificationQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultBillingNotificationOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *billingnotificationPager) applyOrder(query *BillingNotificationQuery) *BillingNotificationQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultBillingNotificationOrder.Field {
+		query = query.Order(DefaultBillingNotificationOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *billingnotificationPager) orderExpr(query *BillingNotificationQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultBillingNotificationOrder.Field {
+			b.Comma().Ident(DefaultBillingNotificationOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to BillingNotification.
+func (_m *BillingNotificationQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...BillingNotificationPaginateOption,
+) (*BillingNotificationConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newBillingNotificationPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &BillingNotificationConnection{Edges: []*BillingNotificationEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// BillingNotificationOrderFieldCreatedAt orders BillingNotification by created_at.
+	BillingNotificationOrderFieldCreatedAt = &BillingNotificationOrderField{
+		Value: func(_m *BillingNotification) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: billingnotification.FieldCreatedAt,
+		toTerm: billingnotification.ByCreatedAt,
+		toCursor: func(_m *BillingNotification) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// BillingNotificationOrderFieldUpdatedAt orders BillingNotification by updated_at.
+	BillingNotificationOrderFieldUpdatedAt = &BillingNotificationOrderField{
+		Value: func(_m *BillingNotification) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: billingnotification.FieldUpdatedAt,
+		toTerm: billingnotification.ByUpdatedAt,
+		toCursor: func(_m *BillingNotification) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f BillingNotificationOrderField) String() string {
+	var str string
+	switch f.column {
+	case BillingNotificationOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case BillingNotificationOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f BillingNotificationOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *BillingNotificationOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("BillingNotificationOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *BillingNotificationOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *BillingNotificationOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid BillingNotificationOrderField", str)
+	}
+	return nil
+}
+
+// BillingNotificationOrderField defines the ordering field of BillingNotification.
+type BillingNotificationOrderField struct {
+	// Value extracts the ordering value from the given BillingNotification.
+	Value    func(*BillingNotification) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) billingnotification.OrderOption
+	toCursor func(*BillingNotification) Cursor
+}
+
+// BillingNotificationOrder defines the ordering of BillingNotification.
+type BillingNotificationOrder struct {
+	Direction OrderDirection                 `json:"direction"`
+	Field     *BillingNotificationOrderField `json:"field"`
+}
+
+// DefaultBillingNotificationOrder is the default ordering of BillingNotification.
+var DefaultBillingNotificationOrder = &BillingNotificationOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &BillingNotificationOrderField{
+		Value: func(_m *BillingNotification) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: billingnotification.FieldID,
+		toTerm: billingnotification.ByID,
+		toCursor: func(_m *BillingNotification) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts BillingNotification into BillingNotificationEdge.
+func (_m *BillingNotification) ToEdge(order *BillingNotificationOrder) *BillingNotificationEdge {
+	if order == nil {
+		order = DefaultBillingNotificationOrder
+	}
+	return &BillingNotificationEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// BillingNotificationPreferenceEdge is the edge representation of BillingNotificationPreference.
+type BillingNotificationPreferenceEdge struct {
+	Node   *BillingNotificationPreference `json:"node"`
+	Cursor Cursor                         `json:"cursor"`
+}
+
+// BillingNotificationPreferenceConnection is the connection containing edges to BillingNotificationPreference.
+type BillingNotificationPreferenceConnection struct {
+	Edges      []*BillingNotificationPreferenceEdge `json:"edges"`
+	PageInfo   PageInfo                             `json:"pageInfo"`
+	TotalCount int                                  `json:"totalCount"`
+}
+
+func (c *BillingNotificationPreferenceConnection) build(nodes []*BillingNotificationPreference, pager *billingnotificationpreferencePager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *BillingNotificationPreference
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *BillingNotificationPreference {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *BillingNotificationPreference {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*BillingNotificationPreferenceEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &BillingNotificationPreferenceEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// BillingNotificationPreferencePaginateOption enables pagination customization.
+type BillingNotificationPreferencePaginateOption func(*billingnotificationpreferencePager) error
+
+// WithBillingNotificationPreferenceOrder configures pagination ordering.
+func WithBillingNotificationPreferenceOrder(order *BillingNotificationPreferenceOrder) BillingNotificationPreferencePaginateOption {
+	if order == nil {
+		order = DefaultBillingNotificationPreferenceOrder
+	}
+	o := *order
+	return func(pager *billingnotificationpreferencePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultBillingNotificationPreferenceOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithBillingNotificationPreferenceFilter configures pagination filter.
+func WithBillingNotificationPreferenceFilter(filter func(*BillingNotificationPreferenceQuery) (*BillingNotificationPreferenceQuery, error)) BillingNotificationPreferencePaginateOption {
+	return func(pager *billingnotificationpreferencePager) error {
+		if filter == nil {
+			return errors.New("BillingNotificationPreferenceQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type billingnotificationpreferencePager struct {
+	reverse bool
+	order   *BillingNotificationPreferenceOrder
+	filter  func(*BillingNotificationPreferenceQuery) (*BillingNotificationPreferenceQuery, error)
+}
+
+func newBillingNotificationPreferencePager(opts []BillingNotificationPreferencePaginateOption, reverse bool) (*billingnotificationpreferencePager, error) {
+	pager := &billingnotificationpreferencePager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultBillingNotificationPreferenceOrder
+	}
+	return pager, nil
+}
+
+func (p *billingnotificationpreferencePager) applyFilter(query *BillingNotificationPreferenceQuery) (*BillingNotificationPreferenceQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *billingnotificationpreferencePager) toCursor(_m *BillingNotificationPreference) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *billingnotificationpreferencePager) applyCursors(query *BillingNotificationPreferenceQuery, after, before *Cursor) (*BillingNotificationPreferenceQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultBillingNotificationPreferenceOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *billingnotificationpreferencePager) applyOrder(query *BillingNotificationPreferenceQuery) *BillingNotificationPreferenceQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultBillingNotificationPreferenceOrder.Field {
+		query = query.Order(DefaultBillingNotificationPreferenceOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *billingnotificationpreferencePager) orderExpr(query *BillingNotificationPreferenceQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultBillingNotificationPreferenceOrder.Field {
+			b.Comma().Ident(DefaultBillingNotificationPreferenceOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to BillingNotificationPreference.
+func (_m *BillingNotificationPreferenceQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...BillingNotificationPreferencePaginateOption,
+) (*BillingNotificationPreferenceConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newBillingNotificationPreferencePager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &BillingNotificationPreferenceConnection{Edges: []*BillingNotificationPreferenceEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// BillingNotificationPreferenceOrderFieldCreatedAt orders BillingNotificationPreference by created_at.
+	BillingNotificationPreferenceOrderFieldCreatedAt = &BillingNotificationPreferenceOrderField{
+		Value: func(_m *BillingNotificationPreference) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: billingnotificationpreference.FieldCreatedAt,
+		toTerm: billingnotificationpreference.ByCreatedAt,
+		toCursor: func(_m *BillingNotificationPreference) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// BillingNotificationPreferenceOrderFieldUpdatedAt orders BillingNotificationPreference by updated_at.
+	BillingNotificationPreferenceOrderFieldUpdatedAt = &BillingNotificationPreferenceOrderField{
+		Value: func(_m *BillingNotificationPreference) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: billingnotificationpreference.FieldUpdatedAt,
+		toTerm: billingnotificationpreference.ByUpdatedAt,
+		toCursor: func(_m *BillingNotificationPreference) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f BillingNotificationPreferenceOrderField) String() string {
+	var str string
+	switch f.column {
+	case BillingNotificationPreferenceOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case BillingNotificationPreferenceOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f BillingNotificationPreferenceOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *BillingNotificationPreferenceOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("BillingNotificationPreferenceOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *BillingNotificationPreferenceOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *BillingNotificationPreferenceOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid BillingNotificationPreferenceOrderField", str)
+	}
+	return nil
+}
+
+// BillingNotificationPreferenceOrderField defines the ordering field of BillingNotificationPreference.
+type BillingNotificationPreferenceOrderField struct {
+	// Value extracts the ordering value from the given BillingNotificationPreference.
+	Value    func(*BillingNotificationPreference) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) billingnotificationpreference.OrderOption
+	toCursor func(*BillingNotificationPreference) Cursor
+}
+
+// BillingNotificationPreferenceOrder defines the ordering of BillingNotificationPreference.
+type BillingNotificationPreferenceOrder struct {
+	Direction OrderDirection                           `json:"direction"`
+	Field     *BillingNotificationPreferenceOrderField `json:"field"`
+}
+
+// DefaultBillingNotificationPreferenceOrder is the default ordering of BillingNotificationPreference.
+var DefaultBillingNotificationPreferenceOrder = &BillingNotificationPreferenceOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &BillingNotificationPreferenceOrderField{
+		Value: func(_m *BillingNotificationPreference) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: billingnotificationpreference.FieldID,
+		toTerm: billingnotificationpreference.ByID,
+		toCursor: func(_m *BillingNotificationPreference) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts BillingNotificationPreference into BillingNotificationPreferenceEdge.
+func (_m *BillingNotificationPreference) ToEdge(order *BillingNotificationPreferenceOrder) *BillingNotificationPreferenceEdge {
+	if order == nil {
+		order = DefaultBillingNotificationPreferenceOrder
+	}
+	return &BillingNotificationPreferenceEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// BillingNotificationSettingEdge is the edge representation of BillingNotificationSetting.
+type BillingNotificationSettingEdge struct {
+	Node   *BillingNotificationSetting `json:"node"`
+	Cursor Cursor                      `json:"cursor"`
+}
+
+// BillingNotificationSettingConnection is the connection containing edges to BillingNotificationSetting.
+type BillingNotificationSettingConnection struct {
+	Edges      []*BillingNotificationSettingEdge `json:"edges"`
+	PageInfo   PageInfo                          `json:"pageInfo"`
+	TotalCount int                               `json:"totalCount"`
+}
+
+func (c *BillingNotificationSettingConnection) build(nodes []*BillingNotificationSetting, pager *billingnotificationsettingPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *BillingNotificationSetting
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *BillingNotificationSetting {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *BillingNotificationSetting {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*BillingNotificationSettingEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &BillingNotificationSettingEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// BillingNotificationSettingPaginateOption enables pagination customization.
+type BillingNotificationSettingPaginateOption func(*billingnotificationsettingPager) error
+
+// WithBillingNotificationSettingOrder configures pagination ordering.
+func WithBillingNotificationSettingOrder(order *BillingNotificationSettingOrder) BillingNotificationSettingPaginateOption {
+	if order == nil {
+		order = DefaultBillingNotificationSettingOrder
+	}
+	o := *order
+	return func(pager *billingnotificationsettingPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultBillingNotificationSettingOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithBillingNotificationSettingFilter configures pagination filter.
+func WithBillingNotificationSettingFilter(filter func(*BillingNotificationSettingQuery) (*BillingNotificationSettingQuery, error)) BillingNotificationSettingPaginateOption {
+	return func(pager *billingnotificationsettingPager) error {
+		if filter == nil {
+			return errors.New("BillingNotificationSettingQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type billingnotificationsettingPager struct {
+	reverse bool
+	order   *BillingNotificationSettingOrder
+	filter  func(*BillingNotificationSettingQuery) (*BillingNotificationSettingQuery, error)
+}
+
+func newBillingNotificationSettingPager(opts []BillingNotificationSettingPaginateOption, reverse bool) (*billingnotificationsettingPager, error) {
+	pager := &billingnotificationsettingPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultBillingNotificationSettingOrder
+	}
+	return pager, nil
+}
+
+func (p *billingnotificationsettingPager) applyFilter(query *BillingNotificationSettingQuery) (*BillingNotificationSettingQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *billingnotificationsettingPager) toCursor(_m *BillingNotificationSetting) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *billingnotificationsettingPager) applyCursors(query *BillingNotificationSettingQuery, after, before *Cursor) (*BillingNotificationSettingQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultBillingNotificationSettingOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *billingnotificationsettingPager) applyOrder(query *BillingNotificationSettingQuery) *BillingNotificationSettingQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultBillingNotificationSettingOrder.Field {
+		query = query.Order(DefaultBillingNotificationSettingOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *billingnotificationsettingPager) orderExpr(query *BillingNotificationSettingQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultBillingNotificationSettingOrder.Field {
+			b.Comma().Ident(DefaultBillingNotificationSettingOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to BillingNotificationSetting.
+func (_m *BillingNotificationSettingQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...BillingNotificationSettingPaginateOption,
+) (*BillingNotificationSettingConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newBillingNotificationSettingPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &BillingNotificationSettingConnection{Edges: []*BillingNotificationSettingEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// BillingNotificationSettingOrderFieldCreatedAt orders BillingNotificationSetting by created_at.
+	BillingNotificationSettingOrderFieldCreatedAt = &BillingNotificationSettingOrderField{
+		Value: func(_m *BillingNotificationSetting) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: billingnotificationsetting.FieldCreatedAt,
+		toTerm: billingnotificationsetting.ByCreatedAt,
+		toCursor: func(_m *BillingNotificationSetting) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// BillingNotificationSettingOrderFieldUpdatedAt orders BillingNotificationSetting by updated_at.
+	BillingNotificationSettingOrderFieldUpdatedAt = &BillingNotificationSettingOrderField{
+		Value: func(_m *BillingNotificationSetting) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: billingnotificationsetting.FieldUpdatedAt,
+		toTerm: billingnotificationsetting.ByUpdatedAt,
+		toCursor: func(_m *BillingNotificationSetting) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f BillingNotificationSettingOrderField) String() string {
+	var str string
+	switch f.column {
+	case BillingNotificationSettingOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case BillingNotificationSettingOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f BillingNotificationSettingOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *BillingNotificationSettingOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("BillingNotificationSettingOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *BillingNotificationSettingOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *BillingNotificationSettingOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid BillingNotificationSettingOrderField", str)
+	}
+	return nil
+}
+
+// BillingNotificationSettingOrderField defines the ordering field of BillingNotificationSetting.
+type BillingNotificationSettingOrderField struct {
+	// Value extracts the ordering value from the given BillingNotificationSetting.
+	Value    func(*BillingNotificationSetting) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) billingnotificationsetting.OrderOption
+	toCursor func(*BillingNotificationSetting) Cursor
+}
+
+// BillingNotificationSettingOrder defines the ordering of BillingNotificationSetting.
+type BillingNotificationSettingOrder struct {
+	Direction OrderDirection                        `json:"direction"`
+	Field     *BillingNotificationSettingOrderField `json:"field"`
+}
+
+// DefaultBillingNotificationSettingOrder is the default ordering of BillingNotificationSetting.
+var DefaultBillingNotificationSettingOrder = &BillingNotificationSettingOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &BillingNotificationSettingOrderField{
+		Value: func(_m *BillingNotificationSetting) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: billingnotificationsetting.FieldID,
+		toTerm: billingnotificationsetting.ByID,
+		toCursor: func(_m *BillingNotificationSetting) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts BillingNotificationSetting into BillingNotificationSettingEdge.
+func (_m *BillingNotificationSetting) ToEdge(order *BillingNotificationSettingOrder) *BillingNotificationSettingEdge {
+	if order == nil {
+		order = DefaultBillingNotificationSettingOrder
+	}
+	return &BillingNotificationSettingEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

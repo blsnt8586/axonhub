@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/predicate"
@@ -26,24 +27,26 @@ import (
 // BillingAccountQuery is the builder for querying BillingAccount entities.
 type BillingAccountQuery struct {
 	config
-	ctx                          *QueryContext
-	order                        []billingaccount.OrderOption
-	inters                       []Interceptor
-	predicates                   []predicate.BillingAccount
-	withBindings                 *BillingAccountBindingQuery
-	withLedgerTransactions       *LedgerTransactionQuery
-	withBillingHolds             *BillingHoldQuery
-	withUsageBillingRecords      *UsageBillingRecordQuery
-	withPaymentOrders            *PaymentOrderQuery
-	withPromoUsages              *PromoUsageQuery
-	loadTotal                    []func(context.Context, []*BillingAccount) error
-	modifiers                    []func(*sql.Selector)
-	withNamedBindings            map[string]*BillingAccountBindingQuery
-	withNamedLedgerTransactions  map[string]*LedgerTransactionQuery
-	withNamedBillingHolds        map[string]*BillingHoldQuery
-	withNamedUsageBillingRecords map[string]*UsageBillingRecordQuery
-	withNamedPaymentOrders       map[string]*PaymentOrderQuery
-	withNamedPromoUsages         map[string]*PromoUsageQuery
+	ctx                           *QueryContext
+	order                         []billingaccount.OrderOption
+	inters                        []Interceptor
+	predicates                    []predicate.BillingAccount
+	withBindings                  *BillingAccountBindingQuery
+	withLedgerTransactions        *LedgerTransactionQuery
+	withBillingHolds              *BillingHoldQuery
+	withUsageBillingRecords       *UsageBillingRecordQuery
+	withPaymentOrders             *PaymentOrderQuery
+	withPromoUsages               *PromoUsageQuery
+	withBillingNotifications      *BillingNotificationQuery
+	loadTotal                     []func(context.Context, []*BillingAccount) error
+	modifiers                     []func(*sql.Selector)
+	withNamedBindings             map[string]*BillingAccountBindingQuery
+	withNamedLedgerTransactions   map[string]*LedgerTransactionQuery
+	withNamedBillingHolds         map[string]*BillingHoldQuery
+	withNamedUsageBillingRecords  map[string]*UsageBillingRecordQuery
+	withNamedPaymentOrders        map[string]*PaymentOrderQuery
+	withNamedPromoUsages          map[string]*PromoUsageQuery
+	withNamedBillingNotifications map[string]*BillingNotificationQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -205,6 +208,28 @@ func (_q *BillingAccountQuery) QueryPromoUsages() *PromoUsageQuery {
 			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, selector),
 			sqlgraph.To(promousage.Table, promousage.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.PromoUsagesTable, billingaccount.PromoUsagesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBillingNotifications chains the current query on the "billing_notifications" edge.
+func (_q *BillingAccountQuery) QueryBillingNotifications() *BillingNotificationQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, selector),
+			sqlgraph.To(billingnotification.Table, billingnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.BillingNotificationsTable, billingaccount.BillingNotificationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -399,17 +424,18 @@ func (_q *BillingAccountQuery) Clone() *BillingAccountQuery {
 		return nil
 	}
 	return &BillingAccountQuery{
-		config:                  _q.config,
-		ctx:                     _q.ctx.Clone(),
-		order:                   append([]billingaccount.OrderOption{}, _q.order...),
-		inters:                  append([]Interceptor{}, _q.inters...),
-		predicates:              append([]predicate.BillingAccount{}, _q.predicates...),
-		withBindings:            _q.withBindings.Clone(),
-		withLedgerTransactions:  _q.withLedgerTransactions.Clone(),
-		withBillingHolds:        _q.withBillingHolds.Clone(),
-		withUsageBillingRecords: _q.withUsageBillingRecords.Clone(),
-		withPaymentOrders:       _q.withPaymentOrders.Clone(),
-		withPromoUsages:         _q.withPromoUsages.Clone(),
+		config:                   _q.config,
+		ctx:                      _q.ctx.Clone(),
+		order:                    append([]billingaccount.OrderOption{}, _q.order...),
+		inters:                   append([]Interceptor{}, _q.inters...),
+		predicates:               append([]predicate.BillingAccount{}, _q.predicates...),
+		withBindings:             _q.withBindings.Clone(),
+		withLedgerTransactions:   _q.withLedgerTransactions.Clone(),
+		withBillingHolds:         _q.withBillingHolds.Clone(),
+		withUsageBillingRecords:  _q.withUsageBillingRecords.Clone(),
+		withPaymentOrders:        _q.withPaymentOrders.Clone(),
+		withPromoUsages:          _q.withPromoUsages.Clone(),
+		withBillingNotifications: _q.withBillingNotifications.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -480,6 +506,17 @@ func (_q *BillingAccountQuery) WithPromoUsages(opts ...func(*PromoUsageQuery)) *
 		opt(query)
 	}
 	_q.withPromoUsages = query
+	return _q
+}
+
+// WithBillingNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "billing_notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *BillingAccountQuery) WithBillingNotifications(opts ...func(*BillingNotificationQuery)) *BillingAccountQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withBillingNotifications = query
 	return _q
 }
 
@@ -567,13 +604,14 @@ func (_q *BillingAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	var (
 		nodes       = []*BillingAccount{}
 		_spec       = _q.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [7]bool{
 			_q.withBindings != nil,
 			_q.withLedgerTransactions != nil,
 			_q.withBillingHolds != nil,
 			_q.withUsageBillingRecords != nil,
 			_q.withPaymentOrders != nil,
 			_q.withPromoUsages != nil,
+			_q.withBillingNotifications != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -643,6 +681,15 @@ func (_q *BillingAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 			return nil, err
 		}
 	}
+	if query := _q.withBillingNotifications; query != nil {
+		if err := _q.loadBillingNotifications(ctx, query, nodes,
+			func(n *BillingAccount) { n.Edges.BillingNotifications = []*BillingNotification{} },
+			func(n *BillingAccount, e *BillingNotification) {
+				n.Edges.BillingNotifications = append(n.Edges.BillingNotifications, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedBindings {
 		if err := _q.loadBindings(ctx, query, nodes,
 			func(n *BillingAccount) { n.appendNamedBindings(name) },
@@ -682,6 +729,13 @@ func (_q *BillingAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		if err := _q.loadPromoUsages(ctx, query, nodes,
 			func(n *BillingAccount) { n.appendNamedPromoUsages(name) },
 			func(n *BillingAccount, e *PromoUsage) { n.appendNamedPromoUsages(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedBillingNotifications {
+		if err := _q.loadBillingNotifications(ctx, query, nodes,
+			func(n *BillingAccount) { n.appendNamedBillingNotifications(name) },
+			func(n *BillingAccount, e *BillingNotification) { n.appendNamedBillingNotifications(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -876,6 +930,39 @@ func (_q *BillingAccountQuery) loadPromoUsages(ctx context.Context, query *Promo
 	}
 	return nil
 }
+func (_q *BillingAccountQuery) loadBillingNotifications(ctx context.Context, query *BillingNotificationQuery, nodes []*BillingAccount, init func(*BillingAccount), assign func(*BillingAccount, *BillingNotification)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*BillingAccount)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(billingnotification.FieldBillingAccountID)
+	}
+	query.Where(predicate.BillingNotification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(billingaccount.BillingNotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.BillingAccountID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "billing_account_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "billing_account_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *BillingAccountQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1051,6 +1138,20 @@ func (_q *BillingAccountQuery) WithNamedPromoUsages(name string, opts ...func(*P
 		_q.withNamedPromoUsages = make(map[string]*PromoUsageQuery)
 	}
 	_q.withNamedPromoUsages[name] = query
+	return _q
+}
+
+// WithNamedBillingNotifications tells the query-builder to eager-load the nodes that are connected to the "billing_notifications"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *BillingAccountQuery) WithNamedBillingNotifications(name string, opts ...func(*BillingNotificationQuery)) *BillingAccountQuery {
+	query := (&BillingNotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedBillingNotifications == nil {
+		_q.withNamedBillingNotifications = make(map[string]*BillingNotificationQuery)
+	}
+	_q.withNamedBillingNotifications[name] = query
 	return _q
 }
 

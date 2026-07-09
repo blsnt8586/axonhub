@@ -12,6 +12,9 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationpreference"
+	"github.com/looplj/axonhub/internal/ent/billingnotificationsetting"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -57,7 +60,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 44)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 47)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -275,6 +278,81 @@ var schemaGraph = func() *sqlgraph.Schema {
 	}
 	graph.Nodes[9] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
+			Table:   billingnotification.Table,
+			Columns: billingnotification.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: billingnotification.FieldID,
+			},
+		},
+		Type: "BillingNotification",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			billingnotification.FieldCreatedAt:            {Type: field.TypeTime, Column: billingnotification.FieldCreatedAt},
+			billingnotification.FieldUpdatedAt:            {Type: field.TypeTime, Column: billingnotification.FieldUpdatedAt},
+			billingnotification.FieldUserID:               {Type: field.TypeInt, Column: billingnotification.FieldUserID},
+			billingnotification.FieldAudience:             {Type: field.TypeEnum, Column: billingnotification.FieldAudience},
+			billingnotification.FieldCategory:             {Type: field.TypeEnum, Column: billingnotification.FieldCategory},
+			billingnotification.FieldSeverity:             {Type: field.TypeEnum, Column: billingnotification.FieldSeverity},
+			billingnotification.FieldStatus:               {Type: field.TypeEnum, Column: billingnotification.FieldStatus},
+			billingnotification.FieldEventKey:             {Type: field.TypeString, Column: billingnotification.FieldEventKey},
+			billingnotification.FieldTitle:                {Type: field.TypeString, Column: billingnotification.FieldTitle},
+			billingnotification.FieldMessage:              {Type: field.TypeString, Column: billingnotification.FieldMessage},
+			billingnotification.FieldCurrency:             {Type: field.TypeString, Column: billingnotification.FieldCurrency},
+			billingnotification.FieldAmountMicros:         {Type: field.TypeInt64, Column: billingnotification.FieldAmountMicros},
+			billingnotification.FieldBillingAccountID:     {Type: field.TypeInt, Column: billingnotification.FieldBillingAccountID},
+			billingnotification.FieldPaymentOrderID:       {Type: field.TypeInt, Column: billingnotification.FieldPaymentOrderID},
+			billingnotification.FieldUserSubscriptionID:   {Type: field.TypeInt, Column: billingnotification.FieldUserSubscriptionID},
+			billingnotification.FieldUsageBillingRecordID: {Type: field.TypeInt, Column: billingnotification.FieldUsageBillingRecordID},
+			billingnotification.FieldReadAt:               {Type: field.TypeTime, Column: billingnotification.FieldReadAt},
+			billingnotification.FieldMetadata:             {Type: field.TypeJSON, Column: billingnotification.FieldMetadata},
+		},
+	}
+	graph.Nodes[10] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   billingnotificationpreference.Table,
+			Columns: billingnotificationpreference.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: billingnotificationpreference.FieldID,
+			},
+		},
+		Type: "BillingNotificationPreference",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			billingnotificationpreference.FieldCreatedAt:               {Type: field.TypeTime, Column: billingnotificationpreference.FieldCreatedAt},
+			billingnotificationpreference.FieldUpdatedAt:               {Type: field.TypeTime, Column: billingnotificationpreference.FieldUpdatedAt},
+			billingnotificationpreference.FieldUserID:                  {Type: field.TypeInt, Column: billingnotificationpreference.FieldUserID},
+			billingnotificationpreference.FieldEnabled:                 {Type: field.TypeBool, Column: billingnotificationpreference.FieldEnabled},
+			billingnotificationpreference.FieldLowBalanceEnabled:       {Type: field.TypeBool, Column: billingnotificationpreference.FieldLowBalanceEnabled},
+			billingnotificationpreference.FieldPaymentEnabled:          {Type: field.TypeBool, Column: billingnotificationpreference.FieldPaymentEnabled},
+			billingnotificationpreference.FieldSubscriptionEnabled:     {Type: field.TypeBool, Column: billingnotificationpreference.FieldSubscriptionEnabled},
+			billingnotificationpreference.FieldLargeConsumptionEnabled: {Type: field.TypeBool, Column: billingnotificationpreference.FieldLargeConsumptionEnabled},
+		},
+	}
+	graph.Nodes[11] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   billingnotificationsetting.Table,
+			Columns: billingnotificationsetting.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: billingnotificationsetting.FieldID,
+			},
+		},
+		Type: "BillingNotificationSetting",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			billingnotificationsetting.FieldCreatedAt:                       {Type: field.TypeTime, Column: billingnotificationsetting.FieldCreatedAt},
+			billingnotificationsetting.FieldUpdatedAt:                       {Type: field.TypeTime, Column: billingnotificationsetting.FieldUpdatedAt},
+			billingnotificationsetting.FieldKey:                             {Type: field.TypeString, Column: billingnotificationsetting.FieldKey},
+			billingnotificationsetting.FieldEnabled:                         {Type: field.TypeBool, Column: billingnotificationsetting.FieldEnabled},
+			billingnotificationsetting.FieldUserNotificationsEnabled:        {Type: field.TypeBool, Column: billingnotificationsetting.FieldUserNotificationsEnabled},
+			billingnotificationsetting.FieldOperatorAlertsEnabled:           {Type: field.TypeBool, Column: billingnotificationsetting.FieldOperatorAlertsEnabled},
+			billingnotificationsetting.FieldLowBalanceThresholdMicros:       {Type: field.TypeInt64, Column: billingnotificationsetting.FieldLowBalanceThresholdMicros},
+			billingnotificationsetting.FieldLargeConsumptionThresholdMicros: {Type: field.TypeInt64, Column: billingnotificationsetting.FieldLargeConsumptionThresholdMicros},
+			billingnotificationsetting.FieldSubscriptionExpiryWarningDays:   {Type: field.TypeInt, Column: billingnotificationsetting.FieldSubscriptionExpiryWarningDays},
+			billingnotificationsetting.FieldCurrency:                        {Type: field.TypeString, Column: billingnotificationsetting.FieldCurrency},
+		},
+	}
+	graph.Nodes[12] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
 			Table:   billingoutbox.Table,
 			Columns: billingoutbox.Columns,
 			ID: &sqlgraph.FieldSpec{
@@ -295,7 +373,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billingoutbox.FieldLastError:     {Type: field.TypeString, Column: billingoutbox.FieldLastError},
 		},
 	}
-	graph.Nodes[10] = &sqlgraph.Node{
+	graph.Nodes[13] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   billingpricerule.Table,
 			Columns: billingpricerule.Columns,
@@ -318,7 +396,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			billingpricerule.FieldReferenceID:  {Type: field.TypeString, Column: billingpricerule.FieldReferenceID},
 		},
 	}
-	graph.Nodes[11] = &sqlgraph.Node{
+	graph.Nodes[14] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channel.Table,
 			Columns: channel.Columns,
@@ -352,7 +430,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channel.FieldEndpoints:               {Type: field.TypeJSON, Column: channel.FieldEndpoints},
 		},
 	}
-	graph.Nodes[12] = &sqlgraph.Node{
+	graph.Nodes[15] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channelmodelprice.Table,
 			Columns: channelmodelprice.Columns,
@@ -372,7 +450,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channelmodelprice.FieldReferenceID: {Type: field.TypeString, Column: channelmodelprice.FieldReferenceID},
 		},
 	}
-	graph.Nodes[13] = &sqlgraph.Node{
+	graph.Nodes[16] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channelmodelpriceversion.Table,
 			Columns: channelmodelpriceversion.Columns,
@@ -395,7 +473,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channelmodelpriceversion.FieldReferenceID:         {Type: field.TypeString, Column: channelmodelpriceversion.FieldReferenceID},
 		},
 	}
-	graph.Nodes[14] = &sqlgraph.Node{
+	graph.Nodes[17] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channeloverridetemplate.Table,
 			Columns: channeloverridetemplate.Columns,
@@ -418,7 +496,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channeloverridetemplate.FieldBodyOverrideOperations:   {Type: field.TypeJSON, Column: channeloverridetemplate.FieldBodyOverrideOperations},
 		},
 	}
-	graph.Nodes[15] = &sqlgraph.Node{
+	graph.Nodes[18] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   channelprobe.Table,
 			Columns: channelprobe.Columns,
@@ -437,7 +515,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channelprobe.FieldTimestamp:             {Type: field.TypeInt64, Column: channelprobe.FieldTimestamp},
 		},
 	}
-	graph.Nodes[16] = &sqlgraph.Node{
+	graph.Nodes[19] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   datastorage.Table,
 			Columns: datastorage.Columns,
@@ -459,7 +537,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			datastorage.FieldStatus:      {Type: field.TypeEnum, Column: datastorage.FieldStatus},
 		},
 	}
-	graph.Nodes[17] = &sqlgraph.Node{
+	graph.Nodes[20] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   ledgerentry.Table,
 			Columns: ledgerentry.Columns,
@@ -479,7 +557,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			ledgerentry.FieldCurrency:            {Type: field.TypeString, Column: ledgerentry.FieldCurrency},
 		},
 	}
-	graph.Nodes[18] = &sqlgraph.Node{
+	graph.Nodes[21] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   ledgertransaction.Table,
 			Columns: ledgertransaction.Columns,
@@ -506,7 +584,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			ledgertransaction.FieldCreatedByID:      {Type: field.TypeString, Column: ledgertransaction.FieldCreatedByID},
 		},
 	}
-	graph.Nodes[19] = &sqlgraph.Node{
+	graph.Nodes[22] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   model.Table,
 			Columns: model.Columns,
@@ -532,7 +610,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			model.FieldRemark:    {Type: field.TypeString, Column: model.FieldRemark},
 		},
 	}
-	graph.Nodes[20] = &sqlgraph.Node{
+	graph.Nodes[23] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   oidcidentity.Table,
 			Columns: oidcidentity.Columns,
@@ -554,7 +632,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			oidcidentity.FieldUserID:      {Type: field.TypeInt, Column: oidcidentity.FieldUserID},
 		},
 	}
-	graph.Nodes[21] = &sqlgraph.Node{
+	graph.Nodes[24] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   paymentevent.Table,
 			Columns: paymentevent.Columns,
@@ -577,7 +655,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentevent.FieldError:              {Type: field.TypeString, Column: paymentevent.FieldError},
 		},
 	}
-	graph.Nodes[22] = &sqlgraph.Node{
+	graph.Nodes[25] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   paymentorder.Table,
 			Columns: paymentorder.Columns,
@@ -616,7 +694,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentorder.FieldMetadata:             {Type: field.TypeJSON, Column: paymentorder.FieldMetadata},
 		},
 	}
-	graph.Nodes[23] = &sqlgraph.Node{
+	graph.Nodes[26] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   paymentproviderinstance.Table,
 			Columns: paymentproviderinstance.Columns,
@@ -636,7 +714,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			paymentproviderinstance.FieldConfig:       {Type: field.TypeJSON, Column: paymentproviderinstance.FieldConfig},
 		},
 	}
-	graph.Nodes[24] = &sqlgraph.Node{
+	graph.Nodes[27] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   project.Table,
 			Columns: project.Columns,
@@ -656,7 +734,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			project.FieldProfiles:    {Type: field.TypeJSON, Column: project.FieldProfiles},
 		},
 	}
-	graph.Nodes[25] = &sqlgraph.Node{
+	graph.Nodes[28] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   promocode.Table,
 			Columns: promocode.Columns,
@@ -687,7 +765,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			promocode.FieldMetadata:             {Type: field.TypeJSON, Column: promocode.FieldMetadata},
 		},
 	}
-	graph.Nodes[26] = &sqlgraph.Node{
+	graph.Nodes[29] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   promousage.Table,
 			Columns: promousage.Columns,
@@ -718,7 +796,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			promousage.FieldFailureReason:        {Type: field.TypeString, Column: promousage.FieldFailureReason},
 		},
 	}
-	graph.Nodes[27] = &sqlgraph.Node{
+	graph.Nodes[30] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   prompt.Table,
 			Columns: prompt.Columns,
@@ -742,7 +820,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			prompt.FieldSettings:    {Type: field.TypeJSON, Column: prompt.FieldSettings},
 		},
 	}
-	graph.Nodes[28] = &sqlgraph.Node{
+	graph.Nodes[31] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   promptprotectionrule.Table,
 			Columns: promptprotectionrule.Columns,
@@ -763,7 +841,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			promptprotectionrule.FieldSettings:    {Type: field.TypeJSON, Column: promptprotectionrule.FieldSettings},
 		},
 	}
-	graph.Nodes[29] = &sqlgraph.Node{
+	graph.Nodes[32] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   providerquotastatus.Table,
 			Columns: providerquotastatus.Columns,
@@ -786,7 +864,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			providerquotastatus.FieldNextCheckAt:  {Type: field.TypeTime, Column: providerquotastatus.FieldNextCheckAt},
 		},
 	}
-	graph.Nodes[30] = &sqlgraph.Node{
+	graph.Nodes[33] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   redeemcode.Table,
 			Columns: redeemcode.Columns,
@@ -813,7 +891,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			redeemcode.FieldBatchID:             {Type: field.TypeString, Column: redeemcode.FieldBatchID},
 		},
 	}
-	graph.Nodes[31] = &sqlgraph.Node{
+	graph.Nodes[34] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   request.Table,
 			Columns: request.Columns,
@@ -852,7 +930,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			request.FieldContentSavedAt:             {Type: field.TypeTime, Column: request.FieldContentSavedAt},
 		},
 	}
-	graph.Nodes[32] = &sqlgraph.Node{
+	graph.Nodes[35] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   requestexecution.Table,
 			Columns: requestexecution.Columns,
@@ -887,7 +965,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			requestexecution.FieldPassThroughApplied:         {Type: field.TypeBool, Column: requestexecution.FieldPassThroughApplied},
 		},
 	}
-	graph.Nodes[33] = &sqlgraph.Node{
+	graph.Nodes[36] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   role.Table,
 			Columns: role.Columns,
@@ -907,7 +985,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			role.FieldScopes:    {Type: field.TypeJSON, Column: role.FieldScopes},
 		},
 	}
-	graph.Nodes[34] = &sqlgraph.Node{
+	graph.Nodes[37] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   subscriptionplan.Table,
 			Columns: subscriptionplan.Columns,
@@ -936,7 +1014,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			subscriptionplan.FieldMetadata:             {Type: field.TypeJSON, Column: subscriptionplan.FieldMetadata},
 		},
 	}
-	graph.Nodes[35] = &sqlgraph.Node{
+	graph.Nodes[38] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   system.Table,
 			Columns: system.Columns,
@@ -954,7 +1032,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			system.FieldValue:     {Type: field.TypeString, Column: system.FieldValue},
 		},
 	}
-	graph.Nodes[36] = &sqlgraph.Node{
+	graph.Nodes[39] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   thread.Table,
 			Columns: thread.Columns,
@@ -971,7 +1049,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			thread.FieldThreadID:  {Type: field.TypeString, Column: thread.FieldThreadID},
 		},
 	}
-	graph.Nodes[37] = &sqlgraph.Node{
+	graph.Nodes[40] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   trace.Table,
 			Columns: trace.Columns,
@@ -989,7 +1067,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			trace.FieldThreadID:  {Type: field.TypeInt, Column: trace.FieldThreadID},
 		},
 	}
-	graph.Nodes[38] = &sqlgraph.Node{
+	graph.Nodes[41] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagebillingrecord.Table,
 			Columns: usagebillingrecord.Columns,
@@ -1023,7 +1101,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagebillingrecord.FieldError:               {Type: field.TypeString, Column: usagebillingrecord.FieldError},
 		},
 	}
-	graph.Nodes[39] = &sqlgraph.Node{
+	graph.Nodes[42] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagelog.Table,
 			Columns: usagelog.Columns,
@@ -1060,7 +1138,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagelog.FieldCostPriceReferenceID:               {Type: field.TypeString, Column: usagelog.FieldCostPriceReferenceID},
 		},
 	}
-	graph.Nodes[40] = &sqlgraph.Node{
+	graph.Nodes[43] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -1085,7 +1163,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldScopes:         {Type: field.TypeJSON, Column: user.FieldScopes},
 		},
 	}
-	graph.Nodes[41] = &sqlgraph.Node{
+	graph.Nodes[44] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userproject.Table,
 			Columns: userproject.Columns,
@@ -1104,7 +1182,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userproject.FieldScopes:    {Type: field.TypeJSON, Column: userproject.FieldScopes},
 		},
 	}
-	graph.Nodes[42] = &sqlgraph.Node{
+	graph.Nodes[45] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userrole.Table,
 			Columns: userrole.Columns,
@@ -1121,7 +1199,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userrole.FieldUpdatedAt: {Type: field.TypeTime, Column: userrole.FieldUpdatedAt},
 		},
 	}
-	graph.Nodes[43] = &sqlgraph.Node{
+	graph.Nodes[46] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usersubscription.Table,
 			Columns: usersubscription.Columns,
@@ -1402,6 +1480,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"PromoUsage",
 	)
 	graph.MustAddE(
+		"billing_notifications",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.BillingNotificationsTable,
+			Columns: []string{billingaccount.BillingNotificationsColumn},
+			Bidi:    false,
+		},
+		"BillingAccount",
+		"BillingNotification",
+	)
+	graph.MustAddE(
 		"billing_account",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -1460,6 +1550,78 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"BillingHold",
 		"LedgerTransaction",
+	)
+	graph.MustAddE(
+		"user",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billingnotification.UserTable,
+			Columns: []string{billingnotification.UserColumn},
+			Bidi:    false,
+		},
+		"BillingNotification",
+		"User",
+	)
+	graph.MustAddE(
+		"billing_account",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billingnotification.BillingAccountTable,
+			Columns: []string{billingnotification.BillingAccountColumn},
+			Bidi:    false,
+		},
+		"BillingNotification",
+		"BillingAccount",
+	)
+	graph.MustAddE(
+		"payment_order",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billingnotification.PaymentOrderTable,
+			Columns: []string{billingnotification.PaymentOrderColumn},
+			Bidi:    false,
+		},
+		"BillingNotification",
+		"PaymentOrder",
+	)
+	graph.MustAddE(
+		"user_subscription",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billingnotification.UserSubscriptionTable,
+			Columns: []string{billingnotification.UserSubscriptionColumn},
+			Bidi:    false,
+		},
+		"BillingNotification",
+		"UserSubscription",
+	)
+	graph.MustAddE(
+		"usage_billing_record",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billingnotification.UsageBillingRecordTable,
+			Columns: []string{billingnotification.UsageBillingRecordColumn},
+			Bidi:    false,
+		},
+		"BillingNotification",
+		"UsageBillingRecord",
+	)
+	graph.MustAddE(
+		"user",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   billingnotificationpreference.UserTable,
+			Columns: []string{billingnotificationpreference.UserColumn},
+			Bidi:    false,
+		},
+		"BillingNotificationPreference",
+		"User",
 	)
 	graph.MustAddE(
 		"requests",
@@ -1856,6 +2018,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"PaymentOrder",
 		"AffiliateRebate",
+	)
+	graph.MustAddE(
+		"billing_notifications",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.BillingNotificationsTable,
+			Columns: []string{paymentorder.BillingNotificationsColumn},
+			Bidi:    false,
+		},
+		"PaymentOrder",
+		"BillingNotification",
 	)
 	graph.MustAddE(
 		"payment_orders",
@@ -2458,6 +2632,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"UserSubscription",
 	)
 	graph.MustAddE(
+		"billing_notifications",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagebillingrecord.BillingNotificationsTable,
+			Columns: []string{usagebillingrecord.BillingNotificationsColumn},
+			Bidi:    false,
+		},
+		"UsageBillingRecord",
+		"BillingNotification",
+	)
+	graph.MustAddE(
 		"request",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -2698,6 +2884,30 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"AffiliateRebate",
 	)
 	graph.MustAddE(
+		"billing_notification_preferences",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationPreferencesTable,
+			Columns: []string{user.BillingNotificationPreferencesColumn},
+			Bidi:    false,
+		},
+		"User",
+		"BillingNotificationPreference",
+	)
+	graph.MustAddE(
+		"billing_notifications",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BillingNotificationsTable,
+			Columns: []string{user.BillingNotificationsColumn},
+			Bidi:    false,
+		},
+		"User",
+		"BillingNotification",
+	)
+	graph.MustAddE(
 		"project_users",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -2864,6 +3074,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"UserSubscription",
 		"AffiliateRebate",
+	)
+	graph.MustAddE(
+		"billing_notifications",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.BillingNotificationsTable,
+			Columns: []string{usersubscription.BillingNotificationsColumn},
+			Bidi:    false,
+		},
+		"UserSubscription",
+		"BillingNotification",
 	)
 	return graph
 }()
@@ -3779,6 +4001,20 @@ func (f *BillingAccountFilter) WhereHasPromoUsagesWith(preds ...predicate.PromoU
 	})))
 }
 
+// WhereHasBillingNotifications applies a predicate to check if query has an edge billing_notifications.
+func (f *BillingAccountFilter) WhereHasBillingNotifications() {
+	f.Where(entql.HasEdge("billing_notifications"))
+}
+
+// WhereHasBillingNotificationsWith applies a predicate to check if query has an edge billing_notifications with a given conditions (other predicates).
+func (f *BillingAccountFilter) WhereHasBillingNotificationsWith(preds ...predicate.BillingNotification) {
+	f.Where(entql.HasEdgeWith("billing_notifications", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *BillingAccountBindingQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -4075,6 +4311,390 @@ func (f *BillingHoldFilter) WhereHasCapturedLedgerTransactionWith(preds ...predi
 }
 
 // addPredicate implements the predicateAdder interface.
+func (_q *BillingNotificationQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the BillingNotificationQuery builder.
+func (_q *BillingNotificationQuery) Filter() *BillingNotificationFilter {
+	return &BillingNotificationFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *BillingNotificationMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the BillingNotificationMutation builder.
+func (m *BillingNotificationMutation) Filter() *BillingNotificationFilter {
+	return &BillingNotificationFilter{config: m.config, predicateAdder: m}
+}
+
+// BillingNotificationFilter provides a generic filtering capability at runtime for BillingNotificationQuery.
+type BillingNotificationFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *BillingNotificationFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[9].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *BillingNotificationFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(billingnotification.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *BillingNotificationFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(billingnotification.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *BillingNotificationFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(billingnotification.FieldUpdatedAt))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *BillingNotificationFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(billingnotification.FieldUserID))
+}
+
+// WhereAudience applies the entql string predicate on the audience field.
+func (f *BillingNotificationFilter) WhereAudience(p entql.StringP) {
+	f.Where(p.Field(billingnotification.FieldAudience))
+}
+
+// WhereCategory applies the entql string predicate on the category field.
+func (f *BillingNotificationFilter) WhereCategory(p entql.StringP) {
+	f.Where(p.Field(billingnotification.FieldCategory))
+}
+
+// WhereSeverity applies the entql string predicate on the severity field.
+func (f *BillingNotificationFilter) WhereSeverity(p entql.StringP) {
+	f.Where(p.Field(billingnotification.FieldSeverity))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *BillingNotificationFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(billingnotification.FieldStatus))
+}
+
+// WhereEventKey applies the entql string predicate on the event_key field.
+func (f *BillingNotificationFilter) WhereEventKey(p entql.StringP) {
+	f.Where(p.Field(billingnotification.FieldEventKey))
+}
+
+// WhereTitle applies the entql string predicate on the title field.
+func (f *BillingNotificationFilter) WhereTitle(p entql.StringP) {
+	f.Where(p.Field(billingnotification.FieldTitle))
+}
+
+// WhereMessage applies the entql string predicate on the message field.
+func (f *BillingNotificationFilter) WhereMessage(p entql.StringP) {
+	f.Where(p.Field(billingnotification.FieldMessage))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *BillingNotificationFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(billingnotification.FieldCurrency))
+}
+
+// WhereAmountMicros applies the entql int64 predicate on the amount_micros field.
+func (f *BillingNotificationFilter) WhereAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(billingnotification.FieldAmountMicros))
+}
+
+// WhereBillingAccountID applies the entql int predicate on the billing_account_id field.
+func (f *BillingNotificationFilter) WhereBillingAccountID(p entql.IntP) {
+	f.Where(p.Field(billingnotification.FieldBillingAccountID))
+}
+
+// WherePaymentOrderID applies the entql int predicate on the payment_order_id field.
+func (f *BillingNotificationFilter) WherePaymentOrderID(p entql.IntP) {
+	f.Where(p.Field(billingnotification.FieldPaymentOrderID))
+}
+
+// WhereUserSubscriptionID applies the entql int predicate on the user_subscription_id field.
+func (f *BillingNotificationFilter) WhereUserSubscriptionID(p entql.IntP) {
+	f.Where(p.Field(billingnotification.FieldUserSubscriptionID))
+}
+
+// WhereUsageBillingRecordID applies the entql int predicate on the usage_billing_record_id field.
+func (f *BillingNotificationFilter) WhereUsageBillingRecordID(p entql.IntP) {
+	f.Where(p.Field(billingnotification.FieldUsageBillingRecordID))
+}
+
+// WhereReadAt applies the entql time.Time predicate on the read_at field.
+func (f *BillingNotificationFilter) WhereReadAt(p entql.TimeP) {
+	f.Where(p.Field(billingnotification.FieldReadAt))
+}
+
+// WhereMetadata applies the entql json.RawMessage predicate on the metadata field.
+func (f *BillingNotificationFilter) WhereMetadata(p entql.BytesP) {
+	f.Where(p.Field(billingnotification.FieldMetadata))
+}
+
+// WhereHasUser applies a predicate to check if query has an edge user.
+func (f *BillingNotificationFilter) WhereHasUser() {
+	f.Where(entql.HasEdge("user"))
+}
+
+// WhereHasUserWith applies a predicate to check if query has an edge user with a given conditions (other predicates).
+func (f *BillingNotificationFilter) WhereHasUserWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("user", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasBillingAccount applies a predicate to check if query has an edge billing_account.
+func (f *BillingNotificationFilter) WhereHasBillingAccount() {
+	f.Where(entql.HasEdge("billing_account"))
+}
+
+// WhereHasBillingAccountWith applies a predicate to check if query has an edge billing_account with a given conditions (other predicates).
+func (f *BillingNotificationFilter) WhereHasBillingAccountWith(preds ...predicate.BillingAccount) {
+	f.Where(entql.HasEdgeWith("billing_account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPaymentOrder applies a predicate to check if query has an edge payment_order.
+func (f *BillingNotificationFilter) WhereHasPaymentOrder() {
+	f.Where(entql.HasEdge("payment_order"))
+}
+
+// WhereHasPaymentOrderWith applies a predicate to check if query has an edge payment_order with a given conditions (other predicates).
+func (f *BillingNotificationFilter) WhereHasPaymentOrderWith(preds ...predicate.PaymentOrder) {
+	f.Where(entql.HasEdgeWith("payment_order", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUserSubscription applies a predicate to check if query has an edge user_subscription.
+func (f *BillingNotificationFilter) WhereHasUserSubscription() {
+	f.Where(entql.HasEdge("user_subscription"))
+}
+
+// WhereHasUserSubscriptionWith applies a predicate to check if query has an edge user_subscription with a given conditions (other predicates).
+func (f *BillingNotificationFilter) WhereHasUserSubscriptionWith(preds ...predicate.UserSubscription) {
+	f.Where(entql.HasEdgeWith("user_subscription", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUsageBillingRecord applies a predicate to check if query has an edge usage_billing_record.
+func (f *BillingNotificationFilter) WhereHasUsageBillingRecord() {
+	f.Where(entql.HasEdge("usage_billing_record"))
+}
+
+// WhereHasUsageBillingRecordWith applies a predicate to check if query has an edge usage_billing_record with a given conditions (other predicates).
+func (f *BillingNotificationFilter) WhereHasUsageBillingRecordWith(preds ...predicate.UsageBillingRecord) {
+	f.Where(entql.HasEdgeWith("usage_billing_record", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (_q *BillingNotificationPreferenceQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the BillingNotificationPreferenceQuery builder.
+func (_q *BillingNotificationPreferenceQuery) Filter() *BillingNotificationPreferenceFilter {
+	return &BillingNotificationPreferenceFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *BillingNotificationPreferenceMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the BillingNotificationPreferenceMutation builder.
+func (m *BillingNotificationPreferenceMutation) Filter() *BillingNotificationPreferenceFilter {
+	return &BillingNotificationPreferenceFilter{config: m.config, predicateAdder: m}
+}
+
+// BillingNotificationPreferenceFilter provides a generic filtering capability at runtime for BillingNotificationPreferenceQuery.
+type BillingNotificationPreferenceFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *BillingNotificationPreferenceFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[10].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *BillingNotificationPreferenceFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(billingnotificationpreference.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *BillingNotificationPreferenceFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(billingnotificationpreference.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *BillingNotificationPreferenceFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(billingnotificationpreference.FieldUpdatedAt))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *BillingNotificationPreferenceFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(billingnotificationpreference.FieldUserID))
+}
+
+// WhereEnabled applies the entql bool predicate on the enabled field.
+func (f *BillingNotificationPreferenceFilter) WhereEnabled(p entql.BoolP) {
+	f.Where(p.Field(billingnotificationpreference.FieldEnabled))
+}
+
+// WhereLowBalanceEnabled applies the entql bool predicate on the low_balance_enabled field.
+func (f *BillingNotificationPreferenceFilter) WhereLowBalanceEnabled(p entql.BoolP) {
+	f.Where(p.Field(billingnotificationpreference.FieldLowBalanceEnabled))
+}
+
+// WherePaymentEnabled applies the entql bool predicate on the payment_enabled field.
+func (f *BillingNotificationPreferenceFilter) WherePaymentEnabled(p entql.BoolP) {
+	f.Where(p.Field(billingnotificationpreference.FieldPaymentEnabled))
+}
+
+// WhereSubscriptionEnabled applies the entql bool predicate on the subscription_enabled field.
+func (f *BillingNotificationPreferenceFilter) WhereSubscriptionEnabled(p entql.BoolP) {
+	f.Where(p.Field(billingnotificationpreference.FieldSubscriptionEnabled))
+}
+
+// WhereLargeConsumptionEnabled applies the entql bool predicate on the large_consumption_enabled field.
+func (f *BillingNotificationPreferenceFilter) WhereLargeConsumptionEnabled(p entql.BoolP) {
+	f.Where(p.Field(billingnotificationpreference.FieldLargeConsumptionEnabled))
+}
+
+// WhereHasUser applies a predicate to check if query has an edge user.
+func (f *BillingNotificationPreferenceFilter) WhereHasUser() {
+	f.Where(entql.HasEdge("user"))
+}
+
+// WhereHasUserWith applies a predicate to check if query has an edge user with a given conditions (other predicates).
+func (f *BillingNotificationPreferenceFilter) WhereHasUserWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("user", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (_q *BillingNotificationSettingQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the BillingNotificationSettingQuery builder.
+func (_q *BillingNotificationSettingQuery) Filter() *BillingNotificationSettingFilter {
+	return &BillingNotificationSettingFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *BillingNotificationSettingMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the BillingNotificationSettingMutation builder.
+func (m *BillingNotificationSettingMutation) Filter() *BillingNotificationSettingFilter {
+	return &BillingNotificationSettingFilter{config: m.config, predicateAdder: m}
+}
+
+// BillingNotificationSettingFilter provides a generic filtering capability at runtime for BillingNotificationSettingQuery.
+type BillingNotificationSettingFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *BillingNotificationSettingFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[11].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *BillingNotificationSettingFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(billingnotificationsetting.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *BillingNotificationSettingFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(billingnotificationsetting.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *BillingNotificationSettingFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(billingnotificationsetting.FieldUpdatedAt))
+}
+
+// WhereKey applies the entql string predicate on the key field.
+func (f *BillingNotificationSettingFilter) WhereKey(p entql.StringP) {
+	f.Where(p.Field(billingnotificationsetting.FieldKey))
+}
+
+// WhereEnabled applies the entql bool predicate on the enabled field.
+func (f *BillingNotificationSettingFilter) WhereEnabled(p entql.BoolP) {
+	f.Where(p.Field(billingnotificationsetting.FieldEnabled))
+}
+
+// WhereUserNotificationsEnabled applies the entql bool predicate on the user_notifications_enabled field.
+func (f *BillingNotificationSettingFilter) WhereUserNotificationsEnabled(p entql.BoolP) {
+	f.Where(p.Field(billingnotificationsetting.FieldUserNotificationsEnabled))
+}
+
+// WhereOperatorAlertsEnabled applies the entql bool predicate on the operator_alerts_enabled field.
+func (f *BillingNotificationSettingFilter) WhereOperatorAlertsEnabled(p entql.BoolP) {
+	f.Where(p.Field(billingnotificationsetting.FieldOperatorAlertsEnabled))
+}
+
+// WhereLowBalanceThresholdMicros applies the entql int64 predicate on the low_balance_threshold_micros field.
+func (f *BillingNotificationSettingFilter) WhereLowBalanceThresholdMicros(p entql.Int64P) {
+	f.Where(p.Field(billingnotificationsetting.FieldLowBalanceThresholdMicros))
+}
+
+// WhereLargeConsumptionThresholdMicros applies the entql int64 predicate on the large_consumption_threshold_micros field.
+func (f *BillingNotificationSettingFilter) WhereLargeConsumptionThresholdMicros(p entql.Int64P) {
+	f.Where(p.Field(billingnotificationsetting.FieldLargeConsumptionThresholdMicros))
+}
+
+// WhereSubscriptionExpiryWarningDays applies the entql int predicate on the subscription_expiry_warning_days field.
+func (f *BillingNotificationSettingFilter) WhereSubscriptionExpiryWarningDays(p entql.IntP) {
+	f.Where(p.Field(billingnotificationsetting.FieldSubscriptionExpiryWarningDays))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *BillingNotificationSettingFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(billingnotificationsetting.FieldCurrency))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (_q *BillingOutboxQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
 }
@@ -4103,7 +4723,7 @@ type BillingOutboxFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *BillingOutboxFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[9].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[12].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4188,7 +4808,7 @@ type BillingPriceRuleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *BillingPriceRuleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[10].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[13].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4278,7 +4898,7 @@ type ChannelFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[11].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[14].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4507,7 +5127,7 @@ type ChannelModelPriceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelModelPriceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[12].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[15].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4610,7 +5230,7 @@ type ChannelModelPriceVersionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelModelPriceVersionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[13].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[16].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4714,7 +5334,7 @@ type ChannelOverrideTemplateFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelOverrideTemplateFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[14].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[17].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4818,7 +5438,7 @@ type ChannelProbeFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ChannelProbeFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[15].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[18].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4902,7 +5522,7 @@ type DataStorageFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *DataStorageFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[16].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[19].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5015,7 +5635,7 @@ type LedgerEntryFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *LedgerEntryFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[17].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[20].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5104,7 +5724,7 @@ type LedgerTransactionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *LedgerTransactionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[18].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[21].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5340,7 +5960,7 @@ type ModelFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ModelFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[19].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[22].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5445,7 +6065,7 @@ type OIDCIdentityFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *OIDCIdentityFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[20].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5544,7 +6164,7 @@ type PaymentEventFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PaymentEventFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[21].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5662,7 +6282,7 @@ type PaymentOrderFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PaymentOrderFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[22].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5901,6 +6521,20 @@ func (f *PaymentOrderFilter) WhereHasAffiliateRebatesWith(preds ...predicate.Aff
 	})))
 }
 
+// WhereHasBillingNotifications applies a predicate to check if query has an edge billing_notifications.
+func (f *PaymentOrderFilter) WhereHasBillingNotifications() {
+	f.Where(entql.HasEdge("billing_notifications"))
+}
+
+// WhereHasBillingNotificationsWith applies a predicate to check if query has an edge billing_notifications with a given conditions (other predicates).
+func (f *PaymentOrderFilter) WhereHasBillingNotificationsWith(preds ...predicate.BillingNotification) {
+	f.Where(entql.HasEdgeWith("billing_notifications", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *PaymentProviderInstanceQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -5930,7 +6564,7 @@ type PaymentProviderInstanceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PaymentProviderInstanceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6033,7 +6667,7 @@ type ProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6248,7 +6882,7 @@ type PromoCodeFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromoCodeFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6420,7 +7054,7 @@ type PromoUsageFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromoUsageFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6634,7 +7268,7 @@ type PromptFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromptFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6743,7 +7377,7 @@ type PromptProtectionRuleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromptProtectionRuleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6823,7 +7457,7 @@ type ProviderQuotaStatusFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ProviderQuotaStatusFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6927,7 +7561,7 @@ type RedeemCodeFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RedeemCodeFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7079,7 +7713,7 @@ type RequestFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[34].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7361,7 +7995,7 @@ type RequestExecutionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestExecutionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[35].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7553,7 +8187,7 @@ type RoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[36].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7670,7 +8304,7 @@ type SubscriptionPlanFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SubscriptionPlanFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[34].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[37].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7804,7 +8438,7 @@ type SystemFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SystemFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[35].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[38].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7869,7 +8503,7 @@ type ThreadFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ThreadFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[36].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[39].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7957,7 +8591,7 @@ type TraceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *TraceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[37].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[40].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -8064,7 +8698,7 @@ type UsageBillingRecordFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageBillingRecordFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[38].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[41].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -8236,6 +8870,20 @@ func (f *UsageBillingRecordFilter) WhereHasUserSubscriptionWith(preds ...predica
 	})))
 }
 
+// WhereHasBillingNotifications applies a predicate to check if query has an edge billing_notifications.
+func (f *UsageBillingRecordFilter) WhereHasBillingNotifications() {
+	f.Where(entql.HasEdge("billing_notifications"))
+}
+
+// WhereHasBillingNotificationsWith applies a predicate to check if query has an edge billing_notifications with a given conditions (other predicates).
+func (f *UsageBillingRecordFilter) WhereHasBillingNotificationsWith(preds ...predicate.BillingNotification) {
+	f.Where(entql.HasEdgeWith("billing_notifications", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *UsageLogQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -8265,7 +8913,7 @@ type UsageLogFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageLogFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[39].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[42].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -8495,7 +9143,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[40].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[43].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -8776,6 +9424,34 @@ func (f *UserFilter) WhereHasAffiliateRebatesGeneratedWith(preds ...predicate.Af
 	})))
 }
 
+// WhereHasBillingNotificationPreferences applies a predicate to check if query has an edge billing_notification_preferences.
+func (f *UserFilter) WhereHasBillingNotificationPreferences() {
+	f.Where(entql.HasEdge("billing_notification_preferences"))
+}
+
+// WhereHasBillingNotificationPreferencesWith applies a predicate to check if query has an edge billing_notification_preferences with a given conditions (other predicates).
+func (f *UserFilter) WhereHasBillingNotificationPreferencesWith(preds ...predicate.BillingNotificationPreference) {
+	f.Where(entql.HasEdgeWith("billing_notification_preferences", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasBillingNotifications applies a predicate to check if query has an edge billing_notifications.
+func (f *UserFilter) WhereHasBillingNotifications() {
+	f.Where(entql.HasEdge("billing_notifications"))
+}
+
+// WhereHasBillingNotificationsWith applies a predicate to check if query has an edge billing_notifications with a given conditions (other predicates).
+func (f *UserFilter) WhereHasBillingNotificationsWith(preds ...predicate.BillingNotification) {
+	f.Where(entql.HasEdgeWith("billing_notifications", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasProjectUsers applies a predicate to check if query has an edge project_users.
 func (f *UserFilter) WhereHasProjectUsers() {
 	f.Where(entql.HasEdge("project_users"))
@@ -8833,7 +9509,7 @@ type UserProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[41].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[44].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -8931,7 +9607,7 @@ type UserRoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserRoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[42].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[45].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9019,7 +9695,7 @@ type UserSubscriptionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserSubscriptionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[43].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[46].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9271,6 +9947,20 @@ func (f *UserSubscriptionFilter) WhereHasAffiliateRebates() {
 // WhereHasAffiliateRebatesWith applies a predicate to check if query has an edge affiliate_rebates with a given conditions (other predicates).
 func (f *UserSubscriptionFilter) WhereHasAffiliateRebatesWith(preds ...predicate.AffiliateRebate) {
 	f.Where(entql.HasEdgeWith("affiliate_rebates", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasBillingNotifications applies a predicate to check if query has an edge billing_notifications.
+func (f *UserSubscriptionFilter) WhereHasBillingNotifications() {
+	f.Where(entql.HasEdge("billing_notifications"))
+}
+
+// WhereHasBillingNotificationsWith applies a predicate to check if query has an edge billing_notifications with a given conditions (other predicates).
+func (f *UserSubscriptionFilter) WhereHasBillingNotificationsWith(preds ...predicate.BillingNotification) {
+	f.Where(entql.HasEdgeWith("billing_notifications", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}

@@ -25,6 +25,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billingaccount"
 	"github.com/looplj/axonhub/internal/ent/billingaccountbinding"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
+	"github.com/looplj/axonhub/internal/ent/billingnotification"
 	"github.com/looplj/axonhub/internal/ent/billingoutbox"
 	"github.com/looplj/axonhub/internal/ent/billingpricerule"
 	"github.com/looplj/axonhub/internal/ent/channel"
@@ -92,6 +93,9 @@ type ResolverRoot interface {
 	BillingAccount() BillingAccountResolver
 	BillingAccountBinding() BillingAccountBindingResolver
 	BillingHold() BillingHoldResolver
+	BillingNotification() BillingNotificationResolver
+	BillingNotificationPreference() BillingNotificationPreferenceResolver
+	BillingNotificationSetting() BillingNotificationSettingResolver
 	BillingOutbox() BillingOutboxResolver
 	BillingPriceRule() BillingPriceRuleResolver
 	Channel() ChannelResolver
@@ -467,22 +471,23 @@ type ComplexityRoot struct {
 	}
 
 	BillingAccount struct {
-		BalanceMicros       func(childComplexity int) int
-		BillingHolds        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) int
-		Bindings            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) int
-		CreatedAt           func(childComplexity int) int
-		CreditLimitMicros   func(childComplexity int) int
-		Currency            func(childComplexity int) int
-		HeldBalanceMicros   func(childComplexity int) int
-		ID                  func(childComplexity int) int
-		LedgerTransactions  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder, where *ent.LedgerTransactionWhereInput) int
-		OwnerID             func(childComplexity int) int
-		OwnerType           func(childComplexity int) int
-		PaymentOrders       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) int
-		PromoUsages         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
-		Status              func(childComplexity int) int
-		UpdatedAt           func(childComplexity int) int
-		UsageBillingRecords func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder, where *ent.UsageBillingRecordWhereInput) int
+		BalanceMicros        func(childComplexity int) int
+		BillingHolds         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) int
+		BillingNotifications func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder, where *ent.BillingNotificationWhereInput) int
+		Bindings             func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) int
+		CreatedAt            func(childComplexity int) int
+		CreditLimitMicros    func(childComplexity int) int
+		Currency             func(childComplexity int) int
+		HeldBalanceMicros    func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		LedgerTransactions   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder, where *ent.LedgerTransactionWhereInput) int
+		OwnerID              func(childComplexity int) int
+		OwnerType            func(childComplexity int) int
+		PaymentOrders        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) int
+		PromoUsages          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
+		Status               func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
+		UsageBillingRecords  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder, where *ent.UsageBillingRecordWhereInput) int
 	}
 
 	BillingAccountBinding struct {
@@ -582,6 +587,93 @@ type ComplexityRoot struct {
 	}
 
 	BillingHoldEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	BillingNotification struct {
+		AmountMicros         func(childComplexity int) int
+		Audience             func(childComplexity int) int
+		BillingAccount       func(childComplexity int) int
+		BillingAccountID     func(childComplexity int) int
+		Category             func(childComplexity int) int
+		CreatedAt            func(childComplexity int) int
+		Currency             func(childComplexity int) int
+		EventKey             func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		Message              func(childComplexity int) int
+		Metadata             func(childComplexity int) int
+		PaymentOrder         func(childComplexity int) int
+		PaymentOrderID       func(childComplexity int) int
+		ReadAt               func(childComplexity int) int
+		Severity             func(childComplexity int) int
+		Status               func(childComplexity int) int
+		Title                func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
+		UsageBillingRecord   func(childComplexity int) int
+		UsageBillingRecordID func(childComplexity int) int
+		User                 func(childComplexity int) int
+		UserID               func(childComplexity int) int
+		UserSubscription     func(childComplexity int) int
+		UserSubscriptionID   func(childComplexity int) int
+	}
+
+	BillingNotificationConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	BillingNotificationEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	BillingNotificationPreference struct {
+		CreatedAt               func(childComplexity int) int
+		Enabled                 func(childComplexity int) int
+		ID                      func(childComplexity int) int
+		LargeConsumptionEnabled func(childComplexity int) int
+		LowBalanceEnabled       func(childComplexity int) int
+		PaymentEnabled          func(childComplexity int) int
+		SubscriptionEnabled     func(childComplexity int) int
+		UpdatedAt               func(childComplexity int) int
+		User                    func(childComplexity int) int
+		UserID                  func(childComplexity int) int
+	}
+
+	BillingNotificationPreferenceConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	BillingNotificationPreferenceEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	BillingNotificationSetting struct {
+		CreatedAt                       func(childComplexity int) int
+		Currency                        func(childComplexity int) int
+		Enabled                         func(childComplexity int) int
+		ID                              func(childComplexity int) int
+		Key                             func(childComplexity int) int
+		LargeConsumptionThresholdMicros func(childComplexity int) int
+		LowBalanceThresholdMicros       func(childComplexity int) int
+		OperatorAlertsEnabled           func(childComplexity int) int
+		SubscriptionExpiryWarningDays   func(childComplexity int) int
+		UpdatedAt                       func(childComplexity int) int
+		UserNotificationsEnabled        func(childComplexity int) int
+	}
+
+	BillingNotificationSettingConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	BillingNotificationSettingEdge struct {
 		Cursor func(childComplexity int) int
 		Node   func(childComplexity int) int
 	}
@@ -1406,6 +1498,8 @@ type ComplexityRoot struct {
 		ExtendUserSubscription               func(childComplexity int, input biz.ExtendUserSubscriptionInput) int
 		LoadAPIKeyProfileTemplate            func(childComplexity int, input LoadAPIKeyProfileTemplateInput) int
 		MakeUpPaymentOrder                   func(childComplexity int, input biz.MakeUpPaymentOrderInput) int
+		MarkAllBillingNotificationsRead      func(childComplexity int) int
+		MarkBillingNotificationRead          func(childComplexity int, id objects.GUID) int
 		PreviewPromptProtectionRule          func(childComplexity int, input PromptProtectionRulePreviewInput) int
 		PurchaseSubscriptionPlan             func(childComplexity int, input biz.PurchaseSubscriptionPlanInput) int
 		RedeemCode                           func(childComplexity int, input biz.RedeemCodeInput) int
@@ -1419,9 +1513,11 @@ type ComplexityRoot struct {
 		RotateAPIKey                         func(childComplexity int, id objects.GUID) int
 		SaveAffiliateProfile                 func(childComplexity int, input biz.SaveAffiliateProfileInput) int
 		SaveAffiliateSetting                 func(childComplexity int, input biz.SaveAffiliateSettingInput) int
+		SaveBillingNotificationSetting       func(childComplexity int, input biz.SaveBillingNotificationSettingInput) int
 		SaveBillingPriceRule                 func(childComplexity int, input SaveBillingPriceRuleForm) int
 		SaveChannelEndpoints                 func(childComplexity int, input biz.SaveChannelEndpointsInput) int
 		SaveChannelModelPrices               func(childComplexity int, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) int
+		SaveMyBillingNotificationPreference  func(childComplexity int, input biz.SaveBillingNotificationPreferenceInput) int
 		SavePromoCode                        func(childComplexity int, input biz.SavePromoCodeInput) int
 		SaveProxyPreset                      func(childComplexity int, input biz.ProxyPreset) int
 		SaveSubscriptionPlan                 func(childComplexity int, input biz.SaveSubscriptionPlanInput) int
@@ -1599,6 +1695,7 @@ type ComplexityRoot struct {
 		AmountMicros         func(childComplexity int) int
 		BillingAccount       func(childComplexity int) int
 		BillingAccountID     func(childComplexity int) int
+		BillingNotifications func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder, where *ent.BillingNotificationWhereInput) int
 		CancelReason         func(childComplexity int) int
 		CanceledAt           func(childComplexity int) int
 		CreatedAt            func(childComplexity int) int
@@ -1916,133 +2013,140 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		APIKeyCommercialLimitUsage   func(childComplexity int, apiKeyID objects.GUID) int
-		APIKeyProfileTemplates       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyProfileTemplateOrder, where *ent.APIKeyProfileTemplateWhereInput) int
-		APIKeyQuotaUsages            func(childComplexity int, apiKeyID objects.GUID) int
-		APIKeyTokenUsageStats        func(childComplexity int, input *APIKeyTokenUsageStatsInput) int
-		APIKeys                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyOrder, where *ent.APIKeyWhereInput) int
-		AdminAffiliateInvitations    func(childComplexity int, filter *AdminAffiliateInvitationsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) int
-		AdminAffiliateProfiles       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder) int
-		AdminAffiliateRebates        func(childComplexity int, filter *AdminAffiliateRebatesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) int
-		AdminAffiliateSetting        func(childComplexity int) int
-		AdminBillingHolds            func(childComplexity int, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) int
-		AdminBillingReport           func(childComplexity int, filter *AdminBillingReportFilter) int
-		AdminLedgerTransactions      func(childComplexity int, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
-		AdminPaymentEvents           func(childComplexity int, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) int
-		AdminPaymentOrders           func(childComplexity int, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
-		AdminPromoCodes              func(childComplexity int, filter *AdminPromoCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder) int
-		AdminPromoUsages             func(childComplexity int, filter *AdminPromoUsagesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder) int
-		AdminRedeemCodes             func(childComplexity int, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) int
-		AdminUsageBillingRecords     func(childComplexity int, filter *AdminUsageBillingRecordsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
-		AdminUserSubscriptions       func(childComplexity int, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) int
-		AffiliateInvitations         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) int
-		AffiliateProfiles            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder, where *ent.AffiliateProfileWhereInput) int
-		AffiliateRebates             func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
-		AffiliateSettings            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateSettingOrder, where *ent.AffiliateSettingWhereInput) int
-		AllChannelSummarys           func(childComplexity int, includeArchived *bool) int
-		AllChannelTags               func(childComplexity int) int
-		AllScopes                    func(childComplexity int, level *string) int
-		AutoBackupSettings           func(childComplexity int) int
-		AvailableSubscriptionPlans   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SubscriptionPlanOrder) int
-		BillingAccountBindings       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) int
-		BillingAccounts              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountOrder, where *ent.BillingAccountWhereInput) int
-		BillingHolds                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) int
-		BillingOutboxes              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingOutboxOrder, where *ent.BillingOutboxWhereInput) int
-		BillingPriceRules            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingPriceRuleOrder, where *ent.BillingPriceRuleWhereInput) int
-		BrandSettings                func(childComplexity int) int
-		ChannelOverrideTemplates     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOverrideTemplateOrder, where *ent.ChannelOverrideTemplateWhereInput) int
-		ChannelPerformanceStats      func(childComplexity int) int
-		ChannelProbeData             func(childComplexity int, input biz.GetChannelProbeDataInput) int
-		ChannelSuccessRates          func(childComplexity int, timeWindow *string, limit *int) int
-		Channels                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOrder, where *ent.ChannelWhereInput) int
-		CheckForUpdate               func(childComplexity int) int
-		CostStatsByAPIKey            func(childComplexity int, timeWindow *string) int
-		CostStatsByChannel           func(childComplexity int, timeWindow *string) int
-		CostStatsByModel             func(childComplexity int, timeWindow *string) int
-		CountChannelsByType          func(childComplexity int, input CountChannelsByTypeInput) int
-		DailyRequestStats            func(childComplexity int) int
-		DashboardOverview            func(childComplexity int) int
-		DataStorages                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.DataStorageOrder, where *ent.DataStorageWhereInput) int
-		DefaultDataStorageID         func(childComplexity int) int
-		ExportAdminBillingCSV        func(childComplexity int, input ExportAdminBillingCSVInput) int
-		FastestChannels              func(childComplexity int, input FastestChannelsInput) int
-		FastestModels                func(childComplexity int, input FastestChannelsInput) int
-		FetchModels                  func(childComplexity int, input biz.FetchModelsInput) int
-		GetCacheDiagnostics          func(childComplexity int, input *GetCacheDiagnosticsInput) int
-		LedgerEntries                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerEntryOrder, where *ent.LedgerEntryWhereInput) int
-		LedgerTransactions           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder, where *ent.LedgerTransactionWhereInput) int
-		Me                           func(childComplexity int) int
-		ModelPerformanceStats        func(childComplexity int) int
-		Models                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ModelOrder, where *ent.ModelWhereInput) int
-		MyAffiliateInvitations       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) int
-		MyAffiliateRebates           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) int
-		MyAffiliateSummary           func(childComplexity int) int
-		MyBillingAccount             func(childComplexity int) int
-		MyLedgerTransactions         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
-		MyPaymentOrders              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
-		MyProjects                   func(childComplexity int) int
-		MyRedeemCodes                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) int
-		MyUsageBillingRecords        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
-		MyUserSubscriptions          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) int
-		Node                         func(childComplexity int, id objects.GUID) int
-		Nodes                        func(childComplexity int, ids []*objects.GUID) int
-		OidcIdentities               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) int
-		OnboardingInfo               func(childComplexity int) int
-		PassThroughSettings          func(childComplexity int) int
-		PaymentEvents                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder, where *ent.PaymentEventWhereInput) int
-		PaymentOrders                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) int
-		PaymentProviderInstances     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentProviderInstanceOrder, where *ent.PaymentProviderInstanceWhereInput) int
-		PreviewGcCleanup             func(childComplexity int, input gc.TriggerGcCleanupInput) int
-		ProjectBillingAccount        func(childComplexity int, projectID objects.GUID) int
-		Projects                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) int
-		PromoCodes                   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder, where *ent.PromoCodeWhereInput) int
-		PromoUsages                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
-		PromptProtectionRules        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptProtectionRuleOrder, where *ent.PromptProtectionRuleWhereInput) int
-		Prompts                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptOrder, where *ent.PromptWhereInput) int
-		ProxyPresets                 func(childComplexity int) int
-		QueryChannels                func(childComplexity int, input biz.QueryChannelsInput) int
-		QueryModelChannelConnections func(childComplexity int, associations []*objects.ModelAssociation) int
-		QueryModels                  func(childComplexity int, input QueryModelsInput) int
-		QueryUnassociatedChannels    func(childComplexity int) int
-		QuotaEnforcementSettings     func(childComplexity int) int
-		QuoteRechargePromo           func(childComplexity int, input biz.QuoteRechargePromoInput) int
-		QuoteSubscriptionPromo       func(childComplexity int, input biz.QuoteSubscriptionPromoInput) int
-		RedeemCodes                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
-		RequestStats                 func(childComplexity int) int
-		RequestStatsByAPIKey         func(childComplexity int, timeWindow *string) int
-		RequestStatsByChannel        func(childComplexity int, timeWindow *string) int
-		RequestStatsByModel          func(childComplexity int, timeWindow *string) int
-		Requests                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
-		RetryPolicy                  func(childComplexity int) int
-		Roles                        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RoleOrder, where *ent.RoleWhereInput) int
-		SecuritySettings             func(childComplexity int) int
-		StoragePolicy                func(childComplexity int) int
-		SubscriptionPlans            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SubscriptionPlanOrder, where *ent.SubscriptionPlanWhereInput) int
-		SystemChannelSettings        func(childComplexity int) int
-		SystemGeneralSettings        func(childComplexity int) int
-		SystemModelSettings          func(childComplexity int) int
-		SystemStatus                 func(childComplexity int) int
-		SystemVersion                func(childComplexity int) int
-		Systems                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SystemOrder, where *ent.SystemWhereInput) int
-		Threads                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ThreadOrder, where *ent.ThreadWhereInput) int
-		TokenStats                   func(childComplexity int) int
-		TokenStatsByAPIKey           func(childComplexity int, timeWindow *string) int
-		TokenStatsByChannel          func(childComplexity int, timeWindow *string) int
-		TokenStatsByModel            func(childComplexity int, timeWindow *string) int
-		TopRequestsProjects          func(childComplexity int) int
-		Traces                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.TraceOrder, where *ent.TraceWhereInput) int
-		UsageBillingRecords          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder, where *ent.UsageBillingRecordWhereInput) int
-		UsageLogs                    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
-		UsageStatsByUser             func(childComplexity int, timeWindow *string) int
-		UserAgentPassThroughSettings func(childComplexity int) int
-		UserBillingAccount           func(childComplexity int, userID objects.GUID) int
-		UserLedgerTransactions       func(childComplexity int, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
-		UserPaymentOrders            func(childComplexity int, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
-		UserSubscriptions            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) int
-		UserUsageBillingRecords      func(childComplexity int, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
-		Users                        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) int
-		VideoStorageSettings         func(childComplexity int) int
-		WebhookNotifierConfig        func(childComplexity int) int
+		APIKeyCommercialLimitUsage      func(childComplexity int, apiKeyID objects.GUID) int
+		APIKeyProfileTemplates          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyProfileTemplateOrder, where *ent.APIKeyProfileTemplateWhereInput) int
+		APIKeyQuotaUsages               func(childComplexity int, apiKeyID objects.GUID) int
+		APIKeyTokenUsageStats           func(childComplexity int, input *APIKeyTokenUsageStatsInput) int
+		APIKeys                         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyOrder, where *ent.APIKeyWhereInput) int
+		AdminAffiliateInvitations       func(childComplexity int, filter *AdminAffiliateInvitationsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) int
+		AdminAffiliateProfiles          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder) int
+		AdminAffiliateRebates           func(childComplexity int, filter *AdminAffiliateRebatesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) int
+		AdminAffiliateSetting           func(childComplexity int) int
+		AdminBillingHolds               func(childComplexity int, filter *AdminBillingHoldsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder) int
+		AdminBillingNotificationSetting func(childComplexity int) int
+		AdminBillingNotifications       func(childComplexity int, filter *AdminBillingNotificationsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder) int
+		AdminBillingReport              func(childComplexity int, filter *AdminBillingReportFilter) int
+		AdminLedgerTransactions         func(childComplexity int, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
+		AdminPaymentEvents              func(childComplexity int, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) int
+		AdminPaymentOrders              func(childComplexity int, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
+		AdminPromoCodes                 func(childComplexity int, filter *AdminPromoCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder) int
+		AdminPromoUsages                func(childComplexity int, filter *AdminPromoUsagesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder) int
+		AdminRedeemCodes                func(childComplexity int, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) int
+		AdminUsageBillingRecords        func(childComplexity int, filter *AdminUsageBillingRecordsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
+		AdminUserSubscriptions          func(childComplexity int, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) int
+		AffiliateInvitations            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) int
+		AffiliateProfiles               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder, where *ent.AffiliateProfileWhereInput) int
+		AffiliateRebates                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
+		AffiliateSettings               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateSettingOrder, where *ent.AffiliateSettingWhereInput) int
+		AllChannelSummarys              func(childComplexity int, includeArchived *bool) int
+		AllChannelTags                  func(childComplexity int) int
+		AllScopes                       func(childComplexity int, level *string) int
+		AutoBackupSettings              func(childComplexity int) int
+		AvailableSubscriptionPlans      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SubscriptionPlanOrder) int
+		BillingAccountBindings          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) int
+		BillingAccounts                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountOrder, where *ent.BillingAccountWhereInput) int
+		BillingHolds                    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) int
+		BillingNotificationPreferences  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationPreferenceOrder, where *ent.BillingNotificationPreferenceWhereInput) int
+		BillingNotificationSettings     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationSettingOrder, where *ent.BillingNotificationSettingWhereInput) int
+		BillingNotifications            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder, where *ent.BillingNotificationWhereInput) int
+		BillingOutboxes                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingOutboxOrder, where *ent.BillingOutboxWhereInput) int
+		BillingPriceRules               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingPriceRuleOrder, where *ent.BillingPriceRuleWhereInput) int
+		BrandSettings                   func(childComplexity int) int
+		ChannelOverrideTemplates        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOverrideTemplateOrder, where *ent.ChannelOverrideTemplateWhereInput) int
+		ChannelPerformanceStats         func(childComplexity int) int
+		ChannelProbeData                func(childComplexity int, input biz.GetChannelProbeDataInput) int
+		ChannelSuccessRates             func(childComplexity int, timeWindow *string, limit *int) int
+		Channels                        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOrder, where *ent.ChannelWhereInput) int
+		CheckForUpdate                  func(childComplexity int) int
+		CostStatsByAPIKey               func(childComplexity int, timeWindow *string) int
+		CostStatsByChannel              func(childComplexity int, timeWindow *string) int
+		CostStatsByModel                func(childComplexity int, timeWindow *string) int
+		CountChannelsByType             func(childComplexity int, input CountChannelsByTypeInput) int
+		DailyRequestStats               func(childComplexity int) int
+		DashboardOverview               func(childComplexity int) int
+		DataStorages                    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.DataStorageOrder, where *ent.DataStorageWhereInput) int
+		DefaultDataStorageID            func(childComplexity int) int
+		ExportAdminBillingCSV           func(childComplexity int, input ExportAdminBillingCSVInput) int
+		FastestChannels                 func(childComplexity int, input FastestChannelsInput) int
+		FastestModels                   func(childComplexity int, input FastestChannelsInput) int
+		FetchModels                     func(childComplexity int, input biz.FetchModelsInput) int
+		GetCacheDiagnostics             func(childComplexity int, input *GetCacheDiagnosticsInput) int
+		LedgerEntries                   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerEntryOrder, where *ent.LedgerEntryWhereInput) int
+		LedgerTransactions              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder, where *ent.LedgerTransactionWhereInput) int
+		Me                              func(childComplexity int) int
+		ModelPerformanceStats           func(childComplexity int) int
+		Models                          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ModelOrder, where *ent.ModelWhereInput) int
+		MyAffiliateInvitations          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) int
+		MyAffiliateRebates              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) int
+		MyAffiliateSummary              func(childComplexity int) int
+		MyBillingAccount                func(childComplexity int) int
+		MyBillingNotificationPreference func(childComplexity int) int
+		MyBillingNotifications          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder) int
+		MyLedgerTransactions            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
+		MyPaymentOrders                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
+		MyProjects                      func(childComplexity int) int
+		MyRedeemCodes                   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) int
+		MyUsageBillingRecords           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
+		MyUserSubscriptions             func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) int
+		Node                            func(childComplexity int, id objects.GUID) int
+		Nodes                           func(childComplexity int, ids []*objects.GUID) int
+		OidcIdentities                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) int
+		OnboardingInfo                  func(childComplexity int) int
+		PassThroughSettings             func(childComplexity int) int
+		PaymentEvents                   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder, where *ent.PaymentEventWhereInput) int
+		PaymentOrders                   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) int
+		PaymentProviderInstances        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentProviderInstanceOrder, where *ent.PaymentProviderInstanceWhereInput) int
+		PreviewGcCleanup                func(childComplexity int, input gc.TriggerGcCleanupInput) int
+		ProjectBillingAccount           func(childComplexity int, projectID objects.GUID) int
+		Projects                        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) int
+		PromoCodes                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder, where *ent.PromoCodeWhereInput) int
+		PromoUsages                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
+		PromptProtectionRules           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptProtectionRuleOrder, where *ent.PromptProtectionRuleWhereInput) int
+		Prompts                         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptOrder, where *ent.PromptWhereInput) int
+		ProxyPresets                    func(childComplexity int) int
+		QueryChannels                   func(childComplexity int, input biz.QueryChannelsInput) int
+		QueryModelChannelConnections    func(childComplexity int, associations []*objects.ModelAssociation) int
+		QueryModels                     func(childComplexity int, input QueryModelsInput) int
+		QueryUnassociatedChannels       func(childComplexity int) int
+		QuotaEnforcementSettings        func(childComplexity int) int
+		QuoteRechargePromo              func(childComplexity int, input biz.QuoteRechargePromoInput) int
+		QuoteSubscriptionPromo          func(childComplexity int, input biz.QuoteSubscriptionPromoInput) int
+		RedeemCodes                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
+		RequestStats                    func(childComplexity int) int
+		RequestStatsByAPIKey            func(childComplexity int, timeWindow *string) int
+		RequestStatsByChannel           func(childComplexity int, timeWindow *string) int
+		RequestStatsByModel             func(childComplexity int, timeWindow *string) int
+		Requests                        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
+		RetryPolicy                     func(childComplexity int) int
+		Roles                           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RoleOrder, where *ent.RoleWhereInput) int
+		SecuritySettings                func(childComplexity int) int
+		StoragePolicy                   func(childComplexity int) int
+		SubscriptionPlans               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SubscriptionPlanOrder, where *ent.SubscriptionPlanWhereInput) int
+		SystemChannelSettings           func(childComplexity int) int
+		SystemGeneralSettings           func(childComplexity int) int
+		SystemModelSettings             func(childComplexity int) int
+		SystemStatus                    func(childComplexity int) int
+		SystemVersion                   func(childComplexity int) int
+		Systems                         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SystemOrder, where *ent.SystemWhereInput) int
+		Threads                         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ThreadOrder, where *ent.ThreadWhereInput) int
+		TokenStats                      func(childComplexity int) int
+		TokenStatsByAPIKey              func(childComplexity int, timeWindow *string) int
+		TokenStatsByChannel             func(childComplexity int, timeWindow *string) int
+		TokenStatsByModel               func(childComplexity int, timeWindow *string) int
+		TopRequestsProjects             func(childComplexity int) int
+		Traces                          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.TraceOrder, where *ent.TraceWhereInput) int
+		UsageBillingRecords             func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder, where *ent.UsageBillingRecordWhereInput) int
+		UsageLogs                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
+		UsageStatsByUser                func(childComplexity int, timeWindow *string) int
+		UserAgentPassThroughSettings    func(childComplexity int) int
+		UserBillingAccount              func(childComplexity int, userID objects.GUID) int
+		UserLedgerTransactions          func(childComplexity int, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
+		UserPaymentOrders               func(childComplexity int, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
+		UserSubscriptions               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) int
+		UserUsageBillingRecords         func(childComplexity int, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
+		Users                           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) int
+		VideoStorageSettings            func(childComplexity int) int
+		WebhookNotifierConfig           func(childComplexity int) int
 	}
 
 	QuotaEnforcementSettings struct {
@@ -2608,32 +2712,33 @@ type ComplexityRoot struct {
 	}
 
 	UsageBillingRecord struct {
-		APIKeyID            func(childComplexity int) int
-		BillingAccount      func(childComplexity int) int
-		BillingAccountID    func(childComplexity int) int
-		ChargeAmountMicros  func(childComplexity int) int
-		ChargeItems         func(childComplexity int) int
-		CostAmountMicros    func(childComplexity int) int
-		CreatedAt           func(childComplexity int) int
-		Currency            func(childComplexity int) int
-		Error               func(childComplexity int) int
-		ID                  func(childComplexity int) int
-		IdempotencyKey      func(childComplexity int) int
-		LedgerTransaction   func(childComplexity int) int
-		LedgerTransactionID func(childComplexity int) int
-		ModelID             func(childComplexity int) int
-		PriceReferenceID    func(childComplexity int) int
-		PriceSnapshot       func(childComplexity int) int
-		ProjectID           func(childComplexity int) int
-		RequestType         func(childComplexity int) int
-		Status              func(childComplexity int) int
-		UpdatedAt           func(childComplexity int) int
-		UsageLog            func(childComplexity int) int
-		UsageLogID          func(childComplexity int) int
-		UsageSnapshot       func(childComplexity int) int
-		UserID              func(childComplexity int) int
-		UserSubscription    func(childComplexity int) int
-		UserSubscriptionID  func(childComplexity int) int
+		APIKeyID             func(childComplexity int) int
+		BillingAccount       func(childComplexity int) int
+		BillingAccountID     func(childComplexity int) int
+		BillingNotifications func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder, where *ent.BillingNotificationWhereInput) int
+		ChargeAmountMicros   func(childComplexity int) int
+		ChargeItems          func(childComplexity int) int
+		CostAmountMicros     func(childComplexity int) int
+		CreatedAt            func(childComplexity int) int
+		Currency             func(childComplexity int) int
+		Error                func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		IdempotencyKey       func(childComplexity int) int
+		LedgerTransaction    func(childComplexity int) int
+		LedgerTransactionID  func(childComplexity int) int
+		ModelID              func(childComplexity int) int
+		PriceReferenceID     func(childComplexity int) int
+		PriceSnapshot        func(childComplexity int) int
+		ProjectID            func(childComplexity int) int
+		RequestType          func(childComplexity int) int
+		Status               func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
+		UsageLog             func(childComplexity int) int
+		UsageLogID           func(childComplexity int) int
+		UsageSnapshot        func(childComplexity int) int
+		UserID               func(childComplexity int) int
+		UserSubscription     func(childComplexity int) int
+		UserSubscriptionID   func(childComplexity int) int
 	}
 
 	UsageBillingRecordConnection struct {
@@ -2709,34 +2814,36 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		APIKeys                   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyOrder, where *ent.APIKeyWhereInput) int
-		AffiliateInvitees         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) int
-		AffiliateInviters         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) int
-		AffiliateProfiles         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder, where *ent.AffiliateProfileWhereInput) int
-		AffiliateRebatesEarned    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
-		AffiliateRebatesGenerated func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
-		AssignedUserSubscriptions func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) int
-		Avatar                    func(childComplexity int) int
-		ChannelOverrideTemplates  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOverrideTemplateOrder, where *ent.ChannelOverrideTemplateWhereInput) int
-		CreatedAt                 func(childComplexity int) int
-		CreatedRedeemCodes        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
-		Email                     func(childComplexity int) int
-		FirstName                 func(childComplexity int) int
-		ID                        func(childComplexity int) int
-		IsOwner                   func(childComplexity int) int
-		LastName                  func(childComplexity int) int
-		OidcIdentities            func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) int
-		PreferLanguage            func(childComplexity int) int
-		ProjectUsers              func(childComplexity int) int
-		Projects                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) int
-		PromoUsages               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
-		Roles                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RoleOrder, where *ent.RoleWhereInput) int
-		Scopes                    func(childComplexity int) int
-		Status                    func(childComplexity int) int
-		UpdatedAt                 func(childComplexity int) int
-		UsedRedeemCodes           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
-		UserRoles                 func(childComplexity int) int
-		UserSubscriptions         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) int
+		APIKeys                        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyOrder, where *ent.APIKeyWhereInput) int
+		AffiliateInvitees              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) int
+		AffiliateInviters              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder, where *ent.AffiliateInvitationWhereInput) int
+		AffiliateProfiles              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder, where *ent.AffiliateProfileWhereInput) int
+		AffiliateRebatesEarned         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
+		AffiliateRebatesGenerated      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder, where *ent.AffiliateRebateWhereInput) int
+		AssignedUserSubscriptions      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) int
+		Avatar                         func(childComplexity int) int
+		BillingNotificationPreferences func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationPreferenceOrder, where *ent.BillingNotificationPreferenceWhereInput) int
+		BillingNotifications           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder, where *ent.BillingNotificationWhereInput) int
+		ChannelOverrideTemplates       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOverrideTemplateOrder, where *ent.ChannelOverrideTemplateWhereInput) int
+		CreatedAt                      func(childComplexity int) int
+		CreatedRedeemCodes             func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
+		Email                          func(childComplexity int) int
+		FirstName                      func(childComplexity int) int
+		ID                             func(childComplexity int) int
+		IsOwner                        func(childComplexity int) int
+		LastName                       func(childComplexity int) int
+		OidcIdentities                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) int
+		PreferLanguage                 func(childComplexity int) int
+		ProjectUsers                   func(childComplexity int) int
+		Projects                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) int
+		PromoUsages                    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
+		Roles                          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RoleOrder, where *ent.RoleWhereInput) int
+		Scopes                         func(childComplexity int) int
+		Status                         func(childComplexity int) int
+		UpdatedAt                      func(childComplexity int) int
+		UsedRedeemCodes                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
+		UserRoles                      func(childComplexity int) int
+		UserSubscriptions              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) int
 	}
 
 	UserAgentPassThroughSettings struct {
@@ -2803,6 +2910,7 @@ type ComplexityRoot struct {
 		AllowWalletFallback         func(childComplexity int) int
 		AssignedBy                  func(childComplexity int) int
 		AssignedByID                func(childComplexity int) int
+		BillingNotifications        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder, where *ent.BillingNotificationWhereInput) int
 		CreatedAt                   func(childComplexity int) int
 		Currency                    func(childComplexity int) int
 		CurrentPeriodEnd            func(childComplexity int) int
@@ -2949,6 +3057,24 @@ type BillingHoldResolver interface {
 	UsageLogID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error)
 
 	CapturedLedgerTransactionID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error)
+}
+type BillingNotificationResolver interface {
+	ID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error)
+
+	UserID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error)
+
+	BillingAccountID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error)
+	PaymentOrderID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error)
+	UserSubscriptionID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error)
+	UsageBillingRecordID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error)
+}
+type BillingNotificationPreferenceResolver interface {
+	ID(ctx context.Context, obj *ent.BillingNotificationPreference) (*objects.GUID, error)
+
+	UserID(ctx context.Context, obj *ent.BillingNotificationPreference) (*objects.GUID, error)
+}
+type BillingNotificationSettingResolver interface {
+	ID(ctx context.Context, obj *ent.BillingNotificationSetting) (*objects.GUID, error)
 }
 type BillingOutboxResolver interface {
 	ID(ctx context.Context, obj *ent.BillingOutbox) (*objects.GUID, error)
@@ -3158,6 +3284,10 @@ type MutationResolver interface {
 	TransferAffiliateRebates(ctx context.Context) (*biz.AffiliateTransferResult, error)
 	SaveAffiliateSetting(ctx context.Context, input biz.SaveAffiliateSettingInput) (*ent.AffiliateSetting, error)
 	SaveAffiliateProfile(ctx context.Context, input biz.SaveAffiliateProfileInput) (*ent.AffiliateProfile, error)
+	SaveMyBillingNotificationPreference(ctx context.Context, input biz.SaveBillingNotificationPreferenceInput) (*ent.BillingNotificationPreference, error)
+	MarkBillingNotificationRead(ctx context.Context, id objects.GUID) (*ent.BillingNotification, error)
+	MarkAllBillingNotificationsRead(ctx context.Context) (int, error)
+	SaveBillingNotificationSetting(ctx context.Context, input biz.SaveBillingNotificationSettingInput) (*ent.BillingNotificationSetting, error)
 	ReleaseBillingHold(ctx context.Context, id objects.GUID, reason string) (*ent.BillingHold, error)
 	SaveBillingPriceRule(ctx context.Context, input SaveBillingPriceRuleForm) (*ent.BillingPriceRule, error)
 	DeleteBillingPriceRule(ctx context.Context, id objects.GUID) (bool, error)
@@ -3228,6 +3358,9 @@ type QueryResolver interface {
 	BillingAccounts(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountOrder, where *ent.BillingAccountWhereInput) (*ent.BillingAccountConnection, error)
 	BillingAccountBindings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingAccountBindingOrder, where *ent.BillingAccountBindingWhereInput) (*ent.BillingAccountBindingConnection, error)
 	BillingHolds(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingHoldOrder, where *ent.BillingHoldWhereInput) (*ent.BillingHoldConnection, error)
+	BillingNotifications(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder, where *ent.BillingNotificationWhereInput) (*ent.BillingNotificationConnection, error)
+	BillingNotificationPreferences(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationPreferenceOrder, where *ent.BillingNotificationPreferenceWhereInput) (*ent.BillingNotificationPreferenceConnection, error)
+	BillingNotificationSettings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationSettingOrder, where *ent.BillingNotificationSettingWhereInput) (*ent.BillingNotificationSettingConnection, error)
 	BillingOutboxes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingOutboxOrder, where *ent.BillingOutboxWhereInput) (*ent.BillingOutboxConnection, error)
 	BillingPriceRules(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingPriceRuleOrder, where *ent.BillingPriceRuleWhereInput) (*ent.BillingPriceRuleConnection, error)
 	Channels(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOrder, where *ent.ChannelWhereInput) (*ent.ChannelConnection, error)
@@ -3337,10 +3470,14 @@ type QueryResolver interface {
 	MyAffiliateSummary(ctx context.Context) (*biz.AffiliateSummary, error)
 	MyAffiliateInvitations(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) (*ent.AffiliateInvitationConnection, error)
 	MyAffiliateRebates(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) (*ent.AffiliateRebateConnection, error)
+	MyBillingNotificationPreference(ctx context.Context) (*ent.BillingNotificationPreference, error)
+	MyBillingNotifications(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder) (*ent.BillingNotificationConnection, error)
 	AdminAffiliateSetting(ctx context.Context) (*ent.AffiliateSetting, error)
 	AdminAffiliateProfiles(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateProfileOrder) (*ent.AffiliateProfileConnection, error)
 	AdminAffiliateInvitations(ctx context.Context, filter *AdminAffiliateInvitationsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateInvitationOrder) (*ent.AffiliateInvitationConnection, error)
 	AdminAffiliateRebates(ctx context.Context, filter *AdminAffiliateRebatesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.AffiliateRebateOrder) (*ent.AffiliateRebateConnection, error)
+	AdminBillingNotificationSetting(ctx context.Context) (*ent.BillingNotificationSetting, error)
+	AdminBillingNotifications(ctx context.Context, filter *AdminBillingNotificationsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.BillingNotificationOrder) (*ent.BillingNotificationConnection, error)
 	AdminUserSubscriptions(ctx context.Context, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) (*ent.UserSubscriptionConnection, error)
 	AdminBillingReport(ctx context.Context, filter *AdminBillingReportFilter) (*biz.BillingCommercialReport, error)
 	ExportAdminBillingCSV(ctx context.Context, input ExportAdminBillingCSVInput) (*biz.BillingCSVExportPayload, error)
@@ -4777,6 +4914,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.BillingAccount.BillingHolds(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder), args["where"].(*ent.BillingHoldWhereInput)), true
+	case "BillingAccount.billingNotifications":
+		if e.complexity.BillingAccount.BillingNotifications == nil {
+			break
+		}
+
+		args, err := ec.field_BillingAccount_billingNotifications_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.BillingAccount.BillingNotifications(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationOrder), args["where"].(*ent.BillingNotificationWhereInput)), true
 	case "BillingAccount.bindings":
 		if e.complexity.BillingAccount.Bindings == nil {
 			break
@@ -5305,6 +5453,375 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.BillingHoldEdge.Node(childComplexity), true
+
+	case "BillingNotification.amountMicros":
+		if e.complexity.BillingNotification.AmountMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.AmountMicros(childComplexity), true
+	case "BillingNotification.audience":
+		if e.complexity.BillingNotification.Audience == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.Audience(childComplexity), true
+	case "BillingNotification.billingAccount":
+		if e.complexity.BillingNotification.BillingAccount == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.BillingAccount(childComplexity), true
+	case "BillingNotification.billingAccountID":
+		if e.complexity.BillingNotification.BillingAccountID == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.BillingAccountID(childComplexity), true
+	case "BillingNotification.category":
+		if e.complexity.BillingNotification.Category == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.Category(childComplexity), true
+	case "BillingNotification.createdAt":
+		if e.complexity.BillingNotification.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.CreatedAt(childComplexity), true
+	case "BillingNotification.currency":
+		if e.complexity.BillingNotification.Currency == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.Currency(childComplexity), true
+	case "BillingNotification.eventKey":
+		if e.complexity.BillingNotification.EventKey == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.EventKey(childComplexity), true
+	case "BillingNotification.id":
+		if e.complexity.BillingNotification.ID == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.ID(childComplexity), true
+	case "BillingNotification.message":
+		if e.complexity.BillingNotification.Message == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.Message(childComplexity), true
+	case "BillingNotification.metadata":
+		if e.complexity.BillingNotification.Metadata == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.Metadata(childComplexity), true
+	case "BillingNotification.paymentOrder":
+		if e.complexity.BillingNotification.PaymentOrder == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.PaymentOrder(childComplexity), true
+	case "BillingNotification.paymentOrderID":
+		if e.complexity.BillingNotification.PaymentOrderID == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.PaymentOrderID(childComplexity), true
+	case "BillingNotification.readAt":
+		if e.complexity.BillingNotification.ReadAt == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.ReadAt(childComplexity), true
+	case "BillingNotification.severity":
+		if e.complexity.BillingNotification.Severity == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.Severity(childComplexity), true
+	case "BillingNotification.status":
+		if e.complexity.BillingNotification.Status == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.Status(childComplexity), true
+	case "BillingNotification.title":
+		if e.complexity.BillingNotification.Title == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.Title(childComplexity), true
+	case "BillingNotification.updatedAt":
+		if e.complexity.BillingNotification.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.UpdatedAt(childComplexity), true
+	case "BillingNotification.usageBillingRecord":
+		if e.complexity.BillingNotification.UsageBillingRecord == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.UsageBillingRecord(childComplexity), true
+	case "BillingNotification.usageBillingRecordID":
+		if e.complexity.BillingNotification.UsageBillingRecordID == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.UsageBillingRecordID(childComplexity), true
+	case "BillingNotification.user":
+		if e.complexity.BillingNotification.User == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.User(childComplexity), true
+	case "BillingNotification.userID":
+		if e.complexity.BillingNotification.UserID == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.UserID(childComplexity), true
+	case "BillingNotification.userSubscription":
+		if e.complexity.BillingNotification.UserSubscription == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.UserSubscription(childComplexity), true
+	case "BillingNotification.userSubscriptionID":
+		if e.complexity.BillingNotification.UserSubscriptionID == nil {
+			break
+		}
+
+		return e.complexity.BillingNotification.UserSubscriptionID(childComplexity), true
+
+	case "BillingNotificationConnection.edges":
+		if e.complexity.BillingNotificationConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationConnection.Edges(childComplexity), true
+	case "BillingNotificationConnection.pageInfo":
+		if e.complexity.BillingNotificationConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationConnection.PageInfo(childComplexity), true
+	case "BillingNotificationConnection.totalCount":
+		if e.complexity.BillingNotificationConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationConnection.TotalCount(childComplexity), true
+
+	case "BillingNotificationEdge.cursor":
+		if e.complexity.BillingNotificationEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationEdge.Cursor(childComplexity), true
+	case "BillingNotificationEdge.node":
+		if e.complexity.BillingNotificationEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationEdge.Node(childComplexity), true
+
+	case "BillingNotificationPreference.createdAt":
+		if e.complexity.BillingNotificationPreference.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.CreatedAt(childComplexity), true
+	case "BillingNotificationPreference.enabled":
+		if e.complexity.BillingNotificationPreference.Enabled == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.Enabled(childComplexity), true
+	case "BillingNotificationPreference.id":
+		if e.complexity.BillingNotificationPreference.ID == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.ID(childComplexity), true
+	case "BillingNotificationPreference.largeConsumptionEnabled":
+		if e.complexity.BillingNotificationPreference.LargeConsumptionEnabled == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.LargeConsumptionEnabled(childComplexity), true
+	case "BillingNotificationPreference.lowBalanceEnabled":
+		if e.complexity.BillingNotificationPreference.LowBalanceEnabled == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.LowBalanceEnabled(childComplexity), true
+	case "BillingNotificationPreference.paymentEnabled":
+		if e.complexity.BillingNotificationPreference.PaymentEnabled == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.PaymentEnabled(childComplexity), true
+	case "BillingNotificationPreference.subscriptionEnabled":
+		if e.complexity.BillingNotificationPreference.SubscriptionEnabled == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.SubscriptionEnabled(childComplexity), true
+	case "BillingNotificationPreference.updatedAt":
+		if e.complexity.BillingNotificationPreference.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.UpdatedAt(childComplexity), true
+	case "BillingNotificationPreference.user":
+		if e.complexity.BillingNotificationPreference.User == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.User(childComplexity), true
+	case "BillingNotificationPreference.userID":
+		if e.complexity.BillingNotificationPreference.UserID == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreference.UserID(childComplexity), true
+
+	case "BillingNotificationPreferenceConnection.edges":
+		if e.complexity.BillingNotificationPreferenceConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreferenceConnection.Edges(childComplexity), true
+	case "BillingNotificationPreferenceConnection.pageInfo":
+		if e.complexity.BillingNotificationPreferenceConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreferenceConnection.PageInfo(childComplexity), true
+	case "BillingNotificationPreferenceConnection.totalCount":
+		if e.complexity.BillingNotificationPreferenceConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreferenceConnection.TotalCount(childComplexity), true
+
+	case "BillingNotificationPreferenceEdge.cursor":
+		if e.complexity.BillingNotificationPreferenceEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreferenceEdge.Cursor(childComplexity), true
+	case "BillingNotificationPreferenceEdge.node":
+		if e.complexity.BillingNotificationPreferenceEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationPreferenceEdge.Node(childComplexity), true
+
+	case "BillingNotificationSetting.createdAt":
+		if e.complexity.BillingNotificationSetting.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.CreatedAt(childComplexity), true
+	case "BillingNotificationSetting.currency":
+		if e.complexity.BillingNotificationSetting.Currency == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.Currency(childComplexity), true
+	case "BillingNotificationSetting.enabled":
+		if e.complexity.BillingNotificationSetting.Enabled == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.Enabled(childComplexity), true
+	case "BillingNotificationSetting.id":
+		if e.complexity.BillingNotificationSetting.ID == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.ID(childComplexity), true
+	case "BillingNotificationSetting.key":
+		if e.complexity.BillingNotificationSetting.Key == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.Key(childComplexity), true
+	case "BillingNotificationSetting.largeConsumptionThresholdMicros":
+		if e.complexity.BillingNotificationSetting.LargeConsumptionThresholdMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.LargeConsumptionThresholdMicros(childComplexity), true
+	case "BillingNotificationSetting.lowBalanceThresholdMicros":
+		if e.complexity.BillingNotificationSetting.LowBalanceThresholdMicros == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.LowBalanceThresholdMicros(childComplexity), true
+	case "BillingNotificationSetting.operatorAlertsEnabled":
+		if e.complexity.BillingNotificationSetting.OperatorAlertsEnabled == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.OperatorAlertsEnabled(childComplexity), true
+	case "BillingNotificationSetting.subscriptionExpiryWarningDays":
+		if e.complexity.BillingNotificationSetting.SubscriptionExpiryWarningDays == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.SubscriptionExpiryWarningDays(childComplexity), true
+	case "BillingNotificationSetting.updatedAt":
+		if e.complexity.BillingNotificationSetting.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.UpdatedAt(childComplexity), true
+	case "BillingNotificationSetting.userNotificationsEnabled":
+		if e.complexity.BillingNotificationSetting.UserNotificationsEnabled == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSetting.UserNotificationsEnabled(childComplexity), true
+
+	case "BillingNotificationSettingConnection.edges":
+		if e.complexity.BillingNotificationSettingConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSettingConnection.Edges(childComplexity), true
+	case "BillingNotificationSettingConnection.pageInfo":
+		if e.complexity.BillingNotificationSettingConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSettingConnection.PageInfo(childComplexity), true
+	case "BillingNotificationSettingConnection.totalCount":
+		if e.complexity.BillingNotificationSettingConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSettingConnection.TotalCount(childComplexity), true
+
+	case "BillingNotificationSettingEdge.cursor":
+		if e.complexity.BillingNotificationSettingEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSettingEdge.Cursor(childComplexity), true
+	case "BillingNotificationSettingEdge.node":
+		if e.complexity.BillingNotificationSettingEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.BillingNotificationSettingEdge.Node(childComplexity), true
 
 	case "BillingOutbox.attempts":
 		if e.complexity.BillingOutbox.Attempts == nil {
@@ -8977,6 +9494,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.MakeUpPaymentOrder(childComplexity, args["input"].(biz.MakeUpPaymentOrderInput)), true
+	case "Mutation.markAllBillingNotificationsRead":
+		if e.complexity.Mutation.MarkAllBillingNotificationsRead == nil {
+			break
+		}
+
+		return e.complexity.Mutation.MarkAllBillingNotificationsRead(childComplexity), true
+	case "Mutation.markBillingNotificationRead":
+		if e.complexity.Mutation.MarkBillingNotificationRead == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_markBillingNotificationRead_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MarkBillingNotificationRead(childComplexity, args["id"].(objects.GUID)), true
 	case "Mutation.previewPromptProtectionRule":
 		if e.complexity.Mutation.PreviewPromptProtectionRule == nil {
 			break
@@ -9120,6 +9654,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SaveAffiliateSetting(childComplexity, args["input"].(biz.SaveAffiliateSettingInput)), true
+	case "Mutation.saveBillingNotificationSetting":
+		if e.complexity.Mutation.SaveBillingNotificationSetting == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_saveBillingNotificationSetting_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SaveBillingNotificationSetting(childComplexity, args["input"].(biz.SaveBillingNotificationSettingInput)), true
 	case "Mutation.saveBillingPriceRule":
 		if e.complexity.Mutation.SaveBillingPriceRule == nil {
 			break
@@ -9153,6 +9698,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SaveChannelModelPrices(childComplexity, args["channelId"].(objects.GUID), args["input"].([]*biz.SaveChannelModelPriceInput)), true
+	case "Mutation.saveMyBillingNotificationPreference":
+		if e.complexity.Mutation.SaveMyBillingNotificationPreference == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_saveMyBillingNotificationPreference_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SaveMyBillingNotificationPreference(childComplexity, args["input"].(biz.SaveBillingNotificationPreferenceInput)), true
 	case "Mutation.savePromoCode":
 		if e.complexity.Mutation.SavePromoCode == nil {
 			break
@@ -10198,6 +10754,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PaymentOrder.BillingAccountID(childComplexity), true
+	case "PaymentOrder.billingNotifications":
+		if e.complexity.PaymentOrder.BillingNotifications == nil {
+			break
+		}
+
+		args, err := ec.field_PaymentOrder_billingNotifications_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.PaymentOrder.BillingNotifications(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationOrder), args["where"].(*ent.BillingNotificationWhereInput)), true
 	case "PaymentOrder.cancelReason":
 		if e.complexity.PaymentOrder.CancelReason == nil {
 			break
@@ -11678,6 +12245,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.AdminBillingHolds(childComplexity, args["filter"].(*AdminBillingHoldsFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder)), true
+	case "Query.adminBillingNotificationSetting":
+		if e.complexity.Query.AdminBillingNotificationSetting == nil {
+			break
+		}
+
+		return e.complexity.Query.AdminBillingNotificationSetting(childComplexity), true
+	case "Query.adminBillingNotifications":
+		if e.complexity.Query.AdminBillingNotifications == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminBillingNotifications_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminBillingNotifications(childComplexity, args["filter"].(*AdminBillingNotificationsFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationOrder)), true
 	case "Query.adminBillingReport":
 		if e.complexity.Query.AdminBillingReport == nil {
 			break
@@ -11899,6 +12483,39 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.BillingHolds(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingHoldOrder), args["where"].(*ent.BillingHoldWhereInput)), true
+	case "Query.billingNotificationPreferences":
+		if e.complexity.Query.BillingNotificationPreferences == nil {
+			break
+		}
+
+		args, err := ec.field_Query_billingNotificationPreferences_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.BillingNotificationPreferences(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationPreferenceOrder), args["where"].(*ent.BillingNotificationPreferenceWhereInput)), true
+	case "Query.billingNotificationSettings":
+		if e.complexity.Query.BillingNotificationSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Query_billingNotificationSettings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.BillingNotificationSettings(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationSettingOrder), args["where"].(*ent.BillingNotificationSettingWhereInput)), true
+	case "Query.billingNotifications":
+		if e.complexity.Query.BillingNotifications == nil {
+			break
+		}
+
+		args, err := ec.field_Query_billingNotifications_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.BillingNotifications(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationOrder), args["where"].(*ent.BillingNotificationWhereInput)), true
 	case "Query.billingOutboxes":
 		if e.complexity.Query.BillingOutboxes == nil {
 			break
@@ -12190,6 +12807,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.MyBillingAccount(childComplexity), true
+	case "Query.myBillingNotificationPreference":
+		if e.complexity.Query.MyBillingNotificationPreference == nil {
+			break
+		}
+
+		return e.complexity.Query.MyBillingNotificationPreference(childComplexity), true
+	case "Query.myBillingNotifications":
+		if e.complexity.Query.MyBillingNotifications == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myBillingNotifications_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyBillingNotifications(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationOrder)), true
 	case "Query.myLedgerTransactions":
 		if e.complexity.Query.MyLedgerTransactions == nil {
 			break
@@ -15007,6 +15641,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageBillingRecord.BillingAccountID(childComplexity), true
+	case "UsageBillingRecord.billingNotifications":
+		if e.complexity.UsageBillingRecord.BillingNotifications == nil {
+			break
+		}
+
+		args, err := ec.field_UsageBillingRecord_billingNotifications_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.UsageBillingRecord.BillingNotifications(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationOrder), args["where"].(*ent.BillingNotificationWhereInput)), true
 	case "UsageBillingRecord.chargeAmountMicros":
 		if e.complexity.UsageBillingRecord.ChargeAmountMicros == nil {
 			break
@@ -15552,6 +16197,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.Avatar(childComplexity), true
+	case "User.billingNotificationPreferences":
+		if e.complexity.User.BillingNotificationPreferences == nil {
+			break
+		}
+
+		args, err := ec.field_User_billingNotificationPreferences_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.BillingNotificationPreferences(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationPreferenceOrder), args["where"].(*ent.BillingNotificationPreferenceWhereInput)), true
+	case "User.billingNotifications":
+		if e.complexity.User.BillingNotifications == nil {
+			break
+		}
+
+		args, err := ec.field_User_billingNotifications_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.BillingNotifications(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationOrder), args["where"].(*ent.BillingNotificationWhereInput)), true
 	case "User.channelOverrideTemplates":
 		if e.complexity.User.ChannelOverrideTemplates == nil {
 			break
@@ -15977,6 +16644,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UserSubscription.AssignedByID(childComplexity), true
+	case "UserSubscription.billingNotifications":
+		if e.complexity.UserSubscription.BillingNotifications == nil {
+			break
+		}
+
+		args, err := ec.field_UserSubscription_billingNotifications_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.UserSubscription.BillingNotifications(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.BillingNotificationOrder), args["where"].(*ent.BillingNotificationWhereInput)), true
 	case "UserSubscription.createdAt":
 		if e.complexity.UserSubscription.CreatedAt == nil {
 			break
@@ -16387,6 +17065,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAdminAffiliateRebatesFilter,
 		ec.unmarshalInputAdminAssignSubscriptionInput,
 		ec.unmarshalInputAdminBillingHoldsFilter,
+		ec.unmarshalInputAdminBillingNotificationsFilter,
 		ec.unmarshalInputAdminBillingReportFilter,
 		ec.unmarshalInputAdminCreateAndRedeemCodeInput,
 		ec.unmarshalInputAdminLedgerTransactionsFilter,
@@ -16415,6 +17094,12 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputBillingAccountWhereInput,
 		ec.unmarshalInputBillingHoldOrder,
 		ec.unmarshalInputBillingHoldWhereInput,
+		ec.unmarshalInputBillingNotificationOrder,
+		ec.unmarshalInputBillingNotificationPreferenceOrder,
+		ec.unmarshalInputBillingNotificationPreferenceWhereInput,
+		ec.unmarshalInputBillingNotificationSettingOrder,
+		ec.unmarshalInputBillingNotificationSettingWhereInput,
+		ec.unmarshalInputBillingNotificationWhereInput,
 		ec.unmarshalInputBillingOutboxOrder,
 		ec.unmarshalInputBillingOutboxWhereInput,
 		ec.unmarshalInputBillingPriceRuleOrder,
@@ -16567,6 +17252,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputS3Input,
 		ec.unmarshalInputSaveAffiliateProfileInput,
 		ec.unmarshalInputSaveAffiliateSettingInput,
+		ec.unmarshalInputSaveBillingNotificationPreferenceInput,
+		ec.unmarshalInputSaveBillingNotificationSettingInput,
 		ec.unmarshalInputSaveBillingPriceRuleForm,
 		ec.unmarshalInputSaveChannelEndpointsInput,
 		ec.unmarshalInputSaveChannelModelPriceInput,
@@ -16877,6 +17564,42 @@ func (ec *executionContext) field_BillingAccount_billingHolds_args(ctx context.C
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_BillingAccount_billingNotifications_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -18387,6 +19110,17 @@ func (ec *executionContext) field_Mutation_makeUpPaymentOrder_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_markBillingNotificationRead_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_previewPromptProtectionRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -18545,6 +19279,17 @@ func (ec *executionContext) field_Mutation_saveAffiliateSetting_args(ctx context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_saveBillingNotificationSetting_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSaveBillingNotificationSettingInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveBillingNotificationSettingInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_saveBillingPriceRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -18580,6 +19325,17 @@ func (ec *executionContext) field_Mutation_saveChannelModelPrices_args(ctx conte
 		return nil, err
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_saveMyBillingNotificationPreference_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSaveBillingNotificationPreferenceInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveBillingNotificationPreferenceInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -19287,6 +20043,42 @@ func (ec *executionContext) field_PaymentOrder_affiliateRebates_args(ctx context
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_PaymentOrder_billingNotifications_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -20056,6 +20848,42 @@ func (ec *executionContext) field_Query_adminBillingHolds_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_adminBillingNotifications_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOAdminBillingNotificationsFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminBillingNotificationsFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_adminBillingReport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -20765,6 +21593,114 @@ func (ec *executionContext) field_Query_billingHolds_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_billingNotificationPreferences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationPreferenceOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingNotificationPreferenceWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_billingNotificationSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationSettingOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingNotificationSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_billingNotifications_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_billingOutboxes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -21234,6 +22170,37 @@ func (ec *executionContext) field_Query_myAffiliateRebates_args(ctx context.Cont
 	}
 	args["last"] = arg3
 	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOAffiliateRebateOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myBillingNotifications_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrder)
 	if err != nil {
 		return nil, err
 	}
@@ -22663,6 +23630,42 @@ func (ec *executionContext) field_Trace_requests_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_UsageBillingRecord_billingNotifications_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_UsageLog_billingHolds_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -22764,6 +23767,42 @@ func (ec *executionContext) field_UserSubscription_affiliateRebates_args(ctx con
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOAffiliateRebateWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐAffiliateRebateWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_UserSubscription_billingNotifications_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -23088,6 +24127,78 @@ func (ec *executionContext) field_User_assignedUserSubscriptions_args(ctx contex
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOUserSubscriptionWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscriptionWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_User_billingNotificationPreferences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationPreferenceOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingNotificationPreferenceWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_User_billingNotifications_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOBillingNotificationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -23881,6 +24992,10 @@ func (ec *executionContext) fieldContext_APIKey_user(_ context.Context, field gr
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -26668,6 +27783,10 @@ func (ec *executionContext) fieldContext_AffiliateInvitation_inviter(_ context.C
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -26755,6 +27874,10 @@ func (ec *executionContext) fieldContext_AffiliateInvitation_invitee(_ context.C
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -27308,6 +28431,10 @@ func (ec *executionContext) fieldContext_AffiliateProfile_user(_ context.Context
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -28209,6 +29336,10 @@ func (ec *executionContext) fieldContext_AffiliateRebate_inviter(_ context.Conte
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -28296,6 +29427,10 @@ func (ec *executionContext) fieldContext_AffiliateRebate_invitee(_ context.Conte
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -28399,6 +29534,8 @@ func (ec *executionContext) fieldContext_AffiliateRebate_paymentOrder(_ context.
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_PaymentOrder_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -28502,6 +29639,8 @@ func (ec *executionContext) fieldContext_AffiliateRebate_userSubscription(_ cont
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -31127,6 +32266,55 @@ func (ec *executionContext) fieldContext_BillingAccount_promoUsages(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _BillingAccount_billingNotifications(ctx context.Context, field graphql.CollectedField, obj *ent.BillingAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingAccount_billingNotifications,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingNotifications(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationOrder), fc.Args["where"].(*ent.BillingNotificationWhereInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingAccount_billingNotifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_BillingAccount_billingNotifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _BillingAccountBinding_id(ctx context.Context, field graphql.CollectedField, obj *ent.BillingAccountBinding) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -31386,6 +32574,8 @@ func (ec *executionContext) fieldContext_BillingAccountBinding_billingAccount(_ 
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -31731,6 +32921,8 @@ func (ec *executionContext) fieldContext_BillingAccountEdge_node(_ context.Conte
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -33074,6 +34266,8 @@ func (ec *executionContext) fieldContext_BillingHold_billingAccount(_ context.Co
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -33561,6 +34755,2254 @@ func (ec *executionContext) _BillingHoldEdge_cursor(ctx context.Context, field g
 func (ec *executionContext) fieldContext_BillingHoldEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BillingHoldEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_id(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingNotification().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_userID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_userID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingNotification().UserID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_audience(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_audience,
+		func(ctx context.Context) (any, error) {
+			return obj.Audience, nil
+		},
+		nil,
+		ec.marshalNBillingNotificationAudience2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_audience(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type BillingNotificationAudience does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_category(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_category,
+		func(ctx context.Context) (any, error) {
+			return obj.Category, nil
+		},
+		nil,
+		ec.marshalNBillingNotificationCategory2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type BillingNotificationCategory does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_severity(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_severity,
+		func(ctx context.Context) (any, error) {
+			return obj.Severity, nil
+		},
+		nil,
+		ec.marshalNBillingNotificationSeverity2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_severity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type BillingNotificationSeverity does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_status(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNBillingNotificationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type BillingNotificationStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_eventKey(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_eventKey,
+		func(ctx context.Context) (any, error) {
+			return obj.EventKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_eventKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_title(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_title,
+		func(ctx context.Context) (any, error) {
+			return obj.Title, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_message(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_message,
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_currency(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_amountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_amountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.AmountMicros, nil
+		},
+		nil,
+		ec.marshalOInt2ᚖint64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_amountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_billingAccountID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_billingAccountID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingNotification().BillingAccountID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_billingAccountID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_paymentOrderID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_paymentOrderID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingNotification().PaymentOrderID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_paymentOrderID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_userSubscriptionID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_userSubscriptionID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingNotification().UserSubscriptionID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_userSubscriptionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_usageBillingRecordID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_usageBillingRecordID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingNotification().UsageBillingRecordID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_usageBillingRecordID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_readAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_readAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ReadAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_readAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_metadata(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_metadata,
+		func(ctx context.Context) (any, error) {
+			return obj.Metadata, nil
+		},
+		nil,
+		ec.marshalOJSONRawMessage2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type JSONRawMessage does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_user(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_user,
+		func(ctx context.Context) (any, error) {
+			return obj.User(ctx)
+		},
+		nil,
+		ec.marshalOUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_User_userSubscriptions(ctx, field)
+			case "assignedUserSubscriptions":
+				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_billingAccount(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_billingAccount,
+		func(ctx context.Context) (any, error) {
+			return obj.BillingAccount(ctx)
+		},
+		nil,
+		ec.marshalOBillingAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccount,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_billingAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingAccount_updatedAt(ctx, field)
+			case "ownerType":
+				return ec.fieldContext_BillingAccount_ownerType(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_BillingAccount_ownerID(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingAccount_currency(ctx, field)
+			case "balanceMicros":
+				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
+			case "creditLimitMicros":
+				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
+			case "status":
+				return ec.fieldContext_BillingAccount_status(ctx, field)
+			case "bindings":
+				return ec.fieldContext_BillingAccount_bindings(ctx, field)
+			case "ledgerTransactions":
+				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_paymentOrder(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_paymentOrder,
+		func(ctx context.Context) (any, error) {
+			return obj.PaymentOrder(ctx)
+		},
+		nil,
+		ec.marshalOPaymentOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrder,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_paymentOrder(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PaymentOrder_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PaymentOrder_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PaymentOrder_updatedAt(ctx, field)
+			case "orderNo":
+				return ec.fieldContext_PaymentOrder_orderNo(ctx, field)
+			case "projectID":
+				return ec.fieldContext_PaymentOrder_projectID(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_PaymentOrder_billingAccountID(ctx, field)
+			case "providerInstanceID":
+				return ec.fieldContext_PaymentOrder_providerInstanceID(ctx, field)
+			case "providerType":
+				return ec.fieldContext_PaymentOrder_providerType(ctx, field)
+			case "purpose":
+				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PaymentOrder_payableAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PaymentOrder_discountAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PaymentOrder_promoCodeID(ctx, field)
+			case "currency":
+				return ec.fieldContext_PaymentOrder_currency(ctx, field)
+			case "status":
+				return ec.fieldContext_PaymentOrder_status(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PaymentOrder_expiresAt(ctx, field)
+			case "canceledAt":
+				return ec.fieldContext_PaymentOrder_canceledAt(ctx, field)
+			case "cancelReason":
+				return ec.fieldContext_PaymentOrder_cancelReason(ctx, field)
+			case "makeupReason":
+				return ec.fieldContext_PaymentOrder_makeupReason(ctx, field)
+			case "failureReason":
+				return ec.fieldContext_PaymentOrder_failureReason(ctx, field)
+			case "refundedAt":
+				return ec.fieldContext_PaymentOrder_refundedAt(ctx, field)
+			case "refundReason":
+				return ec.fieldContext_PaymentOrder_refundReason(ctx, field)
+			case "refundAmountMicros":
+				return ec.fieldContext_PaymentOrder_refundAmountMicros(ctx, field)
+			case "externalTradeNo":
+				return ec.fieldContext_PaymentOrder_externalTradeNo(ctx, field)
+			case "paidAt":
+				return ec.fieldContext_PaymentOrder_paidAt(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_PaymentOrder_ledgerTransactionID(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PaymentOrder_metadata(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_PaymentOrder_billingAccount(ctx, field)
+			case "providerInstance":
+				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PaymentOrder_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
+			case "paymentEvents":
+				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_PaymentOrder_billingNotifications(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_userSubscription(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_userSubscription,
+		func(ctx context.Context) (any, error) {
+			return obj.UserSubscription(ctx)
+		},
+		nil,
+		ec.marshalOUserSubscription2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscription,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_userSubscription(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserSubscription_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UserSubscription_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UserSubscription_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_UserSubscription_userID(ctx, field)
+			case "planID":
+				return ec.fieldContext_UserSubscription_planID(ctx, field)
+			case "planSnapshot":
+				return ec.fieldContext_UserSubscription_planSnapshot(ctx, field)
+			case "status":
+				return ec.fieldContext_UserSubscription_status(ctx, field)
+			case "startsAt":
+				return ec.fieldContext_UserSubscription_startsAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UserSubscription_expiresAt(ctx, field)
+			case "currentPeriodStart":
+				return ec.fieldContext_UserSubscription_currentPeriodStart(ctx, field)
+			case "currentPeriodEnd":
+				return ec.fieldContext_UserSubscription_currentPeriodEnd(ctx, field)
+			case "resetAt":
+				return ec.fieldContext_UserSubscription_resetAt(ctx, field)
+			case "periodDays":
+				return ec.fieldContext_UserSubscription_periodDays(ctx, field)
+			case "includedAmountMicros":
+				return ec.fieldContext_UserSubscription_includedAmountMicros(ctx, field)
+			case "usedAmountMicros":
+				return ec.fieldContext_UserSubscription_usedAmountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_UserSubscription_currency(ctx, field)
+			case "supportedModelIds":
+				return ec.fieldContext_UserSubscription_supportedModelIds(ctx, field)
+			case "supportedProjectIds":
+				return ec.fieldContext_UserSubscription_supportedProjectIds(ctx, field)
+			case "supportedGroupIds":
+				return ec.fieldContext_UserSubscription_supportedGroupIds(ctx, field)
+			case "allowWalletFallback":
+				return ec.fieldContext_UserSubscription_allowWalletFallback(ctx, field)
+			case "assignedByID":
+				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
+			case "purchaseLedgerTransactionID":
+				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
+			case "notes":
+				return ec.fieldContext_UserSubscription_notes(ctx, field)
+			case "revokeReason":
+				return ec.fieldContext_UserSubscription_revokeReason(ctx, field)
+			case "user":
+				return ec.fieldContext_UserSubscription_user(ctx, field)
+			case "plan":
+				return ec.fieldContext_UserSubscription_plan(ctx, field)
+			case "assignedBy":
+				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
+			case "purchaseLedgerTransaction":
+				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			case "affiliateRebates":
+				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotification_usageBillingRecord(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotification) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotification_usageBillingRecord,
+		func(ctx context.Context) (any, error) {
+			return obj.UsageBillingRecord(ctx)
+		},
+		nil,
+		ec.marshalOUsageBillingRecord2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUsageBillingRecord,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotification_usageBillingRecord(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotification",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UsageBillingRecord_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UsageBillingRecord_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UsageBillingRecord_updatedAt(ctx, field)
+			case "usageLogID":
+				return ec.fieldContext_UsageBillingRecord_usageLogID(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_UsageBillingRecord_billingAccountID(ctx, field)
+			case "projectID":
+				return ec.fieldContext_UsageBillingRecord_projectID(ctx, field)
+			case "userID":
+				return ec.fieldContext_UsageBillingRecord_userID(ctx, field)
+			case "apiKeyID":
+				return ec.fieldContext_UsageBillingRecord_apiKeyID(ctx, field)
+			case "modelID":
+				return ec.fieldContext_UsageBillingRecord_modelID(ctx, field)
+			case "requestType":
+				return ec.fieldContext_UsageBillingRecord_requestType(ctx, field)
+			case "usageSnapshot":
+				return ec.fieldContext_UsageBillingRecord_usageSnapshot(ctx, field)
+			case "priceSnapshot":
+				return ec.fieldContext_UsageBillingRecord_priceSnapshot(ctx, field)
+			case "priceReferenceID":
+				return ec.fieldContext_UsageBillingRecord_priceReferenceID(ctx, field)
+			case "chargeItems":
+				return ec.fieldContext_UsageBillingRecord_chargeItems(ctx, field)
+			case "costAmountMicros":
+				return ec.fieldContext_UsageBillingRecord_costAmountMicros(ctx, field)
+			case "chargeAmountMicros":
+				return ec.fieldContext_UsageBillingRecord_chargeAmountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_UsageBillingRecord_currency(ctx, field)
+			case "status":
+				return ec.fieldContext_UsageBillingRecord_status(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_UsageBillingRecord_ledgerTransactionID(ctx, field)
+			case "userSubscriptionID":
+				return ec.fieldContext_UsageBillingRecord_userSubscriptionID(ctx, field)
+			case "idempotencyKey":
+				return ec.fieldContext_UsageBillingRecord_idempotencyKey(ctx, field)
+			case "error":
+				return ec.fieldContext_UsageBillingRecord_error(ctx, field)
+			case "usageLog":
+				return ec.fieldContext_UsageBillingRecord_usageLog(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_UsageBillingRecord_billingAccount(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_UsageBillingRecord_ledgerTransaction(ctx, field)
+			case "userSubscription":
+				return ec.fieldContext_UsageBillingRecord_userSubscription(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UsageBillingRecord_billingNotifications(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UsageBillingRecord", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOBillingNotificationEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_BillingNotificationEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_BillingNotificationEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOBillingNotification2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotification,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingNotification_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingNotification_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingNotification_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_BillingNotification_userID(ctx, field)
+			case "audience":
+				return ec.fieldContext_BillingNotification_audience(ctx, field)
+			case "category":
+				return ec.fieldContext_BillingNotification_category(ctx, field)
+			case "severity":
+				return ec.fieldContext_BillingNotification_severity(ctx, field)
+			case "status":
+				return ec.fieldContext_BillingNotification_status(ctx, field)
+			case "eventKey":
+				return ec.fieldContext_BillingNotification_eventKey(ctx, field)
+			case "title":
+				return ec.fieldContext_BillingNotification_title(ctx, field)
+			case "message":
+				return ec.fieldContext_BillingNotification_message(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingNotification_currency(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_BillingNotification_amountMicros(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_BillingNotification_billingAccountID(ctx, field)
+			case "paymentOrderID":
+				return ec.fieldContext_BillingNotification_paymentOrderID(ctx, field)
+			case "userSubscriptionID":
+				return ec.fieldContext_BillingNotification_userSubscriptionID(ctx, field)
+			case "usageBillingRecordID":
+				return ec.fieldContext_BillingNotification_usageBillingRecordID(ctx, field)
+			case "readAt":
+				return ec.fieldContext_BillingNotification_readAt(ctx, field)
+			case "metadata":
+				return ec.fieldContext_BillingNotification_metadata(ctx, field)
+			case "user":
+				return ec.fieldContext_BillingNotification_user(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_BillingNotification_billingAccount(ctx, field)
+			case "paymentOrder":
+				return ec.fieldContext_BillingNotification_paymentOrder(ctx, field)
+			case "userSubscription":
+				return ec.fieldContext_BillingNotification_userSubscription(ctx, field)
+			case "usageBillingRecord":
+				return ec.fieldContext_BillingNotification_usageBillingRecord(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotification", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_id(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingNotificationPreference().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_userID(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_userID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingNotificationPreference().UserID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_enabled(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_lowBalanceEnabled(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_lowBalanceEnabled,
+		func(ctx context.Context) (any, error) {
+			return obj.LowBalanceEnabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_lowBalanceEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_paymentEnabled(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_paymentEnabled,
+		func(ctx context.Context) (any, error) {
+			return obj.PaymentEnabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_paymentEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_subscriptionEnabled(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_subscriptionEnabled,
+		func(ctx context.Context) (any, error) {
+			return obj.SubscriptionEnabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_subscriptionEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_largeConsumptionEnabled(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_largeConsumptionEnabled,
+		func(ctx context.Context) (any, error) {
+			return obj.LargeConsumptionEnabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_largeConsumptionEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreference_user(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreference) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreference_user,
+		func(ctx context.Context) (any, error) {
+			return obj.User(ctx)
+		},
+		nil,
+		ec.marshalNUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreference_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreference",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_User_userSubscriptions(ctx, field)
+			case "assignedUserSubscriptions":
+				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "affiliateProfiles":
+				return ec.fieldContext_User_affiliateProfiles(ctx, field)
+			case "affiliateInviters":
+				return ec.fieldContext_User_affiliateInviters(ctx, field)
+			case "affiliateInvitees":
+				return ec.fieldContext_User_affiliateInvitees(ctx, field)
+			case "affiliateRebatesEarned":
+				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
+			case "affiliateRebatesGenerated":
+				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreferenceConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreferenceConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreferenceConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOBillingNotificationPreferenceEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreferenceConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreferenceConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_BillingNotificationPreferenceEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_BillingNotificationPreferenceEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationPreferenceEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreferenceConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreferenceConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreferenceConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreferenceConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreferenceConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreferenceConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreferenceConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreferenceConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreferenceConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreferenceConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreferenceEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreferenceEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreferenceEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOBillingNotificationPreference2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreference,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreferenceEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreferenceEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingNotificationPreference_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingNotificationPreference_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingNotificationPreference_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_BillingNotificationPreference_userID(ctx, field)
+			case "enabled":
+				return ec.fieldContext_BillingNotificationPreference_enabled(ctx, field)
+			case "lowBalanceEnabled":
+				return ec.fieldContext_BillingNotificationPreference_lowBalanceEnabled(ctx, field)
+			case "paymentEnabled":
+				return ec.fieldContext_BillingNotificationPreference_paymentEnabled(ctx, field)
+			case "subscriptionEnabled":
+				return ec.fieldContext_BillingNotificationPreference_subscriptionEnabled(ctx, field)
+			case "largeConsumptionEnabled":
+				return ec.fieldContext_BillingNotificationPreference_largeConsumptionEnabled(ctx, field)
+			case "user":
+				return ec.fieldContext_BillingNotificationPreference_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationPreference", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationPreferenceEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationPreferenceEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationPreferenceEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationPreferenceEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationPreferenceEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_id(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.BillingNotificationSetting().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_key(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_key,
+		func(ctx context.Context) (any, error) {
+			return obj.Key, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_enabled(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_userNotificationsEnabled(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_userNotificationsEnabled,
+		func(ctx context.Context) (any, error) {
+			return obj.UserNotificationsEnabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_userNotificationsEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_operatorAlertsEnabled(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_operatorAlertsEnabled,
+		func(ctx context.Context) (any, error) {
+			return obj.OperatorAlertsEnabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_operatorAlertsEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_lowBalanceThresholdMicros(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_lowBalanceThresholdMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.LowBalanceThresholdMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_lowBalanceThresholdMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_largeConsumptionThresholdMicros(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_largeConsumptionThresholdMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.LargeConsumptionThresholdMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_largeConsumptionThresholdMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_subscriptionExpiryWarningDays(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_subscriptionExpiryWarningDays,
+		func(ctx context.Context) (any, error) {
+			return obj.SubscriptionExpiryWarningDays, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_subscriptionExpiryWarningDays(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSetting_currency(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSetting) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSetting_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSetting_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSetting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSettingConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSettingConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSettingConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOBillingNotificationSettingEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSettingConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSettingConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_BillingNotificationSettingEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_BillingNotificationSettingEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationSettingEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSettingConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSettingConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSettingConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSettingConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSettingConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSettingConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSettingConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSettingConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSettingConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSettingConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSettingEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSettingEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSettingEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOBillingNotificationSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSetting,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSettingEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSettingEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingNotificationSetting_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingNotificationSetting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingNotificationSetting_updatedAt(ctx, field)
+			case "key":
+				return ec.fieldContext_BillingNotificationSetting_key(ctx, field)
+			case "enabled":
+				return ec.fieldContext_BillingNotificationSetting_enabled(ctx, field)
+			case "userNotificationsEnabled":
+				return ec.fieldContext_BillingNotificationSetting_userNotificationsEnabled(ctx, field)
+			case "operatorAlertsEnabled":
+				return ec.fieldContext_BillingNotificationSetting_operatorAlertsEnabled(ctx, field)
+			case "lowBalanceThresholdMicros":
+				return ec.fieldContext_BillingNotificationSetting_lowBalanceThresholdMicros(ctx, field)
+			case "largeConsumptionThresholdMicros":
+				return ec.fieldContext_BillingNotificationSetting_largeConsumptionThresholdMicros(ctx, field)
+			case "subscriptionExpiryWarningDays":
+				return ec.fieldContext_BillingNotificationSetting_subscriptionExpiryWarningDays(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingNotificationSetting_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationSetting", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingNotificationSettingEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.BillingNotificationSettingEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingNotificationSettingEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingNotificationSettingEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingNotificationSettingEdge",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -38935,6 +42377,10 @@ func (ec *executionContext) fieldContext_ChannelOverrideTemplate_user(_ context.
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -44309,6 +47755,10 @@ func (ec *executionContext) fieldContext_InitializeSystemPayload_user(_ context.
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -45332,6 +48782,8 @@ func (ec *executionContext) fieldContext_LedgerTransaction_billingAccount(_ cont
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -50356,6 +53808,10 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -50455,6 +53911,10 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -50554,6 +54014,10 @@ func (ec *executionContext) fieldContext_Mutation_updateUserStatus(ctx context.C
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -52110,6 +55574,10 @@ func (ec *executionContext) fieldContext_Mutation_updateMe(ctx context.Context, 
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -54606,6 +58074,8 @@ func (ec *executionContext) fieldContext_Mutation_createManualRechargeOrder(ctx 
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_PaymentOrder_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -54717,6 +58187,8 @@ func (ec *executionContext) fieldContext_Mutation_confirmManualPayment(ctx conte
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_PaymentOrder_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -54828,6 +58300,8 @@ func (ec *executionContext) fieldContext_Mutation_cancelPaymentOrder(ctx context
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_PaymentOrder_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -54939,6 +58413,8 @@ func (ec *executionContext) fieldContext_Mutation_makeUpPaymentOrder(ctx context
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_PaymentOrder_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -55280,6 +58756,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUserBillingAccount(ctx c
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -56087,6 +59565,8 @@ func (ec *executionContext) fieldContext_Mutation_purchaseSubscriptionPlan(ctx c
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -56202,6 +59682,8 @@ func (ec *executionContext) fieldContext_Mutation_adminAssignSubscription(ctx co
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -56317,6 +59799,8 @@ func (ec *executionContext) fieldContext_Mutation_extendUserSubscription(ctx con
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -56432,6 +59916,8 @@ func (ec *executionContext) fieldContext_Mutation_revokeUserSubscription(ctx con
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -56547,6 +60033,8 @@ func (ec *executionContext) fieldContext_Mutation_restoreUserSubscription(ctx co
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -56662,6 +60150,8 @@ func (ec *executionContext) fieldContext_Mutation_resetUserSubscriptionUsage(ctx
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -56900,6 +60390,254 @@ func (ec *executionContext) fieldContext_Mutation_saveAffiliateProfile(ctx conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_saveAffiliateProfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_saveMyBillingNotificationPreference(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_saveMyBillingNotificationPreference,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SaveMyBillingNotificationPreference(ctx, fc.Args["input"].(biz.SaveBillingNotificationPreferenceInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationPreference2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreference,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_saveMyBillingNotificationPreference(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingNotificationPreference_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingNotificationPreference_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingNotificationPreference_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_BillingNotificationPreference_userID(ctx, field)
+			case "enabled":
+				return ec.fieldContext_BillingNotificationPreference_enabled(ctx, field)
+			case "lowBalanceEnabled":
+				return ec.fieldContext_BillingNotificationPreference_lowBalanceEnabled(ctx, field)
+			case "paymentEnabled":
+				return ec.fieldContext_BillingNotificationPreference_paymentEnabled(ctx, field)
+			case "subscriptionEnabled":
+				return ec.fieldContext_BillingNotificationPreference_subscriptionEnabled(ctx, field)
+			case "largeConsumptionEnabled":
+				return ec.fieldContext_BillingNotificationPreference_largeConsumptionEnabled(ctx, field)
+			case "user":
+				return ec.fieldContext_BillingNotificationPreference_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationPreference", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_saveMyBillingNotificationPreference_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_markBillingNotificationRead(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_markBillingNotificationRead,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().MarkBillingNotificationRead(ctx, fc.Args["id"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNBillingNotification2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotification,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_markBillingNotificationRead(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingNotification_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingNotification_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingNotification_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_BillingNotification_userID(ctx, field)
+			case "audience":
+				return ec.fieldContext_BillingNotification_audience(ctx, field)
+			case "category":
+				return ec.fieldContext_BillingNotification_category(ctx, field)
+			case "severity":
+				return ec.fieldContext_BillingNotification_severity(ctx, field)
+			case "status":
+				return ec.fieldContext_BillingNotification_status(ctx, field)
+			case "eventKey":
+				return ec.fieldContext_BillingNotification_eventKey(ctx, field)
+			case "title":
+				return ec.fieldContext_BillingNotification_title(ctx, field)
+			case "message":
+				return ec.fieldContext_BillingNotification_message(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingNotification_currency(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_BillingNotification_amountMicros(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_BillingNotification_billingAccountID(ctx, field)
+			case "paymentOrderID":
+				return ec.fieldContext_BillingNotification_paymentOrderID(ctx, field)
+			case "userSubscriptionID":
+				return ec.fieldContext_BillingNotification_userSubscriptionID(ctx, field)
+			case "usageBillingRecordID":
+				return ec.fieldContext_BillingNotification_usageBillingRecordID(ctx, field)
+			case "readAt":
+				return ec.fieldContext_BillingNotification_readAt(ctx, field)
+			case "metadata":
+				return ec.fieldContext_BillingNotification_metadata(ctx, field)
+			case "user":
+				return ec.fieldContext_BillingNotification_user(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_BillingNotification_billingAccount(ctx, field)
+			case "paymentOrder":
+				return ec.fieldContext_BillingNotification_paymentOrder(ctx, field)
+			case "userSubscription":
+				return ec.fieldContext_BillingNotification_userSubscription(ctx, field)
+			case "usageBillingRecord":
+				return ec.fieldContext_BillingNotification_usageBillingRecord(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotification", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_markBillingNotificationRead_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_markAllBillingNotificationsRead(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_markAllBillingNotificationsRead,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().MarkAllBillingNotificationsRead(ctx)
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_markAllBillingNotificationsRead(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_saveBillingNotificationSetting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_saveBillingNotificationSetting,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SaveBillingNotificationSetting(ctx, fc.Args["input"].(biz.SaveBillingNotificationSettingInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSetting,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_saveBillingNotificationSetting(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingNotificationSetting_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingNotificationSetting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingNotificationSetting_updatedAt(ctx, field)
+			case "key":
+				return ec.fieldContext_BillingNotificationSetting_key(ctx, field)
+			case "enabled":
+				return ec.fieldContext_BillingNotificationSetting_enabled(ctx, field)
+			case "userNotificationsEnabled":
+				return ec.fieldContext_BillingNotificationSetting_userNotificationsEnabled(ctx, field)
+			case "operatorAlertsEnabled":
+				return ec.fieldContext_BillingNotificationSetting_operatorAlertsEnabled(ctx, field)
+			case "lowBalanceThresholdMicros":
+				return ec.fieldContext_BillingNotificationSetting_lowBalanceThresholdMicros(ctx, field)
+			case "largeConsumptionThresholdMicros":
+				return ec.fieldContext_BillingNotificationSetting_largeConsumptionThresholdMicros(ctx, field)
+			case "subscriptionExpiryWarningDays":
+				return ec.fieldContext_BillingNotificationSetting_subscriptionExpiryWarningDays(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingNotificationSetting_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationSetting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_saveBillingNotificationSetting_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -57622,6 +61360,10 @@ func (ec *executionContext) fieldContext_OIDCIdentity_user(_ context.Context, fi
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -59231,6 +62973,8 @@ func (ec *executionContext) fieldContext_PaymentEvent_paymentOrder(_ context.Con
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_PaymentOrder_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -60315,6 +64059,8 @@ func (ec *executionContext) fieldContext_PaymentOrder_billingAccount(_ context.C
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -60672,6 +64418,55 @@ func (ec *executionContext) fieldContext_PaymentOrder_affiliateRebates(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _PaymentOrder_billingNotifications(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentOrder) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentOrder_billingNotifications,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingNotifications(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationOrder), fc.Args["where"].(*ent.BillingNotificationWhereInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentOrder_billingNotifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentOrder",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_PaymentOrder_billingNotifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PaymentOrderConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentOrderConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -60867,6 +64662,8 @@ func (ec *executionContext) fieldContext_PaymentOrderEdge_node(_ context.Context
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_PaymentOrder_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -64395,6 +68192,10 @@ func (ec *executionContext) fieldContext_PromoUsage_user(_ context.Context, fiel
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -64462,6 +68263,8 @@ func (ec *executionContext) fieldContext_PromoUsage_billingAccount(_ context.Con
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -64561,6 +68364,8 @@ func (ec *executionContext) fieldContext_PromoUsage_paymentOrder(_ context.Conte
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_PaymentOrder_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_PaymentOrder_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
 		},
@@ -64664,6 +68469,8 @@ func (ec *executionContext) fieldContext_PromoUsage_userSubscription(_ context.C
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -67536,6 +71343,153 @@ func (ec *executionContext) fieldContext_Query_billingHolds(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_billingHolds_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_billingNotifications(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_billingNotifications,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().BillingNotifications(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationOrder), fc.Args["where"].(*ent.BillingNotificationWhereInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_billingNotifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_billingNotifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_billingNotificationPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_billingNotificationPreferences,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().BillingNotificationPreferences(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationPreferenceOrder), fc.Args["where"].(*ent.BillingNotificationPreferenceWhereInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationPreferenceConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_billingNotificationPreferences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationPreferenceConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationPreferenceConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationPreferenceConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationPreferenceConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_billingNotificationPreferences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_billingNotificationSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_billingNotificationSettings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().BillingNotificationSettings(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationSettingOrder), fc.Args["where"].(*ent.BillingNotificationSettingWhereInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationSettingConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_billingNotificationSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationSettingConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationSettingConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationSettingConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationSettingConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_billingNotificationSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -71565,6 +75519,8 @@ func (ec *executionContext) fieldContext_Query_projectBillingAccount(ctx context
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -71639,6 +75595,8 @@ func (ec *executionContext) fieldContext_Query_myBillingAccount(_ context.Contex
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -71703,6 +75661,8 @@ func (ec *executionContext) fieldContext_Query_userBillingAccount(ctx context.Co
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -72805,6 +76765,106 @@ func (ec *executionContext) fieldContext_Query_myAffiliateRebates(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_myBillingNotificationPreference(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myBillingNotificationPreference,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyBillingNotificationPreference(ctx)
+		},
+		nil,
+		ec.marshalNBillingNotificationPreference2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreference,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myBillingNotificationPreference(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingNotificationPreference_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingNotificationPreference_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingNotificationPreference_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_BillingNotificationPreference_userID(ctx, field)
+			case "enabled":
+				return ec.fieldContext_BillingNotificationPreference_enabled(ctx, field)
+			case "lowBalanceEnabled":
+				return ec.fieldContext_BillingNotificationPreference_lowBalanceEnabled(ctx, field)
+			case "paymentEnabled":
+				return ec.fieldContext_BillingNotificationPreference_paymentEnabled(ctx, field)
+			case "subscriptionEnabled":
+				return ec.fieldContext_BillingNotificationPreference_subscriptionEnabled(ctx, field)
+			case "largeConsumptionEnabled":
+				return ec.fieldContext_BillingNotificationPreference_largeConsumptionEnabled(ctx, field)
+			case "user":
+				return ec.fieldContext_BillingNotificationPreference_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationPreference", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myBillingNotifications(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myBillingNotifications,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyBillingNotifications(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationOrder))
+		},
+		nil,
+		ec.marshalNBillingNotificationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myBillingNotifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myBillingNotifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_adminAffiliateSetting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -72995,6 +77055,108 @@ func (ec *executionContext) fieldContext_Query_adminAffiliateRebates(ctx context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_adminAffiliateRebates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminBillingNotificationSetting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminBillingNotificationSetting,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().AdminBillingNotificationSetting(ctx)
+		},
+		nil,
+		ec.marshalNBillingNotificationSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSetting,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminBillingNotificationSetting(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingNotificationSetting_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingNotificationSetting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingNotificationSetting_updatedAt(ctx, field)
+			case "key":
+				return ec.fieldContext_BillingNotificationSetting_key(ctx, field)
+			case "enabled":
+				return ec.fieldContext_BillingNotificationSetting_enabled(ctx, field)
+			case "userNotificationsEnabled":
+				return ec.fieldContext_BillingNotificationSetting_userNotificationsEnabled(ctx, field)
+			case "operatorAlertsEnabled":
+				return ec.fieldContext_BillingNotificationSetting_operatorAlertsEnabled(ctx, field)
+			case "lowBalanceThresholdMicros":
+				return ec.fieldContext_BillingNotificationSetting_lowBalanceThresholdMicros(ctx, field)
+			case "largeConsumptionThresholdMicros":
+				return ec.fieldContext_BillingNotificationSetting_largeConsumptionThresholdMicros(ctx, field)
+			case "subscriptionExpiryWarningDays":
+				return ec.fieldContext_BillingNotificationSetting_subscriptionExpiryWarningDays(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingNotificationSetting_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationSetting", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminBillingNotifications(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminBillingNotifications,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AdminBillingNotifications(ctx, fc.Args["filter"].(*AdminBillingNotificationsFilter), fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationOrder))
+		},
+		nil,
+		ec.marshalNBillingNotificationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminBillingNotifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminBillingNotifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -73835,6 +77997,10 @@ func (ec *executionContext) fieldContext_RedeemCode_createdBy(_ context.Context,
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -73922,6 +78088,10 @@ func (ec *executionContext) fieldContext_RedeemCode_usedBy(_ context.Context, fi
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -79037,6 +83207,10 @@ func (ec *executionContext) fieldContext_SignInPayload_user(_ context.Context, f
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -85653,6 +89827,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_billingAccount(_ con
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
 			case "promoUsages":
 				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_BillingAccount_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -85835,9 +90011,60 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_userSubscription(_ c
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageBillingRecord_billingNotifications(ctx context.Context, field graphql.CollectedField, obj *ent.UsageBillingRecord) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageBillingRecord_billingNotifications,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingNotifications(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationOrder), fc.Args["where"].(*ent.BillingNotificationWhereInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageBillingRecord_billingNotifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageBillingRecord",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_UsageBillingRecord_billingNotifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -86021,6 +90248,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecordEdge_node(_ context.C
 				return ec.fieldContext_UsageBillingRecord_ledgerTransaction(ctx, field)
 			case "userSubscription":
 				return ec.fieldContext_UsageBillingRecord_userSubscription(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UsageBillingRecord_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageBillingRecord", field.Name)
 		},
@@ -88743,6 +92972,104 @@ func (ec *executionContext) fieldContext_User_affiliateRebatesGenerated(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _User_billingNotificationPreferences(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_billingNotificationPreferences,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingNotificationPreferences(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationPreferenceOrder), fc.Args["where"].(*ent.BillingNotificationPreferenceWhereInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationPreferenceConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_billingNotificationPreferences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationPreferenceConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationPreferenceConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationPreferenceConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationPreferenceConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_billingNotificationPreferences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_billingNotifications(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_billingNotifications,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingNotifications(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationOrder), fc.Args["where"].(*ent.BillingNotificationWhereInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_billingNotifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_billingNotifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_projectUsers(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -89045,6 +93372,10 @@ func (ec *executionContext) fieldContext_UserEdge_node(_ context.Context, field 
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -89738,6 +94069,10 @@ func (ec *executionContext) fieldContext_UserProject_user(_ context.Context, fie
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -90155,6 +94490,10 @@ func (ec *executionContext) fieldContext_UserRole_user(_ context.Context, field 
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -91105,6 +95444,10 @@ func (ec *executionContext) fieldContext_UserSubscription_user(_ context.Context
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -91259,6 +95602,10 @@ func (ec *executionContext) fieldContext_UserSubscription_assignedBy(_ context.C
 				return ec.fieldContext_User_affiliateRebatesEarned(ctx, field)
 			case "affiliateRebatesGenerated":
 				return ec.fieldContext_User_affiliateRebatesGenerated(ctx, field)
+			case "billingNotificationPreferences":
+				return ec.fieldContext_User_billingNotificationPreferences(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_User_billingNotifications(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -91571,6 +95918,55 @@ func (ec *executionContext) fieldContext_UserSubscription_affiliateRebates(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _UserSubscription_billingNotifications(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserSubscription_billingNotifications,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.BillingNotifications(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.BillingNotificationOrder), fc.Args["where"].(*ent.BillingNotificationWhereInput))
+		},
+		nil,
+		ec.marshalNBillingNotificationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserSubscription_billingNotifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserSubscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_BillingNotificationConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_BillingNotificationConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_BillingNotificationConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingNotificationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_UserSubscription_billingNotifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserSubscriptionConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscriptionConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -91770,6 +96166,8 @@ func (ec *executionContext) fieldContext_UserSubscriptionEdge_node(_ context.Con
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			case "affiliateRebates":
 				return ec.fieldContext_UserSubscription_affiliateRebates(ctx, field)
+			case "billingNotifications":
+				return ec.fieldContext_UserSubscription_billingNotifications(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
 		},
@@ -95894,6 +100292,110 @@ func (ec *executionContext) unmarshalInputAdminBillingHoldsFilter(ctx context.Co
 				return it, err
 			}
 			it.ExpiresBefore = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAdminBillingNotificationsFilter(ctx context.Context, obj any) (AdminBillingNotificationsFilter, error) {
+	var it AdminBillingNotificationsFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userId", "audience", "category", "severity", "status", "eventKey", "billingAccountId", "paymentOrderId", "userSubscriptionId", "usageBillingRecordId", "from", "to"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "audience":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("audience"))
+			data, err := ec.unmarshalOBillingNotificationAudience2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Audience = data
+		case "category":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("category"))
+			data, err := ec.unmarshalOBillingNotificationCategory2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Category = data
+		case "severity":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("severity"))
+			data, err := ec.unmarshalOBillingNotificationSeverity2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Severity = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOBillingNotificationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "eventKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKey = data
+		case "billingAccountId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingAccountID = data
+		case "paymentOrderId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentOrderID = data
+		case "userSubscriptionId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserSubscriptionID = data
+		case "usageBillingRecordId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageBillingRecordId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsageBillingRecordID = data
+		case "from":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.From = data
+		case "to":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.To = data
 		}
 	}
 
@@ -100587,7 +105089,7 @@ func (ec *executionContext) unmarshalInputBillingAccountWhereInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "ownerType", "ownerTypeNEQ", "ownerTypeIn", "ownerTypeNotIn", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDGT", "ownerIDGTE", "ownerIDLT", "ownerIDLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "balanceMicros", "balanceMicrosNEQ", "balanceMicrosIn", "balanceMicrosNotIn", "balanceMicrosGT", "balanceMicrosGTE", "balanceMicrosLT", "balanceMicrosLTE", "heldBalanceMicros", "heldBalanceMicrosNEQ", "heldBalanceMicrosIn", "heldBalanceMicrosNotIn", "heldBalanceMicrosGT", "heldBalanceMicrosGTE", "heldBalanceMicrosLT", "heldBalanceMicrosLTE", "creditLimitMicros", "creditLimitMicrosNEQ", "creditLimitMicrosIn", "creditLimitMicrosNotIn", "creditLimitMicrosGT", "creditLimitMicrosGTE", "creditLimitMicrosLT", "creditLimitMicrosLTE", "status", "statusNEQ", "statusIn", "statusNotIn", "hasBindings", "hasBindingsWith", "hasLedgerTransactions", "hasLedgerTransactionsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasPaymentOrders", "hasPaymentOrdersWith", "hasPromoUsages", "hasPromoUsagesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "ownerType", "ownerTypeNEQ", "ownerTypeIn", "ownerTypeNotIn", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDGT", "ownerIDGTE", "ownerIDLT", "ownerIDLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "balanceMicros", "balanceMicrosNEQ", "balanceMicrosIn", "balanceMicrosNotIn", "balanceMicrosGT", "balanceMicrosGTE", "balanceMicrosLT", "balanceMicrosLTE", "heldBalanceMicros", "heldBalanceMicrosNEQ", "heldBalanceMicrosIn", "heldBalanceMicrosNotIn", "heldBalanceMicrosGT", "heldBalanceMicrosGTE", "heldBalanceMicrosLT", "heldBalanceMicrosLTE", "creditLimitMicros", "creditLimitMicrosNEQ", "creditLimitMicrosIn", "creditLimitMicrosNotIn", "creditLimitMicrosGT", "creditLimitMicrosGTE", "creditLimitMicrosLT", "creditLimitMicrosLTE", "status", "statusNEQ", "statusIn", "statusNotIn", "hasBindings", "hasBindingsWith", "hasLedgerTransactions", "hasLedgerTransactionsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasPaymentOrders", "hasPaymentOrdersWith", "hasPromoUsages", "hasPromoUsagesWith", "hasBillingNotifications", "hasBillingNotificationsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -101270,6 +105772,20 @@ func (ec *executionContext) unmarshalInputBillingAccountWhereInput(ctx context.C
 				return it, err
 			}
 			it.HasPromoUsagesWith = data
+		case "hasBillingNotifications":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotifications"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotifications = data
+		case "hasBillingNotificationsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotificationsWith"))
+			data, err := ec.unmarshalOBillingNotificationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotificationsWith = data
 		}
 	}
 
@@ -103034,6 +107550,2339 @@ func (ec *executionContext) unmarshalInputBillingHoldWhereInput(ctx context.Cont
 				return it, err
 			}
 			it.HasCapturedLedgerTransactionWith = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBillingNotificationOrder(ctx context.Context, obj any) (ent.BillingNotificationOrder, error) {
+	var it ent.BillingNotificationOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNBillingNotificationOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBillingNotificationPreferenceOrder(ctx context.Context, obj any) (ent.BillingNotificationPreferenceOrder, error) {
+	var it ent.BillingNotificationPreferenceOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNBillingNotificationPreferenceOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBillingNotificationPreferenceWhereInput(ctx context.Context, obj any) (ent.BillingNotificationPreferenceWhereInput, error) {
+	var it ent.BillingNotificationPreferenceWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "enabled", "enabledNEQ", "lowBalanceEnabled", "lowBalanceEnabledNEQ", "paymentEnabled", "paymentEnabledNEQ", "subscriptionEnabled", "subscriptionEnabledNEQ", "largeConsumptionEnabled", "largeConsumptionEnabledNEQ", "hasUser", "hasUserWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOBillingNotificationPreferenceWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOBillingNotificationPreferenceWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOBillingNotificationPreferenceWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "userID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserID = converted
+		case "userIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDNEQ = converted
+		case "userIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDIn = converted
+		case "userIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDNotIn = converted
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "enabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EnabledNEQ = data
+		case "lowBalanceEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceEnabled = data
+		case "lowBalanceEnabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceEnabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceEnabledNEQ = data
+		case "paymentEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentEnabled = data
+		case "paymentEnabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentEnabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentEnabledNEQ = data
+		case "subscriptionEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionEnabled = data
+		case "subscriptionEnabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionEnabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionEnabledNEQ = data
+		case "largeConsumptionEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionEnabled = data
+		case "largeConsumptionEnabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionEnabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionEnabledNEQ = data
+		case "hasUser":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUser"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUser = data
+		case "hasUserWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserWith = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBillingNotificationSettingOrder(ctx context.Context, obj any) (ent.BillingNotificationSettingOrder, error) {
+	var it ent.BillingNotificationSettingOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNBillingNotificationSettingOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBillingNotificationSettingWhereInput(ctx context.Context, obj any) (ent.BillingNotificationSettingWhereInput, error) {
+	var it ent.BillingNotificationSettingWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "key", "keyNEQ", "keyIn", "keyNotIn", "keyGT", "keyGTE", "keyLT", "keyLTE", "keyContains", "keyHasPrefix", "keyHasSuffix", "keyEqualFold", "keyContainsFold", "enabled", "enabledNEQ", "userNotificationsEnabled", "userNotificationsEnabledNEQ", "operatorAlertsEnabled", "operatorAlertsEnabledNEQ", "lowBalanceThresholdMicros", "lowBalanceThresholdMicrosNEQ", "lowBalanceThresholdMicrosIn", "lowBalanceThresholdMicrosNotIn", "lowBalanceThresholdMicrosGT", "lowBalanceThresholdMicrosGTE", "lowBalanceThresholdMicrosLT", "lowBalanceThresholdMicrosLTE", "largeConsumptionThresholdMicros", "largeConsumptionThresholdMicrosNEQ", "largeConsumptionThresholdMicrosIn", "largeConsumptionThresholdMicrosNotIn", "largeConsumptionThresholdMicrosGT", "largeConsumptionThresholdMicrosGTE", "largeConsumptionThresholdMicrosLT", "largeConsumptionThresholdMicrosLTE", "subscriptionExpiryWarningDays", "subscriptionExpiryWarningDaysNEQ", "subscriptionExpiryWarningDaysIn", "subscriptionExpiryWarningDaysNotIn", "subscriptionExpiryWarningDaysGT", "subscriptionExpiryWarningDaysGTE", "subscriptionExpiryWarningDaysLT", "subscriptionExpiryWarningDaysLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOBillingNotificationSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOBillingNotificationSettingWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOBillingNotificationSettingWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "key":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Key = data
+		case "keyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyNEQ = data
+		case "keyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyIn = data
+		case "keyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyNotIn = data
+		case "keyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyGT = data
+		case "keyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyGTE = data
+		case "keyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyLT = data
+		case "keyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyLTE = data
+		case "keyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyContains = data
+		case "keyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyHasPrefix = data
+		case "keyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyHasSuffix = data
+		case "keyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyEqualFold = data
+		case "keyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.KeyContainsFold = data
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "enabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EnabledNEQ = data
+		case "userNotificationsEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userNotificationsEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserNotificationsEnabled = data
+		case "userNotificationsEnabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userNotificationsEnabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserNotificationsEnabledNEQ = data
+		case "operatorAlertsEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operatorAlertsEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OperatorAlertsEnabled = data
+		case "operatorAlertsEnabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operatorAlertsEnabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OperatorAlertsEnabledNEQ = data
+		case "lowBalanceThresholdMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceThresholdMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceThresholdMicros = data
+		case "lowBalanceThresholdMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceThresholdMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceThresholdMicrosNEQ = data
+		case "lowBalanceThresholdMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceThresholdMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceThresholdMicrosIn = data
+		case "lowBalanceThresholdMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceThresholdMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceThresholdMicrosNotIn = data
+		case "lowBalanceThresholdMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceThresholdMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceThresholdMicrosGT = data
+		case "lowBalanceThresholdMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceThresholdMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceThresholdMicrosGTE = data
+		case "lowBalanceThresholdMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceThresholdMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceThresholdMicrosLT = data
+		case "lowBalanceThresholdMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceThresholdMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceThresholdMicrosLTE = data
+		case "largeConsumptionThresholdMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionThresholdMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionThresholdMicros = data
+		case "largeConsumptionThresholdMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionThresholdMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionThresholdMicrosNEQ = data
+		case "largeConsumptionThresholdMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionThresholdMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionThresholdMicrosIn = data
+		case "largeConsumptionThresholdMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionThresholdMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionThresholdMicrosNotIn = data
+		case "largeConsumptionThresholdMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionThresholdMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionThresholdMicrosGT = data
+		case "largeConsumptionThresholdMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionThresholdMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionThresholdMicrosGTE = data
+		case "largeConsumptionThresholdMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionThresholdMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionThresholdMicrosLT = data
+		case "largeConsumptionThresholdMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionThresholdMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionThresholdMicrosLTE = data
+		case "subscriptionExpiryWarningDays":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionExpiryWarningDays"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionExpiryWarningDays = data
+		case "subscriptionExpiryWarningDaysNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionExpiryWarningDaysNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionExpiryWarningDaysNEQ = data
+		case "subscriptionExpiryWarningDaysIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionExpiryWarningDaysIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionExpiryWarningDaysIn = data
+		case "subscriptionExpiryWarningDaysNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionExpiryWarningDaysNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionExpiryWarningDaysNotIn = data
+		case "subscriptionExpiryWarningDaysGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionExpiryWarningDaysGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionExpiryWarningDaysGT = data
+		case "subscriptionExpiryWarningDaysGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionExpiryWarningDaysGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionExpiryWarningDaysGTE = data
+		case "subscriptionExpiryWarningDaysLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionExpiryWarningDaysLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionExpiryWarningDaysLT = data
+		case "subscriptionExpiryWarningDaysLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionExpiryWarningDaysLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionExpiryWarningDaysLTE = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "currencyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNEQ = data
+		case "currencyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyIn = data
+		case "currencyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNotIn = data
+		case "currencyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGT = data
+		case "currencyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGTE = data
+		case "currencyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLT = data
+		case "currencyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLTE = data
+		case "currencyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContains = data
+		case "currencyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasPrefix = data
+		case "currencyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasSuffix = data
+		case "currencyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyEqualFold = data
+		case "currencyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContainsFold = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBillingNotificationWhereInput(ctx context.Context, obj any) (ent.BillingNotificationWhereInput, error) {
+	var it ent.BillingNotificationWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "userIDIsNil", "userIDNotNil", "audience", "audienceNEQ", "audienceIn", "audienceNotIn", "category", "categoryNEQ", "categoryIn", "categoryNotIn", "severity", "severityNEQ", "severityIn", "severityNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "eventKey", "eventKeyNEQ", "eventKeyIn", "eventKeyNotIn", "eventKeyGT", "eventKeyGTE", "eventKeyLT", "eventKeyLTE", "eventKeyContains", "eventKeyHasPrefix", "eventKeyHasSuffix", "eventKeyEqualFold", "eventKeyContainsFold", "title", "titleNEQ", "titleIn", "titleNotIn", "titleGT", "titleGTE", "titleLT", "titleLTE", "titleContains", "titleHasPrefix", "titleHasSuffix", "titleEqualFold", "titleContainsFold", "message", "messageNEQ", "messageIn", "messageNotIn", "messageGT", "messageGTE", "messageLT", "messageLTE", "messageContains", "messageHasPrefix", "messageHasSuffix", "messageEqualFold", "messageContainsFold", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "amountMicrosIsNil", "amountMicrosNotNil", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "billingAccountIDIsNil", "billingAccountIDNotNil", "paymentOrderID", "paymentOrderIDNEQ", "paymentOrderIDIn", "paymentOrderIDNotIn", "paymentOrderIDIsNil", "paymentOrderIDNotNil", "userSubscriptionID", "userSubscriptionIDNEQ", "userSubscriptionIDIn", "userSubscriptionIDNotIn", "userSubscriptionIDIsNil", "userSubscriptionIDNotNil", "usageBillingRecordID", "usageBillingRecordIDNEQ", "usageBillingRecordIDIn", "usageBillingRecordIDNotIn", "usageBillingRecordIDIsNil", "usageBillingRecordIDNotNil", "readAt", "readAtNEQ", "readAtIn", "readAtNotIn", "readAtGT", "readAtGTE", "readAtLT", "readAtLTE", "readAtIsNil", "readAtNotNil", "hasUser", "hasUserWith", "hasBillingAccount", "hasBillingAccountWith", "hasPaymentOrder", "hasPaymentOrderWith", "hasUserSubscription", "hasUserSubscriptionWith", "hasUsageBillingRecord", "hasUsageBillingRecordWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOBillingNotificationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOBillingNotificationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "userID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserID = converted
+		case "userIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDNEQ = converted
+		case "userIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDIn = converted
+		case "userIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDNotIn = converted
+		case "userIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDIsNil = data
+		case "userIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDNotNil = data
+		case "audience":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("audience"))
+			data, err := ec.unmarshalOBillingNotificationAudience2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Audience = data
+		case "audienceNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("audienceNEQ"))
+			data, err := ec.unmarshalOBillingNotificationAudience2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AudienceNEQ = data
+		case "audienceIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("audienceIn"))
+			data, err := ec.unmarshalOBillingNotificationAudience2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudienceᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AudienceIn = data
+		case "audienceNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("audienceNotIn"))
+			data, err := ec.unmarshalOBillingNotificationAudience2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudienceᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AudienceNotIn = data
+		case "category":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("category"))
+			data, err := ec.unmarshalOBillingNotificationCategory2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Category = data
+		case "categoryNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryNEQ"))
+			data, err := ec.unmarshalOBillingNotificationCategory2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CategoryNEQ = data
+		case "categoryIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryIn"))
+			data, err := ec.unmarshalOBillingNotificationCategory2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategoryᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CategoryIn = data
+		case "categoryNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryNotIn"))
+			data, err := ec.unmarshalOBillingNotificationCategory2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategoryᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CategoryNotIn = data
+		case "severity":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("severity"))
+			data, err := ec.unmarshalOBillingNotificationSeverity2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Severity = data
+		case "severityNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("severityNEQ"))
+			data, err := ec.unmarshalOBillingNotificationSeverity2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SeverityNEQ = data
+		case "severityIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("severityIn"))
+			data, err := ec.unmarshalOBillingNotificationSeverity2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverityᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SeverityIn = data
+		case "severityNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("severityNotIn"))
+			data, err := ec.unmarshalOBillingNotificationSeverity2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverityᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SeverityNotIn = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOBillingNotificationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOBillingNotificationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOBillingNotificationStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOBillingNotificationStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "eventKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKey = data
+		case "eventKeyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyNEQ = data
+		case "eventKeyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyIn = data
+		case "eventKeyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyNotIn = data
+		case "eventKeyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyGT = data
+		case "eventKeyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyGTE = data
+		case "eventKeyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyLT = data
+		case "eventKeyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyLTE = data
+		case "eventKeyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyContains = data
+		case "eventKeyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyHasPrefix = data
+		case "eventKeyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyHasSuffix = data
+		case "eventKeyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyEqualFold = data
+		case "eventKeyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventKeyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EventKeyContainsFold = data
+		case "title":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Title = data
+		case "titleNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleNEQ = data
+		case "titleIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleIn = data
+		case "titleNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleNotIn = data
+		case "titleGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleGT = data
+		case "titleGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleGTE = data
+		case "titleLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleLT = data
+		case "titleLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleLTE = data
+		case "titleContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleContains = data
+		case "titleHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleHasPrefix = data
+		case "titleHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleHasSuffix = data
+		case "titleEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleEqualFold = data
+		case "titleContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TitleContainsFold = data
+		case "message":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("message"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Message = data
+		case "messageNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageNEQ = data
+		case "messageIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageIn = data
+		case "messageNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageNotIn = data
+		case "messageGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageGT = data
+		case "messageGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageGTE = data
+		case "messageLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageLT = data
+		case "messageLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageLTE = data
+		case "messageContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageContains = data
+		case "messageHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageHasPrefix = data
+		case "messageHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageHasSuffix = data
+		case "messageEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageEqualFold = data
+		case "messageContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageContainsFold = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "currencyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNEQ = data
+		case "currencyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyIn = data
+		case "currencyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNotIn = data
+		case "currencyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGT = data
+		case "currencyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGTE = data
+		case "currencyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLT = data
+		case "currencyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLTE = data
+		case "currencyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContains = data
+		case "currencyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasPrefix = data
+		case "currencyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasSuffix = data
+		case "currencyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyEqualFold = data
+		case "currencyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContainsFold = data
+		case "amountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicros = data
+		case "amountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosNEQ = data
+		case "amountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosIn = data
+		case "amountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosNotIn = data
+		case "amountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosGT = data
+		case "amountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosGTE = data
+		case "amountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosLT = data
+		case "amountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosLTE = data
+		case "amountMicrosIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosIsNil = data
+		case "amountMicrosNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountMicrosNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountMicrosNotNil = data
+		case "billingAccountID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountID = converted
+		case "billingAccountIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountIDNEQ = converted
+		case "billingAccountIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountIDIn = converted
+		case "billingAccountIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountIDNotIn = converted
+		case "billingAccountIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingAccountIDIsNil = data
+		case "billingAccountIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingAccountIDNotNil = data
+		case "paymentOrderID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderID = converted
+		case "paymentOrderIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderIDNEQ = converted
+		case "paymentOrderIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderIDIn = converted
+		case "paymentOrderIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderIDNotIn = converted
+		case "paymentOrderIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentOrderIDIsNil = data
+		case "paymentOrderIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentOrderIDNotNil = data
+		case "userSubscriptionID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionID = converted
+		case "userSubscriptionIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionIDNEQ = converted
+		case "userSubscriptionIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionIDIn = converted
+		case "userSubscriptionIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionIDNotIn = converted
+		case "userSubscriptionIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserSubscriptionIDIsNil = data
+		case "userSubscriptionIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserSubscriptionIDNotNil = data
+		case "usageBillingRecordID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageBillingRecordID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageBillingRecordID = converted
+		case "usageBillingRecordIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageBillingRecordIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageBillingRecordIDNEQ = converted
+		case "usageBillingRecordIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageBillingRecordIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageBillingRecordIDIn = converted
+		case "usageBillingRecordIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageBillingRecordIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageBillingRecordIDNotIn = converted
+		case "usageBillingRecordIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageBillingRecordIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsageBillingRecordIDIsNil = data
+		case "usageBillingRecordIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageBillingRecordIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsageBillingRecordIDNotNil = data
+		case "readAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAt = data
+		case "readAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAtNEQ = data
+		case "readAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAtIn = data
+		case "readAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAtNotIn = data
+		case "readAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAtGT = data
+		case "readAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAtGTE = data
+		case "readAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAtLT = data
+		case "readAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAtLTE = data
+		case "readAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAtIsNil = data
+		case "readAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadAtNotNil = data
+		case "hasUser":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUser"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUser = data
+		case "hasUserWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserWith = data
+		case "hasBillingAccount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingAccount"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingAccount = data
+		case "hasBillingAccountWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingAccountWith"))
+			data, err := ec.unmarshalOBillingAccountWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccountWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingAccountWith = data
+		case "hasPaymentOrder":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentOrder"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPaymentOrder = data
+		case "hasPaymentOrderWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentOrderWith"))
+			data, err := ec.unmarshalOPaymentOrderWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPaymentOrderWith = data
+		case "hasUserSubscription":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserSubscription"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserSubscription = data
+		case "hasUserSubscriptionWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserSubscriptionWith"))
+			data, err := ec.unmarshalOUserSubscriptionWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscriptionWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserSubscriptionWith = data
+		case "hasUsageBillingRecord":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsageBillingRecord"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsageBillingRecord = data
+		case "hasUsageBillingRecordWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsageBillingRecordWith"))
+			data, err := ec.unmarshalOUsageBillingRecordWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUsageBillingRecordWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsageBillingRecordWith = data
 		}
 	}
 
@@ -116758,7 +123607,7 @@ func (ec *executionContext) unmarshalInputPaymentOrderWhereInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "orderNo", "orderNoNEQ", "orderNoIn", "orderNoNotIn", "orderNoGT", "orderNoGTE", "orderNoLT", "orderNoLTE", "orderNoContains", "orderNoHasPrefix", "orderNoHasSuffix", "orderNoEqualFold", "orderNoContainsFold", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "providerInstanceID", "providerInstanceIDNEQ", "providerInstanceIDIn", "providerInstanceIDNotIn", "providerInstanceIDIsNil", "providerInstanceIDNotNil", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "purpose", "purposeNEQ", "purposeIn", "purposeNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "expiresAtIsNil", "expiresAtNotNil", "canceledAt", "canceledAtNEQ", "canceledAtIn", "canceledAtNotIn", "canceledAtGT", "canceledAtGTE", "canceledAtLT", "canceledAtLTE", "canceledAtIsNil", "canceledAtNotNil", "cancelReason", "cancelReasonNEQ", "cancelReasonIn", "cancelReasonNotIn", "cancelReasonGT", "cancelReasonGTE", "cancelReasonLT", "cancelReasonLTE", "cancelReasonContains", "cancelReasonHasPrefix", "cancelReasonHasSuffix", "cancelReasonEqualFold", "cancelReasonContainsFold", "makeupReason", "makeupReasonNEQ", "makeupReasonIn", "makeupReasonNotIn", "makeupReasonGT", "makeupReasonGTE", "makeupReasonLT", "makeupReasonLTE", "makeupReasonContains", "makeupReasonHasPrefix", "makeupReasonHasSuffix", "makeupReasonEqualFold", "makeupReasonContainsFold", "failureReason", "failureReasonNEQ", "failureReasonIn", "failureReasonNotIn", "failureReasonGT", "failureReasonGTE", "failureReasonLT", "failureReasonLTE", "failureReasonContains", "failureReasonHasPrefix", "failureReasonHasSuffix", "failureReasonEqualFold", "failureReasonContainsFold", "refundedAt", "refundedAtNEQ", "refundedAtIn", "refundedAtNotIn", "refundedAtGT", "refundedAtGTE", "refundedAtLT", "refundedAtLTE", "refundedAtIsNil", "refundedAtNotNil", "refundReason", "refundReasonNEQ", "refundReasonIn", "refundReasonNotIn", "refundReasonGT", "refundReasonGTE", "refundReasonLT", "refundReasonLTE", "refundReasonContains", "refundReasonHasPrefix", "refundReasonHasSuffix", "refundReasonEqualFold", "refundReasonContainsFold", "refundAmountMicros", "refundAmountMicrosNEQ", "refundAmountMicrosIn", "refundAmountMicrosNotIn", "refundAmountMicrosGT", "refundAmountMicrosGTE", "refundAmountMicrosLT", "refundAmountMicrosLTE", "externalTradeNo", "externalTradeNoNEQ", "externalTradeNoIn", "externalTradeNoNotIn", "externalTradeNoGT", "externalTradeNoGTE", "externalTradeNoLT", "externalTradeNoLTE", "externalTradeNoContains", "externalTradeNoHasPrefix", "externalTradeNoHasSuffix", "externalTradeNoIsNil", "externalTradeNoNotNil", "externalTradeNoEqualFold", "externalTradeNoContainsFold", "paidAt", "paidAtNEQ", "paidAtIn", "paidAtNotIn", "paidAtGT", "paidAtGTE", "paidAtLT", "paidAtLTE", "paidAtIsNil", "paidAtNotNil", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "hasBillingAccount", "hasBillingAccountWith", "hasProviderInstance", "hasProviderInstanceWith", "hasLedgerTransaction", "hasLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasPaymentEvents", "hasPaymentEventsWith", "hasAffiliateRebates", "hasAffiliateRebatesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "orderNo", "orderNoNEQ", "orderNoIn", "orderNoNotIn", "orderNoGT", "orderNoGTE", "orderNoLT", "orderNoLTE", "orderNoContains", "orderNoHasPrefix", "orderNoHasSuffix", "orderNoEqualFold", "orderNoContainsFold", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "providerInstanceID", "providerInstanceIDNEQ", "providerInstanceIDIn", "providerInstanceIDNotIn", "providerInstanceIDIsNil", "providerInstanceIDNotNil", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "purpose", "purposeNEQ", "purposeIn", "purposeNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "expiresAtIsNil", "expiresAtNotNil", "canceledAt", "canceledAtNEQ", "canceledAtIn", "canceledAtNotIn", "canceledAtGT", "canceledAtGTE", "canceledAtLT", "canceledAtLTE", "canceledAtIsNil", "canceledAtNotNil", "cancelReason", "cancelReasonNEQ", "cancelReasonIn", "cancelReasonNotIn", "cancelReasonGT", "cancelReasonGTE", "cancelReasonLT", "cancelReasonLTE", "cancelReasonContains", "cancelReasonHasPrefix", "cancelReasonHasSuffix", "cancelReasonEqualFold", "cancelReasonContainsFold", "makeupReason", "makeupReasonNEQ", "makeupReasonIn", "makeupReasonNotIn", "makeupReasonGT", "makeupReasonGTE", "makeupReasonLT", "makeupReasonLTE", "makeupReasonContains", "makeupReasonHasPrefix", "makeupReasonHasSuffix", "makeupReasonEqualFold", "makeupReasonContainsFold", "failureReason", "failureReasonNEQ", "failureReasonIn", "failureReasonNotIn", "failureReasonGT", "failureReasonGTE", "failureReasonLT", "failureReasonLTE", "failureReasonContains", "failureReasonHasPrefix", "failureReasonHasSuffix", "failureReasonEqualFold", "failureReasonContainsFold", "refundedAt", "refundedAtNEQ", "refundedAtIn", "refundedAtNotIn", "refundedAtGT", "refundedAtGTE", "refundedAtLT", "refundedAtLTE", "refundedAtIsNil", "refundedAtNotNil", "refundReason", "refundReasonNEQ", "refundReasonIn", "refundReasonNotIn", "refundReasonGT", "refundReasonGTE", "refundReasonLT", "refundReasonLTE", "refundReasonContains", "refundReasonHasPrefix", "refundReasonHasSuffix", "refundReasonEqualFold", "refundReasonContainsFold", "refundAmountMicros", "refundAmountMicrosNEQ", "refundAmountMicrosIn", "refundAmountMicrosNotIn", "refundAmountMicrosGT", "refundAmountMicrosGTE", "refundAmountMicrosLT", "refundAmountMicrosLTE", "externalTradeNo", "externalTradeNoNEQ", "externalTradeNoIn", "externalTradeNoNotIn", "externalTradeNoGT", "externalTradeNoGTE", "externalTradeNoLT", "externalTradeNoLTE", "externalTradeNoContains", "externalTradeNoHasPrefix", "externalTradeNoHasSuffix", "externalTradeNoIsNil", "externalTradeNoNotNil", "externalTradeNoEqualFold", "externalTradeNoContainsFold", "paidAt", "paidAtNEQ", "paidAtIn", "paidAtNotIn", "paidAtGT", "paidAtGTE", "paidAtLT", "paidAtLTE", "paidAtIsNil", "paidAtNotNil", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "hasBillingAccount", "hasBillingAccountWith", "hasProviderInstance", "hasProviderInstanceWith", "hasLedgerTransaction", "hasLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasPaymentEvents", "hasPaymentEventsWith", "hasAffiliateRebates", "hasAffiliateRebatesWith", "hasBillingNotifications", "hasBillingNotificationsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -118597,6 +125446,20 @@ func (ec *executionContext) unmarshalInputPaymentOrderWhereInput(ctx context.Con
 				return it, err
 			}
 			it.HasAffiliateRebatesWith = data
+		case "hasBillingNotifications":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotifications"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotifications = data
+		case "hasBillingNotificationsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotificationsWith"))
+			data, err := ec.unmarshalOBillingNotificationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotificationsWith = data
 		}
 	}
 
@@ -129972,6 +136835,130 @@ func (ec *executionContext) unmarshalInputSaveAffiliateSettingInput(ctx context.
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSaveBillingNotificationPreferenceInput(ctx context.Context, obj any) (biz.SaveBillingNotificationPreferenceInput, error) {
+	var it biz.SaveBillingNotificationPreferenceInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"enabled", "lowBalanceEnabled", "paymentEnabled", "subscriptionEnabled", "largeConsumptionEnabled"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "lowBalanceEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceEnabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceEnabled = data
+		case "paymentEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentEnabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentEnabled = data
+		case "subscriptionEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionEnabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionEnabled = data
+		case "largeConsumptionEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionEnabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionEnabled = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSaveBillingNotificationSettingInput(ctx context.Context, obj any) (biz.SaveBillingNotificationSettingInput, error) {
+	var it biz.SaveBillingNotificationSettingInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"enabled", "userNotificationsEnabled", "operatorAlertsEnabled", "lowBalanceThreshold", "largeConsumptionThreshold", "subscriptionExpiryWarningDays", "currency"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "userNotificationsEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userNotificationsEnabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserNotificationsEnabled = data
+		case "operatorAlertsEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operatorAlertsEnabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OperatorAlertsEnabled = data
+		case "lowBalanceThreshold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowBalanceThreshold"))
+			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowBalanceThreshold = data
+		case "largeConsumptionThreshold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("largeConsumptionThreshold"))
+			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LargeConsumptionThreshold = data
+		case "subscriptionExpiryWarningDays":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subscriptionExpiryWarningDays"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubscriptionExpiryWarningDays = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSaveBillingPriceRuleForm(ctx context.Context, obj any) (SaveBillingPriceRuleForm, error) {
 	var it SaveBillingPriceRuleForm
 	asMap := map[string]any{}
@@ -135758,7 +142745,7 @@ func (ec *executionContext) unmarshalInputUsageBillingRecordWhereInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "usageLogID", "usageLogIDNEQ", "usageLogIDIn", "usageLogIDNotIn", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "userIDGT", "userIDGTE", "userIDLT", "userIDLTE", "userIDIsNil", "userIDNotNil", "apiKeyID", "apiKeyIDNEQ", "apiKeyIDIn", "apiKeyIDNotIn", "apiKeyIDGT", "apiKeyIDGTE", "apiKeyIDLT", "apiKeyIDLTE", "apiKeyIDIsNil", "apiKeyIDNotNil", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "requestType", "requestTypeNEQ", "requestTypeIn", "requestTypeNotIn", "priceReferenceID", "priceReferenceIDNEQ", "priceReferenceIDIn", "priceReferenceIDNotIn", "priceReferenceIDGT", "priceReferenceIDGTE", "priceReferenceIDLT", "priceReferenceIDLTE", "priceReferenceIDContains", "priceReferenceIDHasPrefix", "priceReferenceIDHasSuffix", "priceReferenceIDEqualFold", "priceReferenceIDContainsFold", "costAmountMicros", "costAmountMicrosNEQ", "costAmountMicrosIn", "costAmountMicrosNotIn", "costAmountMicrosGT", "costAmountMicrosGTE", "costAmountMicrosLT", "costAmountMicrosLTE", "chargeAmountMicros", "chargeAmountMicrosNEQ", "chargeAmountMicrosIn", "chargeAmountMicrosNotIn", "chargeAmountMicrosGT", "chargeAmountMicrosGTE", "chargeAmountMicrosLT", "chargeAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "userSubscriptionID", "userSubscriptionIDNEQ", "userSubscriptionIDIn", "userSubscriptionIDNotIn", "userSubscriptionIDIsNil", "userSubscriptionIDNotNil", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "error", "errorNEQ", "errorIn", "errorNotIn", "errorGT", "errorGTE", "errorLT", "errorLTE", "errorContains", "errorHasPrefix", "errorHasSuffix", "errorEqualFold", "errorContainsFold", "hasUsageLog", "hasUsageLogWith", "hasBillingAccount", "hasBillingAccountWith", "hasLedgerTransaction", "hasLedgerTransactionWith", "hasUserSubscription", "hasUserSubscriptionWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "usageLogID", "usageLogIDNEQ", "usageLogIDIn", "usageLogIDNotIn", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "userIDGT", "userIDGTE", "userIDLT", "userIDLTE", "userIDIsNil", "userIDNotNil", "apiKeyID", "apiKeyIDNEQ", "apiKeyIDIn", "apiKeyIDNotIn", "apiKeyIDGT", "apiKeyIDGTE", "apiKeyIDLT", "apiKeyIDLTE", "apiKeyIDIsNil", "apiKeyIDNotNil", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "requestType", "requestTypeNEQ", "requestTypeIn", "requestTypeNotIn", "priceReferenceID", "priceReferenceIDNEQ", "priceReferenceIDIn", "priceReferenceIDNotIn", "priceReferenceIDGT", "priceReferenceIDGTE", "priceReferenceIDLT", "priceReferenceIDLTE", "priceReferenceIDContains", "priceReferenceIDHasPrefix", "priceReferenceIDHasSuffix", "priceReferenceIDEqualFold", "priceReferenceIDContainsFold", "costAmountMicros", "costAmountMicrosNEQ", "costAmountMicrosIn", "costAmountMicrosNotIn", "costAmountMicrosGT", "costAmountMicrosGTE", "costAmountMicrosLT", "costAmountMicrosLTE", "chargeAmountMicros", "chargeAmountMicrosNEQ", "chargeAmountMicrosIn", "chargeAmountMicrosNotIn", "chargeAmountMicrosGT", "chargeAmountMicrosGTE", "chargeAmountMicrosLT", "chargeAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "userSubscriptionID", "userSubscriptionIDNEQ", "userSubscriptionIDIn", "userSubscriptionIDNotIn", "userSubscriptionIDIsNil", "userSubscriptionIDNotNil", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "error", "errorNEQ", "errorIn", "errorNotIn", "errorGT", "errorGTE", "errorLT", "errorLTE", "errorContains", "errorHasPrefix", "errorHasSuffix", "errorEqualFold", "errorContainsFold", "hasUsageLog", "hasUsageLogWith", "hasBillingAccount", "hasBillingAccountWith", "hasLedgerTransaction", "hasLedgerTransactionWith", "hasUserSubscription", "hasUserSubscriptionWith", "hasBillingNotifications", "hasBillingNotificationsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -137065,6 +144052,20 @@ func (ec *executionContext) unmarshalInputUsageBillingRecordWhereInput(ctx conte
 				return it, err
 			}
 			it.HasUserSubscriptionWith = data
+		case "hasBillingNotifications":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotifications"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotifications = data
+		case "hasBillingNotificationsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotificationsWith"))
+			data, err := ec.unmarshalOBillingNotificationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotificationsWith = data
 		}
 	}
 
@@ -139502,7 +146503,7 @@ func (ec *executionContext) unmarshalInputUserSubscriptionWhereInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "planID", "planIDNEQ", "planIDIn", "planIDNotIn", "planIDIsNil", "planIDNotNil", "status", "statusNEQ", "statusIn", "statusNotIn", "startsAt", "startsAtNEQ", "startsAtIn", "startsAtNotIn", "startsAtGT", "startsAtGTE", "startsAtLT", "startsAtLTE", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "currentPeriodStart", "currentPeriodStartNEQ", "currentPeriodStartIn", "currentPeriodStartNotIn", "currentPeriodStartGT", "currentPeriodStartGTE", "currentPeriodStartLT", "currentPeriodStartLTE", "currentPeriodEnd", "currentPeriodEndNEQ", "currentPeriodEndIn", "currentPeriodEndNotIn", "currentPeriodEndGT", "currentPeriodEndGTE", "currentPeriodEndLT", "currentPeriodEndLTE", "resetAt", "resetAtNEQ", "resetAtIn", "resetAtNotIn", "resetAtGT", "resetAtGTE", "resetAtLT", "resetAtLTE", "periodDays", "periodDaysNEQ", "periodDaysIn", "periodDaysNotIn", "periodDaysGT", "periodDaysGTE", "periodDaysLT", "periodDaysLTE", "includedAmountMicros", "includedAmountMicrosNEQ", "includedAmountMicrosIn", "includedAmountMicrosNotIn", "includedAmountMicrosGT", "includedAmountMicrosGTE", "includedAmountMicrosLT", "includedAmountMicrosLTE", "usedAmountMicros", "usedAmountMicrosNEQ", "usedAmountMicrosIn", "usedAmountMicrosNotIn", "usedAmountMicrosGT", "usedAmountMicrosGTE", "usedAmountMicrosLT", "usedAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "allowWalletFallback", "allowWalletFallbackNEQ", "assignedByID", "assignedByIDNEQ", "assignedByIDIn", "assignedByIDNotIn", "assignedByIDIsNil", "assignedByIDNotNil", "purchaseLedgerTransactionID", "purchaseLedgerTransactionIDNEQ", "purchaseLedgerTransactionIDIn", "purchaseLedgerTransactionIDNotIn", "purchaseLedgerTransactionIDIsNil", "purchaseLedgerTransactionIDNotNil", "originalPriceMicros", "originalPriceMicrosNEQ", "originalPriceMicrosIn", "originalPriceMicrosNotIn", "originalPriceMicrosGT", "originalPriceMicrosGTE", "originalPriceMicrosLT", "originalPriceMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "revokeReason", "revokeReasonNEQ", "revokeReasonIn", "revokeReasonNotIn", "revokeReasonGT", "revokeReasonGTE", "revokeReasonLT", "revokeReasonLTE", "revokeReasonContains", "revokeReasonHasPrefix", "revokeReasonHasSuffix", "revokeReasonEqualFold", "revokeReasonContainsFold", "hasUser", "hasUserWith", "hasPlan", "hasPlanWith", "hasAssignedBy", "hasAssignedByWith", "hasPurchaseLedgerTransaction", "hasPurchaseLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasAffiliateRebates", "hasAffiliateRebatesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "planID", "planIDNEQ", "planIDIn", "planIDNotIn", "planIDIsNil", "planIDNotNil", "status", "statusNEQ", "statusIn", "statusNotIn", "startsAt", "startsAtNEQ", "startsAtIn", "startsAtNotIn", "startsAtGT", "startsAtGTE", "startsAtLT", "startsAtLTE", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "currentPeriodStart", "currentPeriodStartNEQ", "currentPeriodStartIn", "currentPeriodStartNotIn", "currentPeriodStartGT", "currentPeriodStartGTE", "currentPeriodStartLT", "currentPeriodStartLTE", "currentPeriodEnd", "currentPeriodEndNEQ", "currentPeriodEndIn", "currentPeriodEndNotIn", "currentPeriodEndGT", "currentPeriodEndGTE", "currentPeriodEndLT", "currentPeriodEndLTE", "resetAt", "resetAtNEQ", "resetAtIn", "resetAtNotIn", "resetAtGT", "resetAtGTE", "resetAtLT", "resetAtLTE", "periodDays", "periodDaysNEQ", "periodDaysIn", "periodDaysNotIn", "periodDaysGT", "periodDaysGTE", "periodDaysLT", "periodDaysLTE", "includedAmountMicros", "includedAmountMicrosNEQ", "includedAmountMicrosIn", "includedAmountMicrosNotIn", "includedAmountMicrosGT", "includedAmountMicrosGTE", "includedAmountMicrosLT", "includedAmountMicrosLTE", "usedAmountMicros", "usedAmountMicrosNEQ", "usedAmountMicrosIn", "usedAmountMicrosNotIn", "usedAmountMicrosGT", "usedAmountMicrosGTE", "usedAmountMicrosLT", "usedAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "allowWalletFallback", "allowWalletFallbackNEQ", "assignedByID", "assignedByIDNEQ", "assignedByIDIn", "assignedByIDNotIn", "assignedByIDIsNil", "assignedByIDNotNil", "purchaseLedgerTransactionID", "purchaseLedgerTransactionIDNEQ", "purchaseLedgerTransactionIDIn", "purchaseLedgerTransactionIDNotIn", "purchaseLedgerTransactionIDIsNil", "purchaseLedgerTransactionIDNotNil", "originalPriceMicros", "originalPriceMicrosNEQ", "originalPriceMicrosIn", "originalPriceMicrosNotIn", "originalPriceMicrosGT", "originalPriceMicrosGTE", "originalPriceMicrosLT", "originalPriceMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "revokeReason", "revokeReasonNEQ", "revokeReasonIn", "revokeReasonNotIn", "revokeReasonGT", "revokeReasonGTE", "revokeReasonLT", "revokeReasonLTE", "revokeReasonContains", "revokeReasonHasPrefix", "revokeReasonHasSuffix", "revokeReasonEqualFold", "revokeReasonContainsFold", "hasUser", "hasUserWith", "hasPlan", "hasPlanWith", "hasAssignedBy", "hasAssignedByWith", "hasPurchaseLedgerTransaction", "hasPurchaseLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasAffiliateRebates", "hasAffiliateRebatesWith", "hasBillingNotifications", "hasBillingNotificationsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -141049,6 +148050,20 @@ func (ec *executionContext) unmarshalInputUserSubscriptionWhereInput(ctx context
 				return it, err
 			}
 			it.HasAffiliateRebatesWith = data
+		case "hasBillingNotifications":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotifications"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotifications = data
+		case "hasBillingNotificationsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotificationsWith"))
+			data, err := ec.unmarshalOBillingNotificationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotificationsWith = data
 		}
 	}
 
@@ -141062,7 +148077,7 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "hasProjects", "hasProjectsWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasCreatedRedeemCodes", "hasCreatedRedeemCodesWith", "hasUsedRedeemCodes", "hasUsedRedeemCodesWith", "hasUserSubscriptions", "hasUserSubscriptionsWith", "hasAssignedUserSubscriptions", "hasAssignedUserSubscriptionsWith", "hasPromoUsages", "hasPromoUsagesWith", "hasAffiliateProfiles", "hasAffiliateProfilesWith", "hasAffiliateInviters", "hasAffiliateInvitersWith", "hasAffiliateInvitees", "hasAffiliateInviteesWith", "hasAffiliateRebatesEarned", "hasAffiliateRebatesEarnedWith", "hasAffiliateRebatesGenerated", "hasAffiliateRebatesGeneratedWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "hasProjects", "hasProjectsWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasCreatedRedeemCodes", "hasCreatedRedeemCodesWith", "hasUsedRedeemCodes", "hasUsedRedeemCodesWith", "hasUserSubscriptions", "hasUserSubscriptionsWith", "hasAssignedUserSubscriptions", "hasAssignedUserSubscriptionsWith", "hasPromoUsages", "hasPromoUsagesWith", "hasAffiliateProfiles", "hasAffiliateProfilesWith", "hasAffiliateInviters", "hasAffiliateInvitersWith", "hasAffiliateInvitees", "hasAffiliateInviteesWith", "hasAffiliateRebatesEarned", "hasAffiliateRebatesEarnedWith", "hasAffiliateRebatesGenerated", "hasAffiliateRebatesGeneratedWith", "hasBillingNotificationPreferences", "hasBillingNotificationPreferencesWith", "hasBillingNotifications", "hasBillingNotificationsWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -142011,6 +149026,34 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 				return it, err
 			}
 			it.HasAffiliateRebatesGeneratedWith = data
+		case "hasBillingNotificationPreferences":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotificationPreferences"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotificationPreferences = data
+		case "hasBillingNotificationPreferencesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotificationPreferencesWith"))
+			data, err := ec.unmarshalOBillingNotificationPreferenceWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotificationPreferencesWith = data
+		case "hasBillingNotifications":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotifications"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotifications = data
+		case "hasBillingNotificationsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingNotificationsWith"))
+			data, err := ec.unmarshalOBillingNotificationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingNotificationsWith = data
 		case "hasProjectUsers":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasProjectUsers"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -142420,6 +149463,21 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._BillingOutbox(ctx, sel, obj)
+	case *ent.BillingNotificationSetting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BillingNotificationSetting(ctx, sel, obj)
+	case *ent.BillingNotificationPreference:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BillingNotificationPreference(ctx, sel, obj)
+	case *ent.BillingNotification:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BillingNotification(ctx, sel, obj)
 	case *ent.BillingHold:
 		if obj == nil {
 			return graphql.Null
@@ -146041,6 +153099,42 @@ func (ec *executionContext) _BillingAccount(ctx context.Context, sel ast.Selecti
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingNotifications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingAccount_billingNotifications(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -147067,6 +154161,1020 @@ func (ec *executionContext) _BillingHoldEdge(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._BillingHoldEdge_node(ctx, field, obj)
 		case "cursor":
 			out.Values[i] = ec._BillingHoldEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingNotificationImplementors = []string{"BillingNotification", "Node"}
+
+func (ec *executionContext) _BillingNotification(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingNotification) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingNotificationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingNotification")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._BillingNotification_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._BillingNotification_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "userID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_userID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "audience":
+			out.Values[i] = ec._BillingNotification_audience(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "category":
+			out.Values[i] = ec._BillingNotification_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "severity":
+			out.Values[i] = ec._BillingNotification_severity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._BillingNotification_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "eventKey":
+			out.Values[i] = ec._BillingNotification_eventKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "title":
+			out.Values[i] = ec._BillingNotification_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "message":
+			out.Values[i] = ec._BillingNotification_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "currency":
+			out.Values[i] = ec._BillingNotification_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "amountMicros":
+			out.Values[i] = ec._BillingNotification_amountMicros(ctx, field, obj)
+		case "billingAccountID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_billingAccountID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "paymentOrderID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_paymentOrderID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "userSubscriptionID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_userSubscriptionID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usageBillingRecordID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_usageBillingRecordID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "readAt":
+			out.Values[i] = ec._BillingNotification_readAt(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._BillingNotification_metadata(ctx, field, obj)
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_user(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingAccount":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_billingAccount(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "paymentOrder":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_paymentOrder(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "userSubscription":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_userSubscription(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usageBillingRecord":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotification_usageBillingRecord(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingNotificationConnectionImplementors = []string{"BillingNotificationConnection"}
+
+func (ec *executionContext) _BillingNotificationConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingNotificationConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingNotificationConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingNotificationConnection")
+		case "edges":
+			out.Values[i] = ec._BillingNotificationConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._BillingNotificationConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._BillingNotificationConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingNotificationEdgeImplementors = []string{"BillingNotificationEdge"}
+
+func (ec *executionContext) _BillingNotificationEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingNotificationEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingNotificationEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingNotificationEdge")
+		case "node":
+			out.Values[i] = ec._BillingNotificationEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._BillingNotificationEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingNotificationPreferenceImplementors = []string{"BillingNotificationPreference", "Node"}
+
+func (ec *executionContext) _BillingNotificationPreference(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingNotificationPreference) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingNotificationPreferenceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingNotificationPreference")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotificationPreference_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._BillingNotificationPreference_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._BillingNotificationPreference_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "userID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotificationPreference_userID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "enabled":
+			out.Values[i] = ec._BillingNotificationPreference_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "lowBalanceEnabled":
+			out.Values[i] = ec._BillingNotificationPreference_lowBalanceEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "paymentEnabled":
+			out.Values[i] = ec._BillingNotificationPreference_paymentEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "subscriptionEnabled":
+			out.Values[i] = ec._BillingNotificationPreference_subscriptionEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "largeConsumptionEnabled":
+			out.Values[i] = ec._BillingNotificationPreference_largeConsumptionEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotificationPreference_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingNotificationPreferenceConnectionImplementors = []string{"BillingNotificationPreferenceConnection"}
+
+func (ec *executionContext) _BillingNotificationPreferenceConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingNotificationPreferenceConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingNotificationPreferenceConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingNotificationPreferenceConnection")
+		case "edges":
+			out.Values[i] = ec._BillingNotificationPreferenceConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._BillingNotificationPreferenceConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._BillingNotificationPreferenceConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingNotificationPreferenceEdgeImplementors = []string{"BillingNotificationPreferenceEdge"}
+
+func (ec *executionContext) _BillingNotificationPreferenceEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingNotificationPreferenceEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingNotificationPreferenceEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingNotificationPreferenceEdge")
+		case "node":
+			out.Values[i] = ec._BillingNotificationPreferenceEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._BillingNotificationPreferenceEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingNotificationSettingImplementors = []string{"BillingNotificationSetting", "Node"}
+
+func (ec *executionContext) _BillingNotificationSetting(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingNotificationSetting) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingNotificationSettingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingNotificationSetting")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingNotificationSetting_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._BillingNotificationSetting_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._BillingNotificationSetting_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "key":
+			out.Values[i] = ec._BillingNotificationSetting_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "enabled":
+			out.Values[i] = ec._BillingNotificationSetting_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "userNotificationsEnabled":
+			out.Values[i] = ec._BillingNotificationSetting_userNotificationsEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "operatorAlertsEnabled":
+			out.Values[i] = ec._BillingNotificationSetting_operatorAlertsEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "lowBalanceThresholdMicros":
+			out.Values[i] = ec._BillingNotificationSetting_lowBalanceThresholdMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "largeConsumptionThresholdMicros":
+			out.Values[i] = ec._BillingNotificationSetting_largeConsumptionThresholdMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "subscriptionExpiryWarningDays":
+			out.Values[i] = ec._BillingNotificationSetting_subscriptionExpiryWarningDays(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "currency":
+			out.Values[i] = ec._BillingNotificationSetting_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingNotificationSettingConnectionImplementors = []string{"BillingNotificationSettingConnection"}
+
+func (ec *executionContext) _BillingNotificationSettingConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingNotificationSettingConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingNotificationSettingConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingNotificationSettingConnection")
+		case "edges":
+			out.Values[i] = ec._BillingNotificationSettingConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._BillingNotificationSettingConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._BillingNotificationSettingConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var billingNotificationSettingEdgeImplementors = []string{"BillingNotificationSettingEdge"}
+
+func (ec *executionContext) _BillingNotificationSettingEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.BillingNotificationSettingEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, billingNotificationSettingEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BillingNotificationSettingEdge")
+		case "node":
+			out.Values[i] = ec._BillingNotificationSettingEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._BillingNotificationSettingEdge_cursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -154950,6 +163058,34 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "saveMyBillingNotificationPreference":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_saveMyBillingNotificationPreference(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "markBillingNotificationRead":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_markBillingNotificationRead(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "markAllBillingNotificationsRead":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_markAllBillingNotificationsRead(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "saveBillingNotificationSetting":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_saveBillingNotificationSetting(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "releaseBillingHold":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_releaseBillingHold(ctx, field)
@@ -156503,6 +164639,42 @@ func (ec *executionContext) _PaymentOrder(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._PaymentOrder_affiliateRebates(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingNotifications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PaymentOrder_billingNotifications(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -159883,6 +168055,72 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "billingNotifications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_billingNotifications(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "billingNotificationPreferences":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_billingNotificationPreferences(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "billingNotificationSettings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_billingNotificationSettings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "billingOutboxes":
 			field := field
 
@@ -162275,6 +170513,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myBillingNotificationPreference":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myBillingNotificationPreference(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myBillingNotifications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myBillingNotifications(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "adminAffiliateSetting":
 			field := field
 
@@ -162351,6 +170633,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_adminAffiliateRebates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminBillingNotificationSetting":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminBillingNotificationSetting(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminBillingNotifications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminBillingNotifications(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -168598,6 +176924,42 @@ func (ec *executionContext) _UsageBillingRecord(ctx context.Context, sel ast.Sel
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingNotifications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UsageBillingRecord_billingNotifications(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -169941,6 +178303,78 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_affiliateRebatesGenerated(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingNotificationPreferences":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_billingNotificationPreferences(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingNotifications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_billingNotifications(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -171379,6 +179813,42 @@ func (ec *executionContext) _UserSubscription(ctx context.Context, sel ast.Selec
 					}
 				}()
 				res = ec._UserSubscription_affiliateRebates(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingNotifications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserSubscription_billingNotifications(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -173241,6 +181711,193 @@ func (ec *executionContext) marshalNBillingHoldStatus2githubᚗcomᚋloopljᚋax
 
 func (ec *executionContext) unmarshalNBillingHoldWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingHoldWhereInput(ctx context.Context, v any) (*ent.BillingHoldWhereInput, error) {
 	res, err := ec.unmarshalInputBillingHoldWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingNotification2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotification(ctx context.Context, sel ast.SelectionSet, v ent.BillingNotification) graphql.Marshaler {
+	return ec._BillingNotification(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingNotification2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotification(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotification) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingNotification(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationAudience2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience(ctx context.Context, v any) (billingnotification.Audience, error) {
+	var res billingnotification.Audience
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingNotificationAudience2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience(ctx context.Context, sel ast.SelectionSet, v billingnotification.Audience) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationCategory2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory(ctx context.Context, v any) (billingnotification.Category, error) {
+	var res billingnotification.Category
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingNotificationCategory2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory(ctx context.Context, sel ast.SelectionSet, v billingnotification.Category) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNBillingNotificationConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection(ctx context.Context, sel ast.SelectionSet, v ent.BillingNotificationConnection) graphql.Marshaler {
+	return ec._BillingNotificationConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingNotificationConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationConnection(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingNotificationConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrderField(ctx context.Context, v any) (*ent.BillingNotificationOrderField, error) {
+	var res = new(ent.BillingNotificationOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingNotificationOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) marshalNBillingNotificationPreference2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreference(ctx context.Context, sel ast.SelectionSet, v ent.BillingNotificationPreference) graphql.Marshaler {
+	return ec._BillingNotificationPreference(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingNotificationPreference2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreference(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationPreference) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingNotificationPreference(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBillingNotificationPreferenceConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceConnection(ctx context.Context, sel ast.SelectionSet, v ent.BillingNotificationPreferenceConnection) graphql.Marshaler {
+	return ec._BillingNotificationPreferenceConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingNotificationPreferenceConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceConnection(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationPreferenceConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingNotificationPreferenceConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationPreferenceOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceOrderField(ctx context.Context, v any) (*ent.BillingNotificationPreferenceOrderField, error) {
+	var res = new(ent.BillingNotificationPreferenceOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingNotificationPreferenceOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationPreferenceOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationPreferenceWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInput(ctx context.Context, v any) (*ent.BillingNotificationPreferenceWhereInput, error) {
+	res, err := ec.unmarshalInputBillingNotificationPreferenceWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingNotificationSetting2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSetting(ctx context.Context, sel ast.SelectionSet, v ent.BillingNotificationSetting) graphql.Marshaler {
+	return ec._BillingNotificationSetting(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingNotificationSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSetting(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationSetting) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingNotificationSetting(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBillingNotificationSettingConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingConnection(ctx context.Context, sel ast.SelectionSet, v ent.BillingNotificationSettingConnection) graphql.Marshaler {
+	return ec._BillingNotificationSettingConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBillingNotificationSettingConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingConnection(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationSettingConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BillingNotificationSettingConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationSettingOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingOrderField(ctx context.Context, v any) (*ent.BillingNotificationSettingOrderField, error) {
+	var res = new(ent.BillingNotificationSettingOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingNotificationSettingOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationSettingOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingWhereInput(ctx context.Context, v any) (*ent.BillingNotificationSettingWhereInput, error) {
+	res, err := ec.unmarshalInputBillingNotificationSettingWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationSeverity2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity(ctx context.Context, v any) (billingnotification.Severity, error) {
+	var res billingnotification.Severity
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingNotificationSeverity2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity(ctx context.Context, sel ast.SelectionSet, v billingnotification.Severity) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus(ctx context.Context, v any) (billingnotification.Status, error) {
+	var res billingnotification.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBillingNotificationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus(ctx context.Context, sel ast.SelectionSet, v billingnotification.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput(ctx context.Context, v any) (*ent.BillingNotificationWhereInput, error) {
+	res, err := ec.unmarshalInputBillingNotificationWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -178302,6 +186959,16 @@ func (ec *executionContext) unmarshalNSaveAffiliateSettingInput2githubᚗcomᚋl
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNSaveBillingNotificationPreferenceInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveBillingNotificationPreferenceInput(ctx context.Context, v any) (biz.SaveBillingNotificationPreferenceInput, error) {
+	res, err := ec.unmarshalInputSaveBillingNotificationPreferenceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSaveBillingNotificationSettingInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveBillingNotificationSettingInput(ctx context.Context, v any) (biz.SaveBillingNotificationSettingInput, error) {
+	res, err := ec.unmarshalInputSaveBillingNotificationSettingInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNSaveBillingPriceRuleForm2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐSaveBillingPriceRuleForm(ctx context.Context, v any) (SaveBillingPriceRuleForm, error) {
 	res, err := ec.unmarshalInputSaveBillingPriceRuleForm(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -180700,6 +189367,14 @@ func (ec *executionContext) unmarshalOAdminBillingHoldsFilter2ᚖgithubᚗcomᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOAdminBillingNotificationsFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminBillingNotificationsFilter(ctx context.Context, v any) (*AdminBillingNotificationsFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAdminBillingNotificationsFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOAdminBillingReportFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminBillingReportFilter(ctx context.Context, v any) (*AdminBillingReportFilter, error) {
 	if v == nil {
 		return nil, nil
@@ -182198,6 +190873,597 @@ func (ec *executionContext) unmarshalOBillingHoldWhereInput2ᚖgithubᚗcomᚋlo
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputBillingHoldWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingNotification2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotification(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotification) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BillingNotification(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationAudience2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudienceᚄ(ctx context.Context, v any) ([]billingnotification.Audience, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]billingnotification.Audience, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingNotificationAudience2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOBillingNotificationAudience2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudienceᚄ(ctx context.Context, sel ast.SelectionSet, v []billingnotification.Audience) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingNotificationAudience2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationAudience2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience(ctx context.Context, v any) (*billingnotification.Audience, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(billingnotification.Audience)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingNotificationAudience2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐAudience(ctx context.Context, sel ast.SelectionSet, v *billingnotification.Audience) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationCategory2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategoryᚄ(ctx context.Context, v any) ([]billingnotification.Category, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]billingnotification.Category, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingNotificationCategory2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOBillingNotificationCategory2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []billingnotification.Category) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingNotificationCategory2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationCategory2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory(ctx context.Context, v any) (*billingnotification.Category, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(billingnotification.Category)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingNotificationCategory2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐCategory(ctx context.Context, sel ast.SelectionSet, v *billingnotification.Category) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) marshalOBillingNotificationEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.BillingNotificationEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOBillingNotificationEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOBillingNotificationEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationEdge(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BillingNotificationEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationOrder(ctx context.Context, v any) (*ent.BillingNotificationOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBillingNotificationOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingNotificationPreference2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreference(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationPreference) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BillingNotificationPreference(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOBillingNotificationPreferenceEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.BillingNotificationPreferenceEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOBillingNotificationPreferenceEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOBillingNotificationPreferenceEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceEdge(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationPreferenceEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BillingNotificationPreferenceEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationPreferenceOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceOrder(ctx context.Context, v any) (*ent.BillingNotificationPreferenceOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBillingNotificationPreferenceOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationPreferenceWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInputᚄ(ctx context.Context, v any) ([]*ent.BillingNotificationPreferenceWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.BillingNotificationPreferenceWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingNotificationPreferenceWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationPreferenceWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationPreferenceWhereInput(ctx context.Context, v any) (*ent.BillingNotificationPreferenceWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBillingNotificationPreferenceWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingNotificationSetting2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSetting(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationSetting) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BillingNotificationSetting(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOBillingNotificationSettingEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.BillingNotificationSettingEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOBillingNotificationSettingEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOBillingNotificationSettingEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingEdge(ctx context.Context, sel ast.SelectionSet, v *ent.BillingNotificationSettingEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BillingNotificationSettingEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationSettingOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingOrder(ctx context.Context, v any) (*ent.BillingNotificationSettingOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBillingNotificationSettingOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationSettingWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingWhereInputᚄ(ctx context.Context, v any) ([]*ent.BillingNotificationSettingWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.BillingNotificationSettingWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingNotificationSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationSettingWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationSettingWhereInput(ctx context.Context, v any) (*ent.BillingNotificationSettingWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBillingNotificationSettingWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationSeverity2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverityᚄ(ctx context.Context, v any) ([]billingnotification.Severity, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]billingnotification.Severity, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingNotificationSeverity2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOBillingNotificationSeverity2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverityᚄ(ctx context.Context, sel ast.SelectionSet, v []billingnotification.Severity) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingNotificationSeverity2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationSeverity2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity(ctx context.Context, v any) (*billingnotification.Severity, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(billingnotification.Severity)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingNotificationSeverity2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐSeverity(ctx context.Context, sel ast.SelectionSet, v *billingnotification.Severity) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatusᚄ(ctx context.Context, v any) ([]billingnotification.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]billingnotification.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingNotificationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOBillingNotificationStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []billingnotification.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBillingNotificationStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus(ctx context.Context, v any) (*billingnotification.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(billingnotification.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBillingNotificationStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋbillingnotificationᚐStatus(ctx context.Context, sel ast.SelectionSet, v *billingnotification.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInputᚄ(ctx context.Context, v any) ([]*ent.BillingNotificationWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.BillingNotificationWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOBillingNotificationWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingNotificationWhereInput(ctx context.Context, v any) (*ent.BillingNotificationWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBillingNotificationWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

@@ -327,6 +327,78 @@ func (f BillingHoldMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mut
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.BillingHoldMutation", m)
 }
 
+// The BillingNotificationQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type BillingNotificationQueryRuleFunc func(context.Context, *ent.BillingNotificationQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f BillingNotificationQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingNotificationQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.BillingNotificationQuery", q)
+}
+
+// The BillingNotificationMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type BillingNotificationMutationRuleFunc func(context.Context, *ent.BillingNotificationMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f BillingNotificationMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.BillingNotificationMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.BillingNotificationMutation", m)
+}
+
+// The BillingNotificationPreferenceQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type BillingNotificationPreferenceQueryRuleFunc func(context.Context, *ent.BillingNotificationPreferenceQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f BillingNotificationPreferenceQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingNotificationPreferenceQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.BillingNotificationPreferenceQuery", q)
+}
+
+// The BillingNotificationPreferenceMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type BillingNotificationPreferenceMutationRuleFunc func(context.Context, *ent.BillingNotificationPreferenceMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f BillingNotificationPreferenceMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.BillingNotificationPreferenceMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.BillingNotificationPreferenceMutation", m)
+}
+
+// The BillingNotificationSettingQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type BillingNotificationSettingQueryRuleFunc func(context.Context, *ent.BillingNotificationSettingQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f BillingNotificationSettingQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.BillingNotificationSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.BillingNotificationSettingQuery", q)
+}
+
+// The BillingNotificationSettingMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type BillingNotificationSettingMutationRuleFunc func(context.Context, *ent.BillingNotificationSettingMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f BillingNotificationSettingMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.BillingNotificationSettingMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.BillingNotificationSettingMutation", m)
+}
+
 // The BillingOutboxQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type BillingOutboxQueryRuleFunc func(context.Context, *ent.BillingOutboxQuery) error
@@ -1220,6 +1292,12 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.BillingHoldQuery:
 		return q.Filter(), nil
+	case *ent.BillingNotificationQuery:
+		return q.Filter(), nil
+	case *ent.BillingNotificationPreferenceQuery:
+		return q.Filter(), nil
+	case *ent.BillingNotificationSettingQuery:
+		return q.Filter(), nil
 	case *ent.BillingOutboxQuery:
 		return q.Filter(), nil
 	case *ent.BillingPriceRuleQuery:
@@ -1314,6 +1392,12 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.BillingAccountBindingMutation:
 		return m.Filter(), nil
 	case *ent.BillingHoldMutation:
+		return m.Filter(), nil
+	case *ent.BillingNotificationMutation:
+		return m.Filter(), nil
+	case *ent.BillingNotificationPreferenceMutation:
+		return m.Filter(), nil
+	case *ent.BillingNotificationSettingMutation:
 		return m.Filter(), nil
 	case *ent.BillingOutboxMutation:
 		return m.Filter(), nil
