@@ -78,6 +78,20 @@ db:
     read_max_open_conns: 0      #   Max open connections for replica (env: AXONHUB_DB_READ_REPLICA_READ_MAX_OPEN_CONNS)
     read_max_idle_conns: 0      #   Max idle connections for replica (env: AXONHUB_DB_READ_REPLICA_READ_MAX_IDLE_CONNS)
 
+# Commercial billing configuration
+billing:
+  mode: "disabled"              # Billing admission mode: disabled, warn, enforce (env: AXONHUB_BILLING_MODE)
+  subject: "user"               # Default payer: user wallet. Project rules affect price only (env: AXONHUB_BILLING_SUBJECT)
+  currency: "CNY"               # Settlement currency (env: AXONHUB_BILLING_CURRENCY)
+  min_balance: "0"              # Minimum available balance before admitting requests (env: AXONHUB_BILLING_MIN_BALANCE)
+  allow_negative: false         # Allow wallet balance below zero within credit controls (env: AXONHUB_BILLING_ALLOW_NEGATIVE)
+  credit_limit_default: "0"     # Default user wallet credit limit (env: AXONHUB_BILLING_CREDIT_LIMIT_DEFAULT)
+  block_when_no_price_rule: false # Reject billable usage when no price rule exists (env: AXONHUB_BILLING_BLOCK_WHEN_NO_PRICE_RULE)
+  outbox_worker_interval_seconds: 60 # Billing retry worker interval (env: AXONHUB_BILLING_OUTBOX_WORKER_INTERVAL_SECONDS)
+  outbox_batch_size: 100        # Billing retry worker batch size (env: AXONHUB_BILLING_OUTBOX_BATCH_SIZE)
+  outbox_max_attempts: 10       # Max retry attempts for failed billing outbox rows (env: AXONHUB_BILLING_OUTBOX_MAX_ATTEMPTS)
+  outbox_retry_delay_seconds: 60 # Retry delay for failed billing outbox rows (env: AXONHUB_BILLING_OUTBOX_RETRY_DELAY_SECONDS)
+
 # Cache configuration
 cache:
   # One of: memory, redis, two-level (memory + redis)

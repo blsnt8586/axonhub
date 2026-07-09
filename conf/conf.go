@@ -191,7 +191,7 @@ func setDefaults(v *viper.Viper) {
 	// Billing defaults. Keep disabled by default so commercial features can be
 	// deployed before they are enforced.
 	v.SetDefault("billing.mode", "disabled")
-	v.SetDefault("billing.subject", "project")
+	v.SetDefault("billing.subject", "user")
 	v.SetDefault("billing.currency", "CNY")
 	v.SetDefault("billing.min_balance", "0")
 	v.SetDefault("billing.allow_negative", false)

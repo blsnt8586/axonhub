@@ -39,7 +39,7 @@ func TestPaymentHandlersSimulateEPaySubmitCreditsOrder(t *testing.T) {
 	router := gin.New()
 	router.GET("/payment/simulate/epay/submit", NewPaymentHandlers(PaymentHandlersParams{PaymentService: paymentSvc}).SimulateEPaySubmit)
 
-	req := httptest.NewRequest(http.MethodGet, checkout.URL, nil).WithContext(ctx)
+	req := httptest.NewRequest(http.MethodGet, checkout.URL, nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	require.Equal(t, http.StatusFound, w.Code)
@@ -51,6 +51,48 @@ func TestPaymentHandlersSimulateEPaySubmitCreditsOrder(t *testing.T) {
 	account, err := client.BillingAccount.Get(ctx, order.BillingAccountID)
 	require.NoError(t, err)
 	require.Equal(t, int64(5_670_000), account.BalanceMicros)
+}
+
+func TestPaymentHandlersSimulateEPaySubmitUsesOrderProviderKey(t *testing.T) {
+	t.Parallel()
+
+	gin.SetMode(gin.TestMode)
+	client, ctx, paymentSvc := newPaymentAPITestService(t, "api_payment_simulated_epay_custom_key")
+	provider, err := paymentSvc.UpsertEPayProvider(ctx, biz.UpsertEPayProviderInput{
+		Name:       "Custom ePay",
+		GatewayURL: "http://axon.local/payment/simulate/epay/submit",
+		PID:        "custom-pid",
+		Key:        "custom-provider-key",
+		NotifyURL:  "http://axon.local/payment/notify/epay",
+		ReturnURL:  "http://axon.local/payment/return/epay",
+		Currency:   "CNY",
+	})
+	require.NoError(t, err)
+
+	checkout, err := paymentSvc.CreateRechargeCheckout(ctx, biz.CreateRechargeCheckoutInput{
+		ProjectID:          1,
+		ProviderInstanceID: &provider.ID,
+		ProviderType:       provider.ProviderType,
+		Amount:             decimal.RequireFromString("8.90"),
+		Currency:           "CNY",
+	})
+	require.NoError(t, err)
+
+	router := gin.New()
+	router.GET("/payment/simulate/epay/submit", NewPaymentHandlers(PaymentHandlersParams{PaymentService: paymentSvc}).SimulateEPaySubmit)
+
+	req := httptest.NewRequest(http.MethodGet, checkout.URL, nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	require.Equal(t, http.StatusFound, w.Code)
+
+	order, err := client.PaymentOrder.Query().Only(ctx)
+	require.NoError(t, err)
+	require.NotNil(t, order.LedgerTransactionID)
+
+	account, err := client.BillingAccount.Get(ctx, order.BillingAccountID)
+	require.NoError(t, err)
+	require.Equal(t, int64(8_900_000), account.BalanceMicros)
 }
 
 func TestPaymentHandlersReturnEPayReportsOrderStatusWithoutCrediting(t *testing.T) {
@@ -78,7 +120,7 @@ func TestPaymentHandlersReturnEPayReportsOrderStatusWithoutCrediting(t *testing.
 	handlers := NewPaymentHandlers(PaymentHandlersParams{PaymentService: paymentSvc})
 	router.GET("/payment/return/epay", handlers.ReturnEPay)
 
-	req := httptest.NewRequest(http.MethodGet, returnURL, nil).WithContext(ctx)
+	req := httptest.NewRequest(http.MethodGet, returnURL, nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	require.Equal(t, http.StatusOK, w.Code)

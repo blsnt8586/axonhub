@@ -460,6 +460,49 @@ func (s *PaymentService) resolvePaymentProvider(ctx context.Context, providerTyp
 	return provider, nil
 }
 
+func (s *PaymentService) BuildSimulatedEPayNotify(ctx context.Context, checkoutParams map[string]string) (map[string]string, error) {
+	if len(checkoutParams) == 0 {
+		return nil, fmt.Errorf("epay checkout params are required")
+	}
+	orderNo := checkoutParams["out_trade_no"]
+	if orderNo == "" {
+		return nil, fmt.Errorf("epay checkout missing out_trade_no")
+	}
+
+	order, err := s.entFromContext(ctx).PaymentOrder.Query().
+		Where(paymentorder.OrderNoEQ(orderNo)).
+		Only(ctx)
+	if ent.IsNotFound(err) {
+		return nil, ErrPaymentOrderNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to load payment order: %w", err)
+	}
+	if order.ProviderType != paymentorder.ProviderTypeEpay {
+		return nil, fmt.Errorf("payment order %s is not an epay order", order.OrderNo)
+	}
+	if order.ProviderInstanceID == nil {
+		return nil, fmt.Errorf("payment order %s has no provider instance", order.OrderNo)
+	}
+
+	provider, err := s.entFromContext(ctx).PaymentProviderInstance.Get(ctx, *order.ProviderInstanceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load epay provider: %w", err)
+	}
+	cfg, err := parseEPayConfig(provider.Config)
+	if err != nil {
+		return nil, err
+	}
+	if checkoutParams["pid"] != cfg.PID {
+		return nil, fmt.Errorf("epay pid mismatch")
+	}
+	if !VerifyEPaySignature(checkoutParams, cfg.Key) {
+		return nil, fmt.Errorf("invalid epay checkout signature")
+	}
+
+	return NewSimulatedEPayNotifyFromCheckout(checkoutParams, cfg.Key), nil
+}
+
 type HandleEPayReturnInput struct {
 	Params map[string]string
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 
+	"github.com/looplj/axonhub/internal/authz"
+	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/server/biz"
 )
 
@@ -33,7 +36,9 @@ func (h *PaymentHandlers) NotifyEPay(c *gin.Context) {
 		return
 	}
 
-	if _, err := h.PaymentService.HandleEPayNotify(c.Request.Context(), biz.HandleEPayNotifyInput{Params: params}); err != nil {
+	if _, err := authz.RunWithSystemBypass(c.Request.Context(), "payment-epay-notify", func(ctx context.Context) (*ent.PaymentOrder, error) {
+		return h.PaymentService.HandleEPayNotify(ctx, biz.HandleEPayNotifyInput{Params: params})
+	}); err != nil {
 		_ = c.Error(err)
 		c.String(http.StatusBadRequest, "fail")
 		return
@@ -44,7 +49,9 @@ func (h *PaymentHandlers) NotifyEPay(c *gin.Context) {
 
 func (h *PaymentHandlers) ReturnEPay(c *gin.Context) {
 	params := biz.EPayParamsFromValues(c.Request.URL.Query())
-	status, err := h.PaymentService.HandleEPayReturn(c.Request.Context(), biz.HandleEPayReturnInput{Params: params})
+	status, err := authz.RunWithSystemBypass(c.Request.Context(), "payment-epay-return", func(ctx context.Context) (*biz.EPayReturnStatus, error) {
+		return h.PaymentService.HandleEPayReturn(ctx, biz.HandleEPayReturnInput{Params: params})
+	})
 	if err != nil {
 		JSONError(c, http.StatusBadRequest, err)
 		return
@@ -73,8 +80,15 @@ func (h *PaymentHandlers) SimulateEPaySubmit(c *gin.Context) {
 		return
 	}
 
-	notifyParams := biz.NewSimulatedEPayNotifyFromCheckout(params, "axonhub-simulated-epay-secret")
-	if _, err := h.PaymentService.HandleEPayNotify(c.Request.Context(), biz.HandleEPayNotifyInput{Params: notifyParams}); err != nil {
+	var notifyParams map[string]string
+	if _, err := authz.RunWithSystemBypass(c.Request.Context(), "payment-epay-simulate-submit", func(ctx context.Context) (*ent.PaymentOrder, error) {
+		var err error
+		notifyParams, err = h.PaymentService.BuildSimulatedEPayNotify(ctx, params)
+		if err != nil {
+			return nil, err
+		}
+		return h.PaymentService.HandleEPayNotify(ctx, biz.HandleEPayNotifyInput{Params: notifyParams})
+	}); err != nil {
 		JSONError(c, http.StatusBadRequest, err)
 		return
 	}

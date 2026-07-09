@@ -62,7 +62,7 @@ func TestBillingAdmission_EnforceRejectsInsufficientBalance(t *testing.T) {
 	var respErr *llm.ResponseError
 	require.ErrorAs(t, err, &respErr)
 	require.Equal(t, http.StatusPaymentRequired, respErr.StatusCode)
-	require.Equal(t, "billing_admission_denied", respErr.Detail.Code)
+	require.Equal(t, string(biz.AdmissionCodeInsufficientBalance), respErr.Detail.Code)
 	require.Equal(t, "billing_error", respErr.Detail.Type)
 	require.Equal(t, "insufficient billing balance", respErr.Detail.Message)
 }

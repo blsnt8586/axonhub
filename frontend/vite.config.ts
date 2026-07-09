@@ -5,6 +5,24 @@ import react from '@vitejs/plugin-react-swc';
 import tailwindcss from '@tailwindcss/vite';
 import tanstackRouter from '@tanstack/router-plugin/vite';
 
+const backendAdminPathPrefixes = [
+  '/admin/system/',
+  '/admin/auth/',
+  '/admin/graphql',
+  '/admin/playground',
+  '/admin/codex/',
+  '/admin/claudecode/',
+  '/admin/antigravity/',
+  '/admin/copilot/',
+  '/admin/oidc/',
+  '/admin/requests/',
+];
+
+function isBackendAdminPath(url?: string) {
+  if (!url) return false;
+  return backendAdminPathPrefixes.some((prefix) => url === prefix || url.startsWith(prefix));
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -36,6 +54,11 @@ export default defineConfig({
       '/admin': {
         target: process.env.VITE_API_URL || 'http://localhost:8090',
         changeOrigin: true,
+        bypass: (req) => {
+          if (!isBackendAdminPath(req.url)) {
+            return req.url;
+          }
+        },
       },
       '/oauth': {
         target: process.env.VITE_API_URL || 'http://localhost:8090',

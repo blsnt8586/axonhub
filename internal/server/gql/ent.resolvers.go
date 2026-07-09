@@ -162,77 +162,101 @@ func (r *billingAccountBindingResolver) BillingAccountID(ctx context.Context, ob
 
 // ID is the resolver for the id field.
 func (r *billingAuditLogResolver) ID(ctx context.Context, obj *ent.BillingAuditLog) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{Type: ent.TypeBillingAuditLog, ID: obj.ID}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *billingHoldResolver) ID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{Type: ent.TypeBillingHold, ID: obj.ID}, nil
 }
 
 // BillingAccountID is the resolver for the billingAccountID field.
 func (r *billingHoldResolver) BillingAccountID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+	return &objects.GUID{Type: ent.TypeBillingAccount, ID: obj.BillingAccountID}, nil
 }
 
 // RequestID is the resolver for the requestID field.
 func (r *billingHoldResolver) RequestID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: RequestID - requestID"))
+	if obj.RequestID <= 0 {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeRequest, ID: obj.RequestID}, nil
 }
 
 // UsageLogID is the resolver for the usageLogID field.
 func (r *billingHoldResolver) UsageLogID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: UsageLogID - usageLogID"))
+	if obj.UsageLogID <= 0 {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeUsageLog, ID: obj.UsageLogID}, nil
 }
 
 // CapturedLedgerTransactionID is the resolver for the capturedLedgerTransactionID field.
 func (r *billingHoldResolver) CapturedLedgerTransactionID(ctx context.Context, obj *ent.BillingHold) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: CapturedLedgerTransactionID - capturedLedgerTransactionID"))
+	if obj.CapturedLedgerTransactionID <= 0 {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeLedgerTransaction, ID: obj.CapturedLedgerTransactionID}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *billingNotificationResolver) ID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{Type: ent.TypeBillingNotification, ID: obj.ID}, nil
 }
 
 // UserID is the resolver for the userID field.
 func (r *billingNotificationResolver) UserID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: UserID - userID"))
+	if obj.UserID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeUser, ID: *obj.UserID}, nil
 }
 
 // BillingAccountID is the resolver for the billingAccountID field.
 func (r *billingNotificationResolver) BillingAccountID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: BillingAccountID - billingAccountID"))
+	if obj.BillingAccountID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeBillingAccount, ID: *obj.BillingAccountID}, nil
 }
 
 // PaymentOrderID is the resolver for the paymentOrderID field.
 func (r *billingNotificationResolver) PaymentOrderID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: PaymentOrderID - paymentOrderID"))
+	if obj.PaymentOrderID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypePaymentOrder, ID: *obj.PaymentOrderID}, nil
 }
 
 // UserSubscriptionID is the resolver for the userSubscriptionID field.
 func (r *billingNotificationResolver) UserSubscriptionID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: UserSubscriptionID - userSubscriptionID"))
+	if obj.UserSubscriptionID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeUserSubscription, ID: *obj.UserSubscriptionID}, nil
 }
 
 // UsageBillingRecordID is the resolver for the usageBillingRecordID field.
 func (r *billingNotificationResolver) UsageBillingRecordID(ctx context.Context, obj *ent.BillingNotification) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: UsageBillingRecordID - usageBillingRecordID"))
+	if obj.UsageBillingRecordID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeUsageBillingRecord, ID: *obj.UsageBillingRecordID}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *billingNotificationPreferenceResolver) ID(ctx context.Context, obj *ent.BillingNotificationPreference) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{Type: ent.TypeBillingNotificationPreference, ID: obj.ID}, nil
 }
 
 // UserID is the resolver for the userID field.
 func (r *billingNotificationPreferenceResolver) UserID(ctx context.Context, obj *ent.BillingNotificationPreference) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: UserID - userID"))
+	return &objects.GUID{Type: ent.TypeUser, ID: obj.UserID}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *billingNotificationSettingResolver) ID(ctx context.Context, obj *ent.BillingNotificationSetting) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{Type: ent.TypeBillingNotificationSetting, ID: obj.ID}, nil
 }
 
 // ID is the resolver for the id field.
@@ -390,7 +414,7 @@ func (r *channelProbeResolver) ChannelID(ctx context.Context, obj *ent.ChannelPr
 
 // ID is the resolver for the id field.
 func (r *commercialSettingResolver) ID(ctx context.Context, obj *ent.CommercialSetting) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{Type: ent.TypeCommercialSetting, ID: obj.ID}, nil
 }
 
 // ID is the resolver for the id field.

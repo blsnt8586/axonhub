@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -53,6 +54,63 @@ func TestBillingAccountServiceGetOrCreateIsIdempotent(t *testing.T) {
 	count, err := client.BillingAccount.Query().Count(ctx)
 	require.NoError(t, err)
 	require.Equal(t, 1, count)
+}
+
+func TestBillingAccountServiceGetOrCreateSerializesConcurrentSubjectCreation(t *testing.T) {
+	t.Parallel()
+
+	client := enttest.NewEntClient(t, "sqlite3", "file:billing_account_concurrent?mode=memory&cache=shared&_fk=1")
+	ctx := authz.WithTestBypass(context.Background())
+	svc := NewBillingAccountService(BillingAccountServiceParams{Ent: client})
+
+	const workers = 16
+	accounts := make(chan *ent.BillingAccount, workers)
+	errs := make(chan error, workers)
+
+	var start sync.WaitGroup
+	start.Add(1)
+
+	var done sync.WaitGroup
+	done.Add(workers)
+	for range workers {
+		go func() {
+			defer done.Done()
+			start.Wait()
+
+			account, err := svc.GetOrCreateForSubject(ctx, UserBillingSubject(99))
+			if err != nil {
+				errs <- err
+				return
+			}
+			accounts <- account
+		}()
+	}
+
+	start.Done()
+	done.Wait()
+	close(accounts)
+	close(errs)
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	var firstID int
+	for account := range accounts {
+		if firstID == 0 {
+			firstID = account.ID
+		}
+		require.Equal(t, firstID, account.ID)
+	}
+	require.NotZero(t, firstID)
+
+	accountCount, err := client.BillingAccount.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, accountCount)
+
+	bindingCount, err := client.BillingAccountBinding.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, bindingCount)
 }
 
 func TestBillingAccountServiceGetBySubjectNotFound(t *testing.T) {

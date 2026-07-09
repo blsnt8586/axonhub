@@ -357,6 +357,26 @@ Verification:
 - [x] Stage 8: Affiliate And Rebates
 - [x] Stage 9: Billing Notifications
 - [x] Stage 10: Production Operations And Security Closure
+- [ ] Stage 11: Production Deployment And End-to-End Acceptance
+
+## Stage 11: Production Deployment And End-to-End Acceptance
+
+Status: [ ] In Progress
+
+Goal: verify the commercial billing build as a deployable product, including configuration defaults, local runtime startup, browser-level owner/user acceptance, Docker readiness, and rollback-friendly evidence.
+
+Tracking checklist:
+
+- [x] Maintain the detailed production checklist in [commercial-billing-production-checklist.md](./commercial-billing-production-checklist.md).
+- [x] Lock the default commercial payer to user wallet in configuration.
+- [x] Run backend verification for commercial billing and configuration.
+- [x] Run frontend TypeScript and production build verification.
+- [x] Start backend and frontend locally with an isolated Stage 11 database.
+- [x] Complete browser-level admin billing acceptance.
+- [x] Complete browser-level user wallet and simulated recharge acceptance.
+- [x] Fix acceptance defects found during Stage 11 browser verification.
+- [x] Record unresolved production gaps explicitly in the production checklist.
+- [ ] Commit completed stage.
 
 ## Completion Log
 

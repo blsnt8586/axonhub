@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"go.uber.org/fx"
 
@@ -49,6 +50,7 @@ type BillingAccountServiceParams struct {
 
 type BillingAccountService struct {
 	*AbstractService
+	subjectLocks sync.Map
 }
 
 func NewBillingAccountService(params BillingAccountServiceParams) *BillingAccountService {
@@ -83,6 +85,9 @@ func (s *BillingAccountService) GetOrCreateForSubject(ctx context.Context, subje
 	if err := subject.validate(); err != nil {
 		return nil, err
 	}
+
+	unlock := s.lockSubject(subject)
+	defer unlock()
 
 	var account *ent.BillingAccount
 	err := s.RunInTransaction(ctx, func(ctx context.Context) error {
@@ -129,4 +134,13 @@ func (s *BillingAccountService) GetOrCreateForSubject(ctx context.Context, subje
 	}
 
 	return account, nil
+}
+
+func (s *BillingAccountService) lockSubject(subject BillingSubject) func() {
+	key := fmt.Sprintf("%s:%d", subject.Type, subject.ID)
+	value, _ := s.subjectLocks.LoadOrStore(key, &sync.Mutex{})
+	mu := value.(*sync.Mutex)
+	mu.Lock()
+
+	return mu.Unlock
 }
