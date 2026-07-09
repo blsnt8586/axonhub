@@ -19,6 +19,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
@@ -38,6 +39,7 @@ type LedgerTransactionQuery struct {
 	withPaymentOrders                   *PaymentOrderQuery
 	withRedeemCodes                     *RedeemCodeQuery
 	withPurchasedUserSubscriptions      *UserSubscriptionQuery
+	withPromoUsages                     *PromoUsageQuery
 	loadTotal                           []func(context.Context, []*LedgerTransaction) error
 	modifiers                           []func(*sql.Selector)
 	withNamedEntries                    map[string]*LedgerEntryQuery
@@ -46,6 +48,7 @@ type LedgerTransactionQuery struct {
 	withNamedPaymentOrders              map[string]*PaymentOrderQuery
 	withNamedRedeemCodes                map[string]*RedeemCodeQuery
 	withNamedPurchasedUserSubscriptions map[string]*UserSubscriptionQuery
+	withNamedPromoUsages                map[string]*PromoUsageQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -229,6 +232,28 @@ func (_q *LedgerTransactionQuery) QueryPurchasedUserSubscriptions() *UserSubscri
 			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, selector),
 			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.PurchasedUserSubscriptionsTable, ledgertransaction.PurchasedUserSubscriptionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPromoUsages chains the current query on the "promo_usages" edge.
+func (_q *LedgerTransactionQuery) QueryPromoUsages() *PromoUsageQuery {
+	query := (&PromoUsageClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, selector),
+			sqlgraph.To(promousage.Table, promousage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.PromoUsagesTable, ledgertransaction.PromoUsagesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -435,6 +460,7 @@ func (_q *LedgerTransactionQuery) Clone() *LedgerTransactionQuery {
 		withPaymentOrders:              _q.withPaymentOrders.Clone(),
 		withRedeemCodes:                _q.withRedeemCodes.Clone(),
 		withPurchasedUserSubscriptions: _q.withPurchasedUserSubscriptions.Clone(),
+		withPromoUsages:                _q.withPromoUsages.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -516,6 +542,17 @@ func (_q *LedgerTransactionQuery) WithPurchasedUserSubscriptions(opts ...func(*U
 		opt(query)
 	}
 	_q.withPurchasedUserSubscriptions = query
+	return _q
+}
+
+// WithPromoUsages tells the query-builder to eager-load the nodes that are connected to
+// the "promo_usages" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerTransactionQuery) WithPromoUsages(opts ...func(*PromoUsageQuery)) *LedgerTransactionQuery {
+	query := (&PromoUsageClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPromoUsages = query
 	return _q
 }
 
@@ -603,7 +640,7 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	var (
 		nodes       = []*LedgerTransaction{}
 		_spec       = _q.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [8]bool{
 			_q.withBillingAccount != nil,
 			_q.withEntries != nil,
 			_q.withUsageBillingRecords != nil,
@@ -611,6 +648,7 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 			_q.withPaymentOrders != nil,
 			_q.withRedeemCodes != nil,
 			_q.withPurchasedUserSubscriptions != nil,
+			_q.withPromoUsages != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -686,6 +724,13 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 			return nil, err
 		}
 	}
+	if query := _q.withPromoUsages; query != nil {
+		if err := _q.loadPromoUsages(ctx, query, nodes,
+			func(n *LedgerTransaction) { n.Edges.PromoUsages = []*PromoUsage{} },
+			func(n *LedgerTransaction, e *PromoUsage) { n.Edges.PromoUsages = append(n.Edges.PromoUsages, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedEntries {
 		if err := _q.loadEntries(ctx, query, nodes,
 			func(n *LedgerTransaction) { n.appendNamedEntries(name) },
@@ -725,6 +770,13 @@ func (_q *LedgerTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook
 		if err := _q.loadPurchasedUserSubscriptions(ctx, query, nodes,
 			func(n *LedgerTransaction) { n.appendNamedPurchasedUserSubscriptions(name) },
 			func(n *LedgerTransaction, e *UserSubscription) { n.appendNamedPurchasedUserSubscriptions(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedPromoUsages {
+		if err := _q.loadPromoUsages(ctx, query, nodes,
+			func(n *LedgerTransaction) { n.appendNamedPromoUsages(name) },
+			func(n *LedgerTransaction, e *PromoUsage) { n.appendNamedPromoUsages(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -951,6 +1003,39 @@ func (_q *LedgerTransactionQuery) loadPurchasedUserSubscriptions(ctx context.Con
 	}
 	return nil
 }
+func (_q *LedgerTransactionQuery) loadPromoUsages(ctx context.Context, query *PromoUsageQuery, nodes []*LedgerTransaction, init func(*LedgerTransaction), assign func(*LedgerTransaction, *PromoUsage)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*LedgerTransaction)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(promousage.FieldLedgerTransactionID)
+	}
+	query.Where(predicate.PromoUsage(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ledgertransaction.PromoUsagesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.LedgerTransactionID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "ledger_transaction_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ledger_transaction_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *LedgerTransactionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1129,6 +1214,20 @@ func (_q *LedgerTransactionQuery) WithNamedPurchasedUserSubscriptions(name strin
 		_q.withNamedPurchasedUserSubscriptions = make(map[string]*UserSubscriptionQuery)
 	}
 	_q.withNamedPurchasedUserSubscriptions[name] = query
+	return _q
+}
+
+// WithNamedPromoUsages tells the query-builder to eager-load the nodes that are connected to the "promo_usages"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *LedgerTransactionQuery) WithNamedPromoUsages(name string, opts ...func(*PromoUsageQuery)) *LedgerTransactionQuery {
+	query := (&PromoUsageClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedPromoUsages == nil {
+		_q.withNamedPromoUsages = make(map[string]*PromoUsageQuery)
+	}
+	_q.withNamedPromoUsages[name] = query
 	return _q
 }
 

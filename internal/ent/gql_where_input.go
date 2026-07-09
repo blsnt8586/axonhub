@@ -29,6 +29,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -957,6 +959,10 @@ type BillingAccountWhereInput struct {
 	// "payment_orders" edge predicates.
 	HasPaymentOrders     *bool                     `json:"hasPaymentOrders,omitempty"`
 	HasPaymentOrdersWith []*PaymentOrderWhereInput `json:"hasPaymentOrdersWith,omitempty"`
+
+	// "promo_usages" edge predicates.
+	HasPromoUsages     *bool                   `json:"hasPromoUsages,omitempty"`
+	HasPromoUsagesWith []*PromoUsageWhereInput `json:"hasPromoUsagesWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -1351,6 +1357,24 @@ func (i *BillingAccountWhereInput) P() (predicate.BillingAccount, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, billingaccount.HasPaymentOrdersWith(with...))
+	}
+	if i.HasPromoUsages != nil {
+		p := billingaccount.HasPromoUsages()
+		if !*i.HasPromoUsages {
+			p = billingaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPromoUsagesWith) > 0 {
+		with := make([]predicate.PromoUsage, 0, len(i.HasPromoUsagesWith))
+		for _, w := range i.HasPromoUsagesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPromoUsagesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, billingaccount.HasPromoUsagesWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -6954,6 +6978,10 @@ type LedgerTransactionWhereInput struct {
 	// "purchased_user_subscriptions" edge predicates.
 	HasPurchasedUserSubscriptions     *bool                         `json:"hasPurchasedUserSubscriptions,omitempty"`
 	HasPurchasedUserSubscriptionsWith []*UserSubscriptionWhereInput `json:"hasPurchasedUserSubscriptionsWith,omitempty"`
+
+	// "promo_usages" edge predicates.
+	HasPromoUsages     *bool                   `json:"hasPromoUsages,omitempty"`
+	HasPromoUsagesWith []*PromoUsageWhereInput `json:"hasPromoUsagesWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -7543,6 +7571,24 @@ func (i *LedgerTransactionWhereInput) P() (predicate.LedgerTransaction, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, ledgertransaction.HasPurchasedUserSubscriptionsWith(with...))
+	}
+	if i.HasPromoUsages != nil {
+		p := ledgertransaction.HasPromoUsages()
+		if !*i.HasPromoUsages {
+			p = ledgertransaction.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPromoUsagesWith) > 0 {
+		with := make([]predicate.PromoUsage, 0, len(i.HasPromoUsagesWith))
+		for _, w := range i.HasPromoUsagesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPromoUsagesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, ledgertransaction.HasPromoUsagesWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -9204,6 +9250,34 @@ type PaymentOrderWhereInput struct {
 	AmountMicrosLT    *int64  `json:"amountMicrosLT,omitempty"`
 	AmountMicrosLTE   *int64  `json:"amountMicrosLTE,omitempty"`
 
+	// "payable_amount_micros" field predicates.
+	PayableAmountMicros      *int64  `json:"payableAmountMicros,omitempty"`
+	PayableAmountMicrosNEQ   *int64  `json:"payableAmountMicrosNEQ,omitempty"`
+	PayableAmountMicrosIn    []int64 `json:"payableAmountMicrosIn,omitempty"`
+	PayableAmountMicrosNotIn []int64 `json:"payableAmountMicrosNotIn,omitempty"`
+	PayableAmountMicrosGT    *int64  `json:"payableAmountMicrosGT,omitempty"`
+	PayableAmountMicrosGTE   *int64  `json:"payableAmountMicrosGTE,omitempty"`
+	PayableAmountMicrosLT    *int64  `json:"payableAmountMicrosLT,omitempty"`
+	PayableAmountMicrosLTE   *int64  `json:"payableAmountMicrosLTE,omitempty"`
+
+	// "discount_amount_micros" field predicates.
+	DiscountAmountMicros      *int64  `json:"discountAmountMicros,omitempty"`
+	DiscountAmountMicrosNEQ   *int64  `json:"discountAmountMicrosNEQ,omitempty"`
+	DiscountAmountMicrosIn    []int64 `json:"discountAmountMicrosIn,omitempty"`
+	DiscountAmountMicrosNotIn []int64 `json:"discountAmountMicrosNotIn,omitempty"`
+	DiscountAmountMicrosGT    *int64  `json:"discountAmountMicrosGT,omitempty"`
+	DiscountAmountMicrosGTE   *int64  `json:"discountAmountMicrosGTE,omitempty"`
+	DiscountAmountMicrosLT    *int64  `json:"discountAmountMicrosLT,omitempty"`
+	DiscountAmountMicrosLTE   *int64  `json:"discountAmountMicrosLTE,omitempty"`
+
+	// "promo_code_id" field predicates.
+	PromoCodeID       *int  `json:"promoCodeID,omitempty"`
+	PromoCodeIDNEQ    *int  `json:"promoCodeIDNEQ,omitempty"`
+	PromoCodeIDIn     []int `json:"promoCodeIDIn,omitempty"`
+	PromoCodeIDNotIn  []int `json:"promoCodeIDNotIn,omitempty"`
+	PromoCodeIDIsNil  bool  `json:"promoCodeIDIsNil,omitempty"`
+	PromoCodeIDNotNil bool  `json:"promoCodeIDNotNil,omitempty"`
+
 	// "currency" field predicates.
 	Currency             *string  `json:"currency,omitempty"`
 	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
@@ -9379,6 +9453,14 @@ type PaymentOrderWhereInput struct {
 	// "ledger_transaction" edge predicates.
 	HasLedgerTransaction     *bool                          `json:"hasLedgerTransaction,omitempty"`
 	HasLedgerTransactionWith []*LedgerTransactionWhereInput `json:"hasLedgerTransactionWith,omitempty"`
+
+	// "promo_code" edge predicates.
+	HasPromoCode     *bool                  `json:"hasPromoCode,omitempty"`
+	HasPromoCodeWith []*PromoCodeWhereInput `json:"hasPromoCodeWith,omitempty"`
+
+	// "promo_usages" edge predicates.
+	HasPromoUsages     *bool                   `json:"hasPromoUsages,omitempty"`
+	HasPromoUsagesWith []*PromoUsageWhereInput `json:"hasPromoUsagesWith,omitempty"`
 
 	// "payment_events" edge predicates.
 	HasPaymentEvents     *bool                     `json:"hasPaymentEvents,omitempty"`
@@ -9668,6 +9750,72 @@ func (i *PaymentOrderWhereInput) P() (predicate.PaymentOrder, error) {
 	}
 	if i.AmountMicrosLTE != nil {
 		predicates = append(predicates, paymentorder.AmountMicrosLTE(*i.AmountMicrosLTE))
+	}
+	if i.PayableAmountMicros != nil {
+		predicates = append(predicates, paymentorder.PayableAmountMicrosEQ(*i.PayableAmountMicros))
+	}
+	if i.PayableAmountMicrosNEQ != nil {
+		predicates = append(predicates, paymentorder.PayableAmountMicrosNEQ(*i.PayableAmountMicrosNEQ))
+	}
+	if len(i.PayableAmountMicrosIn) > 0 {
+		predicates = append(predicates, paymentorder.PayableAmountMicrosIn(i.PayableAmountMicrosIn...))
+	}
+	if len(i.PayableAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, paymentorder.PayableAmountMicrosNotIn(i.PayableAmountMicrosNotIn...))
+	}
+	if i.PayableAmountMicrosGT != nil {
+		predicates = append(predicates, paymentorder.PayableAmountMicrosGT(*i.PayableAmountMicrosGT))
+	}
+	if i.PayableAmountMicrosGTE != nil {
+		predicates = append(predicates, paymentorder.PayableAmountMicrosGTE(*i.PayableAmountMicrosGTE))
+	}
+	if i.PayableAmountMicrosLT != nil {
+		predicates = append(predicates, paymentorder.PayableAmountMicrosLT(*i.PayableAmountMicrosLT))
+	}
+	if i.PayableAmountMicrosLTE != nil {
+		predicates = append(predicates, paymentorder.PayableAmountMicrosLTE(*i.PayableAmountMicrosLTE))
+	}
+	if i.DiscountAmountMicros != nil {
+		predicates = append(predicates, paymentorder.DiscountAmountMicrosEQ(*i.DiscountAmountMicros))
+	}
+	if i.DiscountAmountMicrosNEQ != nil {
+		predicates = append(predicates, paymentorder.DiscountAmountMicrosNEQ(*i.DiscountAmountMicrosNEQ))
+	}
+	if len(i.DiscountAmountMicrosIn) > 0 {
+		predicates = append(predicates, paymentorder.DiscountAmountMicrosIn(i.DiscountAmountMicrosIn...))
+	}
+	if len(i.DiscountAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, paymentorder.DiscountAmountMicrosNotIn(i.DiscountAmountMicrosNotIn...))
+	}
+	if i.DiscountAmountMicrosGT != nil {
+		predicates = append(predicates, paymentorder.DiscountAmountMicrosGT(*i.DiscountAmountMicrosGT))
+	}
+	if i.DiscountAmountMicrosGTE != nil {
+		predicates = append(predicates, paymentorder.DiscountAmountMicrosGTE(*i.DiscountAmountMicrosGTE))
+	}
+	if i.DiscountAmountMicrosLT != nil {
+		predicates = append(predicates, paymentorder.DiscountAmountMicrosLT(*i.DiscountAmountMicrosLT))
+	}
+	if i.DiscountAmountMicrosLTE != nil {
+		predicates = append(predicates, paymentorder.DiscountAmountMicrosLTE(*i.DiscountAmountMicrosLTE))
+	}
+	if i.PromoCodeID != nil {
+		predicates = append(predicates, paymentorder.PromoCodeIDEQ(*i.PromoCodeID))
+	}
+	if i.PromoCodeIDNEQ != nil {
+		predicates = append(predicates, paymentorder.PromoCodeIDNEQ(*i.PromoCodeIDNEQ))
+	}
+	if len(i.PromoCodeIDIn) > 0 {
+		predicates = append(predicates, paymentorder.PromoCodeIDIn(i.PromoCodeIDIn...))
+	}
+	if len(i.PromoCodeIDNotIn) > 0 {
+		predicates = append(predicates, paymentorder.PromoCodeIDNotIn(i.PromoCodeIDNotIn...))
+	}
+	if i.PromoCodeIDIsNil {
+		predicates = append(predicates, paymentorder.PromoCodeIDIsNil())
+	}
+	if i.PromoCodeIDNotNil {
+		predicates = append(predicates, paymentorder.PromoCodeIDNotNil())
 	}
 	if i.Currency != nil {
 		predicates = append(predicates, paymentorder.CurrencyEQ(*i.Currency))
@@ -10137,6 +10285,42 @@ func (i *PaymentOrderWhereInput) P() (predicate.PaymentOrder, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, paymentorder.HasLedgerTransactionWith(with...))
+	}
+	if i.HasPromoCode != nil {
+		p := paymentorder.HasPromoCode()
+		if !*i.HasPromoCode {
+			p = paymentorder.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPromoCodeWith) > 0 {
+		with := make([]predicate.PromoCode, 0, len(i.HasPromoCodeWith))
+		for _, w := range i.HasPromoCodeWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPromoCodeWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentorder.HasPromoCodeWith(with...))
+	}
+	if i.HasPromoUsages != nil {
+		p := paymentorder.HasPromoUsages()
+		if !*i.HasPromoUsages {
+			p = paymentorder.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPromoUsagesWith) > 0 {
+		with := make([]predicate.PromoUsage, 0, len(i.HasPromoUsagesWith))
+		for _, w := range i.HasPromoUsagesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPromoUsagesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, paymentorder.HasPromoUsagesWith(with...))
 	}
 	if i.HasPaymentEvents != nil {
 		p := paymentorder.HasPaymentEvents()
@@ -11081,6 +11265,1656 @@ func (i *ProjectWhereInput) P() (predicate.Project, error) {
 		return predicates[0], nil
 	default:
 		return project.And(predicates...), nil
+	}
+}
+
+// PromoCodeWhereInput represents a where input for filtering PromoCode queries.
+type PromoCodeWhereInput struct {
+	Predicates []predicate.PromoCode  `json:"-"`
+	Not        *PromoCodeWhereInput   `json:"not,omitempty"`
+	Or         []*PromoCodeWhereInput `json:"or,omitempty"`
+	And        []*PromoCodeWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "code" field predicates.
+	Code             *string  `json:"code,omitempty"`
+	CodeNEQ          *string  `json:"codeNEQ,omitempty"`
+	CodeIn           []string `json:"codeIn,omitempty"`
+	CodeNotIn        []string `json:"codeNotIn,omitempty"`
+	CodeGT           *string  `json:"codeGT,omitempty"`
+	CodeGTE          *string  `json:"codeGTE,omitempty"`
+	CodeLT           *string  `json:"codeLT,omitempty"`
+	CodeLTE          *string  `json:"codeLTE,omitempty"`
+	CodeContains     *string  `json:"codeContains,omitempty"`
+	CodeHasPrefix    *string  `json:"codeHasPrefix,omitempty"`
+	CodeHasSuffix    *string  `json:"codeHasSuffix,omitempty"`
+	CodeEqualFold    *string  `json:"codeEqualFold,omitempty"`
+	CodeContainsFold *string  `json:"codeContainsFold,omitempty"`
+
+	// "description" field predicates.
+	Description             *string  `json:"description,omitempty"`
+	DescriptionNEQ          *string  `json:"descriptionNEQ,omitempty"`
+	DescriptionIn           []string `json:"descriptionIn,omitempty"`
+	DescriptionNotIn        []string `json:"descriptionNotIn,omitempty"`
+	DescriptionGT           *string  `json:"descriptionGT,omitempty"`
+	DescriptionGTE          *string  `json:"descriptionGTE,omitempty"`
+	DescriptionLT           *string  `json:"descriptionLT,omitempty"`
+	DescriptionLTE          *string  `json:"descriptionLTE,omitempty"`
+	DescriptionContains     *string  `json:"descriptionContains,omitempty"`
+	DescriptionHasPrefix    *string  `json:"descriptionHasPrefix,omitempty"`
+	DescriptionHasSuffix    *string  `json:"descriptionHasSuffix,omitempty"`
+	DescriptionEqualFold    *string  `json:"descriptionEqualFold,omitempty"`
+	DescriptionContainsFold *string  `json:"descriptionContainsFold,omitempty"`
+
+	// "discount_type" field predicates.
+	DiscountType      *promocode.DiscountType  `json:"discountType,omitempty"`
+	DiscountTypeNEQ   *promocode.DiscountType  `json:"discountTypeNEQ,omitempty"`
+	DiscountTypeIn    []promocode.DiscountType `json:"discountTypeIn,omitempty"`
+	DiscountTypeNotIn []promocode.DiscountType `json:"discountTypeNotIn,omitempty"`
+
+	// "discount_amount_micros" field predicates.
+	DiscountAmountMicros      *int64  `json:"discountAmountMicros,omitempty"`
+	DiscountAmountMicrosNEQ   *int64  `json:"discountAmountMicrosNEQ,omitempty"`
+	DiscountAmountMicrosIn    []int64 `json:"discountAmountMicrosIn,omitempty"`
+	DiscountAmountMicrosNotIn []int64 `json:"discountAmountMicrosNotIn,omitempty"`
+	DiscountAmountMicrosGT    *int64  `json:"discountAmountMicrosGT,omitempty"`
+	DiscountAmountMicrosGTE   *int64  `json:"discountAmountMicrosGTE,omitempty"`
+	DiscountAmountMicrosLT    *int64  `json:"discountAmountMicrosLT,omitempty"`
+	DiscountAmountMicrosLTE   *int64  `json:"discountAmountMicrosLTE,omitempty"`
+
+	// "discount_percent_bps" field predicates.
+	DiscountPercentBps      *int  `json:"discountPercentBps,omitempty"`
+	DiscountPercentBpsNEQ   *int  `json:"discountPercentBpsNEQ,omitempty"`
+	DiscountPercentBpsIn    []int `json:"discountPercentBpsIn,omitempty"`
+	DiscountPercentBpsNotIn []int `json:"discountPercentBpsNotIn,omitempty"`
+	DiscountPercentBpsGT    *int  `json:"discountPercentBpsGT,omitempty"`
+	DiscountPercentBpsGTE   *int  `json:"discountPercentBpsGTE,omitempty"`
+	DiscountPercentBpsLT    *int  `json:"discountPercentBpsLT,omitempty"`
+	DiscountPercentBpsLTE   *int  `json:"discountPercentBpsLTE,omitempty"`
+
+	// "scope" field predicates.
+	Scope      *promocode.Scope  `json:"scope,omitempty"`
+	ScopeNEQ   *promocode.Scope  `json:"scopeNEQ,omitempty"`
+	ScopeIn    []promocode.Scope `json:"scopeIn,omitempty"`
+	ScopeNotIn []promocode.Scope `json:"scopeNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *promocode.Status  `json:"status,omitempty"`
+	StatusNEQ   *promocode.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []promocode.Status `json:"statusIn,omitempty"`
+	StatusNotIn []promocode.Status `json:"statusNotIn,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "max_uses" field predicates.
+	MaxUses      *int  `json:"maxUses,omitempty"`
+	MaxUsesNEQ   *int  `json:"maxUsesNEQ,omitempty"`
+	MaxUsesIn    []int `json:"maxUsesIn,omitempty"`
+	MaxUsesNotIn []int `json:"maxUsesNotIn,omitempty"`
+	MaxUsesGT    *int  `json:"maxUsesGT,omitempty"`
+	MaxUsesGTE   *int  `json:"maxUsesGTE,omitempty"`
+	MaxUsesLT    *int  `json:"maxUsesLT,omitempty"`
+	MaxUsesLTE   *int  `json:"maxUsesLTE,omitempty"`
+
+	// "used_count" field predicates.
+	UsedCount      *int  `json:"usedCount,omitempty"`
+	UsedCountNEQ   *int  `json:"usedCountNEQ,omitempty"`
+	UsedCountIn    []int `json:"usedCountIn,omitempty"`
+	UsedCountNotIn []int `json:"usedCountNotIn,omitempty"`
+	UsedCountGT    *int  `json:"usedCountGT,omitempty"`
+	UsedCountGTE   *int  `json:"usedCountGTE,omitempty"`
+	UsedCountLT    *int  `json:"usedCountLT,omitempty"`
+	UsedCountLTE   *int  `json:"usedCountLTE,omitempty"`
+
+	// "per_user_limit" field predicates.
+	PerUserLimit      *int  `json:"perUserLimit,omitempty"`
+	PerUserLimitNEQ   *int  `json:"perUserLimitNEQ,omitempty"`
+	PerUserLimitIn    []int `json:"perUserLimitIn,omitempty"`
+	PerUserLimitNotIn []int `json:"perUserLimitNotIn,omitempty"`
+	PerUserLimitGT    *int  `json:"perUserLimitGT,omitempty"`
+	PerUserLimitGTE   *int  `json:"perUserLimitGTE,omitempty"`
+	PerUserLimitLT    *int  `json:"perUserLimitLT,omitempty"`
+	PerUserLimitLTE   *int  `json:"perUserLimitLTE,omitempty"`
+
+	// "starts_at" field predicates.
+	StartsAt       *time.Time  `json:"startsAt,omitempty"`
+	StartsAtNEQ    *time.Time  `json:"startsAtNEQ,omitempty"`
+	StartsAtIn     []time.Time `json:"startsAtIn,omitempty"`
+	StartsAtNotIn  []time.Time `json:"startsAtNotIn,omitempty"`
+	StartsAtGT     *time.Time  `json:"startsAtGT,omitempty"`
+	StartsAtGTE    *time.Time  `json:"startsAtGTE,omitempty"`
+	StartsAtLT     *time.Time  `json:"startsAtLT,omitempty"`
+	StartsAtLTE    *time.Time  `json:"startsAtLTE,omitempty"`
+	StartsAtIsNil  bool        `json:"startsAtIsNil,omitempty"`
+	StartsAtNotNil bool        `json:"startsAtNotNil,omitempty"`
+
+	// "expires_at" field predicates.
+	ExpiresAt       *time.Time  `json:"expiresAt,omitempty"`
+	ExpiresAtNEQ    *time.Time  `json:"expiresAtNEQ,omitempty"`
+	ExpiresAtIn     []time.Time `json:"expiresAtIn,omitempty"`
+	ExpiresAtNotIn  []time.Time `json:"expiresAtNotIn,omitempty"`
+	ExpiresAtGT     *time.Time  `json:"expiresAtGT,omitempty"`
+	ExpiresAtGTE    *time.Time  `json:"expiresAtGTE,omitempty"`
+	ExpiresAtLT     *time.Time  `json:"expiresAtLT,omitempty"`
+	ExpiresAtLTE    *time.Time  `json:"expiresAtLTE,omitempty"`
+	ExpiresAtIsNil  bool        `json:"expiresAtIsNil,omitempty"`
+	ExpiresAtNotNil bool        `json:"expiresAtNotNil,omitempty"`
+
+	// "created_by_id" field predicates.
+	CreatedByID       *int  `json:"createdByID,omitempty"`
+	CreatedByIDNEQ    *int  `json:"createdByIDNEQ,omitempty"`
+	CreatedByIDIn     []int `json:"createdByIDIn,omitempty"`
+	CreatedByIDNotIn  []int `json:"createdByIDNotIn,omitempty"`
+	CreatedByIDGT     *int  `json:"createdByIDGT,omitempty"`
+	CreatedByIDGTE    *int  `json:"createdByIDGTE,omitempty"`
+	CreatedByIDLT     *int  `json:"createdByIDLT,omitempty"`
+	CreatedByIDLTE    *int  `json:"createdByIDLTE,omitempty"`
+	CreatedByIDIsNil  bool  `json:"createdByIDIsNil,omitempty"`
+	CreatedByIDNotNil bool  `json:"createdByIDNotNil,omitempty"`
+
+	// "notes" field predicates.
+	Notes             *string  `json:"notes,omitempty"`
+	NotesNEQ          *string  `json:"notesNEQ,omitempty"`
+	NotesIn           []string `json:"notesIn,omitempty"`
+	NotesNotIn        []string `json:"notesNotIn,omitempty"`
+	NotesGT           *string  `json:"notesGT,omitempty"`
+	NotesGTE          *string  `json:"notesGTE,omitempty"`
+	NotesLT           *string  `json:"notesLT,omitempty"`
+	NotesLTE          *string  `json:"notesLTE,omitempty"`
+	NotesContains     *string  `json:"notesContains,omitempty"`
+	NotesHasPrefix    *string  `json:"notesHasPrefix,omitempty"`
+	NotesHasSuffix    *string  `json:"notesHasSuffix,omitempty"`
+	NotesEqualFold    *string  `json:"notesEqualFold,omitempty"`
+	NotesContainsFold *string  `json:"notesContainsFold,omitempty"`
+
+	// "usages" edge predicates.
+	HasUsages     *bool                   `json:"hasUsages,omitempty"`
+	HasUsagesWith []*PromoUsageWhereInput `json:"hasUsagesWith,omitempty"`
+
+	// "payment_orders" edge predicates.
+	HasPaymentOrders     *bool                     `json:"hasPaymentOrders,omitempty"`
+	HasPaymentOrdersWith []*PaymentOrderWhereInput `json:"hasPaymentOrdersWith,omitempty"`
+
+	// "user_subscriptions" edge predicates.
+	HasUserSubscriptions     *bool                         `json:"hasUserSubscriptions,omitempty"`
+	HasUserSubscriptionsWith []*UserSubscriptionWhereInput `json:"hasUserSubscriptionsWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *PromoCodeWhereInput) AddPredicates(predicates ...predicate.PromoCode) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the PromoCodeWhereInput filter on the PromoCodeQuery builder.
+func (i *PromoCodeWhereInput) Filter(q *PromoCodeQuery) (*PromoCodeQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyPromoCodeWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyPromoCodeWhereInput is returned in case the PromoCodeWhereInput is empty.
+var ErrEmptyPromoCodeWhereInput = errors.New("ent: empty predicate PromoCodeWhereInput")
+
+// P returns a predicate for filtering promocodes.
+// An error is returned if the input is empty or invalid.
+func (i *PromoCodeWhereInput) P() (predicate.PromoCode, error) {
+	var predicates []predicate.PromoCode
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, promocode.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.PromoCode, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, promocode.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.PromoCode, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, promocode.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, promocode.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, promocode.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, promocode.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, promocode.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, promocode.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, promocode.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, promocode.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, promocode.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, promocode.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, promocode.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, promocode.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, promocode.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, promocode.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, promocode.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, promocode.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, promocode.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, promocode.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, promocode.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, promocode.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, promocode.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, promocode.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, promocode.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, promocode.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, promocode.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.Code != nil {
+		predicates = append(predicates, promocode.CodeEQ(*i.Code))
+	}
+	if i.CodeNEQ != nil {
+		predicates = append(predicates, promocode.CodeNEQ(*i.CodeNEQ))
+	}
+	if len(i.CodeIn) > 0 {
+		predicates = append(predicates, promocode.CodeIn(i.CodeIn...))
+	}
+	if len(i.CodeNotIn) > 0 {
+		predicates = append(predicates, promocode.CodeNotIn(i.CodeNotIn...))
+	}
+	if i.CodeGT != nil {
+		predicates = append(predicates, promocode.CodeGT(*i.CodeGT))
+	}
+	if i.CodeGTE != nil {
+		predicates = append(predicates, promocode.CodeGTE(*i.CodeGTE))
+	}
+	if i.CodeLT != nil {
+		predicates = append(predicates, promocode.CodeLT(*i.CodeLT))
+	}
+	if i.CodeLTE != nil {
+		predicates = append(predicates, promocode.CodeLTE(*i.CodeLTE))
+	}
+	if i.CodeContains != nil {
+		predicates = append(predicates, promocode.CodeContains(*i.CodeContains))
+	}
+	if i.CodeHasPrefix != nil {
+		predicates = append(predicates, promocode.CodeHasPrefix(*i.CodeHasPrefix))
+	}
+	if i.CodeHasSuffix != nil {
+		predicates = append(predicates, promocode.CodeHasSuffix(*i.CodeHasSuffix))
+	}
+	if i.CodeEqualFold != nil {
+		predicates = append(predicates, promocode.CodeEqualFold(*i.CodeEqualFold))
+	}
+	if i.CodeContainsFold != nil {
+		predicates = append(predicates, promocode.CodeContainsFold(*i.CodeContainsFold))
+	}
+	if i.Description != nil {
+		predicates = append(predicates, promocode.DescriptionEQ(*i.Description))
+	}
+	if i.DescriptionNEQ != nil {
+		predicates = append(predicates, promocode.DescriptionNEQ(*i.DescriptionNEQ))
+	}
+	if len(i.DescriptionIn) > 0 {
+		predicates = append(predicates, promocode.DescriptionIn(i.DescriptionIn...))
+	}
+	if len(i.DescriptionNotIn) > 0 {
+		predicates = append(predicates, promocode.DescriptionNotIn(i.DescriptionNotIn...))
+	}
+	if i.DescriptionGT != nil {
+		predicates = append(predicates, promocode.DescriptionGT(*i.DescriptionGT))
+	}
+	if i.DescriptionGTE != nil {
+		predicates = append(predicates, promocode.DescriptionGTE(*i.DescriptionGTE))
+	}
+	if i.DescriptionLT != nil {
+		predicates = append(predicates, promocode.DescriptionLT(*i.DescriptionLT))
+	}
+	if i.DescriptionLTE != nil {
+		predicates = append(predicates, promocode.DescriptionLTE(*i.DescriptionLTE))
+	}
+	if i.DescriptionContains != nil {
+		predicates = append(predicates, promocode.DescriptionContains(*i.DescriptionContains))
+	}
+	if i.DescriptionHasPrefix != nil {
+		predicates = append(predicates, promocode.DescriptionHasPrefix(*i.DescriptionHasPrefix))
+	}
+	if i.DescriptionHasSuffix != nil {
+		predicates = append(predicates, promocode.DescriptionHasSuffix(*i.DescriptionHasSuffix))
+	}
+	if i.DescriptionEqualFold != nil {
+		predicates = append(predicates, promocode.DescriptionEqualFold(*i.DescriptionEqualFold))
+	}
+	if i.DescriptionContainsFold != nil {
+		predicates = append(predicates, promocode.DescriptionContainsFold(*i.DescriptionContainsFold))
+	}
+	if i.DiscountType != nil {
+		predicates = append(predicates, promocode.DiscountTypeEQ(*i.DiscountType))
+	}
+	if i.DiscountTypeNEQ != nil {
+		predicates = append(predicates, promocode.DiscountTypeNEQ(*i.DiscountTypeNEQ))
+	}
+	if len(i.DiscountTypeIn) > 0 {
+		predicates = append(predicates, promocode.DiscountTypeIn(i.DiscountTypeIn...))
+	}
+	if len(i.DiscountTypeNotIn) > 0 {
+		predicates = append(predicates, promocode.DiscountTypeNotIn(i.DiscountTypeNotIn...))
+	}
+	if i.DiscountAmountMicros != nil {
+		predicates = append(predicates, promocode.DiscountAmountMicrosEQ(*i.DiscountAmountMicros))
+	}
+	if i.DiscountAmountMicrosNEQ != nil {
+		predicates = append(predicates, promocode.DiscountAmountMicrosNEQ(*i.DiscountAmountMicrosNEQ))
+	}
+	if len(i.DiscountAmountMicrosIn) > 0 {
+		predicates = append(predicates, promocode.DiscountAmountMicrosIn(i.DiscountAmountMicrosIn...))
+	}
+	if len(i.DiscountAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, promocode.DiscountAmountMicrosNotIn(i.DiscountAmountMicrosNotIn...))
+	}
+	if i.DiscountAmountMicrosGT != nil {
+		predicates = append(predicates, promocode.DiscountAmountMicrosGT(*i.DiscountAmountMicrosGT))
+	}
+	if i.DiscountAmountMicrosGTE != nil {
+		predicates = append(predicates, promocode.DiscountAmountMicrosGTE(*i.DiscountAmountMicrosGTE))
+	}
+	if i.DiscountAmountMicrosLT != nil {
+		predicates = append(predicates, promocode.DiscountAmountMicrosLT(*i.DiscountAmountMicrosLT))
+	}
+	if i.DiscountAmountMicrosLTE != nil {
+		predicates = append(predicates, promocode.DiscountAmountMicrosLTE(*i.DiscountAmountMicrosLTE))
+	}
+	if i.DiscountPercentBps != nil {
+		predicates = append(predicates, promocode.DiscountPercentBpsEQ(*i.DiscountPercentBps))
+	}
+	if i.DiscountPercentBpsNEQ != nil {
+		predicates = append(predicates, promocode.DiscountPercentBpsNEQ(*i.DiscountPercentBpsNEQ))
+	}
+	if len(i.DiscountPercentBpsIn) > 0 {
+		predicates = append(predicates, promocode.DiscountPercentBpsIn(i.DiscountPercentBpsIn...))
+	}
+	if len(i.DiscountPercentBpsNotIn) > 0 {
+		predicates = append(predicates, promocode.DiscountPercentBpsNotIn(i.DiscountPercentBpsNotIn...))
+	}
+	if i.DiscountPercentBpsGT != nil {
+		predicates = append(predicates, promocode.DiscountPercentBpsGT(*i.DiscountPercentBpsGT))
+	}
+	if i.DiscountPercentBpsGTE != nil {
+		predicates = append(predicates, promocode.DiscountPercentBpsGTE(*i.DiscountPercentBpsGTE))
+	}
+	if i.DiscountPercentBpsLT != nil {
+		predicates = append(predicates, promocode.DiscountPercentBpsLT(*i.DiscountPercentBpsLT))
+	}
+	if i.DiscountPercentBpsLTE != nil {
+		predicates = append(predicates, promocode.DiscountPercentBpsLTE(*i.DiscountPercentBpsLTE))
+	}
+	if i.Scope != nil {
+		predicates = append(predicates, promocode.ScopeEQ(*i.Scope))
+	}
+	if i.ScopeNEQ != nil {
+		predicates = append(predicates, promocode.ScopeNEQ(*i.ScopeNEQ))
+	}
+	if len(i.ScopeIn) > 0 {
+		predicates = append(predicates, promocode.ScopeIn(i.ScopeIn...))
+	}
+	if len(i.ScopeNotIn) > 0 {
+		predicates = append(predicates, promocode.ScopeNotIn(i.ScopeNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, promocode.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, promocode.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, promocode.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, promocode.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, promocode.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, promocode.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, promocode.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, promocode.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, promocode.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, promocode.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, promocode.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, promocode.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, promocode.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, promocode.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, promocode.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, promocode.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, promocode.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.MaxUses != nil {
+		predicates = append(predicates, promocode.MaxUsesEQ(*i.MaxUses))
+	}
+	if i.MaxUsesNEQ != nil {
+		predicates = append(predicates, promocode.MaxUsesNEQ(*i.MaxUsesNEQ))
+	}
+	if len(i.MaxUsesIn) > 0 {
+		predicates = append(predicates, promocode.MaxUsesIn(i.MaxUsesIn...))
+	}
+	if len(i.MaxUsesNotIn) > 0 {
+		predicates = append(predicates, promocode.MaxUsesNotIn(i.MaxUsesNotIn...))
+	}
+	if i.MaxUsesGT != nil {
+		predicates = append(predicates, promocode.MaxUsesGT(*i.MaxUsesGT))
+	}
+	if i.MaxUsesGTE != nil {
+		predicates = append(predicates, promocode.MaxUsesGTE(*i.MaxUsesGTE))
+	}
+	if i.MaxUsesLT != nil {
+		predicates = append(predicates, promocode.MaxUsesLT(*i.MaxUsesLT))
+	}
+	if i.MaxUsesLTE != nil {
+		predicates = append(predicates, promocode.MaxUsesLTE(*i.MaxUsesLTE))
+	}
+	if i.UsedCount != nil {
+		predicates = append(predicates, promocode.UsedCountEQ(*i.UsedCount))
+	}
+	if i.UsedCountNEQ != nil {
+		predicates = append(predicates, promocode.UsedCountNEQ(*i.UsedCountNEQ))
+	}
+	if len(i.UsedCountIn) > 0 {
+		predicates = append(predicates, promocode.UsedCountIn(i.UsedCountIn...))
+	}
+	if len(i.UsedCountNotIn) > 0 {
+		predicates = append(predicates, promocode.UsedCountNotIn(i.UsedCountNotIn...))
+	}
+	if i.UsedCountGT != nil {
+		predicates = append(predicates, promocode.UsedCountGT(*i.UsedCountGT))
+	}
+	if i.UsedCountGTE != nil {
+		predicates = append(predicates, promocode.UsedCountGTE(*i.UsedCountGTE))
+	}
+	if i.UsedCountLT != nil {
+		predicates = append(predicates, promocode.UsedCountLT(*i.UsedCountLT))
+	}
+	if i.UsedCountLTE != nil {
+		predicates = append(predicates, promocode.UsedCountLTE(*i.UsedCountLTE))
+	}
+	if i.PerUserLimit != nil {
+		predicates = append(predicates, promocode.PerUserLimitEQ(*i.PerUserLimit))
+	}
+	if i.PerUserLimitNEQ != nil {
+		predicates = append(predicates, promocode.PerUserLimitNEQ(*i.PerUserLimitNEQ))
+	}
+	if len(i.PerUserLimitIn) > 0 {
+		predicates = append(predicates, promocode.PerUserLimitIn(i.PerUserLimitIn...))
+	}
+	if len(i.PerUserLimitNotIn) > 0 {
+		predicates = append(predicates, promocode.PerUserLimitNotIn(i.PerUserLimitNotIn...))
+	}
+	if i.PerUserLimitGT != nil {
+		predicates = append(predicates, promocode.PerUserLimitGT(*i.PerUserLimitGT))
+	}
+	if i.PerUserLimitGTE != nil {
+		predicates = append(predicates, promocode.PerUserLimitGTE(*i.PerUserLimitGTE))
+	}
+	if i.PerUserLimitLT != nil {
+		predicates = append(predicates, promocode.PerUserLimitLT(*i.PerUserLimitLT))
+	}
+	if i.PerUserLimitLTE != nil {
+		predicates = append(predicates, promocode.PerUserLimitLTE(*i.PerUserLimitLTE))
+	}
+	if i.StartsAt != nil {
+		predicates = append(predicates, promocode.StartsAtEQ(*i.StartsAt))
+	}
+	if i.StartsAtNEQ != nil {
+		predicates = append(predicates, promocode.StartsAtNEQ(*i.StartsAtNEQ))
+	}
+	if len(i.StartsAtIn) > 0 {
+		predicates = append(predicates, promocode.StartsAtIn(i.StartsAtIn...))
+	}
+	if len(i.StartsAtNotIn) > 0 {
+		predicates = append(predicates, promocode.StartsAtNotIn(i.StartsAtNotIn...))
+	}
+	if i.StartsAtGT != nil {
+		predicates = append(predicates, promocode.StartsAtGT(*i.StartsAtGT))
+	}
+	if i.StartsAtGTE != nil {
+		predicates = append(predicates, promocode.StartsAtGTE(*i.StartsAtGTE))
+	}
+	if i.StartsAtLT != nil {
+		predicates = append(predicates, promocode.StartsAtLT(*i.StartsAtLT))
+	}
+	if i.StartsAtLTE != nil {
+		predicates = append(predicates, promocode.StartsAtLTE(*i.StartsAtLTE))
+	}
+	if i.StartsAtIsNil {
+		predicates = append(predicates, promocode.StartsAtIsNil())
+	}
+	if i.StartsAtNotNil {
+		predicates = append(predicates, promocode.StartsAtNotNil())
+	}
+	if i.ExpiresAt != nil {
+		predicates = append(predicates, promocode.ExpiresAtEQ(*i.ExpiresAt))
+	}
+	if i.ExpiresAtNEQ != nil {
+		predicates = append(predicates, promocode.ExpiresAtNEQ(*i.ExpiresAtNEQ))
+	}
+	if len(i.ExpiresAtIn) > 0 {
+		predicates = append(predicates, promocode.ExpiresAtIn(i.ExpiresAtIn...))
+	}
+	if len(i.ExpiresAtNotIn) > 0 {
+		predicates = append(predicates, promocode.ExpiresAtNotIn(i.ExpiresAtNotIn...))
+	}
+	if i.ExpiresAtGT != nil {
+		predicates = append(predicates, promocode.ExpiresAtGT(*i.ExpiresAtGT))
+	}
+	if i.ExpiresAtGTE != nil {
+		predicates = append(predicates, promocode.ExpiresAtGTE(*i.ExpiresAtGTE))
+	}
+	if i.ExpiresAtLT != nil {
+		predicates = append(predicates, promocode.ExpiresAtLT(*i.ExpiresAtLT))
+	}
+	if i.ExpiresAtLTE != nil {
+		predicates = append(predicates, promocode.ExpiresAtLTE(*i.ExpiresAtLTE))
+	}
+	if i.ExpiresAtIsNil {
+		predicates = append(predicates, promocode.ExpiresAtIsNil())
+	}
+	if i.ExpiresAtNotNil {
+		predicates = append(predicates, promocode.ExpiresAtNotNil())
+	}
+	if i.CreatedByID != nil {
+		predicates = append(predicates, promocode.CreatedByIDEQ(*i.CreatedByID))
+	}
+	if i.CreatedByIDNEQ != nil {
+		predicates = append(predicates, promocode.CreatedByIDNEQ(*i.CreatedByIDNEQ))
+	}
+	if len(i.CreatedByIDIn) > 0 {
+		predicates = append(predicates, promocode.CreatedByIDIn(i.CreatedByIDIn...))
+	}
+	if len(i.CreatedByIDNotIn) > 0 {
+		predicates = append(predicates, promocode.CreatedByIDNotIn(i.CreatedByIDNotIn...))
+	}
+	if i.CreatedByIDGT != nil {
+		predicates = append(predicates, promocode.CreatedByIDGT(*i.CreatedByIDGT))
+	}
+	if i.CreatedByIDGTE != nil {
+		predicates = append(predicates, promocode.CreatedByIDGTE(*i.CreatedByIDGTE))
+	}
+	if i.CreatedByIDLT != nil {
+		predicates = append(predicates, promocode.CreatedByIDLT(*i.CreatedByIDLT))
+	}
+	if i.CreatedByIDLTE != nil {
+		predicates = append(predicates, promocode.CreatedByIDLTE(*i.CreatedByIDLTE))
+	}
+	if i.CreatedByIDIsNil {
+		predicates = append(predicates, promocode.CreatedByIDIsNil())
+	}
+	if i.CreatedByIDNotNil {
+		predicates = append(predicates, promocode.CreatedByIDNotNil())
+	}
+	if i.Notes != nil {
+		predicates = append(predicates, promocode.NotesEQ(*i.Notes))
+	}
+	if i.NotesNEQ != nil {
+		predicates = append(predicates, promocode.NotesNEQ(*i.NotesNEQ))
+	}
+	if len(i.NotesIn) > 0 {
+		predicates = append(predicates, promocode.NotesIn(i.NotesIn...))
+	}
+	if len(i.NotesNotIn) > 0 {
+		predicates = append(predicates, promocode.NotesNotIn(i.NotesNotIn...))
+	}
+	if i.NotesGT != nil {
+		predicates = append(predicates, promocode.NotesGT(*i.NotesGT))
+	}
+	if i.NotesGTE != nil {
+		predicates = append(predicates, promocode.NotesGTE(*i.NotesGTE))
+	}
+	if i.NotesLT != nil {
+		predicates = append(predicates, promocode.NotesLT(*i.NotesLT))
+	}
+	if i.NotesLTE != nil {
+		predicates = append(predicates, promocode.NotesLTE(*i.NotesLTE))
+	}
+	if i.NotesContains != nil {
+		predicates = append(predicates, promocode.NotesContains(*i.NotesContains))
+	}
+	if i.NotesHasPrefix != nil {
+		predicates = append(predicates, promocode.NotesHasPrefix(*i.NotesHasPrefix))
+	}
+	if i.NotesHasSuffix != nil {
+		predicates = append(predicates, promocode.NotesHasSuffix(*i.NotesHasSuffix))
+	}
+	if i.NotesEqualFold != nil {
+		predicates = append(predicates, promocode.NotesEqualFold(*i.NotesEqualFold))
+	}
+	if i.NotesContainsFold != nil {
+		predicates = append(predicates, promocode.NotesContainsFold(*i.NotesContainsFold))
+	}
+
+	if i.HasUsages != nil {
+		p := promocode.HasUsages()
+		if !*i.HasUsages {
+			p = promocode.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUsagesWith) > 0 {
+		with := make([]predicate.PromoUsage, 0, len(i.HasUsagesWith))
+		for _, w := range i.HasUsagesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUsagesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, promocode.HasUsagesWith(with...))
+	}
+	if i.HasPaymentOrders != nil {
+		p := promocode.HasPaymentOrders()
+		if !*i.HasPaymentOrders {
+			p = promocode.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentOrdersWith) > 0 {
+		with := make([]predicate.PaymentOrder, 0, len(i.HasPaymentOrdersWith))
+		for _, w := range i.HasPaymentOrdersWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentOrdersWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, promocode.HasPaymentOrdersWith(with...))
+	}
+	if i.HasUserSubscriptions != nil {
+		p := promocode.HasUserSubscriptions()
+		if !*i.HasUserSubscriptions {
+			p = promocode.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUserSubscriptionsWith) > 0 {
+		with := make([]predicate.UserSubscription, 0, len(i.HasUserSubscriptionsWith))
+		for _, w := range i.HasUserSubscriptionsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUserSubscriptionsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, promocode.HasUserSubscriptionsWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyPromoCodeWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return promocode.And(predicates...), nil
+	}
+}
+
+// PromoUsageWhereInput represents a where input for filtering PromoUsage queries.
+type PromoUsageWhereInput struct {
+	Predicates []predicate.PromoUsage  `json:"-"`
+	Not        *PromoUsageWhereInput   `json:"not,omitempty"`
+	Or         []*PromoUsageWhereInput `json:"or,omitempty"`
+	And        []*PromoUsageWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "promo_code_id" field predicates.
+	PromoCodeID      *int  `json:"promoCodeID,omitempty"`
+	PromoCodeIDNEQ   *int  `json:"promoCodeIDNEQ,omitempty"`
+	PromoCodeIDIn    []int `json:"promoCodeIDIn,omitempty"`
+	PromoCodeIDNotIn []int `json:"promoCodeIDNotIn,omitempty"`
+
+	// "code" field predicates.
+	Code             *string  `json:"code,omitempty"`
+	CodeNEQ          *string  `json:"codeNEQ,omitempty"`
+	CodeIn           []string `json:"codeIn,omitempty"`
+	CodeNotIn        []string `json:"codeNotIn,omitempty"`
+	CodeGT           *string  `json:"codeGT,omitempty"`
+	CodeGTE          *string  `json:"codeGTE,omitempty"`
+	CodeLT           *string  `json:"codeLT,omitempty"`
+	CodeLTE          *string  `json:"codeLTE,omitempty"`
+	CodeContains     *string  `json:"codeContains,omitempty"`
+	CodeHasPrefix    *string  `json:"codeHasPrefix,omitempty"`
+	CodeHasSuffix    *string  `json:"codeHasSuffix,omitempty"`
+	CodeEqualFold    *string  `json:"codeEqualFold,omitempty"`
+	CodeContainsFold *string  `json:"codeContainsFold,omitempty"`
+
+	// "user_id" field predicates.
+	UserID       *int  `json:"userID,omitempty"`
+	UserIDNEQ    *int  `json:"userIDNEQ,omitempty"`
+	UserIDIn     []int `json:"userIDIn,omitempty"`
+	UserIDNotIn  []int `json:"userIDNotIn,omitempty"`
+	UserIDIsNil  bool  `json:"userIDIsNil,omitempty"`
+	UserIDNotNil bool  `json:"userIDNotNil,omitempty"`
+
+	// "billing_account_id" field predicates.
+	BillingAccountID       *int  `json:"billingAccountID,omitempty"`
+	BillingAccountIDNEQ    *int  `json:"billingAccountIDNEQ,omitempty"`
+	BillingAccountIDIn     []int `json:"billingAccountIDIn,omitempty"`
+	BillingAccountIDNotIn  []int `json:"billingAccountIDNotIn,omitempty"`
+	BillingAccountIDIsNil  bool  `json:"billingAccountIDIsNil,omitempty"`
+	BillingAccountIDNotNil bool  `json:"billingAccountIDNotNil,omitempty"`
+
+	// "payment_order_id" field predicates.
+	PaymentOrderID       *int  `json:"paymentOrderID,omitempty"`
+	PaymentOrderIDNEQ    *int  `json:"paymentOrderIDNEQ,omitempty"`
+	PaymentOrderIDIn     []int `json:"paymentOrderIDIn,omitempty"`
+	PaymentOrderIDNotIn  []int `json:"paymentOrderIDNotIn,omitempty"`
+	PaymentOrderIDIsNil  bool  `json:"paymentOrderIDIsNil,omitempty"`
+	PaymentOrderIDNotNil bool  `json:"paymentOrderIDNotNil,omitempty"`
+
+	// "user_subscription_id" field predicates.
+	UserSubscriptionID       *int  `json:"userSubscriptionID,omitempty"`
+	UserSubscriptionIDNEQ    *int  `json:"userSubscriptionIDNEQ,omitempty"`
+	UserSubscriptionIDIn     []int `json:"userSubscriptionIDIn,omitempty"`
+	UserSubscriptionIDNotIn  []int `json:"userSubscriptionIDNotIn,omitempty"`
+	UserSubscriptionIDIsNil  bool  `json:"userSubscriptionIDIsNil,omitempty"`
+	UserSubscriptionIDNotNil bool  `json:"userSubscriptionIDNotNil,omitempty"`
+
+	// "ledger_transaction_id" field predicates.
+	LedgerTransactionID       *int  `json:"ledgerTransactionID,omitempty"`
+	LedgerTransactionIDNEQ    *int  `json:"ledgerTransactionIDNEQ,omitempty"`
+	LedgerTransactionIDIn     []int `json:"ledgerTransactionIDIn,omitempty"`
+	LedgerTransactionIDNotIn  []int `json:"ledgerTransactionIDNotIn,omitempty"`
+	LedgerTransactionIDIsNil  bool  `json:"ledgerTransactionIDIsNil,omitempty"`
+	LedgerTransactionIDNotNil bool  `json:"ledgerTransactionIDNotNil,omitempty"`
+
+	// "scope" field predicates.
+	Scope      *promousage.Scope  `json:"scope,omitempty"`
+	ScopeNEQ   *promousage.Scope  `json:"scopeNEQ,omitempty"`
+	ScopeIn    []promousage.Scope `json:"scopeIn,omitempty"`
+	ScopeNotIn []promousage.Scope `json:"scopeNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *promousage.Status  `json:"status,omitempty"`
+	StatusNEQ   *promousage.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []promousage.Status `json:"statusIn,omitempty"`
+	StatusNotIn []promousage.Status `json:"statusNotIn,omitempty"`
+
+	// "original_amount_micros" field predicates.
+	OriginalAmountMicros      *int64  `json:"originalAmountMicros,omitempty"`
+	OriginalAmountMicrosNEQ   *int64  `json:"originalAmountMicrosNEQ,omitempty"`
+	OriginalAmountMicrosIn    []int64 `json:"originalAmountMicrosIn,omitempty"`
+	OriginalAmountMicrosNotIn []int64 `json:"originalAmountMicrosNotIn,omitempty"`
+	OriginalAmountMicrosGT    *int64  `json:"originalAmountMicrosGT,omitempty"`
+	OriginalAmountMicrosGTE   *int64  `json:"originalAmountMicrosGTE,omitempty"`
+	OriginalAmountMicrosLT    *int64  `json:"originalAmountMicrosLT,omitempty"`
+	OriginalAmountMicrosLTE   *int64  `json:"originalAmountMicrosLTE,omitempty"`
+
+	// "discount_amount_micros" field predicates.
+	DiscountAmountMicros      *int64  `json:"discountAmountMicros,omitempty"`
+	DiscountAmountMicrosNEQ   *int64  `json:"discountAmountMicrosNEQ,omitempty"`
+	DiscountAmountMicrosIn    []int64 `json:"discountAmountMicrosIn,omitempty"`
+	DiscountAmountMicrosNotIn []int64 `json:"discountAmountMicrosNotIn,omitempty"`
+	DiscountAmountMicrosGT    *int64  `json:"discountAmountMicrosGT,omitempty"`
+	DiscountAmountMicrosGTE   *int64  `json:"discountAmountMicrosGTE,omitempty"`
+	DiscountAmountMicrosLT    *int64  `json:"discountAmountMicrosLT,omitempty"`
+	DiscountAmountMicrosLTE   *int64  `json:"discountAmountMicrosLTE,omitempty"`
+
+	// "payable_amount_micros" field predicates.
+	PayableAmountMicros      *int64  `json:"payableAmountMicros,omitempty"`
+	PayableAmountMicrosNEQ   *int64  `json:"payableAmountMicrosNEQ,omitempty"`
+	PayableAmountMicrosIn    []int64 `json:"payableAmountMicrosIn,omitempty"`
+	PayableAmountMicrosNotIn []int64 `json:"payableAmountMicrosNotIn,omitempty"`
+	PayableAmountMicrosGT    *int64  `json:"payableAmountMicrosGT,omitempty"`
+	PayableAmountMicrosGTE   *int64  `json:"payableAmountMicrosGTE,omitempty"`
+	PayableAmountMicrosLT    *int64  `json:"payableAmountMicrosLT,omitempty"`
+	PayableAmountMicrosLTE   *int64  `json:"payableAmountMicrosLTE,omitempty"`
+
+	// "currency" field predicates.
+	Currency             *string  `json:"currency,omitempty"`
+	CurrencyNEQ          *string  `json:"currencyNEQ,omitempty"`
+	CurrencyIn           []string `json:"currencyIn,omitempty"`
+	CurrencyNotIn        []string `json:"currencyNotIn,omitempty"`
+	CurrencyGT           *string  `json:"currencyGT,omitempty"`
+	CurrencyGTE          *string  `json:"currencyGTE,omitempty"`
+	CurrencyLT           *string  `json:"currencyLT,omitempty"`
+	CurrencyLTE          *string  `json:"currencyLTE,omitempty"`
+	CurrencyContains     *string  `json:"currencyContains,omitempty"`
+	CurrencyHasPrefix    *string  `json:"currencyHasPrefix,omitempty"`
+	CurrencyHasSuffix    *string  `json:"currencyHasSuffix,omitempty"`
+	CurrencyEqualFold    *string  `json:"currencyEqualFold,omitempty"`
+	CurrencyContainsFold *string  `json:"currencyContainsFold,omitempty"`
+
+	// "idempotency_key" field predicates.
+	IdempotencyKey             *string  `json:"idempotencyKey,omitempty"`
+	IdempotencyKeyNEQ          *string  `json:"idempotencyKeyNEQ,omitempty"`
+	IdempotencyKeyIn           []string `json:"idempotencyKeyIn,omitempty"`
+	IdempotencyKeyNotIn        []string `json:"idempotencyKeyNotIn,omitempty"`
+	IdempotencyKeyGT           *string  `json:"idempotencyKeyGT,omitempty"`
+	IdempotencyKeyGTE          *string  `json:"idempotencyKeyGTE,omitempty"`
+	IdempotencyKeyLT           *string  `json:"idempotencyKeyLT,omitempty"`
+	IdempotencyKeyLTE          *string  `json:"idempotencyKeyLTE,omitempty"`
+	IdempotencyKeyContains     *string  `json:"idempotencyKeyContains,omitempty"`
+	IdempotencyKeyHasPrefix    *string  `json:"idempotencyKeyHasPrefix,omitempty"`
+	IdempotencyKeyHasSuffix    *string  `json:"idempotencyKeyHasSuffix,omitempty"`
+	IdempotencyKeyEqualFold    *string  `json:"idempotencyKeyEqualFold,omitempty"`
+	IdempotencyKeyContainsFold *string  `json:"idempotencyKeyContainsFold,omitempty"`
+
+	// "failure_reason" field predicates.
+	FailureReason             *string  `json:"failureReason,omitempty"`
+	FailureReasonNEQ          *string  `json:"failureReasonNEQ,omitempty"`
+	FailureReasonIn           []string `json:"failureReasonIn,omitempty"`
+	FailureReasonNotIn        []string `json:"failureReasonNotIn,omitempty"`
+	FailureReasonGT           *string  `json:"failureReasonGT,omitempty"`
+	FailureReasonGTE          *string  `json:"failureReasonGTE,omitempty"`
+	FailureReasonLT           *string  `json:"failureReasonLT,omitempty"`
+	FailureReasonLTE          *string  `json:"failureReasonLTE,omitempty"`
+	FailureReasonContains     *string  `json:"failureReasonContains,omitempty"`
+	FailureReasonHasPrefix    *string  `json:"failureReasonHasPrefix,omitempty"`
+	FailureReasonHasSuffix    *string  `json:"failureReasonHasSuffix,omitempty"`
+	FailureReasonEqualFold    *string  `json:"failureReasonEqualFold,omitempty"`
+	FailureReasonContainsFold *string  `json:"failureReasonContainsFold,omitempty"`
+
+	// "promo_code" edge predicates.
+	HasPromoCode     *bool                  `json:"hasPromoCode,omitempty"`
+	HasPromoCodeWith []*PromoCodeWhereInput `json:"hasPromoCodeWith,omitempty"`
+
+	// "user" edge predicates.
+	HasUser     *bool             `json:"hasUser,omitempty"`
+	HasUserWith []*UserWhereInput `json:"hasUserWith,omitempty"`
+
+	// "billing_account" edge predicates.
+	HasBillingAccount     *bool                       `json:"hasBillingAccount,omitempty"`
+	HasBillingAccountWith []*BillingAccountWhereInput `json:"hasBillingAccountWith,omitempty"`
+
+	// "payment_order" edge predicates.
+	HasPaymentOrder     *bool                     `json:"hasPaymentOrder,omitempty"`
+	HasPaymentOrderWith []*PaymentOrderWhereInput `json:"hasPaymentOrderWith,omitempty"`
+
+	// "user_subscription" edge predicates.
+	HasUserSubscription     *bool                         `json:"hasUserSubscription,omitempty"`
+	HasUserSubscriptionWith []*UserSubscriptionWhereInput `json:"hasUserSubscriptionWith,omitempty"`
+
+	// "ledger_transaction" edge predicates.
+	HasLedgerTransaction     *bool                          `json:"hasLedgerTransaction,omitempty"`
+	HasLedgerTransactionWith []*LedgerTransactionWhereInput `json:"hasLedgerTransactionWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *PromoUsageWhereInput) AddPredicates(predicates ...predicate.PromoUsage) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the PromoUsageWhereInput filter on the PromoUsageQuery builder.
+func (i *PromoUsageWhereInput) Filter(q *PromoUsageQuery) (*PromoUsageQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyPromoUsageWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyPromoUsageWhereInput is returned in case the PromoUsageWhereInput is empty.
+var ErrEmptyPromoUsageWhereInput = errors.New("ent: empty predicate PromoUsageWhereInput")
+
+// P returns a predicate for filtering promousages.
+// An error is returned if the input is empty or invalid.
+func (i *PromoUsageWhereInput) P() (predicate.PromoUsage, error) {
+	var predicates []predicate.PromoUsage
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, promousage.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.PromoUsage, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, promousage.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.PromoUsage, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, promousage.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, promousage.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, promousage.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, promousage.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, promousage.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, promousage.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, promousage.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, promousage.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, promousage.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, promousage.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, promousage.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, promousage.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, promousage.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, promousage.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, promousage.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, promousage.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, promousage.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, promousage.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, promousage.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, promousage.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, promousage.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, promousage.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, promousage.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, promousage.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, promousage.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.PromoCodeID != nil {
+		predicates = append(predicates, promousage.PromoCodeIDEQ(*i.PromoCodeID))
+	}
+	if i.PromoCodeIDNEQ != nil {
+		predicates = append(predicates, promousage.PromoCodeIDNEQ(*i.PromoCodeIDNEQ))
+	}
+	if len(i.PromoCodeIDIn) > 0 {
+		predicates = append(predicates, promousage.PromoCodeIDIn(i.PromoCodeIDIn...))
+	}
+	if len(i.PromoCodeIDNotIn) > 0 {
+		predicates = append(predicates, promousage.PromoCodeIDNotIn(i.PromoCodeIDNotIn...))
+	}
+	if i.Code != nil {
+		predicates = append(predicates, promousage.CodeEQ(*i.Code))
+	}
+	if i.CodeNEQ != nil {
+		predicates = append(predicates, promousage.CodeNEQ(*i.CodeNEQ))
+	}
+	if len(i.CodeIn) > 0 {
+		predicates = append(predicates, promousage.CodeIn(i.CodeIn...))
+	}
+	if len(i.CodeNotIn) > 0 {
+		predicates = append(predicates, promousage.CodeNotIn(i.CodeNotIn...))
+	}
+	if i.CodeGT != nil {
+		predicates = append(predicates, promousage.CodeGT(*i.CodeGT))
+	}
+	if i.CodeGTE != nil {
+		predicates = append(predicates, promousage.CodeGTE(*i.CodeGTE))
+	}
+	if i.CodeLT != nil {
+		predicates = append(predicates, promousage.CodeLT(*i.CodeLT))
+	}
+	if i.CodeLTE != nil {
+		predicates = append(predicates, promousage.CodeLTE(*i.CodeLTE))
+	}
+	if i.CodeContains != nil {
+		predicates = append(predicates, promousage.CodeContains(*i.CodeContains))
+	}
+	if i.CodeHasPrefix != nil {
+		predicates = append(predicates, promousage.CodeHasPrefix(*i.CodeHasPrefix))
+	}
+	if i.CodeHasSuffix != nil {
+		predicates = append(predicates, promousage.CodeHasSuffix(*i.CodeHasSuffix))
+	}
+	if i.CodeEqualFold != nil {
+		predicates = append(predicates, promousage.CodeEqualFold(*i.CodeEqualFold))
+	}
+	if i.CodeContainsFold != nil {
+		predicates = append(predicates, promousage.CodeContainsFold(*i.CodeContainsFold))
+	}
+	if i.UserID != nil {
+		predicates = append(predicates, promousage.UserIDEQ(*i.UserID))
+	}
+	if i.UserIDNEQ != nil {
+		predicates = append(predicates, promousage.UserIDNEQ(*i.UserIDNEQ))
+	}
+	if len(i.UserIDIn) > 0 {
+		predicates = append(predicates, promousage.UserIDIn(i.UserIDIn...))
+	}
+	if len(i.UserIDNotIn) > 0 {
+		predicates = append(predicates, promousage.UserIDNotIn(i.UserIDNotIn...))
+	}
+	if i.UserIDIsNil {
+		predicates = append(predicates, promousage.UserIDIsNil())
+	}
+	if i.UserIDNotNil {
+		predicates = append(predicates, promousage.UserIDNotNil())
+	}
+	if i.BillingAccountID != nil {
+		predicates = append(predicates, promousage.BillingAccountIDEQ(*i.BillingAccountID))
+	}
+	if i.BillingAccountIDNEQ != nil {
+		predicates = append(predicates, promousage.BillingAccountIDNEQ(*i.BillingAccountIDNEQ))
+	}
+	if len(i.BillingAccountIDIn) > 0 {
+		predicates = append(predicates, promousage.BillingAccountIDIn(i.BillingAccountIDIn...))
+	}
+	if len(i.BillingAccountIDNotIn) > 0 {
+		predicates = append(predicates, promousage.BillingAccountIDNotIn(i.BillingAccountIDNotIn...))
+	}
+	if i.BillingAccountIDIsNil {
+		predicates = append(predicates, promousage.BillingAccountIDIsNil())
+	}
+	if i.BillingAccountIDNotNil {
+		predicates = append(predicates, promousage.BillingAccountIDNotNil())
+	}
+	if i.PaymentOrderID != nil {
+		predicates = append(predicates, promousage.PaymentOrderIDEQ(*i.PaymentOrderID))
+	}
+	if i.PaymentOrderIDNEQ != nil {
+		predicates = append(predicates, promousage.PaymentOrderIDNEQ(*i.PaymentOrderIDNEQ))
+	}
+	if len(i.PaymentOrderIDIn) > 0 {
+		predicates = append(predicates, promousage.PaymentOrderIDIn(i.PaymentOrderIDIn...))
+	}
+	if len(i.PaymentOrderIDNotIn) > 0 {
+		predicates = append(predicates, promousage.PaymentOrderIDNotIn(i.PaymentOrderIDNotIn...))
+	}
+	if i.PaymentOrderIDIsNil {
+		predicates = append(predicates, promousage.PaymentOrderIDIsNil())
+	}
+	if i.PaymentOrderIDNotNil {
+		predicates = append(predicates, promousage.PaymentOrderIDNotNil())
+	}
+	if i.UserSubscriptionID != nil {
+		predicates = append(predicates, promousage.UserSubscriptionIDEQ(*i.UserSubscriptionID))
+	}
+	if i.UserSubscriptionIDNEQ != nil {
+		predicates = append(predicates, promousage.UserSubscriptionIDNEQ(*i.UserSubscriptionIDNEQ))
+	}
+	if len(i.UserSubscriptionIDIn) > 0 {
+		predicates = append(predicates, promousage.UserSubscriptionIDIn(i.UserSubscriptionIDIn...))
+	}
+	if len(i.UserSubscriptionIDNotIn) > 0 {
+		predicates = append(predicates, promousage.UserSubscriptionIDNotIn(i.UserSubscriptionIDNotIn...))
+	}
+	if i.UserSubscriptionIDIsNil {
+		predicates = append(predicates, promousage.UserSubscriptionIDIsNil())
+	}
+	if i.UserSubscriptionIDNotNil {
+		predicates = append(predicates, promousage.UserSubscriptionIDNotNil())
+	}
+	if i.LedgerTransactionID != nil {
+		predicates = append(predicates, promousage.LedgerTransactionIDEQ(*i.LedgerTransactionID))
+	}
+	if i.LedgerTransactionIDNEQ != nil {
+		predicates = append(predicates, promousage.LedgerTransactionIDNEQ(*i.LedgerTransactionIDNEQ))
+	}
+	if len(i.LedgerTransactionIDIn) > 0 {
+		predicates = append(predicates, promousage.LedgerTransactionIDIn(i.LedgerTransactionIDIn...))
+	}
+	if len(i.LedgerTransactionIDNotIn) > 0 {
+		predicates = append(predicates, promousage.LedgerTransactionIDNotIn(i.LedgerTransactionIDNotIn...))
+	}
+	if i.LedgerTransactionIDIsNil {
+		predicates = append(predicates, promousage.LedgerTransactionIDIsNil())
+	}
+	if i.LedgerTransactionIDNotNil {
+		predicates = append(predicates, promousage.LedgerTransactionIDNotNil())
+	}
+	if i.Scope != nil {
+		predicates = append(predicates, promousage.ScopeEQ(*i.Scope))
+	}
+	if i.ScopeNEQ != nil {
+		predicates = append(predicates, promousage.ScopeNEQ(*i.ScopeNEQ))
+	}
+	if len(i.ScopeIn) > 0 {
+		predicates = append(predicates, promousage.ScopeIn(i.ScopeIn...))
+	}
+	if len(i.ScopeNotIn) > 0 {
+		predicates = append(predicates, promousage.ScopeNotIn(i.ScopeNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, promousage.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, promousage.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, promousage.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, promousage.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.OriginalAmountMicros != nil {
+		predicates = append(predicates, promousage.OriginalAmountMicrosEQ(*i.OriginalAmountMicros))
+	}
+	if i.OriginalAmountMicrosNEQ != nil {
+		predicates = append(predicates, promousage.OriginalAmountMicrosNEQ(*i.OriginalAmountMicrosNEQ))
+	}
+	if len(i.OriginalAmountMicrosIn) > 0 {
+		predicates = append(predicates, promousage.OriginalAmountMicrosIn(i.OriginalAmountMicrosIn...))
+	}
+	if len(i.OriginalAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, promousage.OriginalAmountMicrosNotIn(i.OriginalAmountMicrosNotIn...))
+	}
+	if i.OriginalAmountMicrosGT != nil {
+		predicates = append(predicates, promousage.OriginalAmountMicrosGT(*i.OriginalAmountMicrosGT))
+	}
+	if i.OriginalAmountMicrosGTE != nil {
+		predicates = append(predicates, promousage.OriginalAmountMicrosGTE(*i.OriginalAmountMicrosGTE))
+	}
+	if i.OriginalAmountMicrosLT != nil {
+		predicates = append(predicates, promousage.OriginalAmountMicrosLT(*i.OriginalAmountMicrosLT))
+	}
+	if i.OriginalAmountMicrosLTE != nil {
+		predicates = append(predicates, promousage.OriginalAmountMicrosLTE(*i.OriginalAmountMicrosLTE))
+	}
+	if i.DiscountAmountMicros != nil {
+		predicates = append(predicates, promousage.DiscountAmountMicrosEQ(*i.DiscountAmountMicros))
+	}
+	if i.DiscountAmountMicrosNEQ != nil {
+		predicates = append(predicates, promousage.DiscountAmountMicrosNEQ(*i.DiscountAmountMicrosNEQ))
+	}
+	if len(i.DiscountAmountMicrosIn) > 0 {
+		predicates = append(predicates, promousage.DiscountAmountMicrosIn(i.DiscountAmountMicrosIn...))
+	}
+	if len(i.DiscountAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, promousage.DiscountAmountMicrosNotIn(i.DiscountAmountMicrosNotIn...))
+	}
+	if i.DiscountAmountMicrosGT != nil {
+		predicates = append(predicates, promousage.DiscountAmountMicrosGT(*i.DiscountAmountMicrosGT))
+	}
+	if i.DiscountAmountMicrosGTE != nil {
+		predicates = append(predicates, promousage.DiscountAmountMicrosGTE(*i.DiscountAmountMicrosGTE))
+	}
+	if i.DiscountAmountMicrosLT != nil {
+		predicates = append(predicates, promousage.DiscountAmountMicrosLT(*i.DiscountAmountMicrosLT))
+	}
+	if i.DiscountAmountMicrosLTE != nil {
+		predicates = append(predicates, promousage.DiscountAmountMicrosLTE(*i.DiscountAmountMicrosLTE))
+	}
+	if i.PayableAmountMicros != nil {
+		predicates = append(predicates, promousage.PayableAmountMicrosEQ(*i.PayableAmountMicros))
+	}
+	if i.PayableAmountMicrosNEQ != nil {
+		predicates = append(predicates, promousage.PayableAmountMicrosNEQ(*i.PayableAmountMicrosNEQ))
+	}
+	if len(i.PayableAmountMicrosIn) > 0 {
+		predicates = append(predicates, promousage.PayableAmountMicrosIn(i.PayableAmountMicrosIn...))
+	}
+	if len(i.PayableAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, promousage.PayableAmountMicrosNotIn(i.PayableAmountMicrosNotIn...))
+	}
+	if i.PayableAmountMicrosGT != nil {
+		predicates = append(predicates, promousage.PayableAmountMicrosGT(*i.PayableAmountMicrosGT))
+	}
+	if i.PayableAmountMicrosGTE != nil {
+		predicates = append(predicates, promousage.PayableAmountMicrosGTE(*i.PayableAmountMicrosGTE))
+	}
+	if i.PayableAmountMicrosLT != nil {
+		predicates = append(predicates, promousage.PayableAmountMicrosLT(*i.PayableAmountMicrosLT))
+	}
+	if i.PayableAmountMicrosLTE != nil {
+		predicates = append(predicates, promousage.PayableAmountMicrosLTE(*i.PayableAmountMicrosLTE))
+	}
+	if i.Currency != nil {
+		predicates = append(predicates, promousage.CurrencyEQ(*i.Currency))
+	}
+	if i.CurrencyNEQ != nil {
+		predicates = append(predicates, promousage.CurrencyNEQ(*i.CurrencyNEQ))
+	}
+	if len(i.CurrencyIn) > 0 {
+		predicates = append(predicates, promousage.CurrencyIn(i.CurrencyIn...))
+	}
+	if len(i.CurrencyNotIn) > 0 {
+		predicates = append(predicates, promousage.CurrencyNotIn(i.CurrencyNotIn...))
+	}
+	if i.CurrencyGT != nil {
+		predicates = append(predicates, promousage.CurrencyGT(*i.CurrencyGT))
+	}
+	if i.CurrencyGTE != nil {
+		predicates = append(predicates, promousage.CurrencyGTE(*i.CurrencyGTE))
+	}
+	if i.CurrencyLT != nil {
+		predicates = append(predicates, promousage.CurrencyLT(*i.CurrencyLT))
+	}
+	if i.CurrencyLTE != nil {
+		predicates = append(predicates, promousage.CurrencyLTE(*i.CurrencyLTE))
+	}
+	if i.CurrencyContains != nil {
+		predicates = append(predicates, promousage.CurrencyContains(*i.CurrencyContains))
+	}
+	if i.CurrencyHasPrefix != nil {
+		predicates = append(predicates, promousage.CurrencyHasPrefix(*i.CurrencyHasPrefix))
+	}
+	if i.CurrencyHasSuffix != nil {
+		predicates = append(predicates, promousage.CurrencyHasSuffix(*i.CurrencyHasSuffix))
+	}
+	if i.CurrencyEqualFold != nil {
+		predicates = append(predicates, promousage.CurrencyEqualFold(*i.CurrencyEqualFold))
+	}
+	if i.CurrencyContainsFold != nil {
+		predicates = append(predicates, promousage.CurrencyContainsFold(*i.CurrencyContainsFold))
+	}
+	if i.IdempotencyKey != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyEQ(*i.IdempotencyKey))
+	}
+	if i.IdempotencyKeyNEQ != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyNEQ(*i.IdempotencyKeyNEQ))
+	}
+	if len(i.IdempotencyKeyIn) > 0 {
+		predicates = append(predicates, promousage.IdempotencyKeyIn(i.IdempotencyKeyIn...))
+	}
+	if len(i.IdempotencyKeyNotIn) > 0 {
+		predicates = append(predicates, promousage.IdempotencyKeyNotIn(i.IdempotencyKeyNotIn...))
+	}
+	if i.IdempotencyKeyGT != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyGT(*i.IdempotencyKeyGT))
+	}
+	if i.IdempotencyKeyGTE != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyGTE(*i.IdempotencyKeyGTE))
+	}
+	if i.IdempotencyKeyLT != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyLT(*i.IdempotencyKeyLT))
+	}
+	if i.IdempotencyKeyLTE != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyLTE(*i.IdempotencyKeyLTE))
+	}
+	if i.IdempotencyKeyContains != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyContains(*i.IdempotencyKeyContains))
+	}
+	if i.IdempotencyKeyHasPrefix != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyHasPrefix(*i.IdempotencyKeyHasPrefix))
+	}
+	if i.IdempotencyKeyHasSuffix != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyHasSuffix(*i.IdempotencyKeyHasSuffix))
+	}
+	if i.IdempotencyKeyEqualFold != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyEqualFold(*i.IdempotencyKeyEqualFold))
+	}
+	if i.IdempotencyKeyContainsFold != nil {
+		predicates = append(predicates, promousage.IdempotencyKeyContainsFold(*i.IdempotencyKeyContainsFold))
+	}
+	if i.FailureReason != nil {
+		predicates = append(predicates, promousage.FailureReasonEQ(*i.FailureReason))
+	}
+	if i.FailureReasonNEQ != nil {
+		predicates = append(predicates, promousage.FailureReasonNEQ(*i.FailureReasonNEQ))
+	}
+	if len(i.FailureReasonIn) > 0 {
+		predicates = append(predicates, promousage.FailureReasonIn(i.FailureReasonIn...))
+	}
+	if len(i.FailureReasonNotIn) > 0 {
+		predicates = append(predicates, promousage.FailureReasonNotIn(i.FailureReasonNotIn...))
+	}
+	if i.FailureReasonGT != nil {
+		predicates = append(predicates, promousage.FailureReasonGT(*i.FailureReasonGT))
+	}
+	if i.FailureReasonGTE != nil {
+		predicates = append(predicates, promousage.FailureReasonGTE(*i.FailureReasonGTE))
+	}
+	if i.FailureReasonLT != nil {
+		predicates = append(predicates, promousage.FailureReasonLT(*i.FailureReasonLT))
+	}
+	if i.FailureReasonLTE != nil {
+		predicates = append(predicates, promousage.FailureReasonLTE(*i.FailureReasonLTE))
+	}
+	if i.FailureReasonContains != nil {
+		predicates = append(predicates, promousage.FailureReasonContains(*i.FailureReasonContains))
+	}
+	if i.FailureReasonHasPrefix != nil {
+		predicates = append(predicates, promousage.FailureReasonHasPrefix(*i.FailureReasonHasPrefix))
+	}
+	if i.FailureReasonHasSuffix != nil {
+		predicates = append(predicates, promousage.FailureReasonHasSuffix(*i.FailureReasonHasSuffix))
+	}
+	if i.FailureReasonEqualFold != nil {
+		predicates = append(predicates, promousage.FailureReasonEqualFold(*i.FailureReasonEqualFold))
+	}
+	if i.FailureReasonContainsFold != nil {
+		predicates = append(predicates, promousage.FailureReasonContainsFold(*i.FailureReasonContainsFold))
+	}
+
+	if i.HasPromoCode != nil {
+		p := promousage.HasPromoCode()
+		if !*i.HasPromoCode {
+			p = promousage.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPromoCodeWith) > 0 {
+		with := make([]predicate.PromoCode, 0, len(i.HasPromoCodeWith))
+		for _, w := range i.HasPromoCodeWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPromoCodeWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, promousage.HasPromoCodeWith(with...))
+	}
+	if i.HasUser != nil {
+		p := promousage.HasUser()
+		if !*i.HasUser {
+			p = promousage.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUserWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasUserWith))
+		for _, w := range i.HasUserWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUserWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, promousage.HasUserWith(with...))
+	}
+	if i.HasBillingAccount != nil {
+		p := promousage.HasBillingAccount()
+		if !*i.HasBillingAccount {
+			p = promousage.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasBillingAccountWith) > 0 {
+		with := make([]predicate.BillingAccount, 0, len(i.HasBillingAccountWith))
+		for _, w := range i.HasBillingAccountWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasBillingAccountWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, promousage.HasBillingAccountWith(with...))
+	}
+	if i.HasPaymentOrder != nil {
+		p := promousage.HasPaymentOrder()
+		if !*i.HasPaymentOrder {
+			p = promousage.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPaymentOrderWith) > 0 {
+		with := make([]predicate.PaymentOrder, 0, len(i.HasPaymentOrderWith))
+		for _, w := range i.HasPaymentOrderWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPaymentOrderWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, promousage.HasPaymentOrderWith(with...))
+	}
+	if i.HasUserSubscription != nil {
+		p := promousage.HasUserSubscription()
+		if !*i.HasUserSubscription {
+			p = promousage.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUserSubscriptionWith) > 0 {
+		with := make([]predicate.UserSubscription, 0, len(i.HasUserSubscriptionWith))
+		for _, w := range i.HasUserSubscriptionWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUserSubscriptionWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, promousage.HasUserSubscriptionWith(with...))
+	}
+	if i.HasLedgerTransaction != nil {
+		p := promousage.HasLedgerTransaction()
+		if !*i.HasLedgerTransaction {
+			p = promousage.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasLedgerTransactionWith) > 0 {
+		with := make([]predicate.LedgerTransaction, 0, len(i.HasLedgerTransactionWith))
+		for _, w := range i.HasLedgerTransactionWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasLedgerTransactionWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, promousage.HasLedgerTransactionWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyPromoUsageWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return promousage.And(predicates...), nil
 	}
 }
 
@@ -19027,6 +20861,10 @@ type UserWhereInput struct {
 	HasAssignedUserSubscriptions     *bool                         `json:"hasAssignedUserSubscriptions,omitempty"`
 	HasAssignedUserSubscriptionsWith []*UserSubscriptionWhereInput `json:"hasAssignedUserSubscriptionsWith,omitempty"`
 
+	// "promo_usages" edge predicates.
+	HasPromoUsages     *bool                   `json:"hasPromoUsages,omitempty"`
+	HasPromoUsagesWith []*PromoUsageWhereInput `json:"hasPromoUsagesWith,omitempty"`
+
 	// "project_users" edge predicates.
 	HasProjectUsers     *bool                    `json:"hasProjectUsers,omitempty"`
 	HasProjectUsersWith []*UserProjectWhereInput `json:"hasProjectUsersWith,omitempty"`
@@ -19599,6 +21437,24 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasAssignedUserSubscriptionsWith(with...))
+	}
+	if i.HasPromoUsages != nil {
+		p := user.HasPromoUsages()
+		if !*i.HasPromoUsages {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPromoUsagesWith) > 0 {
+		with := make([]predicate.PromoUsage, 0, len(i.HasPromoUsagesWith))
+		for _, w := range i.HasPromoUsagesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPromoUsagesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasPromoUsagesWith(with...))
 	}
 	if i.HasProjectUsers != nil {
 		p := user.HasProjectUsers()
@@ -20388,6 +22244,44 @@ type UserSubscriptionWhereInput struct {
 	PurchaseLedgerTransactionIDIsNil  bool  `json:"purchaseLedgerTransactionIDIsNil,omitempty"`
 	PurchaseLedgerTransactionIDNotNil bool  `json:"purchaseLedgerTransactionIDNotNil,omitempty"`
 
+	// "original_price_micros" field predicates.
+	OriginalPriceMicros      *int64  `json:"originalPriceMicros,omitempty"`
+	OriginalPriceMicrosNEQ   *int64  `json:"originalPriceMicrosNEQ,omitempty"`
+	OriginalPriceMicrosIn    []int64 `json:"originalPriceMicrosIn,omitempty"`
+	OriginalPriceMicrosNotIn []int64 `json:"originalPriceMicrosNotIn,omitempty"`
+	OriginalPriceMicrosGT    *int64  `json:"originalPriceMicrosGT,omitempty"`
+	OriginalPriceMicrosGTE   *int64  `json:"originalPriceMicrosGTE,omitempty"`
+	OriginalPriceMicrosLT    *int64  `json:"originalPriceMicrosLT,omitempty"`
+	OriginalPriceMicrosLTE   *int64  `json:"originalPriceMicrosLTE,omitempty"`
+
+	// "discount_amount_micros" field predicates.
+	DiscountAmountMicros      *int64  `json:"discountAmountMicros,omitempty"`
+	DiscountAmountMicrosNEQ   *int64  `json:"discountAmountMicrosNEQ,omitempty"`
+	DiscountAmountMicrosIn    []int64 `json:"discountAmountMicrosIn,omitempty"`
+	DiscountAmountMicrosNotIn []int64 `json:"discountAmountMicrosNotIn,omitempty"`
+	DiscountAmountMicrosGT    *int64  `json:"discountAmountMicrosGT,omitempty"`
+	DiscountAmountMicrosGTE   *int64  `json:"discountAmountMicrosGTE,omitempty"`
+	DiscountAmountMicrosLT    *int64  `json:"discountAmountMicrosLT,omitempty"`
+	DiscountAmountMicrosLTE   *int64  `json:"discountAmountMicrosLTE,omitempty"`
+
+	// "payable_amount_micros" field predicates.
+	PayableAmountMicros      *int64  `json:"payableAmountMicros,omitempty"`
+	PayableAmountMicrosNEQ   *int64  `json:"payableAmountMicrosNEQ,omitempty"`
+	PayableAmountMicrosIn    []int64 `json:"payableAmountMicrosIn,omitempty"`
+	PayableAmountMicrosNotIn []int64 `json:"payableAmountMicrosNotIn,omitempty"`
+	PayableAmountMicrosGT    *int64  `json:"payableAmountMicrosGT,omitempty"`
+	PayableAmountMicrosGTE   *int64  `json:"payableAmountMicrosGTE,omitempty"`
+	PayableAmountMicrosLT    *int64  `json:"payableAmountMicrosLT,omitempty"`
+	PayableAmountMicrosLTE   *int64  `json:"payableAmountMicrosLTE,omitempty"`
+
+	// "promo_code_id" field predicates.
+	PromoCodeID       *int  `json:"promoCodeID,omitempty"`
+	PromoCodeIDNEQ    *int  `json:"promoCodeIDNEQ,omitempty"`
+	PromoCodeIDIn     []int `json:"promoCodeIDIn,omitempty"`
+	PromoCodeIDNotIn  []int `json:"promoCodeIDNotIn,omitempty"`
+	PromoCodeIDIsNil  bool  `json:"promoCodeIDIsNil,omitempty"`
+	PromoCodeIDNotNil bool  `json:"promoCodeIDNotNil,omitempty"`
+
 	// "notes" field predicates.
 	Notes             *string  `json:"notes,omitempty"`
 	NotesNEQ          *string  `json:"notesNEQ,omitempty"`
@@ -20433,6 +22327,14 @@ type UserSubscriptionWhereInput struct {
 	// "purchase_ledger_transaction" edge predicates.
 	HasPurchaseLedgerTransaction     *bool                          `json:"hasPurchaseLedgerTransaction,omitempty"`
 	HasPurchaseLedgerTransactionWith []*LedgerTransactionWhereInput `json:"hasPurchaseLedgerTransactionWith,omitempty"`
+
+	// "promo_code" edge predicates.
+	HasPromoCode     *bool                  `json:"hasPromoCode,omitempty"`
+	HasPromoCodeWith []*PromoCodeWhereInput `json:"hasPromoCodeWith,omitempty"`
+
+	// "promo_usages" edge predicates.
+	HasPromoUsages     *bool                   `json:"hasPromoUsages,omitempty"`
+	HasPromoUsagesWith []*PromoUsageWhereInput `json:"hasPromoUsagesWith,omitempty"`
 
 	// "usage_billing_records" edge predicates.
 	HasUsageBillingRecords     *bool                           `json:"hasUsageBillingRecords,omitempty"`
@@ -20897,6 +22799,96 @@ func (i *UserSubscriptionWhereInput) P() (predicate.UserSubscription, error) {
 	if i.PurchaseLedgerTransactionIDNotNil {
 		predicates = append(predicates, usersubscription.PurchaseLedgerTransactionIDNotNil())
 	}
+	if i.OriginalPriceMicros != nil {
+		predicates = append(predicates, usersubscription.OriginalPriceMicrosEQ(*i.OriginalPriceMicros))
+	}
+	if i.OriginalPriceMicrosNEQ != nil {
+		predicates = append(predicates, usersubscription.OriginalPriceMicrosNEQ(*i.OriginalPriceMicrosNEQ))
+	}
+	if len(i.OriginalPriceMicrosIn) > 0 {
+		predicates = append(predicates, usersubscription.OriginalPriceMicrosIn(i.OriginalPriceMicrosIn...))
+	}
+	if len(i.OriginalPriceMicrosNotIn) > 0 {
+		predicates = append(predicates, usersubscription.OriginalPriceMicrosNotIn(i.OriginalPriceMicrosNotIn...))
+	}
+	if i.OriginalPriceMicrosGT != nil {
+		predicates = append(predicates, usersubscription.OriginalPriceMicrosGT(*i.OriginalPriceMicrosGT))
+	}
+	if i.OriginalPriceMicrosGTE != nil {
+		predicates = append(predicates, usersubscription.OriginalPriceMicrosGTE(*i.OriginalPriceMicrosGTE))
+	}
+	if i.OriginalPriceMicrosLT != nil {
+		predicates = append(predicates, usersubscription.OriginalPriceMicrosLT(*i.OriginalPriceMicrosLT))
+	}
+	if i.OriginalPriceMicrosLTE != nil {
+		predicates = append(predicates, usersubscription.OriginalPriceMicrosLTE(*i.OriginalPriceMicrosLTE))
+	}
+	if i.DiscountAmountMicros != nil {
+		predicates = append(predicates, usersubscription.DiscountAmountMicrosEQ(*i.DiscountAmountMicros))
+	}
+	if i.DiscountAmountMicrosNEQ != nil {
+		predicates = append(predicates, usersubscription.DiscountAmountMicrosNEQ(*i.DiscountAmountMicrosNEQ))
+	}
+	if len(i.DiscountAmountMicrosIn) > 0 {
+		predicates = append(predicates, usersubscription.DiscountAmountMicrosIn(i.DiscountAmountMicrosIn...))
+	}
+	if len(i.DiscountAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, usersubscription.DiscountAmountMicrosNotIn(i.DiscountAmountMicrosNotIn...))
+	}
+	if i.DiscountAmountMicrosGT != nil {
+		predicates = append(predicates, usersubscription.DiscountAmountMicrosGT(*i.DiscountAmountMicrosGT))
+	}
+	if i.DiscountAmountMicrosGTE != nil {
+		predicates = append(predicates, usersubscription.DiscountAmountMicrosGTE(*i.DiscountAmountMicrosGTE))
+	}
+	if i.DiscountAmountMicrosLT != nil {
+		predicates = append(predicates, usersubscription.DiscountAmountMicrosLT(*i.DiscountAmountMicrosLT))
+	}
+	if i.DiscountAmountMicrosLTE != nil {
+		predicates = append(predicates, usersubscription.DiscountAmountMicrosLTE(*i.DiscountAmountMicrosLTE))
+	}
+	if i.PayableAmountMicros != nil {
+		predicates = append(predicates, usersubscription.PayableAmountMicrosEQ(*i.PayableAmountMicros))
+	}
+	if i.PayableAmountMicrosNEQ != nil {
+		predicates = append(predicates, usersubscription.PayableAmountMicrosNEQ(*i.PayableAmountMicrosNEQ))
+	}
+	if len(i.PayableAmountMicrosIn) > 0 {
+		predicates = append(predicates, usersubscription.PayableAmountMicrosIn(i.PayableAmountMicrosIn...))
+	}
+	if len(i.PayableAmountMicrosNotIn) > 0 {
+		predicates = append(predicates, usersubscription.PayableAmountMicrosNotIn(i.PayableAmountMicrosNotIn...))
+	}
+	if i.PayableAmountMicrosGT != nil {
+		predicates = append(predicates, usersubscription.PayableAmountMicrosGT(*i.PayableAmountMicrosGT))
+	}
+	if i.PayableAmountMicrosGTE != nil {
+		predicates = append(predicates, usersubscription.PayableAmountMicrosGTE(*i.PayableAmountMicrosGTE))
+	}
+	if i.PayableAmountMicrosLT != nil {
+		predicates = append(predicates, usersubscription.PayableAmountMicrosLT(*i.PayableAmountMicrosLT))
+	}
+	if i.PayableAmountMicrosLTE != nil {
+		predicates = append(predicates, usersubscription.PayableAmountMicrosLTE(*i.PayableAmountMicrosLTE))
+	}
+	if i.PromoCodeID != nil {
+		predicates = append(predicates, usersubscription.PromoCodeIDEQ(*i.PromoCodeID))
+	}
+	if i.PromoCodeIDNEQ != nil {
+		predicates = append(predicates, usersubscription.PromoCodeIDNEQ(*i.PromoCodeIDNEQ))
+	}
+	if len(i.PromoCodeIDIn) > 0 {
+		predicates = append(predicates, usersubscription.PromoCodeIDIn(i.PromoCodeIDIn...))
+	}
+	if len(i.PromoCodeIDNotIn) > 0 {
+		predicates = append(predicates, usersubscription.PromoCodeIDNotIn(i.PromoCodeIDNotIn...))
+	}
+	if i.PromoCodeIDIsNil {
+		predicates = append(predicates, usersubscription.PromoCodeIDIsNil())
+	}
+	if i.PromoCodeIDNotNil {
+		predicates = append(predicates, usersubscription.PromoCodeIDNotNil())
+	}
 	if i.Notes != nil {
 		predicates = append(predicates, usersubscription.NotesEQ(*i.Notes))
 	}
@@ -21047,6 +23039,42 @@ func (i *UserSubscriptionWhereInput) P() (predicate.UserSubscription, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, usersubscription.HasPurchaseLedgerTransactionWith(with...))
+	}
+	if i.HasPromoCode != nil {
+		p := usersubscription.HasPromoCode()
+		if !*i.HasPromoCode {
+			p = usersubscription.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPromoCodeWith) > 0 {
+		with := make([]predicate.PromoCode, 0, len(i.HasPromoCodeWith))
+		for _, w := range i.HasPromoCodeWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPromoCodeWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usersubscription.HasPromoCodeWith(with...))
+	}
+	if i.HasPromoUsages != nil {
+		p := usersubscription.HasPromoUsages()
+		if !*i.HasPromoUsages {
+			p = usersubscription.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPromoUsagesWith) > 0 {
+		with := make([]predicate.PromoUsage, 0, len(i.HasPromoUsagesWith))
+		for _, w := range i.HasPromoUsagesWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPromoUsagesWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usersubscription.HasPromoUsagesWith(with...))
 	}
 	if i.HasUsageBillingRecords != nil {
 		p := usersubscription.HasUsageBillingRecords()

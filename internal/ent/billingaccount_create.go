@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 )
 
@@ -218,6 +219,21 @@ func (_c *BillingAccountCreate) AddPaymentOrders(v ...*PaymentOrder) *BillingAcc
 		ids[i] = v[i].ID
 	}
 	return _c.AddPaymentOrderIDs(ids...)
+}
+
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by IDs.
+func (_c *BillingAccountCreate) AddPromoUsageIDs(ids ...int) *BillingAccountCreate {
+	_c.mutation.AddPromoUsageIDs(ids...)
+	return _c
+}
+
+// AddPromoUsages adds the "promo_usages" edges to the PromoUsage entity.
+func (_c *BillingAccountCreate) AddPromoUsages(v ...*PromoUsage) *BillingAccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPromoUsageIDs(ids...)
 }
 
 // Mutation returns the BillingAccountMutation object of the builder.
@@ -467,6 +483,22 @@ func (_c *BillingAccountCreate) createSpec() (*BillingAccount, *sqlgraph.CreateS
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PromoUsagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.PromoUsagesTable,
+			Columns: []string{billingaccount.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

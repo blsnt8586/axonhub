@@ -15,6 +15,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"github.com/looplj/axonhub/internal/log"
@@ -30,6 +31,7 @@ type SubscriptionServiceParams struct {
 	Ent                   *ent.Client
 	BillingAccountService *BillingAccountService
 	LedgerService         *LedgerService
+	PromoCodeService      *PromoCodeService `optional:"true"`
 }
 
 type SubscriptionService struct {
@@ -37,6 +39,7 @@ type SubscriptionService struct {
 
 	billingAccountService *BillingAccountService
 	ledgerService         *LedgerService
+	promoCodeService      *PromoCodeService
 }
 
 func NewSubscriptionService(params SubscriptionServiceParams) *SubscriptionService {
@@ -44,6 +47,7 @@ func NewSubscriptionService(params SubscriptionServiceParams) *SubscriptionServi
 		AbstractService:       &AbstractService{db: params.Ent},
 		billingAccountService: params.BillingAccountService,
 		ledgerService:         params.LedgerService,
+		promoCodeService:      params.PromoCodeService,
 	}
 }
 
@@ -100,6 +104,7 @@ type PurchaseSubscriptionPlanInput struct {
 	UserID int
 	PlanID int
 	Now    time.Time
+	PromoCode string
 }
 
 type AdminAssignSubscriptionInput struct {
@@ -251,12 +256,40 @@ func (s *SubscriptionService) PurchasePlan(ctx context.Context, input PurchaseSu
 
 	var created *ent.UserSubscription
 	err = s.RunInTransaction(ctx, func(ctx context.Context) error {
+		payableMicros := plan.PriceMicros
+		discountMicros := int64(0)
+		var promoApplication *PromoApplication
+		if strings.TrimSpace(input.PromoCode) != "" {
+			if s.promoCodeService == nil {
+				return fmt.Errorf("promo code service is not configured")
+			}
+			application, err := s.promoCodeService.Apply(ctx, PromoApplyInput{
+				PromoQuoteInput: PromoQuoteInput{
+					Code:                 input.PromoCode,
+					Scope:                promousage.ScopeSubscription,
+					UserID:               input.UserID,
+					OriginalAmountMicros: plan.PriceMicros,
+					Currency:             plan.Currency,
+					Now:                  input.Now,
+				},
+				BillingAccountID: account.ID,
+				IdempotencyKey:   fmt.Sprintf("promo:subscription:%d:%d:%d", input.UserID, input.PlanID, input.Now.UnixNano()),
+				Status:           promousage.StatusReserved,
+			})
+			if err != nil {
+				return err
+			}
+			promoApplication = application
+			payableMicros = application.PayableAmountMicros
+			discountMicros = application.DiscountAmountMicros
+		}
+
 		var ledgerTxID int
-		if plan.PriceMicros > 0 {
+		if payableMicros > 0 {
 			ledgerTx, err := s.ledgerService.Post(ctx, LedgerPostInput{
 				BillingAccountID: account.ID,
 				Direction:        ledgertransaction.DirectionDebit,
-				Amount:           microsToDecimal(plan.PriceMicros),
+				Amount:           microsToDecimal(payableMicros),
 				Currency:         plan.Currency,
 				Type:             ledgertransaction.TypeSubscriptionDeduct,
 				IdempotencyKey:   fmt.Sprintf("subscription_purchase:%d:%d:%d", input.UserID, input.PlanID, input.Now.UnixNano()),
@@ -277,9 +310,24 @@ func (s *SubscriptionService) PurchasePlan(ctx context.Context, input PurchaseSu
 			StartsAt:                    input.Now,
 			ExpiresAt:                   input.Now.AddDate(0, 0, plan.PeriodDays),
 			PurchaseLedgerTransactionID: ledgerTxID,
+			OriginalPriceMicros:         plan.PriceMicros,
+			DiscountAmountMicros:        discountMicros,
+			PayableAmountMicros:         payableMicros,
+			PromoCodeID:                 promoCodeIDFromApplication(promoApplication),
 		})
 		if err != nil {
 			return err
+		}
+		if promoApplication != nil && promoApplication.Usage != nil {
+			update := s.entFromContext(ctx).PromoUsage.UpdateOneID(promoApplication.Usage.ID).
+				SetUserSubscriptionID(entity.ID).
+				SetStatus(promousage.StatusApplied)
+			if ledgerTxID > 0 {
+				update.SetLedgerTransactionID(ledgerTxID)
+			}
+			if _, err := update.Save(ctx); err != nil {
+				return fmt.Errorf("failed to attach promo usage to subscription: %w", err)
+			}
 		}
 		created = entity
 		return nil
@@ -473,6 +521,10 @@ type createSubscriptionFromPlanInput struct {
 	AssignedByID                int
 	PurchaseLedgerTransactionID int
 	Notes                       string
+	OriginalPriceMicros         int64
+	DiscountAmountMicros        int64
+	PayableAmountMicros         int64
+	PromoCodeID                 int
 }
 
 func (s *SubscriptionService) createSubscriptionFromPlan(ctx context.Context, plan *ent.SubscriptionPlan, input createSubscriptionFromPlanInput) (*ent.UserSubscription, error) {
@@ -502,6 +554,9 @@ func (s *SubscriptionService) createSubscriptionFromPlan(ctx context.Context, pl
 		SetSupportedProjectIds(plan.SupportedProjectIds).
 		SetSupportedGroupIds(plan.SupportedGroupIds).
 		SetAllowWalletFallback(plan.AllowWalletFallback).
+		SetOriginalPriceMicros(valueOrDefaultInt64(input.OriginalPriceMicros, plan.PriceMicros)).
+		SetDiscountAmountMicros(input.DiscountAmountMicros).
+		SetPayableAmountMicros(valueOrDefaultInt64(input.PayableAmountMicros, plan.PriceMicros)).
 		SetNotes(strings.TrimSpace(input.Notes))
 	if input.AssignedByID > 0 {
 		create.SetAssignedByID(input.AssignedByID)
@@ -509,7 +564,17 @@ func (s *SubscriptionService) createSubscriptionFromPlan(ctx context.Context, pl
 	if input.PurchaseLedgerTransactionID > 0 {
 		create.SetPurchaseLedgerTransactionID(input.PurchaseLedgerTransactionID)
 	}
+	if input.PromoCodeID > 0 {
+		create.SetPromoCodeID(input.PromoCodeID)
+	}
 	return create.Save(ctx)
+}
+
+func promoCodeIDFromApplication(app *PromoApplication) int {
+	if app == nil || app.Code == nil {
+		return 0
+	}
+	return app.Code.ID
 }
 
 func (s *SubscriptionService) findSubscriptionCoverage(ctx context.Context, input SubscriptionCoverageInput, mutate bool) (SubscriptionCoverageResult, error) {
@@ -653,4 +718,11 @@ func normalizeIntList(values []int) []int {
 		}
 	}
 	return out
+}
+
+func valueOrDefaultInt64(value int64, fallback int64) int64 {
+	if value == 0 {
+		return fallback
+	}
+	return value
 }

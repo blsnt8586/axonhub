@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/ent/promocode"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -38,8 +39,14 @@ type PaymentOrder struct {
 	ProviderType paymentorder.ProviderType `json:"provider_type,omitempty"`
 	// Commercial purpose of the payment order.
 	Purpose paymentorder.Purpose `json:"purpose,omitempty"`
-	// Order amount in micro currency units.
+	// Wallet credit amount in micro currency units for recharge orders.
 	AmountMicros int64 `json:"amount_micros,omitempty"`
+	// Provider payable amount after discounts. Zero means same as amount_micros for legacy orders.
+	PayableAmountMicros int64 `json:"payable_amount_micros,omitempty"`
+	// DiscountAmountMicros holds the value of the "discount_amount_micros" field.
+	DiscountAmountMicros int64 `json:"discount_amount_micros,omitempty"`
+	// PromoCodeID holds the value of the "promo_code_id" field.
+	PromoCodeID *int `json:"promo_code_id,omitempty"`
 	// Currency holds the value of the "currency" field.
 	Currency string `json:"currency,omitempty"`
 	// Payment order lifecycle status.
@@ -82,14 +89,19 @@ type PaymentOrderEdges struct {
 	ProviderInstance *PaymentProviderInstance `json:"provider_instance,omitempty"`
 	// LedgerTransaction holds the value of the ledger_transaction edge.
 	LedgerTransaction *LedgerTransaction `json:"ledger_transaction,omitempty"`
+	// PromoCode holds the value of the promo_code edge.
+	PromoCode *PromoCode `json:"promo_code,omitempty"`
+	// PromoUsages holds the value of the promo_usages edge.
+	PromoUsages []*PromoUsage `json:"promo_usages,omitempty"`
 	// PaymentEvents holds the value of the payment_events edge.
 	PaymentEvents []*PaymentEvent `json:"payment_events,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [6]bool
 	// totalCount holds the count of the edges above.
-	totalCount [4]map[string]int
+	totalCount [6]map[string]int
 
+	namedPromoUsages   map[string][]*PromoUsage
 	namedPaymentEvents map[string][]*PaymentEvent
 }
 
@@ -126,10 +138,30 @@ func (e PaymentOrderEdges) LedgerTransactionOrErr() (*LedgerTransaction, error) 
 	return nil, &NotLoadedError{edge: "ledger_transaction"}
 }
 
+// PromoCodeOrErr returns the PromoCode value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PaymentOrderEdges) PromoCodeOrErr() (*PromoCode, error) {
+	if e.PromoCode != nil {
+		return e.PromoCode, nil
+	} else if e.loadedTypes[3] {
+		return nil, &NotFoundError{label: promocode.Label}
+	}
+	return nil, &NotLoadedError{edge: "promo_code"}
+}
+
+// PromoUsagesOrErr returns the PromoUsages value or an error if the edge
+// was not loaded in eager-loading.
+func (e PaymentOrderEdges) PromoUsagesOrErr() ([]*PromoUsage, error) {
+	if e.loadedTypes[4] {
+		return e.PromoUsages, nil
+	}
+	return nil, &NotLoadedError{edge: "promo_usages"}
+}
+
 // PaymentEventsOrErr returns the PaymentEvents value or an error if the edge
 // was not loaded in eager-loading.
 func (e PaymentOrderEdges) PaymentEventsOrErr() ([]*PaymentEvent, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[5] {
 		return e.PaymentEvents, nil
 	}
 	return nil, &NotLoadedError{edge: "payment_events"}
@@ -142,7 +174,7 @@ func (*PaymentOrder) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case paymentorder.FieldMetadata:
 			values[i] = new([]byte)
-		case paymentorder.FieldID, paymentorder.FieldProjectID, paymentorder.FieldBillingAccountID, paymentorder.FieldProviderInstanceID, paymentorder.FieldAmountMicros, paymentorder.FieldRefundAmountMicros, paymentorder.FieldLedgerTransactionID:
+		case paymentorder.FieldID, paymentorder.FieldProjectID, paymentorder.FieldBillingAccountID, paymentorder.FieldProviderInstanceID, paymentorder.FieldAmountMicros, paymentorder.FieldPayableAmountMicros, paymentorder.FieldDiscountAmountMicros, paymentorder.FieldPromoCodeID, paymentorder.FieldRefundAmountMicros, paymentorder.FieldLedgerTransactionID:
 			values[i] = new(sql.NullInt64)
 		case paymentorder.FieldOrderNo, paymentorder.FieldProviderType, paymentorder.FieldPurpose, paymentorder.FieldCurrency, paymentorder.FieldStatus, paymentorder.FieldCancelReason, paymentorder.FieldMakeupReason, paymentorder.FieldFailureReason, paymentorder.FieldRefundReason, paymentorder.FieldExternalTradeNo:
 			values[i] = new(sql.NullString)
@@ -223,6 +255,25 @@ func (_m *PaymentOrder) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field amount_micros", values[i])
 			} else if value.Valid {
 				_m.AmountMicros = value.Int64
+			}
+		case paymentorder.FieldPayableAmountMicros:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field payable_amount_micros", values[i])
+			} else if value.Valid {
+				_m.PayableAmountMicros = value.Int64
+			}
+		case paymentorder.FieldDiscountAmountMicros:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field discount_amount_micros", values[i])
+			} else if value.Valid {
+				_m.DiscountAmountMicros = value.Int64
+			}
+		case paymentorder.FieldPromoCodeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field promo_code_id", values[i])
+			} else if value.Valid {
+				_m.PromoCodeID = new(int)
+				*_m.PromoCodeID = int(value.Int64)
 			}
 		case paymentorder.FieldCurrency:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -344,6 +395,16 @@ func (_m *PaymentOrder) QueryLedgerTransaction() *LedgerTransactionQuery {
 	return NewPaymentOrderClient(_m.config).QueryLedgerTransaction(_m)
 }
 
+// QueryPromoCode queries the "promo_code" edge of the PaymentOrder entity.
+func (_m *PaymentOrder) QueryPromoCode() *PromoCodeQuery {
+	return NewPaymentOrderClient(_m.config).QueryPromoCode(_m)
+}
+
+// QueryPromoUsages queries the "promo_usages" edge of the PaymentOrder entity.
+func (_m *PaymentOrder) QueryPromoUsages() *PromoUsageQuery {
+	return NewPaymentOrderClient(_m.config).QueryPromoUsages(_m)
+}
+
 // QueryPaymentEvents queries the "payment_events" edge of the PaymentOrder entity.
 func (_m *PaymentOrder) QueryPaymentEvents() *PaymentEventQuery {
 	return NewPaymentOrderClient(_m.config).QueryPaymentEvents(_m)
@@ -401,6 +462,17 @@ func (_m *PaymentOrder) String() string {
 	builder.WriteString("amount_micros=")
 	builder.WriteString(fmt.Sprintf("%v", _m.AmountMicros))
 	builder.WriteString(", ")
+	builder.WriteString("payable_amount_micros=")
+	builder.WriteString(fmt.Sprintf("%v", _m.PayableAmountMicros))
+	builder.WriteString(", ")
+	builder.WriteString("discount_amount_micros=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DiscountAmountMicros))
+	builder.WriteString(", ")
+	if v := _m.PromoCodeID; v != nil {
+		builder.WriteString("promo_code_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
 	builder.WriteString("currency=")
 	builder.WriteString(_m.Currency)
 	builder.WriteString(", ")
@@ -456,6 +528,30 @@ func (_m *PaymentOrder) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedPromoUsages returns the PromoUsages named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *PaymentOrder) NamedPromoUsages(name string) ([]*PromoUsage, error) {
+	if _m.Edges.namedPromoUsages == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedPromoUsages[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *PaymentOrder) appendNamedPromoUsages(name string, edges ...*PromoUsage) {
+	if _m.Edges.namedPromoUsages == nil {
+		_m.Edges.namedPromoUsages = make(map[string][]*PromoUsage)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedPromoUsages[name] = []*PromoUsage{}
+	} else {
+		_m.Edges.namedPromoUsages[name] = append(_m.Edges.namedPromoUsages[name], edges...)
+	}
 }
 
 // NamedPaymentEvents returns the PaymentEvents named value or an error if the edge was not

@@ -28,6 +28,8 @@ export interface PaymentOrder {
   orderNo: string;
   providerType: string;
   amountMicros: number;
+  payableAmountMicros: number;
+  discountAmountMicros: number;
   currency: string;
   status: PaymentOrderStatus;
   externalTradeNo?: string | null;
@@ -97,6 +99,9 @@ export interface UserSubscription {
   supportedModelIds: string[];
   supportedProjectIds: number[];
   allowWalletFallback: boolean;
+  originalPriceMicros: number;
+  discountAmountMicros: number;
+  payableAmountMicros: number;
   notes: string;
   revokeReason: string;
   plan?: Pick<SubscriptionPlan, 'id' | 'name' | 'period' | 'priceMicros' | 'currency'> | null;
@@ -124,6 +129,14 @@ export interface PaymentCheckout {
   method: string;
   url?: string | null;
   amount: string;
+  currency: string;
+}
+
+export interface PromoQuote {
+  code?: string | null;
+  originalAmountMicros: number;
+  discountAmountMicros: number;
+  payableAmountMicros: number;
   currency: string;
 }
 
@@ -157,6 +170,8 @@ const BILLING_OVERVIEW_QUERY = `
           orderNo
           providerType
           amountMicros
+          payableAmountMicros
+          discountAmountMicros
           currency
           status
           externalTradeNo
@@ -257,6 +272,9 @@ const BILLING_OVERVIEW_QUERY = `
           supportedModelIds
           supportedProjectIds
           allowWalletFallback
+          originalPriceMicros
+          discountAmountMicros
+          payableAmountMicros
           notes
           revokeReason
           plan {
@@ -280,6 +298,30 @@ const CREATE_MY_EPAY_RECHARGE_CHECKOUT = `
       method
       url
       amount
+      currency
+    }
+  }
+`;
+
+const QUOTE_RECHARGE_PROMO_QUERY = `
+  query QuoteRechargePromo($input: QuoteRechargePromoInput!) {
+    quoteRechargePromo(input: $input) {
+      code
+      originalAmountMicros
+      discountAmountMicros
+      payableAmountMicros
+      currency
+    }
+  }
+`;
+
+const QUOTE_SUBSCRIPTION_PROMO_QUERY = `
+  query QuoteSubscriptionPromo($input: QuoteSubscriptionPromoInput!) {
+    quoteSubscriptionPromo(input: $input) {
+      code
+      originalAmountMicros
+      discountAmountMicros
+      payableAmountMicros
       currency
     }
   }
@@ -365,7 +407,7 @@ export function useCreateMyEPayRechargeCheckout() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: { amount: string; currency?: string; subject?: string }) => {
+    mutationFn: async (input: { amount: string; currency?: string; subject?: string; promoCode?: string }) => {
       const data = await graphqlRequest<{ createMyEPayRechargeCheckout: PaymentCheckout }>(CREATE_MY_EPAY_RECHARGE_CHECKOUT, {
         input,
       });
@@ -395,12 +437,30 @@ export function usePurchaseSubscriptionPlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: { planId: string }) => {
+    mutationFn: async (input: { planId: string; promoCode?: string }) => {
       const data = await graphqlRequest<{ purchaseSubscriptionPlan: UserSubscription }>(PURCHASE_SUBSCRIPTION_PLAN_MUTATION, { input });
       return data.purchaseSubscriptionPlan;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['billing', 'my-overview'] });
+    },
+  });
+}
+
+export function useQuoteRechargePromo() {
+  return useMutation({
+    mutationFn: async (input: { amount: string; currency?: string; promoCode?: string }) => {
+      const data = await graphqlRequest<{ quoteRechargePromo: PromoQuote }>(QUOTE_RECHARGE_PROMO_QUERY, { input });
+      return data.quoteRechargePromo;
+    },
+  });
+}
+
+export function useQuoteSubscriptionPromo() {
+  return useMutation({
+    mutationFn: async (input: { planId: string; promoCode?: string }) => {
+      const data = await graphqlRequest<{ quoteSubscriptionPromo: PromoQuote }>(QUOTE_SUBSCRIPTION_PROMO_QUERY, { input });
+      return data.quoteSubscriptionPromo;
     },
   });
 }

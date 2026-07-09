@@ -69,6 +69,12 @@ type PaymentProviderInstance func(*sql.Selector)
 // Project is the predicate function for project builders.
 type Project func(*sql.Selector)
 
+// PromoCode is the predicate function for promocode builders.
+type PromoCode func(*sql.Selector)
+
+// PromoUsage is the predicate function for promousage builders.
+type PromoUsage func(*sql.Selector)
+
 // Prompt is the predicate function for prompt builders.
 type Prompt func(*sql.Selector)
 

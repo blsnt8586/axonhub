@@ -15,6 +15,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/user"
@@ -32,9 +34,12 @@ type UserSubscriptionQuery struct {
 	withPlan                      *SubscriptionPlanQuery
 	withAssignedBy                *UserQuery
 	withPurchaseLedgerTransaction *LedgerTransactionQuery
+	withPromoCode                 *PromoCodeQuery
+	withPromoUsages               *PromoUsageQuery
 	withUsageBillingRecords       *UsageBillingRecordQuery
 	loadTotal                     []func(context.Context, []*UserSubscription) error
 	modifiers                     []func(*sql.Selector)
+	withNamedPromoUsages          map[string]*PromoUsageQuery
 	withNamedUsageBillingRecords  map[string]*UsageBillingRecordQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -153,6 +158,50 @@ func (_q *UserSubscriptionQuery) QueryPurchaseLedgerTransaction() *LedgerTransac
 			sqlgraph.From(usersubscription.Table, usersubscription.FieldID, selector),
 			sqlgraph.To(ledgertransaction.Table, ledgertransaction.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usersubscription.PurchaseLedgerTransactionTable, usersubscription.PurchaseLedgerTransactionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPromoCode chains the current query on the "promo_code" edge.
+func (_q *UserSubscriptionQuery) QueryPromoCode() *PromoCodeQuery {
+	query := (&PromoCodeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usersubscription.Table, usersubscription.FieldID, selector),
+			sqlgraph.To(promocode.Table, promocode.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usersubscription.PromoCodeTable, usersubscription.PromoCodeColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPromoUsages chains the current query on the "promo_usages" edge.
+func (_q *UserSubscriptionQuery) QueryPromoUsages() *PromoUsageQuery {
+	query := (&PromoUsageClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usersubscription.Table, usersubscription.FieldID, selector),
+			sqlgraph.To(promousage.Table, promousage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usersubscription.PromoUsagesTable, usersubscription.PromoUsagesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -378,6 +427,8 @@ func (_q *UserSubscriptionQuery) Clone() *UserSubscriptionQuery {
 		withPlan:                      _q.withPlan.Clone(),
 		withAssignedBy:                _q.withAssignedBy.Clone(),
 		withPurchaseLedgerTransaction: _q.withPurchaseLedgerTransaction.Clone(),
+		withPromoCode:                 _q.withPromoCode.Clone(),
+		withPromoUsages:               _q.withPromoUsages.Clone(),
 		withUsageBillingRecords:       _q.withUsageBillingRecords.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
@@ -427,6 +478,28 @@ func (_q *UserSubscriptionQuery) WithPurchaseLedgerTransaction(opts ...func(*Led
 		opt(query)
 	}
 	_q.withPurchaseLedgerTransaction = query
+	return _q
+}
+
+// WithPromoCode tells the query-builder to eager-load the nodes that are connected to
+// the "promo_code" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserSubscriptionQuery) WithPromoCode(opts ...func(*PromoCodeQuery)) *UserSubscriptionQuery {
+	query := (&PromoCodeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPromoCode = query
+	return _q
+}
+
+// WithPromoUsages tells the query-builder to eager-load the nodes that are connected to
+// the "promo_usages" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserSubscriptionQuery) WithPromoUsages(opts ...func(*PromoUsageQuery)) *UserSubscriptionQuery {
+	query := (&PromoUsageClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPromoUsages = query
 	return _q
 }
 
@@ -525,11 +598,13 @@ func (_q *UserSubscriptionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	var (
 		nodes       = []*UserSubscription{}
 		_spec       = _q.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [7]bool{
 			_q.withUser != nil,
 			_q.withPlan != nil,
 			_q.withAssignedBy != nil,
 			_q.withPurchaseLedgerTransaction != nil,
+			_q.withPromoCode != nil,
+			_q.withPromoUsages != nil,
 			_q.withUsageBillingRecords != nil,
 		}
 	)
@@ -578,12 +653,32 @@ func (_q *UserSubscriptionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 			return nil, err
 		}
 	}
+	if query := _q.withPromoCode; query != nil {
+		if err := _q.loadPromoCode(ctx, query, nodes, nil,
+			func(n *UserSubscription, e *PromoCode) { n.Edges.PromoCode = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPromoUsages; query != nil {
+		if err := _q.loadPromoUsages(ctx, query, nodes,
+			func(n *UserSubscription) { n.Edges.PromoUsages = []*PromoUsage{} },
+			func(n *UserSubscription, e *PromoUsage) { n.Edges.PromoUsages = append(n.Edges.PromoUsages, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withUsageBillingRecords; query != nil {
 		if err := _q.loadUsageBillingRecords(ctx, query, nodes,
 			func(n *UserSubscription) { n.Edges.UsageBillingRecords = []*UsageBillingRecord{} },
 			func(n *UserSubscription, e *UsageBillingRecord) {
 				n.Edges.UsageBillingRecords = append(n.Edges.UsageBillingRecords, e)
 			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedPromoUsages {
+		if err := _q.loadPromoUsages(ctx, query, nodes,
+			func(n *UserSubscription) { n.appendNamedPromoUsages(name) },
+			func(n *UserSubscription, e *PromoUsage) { n.appendNamedPromoUsages(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -718,6 +813,71 @@ func (_q *UserSubscriptionQuery) loadPurchaseLedgerTransaction(ctx context.Conte
 	}
 	return nil
 }
+func (_q *UserSubscriptionQuery) loadPromoCode(ctx context.Context, query *PromoCodeQuery, nodes []*UserSubscription, init func(*UserSubscription), assign func(*UserSubscription, *PromoCode)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*UserSubscription)
+	for i := range nodes {
+		if nodes[i].PromoCodeID == nil {
+			continue
+		}
+		fk := *nodes[i].PromoCodeID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(promocode.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "promo_code_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *UserSubscriptionQuery) loadPromoUsages(ctx context.Context, query *PromoUsageQuery, nodes []*UserSubscription, init func(*UserSubscription), assign func(*UserSubscription, *PromoUsage)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*UserSubscription)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(promousage.FieldUserSubscriptionID)
+	}
+	query.Where(predicate.PromoUsage(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(usersubscription.PromoUsagesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserSubscriptionID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_subscription_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_subscription_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *UserSubscriptionQuery) loadUsageBillingRecords(ctx context.Context, query *UsageBillingRecordQuery, nodes []*UserSubscription, init func(*UserSubscription), assign func(*UserSubscription, *UsageBillingRecord)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*UserSubscription)
@@ -789,6 +949,9 @@ func (_q *UserSubscriptionQuery) querySpec() *sqlgraph.QuerySpec {
 		if _q.withPurchaseLedgerTransaction != nil {
 			_spec.Node.AddColumnOnce(usersubscription.FieldPurchaseLedgerTransactionID)
 		}
+		if _q.withPromoCode != nil {
+			_spec.Node.AddColumnOnce(usersubscription.FieldPromoCodeID)
+		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -852,6 +1015,20 @@ func (_q *UserSubscriptionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 func (_q *UserSubscriptionQuery) Modify(modifiers ...func(s *sql.Selector)) *UserSubscriptionSelect {
 	_q.modifiers = append(_q.modifiers, modifiers...)
 	return _q.Select()
+}
+
+// WithNamedPromoUsages tells the query-builder to eager-load the nodes that are connected to the "promo_usages"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserSubscriptionQuery) WithNamedPromoUsages(name string, opts ...func(*PromoUsageQuery)) *UserSubscriptionQuery {
+	query := (&PromoUsageClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedPromoUsages == nil {
+		_q.withNamedPromoUsages = make(map[string]*PromoUsageQuery)
+	}
+	_q.withNamedPromoUsages[name] = query
+	return _q
 }
 
 // WithNamedUsageBillingRecords tells the query-builder to eager-load the nodes that are connected to the "usage_billing_records"

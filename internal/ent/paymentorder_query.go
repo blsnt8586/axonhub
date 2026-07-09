@@ -19,6 +19,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 )
 
 // PaymentOrderQuery is the builder for querying PaymentOrder entities.
@@ -31,9 +33,12 @@ type PaymentOrderQuery struct {
 	withBillingAccount     *BillingAccountQuery
 	withProviderInstance   *PaymentProviderInstanceQuery
 	withLedgerTransaction  *LedgerTransactionQuery
+	withPromoCode          *PromoCodeQuery
+	withPromoUsages        *PromoUsageQuery
 	withPaymentEvents      *PaymentEventQuery
 	loadTotal              []func(context.Context, []*PaymentOrder) error
 	modifiers              []func(*sql.Selector)
+	withNamedPromoUsages   map[string]*PromoUsageQuery
 	withNamedPaymentEvents map[string]*PaymentEventQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -130,6 +135,50 @@ func (_q *PaymentOrderQuery) QueryLedgerTransaction() *LedgerTransactionQuery {
 			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
 			sqlgraph.To(ledgertransaction.Table, ledgertransaction.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, paymentorder.LedgerTransactionTable, paymentorder.LedgerTransactionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPromoCode chains the current query on the "promo_code" edge.
+func (_q *PaymentOrderQuery) QueryPromoCode() *PromoCodeQuery {
+	query := (&PromoCodeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
+			sqlgraph.To(promocode.Table, promocode.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, paymentorder.PromoCodeTable, paymentorder.PromoCodeColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPromoUsages chains the current query on the "promo_usages" edge.
+func (_q *PaymentOrderQuery) QueryPromoUsages() *PromoUsageQuery {
+	query := (&PromoUsageClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
+			sqlgraph.To(promousage.Table, promousage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.PromoUsagesTable, paymentorder.PromoUsagesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -354,6 +403,8 @@ func (_q *PaymentOrderQuery) Clone() *PaymentOrderQuery {
 		withBillingAccount:    _q.withBillingAccount.Clone(),
 		withProviderInstance:  _q.withProviderInstance.Clone(),
 		withLedgerTransaction: _q.withLedgerTransaction.Clone(),
+		withPromoCode:         _q.withPromoCode.Clone(),
+		withPromoUsages:       _q.withPromoUsages.Clone(),
 		withPaymentEvents:     _q.withPaymentEvents.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
@@ -392,6 +443,28 @@ func (_q *PaymentOrderQuery) WithLedgerTransaction(opts ...func(*LedgerTransacti
 		opt(query)
 	}
 	_q.withLedgerTransaction = query
+	return _q
+}
+
+// WithPromoCode tells the query-builder to eager-load the nodes that are connected to
+// the "promo_code" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *PaymentOrderQuery) WithPromoCode(opts ...func(*PromoCodeQuery)) *PaymentOrderQuery {
+	query := (&PromoCodeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPromoCode = query
+	return _q
+}
+
+// WithPromoUsages tells the query-builder to eager-load the nodes that are connected to
+// the "promo_usages" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *PaymentOrderQuery) WithPromoUsages(opts ...func(*PromoUsageQuery)) *PaymentOrderQuery {
+	query := (&PromoUsageClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPromoUsages = query
 	return _q
 }
 
@@ -490,10 +563,12 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*PaymentOrder{}
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [6]bool{
 			_q.withBillingAccount != nil,
 			_q.withProviderInstance != nil,
 			_q.withLedgerTransaction != nil,
+			_q.withPromoCode != nil,
+			_q.withPromoUsages != nil,
 			_q.withPaymentEvents != nil,
 		}
 	)
@@ -536,10 +611,30 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			return nil, err
 		}
 	}
+	if query := _q.withPromoCode; query != nil {
+		if err := _q.loadPromoCode(ctx, query, nodes, nil,
+			func(n *PaymentOrder, e *PromoCode) { n.Edges.PromoCode = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPromoUsages; query != nil {
+		if err := _q.loadPromoUsages(ctx, query, nodes,
+			func(n *PaymentOrder) { n.Edges.PromoUsages = []*PromoUsage{} },
+			func(n *PaymentOrder, e *PromoUsage) { n.Edges.PromoUsages = append(n.Edges.PromoUsages, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withPaymentEvents; query != nil {
 		if err := _q.loadPaymentEvents(ctx, query, nodes,
 			func(n *PaymentOrder) { n.Edges.PaymentEvents = []*PaymentEvent{} },
 			func(n *PaymentOrder, e *PaymentEvent) { n.Edges.PaymentEvents = append(n.Edges.PaymentEvents, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedPromoUsages {
+		if err := _q.loadPromoUsages(ctx, query, nodes,
+			func(n *PaymentOrder) { n.appendNamedPromoUsages(name) },
+			func(n *PaymentOrder, e *PromoUsage) { n.appendNamedPromoUsages(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -651,6 +746,71 @@ func (_q *PaymentOrderQuery) loadLedgerTransaction(ctx context.Context, query *L
 	}
 	return nil
 }
+func (_q *PaymentOrderQuery) loadPromoCode(ctx context.Context, query *PromoCodeQuery, nodes []*PaymentOrder, init func(*PaymentOrder), assign func(*PaymentOrder, *PromoCode)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*PaymentOrder)
+	for i := range nodes {
+		if nodes[i].PromoCodeID == nil {
+			continue
+		}
+		fk := *nodes[i].PromoCodeID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(promocode.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "promo_code_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *PaymentOrderQuery) loadPromoUsages(ctx context.Context, query *PromoUsageQuery, nodes []*PaymentOrder, init func(*PaymentOrder), assign func(*PaymentOrder, *PromoUsage)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*PaymentOrder)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(promousage.FieldPaymentOrderID)
+	}
+	query.Where(predicate.PromoUsage(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(paymentorder.PromoUsagesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.PaymentOrderID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "payment_order_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "payment_order_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *PaymentOrderQuery) loadPaymentEvents(ctx context.Context, query *PaymentEventQuery, nodes []*PaymentOrder, init func(*PaymentOrder), assign func(*PaymentOrder, *PaymentEvent)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*PaymentOrder)
@@ -722,6 +882,9 @@ func (_q *PaymentOrderQuery) querySpec() *sqlgraph.QuerySpec {
 		if _q.withLedgerTransaction != nil {
 			_spec.Node.AddColumnOnce(paymentorder.FieldLedgerTransactionID)
 		}
+		if _q.withPromoCode != nil {
+			_spec.Node.AddColumnOnce(paymentorder.FieldPromoCodeID)
+		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -785,6 +948,20 @@ func (_q *PaymentOrderQuery) sqlQuery(ctx context.Context) *sql.Selector {
 func (_q *PaymentOrderQuery) Modify(modifiers ...func(s *sql.Selector)) *PaymentOrderSelect {
 	_q.modifiers = append(_q.modifiers, modifiers...)
 	return _q.Select()
+}
+
+// WithNamedPromoUsages tells the query-builder to eager-load the nodes that are connected to the "promo_usages"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *PaymentOrderQuery) WithNamedPromoUsages(name string, opts ...func(*PromoUsageQuery)) *PaymentOrderQuery {
+	query := (&PromoUsageClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedPromoUsages == nil {
+		_q.withNamedPromoUsages = make(map[string]*PromoUsageQuery)
+	}
+	_q.withNamedPromoUsages[name] = query
+	return _q
 }
 
 // WithNamedPaymentEvents tells the query-builder to eager-load the nodes that are connected to the "payment_events"

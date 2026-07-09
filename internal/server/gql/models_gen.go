@@ -17,6 +17,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
@@ -136,6 +138,29 @@ type AdminPaymentOrdersFilter struct {
 	ExternalTradeNo  *string                    `json:"externalTradeNo,omitempty"`
 	From             *time.Time                 `json:"from,omitempty"`
 	To               *time.Time                 `json:"to,omitempty"`
+}
+
+type AdminPromoCodesFilter struct {
+	Status        *promocode.Status `json:"status,omitempty"`
+	Scope         *promocode.Scope  `json:"scope,omitempty"`
+	Code          *string           `json:"code,omitempty"`
+	CreatedByID   *int              `json:"createdById,omitempty"`
+	From          *time.Time        `json:"from,omitempty"`
+	To            *time.Time        `json:"to,omitempty"`
+	ExpiresBefore *time.Time        `json:"expiresBefore,omitempty"`
+}
+
+type AdminPromoUsagesFilter struct {
+	PromoCodeID        *int               `json:"promoCodeId,omitempty"`
+	UserID             *int               `json:"userId,omitempty"`
+	BillingAccountID   *int               `json:"billingAccountId,omitempty"`
+	PaymentOrderID     *int               `json:"paymentOrderId,omitempty"`
+	UserSubscriptionID *int               `json:"userSubscriptionId,omitempty"`
+	Scope              *promousage.Scope  `json:"scope,omitempty"`
+	Status             *promousage.Status `json:"status,omitempty"`
+	Code               *string            `json:"code,omitempty"`
+	From               *time.Time         `json:"from,omitempty"`
+	To                 *time.Time         `json:"to,omitempty"`
 }
 
 type AdminRedeemCodesFilter struct {
@@ -323,6 +348,7 @@ type CreateMyEPayRechargeCheckoutInput struct {
 	Subject            *string                `json:"subject,omitempty"`
 	ProjectID          *objects.GUID          `json:"projectId,omitempty"`
 	ProviderInstanceID *objects.GUID          `json:"providerInstanceId,omitempty"`
+	PromoCode          *string                `json:"promoCode,omitempty"`
 	Metadata           objects.JSONRawMessage `json:"metadata,omitempty"`
 }
 
@@ -332,6 +358,7 @@ type CreateSimulatedEPayRechargeCheckoutInput struct {
 	Currency      *string                `json:"currency,omitempty"`
 	Subject       *string                `json:"subject,omitempty"`
 	PublicBaseURL *string                `json:"publicBaseUrl,omitempty"`
+	PromoCode     *string                `json:"promoCode,omitempty"`
 	Metadata      objects.JSONRawMessage `json:"metadata,omitempty"`
 }
 
@@ -467,6 +494,14 @@ type PaymentCheckout struct {
 	Params       objects.JSONRawMessage `json:"params,omitempty"`
 	Amount       decimal.Decimal        `json:"amount"`
 	Currency     string                 `json:"currency"`
+}
+
+type PromoQuote struct {
+	Code                 *string `json:"code,omitempty"`
+	OriginalAmountMicros int     `json:"originalAmountMicros"`
+	DiscountAmountMicros int     `json:"discountAmountMicros"`
+	PayableAmountMicros  int     `json:"payableAmountMicros"`
+	Currency             string  `json:"currency"`
 }
 
 type PromptProtectionRulePreviewInput struct {

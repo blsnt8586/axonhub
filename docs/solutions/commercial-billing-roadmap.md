@@ -234,29 +234,29 @@ Verification:
 
 ## Stage 7: Promo Codes
 
-Status: [ ] Not started
+Status: [x] Completed
 
 Goal: support marketing discounts for recharge and subscription purchase flows.
 
 Backend scope:
 
-- [ ] Add promo code entity with amount/percentage discount, scope, max uses, per-user limit, status, and expiry.
-- [ ] Add promo usage records.
-- [ ] Apply promo code during checkout creation.
-- [ ] Verify payment amount against discounted order amount.
-- [ ] Prevent discount from producing negative payable amount.
+- [x] Add promo code entity with amount/percentage discount, scope, max uses, per-user limit, status, and expiry.
+- [x] Add promo usage records.
+- [x] Apply promo code during checkout creation.
+- [x] Verify payment amount against discounted order amount.
+- [x] Prevent discount from producing negative payable amount.
 
 Frontend scope:
 
-- [ ] User recharge and subscription checkout forms accept promo code.
-- [ ] Show original amount, discount, and payable amount.
-- [ ] Admin promo code management and usage records.
+- [x] User recharge and subscription checkout forms accept promo code.
+- [x] Show original amount, discount, and payable amount.
+- [x] Admin promo code management and usage records.
 
 Verification:
 
-- [ ] Disabled, expired, maxed, or reused promo codes are rejected.
-- [ ] Discounted order payment verification uses payable amount.
-- [ ] Commit completed stage.
+- [x] Disabled, expired, maxed, or reused promo codes are rejected.
+- [x] Discounted order payment verification uses payable amount.
+- [x] Commit completed stage.
 
 ## Stage 8: Affiliate And Rebates
 
@@ -352,8 +352,8 @@ Verification:
 - [x] Stage 3: Commercial Reports And Audit Console
 - [x] Stage 4: API Key Budgets And Commercial Limits
 - [x] Stage 5: Redeem Codes
-- [ ] Stage 6: Subscription Plans
-- [ ] Stage 7: Promo Codes
+- [x] Stage 6: Subscription Plans
+- [x] Stage 7: Promo Codes
 - [ ] Stage 8: Affiliate And Rebates
 - [ ] Stage 9: Billing Notifications
 - [ ] Stage 10: Production Operations And Security Closure

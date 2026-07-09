@@ -53,17 +53,20 @@ type BillingAccountEdges struct {
 	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
 	// PaymentOrders holds the value of the payment_orders edge.
 	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
+	// PromoUsages holds the value of the promo_usages edge.
+	PromoUsages []*PromoUsage `json:"promo_usages,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 	// totalCount holds the count of the edges above.
-	totalCount [5]map[string]int
+	totalCount [6]map[string]int
 
 	namedBindings            map[string][]*BillingAccountBinding
 	namedLedgerTransactions  map[string][]*LedgerTransaction
 	namedBillingHolds        map[string][]*BillingHold
 	namedUsageBillingRecords map[string][]*UsageBillingRecord
 	namedPaymentOrders       map[string][]*PaymentOrder
+	namedPromoUsages         map[string][]*PromoUsage
 }
 
 // BindingsOrErr returns the Bindings value or an error if the edge
@@ -109,6 +112,15 @@ func (e BillingAccountEdges) PaymentOrdersOrErr() ([]*PaymentOrder, error) {
 		return e.PaymentOrders, nil
 	}
 	return nil, &NotLoadedError{edge: "payment_orders"}
+}
+
+// PromoUsagesOrErr returns the PromoUsages value or an error if the edge
+// was not loaded in eager-loading.
+func (e BillingAccountEdges) PromoUsagesOrErr() ([]*PromoUsage, error) {
+	if e.loadedTypes[5] {
+		return e.PromoUsages, nil
+	}
+	return nil, &NotLoadedError{edge: "promo_usages"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -233,6 +245,11 @@ func (_m *BillingAccount) QueryUsageBillingRecords() *UsageBillingRecordQuery {
 // QueryPaymentOrders queries the "payment_orders" edge of the BillingAccount entity.
 func (_m *BillingAccount) QueryPaymentOrders() *PaymentOrderQuery {
 	return NewBillingAccountClient(_m.config).QueryPaymentOrders(_m)
+}
+
+// QueryPromoUsages queries the "promo_usages" edge of the BillingAccount entity.
+func (_m *BillingAccount) QueryPromoUsages() *PromoUsageQuery {
+	return NewBillingAccountClient(_m.config).QueryPromoUsages(_m)
 }
 
 // Update returns a builder for updating this BillingAccount.
@@ -405,6 +422,30 @@ func (_m *BillingAccount) appendNamedPaymentOrders(name string, edges ...*Paymen
 		_m.Edges.namedPaymentOrders[name] = []*PaymentOrder{}
 	} else {
 		_m.Edges.namedPaymentOrders[name] = append(_m.Edges.namedPaymentOrders[name], edges...)
+	}
+}
+
+// NamedPromoUsages returns the PromoUsages named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *BillingAccount) NamedPromoUsages(name string) ([]*PromoUsage, error) {
+	if _m.Edges.namedPromoUsages == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedPromoUsages[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *BillingAccount) appendNamedPromoUsages(name string, edges ...*PromoUsage) {
+	if _m.Edges.namedPromoUsages == nil {
+		_m.Edges.namedPromoUsages = make(map[string][]*PromoUsage)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedPromoUsages[name] = []*PromoUsage{}
+	} else {
+		_m.Edges.namedPromoUsages[name] = append(_m.Edges.namedPromoUsages[name], edges...)
 	}
 }
 

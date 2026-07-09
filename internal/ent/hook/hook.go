@@ -261,6 +261,30 @@ func (f ProjectFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProjectMutation", m)
 }
 
+// The PromoCodeFunc type is an adapter to allow the use of ordinary
+// function as PromoCode mutator.
+type PromoCodeFunc func(context.Context, *ent.PromoCodeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PromoCodeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PromoCodeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PromoCodeMutation", m)
+}
+
+// The PromoUsageFunc type is an adapter to allow the use of ordinary
+// function as PromoUsage mutator.
+type PromoUsageFunc func(context.Context, *ent.PromoUsageMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PromoUsageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PromoUsageMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PromoUsageMutation", m)
+}
+
 // The PromptFunc type is an adapter to allow the use of ordinary
 // function as Prompt mutator.
 type PromptFunc func(context.Context, *ent.PromptMutation) (ent.Value, error)

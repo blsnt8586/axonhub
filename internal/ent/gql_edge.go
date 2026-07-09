@@ -158,6 +158,27 @@ func (_m *BillingAccount) PaymentOrders(
 	return _m.QueryPaymentOrders().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *BillingAccount) PromoUsages(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PromoUsageOrder, where *PromoUsageWhereInput,
+) (*PromoUsageConnection, error) {
+	opts := []PromoUsagePaginateOption{
+		WithPromoUsageOrder(orderBy),
+		WithPromoUsageFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
+	if nodes, err := _m.NamedPromoUsages(alias); err == nil || hasTotalCount {
+		pager, err := newPromoUsagePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PromoUsageConnection{Edges: []*PromoUsageEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPromoUsages().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *BillingAccountBinding) BillingAccount(ctx context.Context) (*BillingAccount, error) {
 	result, err := _m.Edges.BillingAccountOrErr()
 	if IsNotLoaded(err) {
@@ -521,6 +542,27 @@ func (_m *LedgerTransaction) PurchasedUserSubscriptions(
 	return _m.QueryPurchasedUserSubscriptions().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *LedgerTransaction) PromoUsages(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PromoUsageOrder, where *PromoUsageWhereInput,
+) (*PromoUsageConnection, error) {
+	opts := []PromoUsagePaginateOption{
+		WithPromoUsageOrder(orderBy),
+		WithPromoUsageFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
+	if nodes, err := _m.NamedPromoUsages(alias); err == nil || hasTotalCount {
+		pager, err := newPromoUsagePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PromoUsageConnection{Edges: []*PromoUsageEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPromoUsages().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *OIDCIdentity) User(ctx context.Context) (*User, error) {
 	result, err := _m.Edges.UserOrErr()
 	if IsNotLoaded(err) {
@@ -569,6 +611,35 @@ func (_m *PaymentOrder) LedgerTransaction(ctx context.Context) (*LedgerTransacti
 	return result, MaskNotFound(err)
 }
 
+func (_m *PaymentOrder) PromoCode(ctx context.Context) (*PromoCode, error) {
+	result, err := _m.Edges.PromoCodeOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPromoCode().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *PaymentOrder) PromoUsages(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PromoUsageOrder, where *PromoUsageWhereInput,
+) (*PromoUsageConnection, error) {
+	opts := []PromoUsagePaginateOption{
+		WithPromoUsageOrder(orderBy),
+		WithPromoUsageFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	if nodes, err := _m.NamedPromoUsages(alias); err == nil || hasTotalCount {
+		pager, err := newPromoUsagePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PromoUsageConnection{Edges: []*PromoUsageEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPromoUsages().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *PaymentOrder) PaymentEvents(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PaymentEventOrder, where *PaymentEventWhereInput,
 ) (*PaymentEventConnection, error) {
@@ -577,7 +648,7 @@ func (_m *PaymentOrder) PaymentEvents(
 		WithPaymentEventFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[3][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
 	if nodes, err := _m.NamedPaymentEvents(alias); err == nil || hasTotalCount {
 		pager, err := newPaymentEventPager(opts, last != nil)
 		if err != nil {
@@ -840,6 +911,117 @@ func (_m *Project) ProjectUsers(
 		return conn, nil
 	}
 	return _m.QueryProjectUsers().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *PromoCode) Usages(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PromoUsageOrder, where *PromoUsageWhereInput,
+) (*PromoUsageConnection, error) {
+	opts := []PromoUsagePaginateOption{
+		WithPromoUsageOrder(orderBy),
+		WithPromoUsageFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[0][alias]
+	if nodes, err := _m.NamedUsages(alias); err == nil || hasTotalCount {
+		pager, err := newPromoUsagePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PromoUsageConnection{Edges: []*PromoUsageEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUsages().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *PromoCode) PaymentOrders(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PaymentOrderOrder, where *PaymentOrderWhereInput,
+) (*PaymentOrderConnection, error) {
+	opts := []PaymentOrderPaginateOption{
+		WithPaymentOrderOrder(orderBy),
+		WithPaymentOrderFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[1][alias]
+	if nodes, err := _m.NamedPaymentOrders(alias); err == nil || hasTotalCount {
+		pager, err := newPaymentOrderPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PaymentOrderConnection{Edges: []*PaymentOrderEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPaymentOrders().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *PromoCode) UserSubscriptions(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserSubscriptionOrder, where *UserSubscriptionWhereInput,
+) (*UserSubscriptionConnection, error) {
+	opts := []UserSubscriptionPaginateOption{
+		WithUserSubscriptionOrder(orderBy),
+		WithUserSubscriptionFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[2][alias]
+	if nodes, err := _m.NamedUserSubscriptions(alias); err == nil || hasTotalCount {
+		pager, err := newUserSubscriptionPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &UserSubscriptionConnection{Edges: []*UserSubscriptionEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryUserSubscriptions().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *PromoUsage) PromoCode(ctx context.Context) (*PromoCode, error) {
+	result, err := _m.Edges.PromoCodeOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPromoCode().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *PromoUsage) User(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.UserOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUser().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *PromoUsage) BillingAccount(ctx context.Context) (*BillingAccount, error) {
+	result, err := _m.Edges.BillingAccountOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryBillingAccount().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *PromoUsage) PaymentOrder(ctx context.Context) (*PaymentOrder, error) {
+	result, err := _m.Edges.PaymentOrderOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPaymentOrder().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *PromoUsage) UserSubscription(ctx context.Context) (*UserSubscription, error) {
+	result, err := _m.Edges.UserSubscriptionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUserSubscription().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *PromoUsage) LedgerTransaction(ctx context.Context) (*LedgerTransaction, error) {
+	result, err := _m.Edges.LedgerTransactionOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryLedgerTransaction().Only(ctx)
+	}
+	return result, MaskNotFound(err)
 }
 
 func (_m *Prompt) Projects(
@@ -1446,6 +1628,27 @@ func (_m *User) AssignedUserSubscriptions(
 	return _m.QueryAssignedUserSubscriptions().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *User) PromoUsages(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PromoUsageOrder, where *PromoUsageWhereInput,
+) (*PromoUsageConnection, error) {
+	opts := []PromoUsagePaginateOption{
+		WithPromoUsageOrder(orderBy),
+		WithPromoUsageFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[9][alias]
+	if nodes, err := _m.NamedPromoUsages(alias); err == nil || hasTotalCount {
+		pager, err := newPromoUsagePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PromoUsageConnection{Edges: []*PromoUsageEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPromoUsages().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *User) ProjectUsers(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserProjectOrder, where *UserProjectWhereInput,
 ) (*UserProjectConnection, error) {
@@ -1454,7 +1657,7 @@ func (_m *User) ProjectUsers(
 		WithUserProjectFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[9][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[10][alias]
 	if nodes, err := _m.NamedProjectUsers(alias); err == nil || hasTotalCount {
 		pager, err := newUserProjectPager(opts, last != nil)
 		if err != nil {
@@ -1475,7 +1678,7 @@ func (_m *User) UserRoles(
 		WithUserRoleFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[10][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[11][alias]
 	if nodes, err := _m.NamedUserRoles(alias); err == nil || hasTotalCount {
 		pager, err := newUserRolePager(opts, last != nil)
 		if err != nil {
@@ -1552,6 +1755,35 @@ func (_m *UserSubscription) PurchaseLedgerTransaction(ctx context.Context) (*Led
 	return result, MaskNotFound(err)
 }
 
+func (_m *UserSubscription) PromoCode(ctx context.Context) (*PromoCode, error) {
+	result, err := _m.Edges.PromoCodeOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPromoCode().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UserSubscription) PromoUsages(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *PromoUsageOrder, where *PromoUsageWhereInput,
+) (*PromoUsageConnection, error) {
+	opts := []PromoUsagePaginateOption{
+		WithPromoUsageOrder(orderBy),
+		WithPromoUsageFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
+	if nodes, err := _m.NamedPromoUsages(alias); err == nil || hasTotalCount {
+		pager, err := newPromoUsagePager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &PromoUsageConnection{Edges: []*PromoUsageEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return _m.QueryPromoUsages().Paginate(ctx, after, first, before, last, opts...)
+}
+
 func (_m *UserSubscription) UsageBillingRecords(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UsageBillingRecordOrder, where *UsageBillingRecordWhereInput,
 ) (*UsageBillingRecordConnection, error) {
@@ -1560,7 +1792,7 @@ func (_m *UserSubscription) UsageBillingRecords(
 		WithUsageBillingRecordFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[6][alias]
 	if nodes, err := _m.NamedUsageBillingRecords(alias); err == nil || hasTotalCount {
 		pager, err := newUsageBillingRecordPager(opts, last != nil)
 		if err != nil {

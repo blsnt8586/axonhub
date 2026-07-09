@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -273,6 +274,21 @@ func (_u *PaymentOrderUpdate) SetLedgerTransaction(v *LedgerTransaction) *Paymen
 	return _u.SetLedgerTransactionID(v.ID)
 }
 
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by IDs.
+func (_u *PaymentOrderUpdate) AddPromoUsageIDs(ids ...int) *PaymentOrderUpdate {
+	_u.mutation.AddPromoUsageIDs(ids...)
+	return _u
+}
+
+// AddPromoUsages adds the "promo_usages" edges to the PromoUsage entity.
+func (_u *PaymentOrderUpdate) AddPromoUsages(v ...*PromoUsage) *PaymentOrderUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPromoUsageIDs(ids...)
+}
+
 // AddPaymentEventIDs adds the "payment_events" edge to the PaymentEvent entity by IDs.
 func (_u *PaymentOrderUpdate) AddPaymentEventIDs(ids ...int) *PaymentOrderUpdate {
 	_u.mutation.AddPaymentEventIDs(ids...)
@@ -297,6 +313,27 @@ func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 func (_u *PaymentOrderUpdate) ClearLedgerTransaction() *PaymentOrderUpdate {
 	_u.mutation.ClearLedgerTransaction()
 	return _u
+}
+
+// ClearPromoUsages clears all "promo_usages" edges to the PromoUsage entity.
+func (_u *PaymentOrderUpdate) ClearPromoUsages() *PaymentOrderUpdate {
+	_u.mutation.ClearPromoUsages()
+	return _u
+}
+
+// RemovePromoUsageIDs removes the "promo_usages" edge to PromoUsage entities by IDs.
+func (_u *PaymentOrderUpdate) RemovePromoUsageIDs(ids ...int) *PaymentOrderUpdate {
+	_u.mutation.RemovePromoUsageIDs(ids...)
+	return _u
+}
+
+// RemovePromoUsages removes "promo_usages" edges to PromoUsage entities.
+func (_u *PaymentOrderUpdate) RemovePromoUsages(v ...*PromoUsage) *PaymentOrderUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePromoUsageIDs(ids...)
 }
 
 // ClearPaymentEvents clears all "payment_events" edges to the PaymentEvent entity.
@@ -485,6 +522,51 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgertransaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PromoUsagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.PromoUsagesTable,
+			Columns: []string{paymentorder.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPromoUsagesIDs(); len(nodes) > 0 && !_u.mutation.PromoUsagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.PromoUsagesTable,
+			Columns: []string{paymentorder.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PromoUsagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.PromoUsagesTable,
+			Columns: []string{paymentorder.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -799,6 +881,21 @@ func (_u *PaymentOrderUpdateOne) SetLedgerTransaction(v *LedgerTransaction) *Pay
 	return _u.SetLedgerTransactionID(v.ID)
 }
 
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by IDs.
+func (_u *PaymentOrderUpdateOne) AddPromoUsageIDs(ids ...int) *PaymentOrderUpdateOne {
+	_u.mutation.AddPromoUsageIDs(ids...)
+	return _u
+}
+
+// AddPromoUsages adds the "promo_usages" edges to the PromoUsage entity.
+func (_u *PaymentOrderUpdateOne) AddPromoUsages(v ...*PromoUsage) *PaymentOrderUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPromoUsageIDs(ids...)
+}
+
 // AddPaymentEventIDs adds the "payment_events" edge to the PaymentEvent entity by IDs.
 func (_u *PaymentOrderUpdateOne) AddPaymentEventIDs(ids ...int) *PaymentOrderUpdateOne {
 	_u.mutation.AddPaymentEventIDs(ids...)
@@ -823,6 +920,27 @@ func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 func (_u *PaymentOrderUpdateOne) ClearLedgerTransaction() *PaymentOrderUpdateOne {
 	_u.mutation.ClearLedgerTransaction()
 	return _u
+}
+
+// ClearPromoUsages clears all "promo_usages" edges to the PromoUsage entity.
+func (_u *PaymentOrderUpdateOne) ClearPromoUsages() *PaymentOrderUpdateOne {
+	_u.mutation.ClearPromoUsages()
+	return _u
+}
+
+// RemovePromoUsageIDs removes the "promo_usages" edge to PromoUsage entities by IDs.
+func (_u *PaymentOrderUpdateOne) RemovePromoUsageIDs(ids ...int) *PaymentOrderUpdateOne {
+	_u.mutation.RemovePromoUsageIDs(ids...)
+	return _u
+}
+
+// RemovePromoUsages removes "promo_usages" edges to PromoUsage entities.
+func (_u *PaymentOrderUpdateOne) RemovePromoUsages(v ...*PromoUsage) *PaymentOrderUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePromoUsageIDs(ids...)
 }
 
 // ClearPaymentEvents clears all "payment_events" edges to the PaymentEvent entity.
@@ -1041,6 +1159,51 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ledgertransaction.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PromoUsagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.PromoUsagesTable,
+			Columns: []string{paymentorder.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPromoUsagesIDs(); len(nodes) > 0 && !_u.mutation.PromoUsagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.PromoUsagesTable,
+			Columns: []string{paymentorder.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PromoUsagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.PromoUsagesTable,
+			Columns: []string{paymentorder.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

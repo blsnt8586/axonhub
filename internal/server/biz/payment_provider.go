@@ -99,7 +99,7 @@ func (ManualPaymentProviderAdapter) CreateCheckout(ctx context.Context, input Pa
 		ProviderType: paymentproviderinstance.ProviderTypeManual,
 		OrderNo:      input.Order.OrderNo,
 		Method:       "manual",
-		Amount:       microsToDecimal(input.Order.AmountMicros),
+		Amount:       microsToDecimal(paymentOrderPayableAmountMicros(input.Order)),
 		Currency:     input.Order.Currency,
 	}, nil
 }
@@ -157,7 +157,7 @@ func (EPayPaymentProviderAdapter) CreateCheckout(ctx context.Context, input Paym
 		"notify_url":   cfg.NotifyURL,
 		"return_url":   cfg.ReturnURL,
 		"name":         subject,
-		"money":        microsToDecimal(input.Order.AmountMicros).StringFixedBank(2),
+		"money":        microsToDecimal(paymentOrderPayableAmountMicros(input.Order)).StringFixedBank(2),
 		"sitename":     cfg.SiteName,
 	}
 	params["sign"] = SignEPayParams(params, cfg.Key)
@@ -169,9 +169,19 @@ func (EPayPaymentProviderAdapter) CreateCheckout(ctx context.Context, input Paym
 		Method:       "redirect",
 		URL:          buildEPayURL(cfg.GatewayURL, params),
 		Params:       params,
-		Amount:       microsToDecimal(input.Order.AmountMicros),
+		Amount:       microsToDecimal(paymentOrderPayableAmountMicros(input.Order)),
 		Currency:     input.Order.Currency,
 	}, nil
+}
+
+func paymentOrderPayableAmountMicros(order *ent.PaymentOrder) int64 {
+	if order == nil {
+		return 0
+	}
+	if order.PayableAmountMicros > 0 || order.DiscountAmountMicros > 0 {
+		return order.PayableAmountMicros
+	}
+	return order.AmountMicros
 }
 
 func parseEPayConfig(raw objects.JSONRawMessage) (*EPayConfig, error) {

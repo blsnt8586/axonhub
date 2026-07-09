@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
@@ -143,6 +144,21 @@ func (_u *LedgerTransactionUpdate) AddPurchasedUserSubscriptions(v ...*UserSubsc
 		ids[i] = v[i].ID
 	}
 	return _u.AddPurchasedUserSubscriptionIDs(ids...)
+}
+
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by IDs.
+func (_u *LedgerTransactionUpdate) AddPromoUsageIDs(ids ...int) *LedgerTransactionUpdate {
+	_u.mutation.AddPromoUsageIDs(ids...)
+	return _u
+}
+
+// AddPromoUsages adds the "promo_usages" edges to the PromoUsage entity.
+func (_u *LedgerTransactionUpdate) AddPromoUsages(v ...*PromoUsage) *LedgerTransactionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPromoUsageIDs(ids...)
 }
 
 // Mutation returns the LedgerTransactionMutation object of the builder.
@@ -274,6 +290,27 @@ func (_u *LedgerTransactionUpdate) RemovePurchasedUserSubscriptions(v ...*UserSu
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePurchasedUserSubscriptionIDs(ids...)
+}
+
+// ClearPromoUsages clears all "promo_usages" edges to the PromoUsage entity.
+func (_u *LedgerTransactionUpdate) ClearPromoUsages() *LedgerTransactionUpdate {
+	_u.mutation.ClearPromoUsages()
+	return _u
+}
+
+// RemovePromoUsageIDs removes the "promo_usages" edge to PromoUsage entities by IDs.
+func (_u *LedgerTransactionUpdate) RemovePromoUsageIDs(ids ...int) *LedgerTransactionUpdate {
+	_u.mutation.RemovePromoUsageIDs(ids...)
+	return _u
+}
+
+// RemovePromoUsages removes "promo_usages" edges to PromoUsage entities.
+func (_u *LedgerTransactionUpdate) RemovePromoUsages(v ...*PromoUsage) *LedgerTransactionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePromoUsageIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -625,6 +662,51 @@ func (_u *LedgerTransactionUpdate) sqlSave(ctx context.Context) (_node int, err 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.PromoUsagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PromoUsagesTable,
+			Columns: []string{ledgertransaction.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPromoUsagesIDs(); len(nodes) > 0 && !_u.mutation.PromoUsagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PromoUsagesTable,
+			Columns: []string{ledgertransaction.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PromoUsagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PromoUsagesTable,
+			Columns: []string{ledgertransaction.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -757,6 +839,21 @@ func (_u *LedgerTransactionUpdateOne) AddPurchasedUserSubscriptions(v ...*UserSu
 	return _u.AddPurchasedUserSubscriptionIDs(ids...)
 }
 
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by IDs.
+func (_u *LedgerTransactionUpdateOne) AddPromoUsageIDs(ids ...int) *LedgerTransactionUpdateOne {
+	_u.mutation.AddPromoUsageIDs(ids...)
+	return _u
+}
+
+// AddPromoUsages adds the "promo_usages" edges to the PromoUsage entity.
+func (_u *LedgerTransactionUpdateOne) AddPromoUsages(v ...*PromoUsage) *LedgerTransactionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPromoUsageIDs(ids...)
+}
+
 // Mutation returns the LedgerTransactionMutation object of the builder.
 func (_u *LedgerTransactionUpdateOne) Mutation() *LedgerTransactionMutation {
 	return _u.mutation
@@ -886,6 +983,27 @@ func (_u *LedgerTransactionUpdateOne) RemovePurchasedUserSubscriptions(v ...*Use
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePurchasedUserSubscriptionIDs(ids...)
+}
+
+// ClearPromoUsages clears all "promo_usages" edges to the PromoUsage entity.
+func (_u *LedgerTransactionUpdateOne) ClearPromoUsages() *LedgerTransactionUpdateOne {
+	_u.mutation.ClearPromoUsages()
+	return _u
+}
+
+// RemovePromoUsageIDs removes the "promo_usages" edge to PromoUsage entities by IDs.
+func (_u *LedgerTransactionUpdateOne) RemovePromoUsageIDs(ids ...int) *LedgerTransactionUpdateOne {
+	_u.mutation.RemovePromoUsageIDs(ids...)
+	return _u
+}
+
+// RemovePromoUsages removes "promo_usages" edges to PromoUsage entities.
+func (_u *LedgerTransactionUpdateOne) RemovePromoUsages(v ...*PromoUsage) *LedgerTransactionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePromoUsageIDs(ids...)
 }
 
 // Where appends a list predicates to the LedgerTransactionUpdate builder.
@@ -1260,6 +1378,51 @@ func (_u *LedgerTransactionUpdateOne) sqlSave(ctx context.Context) (_node *Ledge
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PromoUsagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PromoUsagesTable,
+			Columns: []string{ledgertransaction.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPromoUsagesIDs(); len(nodes) > 0 && !_u.mutation.PromoUsagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PromoUsagesTable,
+			Columns: []string{ledgertransaction.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PromoUsagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PromoUsagesTable,
+			Columns: []string{ledgertransaction.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

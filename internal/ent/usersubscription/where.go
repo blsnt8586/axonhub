@@ -135,6 +135,26 @@ func PurchaseLedgerTransactionID(v int) predicate.UserSubscription {
 	return predicate.UserSubscription(sql.FieldEQ(FieldPurchaseLedgerTransactionID, v))
 }
 
+// OriginalPriceMicros applies equality check predicate on the "original_price_micros" field. It's identical to OriginalPriceMicrosEQ.
+func OriginalPriceMicros(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldEQ(FieldOriginalPriceMicros, v))
+}
+
+// DiscountAmountMicros applies equality check predicate on the "discount_amount_micros" field. It's identical to DiscountAmountMicrosEQ.
+func DiscountAmountMicros(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldEQ(FieldDiscountAmountMicros, v))
+}
+
+// PayableAmountMicros applies equality check predicate on the "payable_amount_micros" field. It's identical to PayableAmountMicrosEQ.
+func PayableAmountMicros(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldEQ(FieldPayableAmountMicros, v))
+}
+
+// PromoCodeID applies equality check predicate on the "promo_code_id" field. It's identical to PromoCodeIDEQ.
+func PromoCodeID(v int) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldEQ(FieldPromoCodeID, v))
+}
+
 // Notes applies equality check predicate on the "notes" field. It's identical to NotesEQ.
 func Notes(v string) predicate.UserSubscription {
 	return predicate.UserSubscription(sql.FieldEQ(FieldNotes, v))
@@ -760,6 +780,156 @@ func PurchaseLedgerTransactionIDNotNil() predicate.UserSubscription {
 	return predicate.UserSubscription(sql.FieldNotNull(FieldPurchaseLedgerTransactionID))
 }
 
+// OriginalPriceMicrosEQ applies the EQ predicate on the "original_price_micros" field.
+func OriginalPriceMicrosEQ(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldEQ(FieldOriginalPriceMicros, v))
+}
+
+// OriginalPriceMicrosNEQ applies the NEQ predicate on the "original_price_micros" field.
+func OriginalPriceMicrosNEQ(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldNEQ(FieldOriginalPriceMicros, v))
+}
+
+// OriginalPriceMicrosIn applies the In predicate on the "original_price_micros" field.
+func OriginalPriceMicrosIn(vs ...int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldIn(FieldOriginalPriceMicros, vs...))
+}
+
+// OriginalPriceMicrosNotIn applies the NotIn predicate on the "original_price_micros" field.
+func OriginalPriceMicrosNotIn(vs ...int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldNotIn(FieldOriginalPriceMicros, vs...))
+}
+
+// OriginalPriceMicrosGT applies the GT predicate on the "original_price_micros" field.
+func OriginalPriceMicrosGT(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldGT(FieldOriginalPriceMicros, v))
+}
+
+// OriginalPriceMicrosGTE applies the GTE predicate on the "original_price_micros" field.
+func OriginalPriceMicrosGTE(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldGTE(FieldOriginalPriceMicros, v))
+}
+
+// OriginalPriceMicrosLT applies the LT predicate on the "original_price_micros" field.
+func OriginalPriceMicrosLT(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldLT(FieldOriginalPriceMicros, v))
+}
+
+// OriginalPriceMicrosLTE applies the LTE predicate on the "original_price_micros" field.
+func OriginalPriceMicrosLTE(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldLTE(FieldOriginalPriceMicros, v))
+}
+
+// DiscountAmountMicrosEQ applies the EQ predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosEQ(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldEQ(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosNEQ applies the NEQ predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosNEQ(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldNEQ(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosIn applies the In predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosIn(vs ...int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldIn(FieldDiscountAmountMicros, vs...))
+}
+
+// DiscountAmountMicrosNotIn applies the NotIn predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosNotIn(vs ...int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldNotIn(FieldDiscountAmountMicros, vs...))
+}
+
+// DiscountAmountMicrosGT applies the GT predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosGT(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldGT(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosGTE applies the GTE predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosGTE(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldGTE(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosLT applies the LT predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosLT(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldLT(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosLTE applies the LTE predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosLTE(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldLTE(FieldDiscountAmountMicros, v))
+}
+
+// PayableAmountMicrosEQ applies the EQ predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosEQ(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldEQ(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosNEQ applies the NEQ predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosNEQ(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldNEQ(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosIn applies the In predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosIn(vs ...int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldIn(FieldPayableAmountMicros, vs...))
+}
+
+// PayableAmountMicrosNotIn applies the NotIn predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosNotIn(vs ...int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldNotIn(FieldPayableAmountMicros, vs...))
+}
+
+// PayableAmountMicrosGT applies the GT predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosGT(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldGT(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosGTE applies the GTE predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosGTE(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldGTE(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosLT applies the LT predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosLT(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldLT(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosLTE applies the LTE predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosLTE(v int64) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldLTE(FieldPayableAmountMicros, v))
+}
+
+// PromoCodeIDEQ applies the EQ predicate on the "promo_code_id" field.
+func PromoCodeIDEQ(v int) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldEQ(FieldPromoCodeID, v))
+}
+
+// PromoCodeIDNEQ applies the NEQ predicate on the "promo_code_id" field.
+func PromoCodeIDNEQ(v int) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldNEQ(FieldPromoCodeID, v))
+}
+
+// PromoCodeIDIn applies the In predicate on the "promo_code_id" field.
+func PromoCodeIDIn(vs ...int) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldIn(FieldPromoCodeID, vs...))
+}
+
+// PromoCodeIDNotIn applies the NotIn predicate on the "promo_code_id" field.
+func PromoCodeIDNotIn(vs ...int) predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldNotIn(FieldPromoCodeID, vs...))
+}
+
+// PromoCodeIDIsNil applies the IsNil predicate on the "promo_code_id" field.
+func PromoCodeIDIsNil() predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldIsNull(FieldPromoCodeID))
+}
+
+// PromoCodeIDNotNil applies the NotNil predicate on the "promo_code_id" field.
+func PromoCodeIDNotNil() predicate.UserSubscription {
+	return predicate.UserSubscription(sql.FieldNotNull(FieldPromoCodeID))
+}
+
 // NotesEQ applies the EQ predicate on the "notes" field.
 func NotesEQ(v string) predicate.UserSubscription {
 	return predicate.UserSubscription(sql.FieldEQ(FieldNotes, v))
@@ -974,6 +1144,52 @@ func HasPurchaseLedgerTransaction() predicate.UserSubscription {
 func HasPurchaseLedgerTransactionWith(preds ...predicate.LedgerTransaction) predicate.UserSubscription {
 	return predicate.UserSubscription(func(s *sql.Selector) {
 		step := newPurchaseLedgerTransactionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPromoCode applies the HasEdge predicate on the "promo_code" edge.
+func HasPromoCode() predicate.UserSubscription {
+	return predicate.UserSubscription(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, PromoCodeTable, PromoCodeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPromoCodeWith applies the HasEdge predicate on the "promo_code" edge with a given conditions (other predicates).
+func HasPromoCodeWith(preds ...predicate.PromoCode) predicate.UserSubscription {
+	return predicate.UserSubscription(func(s *sql.Selector) {
+		step := newPromoCodeStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPromoUsages applies the HasEdge predicate on the "promo_usages" edge.
+func HasPromoUsages() predicate.UserSubscription {
+	return predicate.UserSubscription(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PromoUsagesTable, PromoUsagesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPromoUsagesWith applies the HasEdge predicate on the "promo_usages" edge with a given conditions (other predicates).
+func HasPromoUsagesWith(preds ...predicate.PromoUsage) predicate.UserSubscription {
+	return predicate.UserSubscription(func(s *sql.Selector) {
+		step := newPromoUsagesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

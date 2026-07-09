@@ -34,6 +34,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -101,6 +103,8 @@ type ResolverRoot interface {
 	PaymentOrder() PaymentOrderResolver
 	PaymentProviderInstance() PaymentProviderInstanceResolver
 	Project() ProjectResolver
+	PromoCode() PromoCodeResolver
+	PromoUsage() PromoUsageResolver
 	Prompt() PromptResolver
 	PromptProtectionRule() PromptProtectionRuleResolver
 	ProviderQuotaStatus() ProviderQuotaStatusResolver
@@ -121,6 +125,8 @@ type ResolverRoot interface {
 	UserProject() UserProjectResolver
 	UserRole() UserRoleResolver
 	UserSubscription() UserSubscriptionResolver
+	QuoteRechargePromoInput() QuoteRechargePromoInputResolver
+	QuoteSubscriptionPromoInput() QuoteSubscriptionPromoInputResolver
 }
 
 type DirectiveRoot struct {
@@ -336,6 +342,7 @@ type ComplexityRoot struct {
 		OwnerID             func(childComplexity int) int
 		OwnerType           func(childComplexity int) int
 		PaymentOrders       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) int
+		PromoUsages         func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
 		Status              func(childComplexity int) int
 		UpdatedAt           func(childComplexity int) int
 		UsageBillingRecords func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder, where *ent.UsageBillingRecordWhereInput) int
@@ -1025,6 +1032,7 @@ type ComplexityRoot struct {
 		IdempotencyKey             func(childComplexity int) int
 		Memo                       func(childComplexity int) int
 		PaymentOrders              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) int
+		PromoUsages                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
 		PurchasedUserSubscriptions func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) int
 		RedeemCodes                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
 		ReferenceID                func(childComplexity int) int
@@ -1243,6 +1251,7 @@ type ComplexityRoot struct {
 		DeleteDisabledChannelAPIKeys         func(childComplexity int, channelID objects.GUID, keys []string) int
 		DeleteModel                          func(childComplexity int, id objects.GUID) int
 		DeleteProject                        func(childComplexity int, id objects.GUID) int
+		DeletePromoCode                      func(childComplexity int, id objects.GUID) int
 		DeletePrompt                         func(childComplexity int, id objects.GUID) int
 		DeletePromptProtectionRule           func(childComplexity int, id objects.GUID) int
 		DeleteProxyPreset                    func(childComplexity int, url string) int
@@ -1272,6 +1281,7 @@ type ComplexityRoot struct {
 		SaveBillingPriceRule                 func(childComplexity int, input SaveBillingPriceRuleForm) int
 		SaveChannelEndpoints                 func(childComplexity int, input biz.SaveChannelEndpointsInput) int
 		SaveChannelModelPrices               func(childComplexity int, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) int
+		SavePromoCode                        func(childComplexity int, input biz.SavePromoCodeInput) int
 		SaveProxyPreset                      func(childComplexity int, input biz.ProxyPreset) int
 		SaveSubscriptionPlan                 func(childComplexity int, input biz.SaveSubscriptionPlanInput) int
 		SyncChannelModels                    func(childComplexity int, channelID objects.GUID, pattern *string) int
@@ -1301,6 +1311,7 @@ type ComplexityRoot struct {
 		UpdateProjectProfiles                func(childComplexity int, id objects.GUID, input objects.ProjectProfiles) int
 		UpdateProjectStatus                  func(childComplexity int, id objects.GUID, status project.Status) int
 		UpdateProjectUser                    func(childComplexity int, input UpdateProjectUserInput) int
+		UpdatePromoCodeStatus                func(childComplexity int, input biz.UpdatePromoCodeStatusInput) int
 		UpdatePrompt                         func(childComplexity int, id objects.GUID, input ent.UpdatePromptInput) int
 		UpdatePromptProtectionRule           func(childComplexity int, id objects.GUID, input ent.UpdatePromptProtectionRuleInput) int
 		UpdatePromptProtectionRuleStatus     func(childComplexity int, id objects.GUID, status promptprotectionrule.Status) int
@@ -1442,34 +1453,39 @@ type ComplexityRoot struct {
 	}
 
 	PaymentOrder struct {
-		AmountMicros        func(childComplexity int) int
-		BillingAccount      func(childComplexity int) int
-		BillingAccountID    func(childComplexity int) int
-		CancelReason        func(childComplexity int) int
-		CanceledAt          func(childComplexity int) int
-		CreatedAt           func(childComplexity int) int
-		Currency            func(childComplexity int) int
-		ExpiresAt           func(childComplexity int) int
-		ExternalTradeNo     func(childComplexity int) int
-		FailureReason       func(childComplexity int) int
-		ID                  func(childComplexity int) int
-		LedgerTransaction   func(childComplexity int) int
-		LedgerTransactionID func(childComplexity int) int
-		MakeupReason        func(childComplexity int) int
-		Metadata            func(childComplexity int) int
-		OrderNo             func(childComplexity int) int
-		PaidAt              func(childComplexity int) int
-		PaymentEvents       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder, where *ent.PaymentEventWhereInput) int
-		ProjectID           func(childComplexity int) int
-		ProviderInstance    func(childComplexity int) int
-		ProviderInstanceID  func(childComplexity int) int
-		ProviderType        func(childComplexity int) int
-		Purpose             func(childComplexity int) int
-		RefundAmountMicros  func(childComplexity int) int
-		RefundReason        func(childComplexity int) int
-		RefundedAt          func(childComplexity int) int
-		Status              func(childComplexity int) int
-		UpdatedAt           func(childComplexity int) int
+		AmountMicros         func(childComplexity int) int
+		BillingAccount       func(childComplexity int) int
+		BillingAccountID     func(childComplexity int) int
+		CancelReason         func(childComplexity int) int
+		CanceledAt           func(childComplexity int) int
+		CreatedAt            func(childComplexity int) int
+		Currency             func(childComplexity int) int
+		DiscountAmountMicros func(childComplexity int) int
+		ExpiresAt            func(childComplexity int) int
+		ExternalTradeNo      func(childComplexity int) int
+		FailureReason        func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		LedgerTransaction    func(childComplexity int) int
+		LedgerTransactionID  func(childComplexity int) int
+		MakeupReason         func(childComplexity int) int
+		Metadata             func(childComplexity int) int
+		OrderNo              func(childComplexity int) int
+		PaidAt               func(childComplexity int) int
+		PayableAmountMicros  func(childComplexity int) int
+		PaymentEvents        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder, where *ent.PaymentEventWhereInput) int
+		ProjectID            func(childComplexity int) int
+		PromoCode            func(childComplexity int) int
+		PromoCodeID          func(childComplexity int) int
+		PromoUsages          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
+		ProviderInstance     func(childComplexity int) int
+		ProviderInstanceID   func(childComplexity int) int
+		ProviderType         func(childComplexity int) int
+		Purpose              func(childComplexity int) int
+		RefundAmountMicros   func(childComplexity int) int
+		RefundReason         func(childComplexity int) int
+		RefundedAt           func(childComplexity int) int
+		Status               func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
 	}
 
 	PaymentOrderConnection struct {
@@ -1559,6 +1575,89 @@ type ComplexityRoot struct {
 	ProjectProfiles struct {
 		ActiveProfile func(childComplexity int) int
 		Profiles      func(childComplexity int) int
+	}
+
+	PromoCode struct {
+		Code                 func(childComplexity int) int
+		CreatedAt            func(childComplexity int) int
+		CreatedByID          func(childComplexity int) int
+		Currency             func(childComplexity int) int
+		Description          func(childComplexity int) int
+		DiscountAmountMicros func(childComplexity int) int
+		DiscountPercentBps   func(childComplexity int) int
+		DiscountType         func(childComplexity int) int
+		ExpiresAt            func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		MaxUses              func(childComplexity int) int
+		Metadata             func(childComplexity int) int
+		Notes                func(childComplexity int) int
+		PaymentOrders        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) int
+		PerUserLimit         func(childComplexity int) int
+		Scope                func(childComplexity int) int
+		StartsAt             func(childComplexity int) int
+		Status               func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
+		Usages               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
+		UsedCount            func(childComplexity int) int
+		UserSubscriptions    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder, where *ent.UserSubscriptionWhereInput) int
+	}
+
+	PromoCodeConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	PromoCodeEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	PromoQuote struct {
+		Code                 func(childComplexity int) int
+		Currency             func(childComplexity int) int
+		DiscountAmountMicros func(childComplexity int) int
+		OriginalAmountMicros func(childComplexity int) int
+		PayableAmountMicros  func(childComplexity int) int
+	}
+
+	PromoUsage struct {
+		BillingAccount       func(childComplexity int) int
+		BillingAccountID     func(childComplexity int) int
+		Code                 func(childComplexity int) int
+		CodeSnapshot         func(childComplexity int) int
+		CreatedAt            func(childComplexity int) int
+		Currency             func(childComplexity int) int
+		DiscountAmountMicros func(childComplexity int) int
+		FailureReason        func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		IdempotencyKey       func(childComplexity int) int
+		LedgerTransaction    func(childComplexity int) int
+		LedgerTransactionID  func(childComplexity int) int
+		OriginalAmountMicros func(childComplexity int) int
+		PayableAmountMicros  func(childComplexity int) int
+		PaymentOrder         func(childComplexity int) int
+		PaymentOrderID       func(childComplexity int) int
+		PromoCode            func(childComplexity int) int
+		PromoCodeID          func(childComplexity int) int
+		Scope                func(childComplexity int) int
+		Status               func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
+		User                 func(childComplexity int) int
+		UserID               func(childComplexity int) int
+		UserSubscription     func(childComplexity int) int
+		UserSubscriptionID   func(childComplexity int) int
+	}
+
+	PromoUsageConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	PromoUsageEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
 	}
 
 	Prompt struct {
@@ -1684,6 +1783,8 @@ type ComplexityRoot struct {
 		AdminLedgerTransactions      func(childComplexity int, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) int
 		AdminPaymentEvents           func(childComplexity int, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) int
 		AdminPaymentOrders           func(childComplexity int, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) int
+		AdminPromoCodes              func(childComplexity int, filter *AdminPromoCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder) int
+		AdminPromoUsages             func(childComplexity int, filter *AdminPromoUsagesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder) int
 		AdminRedeemCodes             func(childComplexity int, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) int
 		AdminUsageBillingRecords     func(childComplexity int, filter *AdminUsageBillingRecordsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder) int
 		AdminUserSubscriptions       func(childComplexity int, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) int
@@ -1740,6 +1841,8 @@ type ComplexityRoot struct {
 		PreviewGcCleanup             func(childComplexity int, input gc.TriggerGcCleanupInput) int
 		ProjectBillingAccount        func(childComplexity int, projectID objects.GUID) int
 		Projects                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) int
+		PromoCodes                   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder, where *ent.PromoCodeWhereInput) int
+		PromoUsages                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
 		PromptProtectionRules        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptProtectionRuleOrder, where *ent.PromptProtectionRuleWhereInput) int
 		Prompts                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptOrder, where *ent.PromptWhereInput) int
 		ProxyPresets                 func(childComplexity int) int
@@ -1748,6 +1851,8 @@ type ComplexityRoot struct {
 		QueryModels                  func(childComplexity int, input QueryModelsInput) int
 		QueryUnassociatedChannels    func(childComplexity int) int
 		QuotaEnforcementSettings     func(childComplexity int) int
+		QuoteRechargePromo           func(childComplexity int, input biz.QuoteRechargePromoInput) int
+		QuoteSubscriptionPromo       func(childComplexity int, input biz.QuoteSubscriptionPromoInput) int
 		RedeemCodes                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) int
 		RequestStats                 func(childComplexity int) int
 		RequestStatsByAPIKey         func(childComplexity int, timeWindow *string) int
@@ -2465,6 +2570,7 @@ type ComplexityRoot struct {
 		PreferLanguage            func(childComplexity int) int
 		ProjectUsers              func(childComplexity int) int
 		Projects                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) int
+		PromoUsages               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
 		Roles                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RoleOrder, where *ent.RoleWhereInput) int
 		Scopes                    func(childComplexity int) int
 		Status                    func(childComplexity int) int
@@ -2541,14 +2647,20 @@ type ComplexityRoot struct {
 		Currency                    func(childComplexity int) int
 		CurrentPeriodEnd            func(childComplexity int) int
 		CurrentPeriodStart          func(childComplexity int) int
+		DiscountAmountMicros        func(childComplexity int) int
 		ExpiresAt                   func(childComplexity int) int
 		ID                          func(childComplexity int) int
 		IncludedAmountMicros        func(childComplexity int) int
 		Notes                       func(childComplexity int) int
+		OriginalPriceMicros         func(childComplexity int) int
+		PayableAmountMicros         func(childComplexity int) int
 		PeriodDays                  func(childComplexity int) int
 		Plan                        func(childComplexity int) int
 		PlanID                      func(childComplexity int) int
 		PlanSnapshot                func(childComplexity int) int
+		PromoCode                   func(childComplexity int) int
+		PromoCodeID                 func(childComplexity int) int
+		PromoUsages                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) int
 		PurchaseLedgerTransaction   func(childComplexity int) int
 		PurchaseLedgerTransactionID func(childComplexity int) int
 		ResetAt                     func(childComplexity int) int
@@ -2842,6 +2954,9 @@ type MutationResolver interface {
 	AdminCreateAndRedeemCode(ctx context.Context, input biz.AdminCreateAndRedeemCodeInput) (*ent.RedeemCode, error)
 	UpdateRedeemCodeStatus(ctx context.Context, input biz.UpdateRedeemCodeStatusInput) (*ent.RedeemCode, error)
 	DeleteRedeemCode(ctx context.Context, id objects.GUID) (bool, error)
+	SavePromoCode(ctx context.Context, input biz.SavePromoCodeInput) (*ent.PromoCode, error)
+	UpdatePromoCodeStatus(ctx context.Context, input biz.UpdatePromoCodeStatusInput) (*ent.PromoCode, error)
+	DeletePromoCode(ctx context.Context, id objects.GUID) (bool, error)
 	SaveSubscriptionPlan(ctx context.Context, input biz.SaveSubscriptionPlanInput) (*ent.SubscriptionPlan, error)
 	DeleteSubscriptionPlan(ctx context.Context, id objects.GUID) (bool, error)
 	PurchaseSubscriptionPlan(ctx context.Context, input biz.PurchaseSubscriptionPlanInput) (*ent.UserSubscription, error)
@@ -2871,6 +2986,8 @@ type PaymentOrderResolver interface {
 	BillingAccountID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error)
 	ProviderInstanceID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error)
 
+	PromoCodeID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error)
+
 	LedgerTransactionID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error)
 }
 type PaymentProviderInstanceResolver interface {
@@ -2880,6 +2997,20 @@ type ProjectResolver interface {
 	ID(ctx context.Context, obj *ent.Project) (*objects.GUID, error)
 
 	ProjectUsers(ctx context.Context, obj *ent.Project) ([]*ent.UserProject, error)
+}
+type PromoCodeResolver interface {
+	ID(ctx context.Context, obj *ent.PromoCode) (*objects.GUID, error)
+}
+type PromoUsageResolver interface {
+	ID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error)
+
+	PromoCodeID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error)
+
+	UserID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error)
+	BillingAccountID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error)
+	PaymentOrderID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error)
+	UserSubscriptionID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error)
+	LedgerTransactionID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error)
 }
 type PromptResolver interface {
 	ID(ctx context.Context, obj *ent.Prompt) (*objects.GUID, error)
@@ -2913,6 +3044,8 @@ type QueryResolver interface {
 	PaymentOrders(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder, where *ent.PaymentOrderWhereInput) (*ent.PaymentOrderConnection, error)
 	PaymentProviderInstances(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentProviderInstanceOrder, where *ent.PaymentProviderInstanceWhereInput) (*ent.PaymentProviderInstanceConnection, error)
 	Projects(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) (*ent.ProjectConnection, error)
+	PromoCodes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder, where *ent.PromoCodeWhereInput) (*ent.PromoCodeConnection, error)
+	PromoUsages(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) (*ent.PromoUsageConnection, error)
 	Prompts(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptOrder, where *ent.PromptWhereInput) (*ent.PromptConnection, error)
 	PromptProtectionRules(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptProtectionRuleOrder, where *ent.PromptProtectionRuleWhereInput) (*ent.PromptProtectionRuleConnection, error)
 	RedeemCodes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder, where *ent.RedeemCodeWhereInput) (*ent.RedeemCodeConnection, error)
@@ -2992,6 +3125,8 @@ type QueryResolver interface {
 	MyLedgerTransactions(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error)
 	UserLedgerTransactions(ctx context.Context, userID objects.GUID, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error)
 	MyRedeemCodes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) (*ent.RedeemCodeConnection, error)
+	QuoteRechargePromo(ctx context.Context, input biz.QuoteRechargePromoInput) (*PromoQuote, error)
+	QuoteSubscriptionPromo(ctx context.Context, input biz.QuoteSubscriptionPromoInput) (*PromoQuote, error)
 	AvailableSubscriptionPlans(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SubscriptionPlanOrder) (*ent.SubscriptionPlanConnection, error)
 	MyUserSubscriptions(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) (*ent.UserSubscriptionConnection, error)
 	AdminLedgerTransactions(ctx context.Context, filter *AdminLedgerTransactionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.LedgerTransactionOrder) (*ent.LedgerTransactionConnection, error)
@@ -3000,6 +3135,8 @@ type QueryResolver interface {
 	AdminPaymentOrders(ctx context.Context, filter *AdminPaymentOrdersFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentOrderOrder) (*ent.PaymentOrderConnection, error)
 	AdminPaymentEvents(ctx context.Context, filter *AdminPaymentEventsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PaymentEventOrder) (*ent.PaymentEventConnection, error)
 	AdminRedeemCodes(ctx context.Context, filter *AdminRedeemCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RedeemCodeOrder) (*ent.RedeemCodeConnection, error)
+	AdminPromoCodes(ctx context.Context, filter *AdminPromoCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder) (*ent.PromoCodeConnection, error)
+	AdminPromoUsages(ctx context.Context, filter *AdminPromoUsagesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder) (*ent.PromoUsageConnection, error)
 	AdminUserSubscriptions(ctx context.Context, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) (*ent.UserSubscriptionConnection, error)
 	AdminBillingReport(ctx context.Context, filter *AdminBillingReportFilter) (*biz.BillingCommercialReport, error)
 	ExportAdminBillingCSV(ctx context.Context, input ExportAdminBillingCSVInput) (*biz.BillingCSVExportPayload, error)
@@ -3125,6 +3262,16 @@ type UserSubscriptionResolver interface {
 
 	AssignedByID(ctx context.Context, obj *ent.UserSubscription) (*objects.GUID, error)
 	PurchaseLedgerTransactionID(ctx context.Context, obj *ent.UserSubscription) (*objects.GUID, error)
+
+	PromoCodeID(ctx context.Context, obj *ent.UserSubscription) (*objects.GUID, error)
+}
+
+type QuoteRechargePromoInputResolver interface {
+	PromoCode(ctx context.Context, obj *biz.QuoteRechargePromoInput, data *string) error
+}
+type QuoteSubscriptionPromoInputResolver interface {
+	PlanID(ctx context.Context, obj *biz.QuoteSubscriptionPromoInput, data *objects.GUID) error
+	PromoCode(ctx context.Context, obj *biz.QuoteSubscriptionPromoInput, data *string) error
 }
 
 type executableSchema struct {
@@ -3960,6 +4107,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.BillingAccount.PaymentOrders(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PaymentOrderOrder), args["where"].(*ent.PaymentOrderWhereInput)), true
+	case "BillingAccount.promoUsages":
+		if e.complexity.BillingAccount.PromoUsages == nil {
+			break
+		}
+
+		args, err := ec.field_BillingAccount_promoUsages_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.BillingAccount.PromoUsages(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoUsageOrder), args["where"].(*ent.PromoUsageWhereInput)), true
 	case "BillingAccount.status":
 		if e.complexity.BillingAccount.Status == nil {
 			break
@@ -6643,6 +6801,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.LedgerTransaction.PaymentOrders(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PaymentOrderOrder), args["where"].(*ent.PaymentOrderWhereInput)), true
+	case "LedgerTransaction.promoUsages":
+		if e.complexity.LedgerTransaction.PromoUsages == nil {
+			break
+		}
+
+		args, err := ec.field_LedgerTransaction_promoUsages_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.LedgerTransaction.PromoUsages(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoUsageOrder), args["where"].(*ent.PromoUsageWhereInput)), true
 	case "LedgerTransaction.purchasedUserSubscriptions":
 		if e.complexity.LedgerTransaction.PurchasedUserSubscriptions == nil {
 			break
@@ -7865,6 +8034,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteProject(childComplexity, args["id"].(objects.GUID)), true
+	case "Mutation.deletePromoCode":
+		if e.complexity.Mutation.DeletePromoCode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deletePromoCode_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeletePromoCode(childComplexity, args["id"].(objects.GUID)), true
 	case "Mutation.deletePrompt":
 		if e.complexity.Mutation.DeletePrompt == nil {
 			break
@@ -8184,6 +8364,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SaveChannelModelPrices(childComplexity, args["channelId"].(objects.GUID), args["input"].([]*biz.SaveChannelModelPriceInput)), true
+	case "Mutation.savePromoCode":
+		if e.complexity.Mutation.SavePromoCode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_savePromoCode_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SavePromoCode(childComplexity, args["input"].(biz.SavePromoCodeInput)), true
 	case "Mutation.saveProxyPreset":
 		if e.complexity.Mutation.SaveProxyPreset == nil {
 			break
@@ -8498,6 +8689,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateProjectUser(childComplexity, args["input"].(UpdateProjectUserInput)), true
+	case "Mutation.updatePromoCodeStatus":
+		if e.complexity.Mutation.UpdatePromoCodeStatus == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePromoCodeStatus_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePromoCodeStatus(childComplexity, args["input"].(biz.UpdatePromoCodeStatusInput)), true
 	case "Mutation.updatePrompt":
 		if e.complexity.Mutation.UpdatePrompt == nil {
 			break
@@ -9214,6 +9416,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PaymentOrder.Currency(childComplexity), true
+	case "PaymentOrder.discountAmountMicros":
+		if e.complexity.PaymentOrder.DiscountAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.PaymentOrder.DiscountAmountMicros(childComplexity), true
 	case "PaymentOrder.expiresAt":
 		if e.complexity.PaymentOrder.ExpiresAt == nil {
 			break
@@ -9274,6 +9482,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PaymentOrder.PaidAt(childComplexity), true
+	case "PaymentOrder.payableAmountMicros":
+		if e.complexity.PaymentOrder.PayableAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.PaymentOrder.PayableAmountMicros(childComplexity), true
 	case "PaymentOrder.paymentEvents":
 		if e.complexity.PaymentOrder.PaymentEvents == nil {
 			break
@@ -9291,6 +9505,29 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PaymentOrder.ProjectID(childComplexity), true
+	case "PaymentOrder.promoCode":
+		if e.complexity.PaymentOrder.PromoCode == nil {
+			break
+		}
+
+		return e.complexity.PaymentOrder.PromoCode(childComplexity), true
+	case "PaymentOrder.promoCodeID":
+		if e.complexity.PaymentOrder.PromoCodeID == nil {
+			break
+		}
+
+		return e.complexity.PaymentOrder.PromoCodeID(childComplexity), true
+	case "PaymentOrder.promoUsages":
+		if e.complexity.PaymentOrder.PromoUsages == nil {
+			break
+		}
+
+		args, err := ec.field_PaymentOrder_promoUsages_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.PaymentOrder.PromoUsages(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoUsageOrder), args["where"].(*ent.PromoUsageWhereInput)), true
 	case "PaymentOrder.providerInstance":
 		if e.complexity.PaymentOrder.ProviderInstance == nil {
 			break
@@ -9730,6 +9967,400 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ProjectProfiles.Profiles(childComplexity), true
+
+	case "PromoCode.code":
+		if e.complexity.PromoCode.Code == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.Code(childComplexity), true
+	case "PromoCode.createdAt":
+		if e.complexity.PromoCode.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.CreatedAt(childComplexity), true
+	case "PromoCode.createdByID":
+		if e.complexity.PromoCode.CreatedByID == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.CreatedByID(childComplexity), true
+	case "PromoCode.currency":
+		if e.complexity.PromoCode.Currency == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.Currency(childComplexity), true
+	case "PromoCode.description":
+		if e.complexity.PromoCode.Description == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.Description(childComplexity), true
+	case "PromoCode.discountAmountMicros":
+		if e.complexity.PromoCode.DiscountAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.DiscountAmountMicros(childComplexity), true
+	case "PromoCode.discountPercentBps":
+		if e.complexity.PromoCode.DiscountPercentBps == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.DiscountPercentBps(childComplexity), true
+	case "PromoCode.discountType":
+		if e.complexity.PromoCode.DiscountType == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.DiscountType(childComplexity), true
+	case "PromoCode.expiresAt":
+		if e.complexity.PromoCode.ExpiresAt == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.ExpiresAt(childComplexity), true
+	case "PromoCode.id":
+		if e.complexity.PromoCode.ID == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.ID(childComplexity), true
+	case "PromoCode.maxUses":
+		if e.complexity.PromoCode.MaxUses == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.MaxUses(childComplexity), true
+	case "PromoCode.metadata":
+		if e.complexity.PromoCode.Metadata == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.Metadata(childComplexity), true
+	case "PromoCode.notes":
+		if e.complexity.PromoCode.Notes == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.Notes(childComplexity), true
+	case "PromoCode.paymentOrders":
+		if e.complexity.PromoCode.PaymentOrders == nil {
+			break
+		}
+
+		args, err := ec.field_PromoCode_paymentOrders_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.PromoCode.PaymentOrders(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PaymentOrderOrder), args["where"].(*ent.PaymentOrderWhereInput)), true
+	case "PromoCode.perUserLimit":
+		if e.complexity.PromoCode.PerUserLimit == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.PerUserLimit(childComplexity), true
+	case "PromoCode.scope":
+		if e.complexity.PromoCode.Scope == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.Scope(childComplexity), true
+	case "PromoCode.startsAt":
+		if e.complexity.PromoCode.StartsAt == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.StartsAt(childComplexity), true
+	case "PromoCode.status":
+		if e.complexity.PromoCode.Status == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.Status(childComplexity), true
+	case "PromoCode.updatedAt":
+		if e.complexity.PromoCode.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.UpdatedAt(childComplexity), true
+	case "PromoCode.usages":
+		if e.complexity.PromoCode.Usages == nil {
+			break
+		}
+
+		args, err := ec.field_PromoCode_usages_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.PromoCode.Usages(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoUsageOrder), args["where"].(*ent.PromoUsageWhereInput)), true
+	case "PromoCode.usedCount":
+		if e.complexity.PromoCode.UsedCount == nil {
+			break
+		}
+
+		return e.complexity.PromoCode.UsedCount(childComplexity), true
+	case "PromoCode.userSubscriptions":
+		if e.complexity.PromoCode.UserSubscriptions == nil {
+			break
+		}
+
+		args, err := ec.field_PromoCode_userSubscriptions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.PromoCode.UserSubscriptions(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.UserSubscriptionOrder), args["where"].(*ent.UserSubscriptionWhereInput)), true
+
+	case "PromoCodeConnection.edges":
+		if e.complexity.PromoCodeConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.PromoCodeConnection.Edges(childComplexity), true
+	case "PromoCodeConnection.pageInfo":
+		if e.complexity.PromoCodeConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.PromoCodeConnection.PageInfo(childComplexity), true
+	case "PromoCodeConnection.totalCount":
+		if e.complexity.PromoCodeConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.PromoCodeConnection.TotalCount(childComplexity), true
+
+	case "PromoCodeEdge.cursor":
+		if e.complexity.PromoCodeEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.PromoCodeEdge.Cursor(childComplexity), true
+	case "PromoCodeEdge.node":
+		if e.complexity.PromoCodeEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.PromoCodeEdge.Node(childComplexity), true
+
+	case "PromoQuote.code":
+		if e.complexity.PromoQuote.Code == nil {
+			break
+		}
+
+		return e.complexity.PromoQuote.Code(childComplexity), true
+	case "PromoQuote.currency":
+		if e.complexity.PromoQuote.Currency == nil {
+			break
+		}
+
+		return e.complexity.PromoQuote.Currency(childComplexity), true
+	case "PromoQuote.discountAmountMicros":
+		if e.complexity.PromoQuote.DiscountAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.PromoQuote.DiscountAmountMicros(childComplexity), true
+	case "PromoQuote.originalAmountMicros":
+		if e.complexity.PromoQuote.OriginalAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.PromoQuote.OriginalAmountMicros(childComplexity), true
+	case "PromoQuote.payableAmountMicros":
+		if e.complexity.PromoQuote.PayableAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.PromoQuote.PayableAmountMicros(childComplexity), true
+
+	case "PromoUsage.billingAccount":
+		if e.complexity.PromoUsage.BillingAccount == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.BillingAccount(childComplexity), true
+	case "PromoUsage.billingAccountID":
+		if e.complexity.PromoUsage.BillingAccountID == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.BillingAccountID(childComplexity), true
+	case "PromoUsage.code":
+		if e.complexity.PromoUsage.Code == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.Code(childComplexity), true
+	case "PromoUsage.codeSnapshot":
+		if e.complexity.PromoUsage.CodeSnapshot == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.CodeSnapshot(childComplexity), true
+	case "PromoUsage.createdAt":
+		if e.complexity.PromoUsage.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.CreatedAt(childComplexity), true
+	case "PromoUsage.currency":
+		if e.complexity.PromoUsage.Currency == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.Currency(childComplexity), true
+	case "PromoUsage.discountAmountMicros":
+		if e.complexity.PromoUsage.DiscountAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.DiscountAmountMicros(childComplexity), true
+	case "PromoUsage.failureReason":
+		if e.complexity.PromoUsage.FailureReason == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.FailureReason(childComplexity), true
+	case "PromoUsage.id":
+		if e.complexity.PromoUsage.ID == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.ID(childComplexity), true
+	case "PromoUsage.idempotencyKey":
+		if e.complexity.PromoUsage.IdempotencyKey == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.IdempotencyKey(childComplexity), true
+	case "PromoUsage.ledgerTransaction":
+		if e.complexity.PromoUsage.LedgerTransaction == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.LedgerTransaction(childComplexity), true
+	case "PromoUsage.ledgerTransactionID":
+		if e.complexity.PromoUsage.LedgerTransactionID == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.LedgerTransactionID(childComplexity), true
+	case "PromoUsage.originalAmountMicros":
+		if e.complexity.PromoUsage.OriginalAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.OriginalAmountMicros(childComplexity), true
+	case "PromoUsage.payableAmountMicros":
+		if e.complexity.PromoUsage.PayableAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.PayableAmountMicros(childComplexity), true
+	case "PromoUsage.paymentOrder":
+		if e.complexity.PromoUsage.PaymentOrder == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.PaymentOrder(childComplexity), true
+	case "PromoUsage.paymentOrderID":
+		if e.complexity.PromoUsage.PaymentOrderID == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.PaymentOrderID(childComplexity), true
+	case "PromoUsage.promoCode":
+		if e.complexity.PromoUsage.PromoCode == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.PromoCode(childComplexity), true
+	case "PromoUsage.promoCodeID":
+		if e.complexity.PromoUsage.PromoCodeID == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.PromoCodeID(childComplexity), true
+	case "PromoUsage.scope":
+		if e.complexity.PromoUsage.Scope == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.Scope(childComplexity), true
+	case "PromoUsage.status":
+		if e.complexity.PromoUsage.Status == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.Status(childComplexity), true
+	case "PromoUsage.updatedAt":
+		if e.complexity.PromoUsage.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.UpdatedAt(childComplexity), true
+	case "PromoUsage.user":
+		if e.complexity.PromoUsage.User == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.User(childComplexity), true
+	case "PromoUsage.userID":
+		if e.complexity.PromoUsage.UserID == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.UserID(childComplexity), true
+	case "PromoUsage.userSubscription":
+		if e.complexity.PromoUsage.UserSubscription == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.UserSubscription(childComplexity), true
+	case "PromoUsage.userSubscriptionID":
+		if e.complexity.PromoUsage.UserSubscriptionID == nil {
+			break
+		}
+
+		return e.complexity.PromoUsage.UserSubscriptionID(childComplexity), true
+
+	case "PromoUsageConnection.edges":
+		if e.complexity.PromoUsageConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.PromoUsageConnection.Edges(childComplexity), true
+	case "PromoUsageConnection.pageInfo":
+		if e.complexity.PromoUsageConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.PromoUsageConnection.PageInfo(childComplexity), true
+	case "PromoUsageConnection.totalCount":
+		if e.complexity.PromoUsageConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.PromoUsageConnection.TotalCount(childComplexity), true
+
+	case "PromoUsageEdge.cursor":
+		if e.complexity.PromoUsageEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.PromoUsageEdge.Cursor(childComplexity), true
+	case "PromoUsageEdge.node":
+		if e.complexity.PromoUsageEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.PromoUsageEdge.Node(childComplexity), true
 
 	case "Prompt.content":
 		if e.complexity.Prompt.Content == nil {
@@ -10246,6 +10877,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.AdminPaymentOrders(childComplexity, args["filter"].(*AdminPaymentOrdersFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PaymentOrderOrder)), true
+	case "Query.adminPromoCodes":
+		if e.complexity.Query.AdminPromoCodes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminPromoCodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminPromoCodes(childComplexity, args["filter"].(*AdminPromoCodesFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoCodeOrder)), true
+	case "Query.adminPromoUsages":
+		if e.complexity.Query.AdminPromoUsages == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminPromoUsages_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminPromoUsages(childComplexity, args["filter"].(*AdminPromoUsagesFilter), args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoUsageOrder)), true
 	case "Query.adminRedeemCodes":
 		if e.complexity.Query.AdminRedeemCodes == nil {
 			break
@@ -10792,6 +11445,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Projects(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.ProjectOrder), args["where"].(*ent.ProjectWhereInput)), true
+	case "Query.promoCodes":
+		if e.complexity.Query.PromoCodes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_promoCodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PromoCodes(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoCodeOrder), args["where"].(*ent.PromoCodeWhereInput)), true
+	case "Query.promoUsages":
+		if e.complexity.Query.PromoUsages == nil {
+			break
+		}
+
+		args, err := ec.field_Query_promoUsages_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PromoUsages(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoUsageOrder), args["where"].(*ent.PromoUsageWhereInput)), true
 	case "Query.promptProtectionRules":
 		if e.complexity.Query.PromptProtectionRules == nil {
 			break
@@ -10865,6 +11540,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.QuotaEnforcementSettings(childComplexity), true
+	case "Query.quoteRechargePromo":
+		if e.complexity.Query.QuoteRechargePromo == nil {
+			break
+		}
+
+		args, err := ec.field_Query_quoteRechargePromo_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.QuoteRechargePromo(childComplexity, args["input"].(biz.QuoteRechargePromoInput)), true
+	case "Query.quoteSubscriptionPromo":
+		if e.complexity.Query.QuoteSubscriptionPromo == nil {
+			break
+		}
+
+		args, err := ec.field_Query_quoteSubscriptionPromo_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.QuoteSubscriptionPromo(childComplexity, args["input"].(biz.QuoteSubscriptionPromoInput)), true
 	case "Query.redeemCodes":
 		if e.complexity.Query.RedeemCodes == nil {
 			break
@@ -13975,6 +14672,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.Projects(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.ProjectOrder), args["where"].(*ent.ProjectWhereInput)), true
+	case "User.promoUsages":
+		if e.complexity.User.PromoUsages == nil {
+			break
+		}
+
+		args, err := ec.field_User_promoUsages_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.PromoUsages(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoUsageOrder), args["where"].(*ent.PromoUsageWhereInput)), true
 	case "User.roles":
 		if e.complexity.User.Roles == nil {
 			break
@@ -14310,6 +15018,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UserSubscription.CurrentPeriodStart(childComplexity), true
+	case "UserSubscription.discountAmountMicros":
+		if e.complexity.UserSubscription.DiscountAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.UserSubscription.DiscountAmountMicros(childComplexity), true
 	case "UserSubscription.expiresAt":
 		if e.complexity.UserSubscription.ExpiresAt == nil {
 			break
@@ -14334,6 +15048,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UserSubscription.Notes(childComplexity), true
+	case "UserSubscription.originalPriceMicros":
+		if e.complexity.UserSubscription.OriginalPriceMicros == nil {
+			break
+		}
+
+		return e.complexity.UserSubscription.OriginalPriceMicros(childComplexity), true
+	case "UserSubscription.payableAmountMicros":
+		if e.complexity.UserSubscription.PayableAmountMicros == nil {
+			break
+		}
+
+		return e.complexity.UserSubscription.PayableAmountMicros(childComplexity), true
 	case "UserSubscription.periodDays":
 		if e.complexity.UserSubscription.PeriodDays == nil {
 			break
@@ -14358,6 +15084,29 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UserSubscription.PlanSnapshot(childComplexity), true
+	case "UserSubscription.promoCode":
+		if e.complexity.UserSubscription.PromoCode == nil {
+			break
+		}
+
+		return e.complexity.UserSubscription.PromoCode(childComplexity), true
+	case "UserSubscription.promoCodeID":
+		if e.complexity.UserSubscription.PromoCodeID == nil {
+			break
+		}
+
+		return e.complexity.UserSubscription.PromoCodeID(childComplexity), true
+	case "UserSubscription.promoUsages":
+		if e.complexity.UserSubscription.PromoUsages == nil {
+			break
+		}
+
+		args, err := ec.field_UserSubscription_promoUsages_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.UserSubscription.PromoUsages(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PromoUsageOrder), args["where"].(*ent.PromoUsageWhereInput)), true
 	case "UserSubscription.purchaseLedgerTransaction":
 		if e.complexity.UserSubscription.PurchaseLedgerTransaction == nil {
 			break
@@ -14658,6 +15407,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAdminLedgerTransactionsFilter,
 		ec.unmarshalInputAdminPaymentEventsFilter,
 		ec.unmarshalInputAdminPaymentOrdersFilter,
+		ec.unmarshalInputAdminPromoCodesFilter,
+		ec.unmarshalInputAdminPromoUsagesFilter,
 		ec.unmarshalInputAdminRedeemCodesFilter,
 		ec.unmarshalInputAdminUsageBillingRecordsFilter,
 		ec.unmarshalInputAdminUserSubscriptionsFilter,
@@ -14783,6 +15534,10 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputProjectOrder,
 		ec.unmarshalInputProjectProfileInput,
 		ec.unmarshalInputProjectWhereInput,
+		ec.unmarshalInputPromoCodeOrder,
+		ec.unmarshalInputPromoCodeWhereInput,
+		ec.unmarshalInputPromoUsageOrder,
+		ec.unmarshalInputPromoUsageWhereInput,
 		ec.unmarshalInputPromptActionInput,
 		ec.unmarshalInputPromptActivationConditionCompositeInput,
 		ec.unmarshalInputPromptActivationConditionInput,
@@ -14800,6 +15555,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPurchaseSubscriptionPlanInput,
 		ec.unmarshalInputQueryChannelInput,
 		ec.unmarshalInputQueryModelsInput,
+		ec.unmarshalInputQuoteRechargePromoInput,
+		ec.unmarshalInputQuoteSubscriptionPromoInput,
 		ec.unmarshalInputRedeemCodeInput,
 		ec.unmarshalInputRedeemCodeOrder,
 		ec.unmarshalInputRedeemCodeWhereInput,
@@ -14817,6 +15574,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSaveBillingPriceRuleForm,
 		ec.unmarshalInputSaveChannelEndpointsInput,
 		ec.unmarshalInputSaveChannelModelPriceInput,
+		ec.unmarshalInputSavePromoCodeInput,
 		ec.unmarshalInputSaveProxyPresetInput,
 		ec.unmarshalInputSaveSubscriptionPlanInput,
 		ec.unmarshalInputSignInInput,
@@ -14853,6 +15611,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateProjectInput,
 		ec.unmarshalInputUpdateProjectProfilesInput,
 		ec.unmarshalInputUpdateProjectUserInput,
+		ec.unmarshalInputUpdatePromoCodeStatusInput,
 		ec.unmarshalInputUpdatePromptInput,
 		ec.unmarshalInputUpdatePromptProtectionRuleInput,
 		ec.unmarshalInputUpdateQuotaEnforcementSettingsInput,
@@ -15201,6 +15960,42 @@ func (ec *executionContext) field_BillingAccount_paymentOrders_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_BillingAccount_promoUsages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoUsageOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_BillingAccount_usageBillingRecords_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -15518,6 +16313,42 @@ func (ec *executionContext) field_LedgerTransaction_paymentOrders_args(ctx conte
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPaymentOrderWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_LedgerTransaction_promoUsages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoUsageOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -16281,6 +17112,17 @@ func (ec *executionContext) field_Mutation_deleteProject_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deletePromoCode_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deletePromptProtectionRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -16637,6 +17479,17 @@ func (ec *executionContext) field_Mutation_saveChannelModelPrices_args(ctx conte
 		return nil, err
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_savePromoCode_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSavePromoCodeInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSavePromoCodeInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -17038,6 +17891,17 @@ func (ec *executionContext) field_Mutation_updateProject_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updatePromoCodeStatus_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdatePromoCodeStatusInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdatePromoCodeStatusInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updatePromptProtectionRuleStatus_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -17322,6 +18186,42 @@ func (ec *executionContext) field_PaymentOrder_paymentEvents_args(ctx context.Co
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPaymentEventWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentEventWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_PaymentOrder_promoUsages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoUsageOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -17725,6 +18625,114 @@ func (ec *executionContext) field_Project_users_args(ctx context.Context, rawArg
 	return args, nil
 }
 
+func (ec *executionContext) field_PromoCode_paymentOrders_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPaymentOrderOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPaymentOrderWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_PromoCode_usages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoUsageOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_PromoCode_userSubscriptions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOUserSubscriptionOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscriptionOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOUserSubscriptionWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscriptionWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_Prompt_projects_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -17920,6 +18928,78 @@ func (ec *executionContext) field_Query_adminPaymentOrders_args(ctx context.Cont
 	}
 	args["last"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPaymentOrderOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_adminPromoCodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOAdminPromoCodesFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminPromoCodesFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_adminPromoUsages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOAdminPromoUsagesFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminPromoUsagesFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoUsageOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrder)
 	if err != nil {
 		return nil, err
 	}
@@ -19094,6 +20174,78 @@ func (ec *executionContext) field_Query_projects_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_promoCodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPromoCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_promoUsages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoUsageOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_promptProtectionRules_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -19192,6 +20344,28 @@ func (ec *executionContext) field_Query_queryModels_args(ctx context.Context, ra
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNQueryModelsInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐQueryModelsInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_quoteRechargePromo_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNQuoteRechargePromoInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐQuoteRechargePromoInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_quoteSubscriptionPromo_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNQuoteSubscriptionPromoInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐQuoteSubscriptionPromoInput)
 	if err != nil {
 		return nil, err
 	}
@@ -20115,6 +21289,42 @@ func (ec *executionContext) field_UsageLog_usageBillingRecords_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_UserSubscription_promoUsages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoUsageOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_UserSubscription_usageBillingRecords_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -20360,6 +21570,42 @@ func (ec *executionContext) field_User_projects_args(ctx context.Context, rawArg
 	}
 	args["orderBy"] = arg4
 	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOProjectWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐProjectWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_User_promoUsages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPromoUsageOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput)
 	if err != nil {
 		return nil, err
 	}
@@ -20961,6 +22207,8 @@ func (ec *executionContext) fieldContext_APIKey_user(_ context.Context, field gr
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -24861,6 +26109,55 @@ func (ec *executionContext) fieldContext_BillingAccount_paymentOrders(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _BillingAccount_promoUsages(ctx context.Context, field graphql.CollectedField, obj *ent.BillingAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BillingAccount_promoUsages,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.PromoUsages(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoUsageOrder), fc.Args["where"].(*ent.PromoUsageWhereInput))
+		},
+		nil,
+		ec.marshalNPromoUsageConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BillingAccount_promoUsages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoUsageConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoUsageConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoUsageConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsageConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_BillingAccount_promoUsages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _BillingAccountBinding_id(ctx context.Context, field graphql.CollectedField, obj *ent.BillingAccountBinding) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -25118,6 +26415,8 @@ func (ec *executionContext) fieldContext_BillingAccountBinding_billingAccount(_ 
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -25461,6 +26760,8 @@ func (ec *executionContext) fieldContext_BillingAccountEdge_node(_ context.Conte
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -26802,6 +28103,8 @@ func (ec *executionContext) fieldContext_BillingHold_billingAccount(_ context.Co
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -27069,6 +28372,8 @@ func (ec *executionContext) fieldContext_BillingHold_capturedLedgerTransaction(_
 				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			case "purchasedUserSubscriptions":
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -32647,6 +33952,8 @@ func (ec *executionContext) fieldContext_ChannelOverrideTemplate_user(_ context.
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -38009,6 +39316,8 @@ func (ec *executionContext) fieldContext_InitializeSystemPayload_user(_ context.
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -38349,6 +39658,8 @@ func (ec *executionContext) fieldContext_LedgerEntry_ledgerTransaction(_ context
 				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			case "purchasedUserSubscriptions":
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -39026,6 +40337,8 @@ func (ec *executionContext) fieldContext_LedgerTransaction_billingAccount(_ cont
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -39327,6 +40640,55 @@ func (ec *executionContext) fieldContext_LedgerTransaction_purchasedUserSubscrip
 	return fc, nil
 }
 
+func (ec *executionContext) _LedgerTransaction_promoUsages(ctx context.Context, field graphql.CollectedField, obj *ent.LedgerTransaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LedgerTransaction_promoUsages,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.PromoUsages(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoUsageOrder), fc.Args["where"].(*ent.PromoUsageWhereInput))
+		},
+		nil,
+		ec.marshalNPromoUsageConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LedgerTransaction_promoUsages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LedgerTransaction",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoUsageConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoUsageConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoUsageConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsageConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_LedgerTransaction_promoUsages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LedgerTransactionConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.LedgerTransactionConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -39498,6 +40860,8 @@ func (ec *executionContext) fieldContext_LedgerTransactionEdge_node(_ context.Co
 				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			case "purchasedUserSubscriptions":
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -43936,6 +45300,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -44023,6 +45389,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -44110,6 +45478,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUserStatus(ctx context.C
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -45654,6 +47024,8 @@ func (ec *executionContext) fieldContext_Mutation_updateMe(ctx context.Context, 
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -48102,6 +49474,12 @@ func (ec *executionContext) fieldContext_Mutation_createManualRechargeOrder(ctx 
 				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
 			case "amountMicros":
 				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PaymentOrder_payableAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PaymentOrder_discountAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PaymentOrder_promoCodeID(ctx, field)
 			case "currency":
 				return ec.fieldContext_PaymentOrder_currency(ctx, field)
 			case "status":
@@ -48136,6 +49514,10 @@ func (ec *executionContext) fieldContext_Mutation_createManualRechargeOrder(ctx 
 				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
 			case "ledgerTransaction":
 				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PaymentOrder_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			}
@@ -48201,6 +49583,12 @@ func (ec *executionContext) fieldContext_Mutation_confirmManualPayment(ctx conte
 				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
 			case "amountMicros":
 				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PaymentOrder_payableAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PaymentOrder_discountAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PaymentOrder_promoCodeID(ctx, field)
 			case "currency":
 				return ec.fieldContext_PaymentOrder_currency(ctx, field)
 			case "status":
@@ -48235,6 +49623,10 @@ func (ec *executionContext) fieldContext_Mutation_confirmManualPayment(ctx conte
 				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
 			case "ledgerTransaction":
 				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PaymentOrder_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			}
@@ -48300,6 +49692,12 @@ func (ec *executionContext) fieldContext_Mutation_cancelPaymentOrder(ctx context
 				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
 			case "amountMicros":
 				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PaymentOrder_payableAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PaymentOrder_discountAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PaymentOrder_promoCodeID(ctx, field)
 			case "currency":
 				return ec.fieldContext_PaymentOrder_currency(ctx, field)
 			case "status":
@@ -48334,6 +49732,10 @@ func (ec *executionContext) fieldContext_Mutation_cancelPaymentOrder(ctx context
 				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
 			case "ledgerTransaction":
 				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PaymentOrder_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			}
@@ -48399,6 +49801,12 @@ func (ec *executionContext) fieldContext_Mutation_makeUpPaymentOrder(ctx context
 				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
 			case "amountMicros":
 				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PaymentOrder_payableAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PaymentOrder_discountAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PaymentOrder_promoCodeID(ctx, field)
 			case "currency":
 				return ec.fieldContext_PaymentOrder_currency(ctx, field)
 			case "status":
@@ -48433,6 +49841,10 @@ func (ec *executionContext) fieldContext_Mutation_makeUpPaymentOrder(ctx context
 				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
 			case "ledgerTransaction":
 				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PaymentOrder_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			}
@@ -48697,6 +50109,8 @@ func (ec *executionContext) fieldContext_Mutation_adjustUserBalance(ctx context.
 				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			case "purchasedUserSubscriptions":
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -48770,6 +50184,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUserBillingAccount(ctx c
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -49145,6 +50561,221 @@ func (ec *executionContext) fieldContext_Mutation_deleteRedeemCode(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_savePromoCode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_savePromoCode,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SavePromoCode(ctx, fc.Args["input"].(biz.SavePromoCodeInput))
+		},
+		nil,
+		ec.marshalNPromoCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCode,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_savePromoCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PromoCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PromoCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PromoCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_PromoCode_code(ctx, field)
+			case "description":
+				return ec.fieldContext_PromoCode_description(ctx, field)
+			case "discountType":
+				return ec.fieldContext_PromoCode_discountType(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PromoCode_discountAmountMicros(ctx, field)
+			case "discountPercentBps":
+				return ec.fieldContext_PromoCode_discountPercentBps(ctx, field)
+			case "scope":
+				return ec.fieldContext_PromoCode_scope(ctx, field)
+			case "status":
+				return ec.fieldContext_PromoCode_status(ctx, field)
+			case "currency":
+				return ec.fieldContext_PromoCode_currency(ctx, field)
+			case "maxUses":
+				return ec.fieldContext_PromoCode_maxUses(ctx, field)
+			case "usedCount":
+				return ec.fieldContext_PromoCode_usedCount(ctx, field)
+			case "perUserLimit":
+				return ec.fieldContext_PromoCode_perUserLimit(ctx, field)
+			case "startsAt":
+				return ec.fieldContext_PromoCode_startsAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PromoCode_expiresAt(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_PromoCode_createdByID(ctx, field)
+			case "notes":
+				return ec.fieldContext_PromoCode_notes(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PromoCode_metadata(ctx, field)
+			case "usages":
+				return ec.fieldContext_PromoCode_usages(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_PromoCode_paymentOrders(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_PromoCode_userSubscriptions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoCode", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_savePromoCode_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updatePromoCodeStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updatePromoCodeStatus,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdatePromoCodeStatus(ctx, fc.Args["input"].(biz.UpdatePromoCodeStatusInput))
+		},
+		nil,
+		ec.marshalNPromoCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCode,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updatePromoCodeStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PromoCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PromoCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PromoCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_PromoCode_code(ctx, field)
+			case "description":
+				return ec.fieldContext_PromoCode_description(ctx, field)
+			case "discountType":
+				return ec.fieldContext_PromoCode_discountType(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PromoCode_discountAmountMicros(ctx, field)
+			case "discountPercentBps":
+				return ec.fieldContext_PromoCode_discountPercentBps(ctx, field)
+			case "scope":
+				return ec.fieldContext_PromoCode_scope(ctx, field)
+			case "status":
+				return ec.fieldContext_PromoCode_status(ctx, field)
+			case "currency":
+				return ec.fieldContext_PromoCode_currency(ctx, field)
+			case "maxUses":
+				return ec.fieldContext_PromoCode_maxUses(ctx, field)
+			case "usedCount":
+				return ec.fieldContext_PromoCode_usedCount(ctx, field)
+			case "perUserLimit":
+				return ec.fieldContext_PromoCode_perUserLimit(ctx, field)
+			case "startsAt":
+				return ec.fieldContext_PromoCode_startsAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PromoCode_expiresAt(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_PromoCode_createdByID(ctx, field)
+			case "notes":
+				return ec.fieldContext_PromoCode_notes(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PromoCode_metadata(ctx, field)
+			case "usages":
+				return ec.fieldContext_PromoCode_usages(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_PromoCode_paymentOrders(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_PromoCode_userSubscriptions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoCode", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updatePromoCodeStatus_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deletePromoCode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deletePromoCode,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeletePromoCode(ctx, fc.Args["id"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deletePromoCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deletePromoCode_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_saveSubscriptionPlan(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -49334,6 +50965,14 @@ func (ec *executionContext) fieldContext_Mutation_purchaseSubscriptionPlan(ctx c
 				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
 			case "purchaseLedgerTransactionID":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
 			case "notes":
 				return ec.fieldContext_UserSubscription_notes(ctx, field)
 			case "revokeReason":
@@ -49346,6 +50985,10 @@ func (ec *executionContext) fieldContext_Mutation_purchaseSubscriptionPlan(ctx c
 				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
 			case "purchaseLedgerTransaction":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			}
@@ -49435,6 +51078,14 @@ func (ec *executionContext) fieldContext_Mutation_adminAssignSubscription(ctx co
 				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
 			case "purchaseLedgerTransactionID":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
 			case "notes":
 				return ec.fieldContext_UserSubscription_notes(ctx, field)
 			case "revokeReason":
@@ -49447,6 +51098,10 @@ func (ec *executionContext) fieldContext_Mutation_adminAssignSubscription(ctx co
 				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
 			case "purchaseLedgerTransaction":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			}
@@ -49536,6 +51191,14 @@ func (ec *executionContext) fieldContext_Mutation_extendUserSubscription(ctx con
 				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
 			case "purchaseLedgerTransactionID":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
 			case "notes":
 				return ec.fieldContext_UserSubscription_notes(ctx, field)
 			case "revokeReason":
@@ -49548,6 +51211,10 @@ func (ec *executionContext) fieldContext_Mutation_extendUserSubscription(ctx con
 				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
 			case "purchaseLedgerTransaction":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			}
@@ -49637,6 +51304,14 @@ func (ec *executionContext) fieldContext_Mutation_revokeUserSubscription(ctx con
 				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
 			case "purchaseLedgerTransactionID":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
 			case "notes":
 				return ec.fieldContext_UserSubscription_notes(ctx, field)
 			case "revokeReason":
@@ -49649,6 +51324,10 @@ func (ec *executionContext) fieldContext_Mutation_revokeUserSubscription(ctx con
 				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
 			case "purchaseLedgerTransaction":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			}
@@ -49738,6 +51417,14 @@ func (ec *executionContext) fieldContext_Mutation_restoreUserSubscription(ctx co
 				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
 			case "purchaseLedgerTransactionID":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
 			case "notes":
 				return ec.fieldContext_UserSubscription_notes(ctx, field)
 			case "revokeReason":
@@ -49750,6 +51437,10 @@ func (ec *executionContext) fieldContext_Mutation_restoreUserSubscription(ctx co
 				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
 			case "purchaseLedgerTransaction":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			}
@@ -49839,6 +51530,14 @@ func (ec *executionContext) fieldContext_Mutation_resetUserSubscriptionUsage(ctx
 				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
 			case "purchaseLedgerTransactionID":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
 			case "notes":
 				return ec.fieldContext_UserSubscription_notes(ctx, field)
 			case "revokeReason":
@@ -49851,6 +51550,10 @@ func (ec *executionContext) fieldContext_Mutation_resetUserSubscriptionUsage(ctx
 				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
 			case "purchaseLedgerTransaction":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			}
@@ -50575,6 +52278,8 @@ func (ec *executionContext) fieldContext_OIDCIdentity_user(_ context.Context, fi
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -52136,6 +53841,12 @@ func (ec *executionContext) fieldContext_PaymentEvent_paymentOrder(_ context.Con
 				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
 			case "amountMicros":
 				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PaymentOrder_payableAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PaymentOrder_discountAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PaymentOrder_promoCodeID(ctx, field)
 			case "currency":
 				return ec.fieldContext_PaymentOrder_currency(ctx, field)
 			case "status":
@@ -52170,6 +53881,10 @@ func (ec *executionContext) fieldContext_PaymentEvent_paymentOrder(_ context.Con
 				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
 			case "ledgerTransaction":
 				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PaymentOrder_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			}
@@ -52707,6 +54422,93 @@ func (ec *executionContext) fieldContext_PaymentOrder_amountMicros(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _PaymentOrder_payableAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentOrder) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentOrder_payableAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.PayableAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentOrder_payableAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentOrder",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentOrder_discountAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentOrder) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentOrder_discountAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.DiscountAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentOrder_discountAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentOrder",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentOrder_promoCodeID(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentOrder) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentOrder_promoCodeID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PaymentOrder().PromoCodeID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentOrder_promoCodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentOrder",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PaymentOrder_currency(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentOrder) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -53167,6 +54969,8 @@ func (ec *executionContext) fieldContext_PaymentOrder_billingAccount(_ context.C
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -53291,9 +55095,135 @@ func (ec *executionContext) fieldContext_PaymentOrder_ledgerTransaction(_ contex
 				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			case "purchasedUserSubscriptions":
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentOrder_promoCode(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentOrder) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentOrder_promoCode,
+		func(ctx context.Context) (any, error) {
+			return obj.PromoCode(ctx)
+		},
+		nil,
+		ec.marshalOPromoCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCode,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentOrder_promoCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentOrder",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PromoCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PromoCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PromoCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_PromoCode_code(ctx, field)
+			case "description":
+				return ec.fieldContext_PromoCode_description(ctx, field)
+			case "discountType":
+				return ec.fieldContext_PromoCode_discountType(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PromoCode_discountAmountMicros(ctx, field)
+			case "discountPercentBps":
+				return ec.fieldContext_PromoCode_discountPercentBps(ctx, field)
+			case "scope":
+				return ec.fieldContext_PromoCode_scope(ctx, field)
+			case "status":
+				return ec.fieldContext_PromoCode_status(ctx, field)
+			case "currency":
+				return ec.fieldContext_PromoCode_currency(ctx, field)
+			case "maxUses":
+				return ec.fieldContext_PromoCode_maxUses(ctx, field)
+			case "usedCount":
+				return ec.fieldContext_PromoCode_usedCount(ctx, field)
+			case "perUserLimit":
+				return ec.fieldContext_PromoCode_perUserLimit(ctx, field)
+			case "startsAt":
+				return ec.fieldContext_PromoCode_startsAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PromoCode_expiresAt(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_PromoCode_createdByID(ctx, field)
+			case "notes":
+				return ec.fieldContext_PromoCode_notes(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PromoCode_metadata(ctx, field)
+			case "usages":
+				return ec.fieldContext_PromoCode_usages(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_PromoCode_paymentOrders(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_PromoCode_userSubscriptions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoCode", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaymentOrder_promoUsages(ctx context.Context, field graphql.CollectedField, obj *ent.PaymentOrder) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PaymentOrder_promoUsages,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.PromoUsages(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoUsageOrder), fc.Args["where"].(*ent.PromoUsageWhereInput))
+		},
+		nil,
+		ec.marshalNPromoUsageConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PaymentOrder_promoUsages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaymentOrder",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoUsageConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoUsageConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoUsageConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsageConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_PaymentOrder_promoUsages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -53494,6 +55424,12 @@ func (ec *executionContext) fieldContext_PaymentOrderEdge_node(_ context.Context
 				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
 			case "amountMicros":
 				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PaymentOrder_payableAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PaymentOrder_discountAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PaymentOrder_promoCodeID(ctx, field)
 			case "currency":
 				return ec.fieldContext_PaymentOrder_currency(ctx, field)
 			case "status":
@@ -53528,6 +55464,10 @@ func (ec *executionContext) fieldContext_PaymentOrderEdge_node(_ context.Context
 				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
 			case "ledgerTransaction":
 				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PaymentOrder_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
 			case "paymentEvents":
 				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
 			}
@@ -55301,6 +57241,2310 @@ func (ec *executionContext) fieldContext_ProjectProfiles_profiles(_ context.Cont
 				return ec.fieldContext_ProjectProfile_channelTagsMatchMode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProjectProfile", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_id(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PromoCode().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_code(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_code,
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_description(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_description,
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_discountType(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_discountType,
+		func(ctx context.Context) (any, error) {
+			return obj.DiscountType, nil
+		},
+		nil,
+		ec.marshalNPromoCodeDiscountType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_discountType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type PromoCodeDiscountType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_discountAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_discountAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.DiscountAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_discountAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_discountPercentBps(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_discountPercentBps,
+		func(ctx context.Context) (any, error) {
+			return obj.DiscountPercentBps, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_discountPercentBps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_scope(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_scope,
+		func(ctx context.Context) (any, error) {
+			return obj.Scope, nil
+		},
+		nil,
+		ec.marshalNPromoCodeScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_scope(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type PromoCodeScope does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_status(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNPromoCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type PromoCodeStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_currency(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_maxUses(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_maxUses,
+		func(ctx context.Context) (any, error) {
+			return obj.MaxUses, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_maxUses(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_usedCount(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_usedCount,
+		func(ctx context.Context) (any, error) {
+			return obj.UsedCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_usedCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_perUserLimit(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_perUserLimit,
+		func(ctx context.Context) (any, error) {
+			return obj.PerUserLimit, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_perUserLimit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_startsAt(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_startsAt,
+		func(ctx context.Context) (any, error) {
+			return obj.StartsAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_startsAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_expiresAt(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_expiresAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ExpiresAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_expiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_createdByID(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_createdByID,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedByID, nil
+		},
+		nil,
+		ec.marshalOInt2ᚖint,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_createdByID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_notes(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_notes,
+		func(ctx context.Context) (any, error) {
+			return obj.Notes, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_metadata(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_metadata,
+		func(ctx context.Context) (any, error) {
+			return obj.Metadata, nil
+		},
+		nil,
+		ec.marshalOJSONRawMessage2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type JSONRawMessage does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_usages(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_usages,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.Usages(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoUsageOrder), fc.Args["where"].(*ent.PromoUsageWhereInput))
+		},
+		nil,
+		ec.marshalNPromoUsageConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_usages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoUsageConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoUsageConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoUsageConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsageConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_PromoCode_usages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_paymentOrders(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_paymentOrders,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.PaymentOrders(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PaymentOrderOrder), fc.Args["where"].(*ent.PaymentOrderWhereInput))
+		},
+		nil,
+		ec.marshalNPaymentOrderConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_paymentOrders(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PaymentOrderConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PaymentOrderConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PaymentOrderConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PaymentOrderConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_PromoCode_paymentOrders_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCode_userSubscriptions(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCode_userSubscriptions,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.UserSubscriptions(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.UserSubscriptionOrder), fc.Args["where"].(*ent.UserSubscriptionWhereInput))
+		},
+		nil,
+		ec.marshalNUserSubscriptionConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscriptionConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCode_userSubscriptions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_UserSubscriptionConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_UserSubscriptionConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_UserSubscriptionConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserSubscriptionConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_PromoCode_userSubscriptions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCodeConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCodeConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCodeConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOPromoCodeEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCodeConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCodeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_PromoCodeEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_PromoCodeEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoCodeEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCodeConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCodeConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCodeConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCodeConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCodeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCodeConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCodeConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCodeConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCodeConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCodeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCodeEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCodeEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCodeEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOPromoCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCode,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCodeEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCodeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PromoCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PromoCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PromoCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_PromoCode_code(ctx, field)
+			case "description":
+				return ec.fieldContext_PromoCode_description(ctx, field)
+			case "discountType":
+				return ec.fieldContext_PromoCode_discountType(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PromoCode_discountAmountMicros(ctx, field)
+			case "discountPercentBps":
+				return ec.fieldContext_PromoCode_discountPercentBps(ctx, field)
+			case "scope":
+				return ec.fieldContext_PromoCode_scope(ctx, field)
+			case "status":
+				return ec.fieldContext_PromoCode_status(ctx, field)
+			case "currency":
+				return ec.fieldContext_PromoCode_currency(ctx, field)
+			case "maxUses":
+				return ec.fieldContext_PromoCode_maxUses(ctx, field)
+			case "usedCount":
+				return ec.fieldContext_PromoCode_usedCount(ctx, field)
+			case "perUserLimit":
+				return ec.fieldContext_PromoCode_perUserLimit(ctx, field)
+			case "startsAt":
+				return ec.fieldContext_PromoCode_startsAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PromoCode_expiresAt(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_PromoCode_createdByID(ctx, field)
+			case "notes":
+				return ec.fieldContext_PromoCode_notes(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PromoCode_metadata(ctx, field)
+			case "usages":
+				return ec.fieldContext_PromoCode_usages(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_PromoCode_paymentOrders(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_PromoCode_userSubscriptions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoCode", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoCodeEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.PromoCodeEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoCodeEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoCodeEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoCodeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoQuote_code(ctx context.Context, field graphql.CollectedField, obj *PromoQuote) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoQuote_code,
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoQuote_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoQuote",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoQuote_originalAmountMicros(ctx context.Context, field graphql.CollectedField, obj *PromoQuote) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoQuote_originalAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.OriginalAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoQuote_originalAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoQuote",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoQuote_discountAmountMicros(ctx context.Context, field graphql.CollectedField, obj *PromoQuote) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoQuote_discountAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.DiscountAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoQuote_discountAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoQuote",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoQuote_payableAmountMicros(ctx context.Context, field graphql.CollectedField, obj *PromoQuote) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoQuote_payableAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.PayableAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoQuote_payableAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoQuote",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoQuote_currency(ctx context.Context, field graphql.CollectedField, obj *PromoQuote) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoQuote_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoQuote_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoQuote",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_id(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PromoUsage().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_promoCodeID(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_promoCodeID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PromoUsage().PromoCodeID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_promoCodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_code(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_code,
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_codeSnapshot(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_codeSnapshot,
+		func(ctx context.Context) (any, error) {
+			return obj.CodeSnapshot, nil
+		},
+		nil,
+		ec.marshalOJSONRawMessage2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_codeSnapshot(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type JSONRawMessage does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_userID(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_userID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PromoUsage().UserID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_billingAccountID(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_billingAccountID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PromoUsage().BillingAccountID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_billingAccountID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_paymentOrderID(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_paymentOrderID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PromoUsage().PaymentOrderID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_paymentOrderID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_userSubscriptionID(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_userSubscriptionID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PromoUsage().UserSubscriptionID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_userSubscriptionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_ledgerTransactionID(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_ledgerTransactionID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PromoUsage().LedgerTransactionID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_ledgerTransactionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_scope(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_scope,
+		func(ctx context.Context) (any, error) {
+			return obj.Scope, nil
+		},
+		nil,
+		ec.marshalNPromoUsageScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_scope(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type PromoUsageScope does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_status(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNPromoUsageStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type PromoUsageStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_originalAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_originalAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.OriginalAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_originalAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_discountAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_discountAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.DiscountAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_discountAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_payableAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_payableAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.PayableAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_payableAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_currency(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_idempotencyKey(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_idempotencyKey,
+		func(ctx context.Context) (any, error) {
+			return obj.IdempotencyKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_idempotencyKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_failureReason(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_failureReason,
+		func(ctx context.Context) (any, error) {
+			return obj.FailureReason, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_failureReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_promoCode(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_promoCode,
+		func(ctx context.Context) (any, error) {
+			return obj.PromoCode(ctx)
+		},
+		nil,
+		ec.marshalNPromoCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCode,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_promoCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PromoCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PromoCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PromoCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_PromoCode_code(ctx, field)
+			case "description":
+				return ec.fieldContext_PromoCode_description(ctx, field)
+			case "discountType":
+				return ec.fieldContext_PromoCode_discountType(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PromoCode_discountAmountMicros(ctx, field)
+			case "discountPercentBps":
+				return ec.fieldContext_PromoCode_discountPercentBps(ctx, field)
+			case "scope":
+				return ec.fieldContext_PromoCode_scope(ctx, field)
+			case "status":
+				return ec.fieldContext_PromoCode_status(ctx, field)
+			case "currency":
+				return ec.fieldContext_PromoCode_currency(ctx, field)
+			case "maxUses":
+				return ec.fieldContext_PromoCode_maxUses(ctx, field)
+			case "usedCount":
+				return ec.fieldContext_PromoCode_usedCount(ctx, field)
+			case "perUserLimit":
+				return ec.fieldContext_PromoCode_perUserLimit(ctx, field)
+			case "startsAt":
+				return ec.fieldContext_PromoCode_startsAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PromoCode_expiresAt(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_PromoCode_createdByID(ctx, field)
+			case "notes":
+				return ec.fieldContext_PromoCode_notes(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PromoCode_metadata(ctx, field)
+			case "usages":
+				return ec.fieldContext_PromoCode_usages(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_PromoCode_paymentOrders(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_PromoCode_userSubscriptions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoCode", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_user(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_user,
+		func(ctx context.Context) (any, error) {
+			return obj.User(ctx)
+		},
+		nil,
+		ec.marshalOUser2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "createdRedeemCodes":
+				return ec.fieldContext_User_createdRedeemCodes(ctx, field)
+			case "usedRedeemCodes":
+				return ec.fieldContext_User_usedRedeemCodes(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_User_userSubscriptions(ctx, field)
+			case "assignedUserSubscriptions":
+				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_billingAccount(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_billingAccount,
+		func(ctx context.Context) (any, error) {
+			return obj.BillingAccount(ctx)
+		},
+		nil,
+		ec.marshalOBillingAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccount,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_billingAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_BillingAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_BillingAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_BillingAccount_updatedAt(ctx, field)
+			case "ownerType":
+				return ec.fieldContext_BillingAccount_ownerType(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_BillingAccount_ownerID(ctx, field)
+			case "currency":
+				return ec.fieldContext_BillingAccount_currency(ctx, field)
+			case "balanceMicros":
+				return ec.fieldContext_BillingAccount_balanceMicros(ctx, field)
+			case "heldBalanceMicros":
+				return ec.fieldContext_BillingAccount_heldBalanceMicros(ctx, field)
+			case "creditLimitMicros":
+				return ec.fieldContext_BillingAccount_creditLimitMicros(ctx, field)
+			case "status":
+				return ec.fieldContext_BillingAccount_status(ctx, field)
+			case "bindings":
+				return ec.fieldContext_BillingAccount_bindings(ctx, field)
+			case "ledgerTransactions":
+				return ec.fieldContext_BillingAccount_ledgerTransactions(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_BillingAccount_billingHolds(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_paymentOrder(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_paymentOrder,
+		func(ctx context.Context) (any, error) {
+			return obj.PaymentOrder(ctx)
+		},
+		nil,
+		ec.marshalOPaymentOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrder,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_paymentOrder(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PaymentOrder_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PaymentOrder_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PaymentOrder_updatedAt(ctx, field)
+			case "orderNo":
+				return ec.fieldContext_PaymentOrder_orderNo(ctx, field)
+			case "projectID":
+				return ec.fieldContext_PaymentOrder_projectID(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_PaymentOrder_billingAccountID(ctx, field)
+			case "providerInstanceID":
+				return ec.fieldContext_PaymentOrder_providerInstanceID(ctx, field)
+			case "providerType":
+				return ec.fieldContext_PaymentOrder_providerType(ctx, field)
+			case "purpose":
+				return ec.fieldContext_PaymentOrder_purpose(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_PaymentOrder_amountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PaymentOrder_payableAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PaymentOrder_discountAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PaymentOrder_promoCodeID(ctx, field)
+			case "currency":
+				return ec.fieldContext_PaymentOrder_currency(ctx, field)
+			case "status":
+				return ec.fieldContext_PaymentOrder_status(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PaymentOrder_expiresAt(ctx, field)
+			case "canceledAt":
+				return ec.fieldContext_PaymentOrder_canceledAt(ctx, field)
+			case "cancelReason":
+				return ec.fieldContext_PaymentOrder_cancelReason(ctx, field)
+			case "makeupReason":
+				return ec.fieldContext_PaymentOrder_makeupReason(ctx, field)
+			case "failureReason":
+				return ec.fieldContext_PaymentOrder_failureReason(ctx, field)
+			case "refundedAt":
+				return ec.fieldContext_PaymentOrder_refundedAt(ctx, field)
+			case "refundReason":
+				return ec.fieldContext_PaymentOrder_refundReason(ctx, field)
+			case "refundAmountMicros":
+				return ec.fieldContext_PaymentOrder_refundAmountMicros(ctx, field)
+			case "externalTradeNo":
+				return ec.fieldContext_PaymentOrder_externalTradeNo(ctx, field)
+			case "paidAt":
+				return ec.fieldContext_PaymentOrder_paidAt(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_PaymentOrder_ledgerTransactionID(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PaymentOrder_metadata(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_PaymentOrder_billingAccount(ctx, field)
+			case "providerInstance":
+				return ec.fieldContext_PaymentOrder_providerInstance(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_PaymentOrder_ledgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PaymentOrder_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_PaymentOrder_promoUsages(ctx, field)
+			case "paymentEvents":
+				return ec.fieldContext_PaymentOrder_paymentEvents(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PaymentOrder", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_userSubscription(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_userSubscription,
+		func(ctx context.Context) (any, error) {
+			return obj.UserSubscription(ctx)
+		},
+		nil,
+		ec.marshalOUserSubscription2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscription,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_userSubscription(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserSubscription_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UserSubscription_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UserSubscription_updatedAt(ctx, field)
+			case "userID":
+				return ec.fieldContext_UserSubscription_userID(ctx, field)
+			case "planID":
+				return ec.fieldContext_UserSubscription_planID(ctx, field)
+			case "planSnapshot":
+				return ec.fieldContext_UserSubscription_planSnapshot(ctx, field)
+			case "status":
+				return ec.fieldContext_UserSubscription_status(ctx, field)
+			case "startsAt":
+				return ec.fieldContext_UserSubscription_startsAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UserSubscription_expiresAt(ctx, field)
+			case "currentPeriodStart":
+				return ec.fieldContext_UserSubscription_currentPeriodStart(ctx, field)
+			case "currentPeriodEnd":
+				return ec.fieldContext_UserSubscription_currentPeriodEnd(ctx, field)
+			case "resetAt":
+				return ec.fieldContext_UserSubscription_resetAt(ctx, field)
+			case "periodDays":
+				return ec.fieldContext_UserSubscription_periodDays(ctx, field)
+			case "includedAmountMicros":
+				return ec.fieldContext_UserSubscription_includedAmountMicros(ctx, field)
+			case "usedAmountMicros":
+				return ec.fieldContext_UserSubscription_usedAmountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_UserSubscription_currency(ctx, field)
+			case "supportedModelIds":
+				return ec.fieldContext_UserSubscription_supportedModelIds(ctx, field)
+			case "supportedProjectIds":
+				return ec.fieldContext_UserSubscription_supportedProjectIds(ctx, field)
+			case "supportedGroupIds":
+				return ec.fieldContext_UserSubscription_supportedGroupIds(ctx, field)
+			case "allowWalletFallback":
+				return ec.fieldContext_UserSubscription_allowWalletFallback(ctx, field)
+			case "assignedByID":
+				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
+			case "purchaseLedgerTransactionID":
+				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
+			case "notes":
+				return ec.fieldContext_UserSubscription_notes(ctx, field)
+			case "revokeReason":
+				return ec.fieldContext_UserSubscription_revokeReason(ctx, field)
+			case "user":
+				return ec.fieldContext_UserSubscription_user(ctx, field)
+			case "plan":
+				return ec.fieldContext_UserSubscription_plan(ctx, field)
+			case "assignedBy":
+				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
+			case "purchaseLedgerTransaction":
+				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserSubscription", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsage_ledgerTransaction(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsage_ledgerTransaction,
+		func(ctx context.Context) (any, error) {
+			return obj.LedgerTransaction(ctx)
+		},
+		nil,
+		ec.marshalOLedgerTransaction2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐLedgerTransaction,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsage_ledgerTransaction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsage",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LedgerTransaction_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_LedgerTransaction_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LedgerTransaction_updatedAt(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_LedgerTransaction_billingAccountID(ctx, field)
+			case "direction":
+				return ec.fieldContext_LedgerTransaction_direction(ctx, field)
+			case "amountMicros":
+				return ec.fieldContext_LedgerTransaction_amountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_LedgerTransaction_currency(ctx, field)
+			case "type":
+				return ec.fieldContext_LedgerTransaction_type(ctx, field)
+			case "status":
+				return ec.fieldContext_LedgerTransaction_status(ctx, field)
+			case "idempotencyKey":
+				return ec.fieldContext_LedgerTransaction_idempotencyKey(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_LedgerTransaction_referenceType(ctx, field)
+			case "referenceID":
+				return ec.fieldContext_LedgerTransaction_referenceID(ctx, field)
+			case "memo":
+				return ec.fieldContext_LedgerTransaction_memo(ctx, field)
+			case "createdByType":
+				return ec.fieldContext_LedgerTransaction_createdByType(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_LedgerTransaction_createdByID(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_LedgerTransaction_billingAccount(ctx, field)
+			case "entries":
+				return ec.fieldContext_LedgerTransaction_entries(ctx, field)
+			case "usageBillingRecords":
+				return ec.fieldContext_LedgerTransaction_usageBillingRecords(ctx, field)
+			case "billingHolds":
+				return ec.fieldContext_LedgerTransaction_billingHolds(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_LedgerTransaction_paymentOrders(ctx, field)
+			case "redeemCodes":
+				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
+			case "purchasedUserSubscriptions":
+				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsageConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsageConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsageConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOPromoUsageEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsageConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsageConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_PromoUsageEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_PromoUsageEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsageEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsageConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsageConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsageConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsageConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsageConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsageConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsageConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsageConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsageConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsageConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsageEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsageEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsageEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOPromoUsage2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsage,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsageEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsageEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PromoUsage_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PromoUsage_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PromoUsage_updatedAt(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_PromoUsage_promoCodeID(ctx, field)
+			case "code":
+				return ec.fieldContext_PromoUsage_code(ctx, field)
+			case "codeSnapshot":
+				return ec.fieldContext_PromoUsage_codeSnapshot(ctx, field)
+			case "userID":
+				return ec.fieldContext_PromoUsage_userID(ctx, field)
+			case "billingAccountID":
+				return ec.fieldContext_PromoUsage_billingAccountID(ctx, field)
+			case "paymentOrderID":
+				return ec.fieldContext_PromoUsage_paymentOrderID(ctx, field)
+			case "userSubscriptionID":
+				return ec.fieldContext_PromoUsage_userSubscriptionID(ctx, field)
+			case "ledgerTransactionID":
+				return ec.fieldContext_PromoUsage_ledgerTransactionID(ctx, field)
+			case "scope":
+				return ec.fieldContext_PromoUsage_scope(ctx, field)
+			case "status":
+				return ec.fieldContext_PromoUsage_status(ctx, field)
+			case "originalAmountMicros":
+				return ec.fieldContext_PromoUsage_originalAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PromoUsage_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PromoUsage_payableAmountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_PromoUsage_currency(ctx, field)
+			case "idempotencyKey":
+				return ec.fieldContext_PromoUsage_idempotencyKey(ctx, field)
+			case "failureReason":
+				return ec.fieldContext_PromoUsage_failureReason(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_PromoUsage_promoCode(ctx, field)
+			case "user":
+				return ec.fieldContext_PromoUsage_user(ctx, field)
+			case "billingAccount":
+				return ec.fieldContext_PromoUsage_billingAccount(ctx, field)
+			case "paymentOrder":
+				return ec.fieldContext_PromoUsage_paymentOrder(ctx, field)
+			case "userSubscription":
+				return ec.fieldContext_PromoUsage_userSubscription(ctx, field)
+			case "ledgerTransaction":
+				return ec.fieldContext_PromoUsage_ledgerTransaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsage", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PromoUsageEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.PromoUsageEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PromoUsageEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PromoUsageEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PromoUsageEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
 		},
 	}
 	return fc, nil
@@ -58320,6 +62564,104 @@ func (ec *executionContext) fieldContext_Query_projects(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_projects_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_promoCodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_promoCodes,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().PromoCodes(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoCodeOrder), fc.Args["where"].(*ent.PromoCodeWhereInput))
+		},
+		nil,
+		ec.marshalNPromoCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_promoCodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoCodeConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoCodeConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoCodeConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoCodeConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_promoCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_promoUsages(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_promoUsages,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().PromoUsages(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoUsageOrder), fc.Args["where"].(*ent.PromoUsageWhereInput))
+		},
+		nil,
+		ec.marshalNPromoUsageConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_promoUsages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoUsageConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoUsageConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoUsageConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsageConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_promoUsages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -61612,6 +65954,8 @@ func (ec *executionContext) fieldContext_Query_projectBillingAccount(ctx context
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -61684,6 +66028,8 @@ func (ec *executionContext) fieldContext_Query_myBillingAccount(_ context.Contex
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -61746,6 +66092,8 @@ func (ec *executionContext) fieldContext_Query_userBillingAccount(ctx context.Co
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -62101,6 +66449,112 @@ func (ec *executionContext) fieldContext_Query_myRedeemCodes(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_myRedeemCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_quoteRechargePromo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_quoteRechargePromo,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().QuoteRechargePromo(ctx, fc.Args["input"].(biz.QuoteRechargePromoInput))
+		},
+		nil,
+		ec.marshalNPromoQuote2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐPromoQuote,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_quoteRechargePromo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "code":
+				return ec.fieldContext_PromoQuote_code(ctx, field)
+			case "originalAmountMicros":
+				return ec.fieldContext_PromoQuote_originalAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PromoQuote_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PromoQuote_payableAmountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_PromoQuote_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoQuote", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_quoteRechargePromo_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_quoteSubscriptionPromo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_quoteSubscriptionPromo,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().QuoteSubscriptionPromo(ctx, fc.Args["input"].(biz.QuoteSubscriptionPromoInput))
+		},
+		nil,
+		ec.marshalNPromoQuote2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐPromoQuote,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_quoteSubscriptionPromo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "code":
+				return ec.fieldContext_PromoQuote_code(ctx, field)
+			case "originalAmountMicros":
+				return ec.fieldContext_PromoQuote_originalAmountMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PromoQuote_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_PromoQuote_payableAmountMicros(ctx, field)
+			case "currency":
+				return ec.fieldContext_PromoQuote_currency(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoQuote", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_quoteSubscriptionPromo_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -62493,6 +66947,104 @@ func (ec *executionContext) fieldContext_Query_adminRedeemCodes(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_adminRedeemCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminPromoCodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminPromoCodes,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AdminPromoCodes(ctx, fc.Args["filter"].(*AdminPromoCodesFilter), fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoCodeOrder))
+		},
+		nil,
+		ec.marshalNPromoCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminPromoCodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoCodeConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoCodeConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoCodeConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoCodeConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminPromoCodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminPromoUsages(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_adminPromoUsages,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AdminPromoUsages(ctx, fc.Args["filter"].(*AdminPromoUsagesFilter), fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoUsageOrder))
+		},
+		nil,
+		ec.marshalNPromoUsageConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_adminPromoUsages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoUsageConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoUsageConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoUsageConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsageConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminPromoUsages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -63321,6 +67873,8 @@ func (ec *executionContext) fieldContext_RedeemCode_createdBy(_ context.Context,
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -63396,6 +67950,8 @@ func (ec *executionContext) fieldContext_RedeemCode_usedBy(_ context.Context, fi
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -63475,6 +68031,8 @@ func (ec *executionContext) fieldContext_RedeemCode_ledgerTransaction(_ context.
 				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			case "purchasedUserSubscriptions":
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -68495,6 +73053,8 @@ func (ec *executionContext) fieldContext_SignInPayload_user(_ context.Context, f
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -75109,6 +79669,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_billingAccount(_ con
 				return ec.fieldContext_BillingAccount_usageBillingRecords(ctx, field)
 			case "paymentOrders":
 				return ec.fieldContext_BillingAccount_paymentOrders(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_BillingAccount_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BillingAccount", field.Name)
 		},
@@ -75184,6 +79746,8 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_ledgerTransaction(_ 
 				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			case "purchasedUserSubscriptions":
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
@@ -75259,6 +79823,14 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_userSubscription(_ c
 				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
 			case "purchaseLedgerTransactionID":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
 			case "notes":
 				return ec.fieldContext_UserSubscription_notes(ctx, field)
 			case "revokeReason":
@@ -75271,6 +79843,10 @@ func (ec *executionContext) fieldContext_UsageBillingRecord_userSubscription(_ c
 				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
 			case "purchaseLedgerTransaction":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			}
@@ -77887,6 +82463,55 @@ func (ec *executionContext) fieldContext_User_assignedUserSubscriptions(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _User_promoUsages(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_promoUsages,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.PromoUsages(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoUsageOrder), fc.Args["where"].(*ent.PromoUsageWhereInput))
+		},
+		nil,
+		ec.marshalNPromoUsageConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_promoUsages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoUsageConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoUsageConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoUsageConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsageConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_promoUsages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_projectUsers(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -78177,6 +82802,8 @@ func (ec *executionContext) fieldContext_UserEdge_node(_ context.Context, field 
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -78858,6 +83485,8 @@ func (ec *executionContext) fieldContext_UserProject_user(_ context.Context, fie
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -79263,6 +83892,8 @@ func (ec *executionContext) fieldContext_UserRole_user(_ context.Context, field 
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -79963,6 +84594,122 @@ func (ec *executionContext) fieldContext_UserSubscription_purchaseLedgerTransact
 	return fc, nil
 }
 
+func (ec *executionContext) _UserSubscription_originalPriceMicros(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserSubscription_originalPriceMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.OriginalPriceMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserSubscription_originalPriceMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserSubscription",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserSubscription_discountAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserSubscription_discountAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.DiscountAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserSubscription_discountAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserSubscription",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserSubscription_payableAmountMicros(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserSubscription_payableAmountMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.PayableAmountMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserSubscription_payableAmountMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserSubscription",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserSubscription_promoCodeID(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserSubscription_promoCodeID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UserSubscription().PromoCodeID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserSubscription_promoCodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserSubscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserSubscription_notes(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscription) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -80085,6 +84832,8 @@ func (ec *executionContext) fieldContext_UserSubscription_user(_ context.Context
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -80227,6 +84976,8 @@ func (ec *executionContext) fieldContext_UserSubscription_assignedBy(_ context.C
 				return ec.fieldContext_User_userSubscriptions(ctx, field)
 			case "assignedUserSubscriptions":
 				return ec.fieldContext_User_assignedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_User_promoUsages(ctx, field)
 			case "projectUsers":
 				return ec.fieldContext_User_projectUsers(ctx, field)
 			case "userRoles":
@@ -80306,9 +85057,135 @@ func (ec *executionContext) fieldContext_UserSubscription_purchaseLedgerTransact
 				return ec.fieldContext_LedgerTransaction_redeemCodes(ctx, field)
 			case "purchasedUserSubscriptions":
 				return ec.fieldContext_LedgerTransaction_purchasedUserSubscriptions(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_LedgerTransaction_promoUsages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LedgerTransaction", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserSubscription_promoCode(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserSubscription_promoCode,
+		func(ctx context.Context) (any, error) {
+			return obj.PromoCode(ctx)
+		},
+		nil,
+		ec.marshalOPromoCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCode,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserSubscription_promoCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserSubscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PromoCode_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PromoCode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PromoCode_updatedAt(ctx, field)
+			case "code":
+				return ec.fieldContext_PromoCode_code(ctx, field)
+			case "description":
+				return ec.fieldContext_PromoCode_description(ctx, field)
+			case "discountType":
+				return ec.fieldContext_PromoCode_discountType(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_PromoCode_discountAmountMicros(ctx, field)
+			case "discountPercentBps":
+				return ec.fieldContext_PromoCode_discountPercentBps(ctx, field)
+			case "scope":
+				return ec.fieldContext_PromoCode_scope(ctx, field)
+			case "status":
+				return ec.fieldContext_PromoCode_status(ctx, field)
+			case "currency":
+				return ec.fieldContext_PromoCode_currency(ctx, field)
+			case "maxUses":
+				return ec.fieldContext_PromoCode_maxUses(ctx, field)
+			case "usedCount":
+				return ec.fieldContext_PromoCode_usedCount(ctx, field)
+			case "perUserLimit":
+				return ec.fieldContext_PromoCode_perUserLimit(ctx, field)
+			case "startsAt":
+				return ec.fieldContext_PromoCode_startsAt(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PromoCode_expiresAt(ctx, field)
+			case "createdByID":
+				return ec.fieldContext_PromoCode_createdByID(ctx, field)
+			case "notes":
+				return ec.fieldContext_PromoCode_notes(ctx, field)
+			case "metadata":
+				return ec.fieldContext_PromoCode_metadata(ctx, field)
+			case "usages":
+				return ec.fieldContext_PromoCode_usages(ctx, field)
+			case "paymentOrders":
+				return ec.fieldContext_PromoCode_paymentOrders(ctx, field)
+			case "userSubscriptions":
+				return ec.fieldContext_PromoCode_userSubscriptions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoCode", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserSubscription_promoUsages(ctx context.Context, field graphql.CollectedField, obj *ent.UserSubscription) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserSubscription_promoUsages,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return obj.PromoUsages(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PromoUsageOrder), fc.Args["where"].(*ent.PromoUsageWhereInput))
+		},
+		nil,
+		ec.marshalNPromoUsageConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserSubscription_promoUsages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserSubscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PromoUsageConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PromoUsageConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PromoUsageConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PromoUsageConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_UserSubscription_promoUsages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -80533,6 +85410,14 @@ func (ec *executionContext) fieldContext_UserSubscriptionEdge_node(_ context.Con
 				return ec.fieldContext_UserSubscription_assignedByID(ctx, field)
 			case "purchaseLedgerTransactionID":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransactionID(ctx, field)
+			case "originalPriceMicros":
+				return ec.fieldContext_UserSubscription_originalPriceMicros(ctx, field)
+			case "discountAmountMicros":
+				return ec.fieldContext_UserSubscription_discountAmountMicros(ctx, field)
+			case "payableAmountMicros":
+				return ec.fieldContext_UserSubscription_payableAmountMicros(ctx, field)
+			case "promoCodeID":
+				return ec.fieldContext_UserSubscription_promoCodeID(ctx, field)
 			case "notes":
 				return ec.fieldContext_UserSubscription_notes(ctx, field)
 			case "revokeReason":
@@ -80545,6 +85430,10 @@ func (ec *executionContext) fieldContext_UserSubscriptionEdge_node(_ context.Con
 				return ec.fieldContext_UserSubscription_assignedBy(ctx, field)
 			case "purchaseLedgerTransaction":
 				return ec.fieldContext_UserSubscription_purchaseLedgerTransaction(ctx, field)
+			case "promoCode":
+				return ec.fieldContext_UserSubscription_promoCode(ctx, field)
+			case "promoUsages":
+				return ec.fieldContext_UserSubscription_promoUsages(ctx, field)
 			case "usageBillingRecords":
 				return ec.fieldContext_UserSubscription_usageBillingRecords(ctx, field)
 			}
@@ -84888,6 +89777,165 @@ func (ec *executionContext) unmarshalInputAdminPaymentOrdersFilter(ctx context.C
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAdminPromoCodesFilter(ctx context.Context, obj any) (AdminPromoCodesFilter, error) {
+	var it AdminPromoCodesFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"status", "scope", "code", "createdById", "from", "to", "expiresBefore"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOPromoCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "scope":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scope"))
+			data, err := ec.unmarshalOPromoCodeScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Scope = data
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "createdById":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdById"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByID = data
+		case "from":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.From = data
+		case "to":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.To = data
+		case "expiresBefore":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresBefore"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresBefore = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAdminPromoUsagesFilter(ctx context.Context, obj any) (AdminPromoUsagesFilter, error) {
+	var it AdminPromoUsagesFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"promoCodeId", "userId", "billingAccountId", "paymentOrderId", "userSubscriptionId", "scope", "status", "code", "from", "to"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "promoCodeId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PromoCodeID = data
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "billingAccountId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingAccountID = data
+		case "paymentOrderId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentOrderID = data
+		case "userSubscriptionId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserSubscriptionID = data
+		case "scope":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scope"))
+			data, err := ec.unmarshalOPromoUsageScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Scope = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOPromoUsageStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "from":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.From = data
+		case "to":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.To = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAdminRedeemCodesFilter(ctx context.Context, obj any) (AdminRedeemCodesFilter, error) {
 	var it AdminRedeemCodesFilter
 	asMap := map[string]any{}
@@ -85847,7 +90895,7 @@ func (ec *executionContext) unmarshalInputBillingAccountWhereInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "ownerType", "ownerTypeNEQ", "ownerTypeIn", "ownerTypeNotIn", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDGT", "ownerIDGTE", "ownerIDLT", "ownerIDLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "balanceMicros", "balanceMicrosNEQ", "balanceMicrosIn", "balanceMicrosNotIn", "balanceMicrosGT", "balanceMicrosGTE", "balanceMicrosLT", "balanceMicrosLTE", "heldBalanceMicros", "heldBalanceMicrosNEQ", "heldBalanceMicrosIn", "heldBalanceMicrosNotIn", "heldBalanceMicrosGT", "heldBalanceMicrosGTE", "heldBalanceMicrosLT", "heldBalanceMicrosLTE", "creditLimitMicros", "creditLimitMicrosNEQ", "creditLimitMicrosIn", "creditLimitMicrosNotIn", "creditLimitMicrosGT", "creditLimitMicrosGTE", "creditLimitMicrosLT", "creditLimitMicrosLTE", "status", "statusNEQ", "statusIn", "statusNotIn", "hasBindings", "hasBindingsWith", "hasLedgerTransactions", "hasLedgerTransactionsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasPaymentOrders", "hasPaymentOrdersWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "ownerType", "ownerTypeNEQ", "ownerTypeIn", "ownerTypeNotIn", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDGT", "ownerIDGTE", "ownerIDLT", "ownerIDLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "balanceMicros", "balanceMicrosNEQ", "balanceMicrosIn", "balanceMicrosNotIn", "balanceMicrosGT", "balanceMicrosGTE", "balanceMicrosLT", "balanceMicrosLTE", "heldBalanceMicros", "heldBalanceMicrosNEQ", "heldBalanceMicrosIn", "heldBalanceMicrosNotIn", "heldBalanceMicrosGT", "heldBalanceMicrosGTE", "heldBalanceMicrosLT", "heldBalanceMicrosLTE", "creditLimitMicros", "creditLimitMicrosNEQ", "creditLimitMicrosIn", "creditLimitMicrosNotIn", "creditLimitMicrosGT", "creditLimitMicrosGTE", "creditLimitMicrosLT", "creditLimitMicrosLTE", "status", "statusNEQ", "statusIn", "statusNotIn", "hasBindings", "hasBindingsWith", "hasLedgerTransactions", "hasLedgerTransactionsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasPaymentOrders", "hasPaymentOrdersWith", "hasPromoUsages", "hasPromoUsagesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86516,6 +91564,20 @@ func (ec *executionContext) unmarshalInputBillingAccountWhereInput(ctx context.C
 				return it, err
 			}
 			it.HasPaymentOrdersWith = data
+		case "hasPromoUsages":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsages"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsages = data
+		case "hasPromoUsagesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsagesWith"))
+			data, err := ec.unmarshalOPromoUsageWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsagesWith = data
 		}
 	}
 
@@ -94666,7 +99728,7 @@ func (ec *executionContext) unmarshalInputCreateMyEPayRechargeCheckoutInput(ctx 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"amount", "currency", "subject", "projectId", "providerInstanceId", "metadata"}
+	fieldsInOrder := [...]string{"amount", "currency", "subject", "projectId", "providerInstanceId", "promoCode", "metadata"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -94708,6 +99770,13 @@ func (ec *executionContext) unmarshalInputCreateMyEPayRechargeCheckoutInput(ctx 
 				return it, err
 			}
 			it.ProviderInstanceID = data
+		case "promoCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PromoCode = data
 		case "metadata":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metadata"))
 			data, err := ec.unmarshalOJSONRawMessageInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage(ctx, v)
@@ -95303,7 +100372,7 @@ func (ec *executionContext) unmarshalInputCreateSimulatedEPayRechargeCheckoutInp
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"projectId", "amount", "currency", "subject", "publicBaseUrl", "metadata"}
+	fieldsInOrder := [...]string{"projectId", "amount", "currency", "subject", "publicBaseUrl", "promoCode", "metadata"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95345,6 +100414,13 @@ func (ec *executionContext) unmarshalInputCreateSimulatedEPayRechargeCheckoutInp
 				return it, err
 			}
 			it.PublicBaseURL = data
+		case "promoCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PromoCode = data
 		case "metadata":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metadata"))
 			data, err := ec.unmarshalOJSONRawMessageInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage(ctx, v)
@@ -97525,7 +102601,7 @@ func (ec *executionContext) unmarshalInputLedgerTransactionWhereInput(ctx contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "direction", "directionNEQ", "directionIn", "directionNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "referenceType", "referenceTypeNEQ", "referenceTypeIn", "referenceTypeNotIn", "referenceTypeGT", "referenceTypeGTE", "referenceTypeLT", "referenceTypeLTE", "referenceTypeContains", "referenceTypeHasPrefix", "referenceTypeHasSuffix", "referenceTypeEqualFold", "referenceTypeContainsFold", "referenceID", "referenceIDNEQ", "referenceIDIn", "referenceIDNotIn", "referenceIDGT", "referenceIDGTE", "referenceIDLT", "referenceIDLTE", "referenceIDContains", "referenceIDHasPrefix", "referenceIDHasSuffix", "referenceIDEqualFold", "referenceIDContainsFold", "memo", "memoNEQ", "memoIn", "memoNotIn", "memoGT", "memoGTE", "memoLT", "memoLTE", "memoContains", "memoHasPrefix", "memoHasSuffix", "memoEqualFold", "memoContainsFold", "createdByType", "createdByTypeNEQ", "createdByTypeIn", "createdByTypeNotIn", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDGT", "createdByIDGTE", "createdByIDLT", "createdByIDLTE", "createdByIDContains", "createdByIDHasPrefix", "createdByIDHasSuffix", "createdByIDEqualFold", "createdByIDContainsFold", "hasBillingAccount", "hasBillingAccountWith", "hasEntries", "hasEntriesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasPaymentOrders", "hasPaymentOrdersWith", "hasRedeemCodes", "hasRedeemCodesWith", "hasPurchasedUserSubscriptions", "hasPurchasedUserSubscriptionsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "direction", "directionNEQ", "directionIn", "directionNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "referenceType", "referenceTypeNEQ", "referenceTypeIn", "referenceTypeNotIn", "referenceTypeGT", "referenceTypeGTE", "referenceTypeLT", "referenceTypeLTE", "referenceTypeContains", "referenceTypeHasPrefix", "referenceTypeHasSuffix", "referenceTypeEqualFold", "referenceTypeContainsFold", "referenceID", "referenceIDNEQ", "referenceIDIn", "referenceIDNotIn", "referenceIDGT", "referenceIDGTE", "referenceIDLT", "referenceIDLTE", "referenceIDContains", "referenceIDHasPrefix", "referenceIDHasSuffix", "referenceIDEqualFold", "referenceIDContainsFold", "memo", "memoNEQ", "memoIn", "memoNotIn", "memoGT", "memoGTE", "memoLT", "memoLTE", "memoContains", "memoHasPrefix", "memoHasSuffix", "memoEqualFold", "memoContainsFold", "createdByType", "createdByTypeNEQ", "createdByTypeIn", "createdByTypeNotIn", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDGT", "createdByIDGTE", "createdByIDLT", "createdByIDLTE", "createdByIDContains", "createdByIDHasPrefix", "createdByIDHasSuffix", "createdByIDEqualFold", "createdByIDContainsFold", "hasBillingAccount", "hasBillingAccountWith", "hasEntries", "hasEntriesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith", "hasBillingHolds", "hasBillingHoldsWith", "hasPaymentOrders", "hasPaymentOrdersWith", "hasRedeemCodes", "hasRedeemCodesWith", "hasPurchasedUserSubscriptions", "hasPurchasedUserSubscriptionsWith", "hasPromoUsages", "hasPromoUsagesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -98609,6 +103685,20 @@ func (ec *executionContext) unmarshalInputLedgerTransactionWhereInput(ctx contex
 				return it, err
 			}
 			it.HasPurchasedUserSubscriptionsWith = data
+		case "hasPromoUsages":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsages"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsages = data
+		case "hasPromoUsagesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsagesWith"))
+			data, err := ec.unmarshalOPromoUsageWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsagesWith = data
 		}
 	}
 
@@ -101928,7 +107018,7 @@ func (ec *executionContext) unmarshalInputPaymentOrderWhereInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "orderNo", "orderNoNEQ", "orderNoIn", "orderNoNotIn", "orderNoGT", "orderNoGTE", "orderNoLT", "orderNoLTE", "orderNoContains", "orderNoHasPrefix", "orderNoHasSuffix", "orderNoEqualFold", "orderNoContainsFold", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "providerInstanceID", "providerInstanceIDNEQ", "providerInstanceIDIn", "providerInstanceIDNotIn", "providerInstanceIDIsNil", "providerInstanceIDNotNil", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "purpose", "purposeNEQ", "purposeIn", "purposeNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "expiresAtIsNil", "expiresAtNotNil", "canceledAt", "canceledAtNEQ", "canceledAtIn", "canceledAtNotIn", "canceledAtGT", "canceledAtGTE", "canceledAtLT", "canceledAtLTE", "canceledAtIsNil", "canceledAtNotNil", "cancelReason", "cancelReasonNEQ", "cancelReasonIn", "cancelReasonNotIn", "cancelReasonGT", "cancelReasonGTE", "cancelReasonLT", "cancelReasonLTE", "cancelReasonContains", "cancelReasonHasPrefix", "cancelReasonHasSuffix", "cancelReasonEqualFold", "cancelReasonContainsFold", "makeupReason", "makeupReasonNEQ", "makeupReasonIn", "makeupReasonNotIn", "makeupReasonGT", "makeupReasonGTE", "makeupReasonLT", "makeupReasonLTE", "makeupReasonContains", "makeupReasonHasPrefix", "makeupReasonHasSuffix", "makeupReasonEqualFold", "makeupReasonContainsFold", "failureReason", "failureReasonNEQ", "failureReasonIn", "failureReasonNotIn", "failureReasonGT", "failureReasonGTE", "failureReasonLT", "failureReasonLTE", "failureReasonContains", "failureReasonHasPrefix", "failureReasonHasSuffix", "failureReasonEqualFold", "failureReasonContainsFold", "refundedAt", "refundedAtNEQ", "refundedAtIn", "refundedAtNotIn", "refundedAtGT", "refundedAtGTE", "refundedAtLT", "refundedAtLTE", "refundedAtIsNil", "refundedAtNotNil", "refundReason", "refundReasonNEQ", "refundReasonIn", "refundReasonNotIn", "refundReasonGT", "refundReasonGTE", "refundReasonLT", "refundReasonLTE", "refundReasonContains", "refundReasonHasPrefix", "refundReasonHasSuffix", "refundReasonEqualFold", "refundReasonContainsFold", "refundAmountMicros", "refundAmountMicrosNEQ", "refundAmountMicrosIn", "refundAmountMicrosNotIn", "refundAmountMicrosGT", "refundAmountMicrosGTE", "refundAmountMicrosLT", "refundAmountMicrosLTE", "externalTradeNo", "externalTradeNoNEQ", "externalTradeNoIn", "externalTradeNoNotIn", "externalTradeNoGT", "externalTradeNoGTE", "externalTradeNoLT", "externalTradeNoLTE", "externalTradeNoContains", "externalTradeNoHasPrefix", "externalTradeNoHasSuffix", "externalTradeNoIsNil", "externalTradeNoNotNil", "externalTradeNoEqualFold", "externalTradeNoContainsFold", "paidAt", "paidAtNEQ", "paidAtIn", "paidAtNotIn", "paidAtGT", "paidAtGTE", "paidAtLT", "paidAtLTE", "paidAtIsNil", "paidAtNotNil", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "hasBillingAccount", "hasBillingAccountWith", "hasProviderInstance", "hasProviderInstanceWith", "hasLedgerTransaction", "hasLedgerTransactionWith", "hasPaymentEvents", "hasPaymentEventsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "orderNo", "orderNoNEQ", "orderNoIn", "orderNoNotIn", "orderNoGT", "orderNoGTE", "orderNoLT", "orderNoLTE", "orderNoContains", "orderNoHasPrefix", "orderNoHasSuffix", "orderNoEqualFold", "orderNoContainsFold", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "providerInstanceID", "providerInstanceIDNEQ", "providerInstanceIDIn", "providerInstanceIDNotIn", "providerInstanceIDIsNil", "providerInstanceIDNotNil", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "purpose", "purposeNEQ", "purposeIn", "purposeNotIn", "amountMicros", "amountMicrosNEQ", "amountMicrosIn", "amountMicrosNotIn", "amountMicrosGT", "amountMicrosGTE", "amountMicrosLT", "amountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "expiresAtIsNil", "expiresAtNotNil", "canceledAt", "canceledAtNEQ", "canceledAtIn", "canceledAtNotIn", "canceledAtGT", "canceledAtGTE", "canceledAtLT", "canceledAtLTE", "canceledAtIsNil", "canceledAtNotNil", "cancelReason", "cancelReasonNEQ", "cancelReasonIn", "cancelReasonNotIn", "cancelReasonGT", "cancelReasonGTE", "cancelReasonLT", "cancelReasonLTE", "cancelReasonContains", "cancelReasonHasPrefix", "cancelReasonHasSuffix", "cancelReasonEqualFold", "cancelReasonContainsFold", "makeupReason", "makeupReasonNEQ", "makeupReasonIn", "makeupReasonNotIn", "makeupReasonGT", "makeupReasonGTE", "makeupReasonLT", "makeupReasonLTE", "makeupReasonContains", "makeupReasonHasPrefix", "makeupReasonHasSuffix", "makeupReasonEqualFold", "makeupReasonContainsFold", "failureReason", "failureReasonNEQ", "failureReasonIn", "failureReasonNotIn", "failureReasonGT", "failureReasonGTE", "failureReasonLT", "failureReasonLTE", "failureReasonContains", "failureReasonHasPrefix", "failureReasonHasSuffix", "failureReasonEqualFold", "failureReasonContainsFold", "refundedAt", "refundedAtNEQ", "refundedAtIn", "refundedAtNotIn", "refundedAtGT", "refundedAtGTE", "refundedAtLT", "refundedAtLTE", "refundedAtIsNil", "refundedAtNotNil", "refundReason", "refundReasonNEQ", "refundReasonIn", "refundReasonNotIn", "refundReasonGT", "refundReasonGTE", "refundReasonLT", "refundReasonLTE", "refundReasonContains", "refundReasonHasPrefix", "refundReasonHasSuffix", "refundReasonEqualFold", "refundReasonContainsFold", "refundAmountMicros", "refundAmountMicrosNEQ", "refundAmountMicrosIn", "refundAmountMicrosNotIn", "refundAmountMicrosGT", "refundAmountMicrosGTE", "refundAmountMicrosLT", "refundAmountMicrosLTE", "externalTradeNo", "externalTradeNoNEQ", "externalTradeNoIn", "externalTradeNoNotIn", "externalTradeNoGT", "externalTradeNoGTE", "externalTradeNoLT", "externalTradeNoLTE", "externalTradeNoContains", "externalTradeNoHasPrefix", "externalTradeNoHasSuffix", "externalTradeNoIsNil", "externalTradeNoNotNil", "externalTradeNoEqualFold", "externalTradeNoContainsFold", "paidAt", "paidAtNEQ", "paidAtIn", "paidAtNotIn", "paidAtGT", "paidAtGTE", "paidAtLT", "paidAtLTE", "paidAtIsNil", "paidAtNotNil", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "hasBillingAccount", "hasBillingAccountWith", "hasProviderInstance", "hasProviderInstanceWith", "hasLedgerTransaction", "hasLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasPaymentEvents", "hasPaymentEventsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -102517,6 +107607,176 @@ func (ec *executionContext) unmarshalInputPaymentOrderWhereInput(ctx context.Con
 				return it, err
 			}
 			it.AmountMicrosLTE = data
+		case "payableAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicros = data
+		case "payableAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosNEQ = data
+		case "payableAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosIn = data
+		case "payableAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosNotIn = data
+		case "payableAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosGT = data
+		case "payableAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosGTE = data
+		case "payableAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosLT = data
+		case "payableAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosLTE = data
+		case "discountAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicros = data
+		case "discountAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosNEQ = data
+		case "discountAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosIn = data
+		case "discountAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosNotIn = data
+		case "discountAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosGT = data
+		case "discountAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosGTE = data
+		case "discountAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosLT = data
+		case "discountAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosLTE = data
+		case "promoCodeID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeID = converted
+		case "promoCodeIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeIDNEQ = converted
+		case "promoCodeIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeIDIn = converted
+		case "promoCodeIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeIDNotIn = converted
+		case "promoCodeIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PromoCodeIDIsNil = data
+		case "promoCodeIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PromoCodeIDNotNil = data
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -103541,6 +108801,34 @@ func (ec *executionContext) unmarshalInputPaymentOrderWhereInput(ctx context.Con
 				return it, err
 			}
 			it.HasLedgerTransactionWith = data
+		case "hasPromoCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoCode"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoCode = data
+		case "hasPromoCodeWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoCodeWith"))
+			data, err := ec.unmarshalOPromoCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoCodeWith = data
+		case "hasPromoUsages":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsages"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsages = data
+		case "hasPromoUsagesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsagesWith"))
+			data, err := ec.unmarshalOPromoUsageWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsagesWith = data
 		case "hasPaymentEvents":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentEvents"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -104859,6 +110147,2550 @@ func (ec *executionContext) unmarshalInputProjectWhereInput(ctx context.Context,
 				return it, err
 			}
 			it.HasProjectUsersWith = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPromoCodeOrder(ctx context.Context, obj any) (ent.PromoCodeOrder, error) {
+	var it ent.PromoCodeOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNPromoCodeOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPromoCodeWhereInput(ctx context.Context, obj any) (ent.PromoCodeWhereInput, error) {
+	var it ent.PromoCodeWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "code", "codeNEQ", "codeIn", "codeNotIn", "codeGT", "codeGTE", "codeLT", "codeLTE", "codeContains", "codeHasPrefix", "codeHasSuffix", "codeEqualFold", "codeContainsFold", "description", "descriptionNEQ", "descriptionIn", "descriptionNotIn", "descriptionGT", "descriptionGTE", "descriptionLT", "descriptionLTE", "descriptionContains", "descriptionHasPrefix", "descriptionHasSuffix", "descriptionEqualFold", "descriptionContainsFold", "discountType", "discountTypeNEQ", "discountTypeIn", "discountTypeNotIn", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "discountPercentBps", "discountPercentBpsNEQ", "discountPercentBpsIn", "discountPercentBpsNotIn", "discountPercentBpsGT", "discountPercentBpsGTE", "discountPercentBpsLT", "discountPercentBpsLTE", "scope", "scopeNEQ", "scopeIn", "scopeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "maxUses", "maxUsesNEQ", "maxUsesIn", "maxUsesNotIn", "maxUsesGT", "maxUsesGTE", "maxUsesLT", "maxUsesLTE", "usedCount", "usedCountNEQ", "usedCountIn", "usedCountNotIn", "usedCountGT", "usedCountGTE", "usedCountLT", "usedCountLTE", "perUserLimit", "perUserLimitNEQ", "perUserLimitIn", "perUserLimitNotIn", "perUserLimitGT", "perUserLimitGTE", "perUserLimitLT", "perUserLimitLTE", "startsAt", "startsAtNEQ", "startsAtIn", "startsAtNotIn", "startsAtGT", "startsAtGTE", "startsAtLT", "startsAtLTE", "startsAtIsNil", "startsAtNotNil", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "expiresAtIsNil", "expiresAtNotNil", "createdByID", "createdByIDNEQ", "createdByIDIn", "createdByIDNotIn", "createdByIDGT", "createdByIDGTE", "createdByIDLT", "createdByIDLTE", "createdByIDIsNil", "createdByIDNotNil", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "hasUsages", "hasUsagesWith", "hasPaymentOrders", "hasPaymentOrdersWith", "hasUserSubscriptions", "hasUserSubscriptionsWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOPromoCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOPromoCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOPromoCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "codeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeNEQ = data
+		case "codeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeIn = data
+		case "codeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeNotIn = data
+		case "codeGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeGT = data
+		case "codeGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeGTE = data
+		case "codeLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeLT = data
+		case "codeLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeLTE = data
+		case "codeContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeContains = data
+		case "codeHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeHasPrefix = data
+		case "codeHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeHasSuffix = data
+		case "codeEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeEqualFold = data
+		case "codeContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeContainsFold = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "descriptionNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionNEQ = data
+		case "descriptionIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionIn = data
+		case "descriptionNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionNotIn = data
+		case "descriptionGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionGT = data
+		case "descriptionGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionGTE = data
+		case "descriptionLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionLT = data
+		case "descriptionLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionLTE = data
+		case "descriptionContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionContains = data
+		case "descriptionHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionHasPrefix = data
+		case "descriptionHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionHasSuffix = data
+		case "descriptionEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionEqualFold = data
+		case "descriptionContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("descriptionContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DescriptionContainsFold = data
+		case "discountType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountType"))
+			data, err := ec.unmarshalOPromoCodeDiscountType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountType = data
+		case "discountTypeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountTypeNEQ"))
+			data, err := ec.unmarshalOPromoCodeDiscountType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountTypeNEQ = data
+		case "discountTypeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountTypeIn"))
+			data, err := ec.unmarshalOPromoCodeDiscountType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountTypeIn = data
+		case "discountTypeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountTypeNotIn"))
+			data, err := ec.unmarshalOPromoCodeDiscountType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountTypeNotIn = data
+		case "discountAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicros = data
+		case "discountAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosNEQ = data
+		case "discountAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosIn = data
+		case "discountAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosNotIn = data
+		case "discountAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosGT = data
+		case "discountAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosGTE = data
+		case "discountAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosLT = data
+		case "discountAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosLTE = data
+		case "discountPercentBps":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountPercentBps"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountPercentBps = data
+		case "discountPercentBpsNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountPercentBpsNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountPercentBpsNEQ = data
+		case "discountPercentBpsIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountPercentBpsIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountPercentBpsIn = data
+		case "discountPercentBpsNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountPercentBpsNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountPercentBpsNotIn = data
+		case "discountPercentBpsGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountPercentBpsGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountPercentBpsGT = data
+		case "discountPercentBpsGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountPercentBpsGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountPercentBpsGTE = data
+		case "discountPercentBpsLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountPercentBpsLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountPercentBpsLT = data
+		case "discountPercentBpsLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountPercentBpsLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountPercentBpsLTE = data
+		case "scope":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scope"))
+			data, err := ec.unmarshalOPromoCodeScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Scope = data
+		case "scopeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopeNEQ"))
+			data, err := ec.unmarshalOPromoCodeScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ScopeNEQ = data
+		case "scopeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopeIn"))
+			data, err := ec.unmarshalOPromoCodeScope2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScopeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ScopeIn = data
+		case "scopeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopeNotIn"))
+			data, err := ec.unmarshalOPromoCodeScope2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScopeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ScopeNotIn = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOPromoCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOPromoCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOPromoCodeStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOPromoCodeStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "currencyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNEQ = data
+		case "currencyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyIn = data
+		case "currencyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNotIn = data
+		case "currencyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGT = data
+		case "currencyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGTE = data
+		case "currencyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLT = data
+		case "currencyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLTE = data
+		case "currencyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContains = data
+		case "currencyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasPrefix = data
+		case "currencyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasSuffix = data
+		case "currencyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyEqualFold = data
+		case "currencyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContainsFold = data
+		case "maxUses":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxUses"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxUses = data
+		case "maxUsesNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxUsesNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxUsesNEQ = data
+		case "maxUsesIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxUsesIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxUsesIn = data
+		case "maxUsesNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxUsesNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxUsesNotIn = data
+		case "maxUsesGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxUsesGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxUsesGT = data
+		case "maxUsesGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxUsesGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxUsesGTE = data
+		case "maxUsesLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxUsesLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxUsesLT = data
+		case "maxUsesLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxUsesLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxUsesLTE = data
+		case "usedCount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedCount"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedCount = data
+		case "usedCountNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedCountNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedCountNEQ = data
+		case "usedCountIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedCountIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedCountIn = data
+		case "usedCountNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedCountNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedCountNotIn = data
+		case "usedCountGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedCountGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedCountGT = data
+		case "usedCountGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedCountGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedCountGTE = data
+		case "usedCountLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedCountLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedCountLT = data
+		case "usedCountLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usedCountLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsedCountLTE = data
+		case "perUserLimit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUserLimit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PerUserLimit = data
+		case "perUserLimitNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUserLimitNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PerUserLimitNEQ = data
+		case "perUserLimitIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUserLimitIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PerUserLimitIn = data
+		case "perUserLimitNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUserLimitNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PerUserLimitNotIn = data
+		case "perUserLimitGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUserLimitGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PerUserLimitGT = data
+		case "perUserLimitGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUserLimitGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PerUserLimitGTE = data
+		case "perUserLimitLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUserLimitLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PerUserLimitLT = data
+		case "perUserLimitLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUserLimitLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PerUserLimitLTE = data
+		case "startsAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAt = data
+		case "startsAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAtNEQ = data
+		case "startsAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAtIn = data
+		case "startsAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAtNotIn = data
+		case "startsAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAtGT = data
+		case "startsAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAtGTE = data
+		case "startsAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAtLT = data
+		case "startsAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAtLTE = data
+		case "startsAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAtIsNil = data
+		case "startsAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAtNotNil = data
+		case "expiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAt = data
+		case "expiresAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNEQ = data
+		case "expiresAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtIn = data
+		case "expiresAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNotIn = data
+		case "expiresAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtGT = data
+		case "expiresAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtGTE = data
+		case "expiresAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtLT = data
+		case "expiresAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtLTE = data
+		case "expiresAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtIsNil = data
+		case "expiresAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNotNil = data
+		case "createdByID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByID"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByID = data
+		case "createdByIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDNEQ = data
+		case "createdByIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDIn = data
+		case "createdByIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDNotIn = data
+		case "createdByIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDGT = data
+		case "createdByIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDGTE = data
+		case "createdByIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDLT = data
+		case "createdByIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDLTE = data
+		case "createdByIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDIsNil = data
+		case "createdByIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdByIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedByIDNotNil = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "notesNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNEQ = data
+		case "notesIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesIn = data
+		case "notesNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesNotIn = data
+		case "notesGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGT = data
+		case "notesGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesGTE = data
+		case "notesLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLT = data
+		case "notesLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesLTE = data
+		case "notesContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContains = data
+		case "notesHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasPrefix = data
+		case "notesHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesHasSuffix = data
+		case "notesEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesEqualFold = data
+		case "notesContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notesContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotesContainsFold = data
+		case "hasUsages":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsages"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsages = data
+		case "hasUsagesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsagesWith"))
+			data, err := ec.unmarshalOPromoUsageWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsagesWith = data
+		case "hasPaymentOrders":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentOrders"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPaymentOrders = data
+		case "hasPaymentOrdersWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentOrdersWith"))
+			data, err := ec.unmarshalOPaymentOrderWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPaymentOrdersWith = data
+		case "hasUserSubscriptions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserSubscriptions"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserSubscriptions = data
+		case "hasUserSubscriptionsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserSubscriptionsWith"))
+			data, err := ec.unmarshalOUserSubscriptionWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscriptionWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserSubscriptionsWith = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPromoUsageOrder(ctx context.Context, obj any) (ent.PromoUsageOrder, error) {
+	var it ent.PromoUsageOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNPromoUsageOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPromoUsageWhereInput(ctx context.Context, obj any) (ent.PromoUsageWhereInput, error) {
+	var it ent.PromoUsageWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "code", "codeNEQ", "codeIn", "codeNotIn", "codeGT", "codeGTE", "codeLT", "codeLTE", "codeContains", "codeHasPrefix", "codeHasSuffix", "codeEqualFold", "codeContainsFold", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "userIDIsNil", "userIDNotNil", "billingAccountID", "billingAccountIDNEQ", "billingAccountIDIn", "billingAccountIDNotIn", "billingAccountIDIsNil", "billingAccountIDNotNil", "paymentOrderID", "paymentOrderIDNEQ", "paymentOrderIDIn", "paymentOrderIDNotIn", "paymentOrderIDIsNil", "paymentOrderIDNotNil", "userSubscriptionID", "userSubscriptionIDNEQ", "userSubscriptionIDIn", "userSubscriptionIDNotIn", "userSubscriptionIDIsNil", "userSubscriptionIDNotNil", "ledgerTransactionID", "ledgerTransactionIDNEQ", "ledgerTransactionIDIn", "ledgerTransactionIDNotIn", "ledgerTransactionIDIsNil", "ledgerTransactionIDNotNil", "scope", "scopeNEQ", "scopeIn", "scopeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "originalAmountMicros", "originalAmountMicrosNEQ", "originalAmountMicrosIn", "originalAmountMicrosNotIn", "originalAmountMicrosGT", "originalAmountMicrosGTE", "originalAmountMicrosLT", "originalAmountMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "idempotencyKey", "idempotencyKeyNEQ", "idempotencyKeyIn", "idempotencyKeyNotIn", "idempotencyKeyGT", "idempotencyKeyGTE", "idempotencyKeyLT", "idempotencyKeyLTE", "idempotencyKeyContains", "idempotencyKeyHasPrefix", "idempotencyKeyHasSuffix", "idempotencyKeyEqualFold", "idempotencyKeyContainsFold", "failureReason", "failureReasonNEQ", "failureReasonIn", "failureReasonNotIn", "failureReasonGT", "failureReasonGTE", "failureReasonLT", "failureReasonLTE", "failureReasonContains", "failureReasonHasPrefix", "failureReasonHasSuffix", "failureReasonEqualFold", "failureReasonContainsFold", "hasPromoCode", "hasPromoCodeWith", "hasUser", "hasUserWith", "hasBillingAccount", "hasBillingAccountWith", "hasPaymentOrder", "hasPaymentOrderWith", "hasUserSubscription", "hasUserSubscriptionWith", "hasLedgerTransaction", "hasLedgerTransactionWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOPromoUsageWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOPromoUsageWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "promoCodeID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeID = converted
+		case "promoCodeIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeIDNEQ = converted
+		case "promoCodeIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeIDIn = converted
+		case "promoCodeIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeIDNotIn = converted
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "codeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeNEQ = data
+		case "codeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeIn = data
+		case "codeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeNotIn = data
+		case "codeGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeGT = data
+		case "codeGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeGTE = data
+		case "codeLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeLT = data
+		case "codeLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeLTE = data
+		case "codeContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeContains = data
+		case "codeHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeHasPrefix = data
+		case "codeHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeHasSuffix = data
+		case "codeEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeEqualFold = data
+		case "codeContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CodeContainsFold = data
+		case "userID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserID = converted
+		case "userIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDNEQ = converted
+		case "userIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDIn = converted
+		case "userIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserIDNotIn = converted
+		case "userIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDIsNil = data
+		case "userIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDNotNil = data
+		case "billingAccountID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountID = converted
+		case "billingAccountIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountIDNEQ = converted
+		case "billingAccountIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountIDIn = converted
+		case "billingAccountIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.BillingAccountIDNotIn = converted
+		case "billingAccountIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingAccountIDIsNil = data
+		case "billingAccountIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingAccountIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingAccountIDNotNil = data
+		case "paymentOrderID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderID = converted
+		case "paymentOrderIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderIDNEQ = converted
+		case "paymentOrderIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderIDIn = converted
+		case "paymentOrderIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PaymentOrderIDNotIn = converted
+		case "paymentOrderIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentOrderIDIsNil = data
+		case "paymentOrderIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentOrderIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PaymentOrderIDNotNil = data
+		case "userSubscriptionID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionID = converted
+		case "userSubscriptionIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionIDNEQ = converted
+		case "userSubscriptionIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionIDIn = converted
+		case "userSubscriptionIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UserSubscriptionIDNotIn = converted
+		case "userSubscriptionIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserSubscriptionIDIsNil = data
+		case "userSubscriptionIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userSubscriptionIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserSubscriptionIDNotNil = data
+		case "ledgerTransactionID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionID = converted
+		case "ledgerTransactionIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionIDNEQ = converted
+		case "ledgerTransactionIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionIDIn = converted
+		case "ledgerTransactionIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.LedgerTransactionIDNotIn = converted
+		case "ledgerTransactionIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LedgerTransactionIDIsNil = data
+		case "ledgerTransactionIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ledgerTransactionIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LedgerTransactionIDNotNil = data
+		case "scope":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scope"))
+			data, err := ec.unmarshalOPromoUsageScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Scope = data
+		case "scopeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopeNEQ"))
+			data, err := ec.unmarshalOPromoUsageScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ScopeNEQ = data
+		case "scopeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopeIn"))
+			data, err := ec.unmarshalOPromoUsageScope2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScopeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ScopeIn = data
+		case "scopeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopeNotIn"))
+			data, err := ec.unmarshalOPromoUsageScope2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScopeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ScopeNotIn = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOPromoUsageStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOPromoUsageStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOPromoUsageStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOPromoUsageStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "originalAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalAmountMicros = data
+		case "originalAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalAmountMicrosNEQ = data
+		case "originalAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalAmountMicrosIn = data
+		case "originalAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalAmountMicrosNotIn = data
+		case "originalAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalAmountMicrosGT = data
+		case "originalAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalAmountMicrosGTE = data
+		case "originalAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalAmountMicrosLT = data
+		case "originalAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalAmountMicrosLTE = data
+		case "discountAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicros = data
+		case "discountAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosNEQ = data
+		case "discountAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosIn = data
+		case "discountAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosNotIn = data
+		case "discountAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosGT = data
+		case "discountAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosGTE = data
+		case "discountAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosLT = data
+		case "discountAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosLTE = data
+		case "payableAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicros = data
+		case "payableAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosNEQ = data
+		case "payableAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosIn = data
+		case "payableAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosNotIn = data
+		case "payableAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosGT = data
+		case "payableAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosGTE = data
+		case "payableAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosLT = data
+		case "payableAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosLTE = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "currencyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNEQ = data
+		case "currencyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyIn = data
+		case "currencyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyNotIn = data
+		case "currencyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGT = data
+		case "currencyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyGTE = data
+		case "currencyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLT = data
+		case "currencyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyLTE = data
+		case "currencyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContains = data
+		case "currencyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasPrefix = data
+		case "currencyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyHasSuffix = data
+		case "currencyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyEqualFold = data
+		case "currencyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyContainsFold = data
+		case "idempotencyKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKey = data
+		case "idempotencyKeyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyNEQ = data
+		case "idempotencyKeyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyIn = data
+		case "idempotencyKeyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyNotIn = data
+		case "idempotencyKeyGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyGT = data
+		case "idempotencyKeyGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyGTE = data
+		case "idempotencyKeyLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyLT = data
+		case "idempotencyKeyLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyLTE = data
+		case "idempotencyKeyContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyContains = data
+		case "idempotencyKeyHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyHasPrefix = data
+		case "idempotencyKeyHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyHasSuffix = data
+		case "idempotencyKeyEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyEqualFold = data
+		case "idempotencyKeyContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idempotencyKeyContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IdempotencyKeyContainsFold = data
+		case "failureReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReason = data
+		case "failureReasonNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonNEQ = data
+		case "failureReasonIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonIn = data
+		case "failureReasonNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonNotIn = data
+		case "failureReasonGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonGT = data
+		case "failureReasonGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonGTE = data
+		case "failureReasonLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonLT = data
+		case "failureReasonLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonLTE = data
+		case "failureReasonContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonContains = data
+		case "failureReasonHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonHasPrefix = data
+		case "failureReasonHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonHasSuffix = data
+		case "failureReasonEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonEqualFold = data
+		case "failureReasonContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("failureReasonContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FailureReasonContainsFold = data
+		case "hasPromoCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoCode"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoCode = data
+		case "hasPromoCodeWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoCodeWith"))
+			data, err := ec.unmarshalOPromoCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoCodeWith = data
+		case "hasUser":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUser"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUser = data
+		case "hasUserWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserWith = data
+		case "hasBillingAccount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingAccount"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingAccount = data
+		case "hasBillingAccountWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasBillingAccountWith"))
+			data, err := ec.unmarshalOBillingAccountWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐBillingAccountWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasBillingAccountWith = data
+		case "hasPaymentOrder":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentOrder"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPaymentOrder = data
+		case "hasPaymentOrderWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPaymentOrderWith"))
+			data, err := ec.unmarshalOPaymentOrderWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPaymentOrderWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPaymentOrderWith = data
+		case "hasUserSubscription":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserSubscription"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserSubscription = data
+		case "hasUserSubscriptionWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUserSubscriptionWith"))
+			data, err := ec.unmarshalOUserSubscriptionWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUserSubscriptionWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUserSubscriptionWith = data
+		case "hasLedgerTransaction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLedgerTransaction"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasLedgerTransaction = data
+		case "hasLedgerTransactionWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasLedgerTransactionWith"))
+			data, err := ec.unmarshalOLedgerTransactionWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐLedgerTransactionWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasLedgerTransactionWith = data
 		}
 	}
 
@@ -107082,7 +114914,7 @@ func (ec *executionContext) unmarshalInputPurchaseSubscriptionPlanInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"planId"}
+	fieldsInOrder := [...]string{"planId", "promoCode"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -107100,6 +114932,13 @@ func (ec *executionContext) unmarshalInputPurchaseSubscriptionPlanInput(ctx cont
 				return it, graphql.ErrorOnPath(ctx, err)
 			}
 			it.PlanID = converted
+		case "promoCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCode"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PromoCode = data
 		}
 	}
 
@@ -107224,6 +115063,89 @@ func (ec *executionContext) unmarshalInputQueryModelsInput(ctx context.Context, 
 				return it, err
 			}
 			it.IncludeAllChannelModels = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputQuoteRechargePromoInput(ctx context.Context, obj any) (biz.QuoteRechargePromoInput, error) {
+	var it biz.QuoteRechargePromoInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"amount", "currency", "promoCode"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "promoCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.QuoteRechargePromoInput().PromoCode(ctx, &it, data); err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputQuoteSubscriptionPromoInput(ctx context.Context, obj any) (biz.QuoteSubscriptionPromoInput, error) {
+	var it biz.QuoteSubscriptionPromoInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"planId", "promoCode"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "planId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("planId"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PlanID = converted
+		case "promoCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.QuoteSubscriptionPromoInput().PromoCode(ctx, &it, data); err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -112340,6 +120262,135 @@ func (ec *executionContext) unmarshalInputSaveChannelModelPriceInput(ctx context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSavePromoCodeInput(ctx context.Context, obj any) (biz.SavePromoCodeInput, error) {
+	var it biz.SavePromoCodeInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "code", "description", "discountType", "discountAmount", "discountPercentBps", "scope", "status", "currency", "maxUses", "perUserLimit", "startsAt", "expiresAt", "notes", "metadata"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "discountType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountType"))
+			data, err := ec.unmarshalOPromoCodeDiscountType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountType = data
+		case "discountAmount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmount"))
+			data, err := ec.unmarshalNDecimalInput2githubᚗcomᚋshopspringᚋdecimalᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmount = data
+		case "discountPercentBps":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountPercentBps"))
+			data, err := ec.unmarshalOInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountPercentBps = data
+		case "scope":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scope"))
+			data, err := ec.unmarshalOPromoCodeScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Scope = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOPromoCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "maxUses":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxUses"))
+			data, err := ec.unmarshalOInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxUses = data
+		case "perUserLimit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUserLimit"))
+			data, err := ec.unmarshalOInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PerUserLimit = data
+		case "startsAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startsAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartsAt = data
+		case "expiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAt = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "metadata":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metadata"))
+			data, err := ec.unmarshalOJSONRawMessageInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐJSONRawMessage(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Metadata = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSaveProxyPresetInput(ctx context.Context, obj any) (biz.ProxyPreset, error) {
 	var it biz.ProxyPreset
 	asMap := map[string]any{}
@@ -116191,6 +124242,51 @@ func (ec *executionContext) unmarshalInputUpdateProjectUserInput(ctx context.Con
 				return it, err
 			}
 			it.RemoveRoleIDs = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdatePromoCodeStatusInput(ctx context.Context, obj any) (biz.UpdatePromoCodeStatusInput, error) {
+	var it biz.UpdatePromoCodeStatusInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"codeId", "status", "notes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "codeId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("codeId"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.CodeID = converted
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNPromoCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
 		}
 	}
 
@@ -121545,7 +129641,7 @@ func (ec *executionContext) unmarshalInputUserSubscriptionWhereInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "planID", "planIDNEQ", "planIDIn", "planIDNotIn", "planIDIsNil", "planIDNotNil", "status", "statusNEQ", "statusIn", "statusNotIn", "startsAt", "startsAtNEQ", "startsAtIn", "startsAtNotIn", "startsAtGT", "startsAtGTE", "startsAtLT", "startsAtLTE", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "currentPeriodStart", "currentPeriodStartNEQ", "currentPeriodStartIn", "currentPeriodStartNotIn", "currentPeriodStartGT", "currentPeriodStartGTE", "currentPeriodStartLT", "currentPeriodStartLTE", "currentPeriodEnd", "currentPeriodEndNEQ", "currentPeriodEndIn", "currentPeriodEndNotIn", "currentPeriodEndGT", "currentPeriodEndGTE", "currentPeriodEndLT", "currentPeriodEndLTE", "resetAt", "resetAtNEQ", "resetAtIn", "resetAtNotIn", "resetAtGT", "resetAtGTE", "resetAtLT", "resetAtLTE", "periodDays", "periodDaysNEQ", "periodDaysIn", "periodDaysNotIn", "periodDaysGT", "periodDaysGTE", "periodDaysLT", "periodDaysLTE", "includedAmountMicros", "includedAmountMicrosNEQ", "includedAmountMicrosIn", "includedAmountMicrosNotIn", "includedAmountMicrosGT", "includedAmountMicrosGTE", "includedAmountMicrosLT", "includedAmountMicrosLTE", "usedAmountMicros", "usedAmountMicrosNEQ", "usedAmountMicrosIn", "usedAmountMicrosNotIn", "usedAmountMicrosGT", "usedAmountMicrosGTE", "usedAmountMicrosLT", "usedAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "allowWalletFallback", "allowWalletFallbackNEQ", "assignedByID", "assignedByIDNEQ", "assignedByIDIn", "assignedByIDNotIn", "assignedByIDIsNil", "assignedByIDNotNil", "purchaseLedgerTransactionID", "purchaseLedgerTransactionIDNEQ", "purchaseLedgerTransactionIDIn", "purchaseLedgerTransactionIDNotIn", "purchaseLedgerTransactionIDIsNil", "purchaseLedgerTransactionIDNotNil", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "revokeReason", "revokeReasonNEQ", "revokeReasonIn", "revokeReasonNotIn", "revokeReasonGT", "revokeReasonGTE", "revokeReasonLT", "revokeReasonLTE", "revokeReasonContains", "revokeReasonHasPrefix", "revokeReasonHasSuffix", "revokeReasonEqualFold", "revokeReasonContainsFold", "hasUser", "hasUserWith", "hasPlan", "hasPlanWith", "hasAssignedBy", "hasAssignedByWith", "hasPurchaseLedgerTransaction", "hasPurchaseLedgerTransactionWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "planID", "planIDNEQ", "planIDIn", "planIDNotIn", "planIDIsNil", "planIDNotNil", "status", "statusNEQ", "statusIn", "statusNotIn", "startsAt", "startsAtNEQ", "startsAtIn", "startsAtNotIn", "startsAtGT", "startsAtGTE", "startsAtLT", "startsAtLTE", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "currentPeriodStart", "currentPeriodStartNEQ", "currentPeriodStartIn", "currentPeriodStartNotIn", "currentPeriodStartGT", "currentPeriodStartGTE", "currentPeriodStartLT", "currentPeriodStartLTE", "currentPeriodEnd", "currentPeriodEndNEQ", "currentPeriodEndIn", "currentPeriodEndNotIn", "currentPeriodEndGT", "currentPeriodEndGTE", "currentPeriodEndLT", "currentPeriodEndLTE", "resetAt", "resetAtNEQ", "resetAtIn", "resetAtNotIn", "resetAtGT", "resetAtGTE", "resetAtLT", "resetAtLTE", "periodDays", "periodDaysNEQ", "periodDaysIn", "periodDaysNotIn", "periodDaysGT", "periodDaysGTE", "periodDaysLT", "periodDaysLTE", "includedAmountMicros", "includedAmountMicrosNEQ", "includedAmountMicrosIn", "includedAmountMicrosNotIn", "includedAmountMicrosGT", "includedAmountMicrosGTE", "includedAmountMicrosLT", "includedAmountMicrosLTE", "usedAmountMicros", "usedAmountMicrosNEQ", "usedAmountMicrosIn", "usedAmountMicrosNotIn", "usedAmountMicrosGT", "usedAmountMicrosGTE", "usedAmountMicrosLT", "usedAmountMicrosLTE", "currency", "currencyNEQ", "currencyIn", "currencyNotIn", "currencyGT", "currencyGTE", "currencyLT", "currencyLTE", "currencyContains", "currencyHasPrefix", "currencyHasSuffix", "currencyEqualFold", "currencyContainsFold", "allowWalletFallback", "allowWalletFallbackNEQ", "assignedByID", "assignedByIDNEQ", "assignedByIDIn", "assignedByIDNotIn", "assignedByIDIsNil", "assignedByIDNotNil", "purchaseLedgerTransactionID", "purchaseLedgerTransactionIDNEQ", "purchaseLedgerTransactionIDIn", "purchaseLedgerTransactionIDNotIn", "purchaseLedgerTransactionIDIsNil", "purchaseLedgerTransactionIDNotNil", "originalPriceMicros", "originalPriceMicrosNEQ", "originalPriceMicrosIn", "originalPriceMicrosNotIn", "originalPriceMicrosGT", "originalPriceMicrosGTE", "originalPriceMicrosLT", "originalPriceMicrosLTE", "discountAmountMicros", "discountAmountMicrosNEQ", "discountAmountMicrosIn", "discountAmountMicrosNotIn", "discountAmountMicrosGT", "discountAmountMicrosGTE", "discountAmountMicrosLT", "discountAmountMicrosLTE", "payableAmountMicros", "payableAmountMicrosNEQ", "payableAmountMicrosIn", "payableAmountMicrosNotIn", "payableAmountMicrosGT", "payableAmountMicrosGTE", "payableAmountMicrosLT", "payableAmountMicrosLTE", "promoCodeID", "promoCodeIDNEQ", "promoCodeIDIn", "promoCodeIDNotIn", "promoCodeIDIsNil", "promoCodeIDNotNil", "notes", "notesNEQ", "notesIn", "notesNotIn", "notesGT", "notesGTE", "notesLT", "notesLTE", "notesContains", "notesHasPrefix", "notesHasSuffix", "notesEqualFold", "notesContainsFold", "revokeReason", "revokeReasonNEQ", "revokeReasonIn", "revokeReasonNotIn", "revokeReasonGT", "revokeReasonGTE", "revokeReasonLT", "revokeReasonLTE", "revokeReasonContains", "revokeReasonHasPrefix", "revokeReasonHasSuffix", "revokeReasonEqualFold", "revokeReasonContainsFold", "hasUser", "hasUserWith", "hasPlan", "hasPlanWith", "hasAssignedBy", "hasAssignedByWith", "hasPurchaseLedgerTransaction", "hasPurchaseLedgerTransactionWith", "hasPromoCode", "hasPromoCodeWith", "hasPromoUsages", "hasPromoUsagesWith", "hasUsageBillingRecords", "hasUsageBillingRecordsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -122572,6 +130668,232 @@ func (ec *executionContext) unmarshalInputUserSubscriptionWhereInput(ctx context
 				return it, err
 			}
 			it.PurchaseLedgerTransactionIDNotNil = data
+		case "originalPriceMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPriceMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalPriceMicros = data
+		case "originalPriceMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPriceMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalPriceMicrosNEQ = data
+		case "originalPriceMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPriceMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalPriceMicrosIn = data
+		case "originalPriceMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPriceMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalPriceMicrosNotIn = data
+		case "originalPriceMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPriceMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalPriceMicrosGT = data
+		case "originalPriceMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPriceMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalPriceMicrosGTE = data
+		case "originalPriceMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPriceMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalPriceMicrosLT = data
+		case "originalPriceMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPriceMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalPriceMicrosLTE = data
+		case "discountAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicros = data
+		case "discountAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosNEQ = data
+		case "discountAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosIn = data
+		case "discountAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosNotIn = data
+		case "discountAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosGT = data
+		case "discountAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosGTE = data
+		case "discountAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosLT = data
+		case "discountAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discountAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DiscountAmountMicrosLTE = data
+		case "payableAmountMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicros = data
+		case "payableAmountMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosNEQ = data
+		case "payableAmountMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosIn = data
+		case "payableAmountMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosNotIn = data
+		case "payableAmountMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosGT = data
+		case "payableAmountMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosGTE = data
+		case "payableAmountMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosLT = data
+		case "payableAmountMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payableAmountMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PayableAmountMicrosLTE = data
+		case "promoCodeID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeID = converted
+		case "promoCodeIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeIDNEQ = converted
+		case "promoCodeIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeIDIn = converted
+		case "promoCodeIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PromoCodeIDNotIn = converted
+		case "promoCodeIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PromoCodeIDIsNil = data
+		case "promoCodeIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promoCodeIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PromoCodeIDNotNil = data
 		case "notes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -122810,6 +131132,34 @@ func (ec *executionContext) unmarshalInputUserSubscriptionWhereInput(ctx context
 				return it, err
 			}
 			it.HasPurchaseLedgerTransactionWith = data
+		case "hasPromoCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoCode"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoCode = data
+		case "hasPromoCodeWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoCodeWith"))
+			data, err := ec.unmarshalOPromoCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoCodeWith = data
+		case "hasPromoUsages":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsages"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsages = data
+		case "hasPromoUsagesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsagesWith"))
+			data, err := ec.unmarshalOPromoUsageWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsagesWith = data
 		case "hasUsageBillingRecords":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsageBillingRecords"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -122837,7 +131187,7 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "hasProjects", "hasProjectsWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasCreatedRedeemCodes", "hasCreatedRedeemCodesWith", "hasUsedRedeemCodes", "hasUsedRedeemCodesWith", "hasUserSubscriptions", "hasUserSubscriptionsWith", "hasAssignedUserSubscriptions", "hasAssignedUserSubscriptionsWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "hasProjects", "hasProjectsWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasCreatedRedeemCodes", "hasCreatedRedeemCodesWith", "hasUsedRedeemCodes", "hasUsedRedeemCodesWith", "hasUserSubscriptions", "hasUserSubscriptionsWith", "hasAssignedUserSubscriptions", "hasAssignedUserSubscriptionsWith", "hasPromoUsages", "hasPromoUsagesWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -123702,6 +132052,20 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 				return it, err
 			}
 			it.HasAssignedUserSubscriptionsWith = data
+		case "hasPromoUsages":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsages"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsages = data
+		case "hasPromoUsagesWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPromoUsagesWith"))
+			data, err := ec.unmarshalOPromoUsageWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPromoUsagesWith = data
 		case "hasProjectUsers":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasProjectUsers"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -124021,6 +132385,16 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Prompt(ctx, sel, obj)
+	case *ent.PromoUsage:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._PromoUsage(ctx, sel, obj)
+	case *ent.PromoCode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._PromoCode(ctx, sel, obj)
 	case *ent.Project:
 		if obj == nil {
 			return graphql.Null
@@ -126036,6 +134410,42 @@ func (ec *executionContext) _BillingAccount(ctx context.Context, sel ast.Selecti
 					}
 				}()
 				res = ec._BillingAccount_paymentOrders(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "promoUsages":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BillingAccount_promoUsages(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -132713,6 +141123,42 @@ func (ec *executionContext) _LedgerTransaction(ctx context.Context, sel ast.Sele
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "promoUsages":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LedgerTransaction_promoUsages(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -134794,6 +143240,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "savePromoCode":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_savePromoCode(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatePromoCodeStatus":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updatePromoCodeStatus(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletePromoCode":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deletePromoCode(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "saveSubscriptionPlan":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_saveSubscriptionPlan(ctx, field)
@@ -136063,6 +144530,49 @@ func (ec *executionContext) _PaymentOrder(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "payableAmountMicros":
+			out.Values[i] = ec._PaymentOrder_payableAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "discountAmountMicros":
+			out.Values[i] = ec._PaymentOrder_discountAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "promoCodeID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PaymentOrder_promoCodeID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "currency":
 			out.Values[i] = ec._PaymentOrder_currency(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -136222,6 +144732,75 @@ func (ec *executionContext) _PaymentOrder(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._PaymentOrder_ledgerTransaction(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "promoCode":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PaymentOrder_promoCode(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "promoUsages":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PaymentOrder_promoUsages(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -137340,6 +145919,1021 @@ func (ec *executionContext) _ProjectProfiles(ctx context.Context, sel ast.Select
 			}
 		case "profiles":
 			out.Values[i] = ec._ProjectProfiles_profiles(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var promoCodeImplementors = []string{"PromoCode", "Node"}
+
+func (ec *executionContext) _PromoCode(ctx context.Context, sel ast.SelectionSet, obj *ent.PromoCode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, promoCodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PromoCode")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoCode_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._PromoCode_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._PromoCode_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "code":
+			out.Values[i] = ec._PromoCode_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "description":
+			out.Values[i] = ec._PromoCode_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "discountType":
+			out.Values[i] = ec._PromoCode_discountType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "discountAmountMicros":
+			out.Values[i] = ec._PromoCode_discountAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "discountPercentBps":
+			out.Values[i] = ec._PromoCode_discountPercentBps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "scope":
+			out.Values[i] = ec._PromoCode_scope(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._PromoCode_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "currency":
+			out.Values[i] = ec._PromoCode_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "maxUses":
+			out.Values[i] = ec._PromoCode_maxUses(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "usedCount":
+			out.Values[i] = ec._PromoCode_usedCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "perUserLimit":
+			out.Values[i] = ec._PromoCode_perUserLimit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "startsAt":
+			out.Values[i] = ec._PromoCode_startsAt(ctx, field, obj)
+		case "expiresAt":
+			out.Values[i] = ec._PromoCode_expiresAt(ctx, field, obj)
+		case "createdByID":
+			out.Values[i] = ec._PromoCode_createdByID(ctx, field, obj)
+		case "notes":
+			out.Values[i] = ec._PromoCode_notes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "metadata":
+			out.Values[i] = ec._PromoCode_metadata(ctx, field, obj)
+		case "usages":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoCode_usages(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "paymentOrders":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoCode_paymentOrders(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "userSubscriptions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoCode_userSubscriptions(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var promoCodeConnectionImplementors = []string{"PromoCodeConnection"}
+
+func (ec *executionContext) _PromoCodeConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.PromoCodeConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, promoCodeConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PromoCodeConnection")
+		case "edges":
+			out.Values[i] = ec._PromoCodeConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._PromoCodeConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._PromoCodeConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var promoCodeEdgeImplementors = []string{"PromoCodeEdge"}
+
+func (ec *executionContext) _PromoCodeEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.PromoCodeEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, promoCodeEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PromoCodeEdge")
+		case "node":
+			out.Values[i] = ec._PromoCodeEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._PromoCodeEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var promoQuoteImplementors = []string{"PromoQuote"}
+
+func (ec *executionContext) _PromoQuote(ctx context.Context, sel ast.SelectionSet, obj *PromoQuote) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, promoQuoteImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PromoQuote")
+		case "code":
+			out.Values[i] = ec._PromoQuote_code(ctx, field, obj)
+		case "originalAmountMicros":
+			out.Values[i] = ec._PromoQuote_originalAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "discountAmountMicros":
+			out.Values[i] = ec._PromoQuote_discountAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "payableAmountMicros":
+			out.Values[i] = ec._PromoQuote_payableAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currency":
+			out.Values[i] = ec._PromoQuote_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var promoUsageImplementors = []string{"PromoUsage", "Node"}
+
+func (ec *executionContext) _PromoUsage(ctx context.Context, sel ast.SelectionSet, obj *ent.PromoUsage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, promoUsageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PromoUsage")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._PromoUsage_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._PromoUsage_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "promoCodeID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_promoCodeID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "code":
+			out.Values[i] = ec._PromoUsage_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "codeSnapshot":
+			out.Values[i] = ec._PromoUsage_codeSnapshot(ctx, field, obj)
+		case "userID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_userID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingAccountID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_billingAccountID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "paymentOrderID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_paymentOrderID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "userSubscriptionID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_userSubscriptionID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "ledgerTransactionID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_ledgerTransactionID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "scope":
+			out.Values[i] = ec._PromoUsage_scope(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._PromoUsage_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "originalAmountMicros":
+			out.Values[i] = ec._PromoUsage_originalAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "discountAmountMicros":
+			out.Values[i] = ec._PromoUsage_discountAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "payableAmountMicros":
+			out.Values[i] = ec._PromoUsage_payableAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "currency":
+			out.Values[i] = ec._PromoUsage_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "idempotencyKey":
+			out.Values[i] = ec._PromoUsage_idempotencyKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "failureReason":
+			out.Values[i] = ec._PromoUsage_failureReason(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "promoCode":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_promoCode(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_user(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "billingAccount":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_billingAccount(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "paymentOrder":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_paymentOrder(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "userSubscription":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_userSubscription(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "ledgerTransaction":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PromoUsage_ledgerTransaction(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var promoUsageConnectionImplementors = []string{"PromoUsageConnection"}
+
+func (ec *executionContext) _PromoUsageConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.PromoUsageConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, promoUsageConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PromoUsageConnection")
+		case "edges":
+			out.Values[i] = ec._PromoUsageConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._PromoUsageConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._PromoUsageConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var promoUsageEdgeImplementors = []string{"PromoUsageEdge"}
+
+func (ec *executionContext) _PromoUsageEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.PromoUsageEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, promoUsageEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PromoUsageEdge")
+		case "node":
+			out.Values[i] = ec._PromoUsageEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._PromoUsageEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -138806,6 +148400,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_projects(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "promoCodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_promoCodes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "promoUsages":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_promoUsages(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -140550,6 +150188,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "quoteRechargePromo":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_quoteRechargePromo(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "quoteSubscriptionPromo":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_quoteSubscriptionPromo(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "availableSubscriptionPlans":
 			field := field
 
@@ -140714,6 +150396,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_adminRedeemCodes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminPromoCodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminPromoCodes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminPromoUsages":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminPromoUsages(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -148114,6 +157840,42 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "promoUsages":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_promoUsages(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "projectUsers":
 			field := field
 
@@ -149218,6 +158980,54 @@ func (ec *executionContext) _UserSubscription(ctx context.Context, sel ast.Selec
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "originalPriceMicros":
+			out.Values[i] = ec._UserSubscription_originalPriceMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "discountAmountMicros":
+			out.Values[i] = ec._UserSubscription_discountAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "payableAmountMicros":
+			out.Values[i] = ec._UserSubscription_payableAmountMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "promoCodeID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserSubscription_promoCodeID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "notes":
 			out.Values[i] = ec._UserSubscription_notes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -149340,6 +159150,75 @@ func (ec *executionContext) _UserSubscription(ctx context.Context, sel ast.Selec
 					}
 				}()
 				res = ec._UserSubscription_purchaseLedgerTransaction(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "promoCode":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserSubscription_promoCode(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "promoUsages":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserSubscription_promoUsages(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -154827,6 +164706,154 @@ func (ec *executionContext) unmarshalNProjectWhereInput2ᚖgithubᚗcomᚋlooplj
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNPromoCode2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCode(ctx context.Context, sel ast.SelectionSet, v ent.PromoCode) graphql.Marshaler {
+	return ec._PromoCode(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPromoCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCode(ctx context.Context, sel ast.SelectionSet, v *ent.PromoCode) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PromoCode(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPromoCodeConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeConnection(ctx context.Context, sel ast.SelectionSet, v ent.PromoCodeConnection) graphql.Marshaler {
+	return ec._PromoCodeConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPromoCodeConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeConnection(ctx context.Context, sel ast.SelectionSet, v *ent.PromoCodeConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PromoCodeConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNPromoCodeDiscountType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx context.Context, v any) (promocode.DiscountType, error) {
+	var res promocode.DiscountType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPromoCodeDiscountType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx context.Context, sel ast.SelectionSet, v promocode.DiscountType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPromoCodeOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeOrderField(ctx context.Context, v any) (*ent.PromoCodeOrderField, error) {
+	var res = new(ent.PromoCodeOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPromoCodeOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.PromoCodeOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNPromoCodeScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx context.Context, v any) (promocode.Scope, error) {
+	var res promocode.Scope
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPromoCodeScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx context.Context, sel ast.SelectionSet, v promocode.Scope) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPromoCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx context.Context, v any) (promocode.Status, error) {
+	var res promocode.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPromoCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx context.Context, sel ast.SelectionSet, v promocode.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPromoCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInput(ctx context.Context, v any) (*ent.PromoCodeWhereInput, error) {
+	res, err := ec.unmarshalInputPromoCodeWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPromoQuote2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐPromoQuote(ctx context.Context, sel ast.SelectionSet, v PromoQuote) graphql.Marshaler {
+	return ec._PromoQuote(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPromoQuote2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐPromoQuote(ctx context.Context, sel ast.SelectionSet, v *PromoQuote) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PromoQuote(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPromoUsageConnection2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection(ctx context.Context, sel ast.SelectionSet, v ent.PromoUsageConnection) graphql.Marshaler {
+	return ec._PromoUsageConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPromoUsageConnection2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageConnection(ctx context.Context, sel ast.SelectionSet, v *ent.PromoUsageConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PromoUsageConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNPromoUsageOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrderField(ctx context.Context, v any) (*ent.PromoUsageOrderField, error) {
+	var res = new(ent.PromoUsageOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPromoUsageOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.PromoUsageOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNPromoUsageScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope(ctx context.Context, v any) (promousage.Scope, error) {
+	var res promousage.Scope
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPromoUsageScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope(ctx context.Context, sel ast.SelectionSet, v promousage.Scope) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPromoUsageStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus(ctx context.Context, v any) (promousage.Status, error) {
+	var res promousage.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPromoUsageStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus(ctx context.Context, sel ast.SelectionSet, v promousage.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput(ctx context.Context, v any) (*ent.PromoUsageWhereInput, error) {
+	res, err := ec.unmarshalInputPromoUsageWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNPrompt2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPrompt(ctx context.Context, sel ast.SelectionSet, v ent.Prompt) graphql.Marshaler {
 	return ec._Prompt(ctx, sel, &v)
 }
@@ -155317,6 +165344,16 @@ func (ec *executionContext) marshalNQuotaEnforcementSettings2ᚖgithubᚗcomᚋl
 		return graphql.Null
 	}
 	return ec._QuotaEnforcementSettings(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNQuoteRechargePromoInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐQuoteRechargePromoInput(ctx context.Context, v any) (biz.QuoteRechargePromoInput, error) {
+	res, err := ec.unmarshalInputQuoteRechargePromoInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNQuoteSubscriptionPromoInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐQuoteSubscriptionPromoInput(ctx context.Context, v any) (biz.QuoteSubscriptionPromoInput, error) {
+	res, err := ec.unmarshalInputQuoteSubscriptionPromoInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNRedeemCode2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐRedeemCode(ctx context.Context, sel ast.SelectionSet, v ent.RedeemCode) graphql.Marshaler {
@@ -155901,6 +165938,11 @@ func (ec *executionContext) unmarshalNSaveChannelModelPriceInput2ᚕᚖgithubᚗ
 func (ec *executionContext) unmarshalNSaveChannelModelPriceInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveChannelModelPriceInput(ctx context.Context, v any) (*biz.SaveChannelModelPriceInput, error) {
 	res, err := ec.unmarshalInputSaveChannelModelPriceInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSavePromoCodeInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐSavePromoCodeInput(ctx context.Context, v any) (biz.SavePromoCodeInput, error) {
+	res, err := ec.unmarshalInputSavePromoCodeInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNSaveProxyPresetInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐProxyPreset(ctx context.Context, v any) (biz.ProxyPreset, error) {
@@ -156809,6 +166851,11 @@ func (ec *executionContext) unmarshalNUpdateProjectProfilesInput2githubᚗcomᚋ
 
 func (ec *executionContext) unmarshalNUpdateProjectUserInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateProjectUserInput(ctx context.Context, v any) (UpdateProjectUserInput, error) {
 	res, err := ec.unmarshalInputUpdateProjectUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdatePromoCodeStatusInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdatePromoCodeStatusInput(ctx context.Context, v any) (biz.UpdatePromoCodeStatusInput, error) {
+	res, err := ec.unmarshalInputUpdatePromoCodeStatusInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -158274,6 +168321,22 @@ func (ec *executionContext) unmarshalOAdminPaymentOrdersFilter2ᚖgithubᚗcom�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputAdminPaymentOrdersFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAdminPromoCodesFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminPromoCodesFilter(ctx context.Context, v any) (*AdminPromoCodesFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAdminPromoCodesFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAdminPromoUsagesFilter2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐAdminPromoUsagesFilter(ctx context.Context, v any) (*AdminPromoUsagesFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAdminPromoUsagesFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -163919,6 +173982,619 @@ func (ec *executionContext) unmarshalOProjectWhereInput2ᚖgithubᚗcomᚋlooplj
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputProjectWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoCode2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCode(ctx context.Context, sel ast.SelectionSet, v *ent.PromoCode) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PromoCode(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPromoCodeDiscountType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx context.Context, v any) (promocode.DiscountType, error) {
+	var res promocode.DiscountType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoCodeDiscountType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx context.Context, sel ast.SelectionSet, v promocode.DiscountType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOPromoCodeDiscountType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountTypeᚄ(ctx context.Context, v any) ([]promocode.DiscountType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]promocode.DiscountType, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPromoCodeDiscountType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOPromoCodeDiscountType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []promocode.DiscountType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPromoCodeDiscountType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOPromoCodeDiscountType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx context.Context, v any) (*promocode.DiscountType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(promocode.DiscountType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoCodeDiscountType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐDiscountType(ctx context.Context, sel ast.SelectionSet, v *promocode.DiscountType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) marshalOPromoCodeEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.PromoCodeEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOPromoCodeEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOPromoCodeEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeEdge(ctx context.Context, sel ast.SelectionSet, v *ent.PromoCodeEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PromoCodeEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPromoCodeOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeOrder(ctx context.Context, v any) (*ent.PromoCodeOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPromoCodeOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPromoCodeScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx context.Context, v any) (promocode.Scope, error) {
+	var res promocode.Scope
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoCodeScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx context.Context, sel ast.SelectionSet, v promocode.Scope) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOPromoCodeScope2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScopeᚄ(ctx context.Context, v any) ([]promocode.Scope, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]promocode.Scope, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPromoCodeScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOPromoCodeScope2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScopeᚄ(ctx context.Context, sel ast.SelectionSet, v []promocode.Scope) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPromoCodeScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOPromoCodeScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx context.Context, v any) (*promocode.Scope, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(promocode.Scope)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoCodeScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐScope(ctx context.Context, sel ast.SelectionSet, v *promocode.Scope) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOPromoCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx context.Context, v any) (promocode.Status, error) {
+	var res promocode.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx context.Context, sel ast.SelectionSet, v promocode.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOPromoCodeStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatusᚄ(ctx context.Context, v any) ([]promocode.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]promocode.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPromoCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOPromoCodeStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []promocode.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPromoCodeStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOPromoCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx context.Context, v any) (*promocode.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(promocode.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoCodeStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromocodeᚐStatus(ctx context.Context, sel ast.SelectionSet, v *promocode.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOPromoCodeWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInputᚄ(ctx context.Context, v any) ([]*ent.PromoCodeWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.PromoCodeWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPromoCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOPromoCodeWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoCodeWhereInput(ctx context.Context, v any) (*ent.PromoCodeWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPromoCodeWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoUsage2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsage(ctx context.Context, sel ast.SelectionSet, v *ent.PromoUsage) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PromoUsage(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPromoUsageEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.PromoUsageEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOPromoUsageEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOPromoUsageEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageEdge(ctx context.Context, sel ast.SelectionSet, v *ent.PromoUsageEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PromoUsageEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPromoUsageOrder2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageOrder(ctx context.Context, v any) (*ent.PromoUsageOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPromoUsageOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPromoUsageScope2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScopeᚄ(ctx context.Context, v any) ([]promousage.Scope, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]promousage.Scope, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPromoUsageScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOPromoUsageScope2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScopeᚄ(ctx context.Context, sel ast.SelectionSet, v []promousage.Scope) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPromoUsageScope2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOPromoUsageScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope(ctx context.Context, v any) (*promousage.Scope, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(promousage.Scope)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoUsageScope2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐScope(ctx context.Context, sel ast.SelectionSet, v *promousage.Scope) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOPromoUsageStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatusᚄ(ctx context.Context, v any) ([]promousage.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]promousage.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPromoUsageStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOPromoUsageStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []promousage.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPromoUsageStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOPromoUsageStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus(ctx context.Context, v any) (*promousage.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(promousage.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPromoUsageStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋpromousageᚐStatus(ctx context.Context, sel ast.SelectionSet, v *promousage.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOPromoUsageWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInputᚄ(ctx context.Context, v any) ([]*ent.PromoUsageWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.PromoUsageWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOPromoUsageWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐPromoUsageWhereInput(ctx context.Context, v any) (*ent.PromoUsageWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPromoUsageWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

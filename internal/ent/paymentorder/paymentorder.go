@@ -36,6 +36,12 @@ const (
 	FieldPurpose = "purpose"
 	// FieldAmountMicros holds the string denoting the amount_micros field in the database.
 	FieldAmountMicros = "amount_micros"
+	// FieldPayableAmountMicros holds the string denoting the payable_amount_micros field in the database.
+	FieldPayableAmountMicros = "payable_amount_micros"
+	// FieldDiscountAmountMicros holds the string denoting the discount_amount_micros field in the database.
+	FieldDiscountAmountMicros = "discount_amount_micros"
+	// FieldPromoCodeID holds the string denoting the promo_code_id field in the database.
+	FieldPromoCodeID = "promo_code_id"
 	// FieldCurrency holds the string denoting the currency field in the database.
 	FieldCurrency = "currency"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -70,6 +76,10 @@ const (
 	EdgeProviderInstance = "provider_instance"
 	// EdgeLedgerTransaction holds the string denoting the ledger_transaction edge name in mutations.
 	EdgeLedgerTransaction = "ledger_transaction"
+	// EdgePromoCode holds the string denoting the promo_code edge name in mutations.
+	EdgePromoCode = "promo_code"
+	// EdgePromoUsages holds the string denoting the promo_usages edge name in mutations.
+	EdgePromoUsages = "promo_usages"
 	// EdgePaymentEvents holds the string denoting the payment_events edge name in mutations.
 	EdgePaymentEvents = "payment_events"
 	// Table holds the table name of the paymentorder in the database.
@@ -95,6 +105,20 @@ const (
 	LedgerTransactionInverseTable = "ledger_transactions"
 	// LedgerTransactionColumn is the table column denoting the ledger_transaction relation/edge.
 	LedgerTransactionColumn = "ledger_transaction_id"
+	// PromoCodeTable is the table that holds the promo_code relation/edge.
+	PromoCodeTable = "payment_orders"
+	// PromoCodeInverseTable is the table name for the PromoCode entity.
+	// It exists in this package in order to avoid circular dependency with the "promocode" package.
+	PromoCodeInverseTable = "promo_codes"
+	// PromoCodeColumn is the table column denoting the promo_code relation/edge.
+	PromoCodeColumn = "promo_code_id"
+	// PromoUsagesTable is the table that holds the promo_usages relation/edge.
+	PromoUsagesTable = "promo_usages"
+	// PromoUsagesInverseTable is the table name for the PromoUsage entity.
+	// It exists in this package in order to avoid circular dependency with the "promousage" package.
+	PromoUsagesInverseTable = "promo_usages"
+	// PromoUsagesColumn is the table column denoting the promo_usages relation/edge.
+	PromoUsagesColumn = "payment_order_id"
 	// PaymentEventsTable is the table that holds the payment_events relation/edge.
 	PaymentEventsTable = "payment_events"
 	// PaymentEventsInverseTable is the table name for the PaymentEvent entity.
@@ -116,6 +140,9 @@ var Columns = []string{
 	FieldProviderType,
 	FieldPurpose,
 	FieldAmountMicros,
+	FieldPayableAmountMicros,
+	FieldDiscountAmountMicros,
+	FieldPromoCodeID,
 	FieldCurrency,
 	FieldStatus,
 	FieldExpiresAt,
@@ -158,6 +185,14 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// AmountMicrosValidator is a validator for the "amount_micros" field. It is called by the builders before save.
 	AmountMicrosValidator func(int64) error
+	// DefaultPayableAmountMicros holds the default value on creation for the "payable_amount_micros" field.
+	DefaultPayableAmountMicros int64
+	// PayableAmountMicrosValidator is a validator for the "payable_amount_micros" field. It is called by the builders before save.
+	PayableAmountMicrosValidator func(int64) error
+	// DefaultDiscountAmountMicros holds the default value on creation for the "discount_amount_micros" field.
+	DefaultDiscountAmountMicros int64
+	// DiscountAmountMicrosValidator is a validator for the "discount_amount_micros" field. It is called by the builders before save.
+	DiscountAmountMicrosValidator func(int64) error
 	// DefaultCurrency holds the default value on creation for the "currency" field.
 	DefaultCurrency string
 	// DefaultCancelReason holds the default value on creation for the "cancel_reason" field.
@@ -308,6 +343,21 @@ func ByAmountMicros(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAmountMicros, opts...).ToFunc()
 }
 
+// ByPayableAmountMicros orders the results by the payable_amount_micros field.
+func ByPayableAmountMicros(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPayableAmountMicros, opts...).ToFunc()
+}
+
+// ByDiscountAmountMicros orders the results by the discount_amount_micros field.
+func ByDiscountAmountMicros(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDiscountAmountMicros, opts...).ToFunc()
+}
+
+// ByPromoCodeID orders the results by the promo_code_id field.
+func ByPromoCodeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPromoCodeID, opts...).ToFunc()
+}
+
 // ByCurrency orders the results by the currency field.
 func ByCurrency(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCurrency, opts...).ToFunc()
@@ -394,6 +444,27 @@ func ByLedgerTransactionField(field string, opts ...sql.OrderTermOption) OrderOp
 	}
 }
 
+// ByPromoCodeField orders the results by promo_code field.
+func ByPromoCodeField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPromoCodeStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByPromoUsagesCount orders the results by promo_usages count.
+func ByPromoUsagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPromoUsagesStep(), opts...)
+	}
+}
+
+// ByPromoUsages orders the results by promo_usages terms.
+func ByPromoUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPromoUsagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByPaymentEventsCount orders the results by payment_events count.
 func ByPaymentEventsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -426,6 +497,20 @@ func newLedgerTransactionStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LedgerTransactionInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, LedgerTransactionTable, LedgerTransactionColumn),
+	)
+}
+func newPromoCodeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PromoCodeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, PromoCodeTable, PromoCodeColumn),
+	)
+}
+func newPromoUsagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PromoUsagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PromoUsagesTable, PromoUsagesColumn),
 	)
 }
 func newPaymentEventsStep() *sqlgraph.Step {

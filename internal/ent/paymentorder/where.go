@@ -90,6 +90,21 @@ func AmountMicros(v int64) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldAmountMicros, v))
 }
 
+// PayableAmountMicros applies equality check predicate on the "payable_amount_micros" field. It's identical to PayableAmountMicrosEQ.
+func PayableAmountMicros(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldPayableAmountMicros, v))
+}
+
+// DiscountAmountMicros applies equality check predicate on the "discount_amount_micros" field. It's identical to DiscountAmountMicrosEQ.
+func DiscountAmountMicros(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldDiscountAmountMicros, v))
+}
+
+// PromoCodeID applies equality check predicate on the "promo_code_id" field. It's identical to PromoCodeIDEQ.
+func PromoCodeID(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldPromoCodeID, v))
+}
+
 // Currency applies equality check predicate on the "currency" field. It's identical to CurrencyEQ.
 func Currency(v string) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldCurrency, v))
@@ -463,6 +478,116 @@ func AmountMicrosLT(v int64) predicate.PaymentOrder {
 // AmountMicrosLTE applies the LTE predicate on the "amount_micros" field.
 func AmountMicrosLTE(v int64) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldLTE(FieldAmountMicros, v))
+}
+
+// PayableAmountMicrosEQ applies the EQ predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosEQ(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosNEQ applies the NEQ predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosNEQ(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNEQ(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosIn applies the In predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosIn(vs ...int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIn(FieldPayableAmountMicros, vs...))
+}
+
+// PayableAmountMicrosNotIn applies the NotIn predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosNotIn(vs ...int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotIn(FieldPayableAmountMicros, vs...))
+}
+
+// PayableAmountMicrosGT applies the GT predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosGT(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGT(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosGTE applies the GTE predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosGTE(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGTE(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosLT applies the LT predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosLT(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLT(FieldPayableAmountMicros, v))
+}
+
+// PayableAmountMicrosLTE applies the LTE predicate on the "payable_amount_micros" field.
+func PayableAmountMicrosLTE(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLTE(FieldPayableAmountMicros, v))
+}
+
+// DiscountAmountMicrosEQ applies the EQ predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosEQ(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosNEQ applies the NEQ predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosNEQ(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNEQ(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosIn applies the In predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosIn(vs ...int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIn(FieldDiscountAmountMicros, vs...))
+}
+
+// DiscountAmountMicrosNotIn applies the NotIn predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosNotIn(vs ...int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotIn(FieldDiscountAmountMicros, vs...))
+}
+
+// DiscountAmountMicrosGT applies the GT predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosGT(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGT(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosGTE applies the GTE predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosGTE(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGTE(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosLT applies the LT predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosLT(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLT(FieldDiscountAmountMicros, v))
+}
+
+// DiscountAmountMicrosLTE applies the LTE predicate on the "discount_amount_micros" field.
+func DiscountAmountMicrosLTE(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLTE(FieldDiscountAmountMicros, v))
+}
+
+// PromoCodeIDEQ applies the EQ predicate on the "promo_code_id" field.
+func PromoCodeIDEQ(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldPromoCodeID, v))
+}
+
+// PromoCodeIDNEQ applies the NEQ predicate on the "promo_code_id" field.
+func PromoCodeIDNEQ(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNEQ(FieldPromoCodeID, v))
+}
+
+// PromoCodeIDIn applies the In predicate on the "promo_code_id" field.
+func PromoCodeIDIn(vs ...int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIn(FieldPromoCodeID, vs...))
+}
+
+// PromoCodeIDNotIn applies the NotIn predicate on the "promo_code_id" field.
+func PromoCodeIDNotIn(vs ...int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotIn(FieldPromoCodeID, vs...))
+}
+
+// PromoCodeIDIsNil applies the IsNil predicate on the "promo_code_id" field.
+func PromoCodeIDIsNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIsNull(FieldPromoCodeID))
+}
+
+// PromoCodeIDNotNil applies the NotNil predicate on the "promo_code_id" field.
+func PromoCodeIDNotNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotNull(FieldPromoCodeID))
 }
 
 // CurrencyEQ applies the EQ predicate on the "currency" field.
@@ -1226,6 +1351,52 @@ func HasLedgerTransaction() predicate.PaymentOrder {
 func HasLedgerTransactionWith(preds ...predicate.LedgerTransaction) predicate.PaymentOrder {
 	return predicate.PaymentOrder(func(s *sql.Selector) {
 		step := newLedgerTransactionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPromoCode applies the HasEdge predicate on the "promo_code" edge.
+func HasPromoCode() predicate.PaymentOrder {
+	return predicate.PaymentOrder(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, PromoCodeTable, PromoCodeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPromoCodeWith applies the HasEdge predicate on the "promo_code" edge with a given conditions (other predicates).
+func HasPromoCodeWith(preds ...predicate.PromoCode) predicate.PaymentOrder {
+	return predicate.PaymentOrder(func(s *sql.Selector) {
+		step := newPromoCodeStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPromoUsages applies the HasEdge predicate on the "promo_usages" edge.
+func HasPromoUsages() predicate.PaymentOrder {
+	return predicate.PaymentOrder(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PromoUsagesTable, PromoUsagesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPromoUsagesWith applies the HasEdge predicate on the "promo_usages" edge with a given conditions (other predicates).
+func HasPromoUsagesWith(preds ...predicate.PromoUsage) predicate.PaymentOrder {
+	return predicate.PaymentOrder(func(s *sql.Selector) {
+		step := newPromoUsagesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

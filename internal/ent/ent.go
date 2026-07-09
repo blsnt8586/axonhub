@@ -33,6 +33,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -131,6 +133,8 @@ func checkColumn(t, c string) error {
 			paymentorder.Table:             paymentorder.ValidColumn,
 			paymentproviderinstance.Table:  paymentproviderinstance.ValidColumn,
 			project.Table:                  project.ValidColumn,
+			promocode.Table:                promocode.ValidColumn,
+			promousage.Table:               promousage.ValidColumn,
 			prompt.Table:                   prompt.ValidColumn,
 			promptprotectionrule.Table:     promptprotectionrule.ValidColumn,
 			providerquotastatus.Table:      providerquotastatus.ValidColumn,

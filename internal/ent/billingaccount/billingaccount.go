@@ -46,6 +46,8 @@ const (
 	EdgeUsageBillingRecords = "usage_billing_records"
 	// EdgePaymentOrders holds the string denoting the payment_orders edge name in mutations.
 	EdgePaymentOrders = "payment_orders"
+	// EdgePromoUsages holds the string denoting the promo_usages edge name in mutations.
+	EdgePromoUsages = "promo_usages"
 	// Table holds the table name of the billingaccount in the database.
 	Table = "billing_accounts"
 	// BindingsTable is the table that holds the bindings relation/edge.
@@ -83,6 +85,13 @@ const (
 	PaymentOrdersInverseTable = "payment_orders"
 	// PaymentOrdersColumn is the table column denoting the payment_orders relation/edge.
 	PaymentOrdersColumn = "billing_account_id"
+	// PromoUsagesTable is the table that holds the promo_usages relation/edge.
+	PromoUsagesTable = "promo_usages"
+	// PromoUsagesInverseTable is the table name for the PromoUsage entity.
+	// It exists in this package in order to avoid circular dependency with the "promousage" package.
+	PromoUsagesInverseTable = "promo_usages"
+	// PromoUsagesColumn is the table column denoting the promo_usages relation/edge.
+	PromoUsagesColumn = "billing_account_id"
 )
 
 // Columns holds all SQL columns for billingaccount fields.
@@ -308,6 +317,20 @@ func ByPaymentOrders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPaymentOrdersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPromoUsagesCount orders the results by promo_usages count.
+func ByPromoUsagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPromoUsagesStep(), opts...)
+	}
+}
+
+// ByPromoUsages orders the results by promo_usages terms.
+func ByPromoUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPromoUsagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBindingsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -341,6 +364,13 @@ func newPaymentOrdersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PaymentOrdersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PaymentOrdersTable, PaymentOrdersColumn),
+	)
+}
+func newPromoUsagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PromoUsagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PromoUsagesTable, PromoUsagesColumn),
 	)
 }
 

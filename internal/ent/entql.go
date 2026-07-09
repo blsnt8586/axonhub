@@ -25,6 +25,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -51,7 +53,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 38)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 40)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -489,29 +491,32 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "PaymentOrder",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			paymentorder.FieldCreatedAt:           {Type: field.TypeTime, Column: paymentorder.FieldCreatedAt},
-			paymentorder.FieldUpdatedAt:           {Type: field.TypeTime, Column: paymentorder.FieldUpdatedAt},
-			paymentorder.FieldOrderNo:             {Type: field.TypeString, Column: paymentorder.FieldOrderNo},
-			paymentorder.FieldProjectID:           {Type: field.TypeInt, Column: paymentorder.FieldProjectID},
-			paymentorder.FieldBillingAccountID:    {Type: field.TypeInt, Column: paymentorder.FieldBillingAccountID},
-			paymentorder.FieldProviderInstanceID:  {Type: field.TypeInt, Column: paymentorder.FieldProviderInstanceID},
-			paymentorder.FieldProviderType:        {Type: field.TypeEnum, Column: paymentorder.FieldProviderType},
-			paymentorder.FieldPurpose:             {Type: field.TypeEnum, Column: paymentorder.FieldPurpose},
-			paymentorder.FieldAmountMicros:        {Type: field.TypeInt64, Column: paymentorder.FieldAmountMicros},
-			paymentorder.FieldCurrency:            {Type: field.TypeString, Column: paymentorder.FieldCurrency},
-			paymentorder.FieldStatus:              {Type: field.TypeEnum, Column: paymentorder.FieldStatus},
-			paymentorder.FieldExpiresAt:           {Type: field.TypeTime, Column: paymentorder.FieldExpiresAt},
-			paymentorder.FieldCanceledAt:          {Type: field.TypeTime, Column: paymentorder.FieldCanceledAt},
-			paymentorder.FieldCancelReason:        {Type: field.TypeString, Column: paymentorder.FieldCancelReason},
-			paymentorder.FieldMakeupReason:        {Type: field.TypeString, Column: paymentorder.FieldMakeupReason},
-			paymentorder.FieldFailureReason:       {Type: field.TypeString, Column: paymentorder.FieldFailureReason},
-			paymentorder.FieldRefundedAt:          {Type: field.TypeTime, Column: paymentorder.FieldRefundedAt},
-			paymentorder.FieldRefundReason:        {Type: field.TypeString, Column: paymentorder.FieldRefundReason},
-			paymentorder.FieldRefundAmountMicros:  {Type: field.TypeInt64, Column: paymentorder.FieldRefundAmountMicros},
-			paymentorder.FieldExternalTradeNo:     {Type: field.TypeString, Column: paymentorder.FieldExternalTradeNo},
-			paymentorder.FieldPaidAt:              {Type: field.TypeTime, Column: paymentorder.FieldPaidAt},
-			paymentorder.FieldLedgerTransactionID: {Type: field.TypeInt, Column: paymentorder.FieldLedgerTransactionID},
-			paymentorder.FieldMetadata:            {Type: field.TypeJSON, Column: paymentorder.FieldMetadata},
+			paymentorder.FieldCreatedAt:            {Type: field.TypeTime, Column: paymentorder.FieldCreatedAt},
+			paymentorder.FieldUpdatedAt:            {Type: field.TypeTime, Column: paymentorder.FieldUpdatedAt},
+			paymentorder.FieldOrderNo:              {Type: field.TypeString, Column: paymentorder.FieldOrderNo},
+			paymentorder.FieldProjectID:            {Type: field.TypeInt, Column: paymentorder.FieldProjectID},
+			paymentorder.FieldBillingAccountID:     {Type: field.TypeInt, Column: paymentorder.FieldBillingAccountID},
+			paymentorder.FieldProviderInstanceID:   {Type: field.TypeInt, Column: paymentorder.FieldProviderInstanceID},
+			paymentorder.FieldProviderType:         {Type: field.TypeEnum, Column: paymentorder.FieldProviderType},
+			paymentorder.FieldPurpose:              {Type: field.TypeEnum, Column: paymentorder.FieldPurpose},
+			paymentorder.FieldAmountMicros:         {Type: field.TypeInt64, Column: paymentorder.FieldAmountMicros},
+			paymentorder.FieldPayableAmountMicros:  {Type: field.TypeInt64, Column: paymentorder.FieldPayableAmountMicros},
+			paymentorder.FieldDiscountAmountMicros: {Type: field.TypeInt64, Column: paymentorder.FieldDiscountAmountMicros},
+			paymentorder.FieldPromoCodeID:          {Type: field.TypeInt, Column: paymentorder.FieldPromoCodeID},
+			paymentorder.FieldCurrency:             {Type: field.TypeString, Column: paymentorder.FieldCurrency},
+			paymentorder.FieldStatus:               {Type: field.TypeEnum, Column: paymentorder.FieldStatus},
+			paymentorder.FieldExpiresAt:            {Type: field.TypeTime, Column: paymentorder.FieldExpiresAt},
+			paymentorder.FieldCanceledAt:           {Type: field.TypeTime, Column: paymentorder.FieldCanceledAt},
+			paymentorder.FieldCancelReason:         {Type: field.TypeString, Column: paymentorder.FieldCancelReason},
+			paymentorder.FieldMakeupReason:         {Type: field.TypeString, Column: paymentorder.FieldMakeupReason},
+			paymentorder.FieldFailureReason:        {Type: field.TypeString, Column: paymentorder.FieldFailureReason},
+			paymentorder.FieldRefundedAt:           {Type: field.TypeTime, Column: paymentorder.FieldRefundedAt},
+			paymentorder.FieldRefundReason:         {Type: field.TypeString, Column: paymentorder.FieldRefundReason},
+			paymentorder.FieldRefundAmountMicros:   {Type: field.TypeInt64, Column: paymentorder.FieldRefundAmountMicros},
+			paymentorder.FieldExternalTradeNo:      {Type: field.TypeString, Column: paymentorder.FieldExternalTradeNo},
+			paymentorder.FieldPaidAt:               {Type: field.TypeTime, Column: paymentorder.FieldPaidAt},
+			paymentorder.FieldLedgerTransactionID:  {Type: field.TypeInt, Column: paymentorder.FieldLedgerTransactionID},
+			paymentorder.FieldMetadata:             {Type: field.TypeJSON, Column: paymentorder.FieldMetadata},
 		},
 	}
 	graph.Nodes[19] = &sqlgraph.Node{
@@ -556,6 +561,68 @@ var schemaGraph = func() *sqlgraph.Schema {
 	}
 	graph.Nodes[21] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
+			Table:   promocode.Table,
+			Columns: promocode.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: promocode.FieldID,
+			},
+		},
+		Type: "PromoCode",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			promocode.FieldCreatedAt:            {Type: field.TypeTime, Column: promocode.FieldCreatedAt},
+			promocode.FieldUpdatedAt:            {Type: field.TypeTime, Column: promocode.FieldUpdatedAt},
+			promocode.FieldCode:                 {Type: field.TypeString, Column: promocode.FieldCode},
+			promocode.FieldDescription:          {Type: field.TypeString, Column: promocode.FieldDescription},
+			promocode.FieldDiscountType:         {Type: field.TypeEnum, Column: promocode.FieldDiscountType},
+			promocode.FieldDiscountAmountMicros: {Type: field.TypeInt64, Column: promocode.FieldDiscountAmountMicros},
+			promocode.FieldDiscountPercentBps:   {Type: field.TypeInt, Column: promocode.FieldDiscountPercentBps},
+			promocode.FieldScope:                {Type: field.TypeEnum, Column: promocode.FieldScope},
+			promocode.FieldStatus:               {Type: field.TypeEnum, Column: promocode.FieldStatus},
+			promocode.FieldCurrency:             {Type: field.TypeString, Column: promocode.FieldCurrency},
+			promocode.FieldMaxUses:              {Type: field.TypeInt, Column: promocode.FieldMaxUses},
+			promocode.FieldUsedCount:            {Type: field.TypeInt, Column: promocode.FieldUsedCount},
+			promocode.FieldPerUserLimit:         {Type: field.TypeInt, Column: promocode.FieldPerUserLimit},
+			promocode.FieldStartsAt:             {Type: field.TypeTime, Column: promocode.FieldStartsAt},
+			promocode.FieldExpiresAt:            {Type: field.TypeTime, Column: promocode.FieldExpiresAt},
+			promocode.FieldCreatedByID:          {Type: field.TypeInt, Column: promocode.FieldCreatedByID},
+			promocode.FieldNotes:                {Type: field.TypeString, Column: promocode.FieldNotes},
+			promocode.FieldMetadata:             {Type: field.TypeJSON, Column: promocode.FieldMetadata},
+		},
+	}
+	graph.Nodes[22] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   promousage.Table,
+			Columns: promousage.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: promousage.FieldID,
+			},
+		},
+		Type: "PromoUsage",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			promousage.FieldCreatedAt:            {Type: field.TypeTime, Column: promousage.FieldCreatedAt},
+			promousage.FieldUpdatedAt:            {Type: field.TypeTime, Column: promousage.FieldUpdatedAt},
+			promousage.FieldPromoCodeID:          {Type: field.TypeInt, Column: promousage.FieldPromoCodeID},
+			promousage.FieldCode:                 {Type: field.TypeString, Column: promousage.FieldCode},
+			promousage.FieldCodeSnapshot:         {Type: field.TypeJSON, Column: promousage.FieldCodeSnapshot},
+			promousage.FieldUserID:               {Type: field.TypeInt, Column: promousage.FieldUserID},
+			promousage.FieldBillingAccountID:     {Type: field.TypeInt, Column: promousage.FieldBillingAccountID},
+			promousage.FieldPaymentOrderID:       {Type: field.TypeInt, Column: promousage.FieldPaymentOrderID},
+			promousage.FieldUserSubscriptionID:   {Type: field.TypeInt, Column: promousage.FieldUserSubscriptionID},
+			promousage.FieldLedgerTransactionID:  {Type: field.TypeInt, Column: promousage.FieldLedgerTransactionID},
+			promousage.FieldScope:                {Type: field.TypeEnum, Column: promousage.FieldScope},
+			promousage.FieldStatus:               {Type: field.TypeEnum, Column: promousage.FieldStatus},
+			promousage.FieldOriginalAmountMicros: {Type: field.TypeInt64, Column: promousage.FieldOriginalAmountMicros},
+			promousage.FieldDiscountAmountMicros: {Type: field.TypeInt64, Column: promousage.FieldDiscountAmountMicros},
+			promousage.FieldPayableAmountMicros:  {Type: field.TypeInt64, Column: promousage.FieldPayableAmountMicros},
+			promousage.FieldCurrency:             {Type: field.TypeString, Column: promousage.FieldCurrency},
+			promousage.FieldIdempotencyKey:       {Type: field.TypeString, Column: promousage.FieldIdempotencyKey},
+			promousage.FieldFailureReason:        {Type: field.TypeString, Column: promousage.FieldFailureReason},
+		},
+	}
+	graph.Nodes[23] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
 			Table:   prompt.Table,
 			Columns: prompt.Columns,
 			ID: &sqlgraph.FieldSpec{
@@ -578,7 +645,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			prompt.FieldSettings:    {Type: field.TypeJSON, Column: prompt.FieldSettings},
 		},
 	}
-	graph.Nodes[22] = &sqlgraph.Node{
+	graph.Nodes[24] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   promptprotectionrule.Table,
 			Columns: promptprotectionrule.Columns,
@@ -599,7 +666,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			promptprotectionrule.FieldSettings:    {Type: field.TypeJSON, Column: promptprotectionrule.FieldSettings},
 		},
 	}
-	graph.Nodes[23] = &sqlgraph.Node{
+	graph.Nodes[25] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   providerquotastatus.Table,
 			Columns: providerquotastatus.Columns,
@@ -622,7 +689,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			providerquotastatus.FieldNextCheckAt:  {Type: field.TypeTime, Column: providerquotastatus.FieldNextCheckAt},
 		},
 	}
-	graph.Nodes[24] = &sqlgraph.Node{
+	graph.Nodes[26] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   redeemcode.Table,
 			Columns: redeemcode.Columns,
@@ -649,7 +716,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			redeemcode.FieldBatchID:             {Type: field.TypeString, Column: redeemcode.FieldBatchID},
 		},
 	}
-	graph.Nodes[25] = &sqlgraph.Node{
+	graph.Nodes[27] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   request.Table,
 			Columns: request.Columns,
@@ -688,7 +755,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			request.FieldContentSavedAt:             {Type: field.TypeTime, Column: request.FieldContentSavedAt},
 		},
 	}
-	graph.Nodes[26] = &sqlgraph.Node{
+	graph.Nodes[28] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   requestexecution.Table,
 			Columns: requestexecution.Columns,
@@ -723,7 +790,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			requestexecution.FieldPassThroughApplied:         {Type: field.TypeBool, Column: requestexecution.FieldPassThroughApplied},
 		},
 	}
-	graph.Nodes[27] = &sqlgraph.Node{
+	graph.Nodes[29] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   role.Table,
 			Columns: role.Columns,
@@ -743,7 +810,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			role.FieldScopes:    {Type: field.TypeJSON, Column: role.FieldScopes},
 		},
 	}
-	graph.Nodes[28] = &sqlgraph.Node{
+	graph.Nodes[30] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   subscriptionplan.Table,
 			Columns: subscriptionplan.Columns,
@@ -772,7 +839,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			subscriptionplan.FieldMetadata:             {Type: field.TypeJSON, Column: subscriptionplan.FieldMetadata},
 		},
 	}
-	graph.Nodes[29] = &sqlgraph.Node{
+	graph.Nodes[31] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   system.Table,
 			Columns: system.Columns,
@@ -790,7 +857,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			system.FieldValue:     {Type: field.TypeString, Column: system.FieldValue},
 		},
 	}
-	graph.Nodes[30] = &sqlgraph.Node{
+	graph.Nodes[32] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   thread.Table,
 			Columns: thread.Columns,
@@ -807,7 +874,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			thread.FieldThreadID:  {Type: field.TypeString, Column: thread.FieldThreadID},
 		},
 	}
-	graph.Nodes[31] = &sqlgraph.Node{
+	graph.Nodes[33] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   trace.Table,
 			Columns: trace.Columns,
@@ -825,7 +892,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			trace.FieldThreadID:  {Type: field.TypeInt, Column: trace.FieldThreadID},
 		},
 	}
-	graph.Nodes[32] = &sqlgraph.Node{
+	graph.Nodes[34] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagebillingrecord.Table,
 			Columns: usagebillingrecord.Columns,
@@ -859,7 +926,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagebillingrecord.FieldError:               {Type: field.TypeString, Column: usagebillingrecord.FieldError},
 		},
 	}
-	graph.Nodes[33] = &sqlgraph.Node{
+	graph.Nodes[35] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagelog.Table,
 			Columns: usagelog.Columns,
@@ -896,7 +963,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagelog.FieldCostPriceReferenceID:               {Type: field.TypeString, Column: usagelog.FieldCostPriceReferenceID},
 		},
 	}
-	graph.Nodes[34] = &sqlgraph.Node{
+	graph.Nodes[36] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -921,7 +988,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldScopes:         {Type: field.TypeJSON, Column: user.FieldScopes},
 		},
 	}
-	graph.Nodes[35] = &sqlgraph.Node{
+	graph.Nodes[37] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userproject.Table,
 			Columns: userproject.Columns,
@@ -940,7 +1007,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userproject.FieldScopes:    {Type: field.TypeJSON, Column: userproject.FieldScopes},
 		},
 	}
-	graph.Nodes[36] = &sqlgraph.Node{
+	graph.Nodes[38] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userrole.Table,
 			Columns: userrole.Columns,
@@ -957,7 +1024,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userrole.FieldUpdatedAt: {Type: field.TypeTime, Column: userrole.FieldUpdatedAt},
 		},
 	}
-	graph.Nodes[37] = &sqlgraph.Node{
+	graph.Nodes[39] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usersubscription.Table,
 			Columns: usersubscription.Columns,
@@ -989,6 +1056,10 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usersubscription.FieldAllowWalletFallback:         {Type: field.TypeBool, Column: usersubscription.FieldAllowWalletFallback},
 			usersubscription.FieldAssignedByID:                {Type: field.TypeInt, Column: usersubscription.FieldAssignedByID},
 			usersubscription.FieldPurchaseLedgerTransactionID: {Type: field.TypeInt, Column: usersubscription.FieldPurchaseLedgerTransactionID},
+			usersubscription.FieldOriginalPriceMicros:         {Type: field.TypeInt64, Column: usersubscription.FieldOriginalPriceMicros},
+			usersubscription.FieldDiscountAmountMicros:        {Type: field.TypeInt64, Column: usersubscription.FieldDiscountAmountMicros},
+			usersubscription.FieldPayableAmountMicros:         {Type: field.TypeInt64, Column: usersubscription.FieldPayableAmountMicros},
+			usersubscription.FieldPromoCodeID:                 {Type: field.TypeInt, Column: usersubscription.FieldPromoCodeID},
 			usersubscription.FieldNotes:                       {Type: field.TypeString, Column: usersubscription.FieldNotes},
 			usersubscription.FieldRevokeReason:                {Type: field.TypeString, Column: usersubscription.FieldRevokeReason},
 		},
@@ -1100,6 +1171,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"BillingAccount",
 		"PaymentOrder",
+	)
+	graph.MustAddE(
+		"promo_usages",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   billingaccount.PromoUsagesTable,
+			Columns: []string{billingaccount.PromoUsagesColumn},
+			Bidi:    false,
+		},
+		"BillingAccount",
+		"PromoUsage",
 	)
 	graph.MustAddE(
 		"billing_account",
@@ -1414,6 +1497,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"UserSubscription",
 	)
 	graph.MustAddE(
+		"promo_usages",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PromoUsagesTable,
+			Columns: []string{ledgertransaction.PromoUsagesColumn},
+			Bidi:    false,
+		},
+		"LedgerTransaction",
+		"PromoUsage",
+	)
+	graph.MustAddE(
 		"user",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -1484,6 +1579,30 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"PaymentOrder",
 		"LedgerTransaction",
+	)
+	graph.MustAddE(
+		"promo_code",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paymentorder.PromoCodeTable,
+			Columns: []string{paymentorder.PromoCodeColumn},
+			Bidi:    false,
+		},
+		"PaymentOrder",
+		"PromoCode",
+	)
+	graph.MustAddE(
+		"promo_usages",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.PromoUsagesTable,
+			Columns: []string{paymentorder.PromoUsagesColumn},
+			Bidi:    false,
+		},
+		"PaymentOrder",
+		"PromoUsage",
 	)
 	graph.MustAddE(
 		"payment_events",
@@ -1640,6 +1759,114 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"Project",
 		"UserProject",
+	)
+	graph.MustAddE(
+		"usages",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   promocode.UsagesTable,
+			Columns: []string{promocode.UsagesColumn},
+			Bidi:    false,
+		},
+		"PromoCode",
+		"PromoUsage",
+	)
+	graph.MustAddE(
+		"payment_orders",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   promocode.PaymentOrdersTable,
+			Columns: []string{promocode.PaymentOrdersColumn},
+			Bidi:    false,
+		},
+		"PromoCode",
+		"PaymentOrder",
+	)
+	graph.MustAddE(
+		"user_subscriptions",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   promocode.UserSubscriptionsTable,
+			Columns: []string{promocode.UserSubscriptionsColumn},
+			Bidi:    false,
+		},
+		"PromoCode",
+		"UserSubscription",
+	)
+	graph.MustAddE(
+		"promo_code",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   promousage.PromoCodeTable,
+			Columns: []string{promousage.PromoCodeColumn},
+			Bidi:    false,
+		},
+		"PromoUsage",
+		"PromoCode",
+	)
+	graph.MustAddE(
+		"user",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   promousage.UserTable,
+			Columns: []string{promousage.UserColumn},
+			Bidi:    false,
+		},
+		"PromoUsage",
+		"User",
+	)
+	graph.MustAddE(
+		"billing_account",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   promousage.BillingAccountTable,
+			Columns: []string{promousage.BillingAccountColumn},
+			Bidi:    false,
+		},
+		"PromoUsage",
+		"BillingAccount",
+	)
+	graph.MustAddE(
+		"payment_order",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   promousage.PaymentOrderTable,
+			Columns: []string{promousage.PaymentOrderColumn},
+			Bidi:    false,
+		},
+		"PromoUsage",
+		"PaymentOrder",
+	)
+	graph.MustAddE(
+		"user_subscription",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   promousage.UserSubscriptionTable,
+			Columns: []string{promousage.UserSubscriptionColumn},
+			Bidi:    false,
+		},
+		"PromoUsage",
+		"UserSubscription",
+	)
+	graph.MustAddE(
+		"ledger_transaction",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   promousage.LedgerTransactionTable,
+			Columns: []string{promousage.LedgerTransactionColumn},
+			Bidi:    false,
+		},
+		"PromoUsage",
+		"LedgerTransaction",
 	)
 	graph.MustAddE(
 		"projects",
@@ -2158,6 +2385,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"UserSubscription",
 	)
 	graph.MustAddE(
+		"promo_usages",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PromoUsagesTable,
+			Columns: []string{user.PromoUsagesColumn},
+			Bidi:    false,
+		},
+		"User",
+		"PromoUsage",
+	)
+	graph.MustAddE(
 		"project_users",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -2276,6 +2515,30 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"UserSubscription",
 		"LedgerTransaction",
+	)
+	graph.MustAddE(
+		"promo_code",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usersubscription.PromoCodeTable,
+			Columns: []string{usersubscription.PromoCodeColumn},
+			Bidi:    false,
+		},
+		"UserSubscription",
+		"PromoCode",
+	)
+	graph.MustAddE(
+		"promo_usages",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.PromoUsagesTable,
+			Columns: []string{usersubscription.PromoUsagesColumn},
+			Bidi:    false,
+		},
+		"UserSubscription",
+		"PromoUsage",
 	)
 	graph.MustAddE(
 		"usage_billing_records",
@@ -2678,6 +2941,20 @@ func (f *BillingAccountFilter) WhereHasPaymentOrders() {
 // WhereHasPaymentOrdersWith applies a predicate to check if query has an edge payment_orders with a given conditions (other predicates).
 func (f *BillingAccountFilter) WhereHasPaymentOrdersWith(preds ...predicate.PaymentOrder) {
 	f.Where(entql.HasEdgeWith("payment_orders", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPromoUsages applies a predicate to check if query has an edge promo_usages.
+func (f *BillingAccountFilter) WhereHasPromoUsages() {
+	f.Where(entql.HasEdge("promo_usages"))
+}
+
+// WhereHasPromoUsagesWith applies a predicate to check if query has an edge promo_usages with a given conditions (other predicates).
+func (f *BillingAccountFilter) WhereHasPromoUsagesWith(preds ...predicate.PromoUsage) {
+	f.Where(entql.HasEdgeWith("promo_usages", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -4188,6 +4465,20 @@ func (f *LedgerTransactionFilter) WhereHasPurchasedUserSubscriptionsWith(preds .
 	})))
 }
 
+// WhereHasPromoUsages applies a predicate to check if query has an edge promo_usages.
+func (f *LedgerTransactionFilter) WhereHasPromoUsages() {
+	f.Where(entql.HasEdge("promo_usages"))
+}
+
+// WhereHasPromoUsagesWith applies a predicate to check if query has an edge promo_usages with a given conditions (other predicates).
+func (f *LedgerTransactionFilter) WhereHasPromoUsagesWith(preds ...predicate.PromoUsage) {
+	f.Where(entql.HasEdgeWith("promo_usages", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (_q *ModelQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
@@ -4595,6 +4886,21 @@ func (f *PaymentOrderFilter) WhereAmountMicros(p entql.Int64P) {
 	f.Where(p.Field(paymentorder.FieldAmountMicros))
 }
 
+// WherePayableAmountMicros applies the entql int64 predicate on the payable_amount_micros field.
+func (f *PaymentOrderFilter) WherePayableAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(paymentorder.FieldPayableAmountMicros))
+}
+
+// WhereDiscountAmountMicros applies the entql int64 predicate on the discount_amount_micros field.
+func (f *PaymentOrderFilter) WhereDiscountAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(paymentorder.FieldDiscountAmountMicros))
+}
+
+// WherePromoCodeID applies the entql int predicate on the promo_code_id field.
+func (f *PaymentOrderFilter) WherePromoCodeID(p entql.IntP) {
+	f.Where(p.Field(paymentorder.FieldPromoCodeID))
+}
+
 // WhereCurrency applies the entql string predicate on the currency field.
 func (f *PaymentOrderFilter) WhereCurrency(p entql.StringP) {
 	f.Where(p.Field(paymentorder.FieldCurrency))
@@ -4701,6 +5007,34 @@ func (f *PaymentOrderFilter) WhereHasLedgerTransaction() {
 // WhereHasLedgerTransactionWith applies a predicate to check if query has an edge ledger_transaction with a given conditions (other predicates).
 func (f *PaymentOrderFilter) WhereHasLedgerTransactionWith(preds ...predicate.LedgerTransaction) {
 	f.Where(entql.HasEdgeWith("ledger_transaction", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPromoCode applies a predicate to check if query has an edge promo_code.
+func (f *PaymentOrderFilter) WhereHasPromoCode() {
+	f.Where(entql.HasEdge("promo_code"))
+}
+
+// WhereHasPromoCodeWith applies a predicate to check if query has an edge promo_code with a given conditions (other predicates).
+func (f *PaymentOrderFilter) WhereHasPromoCodeWith(preds ...predicate.PromoCode) {
+	f.Where(entql.HasEdgeWith("promo_code", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPromoUsages applies a predicate to check if query has an edge promo_usages.
+func (f *PaymentOrderFilter) WhereHasPromoUsages() {
+	f.Where(entql.HasEdge("promo_usages"))
+}
+
+// WhereHasPromoUsagesWith applies a predicate to check if query has an edge promo_usages with a given conditions (other predicates).
+func (f *PaymentOrderFilter) WhereHasPromoUsagesWith(preds ...predicate.PromoUsage) {
+	f.Where(entql.HasEdgeWith("promo_usages", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -5040,6 +5374,392 @@ func (f *ProjectFilter) WhereHasProjectUsersWith(preds ...predicate.UserProject)
 }
 
 // addPredicate implements the predicateAdder interface.
+func (_q *PromoCodeQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the PromoCodeQuery builder.
+func (_q *PromoCodeQuery) Filter() *PromoCodeFilter {
+	return &PromoCodeFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *PromoCodeMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the PromoCodeMutation builder.
+func (m *PromoCodeMutation) Filter() *PromoCodeFilter {
+	return &PromoCodeFilter{config: m.config, predicateAdder: m}
+}
+
+// PromoCodeFilter provides a generic filtering capability at runtime for PromoCodeQuery.
+type PromoCodeFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *PromoCodeFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[21].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *PromoCodeFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(promocode.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *PromoCodeFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(promocode.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *PromoCodeFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(promocode.FieldUpdatedAt))
+}
+
+// WhereCode applies the entql string predicate on the code field.
+func (f *PromoCodeFilter) WhereCode(p entql.StringP) {
+	f.Where(p.Field(promocode.FieldCode))
+}
+
+// WhereDescription applies the entql string predicate on the description field.
+func (f *PromoCodeFilter) WhereDescription(p entql.StringP) {
+	f.Where(p.Field(promocode.FieldDescription))
+}
+
+// WhereDiscountType applies the entql string predicate on the discount_type field.
+func (f *PromoCodeFilter) WhereDiscountType(p entql.StringP) {
+	f.Where(p.Field(promocode.FieldDiscountType))
+}
+
+// WhereDiscountAmountMicros applies the entql int64 predicate on the discount_amount_micros field.
+func (f *PromoCodeFilter) WhereDiscountAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(promocode.FieldDiscountAmountMicros))
+}
+
+// WhereDiscountPercentBps applies the entql int predicate on the discount_percent_bps field.
+func (f *PromoCodeFilter) WhereDiscountPercentBps(p entql.IntP) {
+	f.Where(p.Field(promocode.FieldDiscountPercentBps))
+}
+
+// WhereScope applies the entql string predicate on the scope field.
+func (f *PromoCodeFilter) WhereScope(p entql.StringP) {
+	f.Where(p.Field(promocode.FieldScope))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *PromoCodeFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(promocode.FieldStatus))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *PromoCodeFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(promocode.FieldCurrency))
+}
+
+// WhereMaxUses applies the entql int predicate on the max_uses field.
+func (f *PromoCodeFilter) WhereMaxUses(p entql.IntP) {
+	f.Where(p.Field(promocode.FieldMaxUses))
+}
+
+// WhereUsedCount applies the entql int predicate on the used_count field.
+func (f *PromoCodeFilter) WhereUsedCount(p entql.IntP) {
+	f.Where(p.Field(promocode.FieldUsedCount))
+}
+
+// WherePerUserLimit applies the entql int predicate on the per_user_limit field.
+func (f *PromoCodeFilter) WherePerUserLimit(p entql.IntP) {
+	f.Where(p.Field(promocode.FieldPerUserLimit))
+}
+
+// WhereStartsAt applies the entql time.Time predicate on the starts_at field.
+func (f *PromoCodeFilter) WhereStartsAt(p entql.TimeP) {
+	f.Where(p.Field(promocode.FieldStartsAt))
+}
+
+// WhereExpiresAt applies the entql time.Time predicate on the expires_at field.
+func (f *PromoCodeFilter) WhereExpiresAt(p entql.TimeP) {
+	f.Where(p.Field(promocode.FieldExpiresAt))
+}
+
+// WhereCreatedByID applies the entql int predicate on the created_by_id field.
+func (f *PromoCodeFilter) WhereCreatedByID(p entql.IntP) {
+	f.Where(p.Field(promocode.FieldCreatedByID))
+}
+
+// WhereNotes applies the entql string predicate on the notes field.
+func (f *PromoCodeFilter) WhereNotes(p entql.StringP) {
+	f.Where(p.Field(promocode.FieldNotes))
+}
+
+// WhereMetadata applies the entql json.RawMessage predicate on the metadata field.
+func (f *PromoCodeFilter) WhereMetadata(p entql.BytesP) {
+	f.Where(p.Field(promocode.FieldMetadata))
+}
+
+// WhereHasUsages applies a predicate to check if query has an edge usages.
+func (f *PromoCodeFilter) WhereHasUsages() {
+	f.Where(entql.HasEdge("usages"))
+}
+
+// WhereHasUsagesWith applies a predicate to check if query has an edge usages with a given conditions (other predicates).
+func (f *PromoCodeFilter) WhereHasUsagesWith(preds ...predicate.PromoUsage) {
+	f.Where(entql.HasEdgeWith("usages", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPaymentOrders applies a predicate to check if query has an edge payment_orders.
+func (f *PromoCodeFilter) WhereHasPaymentOrders() {
+	f.Where(entql.HasEdge("payment_orders"))
+}
+
+// WhereHasPaymentOrdersWith applies a predicate to check if query has an edge payment_orders with a given conditions (other predicates).
+func (f *PromoCodeFilter) WhereHasPaymentOrdersWith(preds ...predicate.PaymentOrder) {
+	f.Where(entql.HasEdgeWith("payment_orders", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUserSubscriptions applies a predicate to check if query has an edge user_subscriptions.
+func (f *PromoCodeFilter) WhereHasUserSubscriptions() {
+	f.Where(entql.HasEdge("user_subscriptions"))
+}
+
+// WhereHasUserSubscriptionsWith applies a predicate to check if query has an edge user_subscriptions with a given conditions (other predicates).
+func (f *PromoCodeFilter) WhereHasUserSubscriptionsWith(preds ...predicate.UserSubscription) {
+	f.Where(entql.HasEdgeWith("user_subscriptions", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (_q *PromoUsageQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the PromoUsageQuery builder.
+func (_q *PromoUsageQuery) Filter() *PromoUsageFilter {
+	return &PromoUsageFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *PromoUsageMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the PromoUsageMutation builder.
+func (m *PromoUsageMutation) Filter() *PromoUsageFilter {
+	return &PromoUsageFilter{config: m.config, predicateAdder: m}
+}
+
+// PromoUsageFilter provides a generic filtering capability at runtime for PromoUsageQuery.
+type PromoUsageFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *PromoUsageFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[22].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *PromoUsageFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(promousage.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *PromoUsageFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(promousage.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *PromoUsageFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(promousage.FieldUpdatedAt))
+}
+
+// WherePromoCodeID applies the entql int predicate on the promo_code_id field.
+func (f *PromoUsageFilter) WherePromoCodeID(p entql.IntP) {
+	f.Where(p.Field(promousage.FieldPromoCodeID))
+}
+
+// WhereCode applies the entql string predicate on the code field.
+func (f *PromoUsageFilter) WhereCode(p entql.StringP) {
+	f.Where(p.Field(promousage.FieldCode))
+}
+
+// WhereCodeSnapshot applies the entql json.RawMessage predicate on the code_snapshot field.
+func (f *PromoUsageFilter) WhereCodeSnapshot(p entql.BytesP) {
+	f.Where(p.Field(promousage.FieldCodeSnapshot))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *PromoUsageFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(promousage.FieldUserID))
+}
+
+// WhereBillingAccountID applies the entql int predicate on the billing_account_id field.
+func (f *PromoUsageFilter) WhereBillingAccountID(p entql.IntP) {
+	f.Where(p.Field(promousage.FieldBillingAccountID))
+}
+
+// WherePaymentOrderID applies the entql int predicate on the payment_order_id field.
+func (f *PromoUsageFilter) WherePaymentOrderID(p entql.IntP) {
+	f.Where(p.Field(promousage.FieldPaymentOrderID))
+}
+
+// WhereUserSubscriptionID applies the entql int predicate on the user_subscription_id field.
+func (f *PromoUsageFilter) WhereUserSubscriptionID(p entql.IntP) {
+	f.Where(p.Field(promousage.FieldUserSubscriptionID))
+}
+
+// WhereLedgerTransactionID applies the entql int predicate on the ledger_transaction_id field.
+func (f *PromoUsageFilter) WhereLedgerTransactionID(p entql.IntP) {
+	f.Where(p.Field(promousage.FieldLedgerTransactionID))
+}
+
+// WhereScope applies the entql string predicate on the scope field.
+func (f *PromoUsageFilter) WhereScope(p entql.StringP) {
+	f.Where(p.Field(promousage.FieldScope))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *PromoUsageFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(promousage.FieldStatus))
+}
+
+// WhereOriginalAmountMicros applies the entql int64 predicate on the original_amount_micros field.
+func (f *PromoUsageFilter) WhereOriginalAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(promousage.FieldOriginalAmountMicros))
+}
+
+// WhereDiscountAmountMicros applies the entql int64 predicate on the discount_amount_micros field.
+func (f *PromoUsageFilter) WhereDiscountAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(promousage.FieldDiscountAmountMicros))
+}
+
+// WherePayableAmountMicros applies the entql int64 predicate on the payable_amount_micros field.
+func (f *PromoUsageFilter) WherePayableAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(promousage.FieldPayableAmountMicros))
+}
+
+// WhereCurrency applies the entql string predicate on the currency field.
+func (f *PromoUsageFilter) WhereCurrency(p entql.StringP) {
+	f.Where(p.Field(promousage.FieldCurrency))
+}
+
+// WhereIdempotencyKey applies the entql string predicate on the idempotency_key field.
+func (f *PromoUsageFilter) WhereIdempotencyKey(p entql.StringP) {
+	f.Where(p.Field(promousage.FieldIdempotencyKey))
+}
+
+// WhereFailureReason applies the entql string predicate on the failure_reason field.
+func (f *PromoUsageFilter) WhereFailureReason(p entql.StringP) {
+	f.Where(p.Field(promousage.FieldFailureReason))
+}
+
+// WhereHasPromoCode applies a predicate to check if query has an edge promo_code.
+func (f *PromoUsageFilter) WhereHasPromoCode() {
+	f.Where(entql.HasEdge("promo_code"))
+}
+
+// WhereHasPromoCodeWith applies a predicate to check if query has an edge promo_code with a given conditions (other predicates).
+func (f *PromoUsageFilter) WhereHasPromoCodeWith(preds ...predicate.PromoCode) {
+	f.Where(entql.HasEdgeWith("promo_code", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUser applies a predicate to check if query has an edge user.
+func (f *PromoUsageFilter) WhereHasUser() {
+	f.Where(entql.HasEdge("user"))
+}
+
+// WhereHasUserWith applies a predicate to check if query has an edge user with a given conditions (other predicates).
+func (f *PromoUsageFilter) WhereHasUserWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("user", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasBillingAccount applies a predicate to check if query has an edge billing_account.
+func (f *PromoUsageFilter) WhereHasBillingAccount() {
+	f.Where(entql.HasEdge("billing_account"))
+}
+
+// WhereHasBillingAccountWith applies a predicate to check if query has an edge billing_account with a given conditions (other predicates).
+func (f *PromoUsageFilter) WhereHasBillingAccountWith(preds ...predicate.BillingAccount) {
+	f.Where(entql.HasEdgeWith("billing_account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPaymentOrder applies a predicate to check if query has an edge payment_order.
+func (f *PromoUsageFilter) WhereHasPaymentOrder() {
+	f.Where(entql.HasEdge("payment_order"))
+}
+
+// WhereHasPaymentOrderWith applies a predicate to check if query has an edge payment_order with a given conditions (other predicates).
+func (f *PromoUsageFilter) WhereHasPaymentOrderWith(preds ...predicate.PaymentOrder) {
+	f.Where(entql.HasEdgeWith("payment_order", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUserSubscription applies a predicate to check if query has an edge user_subscription.
+func (f *PromoUsageFilter) WhereHasUserSubscription() {
+	f.Where(entql.HasEdge("user_subscription"))
+}
+
+// WhereHasUserSubscriptionWith applies a predicate to check if query has an edge user_subscription with a given conditions (other predicates).
+func (f *PromoUsageFilter) WhereHasUserSubscriptionWith(preds ...predicate.UserSubscription) {
+	f.Where(entql.HasEdgeWith("user_subscription", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasLedgerTransaction applies a predicate to check if query has an edge ledger_transaction.
+func (f *PromoUsageFilter) WhereHasLedgerTransaction() {
+	f.Where(entql.HasEdge("ledger_transaction"))
+}
+
+// WhereHasLedgerTransactionWith applies a predicate to check if query has an edge ledger_transaction with a given conditions (other predicates).
+func (f *PromoUsageFilter) WhereHasLedgerTransactionWith(preds ...predicate.LedgerTransaction) {
+	f.Where(entql.HasEdgeWith("ledger_transaction", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (_q *PromptQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
 }
@@ -5068,7 +5788,7 @@ type PromptFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromptFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[21].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5177,7 +5897,7 @@ type PromptProtectionRuleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *PromptProtectionRuleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[22].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5257,7 +5977,7 @@ type ProviderQuotaStatusFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ProviderQuotaStatusFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5361,7 +6081,7 @@ type RedeemCodeFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RedeemCodeFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5513,7 +6233,7 @@ type RequestFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5795,7 +6515,7 @@ type RequestExecutionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RequestExecutionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5987,7 +6707,7 @@ type RoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6104,7 +6824,7 @@ type SubscriptionPlanFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SubscriptionPlanFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[28].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6238,7 +6958,7 @@ type SystemFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SystemFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[29].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6303,7 +7023,7 @@ type ThreadFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ThreadFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[30].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6391,7 +7111,7 @@ type TraceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *TraceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[31].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6498,7 +7218,7 @@ type UsageBillingRecordFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageBillingRecordFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[32].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[34].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6699,7 +7419,7 @@ type UsageLogFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageLogFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[33].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[35].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -6929,7 +7649,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[34].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[36].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7126,6 +7846,20 @@ func (f *UserFilter) WhereHasAssignedUserSubscriptionsWith(preds ...predicate.Us
 	})))
 }
 
+// WhereHasPromoUsages applies a predicate to check if query has an edge promo_usages.
+func (f *UserFilter) WhereHasPromoUsages() {
+	f.Where(entql.HasEdge("promo_usages"))
+}
+
+// WhereHasPromoUsagesWith applies a predicate to check if query has an edge promo_usages with a given conditions (other predicates).
+func (f *UserFilter) WhereHasPromoUsagesWith(preds ...predicate.PromoUsage) {
+	f.Where(entql.HasEdgeWith("promo_usages", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasProjectUsers applies a predicate to check if query has an edge project_users.
 func (f *UserFilter) WhereHasProjectUsers() {
 	f.Where(entql.HasEdge("project_users"))
@@ -7183,7 +7917,7 @@ type UserProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[35].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[37].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7281,7 +8015,7 @@ type UserRoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserRoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[36].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[38].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7369,7 +8103,7 @@ type UserSubscriptionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserSubscriptionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[37].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[39].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -7485,6 +8219,26 @@ func (f *UserSubscriptionFilter) WherePurchaseLedgerTransactionID(p entql.IntP) 
 	f.Where(p.Field(usersubscription.FieldPurchaseLedgerTransactionID))
 }
 
+// WhereOriginalPriceMicros applies the entql int64 predicate on the original_price_micros field.
+func (f *UserSubscriptionFilter) WhereOriginalPriceMicros(p entql.Int64P) {
+	f.Where(p.Field(usersubscription.FieldOriginalPriceMicros))
+}
+
+// WhereDiscountAmountMicros applies the entql int64 predicate on the discount_amount_micros field.
+func (f *UserSubscriptionFilter) WhereDiscountAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(usersubscription.FieldDiscountAmountMicros))
+}
+
+// WherePayableAmountMicros applies the entql int64 predicate on the payable_amount_micros field.
+func (f *UserSubscriptionFilter) WherePayableAmountMicros(p entql.Int64P) {
+	f.Where(p.Field(usersubscription.FieldPayableAmountMicros))
+}
+
+// WherePromoCodeID applies the entql int predicate on the promo_code_id field.
+func (f *UserSubscriptionFilter) WherePromoCodeID(p entql.IntP) {
+	f.Where(p.Field(usersubscription.FieldPromoCodeID))
+}
+
 // WhereNotes applies the entql string predicate on the notes field.
 func (f *UserSubscriptionFilter) WhereNotes(p entql.StringP) {
 	f.Where(p.Field(usersubscription.FieldNotes))
@@ -7545,6 +8299,34 @@ func (f *UserSubscriptionFilter) WhereHasPurchaseLedgerTransaction() {
 // WhereHasPurchaseLedgerTransactionWith applies a predicate to check if query has an edge purchase_ledger_transaction with a given conditions (other predicates).
 func (f *UserSubscriptionFilter) WhereHasPurchaseLedgerTransactionWith(preds ...predicate.LedgerTransaction) {
 	f.Where(entql.HasEdgeWith("purchase_ledger_transaction", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPromoCode applies a predicate to check if query has an edge promo_code.
+func (f *UserSubscriptionFilter) WhereHasPromoCode() {
+	f.Where(entql.HasEdge("promo_code"))
+}
+
+// WhereHasPromoCodeWith applies a predicate to check if query has an edge promo_code with a given conditions (other predicates).
+func (f *UserSubscriptionFilter) WhereHasPromoCodeWith(preds ...predicate.PromoCode) {
+	f.Where(entql.HasEdgeWith("promo_code", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPromoUsages applies a predicate to check if query has an edge promo_usages.
+func (f *UserSubscriptionFilter) WhereHasPromoUsages() {
+	f.Where(entql.HasEdge("promo_usages"))
+}
+
+// WhereHasPromoUsagesWith applies a predicate to check if query has an edge promo_usages with a given conditions (other predicates).
+func (f *UserSubscriptionFilter) WhereHasPromoUsagesWith(preds ...predicate.PromoUsage) {
+	f.Where(entql.HasEdgeWith("promo_usages", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}

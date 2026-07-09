@@ -68,11 +68,13 @@ type LedgerTransactionEdges struct {
 	RedeemCodes []*RedeemCode `json:"redeem_codes,omitempty"`
 	// PurchasedUserSubscriptions holds the value of the purchased_user_subscriptions edge.
 	PurchasedUserSubscriptions []*UserSubscription `json:"purchased_user_subscriptions,omitempty"`
+	// PromoUsages holds the value of the promo_usages edge.
+	PromoUsages []*PromoUsage `json:"promo_usages,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 	// totalCount holds the count of the edges above.
-	totalCount [7]map[string]int
+	totalCount [8]map[string]int
 
 	namedEntries                    map[string][]*LedgerEntry
 	namedUsageBillingRecords        map[string][]*UsageBillingRecord
@@ -80,6 +82,7 @@ type LedgerTransactionEdges struct {
 	namedPaymentOrders              map[string][]*PaymentOrder
 	namedRedeemCodes                map[string][]*RedeemCode
 	namedPurchasedUserSubscriptions map[string][]*UserSubscription
+	namedPromoUsages                map[string][]*PromoUsage
 }
 
 // BillingAccountOrErr returns the BillingAccount value or an error if the edge
@@ -145,6 +148,15 @@ func (e LedgerTransactionEdges) PurchasedUserSubscriptionsOrErr() ([]*UserSubscr
 		return e.PurchasedUserSubscriptions, nil
 	}
 	return nil, &NotLoadedError{edge: "purchased_user_subscriptions"}
+}
+
+// PromoUsagesOrErr returns the PromoUsages value or an error if the edge
+// was not loaded in eager-loading.
+func (e LedgerTransactionEdges) PromoUsagesOrErr() ([]*PromoUsage, error) {
+	if e.loadedTypes[7] {
+		return e.PromoUsages, nil
+	}
+	return nil, &NotLoadedError{edge: "promo_usages"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -309,6 +321,11 @@ func (_m *LedgerTransaction) QueryRedeemCodes() *RedeemCodeQuery {
 // QueryPurchasedUserSubscriptions queries the "purchased_user_subscriptions" edge of the LedgerTransaction entity.
 func (_m *LedgerTransaction) QueryPurchasedUserSubscriptions() *UserSubscriptionQuery {
 	return NewLedgerTransactionClient(_m.config).QueryPurchasedUserSubscriptions(_m)
+}
+
+// QueryPromoUsages queries the "promo_usages" edge of the LedgerTransaction entity.
+func (_m *LedgerTransaction) QueryPromoUsages() *PromoUsageQuery {
+	return NewLedgerTransactionClient(_m.config).QueryPromoUsages(_m)
 }
 
 // Update returns a builder for updating this LedgerTransaction.
@@ -520,6 +537,30 @@ func (_m *LedgerTransaction) appendNamedPurchasedUserSubscriptions(name string, 
 		_m.Edges.namedPurchasedUserSubscriptions[name] = []*UserSubscription{}
 	} else {
 		_m.Edges.namedPurchasedUserSubscriptions[name] = append(_m.Edges.namedPurchasedUserSubscriptions[name], edges...)
+	}
+}
+
+// NamedPromoUsages returns the PromoUsages named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *LedgerTransaction) NamedPromoUsages(name string) ([]*PromoUsage, error) {
+	if _m.Edges.namedPromoUsages == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedPromoUsages[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *LedgerTransaction) appendNamedPromoUsages(name string, edges ...*PromoUsage) {
+	if _m.Edges.namedPromoUsages == nil {
+		_m.Edges.namedPromoUsages = make(map[string][]*PromoUsage)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedPromoUsages[name] = []*PromoUsage{}
+	} else {
+		_m.Edges.namedPromoUsages[name] = append(_m.Edges.namedPromoUsages[name], edges...)
 	}
 }
 

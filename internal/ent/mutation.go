@@ -33,6 +33,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/predicate"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -83,6 +85,8 @@ const (
 	TypePaymentOrder             = "PaymentOrder"
 	TypePaymentProviderInstance  = "PaymentProviderInstance"
 	TypeProject                  = "Project"
+	TypePromoCode                = "PromoCode"
+	TypePromoUsage               = "PromoUsage"
 	TypePrompt                   = "Prompt"
 	TypePromptProtectionRule     = "PromptProtectionRule"
 	TypeProviderQuotaStatus      = "ProviderQuotaStatus"
@@ -2136,6 +2140,9 @@ type BillingAccountMutation struct {
 	payment_orders               map[int]struct{}
 	removedpayment_orders        map[int]struct{}
 	clearedpayment_orders        bool
+	promo_usages                 map[int]struct{}
+	removedpromo_usages          map[int]struct{}
+	clearedpromo_usages          bool
 	done                         bool
 	oldValue                     func(context.Context) (*BillingAccount, error)
 	predicates                   []predicate.BillingAccount
@@ -2913,6 +2920,60 @@ func (m *BillingAccountMutation) ResetPaymentOrders() {
 	m.removedpayment_orders = nil
 }
 
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by ids.
+func (m *BillingAccountMutation) AddPromoUsageIDs(ids ...int) {
+	if m.promo_usages == nil {
+		m.promo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.promo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPromoUsages clears the "promo_usages" edge to the PromoUsage entity.
+func (m *BillingAccountMutation) ClearPromoUsages() {
+	m.clearedpromo_usages = true
+}
+
+// PromoUsagesCleared reports if the "promo_usages" edge to the PromoUsage entity was cleared.
+func (m *BillingAccountMutation) PromoUsagesCleared() bool {
+	return m.clearedpromo_usages
+}
+
+// RemovePromoUsageIDs removes the "promo_usages" edge to the PromoUsage entity by IDs.
+func (m *BillingAccountMutation) RemovePromoUsageIDs(ids ...int) {
+	if m.removedpromo_usages == nil {
+		m.removedpromo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.promo_usages, ids[i])
+		m.removedpromo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPromoUsages returns the removed IDs of the "promo_usages" edge to the PromoUsage entity.
+func (m *BillingAccountMutation) RemovedPromoUsagesIDs() (ids []int) {
+	for id := range m.removedpromo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PromoUsagesIDs returns the "promo_usages" edge IDs in the mutation.
+func (m *BillingAccountMutation) PromoUsagesIDs() (ids []int) {
+	for id := range m.promo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPromoUsages resets all changes to the "promo_usages" edge.
+func (m *BillingAccountMutation) ResetPromoUsages() {
+	m.promo_usages = nil
+	m.clearedpromo_usages = false
+	m.removedpromo_usages = nil
+}
+
 // Where appends a list predicates to the BillingAccountMutation builder.
 func (m *BillingAccountMutation) Where(ps ...predicate.BillingAccount) {
 	m.predicates = append(m.predicates, ps...)
@@ -3233,7 +3294,7 @@ func (m *BillingAccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BillingAccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.bindings != nil {
 		edges = append(edges, billingaccount.EdgeBindings)
 	}
@@ -3248,6 +3309,9 @@ func (m *BillingAccountMutation) AddedEdges() []string {
 	}
 	if m.payment_orders != nil {
 		edges = append(edges, billingaccount.EdgePaymentOrders)
+	}
+	if m.promo_usages != nil {
+		edges = append(edges, billingaccount.EdgePromoUsages)
 	}
 	return edges
 }
@@ -3286,13 +3350,19 @@ func (m *BillingAccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case billingaccount.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.promo_usages))
+		for id := range m.promo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BillingAccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removedbindings != nil {
 		edges = append(edges, billingaccount.EdgeBindings)
 	}
@@ -3307,6 +3377,9 @@ func (m *BillingAccountMutation) RemovedEdges() []string {
 	}
 	if m.removedpayment_orders != nil {
 		edges = append(edges, billingaccount.EdgePaymentOrders)
+	}
+	if m.removedpromo_usages != nil {
+		edges = append(edges, billingaccount.EdgePromoUsages)
 	}
 	return edges
 }
@@ -3345,13 +3418,19 @@ func (m *BillingAccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case billingaccount.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.removedpromo_usages))
+		for id := range m.removedpromo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BillingAccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.clearedbindings {
 		edges = append(edges, billingaccount.EdgeBindings)
 	}
@@ -3366,6 +3445,9 @@ func (m *BillingAccountMutation) ClearedEdges() []string {
 	}
 	if m.clearedpayment_orders {
 		edges = append(edges, billingaccount.EdgePaymentOrders)
+	}
+	if m.clearedpromo_usages {
+		edges = append(edges, billingaccount.EdgePromoUsages)
 	}
 	return edges
 }
@@ -3384,6 +3466,8 @@ func (m *BillingAccountMutation) EdgeCleared(name string) bool {
 		return m.clearedusage_billing_records
 	case billingaccount.EdgePaymentOrders:
 		return m.clearedpayment_orders
+	case billingaccount.EdgePromoUsages:
+		return m.clearedpromo_usages
 	}
 	return false
 }
@@ -3414,6 +3498,9 @@ func (m *BillingAccountMutation) ResetEdge(name string) error {
 		return nil
 	case billingaccount.EdgePaymentOrders:
 		m.ResetPaymentOrders()
+		return nil
+	case billingaccount.EdgePromoUsages:
+		m.ResetPromoUsages()
 		return nil
 	}
 	return fmt.Errorf("unknown BillingAccount edge %s", name)
@@ -15498,6 +15585,9 @@ type LedgerTransactionMutation struct {
 	purchased_user_subscriptions        map[int]struct{}
 	removedpurchased_user_subscriptions map[int]struct{}
 	clearedpurchased_user_subscriptions bool
+	promo_usages                        map[int]struct{}
+	removedpromo_usages                 map[int]struct{}
+	clearedpromo_usages                 bool
 	done                                bool
 	oldValue                            func(context.Context) (*LedgerTransaction, error)
 	predicates                          []predicate.LedgerTransaction
@@ -16476,6 +16566,60 @@ func (m *LedgerTransactionMutation) ResetPurchasedUserSubscriptions() {
 	m.removedpurchased_user_subscriptions = nil
 }
 
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by ids.
+func (m *LedgerTransactionMutation) AddPromoUsageIDs(ids ...int) {
+	if m.promo_usages == nil {
+		m.promo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.promo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPromoUsages clears the "promo_usages" edge to the PromoUsage entity.
+func (m *LedgerTransactionMutation) ClearPromoUsages() {
+	m.clearedpromo_usages = true
+}
+
+// PromoUsagesCleared reports if the "promo_usages" edge to the PromoUsage entity was cleared.
+func (m *LedgerTransactionMutation) PromoUsagesCleared() bool {
+	return m.clearedpromo_usages
+}
+
+// RemovePromoUsageIDs removes the "promo_usages" edge to the PromoUsage entity by IDs.
+func (m *LedgerTransactionMutation) RemovePromoUsageIDs(ids ...int) {
+	if m.removedpromo_usages == nil {
+		m.removedpromo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.promo_usages, ids[i])
+		m.removedpromo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPromoUsages returns the removed IDs of the "promo_usages" edge to the PromoUsage entity.
+func (m *LedgerTransactionMutation) RemovedPromoUsagesIDs() (ids []int) {
+	for id := range m.removedpromo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PromoUsagesIDs returns the "promo_usages" edge IDs in the mutation.
+func (m *LedgerTransactionMutation) PromoUsagesIDs() (ids []int) {
+	for id := range m.promo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPromoUsages resets all changes to the "promo_usages" edge.
+func (m *LedgerTransactionMutation) ResetPromoUsages() {
+	m.promo_usages = nil
+	m.clearedpromo_usages = false
+	m.removedpromo_usages = nil
+}
+
 // Where appends a list predicates to the LedgerTransactionMutation builder.
 func (m *LedgerTransactionMutation) Where(ps ...predicate.LedgerTransaction) {
 	m.predicates = append(m.predicates, ps...)
@@ -16845,7 +16989,7 @@ func (m *LedgerTransactionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *LedgerTransactionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.billing_account != nil {
 		edges = append(edges, ledgertransaction.EdgeBillingAccount)
 	}
@@ -16866,6 +17010,9 @@ func (m *LedgerTransactionMutation) AddedEdges() []string {
 	}
 	if m.purchased_user_subscriptions != nil {
 		edges = append(edges, ledgertransaction.EdgePurchasedUserSubscriptions)
+	}
+	if m.promo_usages != nil {
+		edges = append(edges, ledgertransaction.EdgePromoUsages)
 	}
 	return edges
 }
@@ -16914,13 +17061,19 @@ func (m *LedgerTransactionMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ledgertransaction.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.promo_usages))
+		for id := range m.promo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *LedgerTransactionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.removedentries != nil {
 		edges = append(edges, ledgertransaction.EdgeEntries)
 	}
@@ -16938,6 +17091,9 @@ func (m *LedgerTransactionMutation) RemovedEdges() []string {
 	}
 	if m.removedpurchased_user_subscriptions != nil {
 		edges = append(edges, ledgertransaction.EdgePurchasedUserSubscriptions)
+	}
+	if m.removedpromo_usages != nil {
+		edges = append(edges, ledgertransaction.EdgePromoUsages)
 	}
 	return edges
 }
@@ -16982,13 +17138,19 @@ func (m *LedgerTransactionMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ledgertransaction.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.removedpromo_usages))
+		for id := range m.removedpromo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *LedgerTransactionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.clearedbilling_account {
 		edges = append(edges, ledgertransaction.EdgeBillingAccount)
 	}
@@ -17009,6 +17171,9 @@ func (m *LedgerTransactionMutation) ClearedEdges() []string {
 	}
 	if m.clearedpurchased_user_subscriptions {
 		edges = append(edges, ledgertransaction.EdgePurchasedUserSubscriptions)
+	}
+	if m.clearedpromo_usages {
+		edges = append(edges, ledgertransaction.EdgePromoUsages)
 	}
 	return edges
 }
@@ -17031,6 +17196,8 @@ func (m *LedgerTransactionMutation) EdgeCleared(name string) bool {
 		return m.clearedredeem_codes
 	case ledgertransaction.EdgePurchasedUserSubscriptions:
 		return m.clearedpurchased_user_subscriptions
+	case ledgertransaction.EdgePromoUsages:
+		return m.clearedpromo_usages
 	}
 	return false
 }
@@ -17070,6 +17237,9 @@ func (m *LedgerTransactionMutation) ResetEdge(name string) error {
 		return nil
 	case ledgertransaction.EdgePurchasedUserSubscriptions:
 		m.ResetPurchasedUserSubscriptions()
+		return nil
+	case ledgertransaction.EdgePromoUsages:
+		m.ResetPromoUsages()
 		return nil
 	}
 	return fmt.Errorf("unknown LedgerTransaction edge %s", name)
@@ -20022,6 +20192,10 @@ type PaymentOrderMutation struct {
 	purpose                   *paymentorder.Purpose
 	amount_micros             *int64
 	addamount_micros          *int64
+	payable_amount_micros     *int64
+	addpayable_amount_micros  *int64
+	discount_amount_micros    *int64
+	adddiscount_amount_micros *int64
 	currency                  *string
 	status                    *paymentorder.Status
 	expires_at                *time.Time
@@ -20044,6 +20218,11 @@ type PaymentOrderMutation struct {
 	clearedprovider_instance  bool
 	ledger_transaction        *int
 	clearedledger_transaction bool
+	promo_code                *int
+	clearedpromo_code         bool
+	promo_usages              map[int]struct{}
+	removedpromo_usages       map[int]struct{}
+	clearedpromo_usages       bool
 	payment_events            map[int]struct{}
 	removedpayment_events     map[int]struct{}
 	clearedpayment_events     bool
@@ -20525,6 +20704,167 @@ func (m *PaymentOrderMutation) AddedAmountMicros() (r int64, exists bool) {
 func (m *PaymentOrderMutation) ResetAmountMicros() {
 	m.amount_micros = nil
 	m.addamount_micros = nil
+}
+
+// SetPayableAmountMicros sets the "payable_amount_micros" field.
+func (m *PaymentOrderMutation) SetPayableAmountMicros(i int64) {
+	m.payable_amount_micros = &i
+	m.addpayable_amount_micros = nil
+}
+
+// PayableAmountMicros returns the value of the "payable_amount_micros" field in the mutation.
+func (m *PaymentOrderMutation) PayableAmountMicros() (r int64, exists bool) {
+	v := m.payable_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPayableAmountMicros returns the old "payable_amount_micros" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldPayableAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPayableAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPayableAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPayableAmountMicros: %w", err)
+	}
+	return oldValue.PayableAmountMicros, nil
+}
+
+// AddPayableAmountMicros adds i to the "payable_amount_micros" field.
+func (m *PaymentOrderMutation) AddPayableAmountMicros(i int64) {
+	if m.addpayable_amount_micros != nil {
+		*m.addpayable_amount_micros += i
+	} else {
+		m.addpayable_amount_micros = &i
+	}
+}
+
+// AddedPayableAmountMicros returns the value that was added to the "payable_amount_micros" field in this mutation.
+func (m *PaymentOrderMutation) AddedPayableAmountMicros() (r int64, exists bool) {
+	v := m.addpayable_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPayableAmountMicros resets all changes to the "payable_amount_micros" field.
+func (m *PaymentOrderMutation) ResetPayableAmountMicros() {
+	m.payable_amount_micros = nil
+	m.addpayable_amount_micros = nil
+}
+
+// SetDiscountAmountMicros sets the "discount_amount_micros" field.
+func (m *PaymentOrderMutation) SetDiscountAmountMicros(i int64) {
+	m.discount_amount_micros = &i
+	m.adddiscount_amount_micros = nil
+}
+
+// DiscountAmountMicros returns the value of the "discount_amount_micros" field in the mutation.
+func (m *PaymentOrderMutation) DiscountAmountMicros() (r int64, exists bool) {
+	v := m.discount_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDiscountAmountMicros returns the old "discount_amount_micros" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldDiscountAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDiscountAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDiscountAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDiscountAmountMicros: %w", err)
+	}
+	return oldValue.DiscountAmountMicros, nil
+}
+
+// AddDiscountAmountMicros adds i to the "discount_amount_micros" field.
+func (m *PaymentOrderMutation) AddDiscountAmountMicros(i int64) {
+	if m.adddiscount_amount_micros != nil {
+		*m.adddiscount_amount_micros += i
+	} else {
+		m.adddiscount_amount_micros = &i
+	}
+}
+
+// AddedDiscountAmountMicros returns the value that was added to the "discount_amount_micros" field in this mutation.
+func (m *PaymentOrderMutation) AddedDiscountAmountMicros() (r int64, exists bool) {
+	v := m.adddiscount_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDiscountAmountMicros resets all changes to the "discount_amount_micros" field.
+func (m *PaymentOrderMutation) ResetDiscountAmountMicros() {
+	m.discount_amount_micros = nil
+	m.adddiscount_amount_micros = nil
+}
+
+// SetPromoCodeID sets the "promo_code_id" field.
+func (m *PaymentOrderMutation) SetPromoCodeID(i int) {
+	m.promo_code = &i
+}
+
+// PromoCodeID returns the value of the "promo_code_id" field in the mutation.
+func (m *PaymentOrderMutation) PromoCodeID() (r int, exists bool) {
+	v := m.promo_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPromoCodeID returns the old "promo_code_id" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldPromoCodeID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPromoCodeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPromoCodeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPromoCodeID: %w", err)
+	}
+	return oldValue.PromoCodeID, nil
+}
+
+// ClearPromoCodeID clears the value of the "promo_code_id" field.
+func (m *PaymentOrderMutation) ClearPromoCodeID() {
+	m.promo_code = nil
+	m.clearedFields[paymentorder.FieldPromoCodeID] = struct{}{}
+}
+
+// PromoCodeIDCleared returns if the "promo_code_id" field was cleared in this mutation.
+func (m *PaymentOrderMutation) PromoCodeIDCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldPromoCodeID]
+	return ok
+}
+
+// ResetPromoCodeID resets all changes to the "promo_code_id" field.
+func (m *PaymentOrderMutation) ResetPromoCodeID() {
+	m.promo_code = nil
+	delete(m.clearedFields, paymentorder.FieldPromoCodeID)
 }
 
 // SetCurrency sets the "currency" field.
@@ -21239,6 +21579,87 @@ func (m *PaymentOrderMutation) ResetLedgerTransaction() {
 	m.clearedledger_transaction = false
 }
 
+// ClearPromoCode clears the "promo_code" edge to the PromoCode entity.
+func (m *PaymentOrderMutation) ClearPromoCode() {
+	m.clearedpromo_code = true
+	m.clearedFields[paymentorder.FieldPromoCodeID] = struct{}{}
+}
+
+// PromoCodeCleared reports if the "promo_code" edge to the PromoCode entity was cleared.
+func (m *PaymentOrderMutation) PromoCodeCleared() bool {
+	return m.PromoCodeIDCleared() || m.clearedpromo_code
+}
+
+// PromoCodeIDs returns the "promo_code" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PromoCodeID instead. It exists only for internal usage by the builders.
+func (m *PaymentOrderMutation) PromoCodeIDs() (ids []int) {
+	if id := m.promo_code; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPromoCode resets all changes to the "promo_code" edge.
+func (m *PaymentOrderMutation) ResetPromoCode() {
+	m.promo_code = nil
+	m.clearedpromo_code = false
+}
+
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by ids.
+func (m *PaymentOrderMutation) AddPromoUsageIDs(ids ...int) {
+	if m.promo_usages == nil {
+		m.promo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.promo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPromoUsages clears the "promo_usages" edge to the PromoUsage entity.
+func (m *PaymentOrderMutation) ClearPromoUsages() {
+	m.clearedpromo_usages = true
+}
+
+// PromoUsagesCleared reports if the "promo_usages" edge to the PromoUsage entity was cleared.
+func (m *PaymentOrderMutation) PromoUsagesCleared() bool {
+	return m.clearedpromo_usages
+}
+
+// RemovePromoUsageIDs removes the "promo_usages" edge to the PromoUsage entity by IDs.
+func (m *PaymentOrderMutation) RemovePromoUsageIDs(ids ...int) {
+	if m.removedpromo_usages == nil {
+		m.removedpromo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.promo_usages, ids[i])
+		m.removedpromo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPromoUsages returns the removed IDs of the "promo_usages" edge to the PromoUsage entity.
+func (m *PaymentOrderMutation) RemovedPromoUsagesIDs() (ids []int) {
+	for id := range m.removedpromo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PromoUsagesIDs returns the "promo_usages" edge IDs in the mutation.
+func (m *PaymentOrderMutation) PromoUsagesIDs() (ids []int) {
+	for id := range m.promo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPromoUsages resets all changes to the "promo_usages" edge.
+func (m *PaymentOrderMutation) ResetPromoUsages() {
+	m.promo_usages = nil
+	m.clearedpromo_usages = false
+	m.removedpromo_usages = nil
+}
+
 // AddPaymentEventIDs adds the "payment_events" edge to the PaymentEvent entity by ids.
 func (m *PaymentOrderMutation) AddPaymentEventIDs(ids ...int) {
 	if m.payment_events == nil {
@@ -21327,7 +21748,7 @@ func (m *PaymentOrderMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PaymentOrderMutation) Fields() []string {
-	fields := make([]string, 0, 23)
+	fields := make([]string, 0, 26)
 	if m.created_at != nil {
 		fields = append(fields, paymentorder.FieldCreatedAt)
 	}
@@ -21354,6 +21775,15 @@ func (m *PaymentOrderMutation) Fields() []string {
 	}
 	if m.amount_micros != nil {
 		fields = append(fields, paymentorder.FieldAmountMicros)
+	}
+	if m.payable_amount_micros != nil {
+		fields = append(fields, paymentorder.FieldPayableAmountMicros)
+	}
+	if m.discount_amount_micros != nil {
+		fields = append(fields, paymentorder.FieldDiscountAmountMicros)
+	}
+	if m.promo_code != nil {
+		fields = append(fields, paymentorder.FieldPromoCodeID)
 	}
 	if m.currency != nil {
 		fields = append(fields, paymentorder.FieldCurrency)
@@ -21423,6 +21853,12 @@ func (m *PaymentOrderMutation) Field(name string) (ent.Value, bool) {
 		return m.Purpose()
 	case paymentorder.FieldAmountMicros:
 		return m.AmountMicros()
+	case paymentorder.FieldPayableAmountMicros:
+		return m.PayableAmountMicros()
+	case paymentorder.FieldDiscountAmountMicros:
+		return m.DiscountAmountMicros()
+	case paymentorder.FieldPromoCodeID:
+		return m.PromoCodeID()
 	case paymentorder.FieldCurrency:
 		return m.Currency()
 	case paymentorder.FieldStatus:
@@ -21478,6 +21914,12 @@ func (m *PaymentOrderMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldPurpose(ctx)
 	case paymentorder.FieldAmountMicros:
 		return m.OldAmountMicros(ctx)
+	case paymentorder.FieldPayableAmountMicros:
+		return m.OldPayableAmountMicros(ctx)
+	case paymentorder.FieldDiscountAmountMicros:
+		return m.OldDiscountAmountMicros(ctx)
+	case paymentorder.FieldPromoCodeID:
+		return m.OldPromoCodeID(ctx)
 	case paymentorder.FieldCurrency:
 		return m.OldCurrency(ctx)
 	case paymentorder.FieldStatus:
@@ -21577,6 +22019,27 @@ func (m *PaymentOrderMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAmountMicros(v)
+		return nil
+	case paymentorder.FieldPayableAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPayableAmountMicros(v)
+		return nil
+	case paymentorder.FieldDiscountAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDiscountAmountMicros(v)
+		return nil
+	case paymentorder.FieldPromoCodeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPromoCodeID(v)
 		return nil
 	case paymentorder.FieldCurrency:
 		v, ok := value.(string)
@@ -21690,6 +22153,12 @@ func (m *PaymentOrderMutation) AddedFields() []string {
 	if m.addamount_micros != nil {
 		fields = append(fields, paymentorder.FieldAmountMicros)
 	}
+	if m.addpayable_amount_micros != nil {
+		fields = append(fields, paymentorder.FieldPayableAmountMicros)
+	}
+	if m.adddiscount_amount_micros != nil {
+		fields = append(fields, paymentorder.FieldDiscountAmountMicros)
+	}
 	if m.addrefund_amount_micros != nil {
 		fields = append(fields, paymentorder.FieldRefundAmountMicros)
 	}
@@ -21705,6 +22174,10 @@ func (m *PaymentOrderMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedProjectID()
 	case paymentorder.FieldAmountMicros:
 		return m.AddedAmountMicros()
+	case paymentorder.FieldPayableAmountMicros:
+		return m.AddedPayableAmountMicros()
+	case paymentorder.FieldDiscountAmountMicros:
+		return m.AddedDiscountAmountMicros()
 	case paymentorder.FieldRefundAmountMicros:
 		return m.AddedRefundAmountMicros()
 	}
@@ -21730,6 +22203,20 @@ func (m *PaymentOrderMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddAmountMicros(v)
 		return nil
+	case paymentorder.FieldPayableAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPayableAmountMicros(v)
+		return nil
+	case paymentorder.FieldDiscountAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDiscountAmountMicros(v)
+		return nil
 	case paymentorder.FieldRefundAmountMicros:
 		v, ok := value.(int64)
 		if !ok {
@@ -21747,6 +22234,9 @@ func (m *PaymentOrderMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(paymentorder.FieldProviderInstanceID) {
 		fields = append(fields, paymentorder.FieldProviderInstanceID)
+	}
+	if m.FieldCleared(paymentorder.FieldPromoCodeID) {
+		fields = append(fields, paymentorder.FieldPromoCodeID)
 	}
 	if m.FieldCleared(paymentorder.FieldExpiresAt) {
 		fields = append(fields, paymentorder.FieldExpiresAt)
@@ -21785,6 +22275,9 @@ func (m *PaymentOrderMutation) ClearField(name string) error {
 	switch name {
 	case paymentorder.FieldProviderInstanceID:
 		m.ClearProviderInstanceID()
+		return nil
+	case paymentorder.FieldPromoCodeID:
+		m.ClearPromoCodeID()
 		return nil
 	case paymentorder.FieldExpiresAt:
 		m.ClearExpiresAt()
@@ -21842,6 +22335,15 @@ func (m *PaymentOrderMutation) ResetField(name string) error {
 	case paymentorder.FieldAmountMicros:
 		m.ResetAmountMicros()
 		return nil
+	case paymentorder.FieldPayableAmountMicros:
+		m.ResetPayableAmountMicros()
+		return nil
+	case paymentorder.FieldDiscountAmountMicros:
+		m.ResetDiscountAmountMicros()
+		return nil
+	case paymentorder.FieldPromoCodeID:
+		m.ResetPromoCodeID()
+		return nil
 	case paymentorder.FieldCurrency:
 		m.ResetCurrency()
 		return nil
@@ -21890,7 +22392,7 @@ func (m *PaymentOrderMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *PaymentOrderMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 6)
 	if m.billing_account != nil {
 		edges = append(edges, paymentorder.EdgeBillingAccount)
 	}
@@ -21899,6 +22401,12 @@ func (m *PaymentOrderMutation) AddedEdges() []string {
 	}
 	if m.ledger_transaction != nil {
 		edges = append(edges, paymentorder.EdgeLedgerTransaction)
+	}
+	if m.promo_code != nil {
+		edges = append(edges, paymentorder.EdgePromoCode)
+	}
+	if m.promo_usages != nil {
+		edges = append(edges, paymentorder.EdgePromoUsages)
 	}
 	if m.payment_events != nil {
 		edges = append(edges, paymentorder.EdgePaymentEvents)
@@ -21922,6 +22430,16 @@ func (m *PaymentOrderMutation) AddedIDs(name string) []ent.Value {
 		if id := m.ledger_transaction; id != nil {
 			return []ent.Value{*id}
 		}
+	case paymentorder.EdgePromoCode:
+		if id := m.promo_code; id != nil {
+			return []ent.Value{*id}
+		}
+	case paymentorder.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.promo_usages))
+		for id := range m.promo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	case paymentorder.EdgePaymentEvents:
 		ids := make([]ent.Value, 0, len(m.payment_events))
 		for id := range m.payment_events {
@@ -21934,7 +22452,10 @@ func (m *PaymentOrderMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PaymentOrderMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 6)
+	if m.removedpromo_usages != nil {
+		edges = append(edges, paymentorder.EdgePromoUsages)
+	}
 	if m.removedpayment_events != nil {
 		edges = append(edges, paymentorder.EdgePaymentEvents)
 	}
@@ -21945,6 +22466,12 @@ func (m *PaymentOrderMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *PaymentOrderMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case paymentorder.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.removedpromo_usages))
+		for id := range m.removedpromo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	case paymentorder.EdgePaymentEvents:
 		ids := make([]ent.Value, 0, len(m.removedpayment_events))
 		for id := range m.removedpayment_events {
@@ -21957,7 +22484,7 @@ func (m *PaymentOrderMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *PaymentOrderMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 6)
 	if m.clearedbilling_account {
 		edges = append(edges, paymentorder.EdgeBillingAccount)
 	}
@@ -21966,6 +22493,12 @@ func (m *PaymentOrderMutation) ClearedEdges() []string {
 	}
 	if m.clearedledger_transaction {
 		edges = append(edges, paymentorder.EdgeLedgerTransaction)
+	}
+	if m.clearedpromo_code {
+		edges = append(edges, paymentorder.EdgePromoCode)
+	}
+	if m.clearedpromo_usages {
+		edges = append(edges, paymentorder.EdgePromoUsages)
 	}
 	if m.clearedpayment_events {
 		edges = append(edges, paymentorder.EdgePaymentEvents)
@@ -21983,6 +22516,10 @@ func (m *PaymentOrderMutation) EdgeCleared(name string) bool {
 		return m.clearedprovider_instance
 	case paymentorder.EdgeLedgerTransaction:
 		return m.clearedledger_transaction
+	case paymentorder.EdgePromoCode:
+		return m.clearedpromo_code
+	case paymentorder.EdgePromoUsages:
+		return m.clearedpromo_usages
 	case paymentorder.EdgePaymentEvents:
 		return m.clearedpayment_events
 	}
@@ -22002,6 +22539,9 @@ func (m *PaymentOrderMutation) ClearEdge(name string) error {
 	case paymentorder.EdgeLedgerTransaction:
 		m.ClearLedgerTransaction()
 		return nil
+	case paymentorder.EdgePromoCode:
+		m.ClearPromoCode()
+		return nil
 	}
 	return fmt.Errorf("unknown PaymentOrder unique edge %s", name)
 }
@@ -22018,6 +22558,12 @@ func (m *PaymentOrderMutation) ResetEdge(name string) error {
 		return nil
 	case paymentorder.EdgeLedgerTransaction:
 		m.ResetLedgerTransaction()
+		return nil
+	case paymentorder.EdgePromoCode:
+		m.ResetPromoCode()
+		return nil
+	case paymentorder.EdgePromoUsages:
+		m.ResetPromoUsages()
 		return nil
 	case paymentorder.EdgePaymentEvents:
 		m.ResetPaymentEvents()
@@ -24437,6 +24983,3571 @@ func (m *ProjectMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Project edge %s", name)
+}
+
+// PromoCodeMutation represents an operation that mutates the PromoCode nodes in the graph.
+type PromoCodeMutation struct {
+	config
+	op                        Op
+	typ                       string
+	id                        *int
+	created_at                *time.Time
+	updated_at                *time.Time
+	code                      *string
+	description               *string
+	discount_type             *promocode.DiscountType
+	discount_amount_micros    *int64
+	adddiscount_amount_micros *int64
+	discount_percent_bps      *int
+	adddiscount_percent_bps   *int
+	scope                     *promocode.Scope
+	status                    *promocode.Status
+	currency                  *string
+	max_uses                  *int
+	addmax_uses               *int
+	used_count                *int
+	addused_count             *int
+	per_user_limit            *int
+	addper_user_limit         *int
+	starts_at                 *time.Time
+	expires_at                *time.Time
+	created_by_id             *int
+	addcreated_by_id          *int
+	notes                     *string
+	metadata                  *objects.JSONRawMessage
+	appendmetadata            objects.JSONRawMessage
+	clearedFields             map[string]struct{}
+	usages                    map[int]struct{}
+	removedusages             map[int]struct{}
+	clearedusages             bool
+	payment_orders            map[int]struct{}
+	removedpayment_orders     map[int]struct{}
+	clearedpayment_orders     bool
+	user_subscriptions        map[int]struct{}
+	removeduser_subscriptions map[int]struct{}
+	cleareduser_subscriptions bool
+	done                      bool
+	oldValue                  func(context.Context) (*PromoCode, error)
+	predicates                []predicate.PromoCode
+}
+
+var _ ent.Mutation = (*PromoCodeMutation)(nil)
+
+// promocodeOption allows management of the mutation configuration using functional options.
+type promocodeOption func(*PromoCodeMutation)
+
+// newPromoCodeMutation creates new mutation for the PromoCode entity.
+func newPromoCodeMutation(c config, op Op, opts ...promocodeOption) *PromoCodeMutation {
+	m := &PromoCodeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePromoCode,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPromoCodeID sets the ID field of the mutation.
+func withPromoCodeID(id int) promocodeOption {
+	return func(m *PromoCodeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PromoCode
+		)
+		m.oldValue = func(ctx context.Context) (*PromoCode, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PromoCode.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPromoCode sets the old PromoCode of the mutation.
+func withPromoCode(node *PromoCode) promocodeOption {
+	return func(m *PromoCodeMutation) {
+		m.oldValue = func(context.Context) (*PromoCode, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PromoCodeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PromoCodeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PromoCodeMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PromoCodeMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PromoCode.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PromoCodeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PromoCodeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PromoCodeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PromoCodeMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PromoCodeMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PromoCodeMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetCode sets the "code" field.
+func (m *PromoCodeMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *PromoCodeMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *PromoCodeMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *PromoCodeMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *PromoCodeMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *PromoCodeMutation) ResetDescription() {
+	m.description = nil
+}
+
+// SetDiscountType sets the "discount_type" field.
+func (m *PromoCodeMutation) SetDiscountType(pt promocode.DiscountType) {
+	m.discount_type = &pt
+}
+
+// DiscountType returns the value of the "discount_type" field in the mutation.
+func (m *PromoCodeMutation) DiscountType() (r promocode.DiscountType, exists bool) {
+	v := m.discount_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDiscountType returns the old "discount_type" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldDiscountType(ctx context.Context) (v promocode.DiscountType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDiscountType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDiscountType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDiscountType: %w", err)
+	}
+	return oldValue.DiscountType, nil
+}
+
+// ResetDiscountType resets all changes to the "discount_type" field.
+func (m *PromoCodeMutation) ResetDiscountType() {
+	m.discount_type = nil
+}
+
+// SetDiscountAmountMicros sets the "discount_amount_micros" field.
+func (m *PromoCodeMutation) SetDiscountAmountMicros(i int64) {
+	m.discount_amount_micros = &i
+	m.adddiscount_amount_micros = nil
+}
+
+// DiscountAmountMicros returns the value of the "discount_amount_micros" field in the mutation.
+func (m *PromoCodeMutation) DiscountAmountMicros() (r int64, exists bool) {
+	v := m.discount_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDiscountAmountMicros returns the old "discount_amount_micros" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldDiscountAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDiscountAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDiscountAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDiscountAmountMicros: %w", err)
+	}
+	return oldValue.DiscountAmountMicros, nil
+}
+
+// AddDiscountAmountMicros adds i to the "discount_amount_micros" field.
+func (m *PromoCodeMutation) AddDiscountAmountMicros(i int64) {
+	if m.adddiscount_amount_micros != nil {
+		*m.adddiscount_amount_micros += i
+	} else {
+		m.adddiscount_amount_micros = &i
+	}
+}
+
+// AddedDiscountAmountMicros returns the value that was added to the "discount_amount_micros" field in this mutation.
+func (m *PromoCodeMutation) AddedDiscountAmountMicros() (r int64, exists bool) {
+	v := m.adddiscount_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDiscountAmountMicros resets all changes to the "discount_amount_micros" field.
+func (m *PromoCodeMutation) ResetDiscountAmountMicros() {
+	m.discount_amount_micros = nil
+	m.adddiscount_amount_micros = nil
+}
+
+// SetDiscountPercentBps sets the "discount_percent_bps" field.
+func (m *PromoCodeMutation) SetDiscountPercentBps(i int) {
+	m.discount_percent_bps = &i
+	m.adddiscount_percent_bps = nil
+}
+
+// DiscountPercentBps returns the value of the "discount_percent_bps" field in the mutation.
+func (m *PromoCodeMutation) DiscountPercentBps() (r int, exists bool) {
+	v := m.discount_percent_bps
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDiscountPercentBps returns the old "discount_percent_bps" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldDiscountPercentBps(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDiscountPercentBps is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDiscountPercentBps requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDiscountPercentBps: %w", err)
+	}
+	return oldValue.DiscountPercentBps, nil
+}
+
+// AddDiscountPercentBps adds i to the "discount_percent_bps" field.
+func (m *PromoCodeMutation) AddDiscountPercentBps(i int) {
+	if m.adddiscount_percent_bps != nil {
+		*m.adddiscount_percent_bps += i
+	} else {
+		m.adddiscount_percent_bps = &i
+	}
+}
+
+// AddedDiscountPercentBps returns the value that was added to the "discount_percent_bps" field in this mutation.
+func (m *PromoCodeMutation) AddedDiscountPercentBps() (r int, exists bool) {
+	v := m.adddiscount_percent_bps
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDiscountPercentBps resets all changes to the "discount_percent_bps" field.
+func (m *PromoCodeMutation) ResetDiscountPercentBps() {
+	m.discount_percent_bps = nil
+	m.adddiscount_percent_bps = nil
+}
+
+// SetScope sets the "scope" field.
+func (m *PromoCodeMutation) SetScope(pr promocode.Scope) {
+	m.scope = &pr
+}
+
+// Scope returns the value of the "scope" field in the mutation.
+func (m *PromoCodeMutation) Scope() (r promocode.Scope, exists bool) {
+	v := m.scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScope returns the old "scope" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldScope(ctx context.Context) (v promocode.Scope, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScope: %w", err)
+	}
+	return oldValue.Scope, nil
+}
+
+// ResetScope resets all changes to the "scope" field.
+func (m *PromoCodeMutation) ResetScope() {
+	m.scope = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *PromoCodeMutation) SetStatus(pr promocode.Status) {
+	m.status = &pr
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *PromoCodeMutation) Status() (r promocode.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldStatus(ctx context.Context) (v promocode.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *PromoCodeMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetCurrency sets the "currency" field.
+func (m *PromoCodeMutation) SetCurrency(s string) {
+	m.currency = &s
+}
+
+// Currency returns the value of the "currency" field in the mutation.
+func (m *PromoCodeMutation) Currency() (r string, exists bool) {
+	v := m.currency
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrency returns the old "currency" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldCurrency(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrency is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrency requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrency: %w", err)
+	}
+	return oldValue.Currency, nil
+}
+
+// ResetCurrency resets all changes to the "currency" field.
+func (m *PromoCodeMutation) ResetCurrency() {
+	m.currency = nil
+}
+
+// SetMaxUses sets the "max_uses" field.
+func (m *PromoCodeMutation) SetMaxUses(i int) {
+	m.max_uses = &i
+	m.addmax_uses = nil
+}
+
+// MaxUses returns the value of the "max_uses" field in the mutation.
+func (m *PromoCodeMutation) MaxUses() (r int, exists bool) {
+	v := m.max_uses
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxUses returns the old "max_uses" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldMaxUses(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxUses is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxUses requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxUses: %w", err)
+	}
+	return oldValue.MaxUses, nil
+}
+
+// AddMaxUses adds i to the "max_uses" field.
+func (m *PromoCodeMutation) AddMaxUses(i int) {
+	if m.addmax_uses != nil {
+		*m.addmax_uses += i
+	} else {
+		m.addmax_uses = &i
+	}
+}
+
+// AddedMaxUses returns the value that was added to the "max_uses" field in this mutation.
+func (m *PromoCodeMutation) AddedMaxUses() (r int, exists bool) {
+	v := m.addmax_uses
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxUses resets all changes to the "max_uses" field.
+func (m *PromoCodeMutation) ResetMaxUses() {
+	m.max_uses = nil
+	m.addmax_uses = nil
+}
+
+// SetUsedCount sets the "used_count" field.
+func (m *PromoCodeMutation) SetUsedCount(i int) {
+	m.used_count = &i
+	m.addused_count = nil
+}
+
+// UsedCount returns the value of the "used_count" field in the mutation.
+func (m *PromoCodeMutation) UsedCount() (r int, exists bool) {
+	v := m.used_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUsedCount returns the old "used_count" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldUsedCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUsedCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUsedCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUsedCount: %w", err)
+	}
+	return oldValue.UsedCount, nil
+}
+
+// AddUsedCount adds i to the "used_count" field.
+func (m *PromoCodeMutation) AddUsedCount(i int) {
+	if m.addused_count != nil {
+		*m.addused_count += i
+	} else {
+		m.addused_count = &i
+	}
+}
+
+// AddedUsedCount returns the value that was added to the "used_count" field in this mutation.
+func (m *PromoCodeMutation) AddedUsedCount() (r int, exists bool) {
+	v := m.addused_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUsedCount resets all changes to the "used_count" field.
+func (m *PromoCodeMutation) ResetUsedCount() {
+	m.used_count = nil
+	m.addused_count = nil
+}
+
+// SetPerUserLimit sets the "per_user_limit" field.
+func (m *PromoCodeMutation) SetPerUserLimit(i int) {
+	m.per_user_limit = &i
+	m.addper_user_limit = nil
+}
+
+// PerUserLimit returns the value of the "per_user_limit" field in the mutation.
+func (m *PromoCodeMutation) PerUserLimit() (r int, exists bool) {
+	v := m.per_user_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPerUserLimit returns the old "per_user_limit" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldPerUserLimit(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPerUserLimit is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPerUserLimit requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPerUserLimit: %w", err)
+	}
+	return oldValue.PerUserLimit, nil
+}
+
+// AddPerUserLimit adds i to the "per_user_limit" field.
+func (m *PromoCodeMutation) AddPerUserLimit(i int) {
+	if m.addper_user_limit != nil {
+		*m.addper_user_limit += i
+	} else {
+		m.addper_user_limit = &i
+	}
+}
+
+// AddedPerUserLimit returns the value that was added to the "per_user_limit" field in this mutation.
+func (m *PromoCodeMutation) AddedPerUserLimit() (r int, exists bool) {
+	v := m.addper_user_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPerUserLimit resets all changes to the "per_user_limit" field.
+func (m *PromoCodeMutation) ResetPerUserLimit() {
+	m.per_user_limit = nil
+	m.addper_user_limit = nil
+}
+
+// SetStartsAt sets the "starts_at" field.
+func (m *PromoCodeMutation) SetStartsAt(t time.Time) {
+	m.starts_at = &t
+}
+
+// StartsAt returns the value of the "starts_at" field in the mutation.
+func (m *PromoCodeMutation) StartsAt() (r time.Time, exists bool) {
+	v := m.starts_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartsAt returns the old "starts_at" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldStartsAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartsAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartsAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartsAt: %w", err)
+	}
+	return oldValue.StartsAt, nil
+}
+
+// ClearStartsAt clears the value of the "starts_at" field.
+func (m *PromoCodeMutation) ClearStartsAt() {
+	m.starts_at = nil
+	m.clearedFields[promocode.FieldStartsAt] = struct{}{}
+}
+
+// StartsAtCleared returns if the "starts_at" field was cleared in this mutation.
+func (m *PromoCodeMutation) StartsAtCleared() bool {
+	_, ok := m.clearedFields[promocode.FieldStartsAt]
+	return ok
+}
+
+// ResetStartsAt resets all changes to the "starts_at" field.
+func (m *PromoCodeMutation) ResetStartsAt() {
+	m.starts_at = nil
+	delete(m.clearedFields, promocode.FieldStartsAt)
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *PromoCodeMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *PromoCodeMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldExpiresAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (m *PromoCodeMutation) ClearExpiresAt() {
+	m.expires_at = nil
+	m.clearedFields[promocode.FieldExpiresAt] = struct{}{}
+}
+
+// ExpiresAtCleared returns if the "expires_at" field was cleared in this mutation.
+func (m *PromoCodeMutation) ExpiresAtCleared() bool {
+	_, ok := m.clearedFields[promocode.FieldExpiresAt]
+	return ok
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *PromoCodeMutation) ResetExpiresAt() {
+	m.expires_at = nil
+	delete(m.clearedFields, promocode.FieldExpiresAt)
+}
+
+// SetCreatedByID sets the "created_by_id" field.
+func (m *PromoCodeMutation) SetCreatedByID(i int) {
+	m.created_by_id = &i
+	m.addcreated_by_id = nil
+}
+
+// CreatedByID returns the value of the "created_by_id" field in the mutation.
+func (m *PromoCodeMutation) CreatedByID() (r int, exists bool) {
+	v := m.created_by_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedByID returns the old "created_by_id" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldCreatedByID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedByID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedByID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedByID: %w", err)
+	}
+	return oldValue.CreatedByID, nil
+}
+
+// AddCreatedByID adds i to the "created_by_id" field.
+func (m *PromoCodeMutation) AddCreatedByID(i int) {
+	if m.addcreated_by_id != nil {
+		*m.addcreated_by_id += i
+	} else {
+		m.addcreated_by_id = &i
+	}
+}
+
+// AddedCreatedByID returns the value that was added to the "created_by_id" field in this mutation.
+func (m *PromoCodeMutation) AddedCreatedByID() (r int, exists bool) {
+	v := m.addcreated_by_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearCreatedByID clears the value of the "created_by_id" field.
+func (m *PromoCodeMutation) ClearCreatedByID() {
+	m.created_by_id = nil
+	m.addcreated_by_id = nil
+	m.clearedFields[promocode.FieldCreatedByID] = struct{}{}
+}
+
+// CreatedByIDCleared returns if the "created_by_id" field was cleared in this mutation.
+func (m *PromoCodeMutation) CreatedByIDCleared() bool {
+	_, ok := m.clearedFields[promocode.FieldCreatedByID]
+	return ok
+}
+
+// ResetCreatedByID resets all changes to the "created_by_id" field.
+func (m *PromoCodeMutation) ResetCreatedByID() {
+	m.created_by_id = nil
+	m.addcreated_by_id = nil
+	delete(m.clearedFields, promocode.FieldCreatedByID)
+}
+
+// SetNotes sets the "notes" field.
+func (m *PromoCodeMutation) SetNotes(s string) {
+	m.notes = &s
+}
+
+// Notes returns the value of the "notes" field in the mutation.
+func (m *PromoCodeMutation) Notes() (r string, exists bool) {
+	v := m.notes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotes returns the old "notes" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldNotes(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotes: %w", err)
+	}
+	return oldValue.Notes, nil
+}
+
+// ResetNotes resets all changes to the "notes" field.
+func (m *PromoCodeMutation) ResetNotes() {
+	m.notes = nil
+}
+
+// SetMetadata sets the "metadata" field.
+func (m *PromoCodeMutation) SetMetadata(orm objects.JSONRawMessage) {
+	m.metadata = &orm
+	m.appendmetadata = nil
+}
+
+// Metadata returns the value of the "metadata" field in the mutation.
+func (m *PromoCodeMutation) Metadata() (r objects.JSONRawMessage, exists bool) {
+	v := m.metadata
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetadata returns the old "metadata" field's value of the PromoCode entity.
+// If the PromoCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoCodeMutation) OldMetadata(ctx context.Context) (v objects.JSONRawMessage, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetadata is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetadata requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetadata: %w", err)
+	}
+	return oldValue.Metadata, nil
+}
+
+// AppendMetadata adds orm to the "metadata" field.
+func (m *PromoCodeMutation) AppendMetadata(orm objects.JSONRawMessage) {
+	m.appendmetadata = append(m.appendmetadata, orm...)
+}
+
+// AppendedMetadata returns the list of values that were appended to the "metadata" field in this mutation.
+func (m *PromoCodeMutation) AppendedMetadata() (objects.JSONRawMessage, bool) {
+	if len(m.appendmetadata) == 0 {
+		return nil, false
+	}
+	return m.appendmetadata, true
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (m *PromoCodeMutation) ClearMetadata() {
+	m.metadata = nil
+	m.appendmetadata = nil
+	m.clearedFields[promocode.FieldMetadata] = struct{}{}
+}
+
+// MetadataCleared returns if the "metadata" field was cleared in this mutation.
+func (m *PromoCodeMutation) MetadataCleared() bool {
+	_, ok := m.clearedFields[promocode.FieldMetadata]
+	return ok
+}
+
+// ResetMetadata resets all changes to the "metadata" field.
+func (m *PromoCodeMutation) ResetMetadata() {
+	m.metadata = nil
+	m.appendmetadata = nil
+	delete(m.clearedFields, promocode.FieldMetadata)
+}
+
+// AddUsageIDs adds the "usages" edge to the PromoUsage entity by ids.
+func (m *PromoCodeMutation) AddUsageIDs(ids ...int) {
+	if m.usages == nil {
+		m.usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.usages[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUsages clears the "usages" edge to the PromoUsage entity.
+func (m *PromoCodeMutation) ClearUsages() {
+	m.clearedusages = true
+}
+
+// UsagesCleared reports if the "usages" edge to the PromoUsage entity was cleared.
+func (m *PromoCodeMutation) UsagesCleared() bool {
+	return m.clearedusages
+}
+
+// RemoveUsageIDs removes the "usages" edge to the PromoUsage entity by IDs.
+func (m *PromoCodeMutation) RemoveUsageIDs(ids ...int) {
+	if m.removedusages == nil {
+		m.removedusages = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.usages, ids[i])
+		m.removedusages[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUsages returns the removed IDs of the "usages" edge to the PromoUsage entity.
+func (m *PromoCodeMutation) RemovedUsagesIDs() (ids []int) {
+	for id := range m.removedusages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UsagesIDs returns the "usages" edge IDs in the mutation.
+func (m *PromoCodeMutation) UsagesIDs() (ids []int) {
+	for id := range m.usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUsages resets all changes to the "usages" edge.
+func (m *PromoCodeMutation) ResetUsages() {
+	m.usages = nil
+	m.clearedusages = false
+	m.removedusages = nil
+}
+
+// AddPaymentOrderIDs adds the "payment_orders" edge to the PaymentOrder entity by ids.
+func (m *PromoCodeMutation) AddPaymentOrderIDs(ids ...int) {
+	if m.payment_orders == nil {
+		m.payment_orders = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.payment_orders[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPaymentOrders clears the "payment_orders" edge to the PaymentOrder entity.
+func (m *PromoCodeMutation) ClearPaymentOrders() {
+	m.clearedpayment_orders = true
+}
+
+// PaymentOrdersCleared reports if the "payment_orders" edge to the PaymentOrder entity was cleared.
+func (m *PromoCodeMutation) PaymentOrdersCleared() bool {
+	return m.clearedpayment_orders
+}
+
+// RemovePaymentOrderIDs removes the "payment_orders" edge to the PaymentOrder entity by IDs.
+func (m *PromoCodeMutation) RemovePaymentOrderIDs(ids ...int) {
+	if m.removedpayment_orders == nil {
+		m.removedpayment_orders = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.payment_orders, ids[i])
+		m.removedpayment_orders[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPaymentOrders returns the removed IDs of the "payment_orders" edge to the PaymentOrder entity.
+func (m *PromoCodeMutation) RemovedPaymentOrdersIDs() (ids []int) {
+	for id := range m.removedpayment_orders {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PaymentOrdersIDs returns the "payment_orders" edge IDs in the mutation.
+func (m *PromoCodeMutation) PaymentOrdersIDs() (ids []int) {
+	for id := range m.payment_orders {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPaymentOrders resets all changes to the "payment_orders" edge.
+func (m *PromoCodeMutation) ResetPaymentOrders() {
+	m.payment_orders = nil
+	m.clearedpayment_orders = false
+	m.removedpayment_orders = nil
+}
+
+// AddUserSubscriptionIDs adds the "user_subscriptions" edge to the UserSubscription entity by ids.
+func (m *PromoCodeMutation) AddUserSubscriptionIDs(ids ...int) {
+	if m.user_subscriptions == nil {
+		m.user_subscriptions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.user_subscriptions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUserSubscriptions clears the "user_subscriptions" edge to the UserSubscription entity.
+func (m *PromoCodeMutation) ClearUserSubscriptions() {
+	m.cleareduser_subscriptions = true
+}
+
+// UserSubscriptionsCleared reports if the "user_subscriptions" edge to the UserSubscription entity was cleared.
+func (m *PromoCodeMutation) UserSubscriptionsCleared() bool {
+	return m.cleareduser_subscriptions
+}
+
+// RemoveUserSubscriptionIDs removes the "user_subscriptions" edge to the UserSubscription entity by IDs.
+func (m *PromoCodeMutation) RemoveUserSubscriptionIDs(ids ...int) {
+	if m.removeduser_subscriptions == nil {
+		m.removeduser_subscriptions = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.user_subscriptions, ids[i])
+		m.removeduser_subscriptions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUserSubscriptions returns the removed IDs of the "user_subscriptions" edge to the UserSubscription entity.
+func (m *PromoCodeMutation) RemovedUserSubscriptionsIDs() (ids []int) {
+	for id := range m.removeduser_subscriptions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UserSubscriptionsIDs returns the "user_subscriptions" edge IDs in the mutation.
+func (m *PromoCodeMutation) UserSubscriptionsIDs() (ids []int) {
+	for id := range m.user_subscriptions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUserSubscriptions resets all changes to the "user_subscriptions" edge.
+func (m *PromoCodeMutation) ResetUserSubscriptions() {
+	m.user_subscriptions = nil
+	m.cleareduser_subscriptions = false
+	m.removeduser_subscriptions = nil
+}
+
+// Where appends a list predicates to the PromoCodeMutation builder.
+func (m *PromoCodeMutation) Where(ps ...predicate.PromoCode) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PromoCodeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PromoCodeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PromoCode, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PromoCodeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PromoCodeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PromoCode).
+func (m *PromoCodeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PromoCodeMutation) Fields() []string {
+	fields := make([]string, 0, 18)
+	if m.created_at != nil {
+		fields = append(fields, promocode.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, promocode.FieldUpdatedAt)
+	}
+	if m.code != nil {
+		fields = append(fields, promocode.FieldCode)
+	}
+	if m.description != nil {
+		fields = append(fields, promocode.FieldDescription)
+	}
+	if m.discount_type != nil {
+		fields = append(fields, promocode.FieldDiscountType)
+	}
+	if m.discount_amount_micros != nil {
+		fields = append(fields, promocode.FieldDiscountAmountMicros)
+	}
+	if m.discount_percent_bps != nil {
+		fields = append(fields, promocode.FieldDiscountPercentBps)
+	}
+	if m.scope != nil {
+		fields = append(fields, promocode.FieldScope)
+	}
+	if m.status != nil {
+		fields = append(fields, promocode.FieldStatus)
+	}
+	if m.currency != nil {
+		fields = append(fields, promocode.FieldCurrency)
+	}
+	if m.max_uses != nil {
+		fields = append(fields, promocode.FieldMaxUses)
+	}
+	if m.used_count != nil {
+		fields = append(fields, promocode.FieldUsedCount)
+	}
+	if m.per_user_limit != nil {
+		fields = append(fields, promocode.FieldPerUserLimit)
+	}
+	if m.starts_at != nil {
+		fields = append(fields, promocode.FieldStartsAt)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, promocode.FieldExpiresAt)
+	}
+	if m.created_by_id != nil {
+		fields = append(fields, promocode.FieldCreatedByID)
+	}
+	if m.notes != nil {
+		fields = append(fields, promocode.FieldNotes)
+	}
+	if m.metadata != nil {
+		fields = append(fields, promocode.FieldMetadata)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PromoCodeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case promocode.FieldCreatedAt:
+		return m.CreatedAt()
+	case promocode.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case promocode.FieldCode:
+		return m.Code()
+	case promocode.FieldDescription:
+		return m.Description()
+	case promocode.FieldDiscountType:
+		return m.DiscountType()
+	case promocode.FieldDiscountAmountMicros:
+		return m.DiscountAmountMicros()
+	case promocode.FieldDiscountPercentBps:
+		return m.DiscountPercentBps()
+	case promocode.FieldScope:
+		return m.Scope()
+	case promocode.FieldStatus:
+		return m.Status()
+	case promocode.FieldCurrency:
+		return m.Currency()
+	case promocode.FieldMaxUses:
+		return m.MaxUses()
+	case promocode.FieldUsedCount:
+		return m.UsedCount()
+	case promocode.FieldPerUserLimit:
+		return m.PerUserLimit()
+	case promocode.FieldStartsAt:
+		return m.StartsAt()
+	case promocode.FieldExpiresAt:
+		return m.ExpiresAt()
+	case promocode.FieldCreatedByID:
+		return m.CreatedByID()
+	case promocode.FieldNotes:
+		return m.Notes()
+	case promocode.FieldMetadata:
+		return m.Metadata()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PromoCodeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case promocode.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case promocode.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case promocode.FieldCode:
+		return m.OldCode(ctx)
+	case promocode.FieldDescription:
+		return m.OldDescription(ctx)
+	case promocode.FieldDiscountType:
+		return m.OldDiscountType(ctx)
+	case promocode.FieldDiscountAmountMicros:
+		return m.OldDiscountAmountMicros(ctx)
+	case promocode.FieldDiscountPercentBps:
+		return m.OldDiscountPercentBps(ctx)
+	case promocode.FieldScope:
+		return m.OldScope(ctx)
+	case promocode.FieldStatus:
+		return m.OldStatus(ctx)
+	case promocode.FieldCurrency:
+		return m.OldCurrency(ctx)
+	case promocode.FieldMaxUses:
+		return m.OldMaxUses(ctx)
+	case promocode.FieldUsedCount:
+		return m.OldUsedCount(ctx)
+	case promocode.FieldPerUserLimit:
+		return m.OldPerUserLimit(ctx)
+	case promocode.FieldStartsAt:
+		return m.OldStartsAt(ctx)
+	case promocode.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	case promocode.FieldCreatedByID:
+		return m.OldCreatedByID(ctx)
+	case promocode.FieldNotes:
+		return m.OldNotes(ctx)
+	case promocode.FieldMetadata:
+		return m.OldMetadata(ctx)
+	}
+	return nil, fmt.Errorf("unknown PromoCode field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PromoCodeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case promocode.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case promocode.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case promocode.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case promocode.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case promocode.FieldDiscountType:
+		v, ok := value.(promocode.DiscountType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDiscountType(v)
+		return nil
+	case promocode.FieldDiscountAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDiscountAmountMicros(v)
+		return nil
+	case promocode.FieldDiscountPercentBps:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDiscountPercentBps(v)
+		return nil
+	case promocode.FieldScope:
+		v, ok := value.(promocode.Scope)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScope(v)
+		return nil
+	case promocode.FieldStatus:
+		v, ok := value.(promocode.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case promocode.FieldCurrency:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrency(v)
+		return nil
+	case promocode.FieldMaxUses:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxUses(v)
+		return nil
+	case promocode.FieldUsedCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUsedCount(v)
+		return nil
+	case promocode.FieldPerUserLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPerUserLimit(v)
+		return nil
+	case promocode.FieldStartsAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartsAt(v)
+		return nil
+	case promocode.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	case promocode.FieldCreatedByID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedByID(v)
+		return nil
+	case promocode.FieldNotes:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotes(v)
+		return nil
+	case promocode.FieldMetadata:
+		v, ok := value.(objects.JSONRawMessage)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetadata(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PromoCode field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PromoCodeMutation) AddedFields() []string {
+	var fields []string
+	if m.adddiscount_amount_micros != nil {
+		fields = append(fields, promocode.FieldDiscountAmountMicros)
+	}
+	if m.adddiscount_percent_bps != nil {
+		fields = append(fields, promocode.FieldDiscountPercentBps)
+	}
+	if m.addmax_uses != nil {
+		fields = append(fields, promocode.FieldMaxUses)
+	}
+	if m.addused_count != nil {
+		fields = append(fields, promocode.FieldUsedCount)
+	}
+	if m.addper_user_limit != nil {
+		fields = append(fields, promocode.FieldPerUserLimit)
+	}
+	if m.addcreated_by_id != nil {
+		fields = append(fields, promocode.FieldCreatedByID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PromoCodeMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case promocode.FieldDiscountAmountMicros:
+		return m.AddedDiscountAmountMicros()
+	case promocode.FieldDiscountPercentBps:
+		return m.AddedDiscountPercentBps()
+	case promocode.FieldMaxUses:
+		return m.AddedMaxUses()
+	case promocode.FieldUsedCount:
+		return m.AddedUsedCount()
+	case promocode.FieldPerUserLimit:
+		return m.AddedPerUserLimit()
+	case promocode.FieldCreatedByID:
+		return m.AddedCreatedByID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PromoCodeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case promocode.FieldDiscountAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDiscountAmountMicros(v)
+		return nil
+	case promocode.FieldDiscountPercentBps:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDiscountPercentBps(v)
+		return nil
+	case promocode.FieldMaxUses:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxUses(v)
+		return nil
+	case promocode.FieldUsedCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUsedCount(v)
+		return nil
+	case promocode.FieldPerUserLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPerUserLimit(v)
+		return nil
+	case promocode.FieldCreatedByID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCreatedByID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PromoCode numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PromoCodeMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(promocode.FieldStartsAt) {
+		fields = append(fields, promocode.FieldStartsAt)
+	}
+	if m.FieldCleared(promocode.FieldExpiresAt) {
+		fields = append(fields, promocode.FieldExpiresAt)
+	}
+	if m.FieldCleared(promocode.FieldCreatedByID) {
+		fields = append(fields, promocode.FieldCreatedByID)
+	}
+	if m.FieldCleared(promocode.FieldMetadata) {
+		fields = append(fields, promocode.FieldMetadata)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PromoCodeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PromoCodeMutation) ClearField(name string) error {
+	switch name {
+	case promocode.FieldStartsAt:
+		m.ClearStartsAt()
+		return nil
+	case promocode.FieldExpiresAt:
+		m.ClearExpiresAt()
+		return nil
+	case promocode.FieldCreatedByID:
+		m.ClearCreatedByID()
+		return nil
+	case promocode.FieldMetadata:
+		m.ClearMetadata()
+		return nil
+	}
+	return fmt.Errorf("unknown PromoCode nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PromoCodeMutation) ResetField(name string) error {
+	switch name {
+	case promocode.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case promocode.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case promocode.FieldCode:
+		m.ResetCode()
+		return nil
+	case promocode.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case promocode.FieldDiscountType:
+		m.ResetDiscountType()
+		return nil
+	case promocode.FieldDiscountAmountMicros:
+		m.ResetDiscountAmountMicros()
+		return nil
+	case promocode.FieldDiscountPercentBps:
+		m.ResetDiscountPercentBps()
+		return nil
+	case promocode.FieldScope:
+		m.ResetScope()
+		return nil
+	case promocode.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case promocode.FieldCurrency:
+		m.ResetCurrency()
+		return nil
+	case promocode.FieldMaxUses:
+		m.ResetMaxUses()
+		return nil
+	case promocode.FieldUsedCount:
+		m.ResetUsedCount()
+		return nil
+	case promocode.FieldPerUserLimit:
+		m.ResetPerUserLimit()
+		return nil
+	case promocode.FieldStartsAt:
+		m.ResetStartsAt()
+		return nil
+	case promocode.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	case promocode.FieldCreatedByID:
+		m.ResetCreatedByID()
+		return nil
+	case promocode.FieldNotes:
+		m.ResetNotes()
+		return nil
+	case promocode.FieldMetadata:
+		m.ResetMetadata()
+		return nil
+	}
+	return fmt.Errorf("unknown PromoCode field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PromoCodeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.usages != nil {
+		edges = append(edges, promocode.EdgeUsages)
+	}
+	if m.payment_orders != nil {
+		edges = append(edges, promocode.EdgePaymentOrders)
+	}
+	if m.user_subscriptions != nil {
+		edges = append(edges, promocode.EdgeUserSubscriptions)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PromoCodeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case promocode.EdgeUsages:
+		ids := make([]ent.Value, 0, len(m.usages))
+		for id := range m.usages {
+			ids = append(ids, id)
+		}
+		return ids
+	case promocode.EdgePaymentOrders:
+		ids := make([]ent.Value, 0, len(m.payment_orders))
+		for id := range m.payment_orders {
+			ids = append(ids, id)
+		}
+		return ids
+	case promocode.EdgeUserSubscriptions:
+		ids := make([]ent.Value, 0, len(m.user_subscriptions))
+		for id := range m.user_subscriptions {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PromoCodeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.removedusages != nil {
+		edges = append(edges, promocode.EdgeUsages)
+	}
+	if m.removedpayment_orders != nil {
+		edges = append(edges, promocode.EdgePaymentOrders)
+	}
+	if m.removeduser_subscriptions != nil {
+		edges = append(edges, promocode.EdgeUserSubscriptions)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PromoCodeMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case promocode.EdgeUsages:
+		ids := make([]ent.Value, 0, len(m.removedusages))
+		for id := range m.removedusages {
+			ids = append(ids, id)
+		}
+		return ids
+	case promocode.EdgePaymentOrders:
+		ids := make([]ent.Value, 0, len(m.removedpayment_orders))
+		for id := range m.removedpayment_orders {
+			ids = append(ids, id)
+		}
+		return ids
+	case promocode.EdgeUserSubscriptions:
+		ids := make([]ent.Value, 0, len(m.removeduser_subscriptions))
+		for id := range m.removeduser_subscriptions {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PromoCodeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.clearedusages {
+		edges = append(edges, promocode.EdgeUsages)
+	}
+	if m.clearedpayment_orders {
+		edges = append(edges, promocode.EdgePaymentOrders)
+	}
+	if m.cleareduser_subscriptions {
+		edges = append(edges, promocode.EdgeUserSubscriptions)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PromoCodeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case promocode.EdgeUsages:
+		return m.clearedusages
+	case promocode.EdgePaymentOrders:
+		return m.clearedpayment_orders
+	case promocode.EdgeUserSubscriptions:
+		return m.cleareduser_subscriptions
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PromoCodeMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown PromoCode unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PromoCodeMutation) ResetEdge(name string) error {
+	switch name {
+	case promocode.EdgeUsages:
+		m.ResetUsages()
+		return nil
+	case promocode.EdgePaymentOrders:
+		m.ResetPaymentOrders()
+		return nil
+	case promocode.EdgeUserSubscriptions:
+		m.ResetUserSubscriptions()
+		return nil
+	}
+	return fmt.Errorf("unknown PromoCode edge %s", name)
+}
+
+// PromoUsageMutation represents an operation that mutates the PromoUsage nodes in the graph.
+type PromoUsageMutation struct {
+	config
+	op                        Op
+	typ                       string
+	id                        *int
+	created_at                *time.Time
+	updated_at                *time.Time
+	code                      *string
+	code_snapshot             *objects.JSONRawMessage
+	appendcode_snapshot       objects.JSONRawMessage
+	scope                     *promousage.Scope
+	status                    *promousage.Status
+	original_amount_micros    *int64
+	addoriginal_amount_micros *int64
+	discount_amount_micros    *int64
+	adddiscount_amount_micros *int64
+	payable_amount_micros     *int64
+	addpayable_amount_micros  *int64
+	currency                  *string
+	idempotency_key           *string
+	failure_reason            *string
+	clearedFields             map[string]struct{}
+	promo_code                *int
+	clearedpromo_code         bool
+	user                      *int
+	cleareduser               bool
+	billing_account           *int
+	clearedbilling_account    bool
+	payment_order             *int
+	clearedpayment_order      bool
+	user_subscription         *int
+	cleareduser_subscription  bool
+	ledger_transaction        *int
+	clearedledger_transaction bool
+	done                      bool
+	oldValue                  func(context.Context) (*PromoUsage, error)
+	predicates                []predicate.PromoUsage
+}
+
+var _ ent.Mutation = (*PromoUsageMutation)(nil)
+
+// promousageOption allows management of the mutation configuration using functional options.
+type promousageOption func(*PromoUsageMutation)
+
+// newPromoUsageMutation creates new mutation for the PromoUsage entity.
+func newPromoUsageMutation(c config, op Op, opts ...promousageOption) *PromoUsageMutation {
+	m := &PromoUsageMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePromoUsage,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPromoUsageID sets the ID field of the mutation.
+func withPromoUsageID(id int) promousageOption {
+	return func(m *PromoUsageMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PromoUsage
+		)
+		m.oldValue = func(ctx context.Context) (*PromoUsage, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PromoUsage.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPromoUsage sets the old PromoUsage of the mutation.
+func withPromoUsage(node *PromoUsage) promousageOption {
+	return func(m *PromoUsageMutation) {
+		m.oldValue = func(context.Context) (*PromoUsage, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PromoUsageMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PromoUsageMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PromoUsageMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PromoUsageMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PromoUsage.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PromoUsageMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PromoUsageMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PromoUsageMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PromoUsageMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PromoUsageMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PromoUsageMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetPromoCodeID sets the "promo_code_id" field.
+func (m *PromoUsageMutation) SetPromoCodeID(i int) {
+	m.promo_code = &i
+}
+
+// PromoCodeID returns the value of the "promo_code_id" field in the mutation.
+func (m *PromoUsageMutation) PromoCodeID() (r int, exists bool) {
+	v := m.promo_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPromoCodeID returns the old "promo_code_id" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldPromoCodeID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPromoCodeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPromoCodeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPromoCodeID: %w", err)
+	}
+	return oldValue.PromoCodeID, nil
+}
+
+// ResetPromoCodeID resets all changes to the "promo_code_id" field.
+func (m *PromoUsageMutation) ResetPromoCodeID() {
+	m.promo_code = nil
+}
+
+// SetCode sets the "code" field.
+func (m *PromoUsageMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *PromoUsageMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *PromoUsageMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetCodeSnapshot sets the "code_snapshot" field.
+func (m *PromoUsageMutation) SetCodeSnapshot(orm objects.JSONRawMessage) {
+	m.code_snapshot = &orm
+	m.appendcode_snapshot = nil
+}
+
+// CodeSnapshot returns the value of the "code_snapshot" field in the mutation.
+func (m *PromoUsageMutation) CodeSnapshot() (r objects.JSONRawMessage, exists bool) {
+	v := m.code_snapshot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCodeSnapshot returns the old "code_snapshot" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldCodeSnapshot(ctx context.Context) (v objects.JSONRawMessage, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCodeSnapshot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCodeSnapshot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCodeSnapshot: %w", err)
+	}
+	return oldValue.CodeSnapshot, nil
+}
+
+// AppendCodeSnapshot adds orm to the "code_snapshot" field.
+func (m *PromoUsageMutation) AppendCodeSnapshot(orm objects.JSONRawMessage) {
+	m.appendcode_snapshot = append(m.appendcode_snapshot, orm...)
+}
+
+// AppendedCodeSnapshot returns the list of values that were appended to the "code_snapshot" field in this mutation.
+func (m *PromoUsageMutation) AppendedCodeSnapshot() (objects.JSONRawMessage, bool) {
+	if len(m.appendcode_snapshot) == 0 {
+		return nil, false
+	}
+	return m.appendcode_snapshot, true
+}
+
+// ClearCodeSnapshot clears the value of the "code_snapshot" field.
+func (m *PromoUsageMutation) ClearCodeSnapshot() {
+	m.code_snapshot = nil
+	m.appendcode_snapshot = nil
+	m.clearedFields[promousage.FieldCodeSnapshot] = struct{}{}
+}
+
+// CodeSnapshotCleared returns if the "code_snapshot" field was cleared in this mutation.
+func (m *PromoUsageMutation) CodeSnapshotCleared() bool {
+	_, ok := m.clearedFields[promousage.FieldCodeSnapshot]
+	return ok
+}
+
+// ResetCodeSnapshot resets all changes to the "code_snapshot" field.
+func (m *PromoUsageMutation) ResetCodeSnapshot() {
+	m.code_snapshot = nil
+	m.appendcode_snapshot = nil
+	delete(m.clearedFields, promousage.FieldCodeSnapshot)
+}
+
+// SetUserID sets the "user_id" field.
+func (m *PromoUsageMutation) SetUserID(i int) {
+	m.user = &i
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *PromoUsageMutation) UserID() (r int, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldUserID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (m *PromoUsageMutation) ClearUserID() {
+	m.user = nil
+	m.clearedFields[promousage.FieldUserID] = struct{}{}
+}
+
+// UserIDCleared returns if the "user_id" field was cleared in this mutation.
+func (m *PromoUsageMutation) UserIDCleared() bool {
+	_, ok := m.clearedFields[promousage.FieldUserID]
+	return ok
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *PromoUsageMutation) ResetUserID() {
+	m.user = nil
+	delete(m.clearedFields, promousage.FieldUserID)
+}
+
+// SetBillingAccountID sets the "billing_account_id" field.
+func (m *PromoUsageMutation) SetBillingAccountID(i int) {
+	m.billing_account = &i
+}
+
+// BillingAccountID returns the value of the "billing_account_id" field in the mutation.
+func (m *PromoUsageMutation) BillingAccountID() (r int, exists bool) {
+	v := m.billing_account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBillingAccountID returns the old "billing_account_id" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldBillingAccountID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBillingAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBillingAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBillingAccountID: %w", err)
+	}
+	return oldValue.BillingAccountID, nil
+}
+
+// ClearBillingAccountID clears the value of the "billing_account_id" field.
+func (m *PromoUsageMutation) ClearBillingAccountID() {
+	m.billing_account = nil
+	m.clearedFields[promousage.FieldBillingAccountID] = struct{}{}
+}
+
+// BillingAccountIDCleared returns if the "billing_account_id" field was cleared in this mutation.
+func (m *PromoUsageMutation) BillingAccountIDCleared() bool {
+	_, ok := m.clearedFields[promousage.FieldBillingAccountID]
+	return ok
+}
+
+// ResetBillingAccountID resets all changes to the "billing_account_id" field.
+func (m *PromoUsageMutation) ResetBillingAccountID() {
+	m.billing_account = nil
+	delete(m.clearedFields, promousage.FieldBillingAccountID)
+}
+
+// SetPaymentOrderID sets the "payment_order_id" field.
+func (m *PromoUsageMutation) SetPaymentOrderID(i int) {
+	m.payment_order = &i
+}
+
+// PaymentOrderID returns the value of the "payment_order_id" field in the mutation.
+func (m *PromoUsageMutation) PaymentOrderID() (r int, exists bool) {
+	v := m.payment_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPaymentOrderID returns the old "payment_order_id" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldPaymentOrderID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPaymentOrderID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPaymentOrderID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPaymentOrderID: %w", err)
+	}
+	return oldValue.PaymentOrderID, nil
+}
+
+// ClearPaymentOrderID clears the value of the "payment_order_id" field.
+func (m *PromoUsageMutation) ClearPaymentOrderID() {
+	m.payment_order = nil
+	m.clearedFields[promousage.FieldPaymentOrderID] = struct{}{}
+}
+
+// PaymentOrderIDCleared returns if the "payment_order_id" field was cleared in this mutation.
+func (m *PromoUsageMutation) PaymentOrderIDCleared() bool {
+	_, ok := m.clearedFields[promousage.FieldPaymentOrderID]
+	return ok
+}
+
+// ResetPaymentOrderID resets all changes to the "payment_order_id" field.
+func (m *PromoUsageMutation) ResetPaymentOrderID() {
+	m.payment_order = nil
+	delete(m.clearedFields, promousage.FieldPaymentOrderID)
+}
+
+// SetUserSubscriptionID sets the "user_subscription_id" field.
+func (m *PromoUsageMutation) SetUserSubscriptionID(i int) {
+	m.user_subscription = &i
+}
+
+// UserSubscriptionID returns the value of the "user_subscription_id" field in the mutation.
+func (m *PromoUsageMutation) UserSubscriptionID() (r int, exists bool) {
+	v := m.user_subscription
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserSubscriptionID returns the old "user_subscription_id" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldUserSubscriptionID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserSubscriptionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserSubscriptionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserSubscriptionID: %w", err)
+	}
+	return oldValue.UserSubscriptionID, nil
+}
+
+// ClearUserSubscriptionID clears the value of the "user_subscription_id" field.
+func (m *PromoUsageMutation) ClearUserSubscriptionID() {
+	m.user_subscription = nil
+	m.clearedFields[promousage.FieldUserSubscriptionID] = struct{}{}
+}
+
+// UserSubscriptionIDCleared returns if the "user_subscription_id" field was cleared in this mutation.
+func (m *PromoUsageMutation) UserSubscriptionIDCleared() bool {
+	_, ok := m.clearedFields[promousage.FieldUserSubscriptionID]
+	return ok
+}
+
+// ResetUserSubscriptionID resets all changes to the "user_subscription_id" field.
+func (m *PromoUsageMutation) ResetUserSubscriptionID() {
+	m.user_subscription = nil
+	delete(m.clearedFields, promousage.FieldUserSubscriptionID)
+}
+
+// SetLedgerTransactionID sets the "ledger_transaction_id" field.
+func (m *PromoUsageMutation) SetLedgerTransactionID(i int) {
+	m.ledger_transaction = &i
+}
+
+// LedgerTransactionID returns the value of the "ledger_transaction_id" field in the mutation.
+func (m *PromoUsageMutation) LedgerTransactionID() (r int, exists bool) {
+	v := m.ledger_transaction
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLedgerTransactionID returns the old "ledger_transaction_id" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldLedgerTransactionID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLedgerTransactionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLedgerTransactionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLedgerTransactionID: %w", err)
+	}
+	return oldValue.LedgerTransactionID, nil
+}
+
+// ClearLedgerTransactionID clears the value of the "ledger_transaction_id" field.
+func (m *PromoUsageMutation) ClearLedgerTransactionID() {
+	m.ledger_transaction = nil
+	m.clearedFields[promousage.FieldLedgerTransactionID] = struct{}{}
+}
+
+// LedgerTransactionIDCleared returns if the "ledger_transaction_id" field was cleared in this mutation.
+func (m *PromoUsageMutation) LedgerTransactionIDCleared() bool {
+	_, ok := m.clearedFields[promousage.FieldLedgerTransactionID]
+	return ok
+}
+
+// ResetLedgerTransactionID resets all changes to the "ledger_transaction_id" field.
+func (m *PromoUsageMutation) ResetLedgerTransactionID() {
+	m.ledger_transaction = nil
+	delete(m.clearedFields, promousage.FieldLedgerTransactionID)
+}
+
+// SetScope sets the "scope" field.
+func (m *PromoUsageMutation) SetScope(pr promousage.Scope) {
+	m.scope = &pr
+}
+
+// Scope returns the value of the "scope" field in the mutation.
+func (m *PromoUsageMutation) Scope() (r promousage.Scope, exists bool) {
+	v := m.scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScope returns the old "scope" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldScope(ctx context.Context) (v promousage.Scope, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScope: %w", err)
+	}
+	return oldValue.Scope, nil
+}
+
+// ResetScope resets all changes to the "scope" field.
+func (m *PromoUsageMutation) ResetScope() {
+	m.scope = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *PromoUsageMutation) SetStatus(pr promousage.Status) {
+	m.status = &pr
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *PromoUsageMutation) Status() (r promousage.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldStatus(ctx context.Context) (v promousage.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *PromoUsageMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetOriginalAmountMicros sets the "original_amount_micros" field.
+func (m *PromoUsageMutation) SetOriginalAmountMicros(i int64) {
+	m.original_amount_micros = &i
+	m.addoriginal_amount_micros = nil
+}
+
+// OriginalAmountMicros returns the value of the "original_amount_micros" field in the mutation.
+func (m *PromoUsageMutation) OriginalAmountMicros() (r int64, exists bool) {
+	v := m.original_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOriginalAmountMicros returns the old "original_amount_micros" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldOriginalAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOriginalAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOriginalAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOriginalAmountMicros: %w", err)
+	}
+	return oldValue.OriginalAmountMicros, nil
+}
+
+// AddOriginalAmountMicros adds i to the "original_amount_micros" field.
+func (m *PromoUsageMutation) AddOriginalAmountMicros(i int64) {
+	if m.addoriginal_amount_micros != nil {
+		*m.addoriginal_amount_micros += i
+	} else {
+		m.addoriginal_amount_micros = &i
+	}
+}
+
+// AddedOriginalAmountMicros returns the value that was added to the "original_amount_micros" field in this mutation.
+func (m *PromoUsageMutation) AddedOriginalAmountMicros() (r int64, exists bool) {
+	v := m.addoriginal_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOriginalAmountMicros resets all changes to the "original_amount_micros" field.
+func (m *PromoUsageMutation) ResetOriginalAmountMicros() {
+	m.original_amount_micros = nil
+	m.addoriginal_amount_micros = nil
+}
+
+// SetDiscountAmountMicros sets the "discount_amount_micros" field.
+func (m *PromoUsageMutation) SetDiscountAmountMicros(i int64) {
+	m.discount_amount_micros = &i
+	m.adddiscount_amount_micros = nil
+}
+
+// DiscountAmountMicros returns the value of the "discount_amount_micros" field in the mutation.
+func (m *PromoUsageMutation) DiscountAmountMicros() (r int64, exists bool) {
+	v := m.discount_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDiscountAmountMicros returns the old "discount_amount_micros" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldDiscountAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDiscountAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDiscountAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDiscountAmountMicros: %w", err)
+	}
+	return oldValue.DiscountAmountMicros, nil
+}
+
+// AddDiscountAmountMicros adds i to the "discount_amount_micros" field.
+func (m *PromoUsageMutation) AddDiscountAmountMicros(i int64) {
+	if m.adddiscount_amount_micros != nil {
+		*m.adddiscount_amount_micros += i
+	} else {
+		m.adddiscount_amount_micros = &i
+	}
+}
+
+// AddedDiscountAmountMicros returns the value that was added to the "discount_amount_micros" field in this mutation.
+func (m *PromoUsageMutation) AddedDiscountAmountMicros() (r int64, exists bool) {
+	v := m.adddiscount_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDiscountAmountMicros resets all changes to the "discount_amount_micros" field.
+func (m *PromoUsageMutation) ResetDiscountAmountMicros() {
+	m.discount_amount_micros = nil
+	m.adddiscount_amount_micros = nil
+}
+
+// SetPayableAmountMicros sets the "payable_amount_micros" field.
+func (m *PromoUsageMutation) SetPayableAmountMicros(i int64) {
+	m.payable_amount_micros = &i
+	m.addpayable_amount_micros = nil
+}
+
+// PayableAmountMicros returns the value of the "payable_amount_micros" field in the mutation.
+func (m *PromoUsageMutation) PayableAmountMicros() (r int64, exists bool) {
+	v := m.payable_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPayableAmountMicros returns the old "payable_amount_micros" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldPayableAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPayableAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPayableAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPayableAmountMicros: %w", err)
+	}
+	return oldValue.PayableAmountMicros, nil
+}
+
+// AddPayableAmountMicros adds i to the "payable_amount_micros" field.
+func (m *PromoUsageMutation) AddPayableAmountMicros(i int64) {
+	if m.addpayable_amount_micros != nil {
+		*m.addpayable_amount_micros += i
+	} else {
+		m.addpayable_amount_micros = &i
+	}
+}
+
+// AddedPayableAmountMicros returns the value that was added to the "payable_amount_micros" field in this mutation.
+func (m *PromoUsageMutation) AddedPayableAmountMicros() (r int64, exists bool) {
+	v := m.addpayable_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPayableAmountMicros resets all changes to the "payable_amount_micros" field.
+func (m *PromoUsageMutation) ResetPayableAmountMicros() {
+	m.payable_amount_micros = nil
+	m.addpayable_amount_micros = nil
+}
+
+// SetCurrency sets the "currency" field.
+func (m *PromoUsageMutation) SetCurrency(s string) {
+	m.currency = &s
+}
+
+// Currency returns the value of the "currency" field in the mutation.
+func (m *PromoUsageMutation) Currency() (r string, exists bool) {
+	v := m.currency
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrency returns the old "currency" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldCurrency(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrency is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrency requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrency: %w", err)
+	}
+	return oldValue.Currency, nil
+}
+
+// ResetCurrency resets all changes to the "currency" field.
+func (m *PromoUsageMutation) ResetCurrency() {
+	m.currency = nil
+}
+
+// SetIdempotencyKey sets the "idempotency_key" field.
+func (m *PromoUsageMutation) SetIdempotencyKey(s string) {
+	m.idempotency_key = &s
+}
+
+// IdempotencyKey returns the value of the "idempotency_key" field in the mutation.
+func (m *PromoUsageMutation) IdempotencyKey() (r string, exists bool) {
+	v := m.idempotency_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdempotencyKey returns the old "idempotency_key" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldIdempotencyKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdempotencyKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdempotencyKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdempotencyKey: %w", err)
+	}
+	return oldValue.IdempotencyKey, nil
+}
+
+// ResetIdempotencyKey resets all changes to the "idempotency_key" field.
+func (m *PromoUsageMutation) ResetIdempotencyKey() {
+	m.idempotency_key = nil
+}
+
+// SetFailureReason sets the "failure_reason" field.
+func (m *PromoUsageMutation) SetFailureReason(s string) {
+	m.failure_reason = &s
+}
+
+// FailureReason returns the value of the "failure_reason" field in the mutation.
+func (m *PromoUsageMutation) FailureReason() (r string, exists bool) {
+	v := m.failure_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFailureReason returns the old "failure_reason" field's value of the PromoUsage entity.
+// If the PromoUsage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PromoUsageMutation) OldFailureReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFailureReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFailureReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFailureReason: %w", err)
+	}
+	return oldValue.FailureReason, nil
+}
+
+// ResetFailureReason resets all changes to the "failure_reason" field.
+func (m *PromoUsageMutation) ResetFailureReason() {
+	m.failure_reason = nil
+}
+
+// ClearPromoCode clears the "promo_code" edge to the PromoCode entity.
+func (m *PromoUsageMutation) ClearPromoCode() {
+	m.clearedpromo_code = true
+	m.clearedFields[promousage.FieldPromoCodeID] = struct{}{}
+}
+
+// PromoCodeCleared reports if the "promo_code" edge to the PromoCode entity was cleared.
+func (m *PromoUsageMutation) PromoCodeCleared() bool {
+	return m.clearedpromo_code
+}
+
+// PromoCodeIDs returns the "promo_code" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PromoCodeID instead. It exists only for internal usage by the builders.
+func (m *PromoUsageMutation) PromoCodeIDs() (ids []int) {
+	if id := m.promo_code; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPromoCode resets all changes to the "promo_code" edge.
+func (m *PromoUsageMutation) ResetPromoCode() {
+	m.promo_code = nil
+	m.clearedpromo_code = false
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *PromoUsageMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[promousage.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *PromoUsageMutation) UserCleared() bool {
+	return m.UserIDCleared() || m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *PromoUsageMutation) UserIDs() (ids []int) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *PromoUsageMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// ClearBillingAccount clears the "billing_account" edge to the BillingAccount entity.
+func (m *PromoUsageMutation) ClearBillingAccount() {
+	m.clearedbilling_account = true
+	m.clearedFields[promousage.FieldBillingAccountID] = struct{}{}
+}
+
+// BillingAccountCleared reports if the "billing_account" edge to the BillingAccount entity was cleared.
+func (m *PromoUsageMutation) BillingAccountCleared() bool {
+	return m.BillingAccountIDCleared() || m.clearedbilling_account
+}
+
+// BillingAccountIDs returns the "billing_account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// BillingAccountID instead. It exists only for internal usage by the builders.
+func (m *PromoUsageMutation) BillingAccountIDs() (ids []int) {
+	if id := m.billing_account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetBillingAccount resets all changes to the "billing_account" edge.
+func (m *PromoUsageMutation) ResetBillingAccount() {
+	m.billing_account = nil
+	m.clearedbilling_account = false
+}
+
+// ClearPaymentOrder clears the "payment_order" edge to the PaymentOrder entity.
+func (m *PromoUsageMutation) ClearPaymentOrder() {
+	m.clearedpayment_order = true
+	m.clearedFields[promousage.FieldPaymentOrderID] = struct{}{}
+}
+
+// PaymentOrderCleared reports if the "payment_order" edge to the PaymentOrder entity was cleared.
+func (m *PromoUsageMutation) PaymentOrderCleared() bool {
+	return m.PaymentOrderIDCleared() || m.clearedpayment_order
+}
+
+// PaymentOrderIDs returns the "payment_order" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PaymentOrderID instead. It exists only for internal usage by the builders.
+func (m *PromoUsageMutation) PaymentOrderIDs() (ids []int) {
+	if id := m.payment_order; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPaymentOrder resets all changes to the "payment_order" edge.
+func (m *PromoUsageMutation) ResetPaymentOrder() {
+	m.payment_order = nil
+	m.clearedpayment_order = false
+}
+
+// ClearUserSubscription clears the "user_subscription" edge to the UserSubscription entity.
+func (m *PromoUsageMutation) ClearUserSubscription() {
+	m.cleareduser_subscription = true
+	m.clearedFields[promousage.FieldUserSubscriptionID] = struct{}{}
+}
+
+// UserSubscriptionCleared reports if the "user_subscription" edge to the UserSubscription entity was cleared.
+func (m *PromoUsageMutation) UserSubscriptionCleared() bool {
+	return m.UserSubscriptionIDCleared() || m.cleareduser_subscription
+}
+
+// UserSubscriptionIDs returns the "user_subscription" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserSubscriptionID instead. It exists only for internal usage by the builders.
+func (m *PromoUsageMutation) UserSubscriptionIDs() (ids []int) {
+	if id := m.user_subscription; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUserSubscription resets all changes to the "user_subscription" edge.
+func (m *PromoUsageMutation) ResetUserSubscription() {
+	m.user_subscription = nil
+	m.cleareduser_subscription = false
+}
+
+// ClearLedgerTransaction clears the "ledger_transaction" edge to the LedgerTransaction entity.
+func (m *PromoUsageMutation) ClearLedgerTransaction() {
+	m.clearedledger_transaction = true
+	m.clearedFields[promousage.FieldLedgerTransactionID] = struct{}{}
+}
+
+// LedgerTransactionCleared reports if the "ledger_transaction" edge to the LedgerTransaction entity was cleared.
+func (m *PromoUsageMutation) LedgerTransactionCleared() bool {
+	return m.LedgerTransactionIDCleared() || m.clearedledger_transaction
+}
+
+// LedgerTransactionIDs returns the "ledger_transaction" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// LedgerTransactionID instead. It exists only for internal usage by the builders.
+func (m *PromoUsageMutation) LedgerTransactionIDs() (ids []int) {
+	if id := m.ledger_transaction; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetLedgerTransaction resets all changes to the "ledger_transaction" edge.
+func (m *PromoUsageMutation) ResetLedgerTransaction() {
+	m.ledger_transaction = nil
+	m.clearedledger_transaction = false
+}
+
+// Where appends a list predicates to the PromoUsageMutation builder.
+func (m *PromoUsageMutation) Where(ps ...predicate.PromoUsage) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PromoUsageMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PromoUsageMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PromoUsage, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PromoUsageMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PromoUsageMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PromoUsage).
+func (m *PromoUsageMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PromoUsageMutation) Fields() []string {
+	fields := make([]string, 0, 18)
+	if m.created_at != nil {
+		fields = append(fields, promousage.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, promousage.FieldUpdatedAt)
+	}
+	if m.promo_code != nil {
+		fields = append(fields, promousage.FieldPromoCodeID)
+	}
+	if m.code != nil {
+		fields = append(fields, promousage.FieldCode)
+	}
+	if m.code_snapshot != nil {
+		fields = append(fields, promousage.FieldCodeSnapshot)
+	}
+	if m.user != nil {
+		fields = append(fields, promousage.FieldUserID)
+	}
+	if m.billing_account != nil {
+		fields = append(fields, promousage.FieldBillingAccountID)
+	}
+	if m.payment_order != nil {
+		fields = append(fields, promousage.FieldPaymentOrderID)
+	}
+	if m.user_subscription != nil {
+		fields = append(fields, promousage.FieldUserSubscriptionID)
+	}
+	if m.ledger_transaction != nil {
+		fields = append(fields, promousage.FieldLedgerTransactionID)
+	}
+	if m.scope != nil {
+		fields = append(fields, promousage.FieldScope)
+	}
+	if m.status != nil {
+		fields = append(fields, promousage.FieldStatus)
+	}
+	if m.original_amount_micros != nil {
+		fields = append(fields, promousage.FieldOriginalAmountMicros)
+	}
+	if m.discount_amount_micros != nil {
+		fields = append(fields, promousage.FieldDiscountAmountMicros)
+	}
+	if m.payable_amount_micros != nil {
+		fields = append(fields, promousage.FieldPayableAmountMicros)
+	}
+	if m.currency != nil {
+		fields = append(fields, promousage.FieldCurrency)
+	}
+	if m.idempotency_key != nil {
+		fields = append(fields, promousage.FieldIdempotencyKey)
+	}
+	if m.failure_reason != nil {
+		fields = append(fields, promousage.FieldFailureReason)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PromoUsageMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case promousage.FieldCreatedAt:
+		return m.CreatedAt()
+	case promousage.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case promousage.FieldPromoCodeID:
+		return m.PromoCodeID()
+	case promousage.FieldCode:
+		return m.Code()
+	case promousage.FieldCodeSnapshot:
+		return m.CodeSnapshot()
+	case promousage.FieldUserID:
+		return m.UserID()
+	case promousage.FieldBillingAccountID:
+		return m.BillingAccountID()
+	case promousage.FieldPaymentOrderID:
+		return m.PaymentOrderID()
+	case promousage.FieldUserSubscriptionID:
+		return m.UserSubscriptionID()
+	case promousage.FieldLedgerTransactionID:
+		return m.LedgerTransactionID()
+	case promousage.FieldScope:
+		return m.Scope()
+	case promousage.FieldStatus:
+		return m.Status()
+	case promousage.FieldOriginalAmountMicros:
+		return m.OriginalAmountMicros()
+	case promousage.FieldDiscountAmountMicros:
+		return m.DiscountAmountMicros()
+	case promousage.FieldPayableAmountMicros:
+		return m.PayableAmountMicros()
+	case promousage.FieldCurrency:
+		return m.Currency()
+	case promousage.FieldIdempotencyKey:
+		return m.IdempotencyKey()
+	case promousage.FieldFailureReason:
+		return m.FailureReason()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PromoUsageMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case promousage.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case promousage.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case promousage.FieldPromoCodeID:
+		return m.OldPromoCodeID(ctx)
+	case promousage.FieldCode:
+		return m.OldCode(ctx)
+	case promousage.FieldCodeSnapshot:
+		return m.OldCodeSnapshot(ctx)
+	case promousage.FieldUserID:
+		return m.OldUserID(ctx)
+	case promousage.FieldBillingAccountID:
+		return m.OldBillingAccountID(ctx)
+	case promousage.FieldPaymentOrderID:
+		return m.OldPaymentOrderID(ctx)
+	case promousage.FieldUserSubscriptionID:
+		return m.OldUserSubscriptionID(ctx)
+	case promousage.FieldLedgerTransactionID:
+		return m.OldLedgerTransactionID(ctx)
+	case promousage.FieldScope:
+		return m.OldScope(ctx)
+	case promousage.FieldStatus:
+		return m.OldStatus(ctx)
+	case promousage.FieldOriginalAmountMicros:
+		return m.OldOriginalAmountMicros(ctx)
+	case promousage.FieldDiscountAmountMicros:
+		return m.OldDiscountAmountMicros(ctx)
+	case promousage.FieldPayableAmountMicros:
+		return m.OldPayableAmountMicros(ctx)
+	case promousage.FieldCurrency:
+		return m.OldCurrency(ctx)
+	case promousage.FieldIdempotencyKey:
+		return m.OldIdempotencyKey(ctx)
+	case promousage.FieldFailureReason:
+		return m.OldFailureReason(ctx)
+	}
+	return nil, fmt.Errorf("unknown PromoUsage field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PromoUsageMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case promousage.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case promousage.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case promousage.FieldPromoCodeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPromoCodeID(v)
+		return nil
+	case promousage.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case promousage.FieldCodeSnapshot:
+		v, ok := value.(objects.JSONRawMessage)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCodeSnapshot(v)
+		return nil
+	case promousage.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case promousage.FieldBillingAccountID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBillingAccountID(v)
+		return nil
+	case promousage.FieldPaymentOrderID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPaymentOrderID(v)
+		return nil
+	case promousage.FieldUserSubscriptionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserSubscriptionID(v)
+		return nil
+	case promousage.FieldLedgerTransactionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLedgerTransactionID(v)
+		return nil
+	case promousage.FieldScope:
+		v, ok := value.(promousage.Scope)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScope(v)
+		return nil
+	case promousage.FieldStatus:
+		v, ok := value.(promousage.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case promousage.FieldOriginalAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOriginalAmountMicros(v)
+		return nil
+	case promousage.FieldDiscountAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDiscountAmountMicros(v)
+		return nil
+	case promousage.FieldPayableAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPayableAmountMicros(v)
+		return nil
+	case promousage.FieldCurrency:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrency(v)
+		return nil
+	case promousage.FieldIdempotencyKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdempotencyKey(v)
+		return nil
+	case promousage.FieldFailureReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFailureReason(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PromoUsage field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PromoUsageMutation) AddedFields() []string {
+	var fields []string
+	if m.addoriginal_amount_micros != nil {
+		fields = append(fields, promousage.FieldOriginalAmountMicros)
+	}
+	if m.adddiscount_amount_micros != nil {
+		fields = append(fields, promousage.FieldDiscountAmountMicros)
+	}
+	if m.addpayable_amount_micros != nil {
+		fields = append(fields, promousage.FieldPayableAmountMicros)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PromoUsageMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case promousage.FieldOriginalAmountMicros:
+		return m.AddedOriginalAmountMicros()
+	case promousage.FieldDiscountAmountMicros:
+		return m.AddedDiscountAmountMicros()
+	case promousage.FieldPayableAmountMicros:
+		return m.AddedPayableAmountMicros()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PromoUsageMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case promousage.FieldOriginalAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOriginalAmountMicros(v)
+		return nil
+	case promousage.FieldDiscountAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDiscountAmountMicros(v)
+		return nil
+	case promousage.FieldPayableAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPayableAmountMicros(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PromoUsage numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PromoUsageMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(promousage.FieldCodeSnapshot) {
+		fields = append(fields, promousage.FieldCodeSnapshot)
+	}
+	if m.FieldCleared(promousage.FieldUserID) {
+		fields = append(fields, promousage.FieldUserID)
+	}
+	if m.FieldCleared(promousage.FieldBillingAccountID) {
+		fields = append(fields, promousage.FieldBillingAccountID)
+	}
+	if m.FieldCleared(promousage.FieldPaymentOrderID) {
+		fields = append(fields, promousage.FieldPaymentOrderID)
+	}
+	if m.FieldCleared(promousage.FieldUserSubscriptionID) {
+		fields = append(fields, promousage.FieldUserSubscriptionID)
+	}
+	if m.FieldCleared(promousage.FieldLedgerTransactionID) {
+		fields = append(fields, promousage.FieldLedgerTransactionID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PromoUsageMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PromoUsageMutation) ClearField(name string) error {
+	switch name {
+	case promousage.FieldCodeSnapshot:
+		m.ClearCodeSnapshot()
+		return nil
+	case promousage.FieldUserID:
+		m.ClearUserID()
+		return nil
+	case promousage.FieldBillingAccountID:
+		m.ClearBillingAccountID()
+		return nil
+	case promousage.FieldPaymentOrderID:
+		m.ClearPaymentOrderID()
+		return nil
+	case promousage.FieldUserSubscriptionID:
+		m.ClearUserSubscriptionID()
+		return nil
+	case promousage.FieldLedgerTransactionID:
+		m.ClearLedgerTransactionID()
+		return nil
+	}
+	return fmt.Errorf("unknown PromoUsage nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PromoUsageMutation) ResetField(name string) error {
+	switch name {
+	case promousage.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case promousage.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case promousage.FieldPromoCodeID:
+		m.ResetPromoCodeID()
+		return nil
+	case promousage.FieldCode:
+		m.ResetCode()
+		return nil
+	case promousage.FieldCodeSnapshot:
+		m.ResetCodeSnapshot()
+		return nil
+	case promousage.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case promousage.FieldBillingAccountID:
+		m.ResetBillingAccountID()
+		return nil
+	case promousage.FieldPaymentOrderID:
+		m.ResetPaymentOrderID()
+		return nil
+	case promousage.FieldUserSubscriptionID:
+		m.ResetUserSubscriptionID()
+		return nil
+	case promousage.FieldLedgerTransactionID:
+		m.ResetLedgerTransactionID()
+		return nil
+	case promousage.FieldScope:
+		m.ResetScope()
+		return nil
+	case promousage.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case promousage.FieldOriginalAmountMicros:
+		m.ResetOriginalAmountMicros()
+		return nil
+	case promousage.FieldDiscountAmountMicros:
+		m.ResetDiscountAmountMicros()
+		return nil
+	case promousage.FieldPayableAmountMicros:
+		m.ResetPayableAmountMicros()
+		return nil
+	case promousage.FieldCurrency:
+		m.ResetCurrency()
+		return nil
+	case promousage.FieldIdempotencyKey:
+		m.ResetIdempotencyKey()
+		return nil
+	case promousage.FieldFailureReason:
+		m.ResetFailureReason()
+		return nil
+	}
+	return fmt.Errorf("unknown PromoUsage field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PromoUsageMutation) AddedEdges() []string {
+	edges := make([]string, 0, 6)
+	if m.promo_code != nil {
+		edges = append(edges, promousage.EdgePromoCode)
+	}
+	if m.user != nil {
+		edges = append(edges, promousage.EdgeUser)
+	}
+	if m.billing_account != nil {
+		edges = append(edges, promousage.EdgeBillingAccount)
+	}
+	if m.payment_order != nil {
+		edges = append(edges, promousage.EdgePaymentOrder)
+	}
+	if m.user_subscription != nil {
+		edges = append(edges, promousage.EdgeUserSubscription)
+	}
+	if m.ledger_transaction != nil {
+		edges = append(edges, promousage.EdgeLedgerTransaction)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PromoUsageMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case promousage.EdgePromoCode:
+		if id := m.promo_code; id != nil {
+			return []ent.Value{*id}
+		}
+	case promousage.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	case promousage.EdgeBillingAccount:
+		if id := m.billing_account; id != nil {
+			return []ent.Value{*id}
+		}
+	case promousage.EdgePaymentOrder:
+		if id := m.payment_order; id != nil {
+			return []ent.Value{*id}
+		}
+	case promousage.EdgeUserSubscription:
+		if id := m.user_subscription; id != nil {
+			return []ent.Value{*id}
+		}
+	case promousage.EdgeLedgerTransaction:
+		if id := m.ledger_transaction; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PromoUsageMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 6)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PromoUsageMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PromoUsageMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 6)
+	if m.clearedpromo_code {
+		edges = append(edges, promousage.EdgePromoCode)
+	}
+	if m.cleareduser {
+		edges = append(edges, promousage.EdgeUser)
+	}
+	if m.clearedbilling_account {
+		edges = append(edges, promousage.EdgeBillingAccount)
+	}
+	if m.clearedpayment_order {
+		edges = append(edges, promousage.EdgePaymentOrder)
+	}
+	if m.cleareduser_subscription {
+		edges = append(edges, promousage.EdgeUserSubscription)
+	}
+	if m.clearedledger_transaction {
+		edges = append(edges, promousage.EdgeLedgerTransaction)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PromoUsageMutation) EdgeCleared(name string) bool {
+	switch name {
+	case promousage.EdgePromoCode:
+		return m.clearedpromo_code
+	case promousage.EdgeUser:
+		return m.cleareduser
+	case promousage.EdgeBillingAccount:
+		return m.clearedbilling_account
+	case promousage.EdgePaymentOrder:
+		return m.clearedpayment_order
+	case promousage.EdgeUserSubscription:
+		return m.cleareduser_subscription
+	case promousage.EdgeLedgerTransaction:
+		return m.clearedledger_transaction
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PromoUsageMutation) ClearEdge(name string) error {
+	switch name {
+	case promousage.EdgePromoCode:
+		m.ClearPromoCode()
+		return nil
+	case promousage.EdgeUser:
+		m.ClearUser()
+		return nil
+	case promousage.EdgeBillingAccount:
+		m.ClearBillingAccount()
+		return nil
+	case promousage.EdgePaymentOrder:
+		m.ClearPaymentOrder()
+		return nil
+	case promousage.EdgeUserSubscription:
+		m.ClearUserSubscription()
+		return nil
+	case promousage.EdgeLedgerTransaction:
+		m.ClearLedgerTransaction()
+		return nil
+	}
+	return fmt.Errorf("unknown PromoUsage unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PromoUsageMutation) ResetEdge(name string) error {
+	switch name {
+	case promousage.EdgePromoCode:
+		m.ResetPromoCode()
+		return nil
+	case promousage.EdgeUser:
+		m.ResetUser()
+		return nil
+	case promousage.EdgeBillingAccount:
+		m.ResetBillingAccount()
+		return nil
+	case promousage.EdgePaymentOrder:
+		m.ResetPaymentOrder()
+		return nil
+	case promousage.EdgeUserSubscription:
+		m.ResetUserSubscription()
+		return nil
+	case promousage.EdgeLedgerTransaction:
+		m.ResetLedgerTransaction()
+		return nil
+	}
+	return fmt.Errorf("unknown PromoUsage edge %s", name)
 }
 
 // PromptMutation represents an operation that mutates the Prompt nodes in the graph.
@@ -42175,6 +46286,9 @@ type UserMutation struct {
 	assigned_user_subscriptions        map[int]struct{}
 	removedassigned_user_subscriptions map[int]struct{}
 	clearedassigned_user_subscriptions bool
+	promo_usages                       map[int]struct{}
+	removedpromo_usages                map[int]struct{}
+	clearedpromo_usages                bool
 	project_users                      map[int]struct{}
 	removedproject_users               map[int]struct{}
 	clearedproject_users               bool
@@ -43264,6 +47378,60 @@ func (m *UserMutation) ResetAssignedUserSubscriptions() {
 	m.removedassigned_user_subscriptions = nil
 }
 
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by ids.
+func (m *UserMutation) AddPromoUsageIDs(ids ...int) {
+	if m.promo_usages == nil {
+		m.promo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.promo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPromoUsages clears the "promo_usages" edge to the PromoUsage entity.
+func (m *UserMutation) ClearPromoUsages() {
+	m.clearedpromo_usages = true
+}
+
+// PromoUsagesCleared reports if the "promo_usages" edge to the PromoUsage entity was cleared.
+func (m *UserMutation) PromoUsagesCleared() bool {
+	return m.clearedpromo_usages
+}
+
+// RemovePromoUsageIDs removes the "promo_usages" edge to the PromoUsage entity by IDs.
+func (m *UserMutation) RemovePromoUsageIDs(ids ...int) {
+	if m.removedpromo_usages == nil {
+		m.removedpromo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.promo_usages, ids[i])
+		m.removedpromo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPromoUsages returns the removed IDs of the "promo_usages" edge to the PromoUsage entity.
+func (m *UserMutation) RemovedPromoUsagesIDs() (ids []int) {
+	for id := range m.removedpromo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PromoUsagesIDs returns the "promo_usages" edge IDs in the mutation.
+func (m *UserMutation) PromoUsagesIDs() (ids []int) {
+	for id := range m.promo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPromoUsages resets all changes to the "promo_usages" edge.
+func (m *UserMutation) ResetPromoUsages() {
+	m.promo_usages = nil
+	m.clearedpromo_usages = false
+	m.removedpromo_usages = nil
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by ids.
 func (m *UserMutation) AddProjectUserIDs(ids ...int) {
 	if m.project_users == nil {
@@ -43722,7 +47890,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 11)
+	edges := make([]string, 0, 12)
 	if m.projects != nil {
 		edges = append(edges, user.EdgeProjects)
 	}
@@ -43749,6 +47917,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.assigned_user_subscriptions != nil {
 		edges = append(edges, user.EdgeAssignedUserSubscriptions)
+	}
+	if m.promo_usages != nil {
+		edges = append(edges, user.EdgePromoUsages)
 	}
 	if m.project_users != nil {
 		edges = append(edges, user.EdgeProjectUsers)
@@ -43817,6 +47988,12 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.promo_usages))
+		for id := range m.promo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeProjectUsers:
 		ids := make([]ent.Value, 0, len(m.project_users))
 		for id := range m.project_users {
@@ -43835,7 +48012,7 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 11)
+	edges := make([]string, 0, 12)
 	if m.removedprojects != nil {
 		edges = append(edges, user.EdgeProjects)
 	}
@@ -43862,6 +48039,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedassigned_user_subscriptions != nil {
 		edges = append(edges, user.EdgeAssignedUserSubscriptions)
+	}
+	if m.removedpromo_usages != nil {
+		edges = append(edges, user.EdgePromoUsages)
 	}
 	if m.removedproject_users != nil {
 		edges = append(edges, user.EdgeProjectUsers)
@@ -43930,6 +48110,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.removedpromo_usages))
+		for id := range m.removedpromo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeProjectUsers:
 		ids := make([]ent.Value, 0, len(m.removedproject_users))
 		for id := range m.removedproject_users {
@@ -43948,7 +48134,7 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 11)
+	edges := make([]string, 0, 12)
 	if m.clearedprojects {
 		edges = append(edges, user.EdgeProjects)
 	}
@@ -43975,6 +48161,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedassigned_user_subscriptions {
 		edges = append(edges, user.EdgeAssignedUserSubscriptions)
+	}
+	if m.clearedpromo_usages {
+		edges = append(edges, user.EdgePromoUsages)
 	}
 	if m.clearedproject_users {
 		edges = append(edges, user.EdgeProjectUsers)
@@ -44007,6 +48196,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.cleareduser_subscriptions
 	case user.EdgeAssignedUserSubscriptions:
 		return m.clearedassigned_user_subscriptions
+	case user.EdgePromoUsages:
+		return m.clearedpromo_usages
 	case user.EdgeProjectUsers:
 		return m.clearedproject_users
 	case user.EdgeUserRoles:
@@ -44053,6 +48244,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeAssignedUserSubscriptions:
 		m.ResetAssignedUserSubscriptions()
+		return nil
+	case user.EdgePromoUsages:
+		m.ResetPromoUsages()
 		return nil
 	case user.EdgeProjectUsers:
 		m.ResetProjectUsers()
@@ -45464,6 +49658,12 @@ type UserSubscriptionMutation struct {
 	supported_group_ids                *[]int
 	appendsupported_group_ids          []int
 	allow_wallet_fallback              *bool
+	original_price_micros              *int64
+	addoriginal_price_micros           *int64
+	discount_amount_micros             *int64
+	adddiscount_amount_micros          *int64
+	payable_amount_micros              *int64
+	addpayable_amount_micros           *int64
 	notes                              *string
 	revoke_reason                      *string
 	clearedFields                      map[string]struct{}
@@ -45475,6 +49675,11 @@ type UserSubscriptionMutation struct {
 	clearedassigned_by                 bool
 	purchase_ledger_transaction        *int
 	clearedpurchase_ledger_transaction bool
+	promo_code                         *int
+	clearedpromo_code                  bool
+	promo_usages                       map[int]struct{}
+	removedpromo_usages                map[int]struct{}
+	clearedpromo_usages                bool
 	usage_billing_records              map[int]struct{}
 	removedusage_billing_records       map[int]struct{}
 	clearedusage_billing_records       bool
@@ -46510,6 +50715,223 @@ func (m *UserSubscriptionMutation) ResetPurchaseLedgerTransactionID() {
 	delete(m.clearedFields, usersubscription.FieldPurchaseLedgerTransactionID)
 }
 
+// SetOriginalPriceMicros sets the "original_price_micros" field.
+func (m *UserSubscriptionMutation) SetOriginalPriceMicros(i int64) {
+	m.original_price_micros = &i
+	m.addoriginal_price_micros = nil
+}
+
+// OriginalPriceMicros returns the value of the "original_price_micros" field in the mutation.
+func (m *UserSubscriptionMutation) OriginalPriceMicros() (r int64, exists bool) {
+	v := m.original_price_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOriginalPriceMicros returns the old "original_price_micros" field's value of the UserSubscription entity.
+// If the UserSubscription object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserSubscriptionMutation) OldOriginalPriceMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOriginalPriceMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOriginalPriceMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOriginalPriceMicros: %w", err)
+	}
+	return oldValue.OriginalPriceMicros, nil
+}
+
+// AddOriginalPriceMicros adds i to the "original_price_micros" field.
+func (m *UserSubscriptionMutation) AddOriginalPriceMicros(i int64) {
+	if m.addoriginal_price_micros != nil {
+		*m.addoriginal_price_micros += i
+	} else {
+		m.addoriginal_price_micros = &i
+	}
+}
+
+// AddedOriginalPriceMicros returns the value that was added to the "original_price_micros" field in this mutation.
+func (m *UserSubscriptionMutation) AddedOriginalPriceMicros() (r int64, exists bool) {
+	v := m.addoriginal_price_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOriginalPriceMicros resets all changes to the "original_price_micros" field.
+func (m *UserSubscriptionMutation) ResetOriginalPriceMicros() {
+	m.original_price_micros = nil
+	m.addoriginal_price_micros = nil
+}
+
+// SetDiscountAmountMicros sets the "discount_amount_micros" field.
+func (m *UserSubscriptionMutation) SetDiscountAmountMicros(i int64) {
+	m.discount_amount_micros = &i
+	m.adddiscount_amount_micros = nil
+}
+
+// DiscountAmountMicros returns the value of the "discount_amount_micros" field in the mutation.
+func (m *UserSubscriptionMutation) DiscountAmountMicros() (r int64, exists bool) {
+	v := m.discount_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDiscountAmountMicros returns the old "discount_amount_micros" field's value of the UserSubscription entity.
+// If the UserSubscription object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserSubscriptionMutation) OldDiscountAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDiscountAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDiscountAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDiscountAmountMicros: %w", err)
+	}
+	return oldValue.DiscountAmountMicros, nil
+}
+
+// AddDiscountAmountMicros adds i to the "discount_amount_micros" field.
+func (m *UserSubscriptionMutation) AddDiscountAmountMicros(i int64) {
+	if m.adddiscount_amount_micros != nil {
+		*m.adddiscount_amount_micros += i
+	} else {
+		m.adddiscount_amount_micros = &i
+	}
+}
+
+// AddedDiscountAmountMicros returns the value that was added to the "discount_amount_micros" field in this mutation.
+func (m *UserSubscriptionMutation) AddedDiscountAmountMicros() (r int64, exists bool) {
+	v := m.adddiscount_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDiscountAmountMicros resets all changes to the "discount_amount_micros" field.
+func (m *UserSubscriptionMutation) ResetDiscountAmountMicros() {
+	m.discount_amount_micros = nil
+	m.adddiscount_amount_micros = nil
+}
+
+// SetPayableAmountMicros sets the "payable_amount_micros" field.
+func (m *UserSubscriptionMutation) SetPayableAmountMicros(i int64) {
+	m.payable_amount_micros = &i
+	m.addpayable_amount_micros = nil
+}
+
+// PayableAmountMicros returns the value of the "payable_amount_micros" field in the mutation.
+func (m *UserSubscriptionMutation) PayableAmountMicros() (r int64, exists bool) {
+	v := m.payable_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPayableAmountMicros returns the old "payable_amount_micros" field's value of the UserSubscription entity.
+// If the UserSubscription object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserSubscriptionMutation) OldPayableAmountMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPayableAmountMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPayableAmountMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPayableAmountMicros: %w", err)
+	}
+	return oldValue.PayableAmountMicros, nil
+}
+
+// AddPayableAmountMicros adds i to the "payable_amount_micros" field.
+func (m *UserSubscriptionMutation) AddPayableAmountMicros(i int64) {
+	if m.addpayable_amount_micros != nil {
+		*m.addpayable_amount_micros += i
+	} else {
+		m.addpayable_amount_micros = &i
+	}
+}
+
+// AddedPayableAmountMicros returns the value that was added to the "payable_amount_micros" field in this mutation.
+func (m *UserSubscriptionMutation) AddedPayableAmountMicros() (r int64, exists bool) {
+	v := m.addpayable_amount_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPayableAmountMicros resets all changes to the "payable_amount_micros" field.
+func (m *UserSubscriptionMutation) ResetPayableAmountMicros() {
+	m.payable_amount_micros = nil
+	m.addpayable_amount_micros = nil
+}
+
+// SetPromoCodeID sets the "promo_code_id" field.
+func (m *UserSubscriptionMutation) SetPromoCodeID(i int) {
+	m.promo_code = &i
+}
+
+// PromoCodeID returns the value of the "promo_code_id" field in the mutation.
+func (m *UserSubscriptionMutation) PromoCodeID() (r int, exists bool) {
+	v := m.promo_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPromoCodeID returns the old "promo_code_id" field's value of the UserSubscription entity.
+// If the UserSubscription object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserSubscriptionMutation) OldPromoCodeID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPromoCodeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPromoCodeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPromoCodeID: %w", err)
+	}
+	return oldValue.PromoCodeID, nil
+}
+
+// ClearPromoCodeID clears the value of the "promo_code_id" field.
+func (m *UserSubscriptionMutation) ClearPromoCodeID() {
+	m.promo_code = nil
+	m.clearedFields[usersubscription.FieldPromoCodeID] = struct{}{}
+}
+
+// PromoCodeIDCleared returns if the "promo_code_id" field was cleared in this mutation.
+func (m *UserSubscriptionMutation) PromoCodeIDCleared() bool {
+	_, ok := m.clearedFields[usersubscription.FieldPromoCodeID]
+	return ok
+}
+
+// ResetPromoCodeID resets all changes to the "promo_code_id" field.
+func (m *UserSubscriptionMutation) ResetPromoCodeID() {
+	m.promo_code = nil
+	delete(m.clearedFields, usersubscription.FieldPromoCodeID)
+}
+
 // SetNotes sets the "notes" field.
 func (m *UserSubscriptionMutation) SetNotes(s string) {
 	m.notes = &s
@@ -46690,6 +51112,87 @@ func (m *UserSubscriptionMutation) ResetPurchaseLedgerTransaction() {
 	m.clearedpurchase_ledger_transaction = false
 }
 
+// ClearPromoCode clears the "promo_code" edge to the PromoCode entity.
+func (m *UserSubscriptionMutation) ClearPromoCode() {
+	m.clearedpromo_code = true
+	m.clearedFields[usersubscription.FieldPromoCodeID] = struct{}{}
+}
+
+// PromoCodeCleared reports if the "promo_code" edge to the PromoCode entity was cleared.
+func (m *UserSubscriptionMutation) PromoCodeCleared() bool {
+	return m.PromoCodeIDCleared() || m.clearedpromo_code
+}
+
+// PromoCodeIDs returns the "promo_code" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PromoCodeID instead. It exists only for internal usage by the builders.
+func (m *UserSubscriptionMutation) PromoCodeIDs() (ids []int) {
+	if id := m.promo_code; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPromoCode resets all changes to the "promo_code" edge.
+func (m *UserSubscriptionMutation) ResetPromoCode() {
+	m.promo_code = nil
+	m.clearedpromo_code = false
+}
+
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by ids.
+func (m *UserSubscriptionMutation) AddPromoUsageIDs(ids ...int) {
+	if m.promo_usages == nil {
+		m.promo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.promo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPromoUsages clears the "promo_usages" edge to the PromoUsage entity.
+func (m *UserSubscriptionMutation) ClearPromoUsages() {
+	m.clearedpromo_usages = true
+}
+
+// PromoUsagesCleared reports if the "promo_usages" edge to the PromoUsage entity was cleared.
+func (m *UserSubscriptionMutation) PromoUsagesCleared() bool {
+	return m.clearedpromo_usages
+}
+
+// RemovePromoUsageIDs removes the "promo_usages" edge to the PromoUsage entity by IDs.
+func (m *UserSubscriptionMutation) RemovePromoUsageIDs(ids ...int) {
+	if m.removedpromo_usages == nil {
+		m.removedpromo_usages = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.promo_usages, ids[i])
+		m.removedpromo_usages[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPromoUsages returns the removed IDs of the "promo_usages" edge to the PromoUsage entity.
+func (m *UserSubscriptionMutation) RemovedPromoUsagesIDs() (ids []int) {
+	for id := range m.removedpromo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PromoUsagesIDs returns the "promo_usages" edge IDs in the mutation.
+func (m *UserSubscriptionMutation) PromoUsagesIDs() (ids []int) {
+	for id := range m.promo_usages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPromoUsages resets all changes to the "promo_usages" edge.
+func (m *UserSubscriptionMutation) ResetPromoUsages() {
+	m.promo_usages = nil
+	m.clearedpromo_usages = false
+	m.removedpromo_usages = nil
+}
+
 // AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by ids.
 func (m *UserSubscriptionMutation) AddUsageBillingRecordIDs(ids ...int) {
 	if m.usage_billing_records == nil {
@@ -46778,7 +51281,7 @@ func (m *UserSubscriptionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserSubscriptionMutation) Fields() []string {
-	fields := make([]string, 0, 23)
+	fields := make([]string, 0, 27)
 	if m.created_at != nil {
 		fields = append(fields, usersubscription.FieldCreatedAt)
 	}
@@ -46842,6 +51345,18 @@ func (m *UserSubscriptionMutation) Fields() []string {
 	if m.purchase_ledger_transaction != nil {
 		fields = append(fields, usersubscription.FieldPurchaseLedgerTransactionID)
 	}
+	if m.original_price_micros != nil {
+		fields = append(fields, usersubscription.FieldOriginalPriceMicros)
+	}
+	if m.discount_amount_micros != nil {
+		fields = append(fields, usersubscription.FieldDiscountAmountMicros)
+	}
+	if m.payable_amount_micros != nil {
+		fields = append(fields, usersubscription.FieldPayableAmountMicros)
+	}
+	if m.promo_code != nil {
+		fields = append(fields, usersubscription.FieldPromoCodeID)
+	}
 	if m.notes != nil {
 		fields = append(fields, usersubscription.FieldNotes)
 	}
@@ -46898,6 +51413,14 @@ func (m *UserSubscriptionMutation) Field(name string) (ent.Value, bool) {
 		return m.AssignedByID()
 	case usersubscription.FieldPurchaseLedgerTransactionID:
 		return m.PurchaseLedgerTransactionID()
+	case usersubscription.FieldOriginalPriceMicros:
+		return m.OriginalPriceMicros()
+	case usersubscription.FieldDiscountAmountMicros:
+		return m.DiscountAmountMicros()
+	case usersubscription.FieldPayableAmountMicros:
+		return m.PayableAmountMicros()
+	case usersubscription.FieldPromoCodeID:
+		return m.PromoCodeID()
 	case usersubscription.FieldNotes:
 		return m.Notes()
 	case usersubscription.FieldRevokeReason:
@@ -46953,6 +51476,14 @@ func (m *UserSubscriptionMutation) OldField(ctx context.Context, name string) (e
 		return m.OldAssignedByID(ctx)
 	case usersubscription.FieldPurchaseLedgerTransactionID:
 		return m.OldPurchaseLedgerTransactionID(ctx)
+	case usersubscription.FieldOriginalPriceMicros:
+		return m.OldOriginalPriceMicros(ctx)
+	case usersubscription.FieldDiscountAmountMicros:
+		return m.OldDiscountAmountMicros(ctx)
+	case usersubscription.FieldPayableAmountMicros:
+		return m.OldPayableAmountMicros(ctx)
+	case usersubscription.FieldPromoCodeID:
+		return m.OldPromoCodeID(ctx)
 	case usersubscription.FieldNotes:
 		return m.OldNotes(ctx)
 	case usersubscription.FieldRevokeReason:
@@ -47113,6 +51644,34 @@ func (m *UserSubscriptionMutation) SetField(name string, value ent.Value) error 
 		}
 		m.SetPurchaseLedgerTransactionID(v)
 		return nil
+	case usersubscription.FieldOriginalPriceMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOriginalPriceMicros(v)
+		return nil
+	case usersubscription.FieldDiscountAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDiscountAmountMicros(v)
+		return nil
+	case usersubscription.FieldPayableAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPayableAmountMicros(v)
+		return nil
+	case usersubscription.FieldPromoCodeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPromoCodeID(v)
+		return nil
 	case usersubscription.FieldNotes:
 		v, ok := value.(string)
 		if !ok {
@@ -47144,6 +51703,15 @@ func (m *UserSubscriptionMutation) AddedFields() []string {
 	if m.addused_amount_micros != nil {
 		fields = append(fields, usersubscription.FieldUsedAmountMicros)
 	}
+	if m.addoriginal_price_micros != nil {
+		fields = append(fields, usersubscription.FieldOriginalPriceMicros)
+	}
+	if m.adddiscount_amount_micros != nil {
+		fields = append(fields, usersubscription.FieldDiscountAmountMicros)
+	}
+	if m.addpayable_amount_micros != nil {
+		fields = append(fields, usersubscription.FieldPayableAmountMicros)
+	}
 	return fields
 }
 
@@ -47158,6 +51726,12 @@ func (m *UserSubscriptionMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedIncludedAmountMicros()
 	case usersubscription.FieldUsedAmountMicros:
 		return m.AddedUsedAmountMicros()
+	case usersubscription.FieldOriginalPriceMicros:
+		return m.AddedOriginalPriceMicros()
+	case usersubscription.FieldDiscountAmountMicros:
+		return m.AddedDiscountAmountMicros()
+	case usersubscription.FieldPayableAmountMicros:
+		return m.AddedPayableAmountMicros()
 	}
 	return nil, false
 }
@@ -47188,6 +51762,27 @@ func (m *UserSubscriptionMutation) AddField(name string, value ent.Value) error 
 		}
 		m.AddUsedAmountMicros(v)
 		return nil
+	case usersubscription.FieldOriginalPriceMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOriginalPriceMicros(v)
+		return nil
+	case usersubscription.FieldDiscountAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDiscountAmountMicros(v)
+		return nil
+	case usersubscription.FieldPayableAmountMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPayableAmountMicros(v)
+		return nil
 	}
 	return fmt.Errorf("unknown UserSubscription numeric field %s", name)
 }
@@ -47207,6 +51802,9 @@ func (m *UserSubscriptionMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(usersubscription.FieldPurchaseLedgerTransactionID) {
 		fields = append(fields, usersubscription.FieldPurchaseLedgerTransactionID)
+	}
+	if m.FieldCleared(usersubscription.FieldPromoCodeID) {
+		fields = append(fields, usersubscription.FieldPromoCodeID)
 	}
 	return fields
 }
@@ -47233,6 +51831,9 @@ func (m *UserSubscriptionMutation) ClearField(name string) error {
 		return nil
 	case usersubscription.FieldPurchaseLedgerTransactionID:
 		m.ClearPurchaseLedgerTransactionID()
+		return nil
+	case usersubscription.FieldPromoCodeID:
+		m.ClearPromoCodeID()
 		return nil
 	}
 	return fmt.Errorf("unknown UserSubscription nullable field %s", name)
@@ -47305,6 +51906,18 @@ func (m *UserSubscriptionMutation) ResetField(name string) error {
 	case usersubscription.FieldPurchaseLedgerTransactionID:
 		m.ResetPurchaseLedgerTransactionID()
 		return nil
+	case usersubscription.FieldOriginalPriceMicros:
+		m.ResetOriginalPriceMicros()
+		return nil
+	case usersubscription.FieldDiscountAmountMicros:
+		m.ResetDiscountAmountMicros()
+		return nil
+	case usersubscription.FieldPayableAmountMicros:
+		m.ResetPayableAmountMicros()
+		return nil
+	case usersubscription.FieldPromoCodeID:
+		m.ResetPromoCodeID()
+		return nil
 	case usersubscription.FieldNotes:
 		m.ResetNotes()
 		return nil
@@ -47317,7 +51930,7 @@ func (m *UserSubscriptionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserSubscriptionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 7)
 	if m.user != nil {
 		edges = append(edges, usersubscription.EdgeUser)
 	}
@@ -47329,6 +51942,12 @@ func (m *UserSubscriptionMutation) AddedEdges() []string {
 	}
 	if m.purchase_ledger_transaction != nil {
 		edges = append(edges, usersubscription.EdgePurchaseLedgerTransaction)
+	}
+	if m.promo_code != nil {
+		edges = append(edges, usersubscription.EdgePromoCode)
+	}
+	if m.promo_usages != nil {
+		edges = append(edges, usersubscription.EdgePromoUsages)
 	}
 	if m.usage_billing_records != nil {
 		edges = append(edges, usersubscription.EdgeUsageBillingRecords)
@@ -47356,6 +51975,16 @@ func (m *UserSubscriptionMutation) AddedIDs(name string) []ent.Value {
 		if id := m.purchase_ledger_transaction; id != nil {
 			return []ent.Value{*id}
 		}
+	case usersubscription.EdgePromoCode:
+		if id := m.promo_code; id != nil {
+			return []ent.Value{*id}
+		}
+	case usersubscription.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.promo_usages))
+		for id := range m.promo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	case usersubscription.EdgeUsageBillingRecords:
 		ids := make([]ent.Value, 0, len(m.usage_billing_records))
 		for id := range m.usage_billing_records {
@@ -47368,7 +51997,10 @@ func (m *UserSubscriptionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserSubscriptionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 7)
+	if m.removedpromo_usages != nil {
+		edges = append(edges, usersubscription.EdgePromoUsages)
+	}
 	if m.removedusage_billing_records != nil {
 		edges = append(edges, usersubscription.EdgeUsageBillingRecords)
 	}
@@ -47379,6 +52011,12 @@ func (m *UserSubscriptionMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *UserSubscriptionMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case usersubscription.EdgePromoUsages:
+		ids := make([]ent.Value, 0, len(m.removedpromo_usages))
+		for id := range m.removedpromo_usages {
+			ids = append(ids, id)
+		}
+		return ids
 	case usersubscription.EdgeUsageBillingRecords:
 		ids := make([]ent.Value, 0, len(m.removedusage_billing_records))
 		for id := range m.removedusage_billing_records {
@@ -47391,7 +52029,7 @@ func (m *UserSubscriptionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserSubscriptionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 7)
 	if m.cleareduser {
 		edges = append(edges, usersubscription.EdgeUser)
 	}
@@ -47403,6 +52041,12 @@ func (m *UserSubscriptionMutation) ClearedEdges() []string {
 	}
 	if m.clearedpurchase_ledger_transaction {
 		edges = append(edges, usersubscription.EdgePurchaseLedgerTransaction)
+	}
+	if m.clearedpromo_code {
+		edges = append(edges, usersubscription.EdgePromoCode)
+	}
+	if m.clearedpromo_usages {
+		edges = append(edges, usersubscription.EdgePromoUsages)
 	}
 	if m.clearedusage_billing_records {
 		edges = append(edges, usersubscription.EdgeUsageBillingRecords)
@@ -47422,6 +52066,10 @@ func (m *UserSubscriptionMutation) EdgeCleared(name string) bool {
 		return m.clearedassigned_by
 	case usersubscription.EdgePurchaseLedgerTransaction:
 		return m.clearedpurchase_ledger_transaction
+	case usersubscription.EdgePromoCode:
+		return m.clearedpromo_code
+	case usersubscription.EdgePromoUsages:
+		return m.clearedpromo_usages
 	case usersubscription.EdgeUsageBillingRecords:
 		return m.clearedusage_billing_records
 	}
@@ -47444,6 +52092,9 @@ func (m *UserSubscriptionMutation) ClearEdge(name string) error {
 	case usersubscription.EdgePurchaseLedgerTransaction:
 		m.ClearPurchaseLedgerTransaction()
 		return nil
+	case usersubscription.EdgePromoCode:
+		m.ClearPromoCode()
+		return nil
 	}
 	return fmt.Errorf("unknown UserSubscription unique edge %s", name)
 }
@@ -47463,6 +52114,12 @@ func (m *UserSubscriptionMutation) ResetEdge(name string) error {
 		return nil
 	case usersubscription.EdgePurchaseLedgerTransaction:
 		m.ResetPurchaseLedgerTransaction()
+		return nil
+	case usersubscription.EdgePromoCode:
+		m.ResetPromoCode()
+		return nil
+	case usersubscription.EdgePromoUsages:
+		m.ResetPromoUsages()
 		return nil
 	case usersubscription.EdgeUsageBillingRecords:
 		m.ResetUsageBillingRecords()

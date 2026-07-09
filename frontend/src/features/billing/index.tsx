@@ -11,7 +11,17 @@ import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
-import { type SubscriptionPlan, type UserSubscription, useCreateMyEPayRechargeCheckout, useMyBillingOverview, usePurchaseSubscriptionPlan, useRedeemCode } from './data/billing';
+import {
+  type PromoQuote,
+  type SubscriptionPlan,
+  type UserSubscription,
+  useCreateMyEPayRechargeCheckout,
+  useMyBillingOverview,
+  usePurchaseSubscriptionPlan,
+  useQuoteRechargePromo,
+  useQuoteSubscriptionPromo,
+  useRedeemCode,
+} from './data/billing';
 
 function microsToAmount(value: number) {
   return value / 1_000_000;
@@ -49,12 +59,50 @@ function usagePercent(subscription: UserSubscription) {
   return Math.min(100, Math.round((subscription.usedAmountMicros / subscription.includedAmountMicros) * 100));
 }
 
+function PromoQuoteSummary({
+  quote,
+  fallbackMicros,
+  formatCurrency,
+}: {
+  quote: PromoQuote | null;
+  fallbackMicros: number;
+  currency: string;
+  formatCurrency: Intl.NumberFormat;
+}) {
+  const { t } = useTranslation();
+  const original = quote?.originalAmountMicros ?? fallbackMicros;
+  const discount = quote?.discountAmountMicros ?? 0;
+  const payable = quote?.payableAmountMicros ?? original;
+
+  return (
+    <div className='rounded-md border p-3 text-sm'>
+      <div className='flex justify-between gap-3'>
+        <span className='text-muted-foreground'>{t('billing.promo.original')}</span>
+        <span className='font-mono'>{formatCurrency.format(microsToAmount(original))}</span>
+      </div>
+      <div className='mt-1 flex justify-between gap-3'>
+        <span className='text-muted-foreground'>{t('billing.promo.discount')}</span>
+        <span className='font-mono'>-{formatCurrency.format(microsToAmount(discount))}</span>
+      </div>
+      <div className='mt-2 flex justify-between gap-3 border-t pt-2 font-medium'>
+        <span>{t('billing.promo.payable')}</span>
+        <span className='font-mono'>{formatCurrency.format(microsToAmount(payable))}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function BillingPage() {
   const { t, i18n } = useTranslation();
   const [amount, setAmount] = useState('20.00');
+  const [rechargePromoCode, setRechargePromoCode] = useState('');
+  const [rechargeQuote, setRechargeQuote] = useState<PromoQuote | null>(null);
+  const [subscriptionPromoCode, setSubscriptionPromoCode] = useState('');
   const [redeemCode, setRedeemCode] = useState('');
   const { data, isLoading, isFetching, error, refetch } = useMyBillingOverview(10);
   const createCheckout = useCreateMyEPayRechargeCheckout();
+  const quoteRechargePromo = useQuoteRechargePromo();
+  const quoteSubscriptionPromo = useQuoteSubscriptionPromo();
   const redeemCodeMutation = useRedeemCode();
   const purchaseSubscriptionPlan = usePurchaseSubscriptionPlan();
 
@@ -90,6 +138,7 @@ export default function BillingPage() {
         amount: normalized,
         currency,
         subject: t('billing.recharge.subject'),
+        promoCode: rechargePromoCode.trim() || undefined,
       });
       if (!checkout.url) {
         toast.error(t('billing.recharge.missingCheckoutUrl'));
@@ -97,6 +146,22 @@ export default function BillingPage() {
       }
       window.location.assign(checkout.url);
     } catch (err) {
+      const message = err instanceof Error ? err.message : t('common.errors.unknownError');
+      toast.error(message);
+    }
+  }
+
+  async function handleQuoteRecharge() {
+    const normalized = normalizeAmount(amount);
+    if (!normalized) {
+      toast.error(t('billing.recharge.invalidAmount'));
+      return;
+    }
+    try {
+      const quote = await quoteRechargePromo.mutateAsync({ amount: normalized, currency, promoCode: rechargePromoCode.trim() || undefined });
+      setRechargeQuote(quote);
+    } catch (err) {
+      setRechargeQuote(null);
       const message = err instanceof Error ? err.message : t('common.errors.unknownError');
       toast.error(message);
     }
@@ -121,12 +186,30 @@ export default function BillingPage() {
   }
 
   async function handlePurchasePlan(plan: SubscriptionPlan) {
-    if (!window.confirm(t('billing.subscriptions.purchaseConfirm', { name: plan.name, amount: formatCurrency.format(microsToAmount(plan.priceMicros)) }))) {
+    let quote: PromoQuote | null = null;
+    if (subscriptionPromoCode.trim()) {
+      try {
+        quote = await quoteSubscriptionPromo.mutateAsync({ planId: plan.id, promoCode: subscriptionPromoCode.trim() });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : t('common.errors.unknownError');
+        toast.error(message);
+        return;
+      }
+    }
+    const original = quote?.originalAmountMicros ?? plan.priceMicros;
+    const discount = quote?.discountAmountMicros ?? 0;
+    const payable = quote?.payableAmountMicros ?? plan.priceMicros;
+    if (!window.confirm(t('billing.subscriptions.purchaseConfirm', {
+      name: plan.name,
+      amount: formatCurrency.format(microsToAmount(payable)),
+      original: formatCurrency.format(microsToAmount(original)),
+      discount: formatCurrency.format(microsToAmount(discount)),
+    }))) {
       return;
     }
 
     try {
-      await purchaseSubscriptionPlan.mutateAsync({ planId: plan.id });
+      await purchaseSubscriptionPlan.mutateAsync({ planId: plan.id, promoCode: subscriptionPromoCode.trim() || undefined });
       toast.success(t('billing.subscriptions.purchaseSuccess'));
     } catch (err) {
       const message = err instanceof Error ? err.message : t('common.errors.unknownError');
@@ -242,6 +325,33 @@ export default function BillingPage() {
                     />
                     <p className='text-muted-foreground text-xs'>{t('billing.recharge.amountHint', { currency })}</p>
                   </div>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium' htmlFor='billing-recharge-promo'>
+                      {t('billing.promo.code')}
+                    </label>
+                    <div className='flex gap-2'>
+                      <Input
+                        id='billing-recharge-promo'
+                        value={rechargePromoCode}
+                        onChange={(event) => {
+                          setRechargePromoCode(event.target.value.toUpperCase());
+                          setRechargeQuote(null);
+                        }}
+                        placeholder={t('billing.promo.placeholder')}
+                        autoComplete='off'
+                      />
+                      <Button type='button' variant='outline' onClick={() => void handleQuoteRecharge()} disabled={quoteRechargePromo.isPending}>
+                        {quoteRechargePromo.isPending ? <Loader2 className='size-4 animate-spin' /> : <Ticket className='size-4' />}
+                        {t('billing.promo.apply')}
+                      </Button>
+                    </div>
+                  </div>
+                  <PromoQuoteSummary
+                    quote={rechargeQuote}
+                    fallbackMicros={normalizeAmount(amount) ? Math.round(Number(normalizeAmount(amount)) * 1_000_000) : 0}
+                    currency={currency}
+                    formatCurrency={formatCurrency}
+                  />
                   <Button className='w-full' type='submit' disabled={createCheckout.isPending}>
                     {createCheckout.isPending ? <Loader2 className='size-4 animate-spin' /> : <ExternalLink className='size-4' />}
                     {t('billing.recharge.submit')}
@@ -330,7 +440,18 @@ export default function BillingPage() {
               </CardTitle>
               <CardDescription>{t('billing.subscriptions.plansDescription')}</CardDescription>
             </CardHeader>
-            <CardContent className='grid gap-3 md:grid-cols-2 xl:grid-cols-3'>
+            <CardContent className='space-y-4'>
+              <div className='grid gap-2 md:max-w-sm'>
+                <label className='text-sm font-medium' htmlFor='billing-subscription-promo'>{t('billing.promo.subscriptionCode')}</label>
+                <Input
+                  id='billing-subscription-promo'
+                  value={subscriptionPromoCode}
+                  onChange={(event) => setSubscriptionPromoCode(event.target.value.toUpperCase())}
+                  placeholder={t('billing.promo.placeholder')}
+                  autoComplete='off'
+                />
+              </div>
+              <div className='grid gap-3 md:grid-cols-2 xl:grid-cols-3'>
               {(data?.availableSubscriptionPlans ?? []).length === 0 ? (
                 <div className='text-muted-foreground rounded-md border p-6 text-center text-sm md:col-span-2 xl:col-span-3'>
                   {isLoading ? t('common.loading') : t('common.noData')}
@@ -363,13 +484,14 @@ export default function BillingPage() {
                         </span>
                       </div>
                     </div>
-                    <Button className='mt-auto w-full' onClick={() => void handlePurchasePlan(plan)} disabled={purchaseSubscriptionPlan.isPending}>
-                      {purchaseSubscriptionPlan.isPending ? <Loader2 className='size-4 animate-spin' /> : <ShieldCheck className='size-4' />}
+                    <Button className='mt-auto w-full' onClick={() => void handlePurchasePlan(plan)} disabled={purchaseSubscriptionPlan.isPending || quoteSubscriptionPromo.isPending}>
+                      {purchaseSubscriptionPlan.isPending || quoteSubscriptionPromo.isPending ? <Loader2 className='size-4 animate-spin' /> : <ShieldCheck className='size-4' />}
                       {t('billing.subscriptions.purchase')}
                     </Button>
                   </div>
                 ))
               )}
+              </div>
             </CardContent>
           </Card>
 

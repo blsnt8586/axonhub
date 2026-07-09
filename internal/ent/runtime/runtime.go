@@ -26,6 +26,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -774,28 +776,40 @@ func init() {
 	paymentorderDescAmountMicros := paymentorderFields[6].Descriptor()
 	// paymentorder.AmountMicrosValidator is a validator for the "amount_micros" field. It is called by the builders before save.
 	paymentorder.AmountMicrosValidator = paymentorderDescAmountMicros.Validators[0].(func(int64) error)
+	// paymentorderDescPayableAmountMicros is the schema descriptor for payable_amount_micros field.
+	paymentorderDescPayableAmountMicros := paymentorderFields[7].Descriptor()
+	// paymentorder.DefaultPayableAmountMicros holds the default value on creation for the payable_amount_micros field.
+	paymentorder.DefaultPayableAmountMicros = paymentorderDescPayableAmountMicros.Default.(int64)
+	// paymentorder.PayableAmountMicrosValidator is a validator for the "payable_amount_micros" field. It is called by the builders before save.
+	paymentorder.PayableAmountMicrosValidator = paymentorderDescPayableAmountMicros.Validators[0].(func(int64) error)
+	// paymentorderDescDiscountAmountMicros is the schema descriptor for discount_amount_micros field.
+	paymentorderDescDiscountAmountMicros := paymentorderFields[8].Descriptor()
+	// paymentorder.DefaultDiscountAmountMicros holds the default value on creation for the discount_amount_micros field.
+	paymentorder.DefaultDiscountAmountMicros = paymentorderDescDiscountAmountMicros.Default.(int64)
+	// paymentorder.DiscountAmountMicrosValidator is a validator for the "discount_amount_micros" field. It is called by the builders before save.
+	paymentorder.DiscountAmountMicrosValidator = paymentorderDescDiscountAmountMicros.Validators[0].(func(int64) error)
 	// paymentorderDescCurrency is the schema descriptor for currency field.
-	paymentorderDescCurrency := paymentorderFields[7].Descriptor()
+	paymentorderDescCurrency := paymentorderFields[10].Descriptor()
 	// paymentorder.DefaultCurrency holds the default value on creation for the currency field.
 	paymentorder.DefaultCurrency = paymentorderDescCurrency.Default.(string)
 	// paymentorderDescCancelReason is the schema descriptor for cancel_reason field.
-	paymentorderDescCancelReason := paymentorderFields[11].Descriptor()
+	paymentorderDescCancelReason := paymentorderFields[14].Descriptor()
 	// paymentorder.DefaultCancelReason holds the default value on creation for the cancel_reason field.
 	paymentorder.DefaultCancelReason = paymentorderDescCancelReason.Default.(string)
 	// paymentorderDescMakeupReason is the schema descriptor for makeup_reason field.
-	paymentorderDescMakeupReason := paymentorderFields[12].Descriptor()
+	paymentorderDescMakeupReason := paymentorderFields[15].Descriptor()
 	// paymentorder.DefaultMakeupReason holds the default value on creation for the makeup_reason field.
 	paymentorder.DefaultMakeupReason = paymentorderDescMakeupReason.Default.(string)
 	// paymentorderDescFailureReason is the schema descriptor for failure_reason field.
-	paymentorderDescFailureReason := paymentorderFields[13].Descriptor()
+	paymentorderDescFailureReason := paymentorderFields[16].Descriptor()
 	// paymentorder.DefaultFailureReason holds the default value on creation for the failure_reason field.
 	paymentorder.DefaultFailureReason = paymentorderDescFailureReason.Default.(string)
 	// paymentorderDescRefundReason is the schema descriptor for refund_reason field.
-	paymentorderDescRefundReason := paymentorderFields[15].Descriptor()
+	paymentorderDescRefundReason := paymentorderFields[18].Descriptor()
 	// paymentorder.DefaultRefundReason holds the default value on creation for the refund_reason field.
 	paymentorder.DefaultRefundReason = paymentorderDescRefundReason.Default.(string)
 	// paymentorderDescRefundAmountMicros is the schema descriptor for refund_amount_micros field.
-	paymentorderDescRefundAmountMicros := paymentorderFields[16].Descriptor()
+	paymentorderDescRefundAmountMicros := paymentorderFields[19].Descriptor()
 	// paymentorder.DefaultRefundAmountMicros holds the default value on creation for the refund_amount_micros field.
 	paymentorder.DefaultRefundAmountMicros = paymentorderDescRefundAmountMicros.Default.(int64)
 	// paymentorder.RefundAmountMicrosValidator is a validator for the "refund_amount_micros" field. It is called by the builders before save.
@@ -871,6 +885,116 @@ func init() {
 	projectDescProfiles := projectFields[3].Descriptor()
 	// project.DefaultProfiles holds the default value on creation for the profiles field.
 	project.DefaultProfiles = projectDescProfiles.Default.(*objects.ProjectProfiles)
+	promocodeMixin := schema.PromoCode{}.Mixin()
+	promocode.Policy = privacy.NewPolicies(schema.PromoCode{})
+	promocode.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := promocode.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	promocodeMixinFields0 := promocodeMixin[0].Fields()
+	_ = promocodeMixinFields0
+	promocodeFields := schema.PromoCode{}.Fields()
+	_ = promocodeFields
+	// promocodeDescCreatedAt is the schema descriptor for created_at field.
+	promocodeDescCreatedAt := promocodeMixinFields0[0].Descriptor()
+	// promocode.DefaultCreatedAt holds the default value on creation for the created_at field.
+	promocode.DefaultCreatedAt = promocodeDescCreatedAt.Default.(func() time.Time)
+	// promocodeDescUpdatedAt is the schema descriptor for updated_at field.
+	promocodeDescUpdatedAt := promocodeMixinFields0[1].Descriptor()
+	// promocode.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	promocode.DefaultUpdatedAt = promocodeDescUpdatedAt.Default.(func() time.Time)
+	// promocode.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	promocode.UpdateDefaultUpdatedAt = promocodeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// promocodeDescDescription is the schema descriptor for description field.
+	promocodeDescDescription := promocodeFields[1].Descriptor()
+	// promocode.DefaultDescription holds the default value on creation for the description field.
+	promocode.DefaultDescription = promocodeDescDescription.Default.(string)
+	// promocodeDescDiscountAmountMicros is the schema descriptor for discount_amount_micros field.
+	promocodeDescDiscountAmountMicros := promocodeFields[3].Descriptor()
+	// promocode.DefaultDiscountAmountMicros holds the default value on creation for the discount_amount_micros field.
+	promocode.DefaultDiscountAmountMicros = promocodeDescDiscountAmountMicros.Default.(int64)
+	// promocode.DiscountAmountMicrosValidator is a validator for the "discount_amount_micros" field. It is called by the builders before save.
+	promocode.DiscountAmountMicrosValidator = promocodeDescDiscountAmountMicros.Validators[0].(func(int64) error)
+	// promocodeDescDiscountPercentBps is the schema descriptor for discount_percent_bps field.
+	promocodeDescDiscountPercentBps := promocodeFields[4].Descriptor()
+	// promocode.DefaultDiscountPercentBps holds the default value on creation for the discount_percent_bps field.
+	promocode.DefaultDiscountPercentBps = promocodeDescDiscountPercentBps.Default.(int)
+	// promocode.DiscountPercentBpsValidator is a validator for the "discount_percent_bps" field. It is called by the builders before save.
+	promocode.DiscountPercentBpsValidator = promocodeDescDiscountPercentBps.Validators[0].(func(int) error)
+	// promocodeDescCurrency is the schema descriptor for currency field.
+	promocodeDescCurrency := promocodeFields[7].Descriptor()
+	// promocode.DefaultCurrency holds the default value on creation for the currency field.
+	promocode.DefaultCurrency = promocodeDescCurrency.Default.(string)
+	// promocodeDescMaxUses is the schema descriptor for max_uses field.
+	promocodeDescMaxUses := promocodeFields[8].Descriptor()
+	// promocode.DefaultMaxUses holds the default value on creation for the max_uses field.
+	promocode.DefaultMaxUses = promocodeDescMaxUses.Default.(int)
+	// promocode.MaxUsesValidator is a validator for the "max_uses" field. It is called by the builders before save.
+	promocode.MaxUsesValidator = promocodeDescMaxUses.Validators[0].(func(int) error)
+	// promocodeDescUsedCount is the schema descriptor for used_count field.
+	promocodeDescUsedCount := promocodeFields[9].Descriptor()
+	// promocode.DefaultUsedCount holds the default value on creation for the used_count field.
+	promocode.DefaultUsedCount = promocodeDescUsedCount.Default.(int)
+	// promocode.UsedCountValidator is a validator for the "used_count" field. It is called by the builders before save.
+	promocode.UsedCountValidator = promocodeDescUsedCount.Validators[0].(func(int) error)
+	// promocodeDescPerUserLimit is the schema descriptor for per_user_limit field.
+	promocodeDescPerUserLimit := promocodeFields[10].Descriptor()
+	// promocode.DefaultPerUserLimit holds the default value on creation for the per_user_limit field.
+	promocode.DefaultPerUserLimit = promocodeDescPerUserLimit.Default.(int)
+	// promocode.PerUserLimitValidator is a validator for the "per_user_limit" field. It is called by the builders before save.
+	promocode.PerUserLimitValidator = promocodeDescPerUserLimit.Validators[0].(func(int) error)
+	// promocodeDescNotes is the schema descriptor for notes field.
+	promocodeDescNotes := promocodeFields[14].Descriptor()
+	// promocode.DefaultNotes holds the default value on creation for the notes field.
+	promocode.DefaultNotes = promocodeDescNotes.Default.(string)
+	promousageMixin := schema.PromoUsage{}.Mixin()
+	promousage.Policy = privacy.NewPolicies(schema.PromoUsage{})
+	promousage.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := promousage.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	promousageMixinFields0 := promousageMixin[0].Fields()
+	_ = promousageMixinFields0
+	promousageFields := schema.PromoUsage{}.Fields()
+	_ = promousageFields
+	// promousageDescCreatedAt is the schema descriptor for created_at field.
+	promousageDescCreatedAt := promousageMixinFields0[0].Descriptor()
+	// promousage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	promousage.DefaultCreatedAt = promousageDescCreatedAt.Default.(func() time.Time)
+	// promousageDescUpdatedAt is the schema descriptor for updated_at field.
+	promousageDescUpdatedAt := promousageMixinFields0[1].Descriptor()
+	// promousage.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	promousage.DefaultUpdatedAt = promousageDescUpdatedAt.Default.(func() time.Time)
+	// promousage.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	promousage.UpdateDefaultUpdatedAt = promousageDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// promousageDescOriginalAmountMicros is the schema descriptor for original_amount_micros field.
+	promousageDescOriginalAmountMicros := promousageFields[10].Descriptor()
+	// promousage.OriginalAmountMicrosValidator is a validator for the "original_amount_micros" field. It is called by the builders before save.
+	promousage.OriginalAmountMicrosValidator = promousageDescOriginalAmountMicros.Validators[0].(func(int64) error)
+	// promousageDescDiscountAmountMicros is the schema descriptor for discount_amount_micros field.
+	promousageDescDiscountAmountMicros := promousageFields[11].Descriptor()
+	// promousage.DiscountAmountMicrosValidator is a validator for the "discount_amount_micros" field. It is called by the builders before save.
+	promousage.DiscountAmountMicrosValidator = promousageDescDiscountAmountMicros.Validators[0].(func(int64) error)
+	// promousageDescPayableAmountMicros is the schema descriptor for payable_amount_micros field.
+	promousageDescPayableAmountMicros := promousageFields[12].Descriptor()
+	// promousage.PayableAmountMicrosValidator is a validator for the "payable_amount_micros" field. It is called by the builders before save.
+	promousage.PayableAmountMicrosValidator = promousageDescPayableAmountMicros.Validators[0].(func(int64) error)
+	// promousageDescCurrency is the schema descriptor for currency field.
+	promousageDescCurrency := promousageFields[13].Descriptor()
+	// promousage.DefaultCurrency holds the default value on creation for the currency field.
+	promousage.DefaultCurrency = promousageDescCurrency.Default.(string)
+	// promousageDescFailureReason is the schema descriptor for failure_reason field.
+	promousageDescFailureReason := promousageFields[15].Descriptor()
+	// promousage.DefaultFailureReason holds the default value on creation for the failure_reason field.
+	promousage.DefaultFailureReason = promousageDescFailureReason.Default.(string)
 	promptMixin := schema.Prompt{}.Mixin()
 	prompt.Policy = privacy.NewPolicies(schema.Prompt{})
 	prompt.Hooks[0] = func(next ent.Mutator) ent.Mutator {
@@ -1570,12 +1694,30 @@ func init() {
 	usersubscriptionDescAllowWalletFallback := usersubscriptionFields[16].Descriptor()
 	// usersubscription.DefaultAllowWalletFallback holds the default value on creation for the allow_wallet_fallback field.
 	usersubscription.DefaultAllowWalletFallback = usersubscriptionDescAllowWalletFallback.Default.(bool)
+	// usersubscriptionDescOriginalPriceMicros is the schema descriptor for original_price_micros field.
+	usersubscriptionDescOriginalPriceMicros := usersubscriptionFields[19].Descriptor()
+	// usersubscription.DefaultOriginalPriceMicros holds the default value on creation for the original_price_micros field.
+	usersubscription.DefaultOriginalPriceMicros = usersubscriptionDescOriginalPriceMicros.Default.(int64)
+	// usersubscription.OriginalPriceMicrosValidator is a validator for the "original_price_micros" field. It is called by the builders before save.
+	usersubscription.OriginalPriceMicrosValidator = usersubscriptionDescOriginalPriceMicros.Validators[0].(func(int64) error)
+	// usersubscriptionDescDiscountAmountMicros is the schema descriptor for discount_amount_micros field.
+	usersubscriptionDescDiscountAmountMicros := usersubscriptionFields[20].Descriptor()
+	// usersubscription.DefaultDiscountAmountMicros holds the default value on creation for the discount_amount_micros field.
+	usersubscription.DefaultDiscountAmountMicros = usersubscriptionDescDiscountAmountMicros.Default.(int64)
+	// usersubscription.DiscountAmountMicrosValidator is a validator for the "discount_amount_micros" field. It is called by the builders before save.
+	usersubscription.DiscountAmountMicrosValidator = usersubscriptionDescDiscountAmountMicros.Validators[0].(func(int64) error)
+	// usersubscriptionDescPayableAmountMicros is the schema descriptor for payable_amount_micros field.
+	usersubscriptionDescPayableAmountMicros := usersubscriptionFields[21].Descriptor()
+	// usersubscription.DefaultPayableAmountMicros holds the default value on creation for the payable_amount_micros field.
+	usersubscription.DefaultPayableAmountMicros = usersubscriptionDescPayableAmountMicros.Default.(int64)
+	// usersubscription.PayableAmountMicrosValidator is a validator for the "payable_amount_micros" field. It is called by the builders before save.
+	usersubscription.PayableAmountMicrosValidator = usersubscriptionDescPayableAmountMicros.Validators[0].(func(int64) error)
 	// usersubscriptionDescNotes is the schema descriptor for notes field.
-	usersubscriptionDescNotes := usersubscriptionFields[19].Descriptor()
+	usersubscriptionDescNotes := usersubscriptionFields[23].Descriptor()
 	// usersubscription.DefaultNotes holds the default value on creation for the notes field.
 	usersubscription.DefaultNotes = usersubscriptionDescNotes.Default.(string)
 	// usersubscriptionDescRevokeReason is the schema descriptor for revoke_reason field.
-	usersubscriptionDescRevokeReason := usersubscriptionFields[20].Descriptor()
+	usersubscriptionDescRevokeReason := usersubscriptionFields[24].Descriptor()
 	// usersubscription.DefaultRevokeReason holds the default value on creation for the revoke_reason field.
 	usersubscription.DefaultRevokeReason = usersubscriptionDescRevokeReason.Default.(string)
 }

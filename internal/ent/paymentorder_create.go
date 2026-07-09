@@ -16,6 +16,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/objects"
 )
 
@@ -110,6 +112,48 @@ func (_c *PaymentOrderCreate) SetNillablePurpose(v *paymentorder.Purpose) *Payme
 // SetAmountMicros sets the "amount_micros" field.
 func (_c *PaymentOrderCreate) SetAmountMicros(v int64) *PaymentOrderCreate {
 	_c.mutation.SetAmountMicros(v)
+	return _c
+}
+
+// SetPayableAmountMicros sets the "payable_amount_micros" field.
+func (_c *PaymentOrderCreate) SetPayableAmountMicros(v int64) *PaymentOrderCreate {
+	_c.mutation.SetPayableAmountMicros(v)
+	return _c
+}
+
+// SetNillablePayableAmountMicros sets the "payable_amount_micros" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillablePayableAmountMicros(v *int64) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetPayableAmountMicros(*v)
+	}
+	return _c
+}
+
+// SetDiscountAmountMicros sets the "discount_amount_micros" field.
+func (_c *PaymentOrderCreate) SetDiscountAmountMicros(v int64) *PaymentOrderCreate {
+	_c.mutation.SetDiscountAmountMicros(v)
+	return _c
+}
+
+// SetNillableDiscountAmountMicros sets the "discount_amount_micros" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableDiscountAmountMicros(v *int64) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetDiscountAmountMicros(*v)
+	}
+	return _c
+}
+
+// SetPromoCodeID sets the "promo_code_id" field.
+func (_c *PaymentOrderCreate) SetPromoCodeID(v int) *PaymentOrderCreate {
+	_c.mutation.SetPromoCodeID(v)
+	return _c
+}
+
+// SetNillablePromoCodeID sets the "promo_code_id" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillablePromoCodeID(v *int) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetPromoCodeID(*v)
+	}
 	return _c
 }
 
@@ -316,6 +360,26 @@ func (_c *PaymentOrderCreate) SetLedgerTransaction(v *LedgerTransaction) *Paymen
 	return _c.SetLedgerTransactionID(v.ID)
 }
 
+// SetPromoCode sets the "promo_code" edge to the PromoCode entity.
+func (_c *PaymentOrderCreate) SetPromoCode(v *PromoCode) *PaymentOrderCreate {
+	return _c.SetPromoCodeID(v.ID)
+}
+
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by IDs.
+func (_c *PaymentOrderCreate) AddPromoUsageIDs(ids ...int) *PaymentOrderCreate {
+	_c.mutation.AddPromoUsageIDs(ids...)
+	return _c
+}
+
+// AddPromoUsages adds the "promo_usages" edges to the PromoUsage entity.
+func (_c *PaymentOrderCreate) AddPromoUsages(v ...*PromoUsage) *PaymentOrderCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPromoUsageIDs(ids...)
+}
+
 // AddPaymentEventIDs adds the "payment_events" edge to the PaymentEvent entity by IDs.
 func (_c *PaymentOrderCreate) AddPaymentEventIDs(ids ...int) *PaymentOrderCreate {
 	_c.mutation.AddPaymentEventIDs(ids...)
@@ -386,6 +450,14 @@ func (_c *PaymentOrderCreate) defaults() error {
 		v := paymentorder.DefaultPurpose
 		_c.mutation.SetPurpose(v)
 	}
+	if _, ok := _c.mutation.PayableAmountMicros(); !ok {
+		v := paymentorder.DefaultPayableAmountMicros
+		_c.mutation.SetPayableAmountMicros(v)
+	}
+	if _, ok := _c.mutation.DiscountAmountMicros(); !ok {
+		v := paymentorder.DefaultDiscountAmountMicros
+		_c.mutation.SetDiscountAmountMicros(v)
+	}
 	if _, ok := _c.mutation.Currency(); !ok {
 		v := paymentorder.DefaultCurrency
 		_c.mutation.SetCurrency(v)
@@ -450,6 +522,22 @@ func (_c *PaymentOrderCreate) check() error {
 	if v, ok := _c.mutation.AmountMicros(); ok {
 		if err := paymentorder.AmountMicrosValidator(v); err != nil {
 			return &ValidationError{Name: "amount_micros", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.amount_micros": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.PayableAmountMicros(); !ok {
+		return &ValidationError{Name: "payable_amount_micros", err: errors.New(`ent: missing required field "PaymentOrder.payable_amount_micros"`)}
+	}
+	if v, ok := _c.mutation.PayableAmountMicros(); ok {
+		if err := paymentorder.PayableAmountMicrosValidator(v); err != nil {
+			return &ValidationError{Name: "payable_amount_micros", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.payable_amount_micros": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.DiscountAmountMicros(); !ok {
+		return &ValidationError{Name: "discount_amount_micros", err: errors.New(`ent: missing required field "PaymentOrder.discount_amount_micros"`)}
+	}
+	if v, ok := _c.mutation.DiscountAmountMicros(); ok {
+		if err := paymentorder.DiscountAmountMicrosValidator(v); err != nil {
+			return &ValidationError{Name: "discount_amount_micros", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.discount_amount_micros": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Currency(); !ok {
@@ -540,6 +628,14 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.AmountMicros(); ok {
 		_spec.SetField(paymentorder.FieldAmountMicros, field.TypeInt64, value)
 		_node.AmountMicros = value
+	}
+	if value, ok := _c.mutation.PayableAmountMicros(); ok {
+		_spec.SetField(paymentorder.FieldPayableAmountMicros, field.TypeInt64, value)
+		_node.PayableAmountMicros = value
+	}
+	if value, ok := _c.mutation.DiscountAmountMicros(); ok {
+		_spec.SetField(paymentorder.FieldDiscountAmountMicros, field.TypeInt64, value)
+		_node.DiscountAmountMicros = value
 	}
 	if value, ok := _c.mutation.Currency(); ok {
 		_spec.SetField(paymentorder.FieldCurrency, field.TypeString, value)
@@ -642,6 +738,39 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.LedgerTransactionID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PromoCodeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paymentorder.PromoCodeTable,
+			Columns: []string{paymentorder.PromoCodeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promocode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.PromoCodeID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PromoUsagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.PromoUsagesTable,
+			Columns: []string{paymentorder.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.PaymentEventsIDs(); len(nodes) > 0 {
@@ -962,6 +1091,15 @@ func (u *PaymentOrderUpsertOne) UpdateNewValues() *PaymentOrderUpsertOne {
 		}
 		if _, exists := u.create.mutation.AmountMicros(); exists {
 			s.SetIgnore(paymentorder.FieldAmountMicros)
+		}
+		if _, exists := u.create.mutation.PayableAmountMicros(); exists {
+			s.SetIgnore(paymentorder.FieldPayableAmountMicros)
+		}
+		if _, exists := u.create.mutation.DiscountAmountMicros(); exists {
+			s.SetIgnore(paymentorder.FieldDiscountAmountMicros)
+		}
+		if _, exists := u.create.mutation.PromoCodeID(); exists {
+			s.SetIgnore(paymentorder.FieldPromoCodeID)
 		}
 		if _, exists := u.create.mutation.Currency(); exists {
 			s.SetIgnore(paymentorder.FieldCurrency)
@@ -1448,6 +1586,15 @@ func (u *PaymentOrderUpsertBulk) UpdateNewValues() *PaymentOrderUpsertBulk {
 			}
 			if _, exists := b.mutation.AmountMicros(); exists {
 				s.SetIgnore(paymentorder.FieldAmountMicros)
+			}
+			if _, exists := b.mutation.PayableAmountMicros(); exists {
+				s.SetIgnore(paymentorder.FieldPayableAmountMicros)
+			}
+			if _, exists := b.mutation.DiscountAmountMicros(); exists {
+				s.SetIgnore(paymentorder.FieldDiscountAmountMicros)
+			}
+			if _, exists := b.mutation.PromoCodeID(); exists {
+				s.SetIgnore(paymentorder.FieldPromoCodeID)
 			}
 			if _, exists := b.mutation.Currency(); exists {
 				s.SetIgnore(paymentorder.FieldCurrency)

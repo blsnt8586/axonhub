@@ -20,6 +20,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentevent"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/log"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/scheduler"
@@ -32,6 +33,7 @@ type PaymentServiceParams struct {
 	BillingAccountService *BillingAccountService
 	LedgerService         *LedgerService
 	ProviderRegistry      *PaymentProviderRegistry
+	PromoCodeService      *PromoCodeService `optional:"true"`
 }
 
 type PaymentService struct {
@@ -40,6 +42,7 @@ type PaymentService struct {
 	billingAccountService *BillingAccountService
 	ledgerService         *LedgerService
 	providerRegistry      *PaymentProviderRegistry
+	promoCodeService      *PromoCodeService
 }
 
 func NewPaymentService(params PaymentServiceParams) *PaymentService {
@@ -48,6 +51,7 @@ func NewPaymentService(params PaymentServiceParams) *PaymentService {
 		billingAccountService: params.BillingAccountService,
 		ledgerService:         params.LedgerService,
 		providerRegistry:      params.ProviderRegistry,
+		promoCodeService:      params.PromoCodeService,
 	}
 }
 
@@ -222,6 +226,7 @@ type CreateRechargeCheckoutInput struct {
 	Currency           string
 	Subject            string
 	Metadata           objects.JSONRawMessage
+	PromoCode          string
 }
 
 func (s *PaymentService) CreateRechargeCheckout(ctx context.Context, input CreateRechargeCheckoutInput) (*PaymentProviderCheckout, error) {
@@ -273,24 +278,74 @@ func (s *PaymentService) CreateRechargeCheckout(ctx context.Context, input Creat
 		return nil, err
 	}
 
-	create := s.entFromContext(ctx).PaymentOrder.Create().
-		SetOrderNo(orderNo).
-		SetProjectID(input.ProjectID).
-		SetBillingAccountID(account.ID).
-		SetProviderInstanceID(provider.ID).
-		SetProviderType(paymentorder.ProviderType(provider.ProviderType)).
-		SetPurpose(paymentorder.PurposeRecharge).
-		SetAmountMicros(amountMicros).
-		SetCurrency(input.Currency).
-		SetStatus(paymentorder.StatusPending).
-		SetExpiresAt(time.Now().UTC().Add(defaultPaymentOrderTTL))
-	if len(input.Metadata) > 0 {
-		create.SetMetadata(input.Metadata)
-	}
+	payableAmountMicros := amountMicros
+	discountAmountMicros := int64(0)
+	var promoApplication *PromoApplication
 
-	order, err := create.Save(ctx)
+	var order *ent.PaymentOrder
+	err = s.RunInTransaction(ctx, func(ctx context.Context) error {
+		if strings.TrimSpace(input.PromoCode) != "" {
+			if input.BillingSubject.Type != BillingSubjectTypeUser {
+				return fmt.Errorf("promo code recharge is only supported for user billing accounts")
+			}
+			if s.promoCodeService == nil {
+				return fmt.Errorf("promo code service is not configured")
+			}
+
+			application, err := s.promoCodeService.Apply(ctx, PromoApplyInput{
+				PromoQuoteInput: PromoQuoteInput{
+					Code:                 input.PromoCode,
+					Scope:                promousage.ScopeRecharge,
+					UserID:               input.BillingSubject.ID,
+					OriginalAmountMicros: amountMicros,
+					Currency:             input.Currency,
+				},
+				BillingAccountID: account.ID,
+				IdempotencyKey:   "promo:recharge:" + orderNo,
+				Status:           promousage.StatusReserved,
+			})
+			if err != nil {
+				return err
+			}
+			promoApplication = application
+			payableAmountMicros = application.PayableAmountMicros
+			discountAmountMicros = application.DiscountAmountMicros
+		}
+
+		create := s.entFromContext(ctx).PaymentOrder.Create().
+			SetOrderNo(orderNo).
+			SetProjectID(input.ProjectID).
+			SetBillingAccountID(account.ID).
+			SetProviderInstanceID(provider.ID).
+			SetProviderType(paymentorder.ProviderType(provider.ProviderType)).
+			SetPurpose(paymentorder.PurposeRecharge).
+			SetAmountMicros(amountMicros).
+			SetPayableAmountMicros(payableAmountMicros).
+			SetDiscountAmountMicros(discountAmountMicros).
+			SetCurrency(input.Currency).
+			SetStatus(paymentorder.StatusPending).
+			SetExpiresAt(time.Now().UTC().Add(defaultPaymentOrderTTL))
+		if len(input.Metadata) > 0 {
+			create.SetMetadata(input.Metadata)
+		}
+		if promoApplication != nil && promoApplication.Code != nil {
+			create.SetPromoCodeID(promoApplication.Code.ID)
+		}
+
+		var err error
+		order, err = create.Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to create payment order: %w", err)
+		}
+		if promoApplication != nil && promoApplication.Usage != nil {
+			if _, err := s.entFromContext(ctx).PromoUsage.UpdateOneID(promoApplication.Usage.ID).SetPaymentOrderID(order.ID).Save(ctx); err != nil {
+				return fmt.Errorf("failed to attach promo usage to payment order: %w", err)
+			}
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create payment order: %w", err)
+		return nil, err
 	}
 
 	adapter, err := s.providerRegistry.Adapter(provider.ProviderType)
@@ -450,8 +505,9 @@ func (s *PaymentService) HandleEPayReturn(ctx context.Context, input HandleEPayR
 	if err != nil {
 		return nil, fmt.Errorf("invalid epay money: %w", err)
 	}
-	if !notifyAmount.Equal(microsToDecimal(order.AmountMicros)) {
-		return nil, fmt.Errorf("epay money mismatch: got %s want %s", notifyAmount, microsToDecimal(order.AmountMicros))
+	expectedAmount := microsToDecimal(paymentOrderPayableAmountMicros(order))
+	if !notifyAmount.Equal(expectedAmount) {
+		return nil, fmt.Errorf("epay money mismatch: got %s want %s", notifyAmount, expectedAmount)
 	}
 
 	return &EPayReturnStatus{
@@ -529,8 +585,9 @@ func (s *PaymentService) HandleEPayNotify(ctx context.Context, input HandleEPayN
 	if err != nil {
 		return fail("invalid_money", order, provider, fmt.Errorf("invalid epay money: %w", err))
 	}
-	if !notifyAmount.Equal(microsToDecimal(order.AmountMicros)) {
-		return fail("money_mismatch", order, provider, fmt.Errorf("epay money mismatch: got %s want %s", notifyAmount, microsToDecimal(order.AmountMicros)))
+	expectedAmount := microsToDecimal(paymentOrderPayableAmountMicros(order))
+	if !notifyAmount.Equal(expectedAmount) {
+		return fail("money_mismatch", order, provider, fmt.Errorf("epay money mismatch: got %s want %s", notifyAmount, expectedAmount))
 	}
 
 	payload, err := json.Marshal(input.Params)
@@ -1080,6 +1137,16 @@ func (s *PaymentService) confirmPaidOrder(ctx context.Context, input confirmPaid
 		paidOrder, err = update.Save(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to mark payment order paid: %w", err)
+		}
+		if order.DiscountAmountMicros > 0 {
+			_, err = client.PromoUsage.Update().
+				Where(promousage.PaymentOrderIDEQ(order.ID), promousage.StatusEQ(promousage.StatusReserved)).
+				SetStatus(promousage.StatusApplied).
+				SetLedgerTransactionID(ledgerTx.ID).
+				Save(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to apply payment promo usage: %w", err)
+			}
 		}
 
 		_, err = client.PaymentEvent.UpdateOneID(event.ID).

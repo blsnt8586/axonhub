@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/user"
@@ -241,6 +243,62 @@ func (_c *UserSubscriptionCreate) SetNillablePurchaseLedgerTransactionID(v *int)
 	return _c
 }
 
+// SetOriginalPriceMicros sets the "original_price_micros" field.
+func (_c *UserSubscriptionCreate) SetOriginalPriceMicros(v int64) *UserSubscriptionCreate {
+	_c.mutation.SetOriginalPriceMicros(v)
+	return _c
+}
+
+// SetNillableOriginalPriceMicros sets the "original_price_micros" field if the given value is not nil.
+func (_c *UserSubscriptionCreate) SetNillableOriginalPriceMicros(v *int64) *UserSubscriptionCreate {
+	if v != nil {
+		_c.SetOriginalPriceMicros(*v)
+	}
+	return _c
+}
+
+// SetDiscountAmountMicros sets the "discount_amount_micros" field.
+func (_c *UserSubscriptionCreate) SetDiscountAmountMicros(v int64) *UserSubscriptionCreate {
+	_c.mutation.SetDiscountAmountMicros(v)
+	return _c
+}
+
+// SetNillableDiscountAmountMicros sets the "discount_amount_micros" field if the given value is not nil.
+func (_c *UserSubscriptionCreate) SetNillableDiscountAmountMicros(v *int64) *UserSubscriptionCreate {
+	if v != nil {
+		_c.SetDiscountAmountMicros(*v)
+	}
+	return _c
+}
+
+// SetPayableAmountMicros sets the "payable_amount_micros" field.
+func (_c *UserSubscriptionCreate) SetPayableAmountMicros(v int64) *UserSubscriptionCreate {
+	_c.mutation.SetPayableAmountMicros(v)
+	return _c
+}
+
+// SetNillablePayableAmountMicros sets the "payable_amount_micros" field if the given value is not nil.
+func (_c *UserSubscriptionCreate) SetNillablePayableAmountMicros(v *int64) *UserSubscriptionCreate {
+	if v != nil {
+		_c.SetPayableAmountMicros(*v)
+	}
+	return _c
+}
+
+// SetPromoCodeID sets the "promo_code_id" field.
+func (_c *UserSubscriptionCreate) SetPromoCodeID(v int) *UserSubscriptionCreate {
+	_c.mutation.SetPromoCodeID(v)
+	return _c
+}
+
+// SetNillablePromoCodeID sets the "promo_code_id" field if the given value is not nil.
+func (_c *UserSubscriptionCreate) SetNillablePromoCodeID(v *int) *UserSubscriptionCreate {
+	if v != nil {
+		_c.SetPromoCodeID(*v)
+	}
+	return _c
+}
+
 // SetNotes sets the "notes" field.
 func (_c *UserSubscriptionCreate) SetNotes(v string) *UserSubscriptionCreate {
 	_c.mutation.SetNotes(v)
@@ -287,6 +345,26 @@ func (_c *UserSubscriptionCreate) SetAssignedBy(v *User) *UserSubscriptionCreate
 // SetPurchaseLedgerTransaction sets the "purchase_ledger_transaction" edge to the LedgerTransaction entity.
 func (_c *UserSubscriptionCreate) SetPurchaseLedgerTransaction(v *LedgerTransaction) *UserSubscriptionCreate {
 	return _c.SetPurchaseLedgerTransactionID(v.ID)
+}
+
+// SetPromoCode sets the "promo_code" edge to the PromoCode entity.
+func (_c *UserSubscriptionCreate) SetPromoCode(v *PromoCode) *UserSubscriptionCreate {
+	return _c.SetPromoCodeID(v.ID)
+}
+
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by IDs.
+func (_c *UserSubscriptionCreate) AddPromoUsageIDs(ids ...int) *UserSubscriptionCreate {
+	_c.mutation.AddPromoUsageIDs(ids...)
+	return _c
+}
+
+// AddPromoUsages adds the "promo_usages" edges to the PromoUsage entity.
+func (_c *UserSubscriptionCreate) AddPromoUsages(v ...*PromoUsage) *UserSubscriptionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPromoUsageIDs(ids...)
 }
 
 // AddUsageBillingRecordIDs adds the "usage_billing_records" edge to the UsageBillingRecord entity by IDs.
@@ -391,6 +469,18 @@ func (_c *UserSubscriptionCreate) defaults() error {
 		v := usersubscription.DefaultAllowWalletFallback
 		_c.mutation.SetAllowWalletFallback(v)
 	}
+	if _, ok := _c.mutation.OriginalPriceMicros(); !ok {
+		v := usersubscription.DefaultOriginalPriceMicros
+		_c.mutation.SetOriginalPriceMicros(v)
+	}
+	if _, ok := _c.mutation.DiscountAmountMicros(); !ok {
+		v := usersubscription.DefaultDiscountAmountMicros
+		_c.mutation.SetDiscountAmountMicros(v)
+	}
+	if _, ok := _c.mutation.PayableAmountMicros(); !ok {
+		v := usersubscription.DefaultPayableAmountMicros
+		_c.mutation.SetPayableAmountMicros(v)
+	}
 	if _, ok := _c.mutation.Notes(); !ok {
 		v := usersubscription.DefaultNotes
 		_c.mutation.SetNotes(v)
@@ -453,6 +543,30 @@ func (_c *UserSubscriptionCreate) check() error {
 	}
 	if _, ok := _c.mutation.AllowWalletFallback(); !ok {
 		return &ValidationError{Name: "allow_wallet_fallback", err: errors.New(`ent: missing required field "UserSubscription.allow_wallet_fallback"`)}
+	}
+	if _, ok := _c.mutation.OriginalPriceMicros(); !ok {
+		return &ValidationError{Name: "original_price_micros", err: errors.New(`ent: missing required field "UserSubscription.original_price_micros"`)}
+	}
+	if v, ok := _c.mutation.OriginalPriceMicros(); ok {
+		if err := usersubscription.OriginalPriceMicrosValidator(v); err != nil {
+			return &ValidationError{Name: "original_price_micros", err: fmt.Errorf(`ent: validator failed for field "UserSubscription.original_price_micros": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.DiscountAmountMicros(); !ok {
+		return &ValidationError{Name: "discount_amount_micros", err: errors.New(`ent: missing required field "UserSubscription.discount_amount_micros"`)}
+	}
+	if v, ok := _c.mutation.DiscountAmountMicros(); ok {
+		if err := usersubscription.DiscountAmountMicrosValidator(v); err != nil {
+			return &ValidationError{Name: "discount_amount_micros", err: fmt.Errorf(`ent: validator failed for field "UserSubscription.discount_amount_micros": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.PayableAmountMicros(); !ok {
+		return &ValidationError{Name: "payable_amount_micros", err: errors.New(`ent: missing required field "UserSubscription.payable_amount_micros"`)}
+	}
+	if v, ok := _c.mutation.PayableAmountMicros(); ok {
+		if err := usersubscription.PayableAmountMicrosValidator(v); err != nil {
+			return &ValidationError{Name: "payable_amount_micros", err: fmt.Errorf(`ent: validator failed for field "UserSubscription.payable_amount_micros": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.Notes(); !ok {
 		return &ValidationError{Name: "notes", err: errors.New(`ent: missing required field "UserSubscription.notes"`)}
@@ -558,6 +672,18 @@ func (_c *UserSubscriptionCreate) createSpec() (*UserSubscription, *sqlgraph.Cre
 		_spec.SetField(usersubscription.FieldAllowWalletFallback, field.TypeBool, value)
 		_node.AllowWalletFallback = value
 	}
+	if value, ok := _c.mutation.OriginalPriceMicros(); ok {
+		_spec.SetField(usersubscription.FieldOriginalPriceMicros, field.TypeInt64, value)
+		_node.OriginalPriceMicros = value
+	}
+	if value, ok := _c.mutation.DiscountAmountMicros(); ok {
+		_spec.SetField(usersubscription.FieldDiscountAmountMicros, field.TypeInt64, value)
+		_node.DiscountAmountMicros = value
+	}
+	if value, ok := _c.mutation.PayableAmountMicros(); ok {
+		_spec.SetField(usersubscription.FieldPayableAmountMicros, field.TypeInt64, value)
+		_node.PayableAmountMicros = value
+	}
 	if value, ok := _c.mutation.Notes(); ok {
 		_spec.SetField(usersubscription.FieldNotes, field.TypeString, value)
 		_node.Notes = value
@@ -632,6 +758,39 @@ func (_c *UserSubscriptionCreate) createSpec() (*UserSubscription, *sqlgraph.Cre
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.PurchaseLedgerTransactionID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PromoCodeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usersubscription.PromoCodeTable,
+			Columns: []string{usersubscription.PromoCodeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promocode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.PromoCodeID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PromoUsagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usersubscription.PromoUsagesTable,
+			Columns: []string{usersubscription.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.UsageBillingRecordsIDs(); len(nodes) > 0 {
@@ -982,6 +1141,18 @@ func (u *UserSubscriptionUpsertOne) UpdateNewValues() *UserSubscriptionUpsertOne
 		}
 		if _, exists := u.create.mutation.PlanSnapshot(); exists {
 			s.SetIgnore(usersubscription.FieldPlanSnapshot)
+		}
+		if _, exists := u.create.mutation.OriginalPriceMicros(); exists {
+			s.SetIgnore(usersubscription.FieldOriginalPriceMicros)
+		}
+		if _, exists := u.create.mutation.DiscountAmountMicros(); exists {
+			s.SetIgnore(usersubscription.FieldDiscountAmountMicros)
+		}
+		if _, exists := u.create.mutation.PayableAmountMicros(); exists {
+			s.SetIgnore(usersubscription.FieldPayableAmountMicros)
+		}
+		if _, exists := u.create.mutation.PromoCodeID(); exists {
+			s.SetIgnore(usersubscription.FieldPromoCodeID)
 		}
 	}))
 	return u
@@ -1502,6 +1673,18 @@ func (u *UserSubscriptionUpsertBulk) UpdateNewValues() *UserSubscriptionUpsertBu
 			}
 			if _, exists := b.mutation.PlanSnapshot(); exists {
 				s.SetIgnore(usersubscription.FieldPlanSnapshot)
+			}
+			if _, exists := b.mutation.OriginalPriceMicros(); exists {
+				s.SetIgnore(usersubscription.FieldOriginalPriceMicros)
+			}
+			if _, exists := b.mutation.DiscountAmountMicros(); exists {
+				s.SetIgnore(usersubscription.FieldDiscountAmountMicros)
+			}
+			if _, exists := b.mutation.PayableAmountMicros(); exists {
+				s.SetIgnore(usersubscription.FieldPayableAmountMicros)
+			}
+			if _, exists := b.mutation.PromoCodeID(); exists {
+				s.SetIgnore(usersubscription.FieldPromoCodeID)
 			}
 		}
 	}))

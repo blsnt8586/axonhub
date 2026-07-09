@@ -71,6 +71,22 @@ func (UserSubscription) Fields() []ent.Field {
 			Optional(),
 		field.Int("purchase_ledger_transaction_id").
 			Optional(),
+		field.Int64("original_price_micros").
+			NonNegative().
+			Default(0).
+			Immutable(),
+		field.Int64("discount_amount_micros").
+			NonNegative().
+			Default(0).
+			Immutable(),
+		field.Int64("payable_amount_micros").
+			NonNegative().
+			Default(0).
+			Immutable(),
+		field.Int("promo_code_id").
+			Optional().
+			Nillable().
+			Immutable(),
 		field.String("notes").
 			Default(""),
 		field.String("revoke_reason").
@@ -99,6 +115,16 @@ func (UserSubscription) Edges() []ent.Edge {
 			Ref("purchased_user_subscriptions").
 			Field("purchase_ledger_transaction_id").
 			Unique(),
+		edge.From("promo_code", PromoCode.Type).
+			Ref("user_subscriptions").
+			Field("promo_code_id").
+			Unique().
+			Immutable(),
+		edge.To("promo_usages", PromoUsage.Type).
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+				entgql.RelayConnection(),
+			),
 		edge.To("usage_billing_records", UsageBillingRecord.Type).
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),

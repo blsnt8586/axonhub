@@ -68,15 +68,17 @@ type UserEdges struct {
 	UserSubscriptions []*UserSubscription `json:"user_subscriptions,omitempty"`
 	// AssignedUserSubscriptions holds the value of the assigned_user_subscriptions edge.
 	AssignedUserSubscriptions []*UserSubscription `json:"assigned_user_subscriptions,omitempty"`
+	// PromoUsages holds the value of the promo_usages edge.
+	PromoUsages []*PromoUsage `json:"promo_usages,omitempty"`
 	// ProjectUsers holds the value of the project_users edge.
 	ProjectUsers []*UserProject `json:"project_users,omitempty"`
 	// UserRoles holds the value of the user_roles edge.
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [11]bool
+	loadedTypes [12]bool
 	// totalCount holds the count of the edges above.
-	totalCount [11]map[string]int
+	totalCount [12]map[string]int
 
 	namedProjects                  map[string][]*Project
 	namedAPIKeys                   map[string][]*APIKey
@@ -87,6 +89,7 @@ type UserEdges struct {
 	namedUsedRedeemCodes           map[string][]*RedeemCode
 	namedUserSubscriptions         map[string][]*UserSubscription
 	namedAssignedUserSubscriptions map[string][]*UserSubscription
+	namedPromoUsages               map[string][]*PromoUsage
 	namedProjectUsers              map[string][]*UserProject
 	namedUserRoles                 map[string][]*UserRole
 }
@@ -172,10 +175,19 @@ func (e UserEdges) AssignedUserSubscriptionsOrErr() ([]*UserSubscription, error)
 	return nil, &NotLoadedError{edge: "assigned_user_subscriptions"}
 }
 
+// PromoUsagesOrErr returns the PromoUsages value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PromoUsagesOrErr() ([]*PromoUsage, error) {
+	if e.loadedTypes[9] {
+		return e.PromoUsages, nil
+	}
+	return nil, &NotLoadedError{edge: "promo_usages"}
+}
+
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[9] {
+	if e.loadedTypes[10] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -184,7 +196,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[10] {
+	if e.loadedTypes[11] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -356,6 +368,11 @@ func (_m *User) QueryUserSubscriptions() *UserSubscriptionQuery {
 // QueryAssignedUserSubscriptions queries the "assigned_user_subscriptions" edge of the User entity.
 func (_m *User) QueryAssignedUserSubscriptions() *UserSubscriptionQuery {
 	return NewUserClient(_m.config).QueryAssignedUserSubscriptions(_m)
+}
+
+// QueryPromoUsages queries the "promo_usages" edge of the User entity.
+func (_m *User) QueryPromoUsages() *PromoUsageQuery {
+	return NewUserClient(_m.config).QueryPromoUsages(_m)
 }
 
 // QueryProjectUsers queries the "project_users" edge of the User entity.
@@ -642,6 +659,30 @@ func (_m *User) appendNamedAssignedUserSubscriptions(name string, edges ...*User
 		_m.Edges.namedAssignedUserSubscriptions[name] = []*UserSubscription{}
 	} else {
 		_m.Edges.namedAssignedUserSubscriptions[name] = append(_m.Edges.namedAssignedUserSubscriptions[name], edges...)
+	}
+}
+
+// NamedPromoUsages returns the PromoUsages named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedPromoUsages(name string) ([]*PromoUsage, error) {
+	if _m.Edges.namedPromoUsages == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedPromoUsages[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedPromoUsages(name string, edges ...*PromoUsage) {
+	if _m.Edges.namedPromoUsages == nil {
+		_m.Edges.namedPromoUsages = make(map[string][]*PromoUsage)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedPromoUsages[name] = []*PromoUsage{}
+	} else {
+		_m.Edges.namedPromoUsages[name] = append(_m.Edges.namedPromoUsages[name], edges...)
 	}
 }
 

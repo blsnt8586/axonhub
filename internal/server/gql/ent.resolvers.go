@@ -388,6 +388,14 @@ func (r *paymentOrderResolver) ProviderInstanceID(ctx context.Context, obj *ent.
 	}, nil
 }
 
+// PromoCodeID is the resolver for the promoCodeID field.
+func (r *paymentOrderResolver) PromoCodeID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
+	if obj.PromoCodeID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypePromoCode, ID: *obj.PromoCodeID}, nil
+}
+
 // LedgerTransactionID is the resolver for the ledgerTransactionID field.
 func (r *paymentOrderResolver) LedgerTransactionID(ctx context.Context, obj *ent.PaymentOrder) (*objects.GUID, error) {
 	if obj.LedgerTransactionID == nil {
@@ -419,6 +427,61 @@ func (r *projectResolver) ID(ctx context.Context, obj *ent.Project) (*objects.GU
 // ProjectUsers is the resolver for the projectUsers field.
 func (r *projectResolver) ProjectUsers(ctx context.Context, obj *ent.Project) ([]*ent.UserProject, error) {
 	return obj.QueryProjectUsers().All(ctx)
+}
+
+// ID is the resolver for the id field.
+func (r *promoCodeResolver) ID(ctx context.Context, obj *ent.PromoCode) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypePromoCode, ID: obj.ID}, nil
+}
+
+// ID is the resolver for the id field.
+func (r *promoUsageResolver) ID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypePromoUsage, ID: obj.ID}, nil
+}
+
+// PromoCodeID is the resolver for the promoCodeID field.
+func (r *promoUsageResolver) PromoCodeID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypePromoCode, ID: obj.PromoCodeID}, nil
+}
+
+// UserID is the resolver for the userID field.
+func (r *promoUsageResolver) UserID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error) {
+	if obj.UserID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeUser, ID: *obj.UserID}, nil
+}
+
+// BillingAccountID is the resolver for the billingAccountID field.
+func (r *promoUsageResolver) BillingAccountID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error) {
+	if obj.BillingAccountID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeBillingAccount, ID: *obj.BillingAccountID}, nil
+}
+
+// PaymentOrderID is the resolver for the paymentOrderID field.
+func (r *promoUsageResolver) PaymentOrderID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error) {
+	if obj.PaymentOrderID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypePaymentOrder, ID: *obj.PaymentOrderID}, nil
+}
+
+// UserSubscriptionID is the resolver for the userSubscriptionID field.
+func (r *promoUsageResolver) UserSubscriptionID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error) {
+	if obj.UserSubscriptionID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeUserSubscription, ID: *obj.UserSubscriptionID}, nil
+}
+
+// LedgerTransactionID is the resolver for the ledgerTransactionID field.
+func (r *promoUsageResolver) LedgerTransactionID(ctx context.Context, obj *ent.PromoUsage) (*objects.GUID, error) {
+	if obj.LedgerTransactionID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypeLedgerTransaction, ID: *obj.LedgerTransactionID}, nil
 }
 
 // ID is the resolver for the id field.
@@ -693,6 +756,28 @@ func (r *queryResolver) Projects(ctx context.Context, after *entgql.Cursor[int],
 	return r.client.Project.Query().Paginate(ctx, after, first, before, last,
 		ent.WithProjectOrder(orderBy),
 		ent.WithProjectFilter(where.Filter),
+	)
+}
+
+// PromoCodes is the resolver for the promoCodes field.
+func (r *queryResolver) PromoCodes(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder, where *ent.PromoCodeWhereInput) (*ent.PromoCodeConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return r.client.PromoCode.Query().Paginate(ctx, after, first, before, last,
+		ent.WithPromoCodeOrder(orderBy),
+		ent.WithPromoCodeFilter(where.Filter),
+	)
+}
+
+// PromoUsages is the resolver for the promoUsages field.
+func (r *queryResolver) PromoUsages(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder, where *ent.PromoUsageWhereInput) (*ent.PromoUsageConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+	return r.client.PromoUsage.Query().Paginate(ctx, after, first, before, last,
+		ent.WithPromoUsageOrder(orderBy),
+		ent.WithPromoUsageFilter(where.Filter),
 	)
 }
 
@@ -1403,6 +1488,14 @@ func (r *userSubscriptionResolver) PurchaseLedgerTransactionID(ctx context.Conte
 	}, nil
 }
 
+// PromoCodeID is the resolver for the promoCodeID field.
+func (r *userSubscriptionResolver) PromoCodeID(ctx context.Context, obj *ent.UserSubscription) (*objects.GUID, error) {
+	if obj.PromoCodeID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{Type: ent.TypePromoCode, ID: *obj.PromoCodeID}, nil
+}
+
 // APIKey returns APIKeyResolver implementation.
 func (r *Resolver) APIKey() APIKeyResolver { return &aPIKeyResolver{r} }
 
@@ -1479,6 +1572,12 @@ func (r *Resolver) PaymentProviderInstance() PaymentProviderInstanceResolver {
 
 // Project returns ProjectResolver implementation.
 func (r *Resolver) Project() ProjectResolver { return &projectResolver{r} }
+
+// PromoCode returns PromoCodeResolver implementation.
+func (r *Resolver) PromoCode() PromoCodeResolver { return &promoCodeResolver{r} }
+
+// PromoUsage returns PromoUsageResolver implementation.
+func (r *Resolver) PromoUsage() PromoUsageResolver { return &promoUsageResolver{r} }
 
 // Prompt returns PromptResolver implementation.
 func (r *Resolver) Prompt() PromptResolver { return &promptResolver{r} }
@@ -1561,6 +1660,8 @@ type paymentEventResolver struct{ *Resolver }
 type paymentOrderResolver struct{ *Resolver }
 type paymentProviderInstanceResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
+type promoCodeResolver struct{ *Resolver }
+type promoUsageResolver struct{ *Resolver }
 type promptResolver struct{ *Resolver }
 type promptProtectionRuleResolver struct{ *Resolver }
 type providerQuotaStatusResolver struct{ *Resolver }

@@ -36,6 +36,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -102,6 +104,10 @@ type Client struct {
 	PaymentProviderInstance *PaymentProviderInstanceClient
 	// Project is the client for interacting with the Project builders.
 	Project *ProjectClient
+	// PromoCode is the client for interacting with the PromoCode builders.
+	PromoCode *PromoCodeClient
+	// PromoUsage is the client for interacting with the PromoUsage builders.
+	PromoUsage *PromoUsageClient
 	// Prompt is the client for interacting with the Prompt builders.
 	Prompt *PromptClient
 	// PromptProtectionRule is the client for interacting with the PromptProtectionRule builders.
@@ -170,6 +176,8 @@ func (c *Client) init() {
 	c.PaymentOrder = NewPaymentOrderClient(c.config)
 	c.PaymentProviderInstance = NewPaymentProviderInstanceClient(c.config)
 	c.Project = NewProjectClient(c.config)
+	c.PromoCode = NewPromoCodeClient(c.config)
+	c.PromoUsage = NewPromoUsageClient(c.config)
 	c.Prompt = NewPromptClient(c.config)
 	c.PromptProtectionRule = NewPromptProtectionRuleClient(c.config)
 	c.ProviderQuotaStatus = NewProviderQuotaStatusClient(c.config)
@@ -300,6 +308,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		PaymentOrder:             NewPaymentOrderClient(cfg),
 		PaymentProviderInstance:  NewPaymentProviderInstanceClient(cfg),
 		Project:                  NewProjectClient(cfg),
+		PromoCode:                NewPromoCodeClient(cfg),
+		PromoUsage:               NewPromoUsageClient(cfg),
 		Prompt:                   NewPromptClient(cfg),
 		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
 		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
@@ -357,6 +367,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		PaymentOrder:             NewPaymentOrderClient(cfg),
 		PaymentProviderInstance:  NewPaymentProviderInstanceClient(cfg),
 		Project:                  NewProjectClient(cfg),
+		PromoCode:                NewPromoCodeClient(cfg),
+		PromoUsage:               NewPromoUsageClient(cfg),
 		Prompt:                   NewPromptClient(cfg),
 		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
 		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
@@ -408,10 +420,10 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
 		c.ChannelProbe, c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model,
 		c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance,
-		c.Project, c.Prompt, c.PromptProtectionRule, c.ProviderQuotaStatus,
-		c.RedeemCode, c.Request, c.RequestExecution, c.Role, c.SubscriptionPlan,
-		c.System, c.Thread, c.Trace, c.UsageBillingRecord, c.UsageLog, c.User,
-		c.UserProject, c.UserRole, c.UserSubscription,
+		c.Project, c.PromoCode, c.PromoUsage, c.Prompt, c.PromptProtectionRule,
+		c.ProviderQuotaStatus, c.RedeemCode, c.Request, c.RequestExecution, c.Role,
+		c.SubscriptionPlan, c.System, c.Thread, c.Trace, c.UsageBillingRecord,
+		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -426,10 +438,10 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ChannelModelPrice, c.ChannelModelPriceVersion, c.ChannelOverrideTemplate,
 		c.ChannelProbe, c.DataStorage, c.LedgerEntry, c.LedgerTransaction, c.Model,
 		c.OIDCIdentity, c.PaymentEvent, c.PaymentOrder, c.PaymentProviderInstance,
-		c.Project, c.Prompt, c.PromptProtectionRule, c.ProviderQuotaStatus,
-		c.RedeemCode, c.Request, c.RequestExecution, c.Role, c.SubscriptionPlan,
-		c.System, c.Thread, c.Trace, c.UsageBillingRecord, c.UsageLog, c.User,
-		c.UserProject, c.UserRole, c.UserSubscription,
+		c.Project, c.PromoCode, c.PromoUsage, c.Prompt, c.PromptProtectionRule,
+		c.ProviderQuotaStatus, c.RedeemCode, c.Request, c.RequestExecution, c.Role,
+		c.SubscriptionPlan, c.System, c.Thread, c.Trace, c.UsageBillingRecord,
+		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -480,6 +492,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PaymentProviderInstance.mutate(ctx, m)
 	case *ProjectMutation:
 		return c.Project.mutate(ctx, m)
+	case *PromoCodeMutation:
+		return c.PromoCode.mutate(ctx, m)
+	case *PromoUsageMutation:
+		return c.PromoUsage.mutate(ctx, m)
 	case *PromptMutation:
 		return c.Prompt.mutate(ctx, m)
 	case *PromptProtectionRuleMutation:
@@ -1034,6 +1050,22 @@ func (c *BillingAccountClient) QueryPaymentOrders(_m *BillingAccount) *PaymentOr
 			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, id),
 			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.PaymentOrdersTable, billingaccount.PaymentOrdersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPromoUsages queries the promo_usages edge of a BillingAccount.
+func (c *BillingAccountClient) QueryPromoUsages(_m *BillingAccount) *PromoUsageQuery {
+	query := (&PromoUsageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(billingaccount.Table, billingaccount.FieldID, id),
+			sqlgraph.To(promousage.Table, promousage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, billingaccount.PromoUsagesTable, billingaccount.PromoUsagesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -3068,6 +3100,22 @@ func (c *LedgerTransactionClient) QueryPurchasedUserSubscriptions(_m *LedgerTran
 	return query
 }
 
+// QueryPromoUsages queries the promo_usages edge of a LedgerTransaction.
+func (c *LedgerTransactionClient) QueryPromoUsages(_m *LedgerTransaction) *PromoUsageQuery {
+	query := (&PromoUsageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ledgertransaction.Table, ledgertransaction.FieldID, id),
+			sqlgraph.To(promousage.Table, promousage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ledgertransaction.PromoUsagesTable, ledgertransaction.PromoUsagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *LedgerTransactionClient) Hooks() []Hook {
 	hooks := c.hooks.LedgerTransaction
@@ -3702,6 +3750,38 @@ func (c *PaymentOrderClient) QueryLedgerTransaction(_m *PaymentOrder) *LedgerTra
 	return query
 }
 
+// QueryPromoCode queries the promo_code edge of a PaymentOrder.
+func (c *PaymentOrderClient) QueryPromoCode(_m *PaymentOrder) *PromoCodeQuery {
+	query := (&PromoCodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
+			sqlgraph.To(promocode.Table, promocode.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, paymentorder.PromoCodeTable, paymentorder.PromoCodeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPromoUsages queries the promo_usages edge of a PaymentOrder.
+func (c *PaymentOrderClient) QueryPromoUsages(_m *PaymentOrder) *PromoUsageQuery {
+	query := (&PromoUsageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
+			sqlgraph.To(promousage.Table, promousage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.PromoUsagesTable, paymentorder.PromoUsagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryPaymentEvents queries the payment_events edge of a PaymentOrder.
 func (c *PaymentOrderClient) QueryPaymentEvents(_m *PaymentOrder) *PaymentEventQuery {
 	query := (&PaymentEventClient{config: c.config}).Query()
@@ -4202,6 +4282,418 @@ func (c *ProjectClient) mutate(ctx context.Context, m *ProjectMutation) (Value, 
 		return (&ProjectDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Project mutation op: %q", m.Op())
+	}
+}
+
+// PromoCodeClient is a client for the PromoCode schema.
+type PromoCodeClient struct {
+	config
+}
+
+// NewPromoCodeClient returns a client for the PromoCode from the given config.
+func NewPromoCodeClient(c config) *PromoCodeClient {
+	return &PromoCodeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `promocode.Hooks(f(g(h())))`.
+func (c *PromoCodeClient) Use(hooks ...Hook) {
+	c.hooks.PromoCode = append(c.hooks.PromoCode, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `promocode.Intercept(f(g(h())))`.
+func (c *PromoCodeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PromoCode = append(c.inters.PromoCode, interceptors...)
+}
+
+// Create returns a builder for creating a PromoCode entity.
+func (c *PromoCodeClient) Create() *PromoCodeCreate {
+	mutation := newPromoCodeMutation(c.config, OpCreate)
+	return &PromoCodeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PromoCode entities.
+func (c *PromoCodeClient) CreateBulk(builders ...*PromoCodeCreate) *PromoCodeCreateBulk {
+	return &PromoCodeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PromoCodeClient) MapCreateBulk(slice any, setFunc func(*PromoCodeCreate, int)) *PromoCodeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PromoCodeCreateBulk{err: fmt.Errorf("calling to PromoCodeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PromoCodeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PromoCodeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PromoCode.
+func (c *PromoCodeClient) Update() *PromoCodeUpdate {
+	mutation := newPromoCodeMutation(c.config, OpUpdate)
+	return &PromoCodeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PromoCodeClient) UpdateOne(_m *PromoCode) *PromoCodeUpdateOne {
+	mutation := newPromoCodeMutation(c.config, OpUpdateOne, withPromoCode(_m))
+	return &PromoCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PromoCodeClient) UpdateOneID(id int) *PromoCodeUpdateOne {
+	mutation := newPromoCodeMutation(c.config, OpUpdateOne, withPromoCodeID(id))
+	return &PromoCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PromoCode.
+func (c *PromoCodeClient) Delete() *PromoCodeDelete {
+	mutation := newPromoCodeMutation(c.config, OpDelete)
+	return &PromoCodeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PromoCodeClient) DeleteOne(_m *PromoCode) *PromoCodeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PromoCodeClient) DeleteOneID(id int) *PromoCodeDeleteOne {
+	builder := c.Delete().Where(promocode.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PromoCodeDeleteOne{builder}
+}
+
+// Query returns a query builder for PromoCode.
+func (c *PromoCodeClient) Query() *PromoCodeQuery {
+	return &PromoCodeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePromoCode},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PromoCode entity by its id.
+func (c *PromoCodeClient) Get(ctx context.Context, id int) (*PromoCode, error) {
+	return c.Query().Where(promocode.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PromoCodeClient) GetX(ctx context.Context, id int) *PromoCode {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUsages queries the usages edge of a PromoCode.
+func (c *PromoCodeClient) QueryUsages(_m *PromoCode) *PromoUsageQuery {
+	query := (&PromoUsageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(promocode.Table, promocode.FieldID, id),
+			sqlgraph.To(promousage.Table, promousage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, promocode.UsagesTable, promocode.UsagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPaymentOrders queries the payment_orders edge of a PromoCode.
+func (c *PromoCodeClient) QueryPaymentOrders(_m *PromoCode) *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(promocode.Table, promocode.FieldID, id),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, promocode.PaymentOrdersTable, promocode.PaymentOrdersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserSubscriptions queries the user_subscriptions edge of a PromoCode.
+func (c *PromoCodeClient) QueryUserSubscriptions(_m *PromoCode) *UserSubscriptionQuery {
+	query := (&UserSubscriptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(promocode.Table, promocode.FieldID, id),
+			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, promocode.UserSubscriptionsTable, promocode.UserSubscriptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PromoCodeClient) Hooks() []Hook {
+	hooks := c.hooks.PromoCode
+	return append(hooks[:len(hooks):len(hooks)], promocode.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PromoCodeClient) Interceptors() []Interceptor {
+	return c.inters.PromoCode
+}
+
+func (c *PromoCodeClient) mutate(ctx context.Context, m *PromoCodeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PromoCodeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PromoCodeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PromoCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PromoCodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PromoCode mutation op: %q", m.Op())
+	}
+}
+
+// PromoUsageClient is a client for the PromoUsage schema.
+type PromoUsageClient struct {
+	config
+}
+
+// NewPromoUsageClient returns a client for the PromoUsage from the given config.
+func NewPromoUsageClient(c config) *PromoUsageClient {
+	return &PromoUsageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `promousage.Hooks(f(g(h())))`.
+func (c *PromoUsageClient) Use(hooks ...Hook) {
+	c.hooks.PromoUsage = append(c.hooks.PromoUsage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `promousage.Intercept(f(g(h())))`.
+func (c *PromoUsageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PromoUsage = append(c.inters.PromoUsage, interceptors...)
+}
+
+// Create returns a builder for creating a PromoUsage entity.
+func (c *PromoUsageClient) Create() *PromoUsageCreate {
+	mutation := newPromoUsageMutation(c.config, OpCreate)
+	return &PromoUsageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PromoUsage entities.
+func (c *PromoUsageClient) CreateBulk(builders ...*PromoUsageCreate) *PromoUsageCreateBulk {
+	return &PromoUsageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PromoUsageClient) MapCreateBulk(slice any, setFunc func(*PromoUsageCreate, int)) *PromoUsageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PromoUsageCreateBulk{err: fmt.Errorf("calling to PromoUsageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PromoUsageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PromoUsageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PromoUsage.
+func (c *PromoUsageClient) Update() *PromoUsageUpdate {
+	mutation := newPromoUsageMutation(c.config, OpUpdate)
+	return &PromoUsageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PromoUsageClient) UpdateOne(_m *PromoUsage) *PromoUsageUpdateOne {
+	mutation := newPromoUsageMutation(c.config, OpUpdateOne, withPromoUsage(_m))
+	return &PromoUsageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PromoUsageClient) UpdateOneID(id int) *PromoUsageUpdateOne {
+	mutation := newPromoUsageMutation(c.config, OpUpdateOne, withPromoUsageID(id))
+	return &PromoUsageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PromoUsage.
+func (c *PromoUsageClient) Delete() *PromoUsageDelete {
+	mutation := newPromoUsageMutation(c.config, OpDelete)
+	return &PromoUsageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PromoUsageClient) DeleteOne(_m *PromoUsage) *PromoUsageDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PromoUsageClient) DeleteOneID(id int) *PromoUsageDeleteOne {
+	builder := c.Delete().Where(promousage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PromoUsageDeleteOne{builder}
+}
+
+// Query returns a query builder for PromoUsage.
+func (c *PromoUsageClient) Query() *PromoUsageQuery {
+	return &PromoUsageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePromoUsage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PromoUsage entity by its id.
+func (c *PromoUsageClient) Get(ctx context.Context, id int) (*PromoUsage, error) {
+	return c.Query().Where(promousage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PromoUsageClient) GetX(ctx context.Context, id int) *PromoUsage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPromoCode queries the promo_code edge of a PromoUsage.
+func (c *PromoUsageClient) QueryPromoCode(_m *PromoUsage) *PromoCodeQuery {
+	query := (&PromoCodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(promousage.Table, promousage.FieldID, id),
+			sqlgraph.To(promocode.Table, promocode.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, promousage.PromoCodeTable, promousage.PromoCodeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a PromoUsage.
+func (c *PromoUsageClient) QueryUser(_m *PromoUsage) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(promousage.Table, promousage.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, promousage.UserTable, promousage.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBillingAccount queries the billing_account edge of a PromoUsage.
+func (c *PromoUsageClient) QueryBillingAccount(_m *PromoUsage) *BillingAccountQuery {
+	query := (&BillingAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(promousage.Table, promousage.FieldID, id),
+			sqlgraph.To(billingaccount.Table, billingaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, promousage.BillingAccountTable, promousage.BillingAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPaymentOrder queries the payment_order edge of a PromoUsage.
+func (c *PromoUsageClient) QueryPaymentOrder(_m *PromoUsage) *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(promousage.Table, promousage.FieldID, id),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, promousage.PaymentOrderTable, promousage.PaymentOrderColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserSubscription queries the user_subscription edge of a PromoUsage.
+func (c *PromoUsageClient) QueryUserSubscription(_m *PromoUsage) *UserSubscriptionQuery {
+	query := (&UserSubscriptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(promousage.Table, promousage.FieldID, id),
+			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, promousage.UserSubscriptionTable, promousage.UserSubscriptionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryLedgerTransaction queries the ledger_transaction edge of a PromoUsage.
+func (c *PromoUsageClient) QueryLedgerTransaction(_m *PromoUsage) *LedgerTransactionQuery {
+	query := (&LedgerTransactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(promousage.Table, promousage.FieldID, id),
+			sqlgraph.To(ledgertransaction.Table, ledgertransaction.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, promousage.LedgerTransactionTable, promousage.LedgerTransactionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PromoUsageClient) Hooks() []Hook {
+	hooks := c.hooks.PromoUsage
+	return append(hooks[:len(hooks):len(hooks)], promousage.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PromoUsageClient) Interceptors() []Interceptor {
+	return c.inters.PromoUsage
+}
+
+func (c *PromoUsageClient) mutate(ctx context.Context, m *PromoUsageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PromoUsageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PromoUsageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PromoUsageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PromoUsageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PromoUsage mutation op: %q", m.Op())
 	}
 }
 
@@ -6747,6 +7239,22 @@ func (c *UserClient) QueryAssignedUserSubscriptions(_m *User) *UserSubscriptionQ
 	return query
 }
 
+// QueryPromoUsages queries the promo_usages edge of a User.
+func (c *UserClient) QueryPromoUsages(_m *User) *PromoUsageQuery {
+	query := (&PromoUsageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(promousage.Table, promousage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PromoUsagesTable, user.PromoUsagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryProjectUsers queries the project_users edge of a User.
 func (c *UserClient) QueryProjectUsers(_m *User) *UserProjectQuery {
 	query := (&UserProjectClient{config: c.config}).Query()
@@ -7309,6 +7817,38 @@ func (c *UserSubscriptionClient) QueryPurchaseLedgerTransaction(_m *UserSubscrip
 	return query
 }
 
+// QueryPromoCode queries the promo_code edge of a UserSubscription.
+func (c *UserSubscriptionClient) QueryPromoCode(_m *UserSubscription) *PromoCodeQuery {
+	query := (&PromoCodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usersubscription.Table, usersubscription.FieldID, id),
+			sqlgraph.To(promocode.Table, promocode.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usersubscription.PromoCodeTable, usersubscription.PromoCodeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPromoUsages queries the promo_usages edge of a UserSubscription.
+func (c *UserSubscriptionClient) QueryPromoUsages(_m *UserSubscription) *PromoUsageQuery {
+	query := (&PromoUsageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usersubscription.Table, usersubscription.FieldID, id),
+			sqlgraph.To(promousage.Table, promousage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usersubscription.PromoUsagesTable, usersubscription.PromoUsagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUsageBillingRecords queries the usage_billing_records edge of a UserSubscription.
 func (c *UserSubscriptionClient) QueryUsageBillingRecords(_m *UserSubscription) *UsageBillingRecordQuery {
 	query := (&UsageBillingRecordClient{config: c.config}).Query()
@@ -7358,19 +7898,21 @@ type (
 		BillingHold, BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
-		PaymentOrder, PaymentProviderInstance, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, RedeemCode, Request, RequestExecution, Role,
-		SubscriptionPlan, System, Thread, Trace, UsageBillingRecord, UsageLog, User,
-		UserProject, UserRole, UserSubscription []ent.Hook
+		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
+		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
+		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
+		UsageBillingRecord, UsageLog, User, UserProject, UserRole,
+		UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, BillingAccount, BillingAccountBinding,
 		BillingHold, BillingOutbox, BillingPriceRule, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		LedgerEntry, LedgerTransaction, Model, OIDCIdentity, PaymentEvent,
-		PaymentOrder, PaymentProviderInstance, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, RedeemCode, Request, RequestExecution, Role,
-		SubscriptionPlan, System, Thread, Trace, UsageBillingRecord, UsageLog, User,
-		UserProject, UserRole, UserSubscription []ent.Interceptor
+		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
+		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
+		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
+		UsageBillingRecord, UsageLog, User, UserProject, UserRole,
+		UserSubscription []ent.Interceptor
 	}
 )

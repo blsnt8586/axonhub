@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
+	"github.com/looplj/axonhub/internal/ent/promocode"
 	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/user"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
@@ -64,6 +65,14 @@ type UserSubscription struct {
 	AssignedByID int `json:"assigned_by_id,omitempty"`
 	// PurchaseLedgerTransactionID holds the value of the "purchase_ledger_transaction_id" field.
 	PurchaseLedgerTransactionID int `json:"purchase_ledger_transaction_id,omitempty"`
+	// OriginalPriceMicros holds the value of the "original_price_micros" field.
+	OriginalPriceMicros int64 `json:"original_price_micros,omitempty"`
+	// DiscountAmountMicros holds the value of the "discount_amount_micros" field.
+	DiscountAmountMicros int64 `json:"discount_amount_micros,omitempty"`
+	// PayableAmountMicros holds the value of the "payable_amount_micros" field.
+	PayableAmountMicros int64 `json:"payable_amount_micros,omitempty"`
+	// PromoCodeID holds the value of the "promo_code_id" field.
+	PromoCodeID *int `json:"promo_code_id,omitempty"`
 	// Notes holds the value of the "notes" field.
 	Notes string `json:"notes,omitempty"`
 	// RevokeReason holds the value of the "revoke_reason" field.
@@ -84,14 +93,19 @@ type UserSubscriptionEdges struct {
 	AssignedBy *User `json:"assigned_by,omitempty"`
 	// PurchaseLedgerTransaction holds the value of the purchase_ledger_transaction edge.
 	PurchaseLedgerTransaction *LedgerTransaction `json:"purchase_ledger_transaction,omitempty"`
+	// PromoCode holds the value of the promo_code edge.
+	PromoCode *PromoCode `json:"promo_code,omitempty"`
+	// PromoUsages holds the value of the promo_usages edge.
+	PromoUsages []*PromoUsage `json:"promo_usages,omitempty"`
 	// UsageBillingRecords holds the value of the usage_billing_records edge.
 	UsageBillingRecords []*UsageBillingRecord `json:"usage_billing_records,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [7]bool
 	// totalCount holds the count of the edges above.
-	totalCount [5]map[string]int
+	totalCount [7]map[string]int
 
+	namedPromoUsages         map[string][]*PromoUsage
 	namedUsageBillingRecords map[string][]*UsageBillingRecord
 }
 
@@ -139,10 +153,30 @@ func (e UserSubscriptionEdges) PurchaseLedgerTransactionOrErr() (*LedgerTransact
 	return nil, &NotLoadedError{edge: "purchase_ledger_transaction"}
 }
 
+// PromoCodeOrErr returns the PromoCode value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserSubscriptionEdges) PromoCodeOrErr() (*PromoCode, error) {
+	if e.PromoCode != nil {
+		return e.PromoCode, nil
+	} else if e.loadedTypes[4] {
+		return nil, &NotFoundError{label: promocode.Label}
+	}
+	return nil, &NotLoadedError{edge: "promo_code"}
+}
+
+// PromoUsagesOrErr returns the PromoUsages value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserSubscriptionEdges) PromoUsagesOrErr() ([]*PromoUsage, error) {
+	if e.loadedTypes[5] {
+		return e.PromoUsages, nil
+	}
+	return nil, &NotLoadedError{edge: "promo_usages"}
+}
+
 // UsageBillingRecordsOrErr returns the UsageBillingRecords value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserSubscriptionEdges) UsageBillingRecordsOrErr() ([]*UsageBillingRecord, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[6] {
 		return e.UsageBillingRecords, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_billing_records"}
@@ -157,7 +191,7 @@ func (*UserSubscription) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case usersubscription.FieldAllowWalletFallback:
 			values[i] = new(sql.NullBool)
-		case usersubscription.FieldID, usersubscription.FieldUserID, usersubscription.FieldPlanID, usersubscription.FieldPeriodDays, usersubscription.FieldIncludedAmountMicros, usersubscription.FieldUsedAmountMicros, usersubscription.FieldAssignedByID, usersubscription.FieldPurchaseLedgerTransactionID:
+		case usersubscription.FieldID, usersubscription.FieldUserID, usersubscription.FieldPlanID, usersubscription.FieldPeriodDays, usersubscription.FieldIncludedAmountMicros, usersubscription.FieldUsedAmountMicros, usersubscription.FieldAssignedByID, usersubscription.FieldPurchaseLedgerTransactionID, usersubscription.FieldOriginalPriceMicros, usersubscription.FieldDiscountAmountMicros, usersubscription.FieldPayableAmountMicros, usersubscription.FieldPromoCodeID:
 			values[i] = new(sql.NullInt64)
 		case usersubscription.FieldStatus, usersubscription.FieldCurrency, usersubscription.FieldNotes, usersubscription.FieldRevokeReason:
 			values[i] = new(sql.NullString)
@@ -318,6 +352,31 @@ func (_m *UserSubscription) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.PurchaseLedgerTransactionID = int(value.Int64)
 			}
+		case usersubscription.FieldOriginalPriceMicros:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field original_price_micros", values[i])
+			} else if value.Valid {
+				_m.OriginalPriceMicros = value.Int64
+			}
+		case usersubscription.FieldDiscountAmountMicros:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field discount_amount_micros", values[i])
+			} else if value.Valid {
+				_m.DiscountAmountMicros = value.Int64
+			}
+		case usersubscription.FieldPayableAmountMicros:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field payable_amount_micros", values[i])
+			} else if value.Valid {
+				_m.PayableAmountMicros = value.Int64
+			}
+		case usersubscription.FieldPromoCodeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field promo_code_id", values[i])
+			} else if value.Valid {
+				_m.PromoCodeID = new(int)
+				*_m.PromoCodeID = int(value.Int64)
+			}
 		case usersubscription.FieldNotes:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field notes", values[i])
@@ -361,6 +420,16 @@ func (_m *UserSubscription) QueryAssignedBy() *UserQuery {
 // QueryPurchaseLedgerTransaction queries the "purchase_ledger_transaction" edge of the UserSubscription entity.
 func (_m *UserSubscription) QueryPurchaseLedgerTransaction() *LedgerTransactionQuery {
 	return NewUserSubscriptionClient(_m.config).QueryPurchaseLedgerTransaction(_m)
+}
+
+// QueryPromoCode queries the "promo_code" edge of the UserSubscription entity.
+func (_m *UserSubscription) QueryPromoCode() *PromoCodeQuery {
+	return NewUserSubscriptionClient(_m.config).QueryPromoCode(_m)
+}
+
+// QueryPromoUsages queries the "promo_usages" edge of the UserSubscription entity.
+func (_m *UserSubscription) QueryPromoUsages() *PromoUsageQuery {
+	return NewUserSubscriptionClient(_m.config).QueryPromoUsages(_m)
 }
 
 // QueryUsageBillingRecords queries the "usage_billing_records" edge of the UserSubscription entity.
@@ -454,6 +523,20 @@ func (_m *UserSubscription) String() string {
 	builder.WriteString("purchase_ledger_transaction_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.PurchaseLedgerTransactionID))
 	builder.WriteString(", ")
+	builder.WriteString("original_price_micros=")
+	builder.WriteString(fmt.Sprintf("%v", _m.OriginalPriceMicros))
+	builder.WriteString(", ")
+	builder.WriteString("discount_amount_micros=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DiscountAmountMicros))
+	builder.WriteString(", ")
+	builder.WriteString("payable_amount_micros=")
+	builder.WriteString(fmt.Sprintf("%v", _m.PayableAmountMicros))
+	builder.WriteString(", ")
+	if v := _m.PromoCodeID; v != nil {
+		builder.WriteString("promo_code_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
 	builder.WriteString("notes=")
 	builder.WriteString(_m.Notes)
 	builder.WriteString(", ")
@@ -461,6 +544,30 @@ func (_m *UserSubscription) String() string {
 	builder.WriteString(_m.RevokeReason)
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedPromoUsages returns the PromoUsages named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UserSubscription) NamedPromoUsages(name string) ([]*PromoUsage, error) {
+	if _m.Edges.namedPromoUsages == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedPromoUsages[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UserSubscription) appendNamedPromoUsages(name string, edges ...*PromoUsage) {
+	if _m.Edges.namedPromoUsages == nil {
+		_m.Edges.namedPromoUsages = make(map[string][]*PromoUsage)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedPromoUsages[name] = []*PromoUsage{}
+	} else {
+		_m.Edges.namedPromoUsages[name] = append(_m.Edges.namedPromoUsages[name], edges...)
+	}
 }
 
 // NamedUsageBillingRecords returns the UsageBillingRecords named value or an error if the edge was not

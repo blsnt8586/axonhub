@@ -35,6 +35,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -6749,6 +6751,634 @@ func (_m *Project) ToEdge(order *ProjectOrder) *ProjectEdge {
 		order = DefaultProjectOrder
 	}
 	return &ProjectEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// PromoCodeEdge is the edge representation of PromoCode.
+type PromoCodeEdge struct {
+	Node   *PromoCode `json:"node"`
+	Cursor Cursor     `json:"cursor"`
+}
+
+// PromoCodeConnection is the connection containing edges to PromoCode.
+type PromoCodeConnection struct {
+	Edges      []*PromoCodeEdge `json:"edges"`
+	PageInfo   PageInfo         `json:"pageInfo"`
+	TotalCount int              `json:"totalCount"`
+}
+
+func (c *PromoCodeConnection) build(nodes []*PromoCode, pager *promocodePager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *PromoCode
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *PromoCode {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *PromoCode {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*PromoCodeEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &PromoCodeEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// PromoCodePaginateOption enables pagination customization.
+type PromoCodePaginateOption func(*promocodePager) error
+
+// WithPromoCodeOrder configures pagination ordering.
+func WithPromoCodeOrder(order *PromoCodeOrder) PromoCodePaginateOption {
+	if order == nil {
+		order = DefaultPromoCodeOrder
+	}
+	o := *order
+	return func(pager *promocodePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultPromoCodeOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithPromoCodeFilter configures pagination filter.
+func WithPromoCodeFilter(filter func(*PromoCodeQuery) (*PromoCodeQuery, error)) PromoCodePaginateOption {
+	return func(pager *promocodePager) error {
+		if filter == nil {
+			return errors.New("PromoCodeQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type promocodePager struct {
+	reverse bool
+	order   *PromoCodeOrder
+	filter  func(*PromoCodeQuery) (*PromoCodeQuery, error)
+}
+
+func newPromoCodePager(opts []PromoCodePaginateOption, reverse bool) (*promocodePager, error) {
+	pager := &promocodePager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultPromoCodeOrder
+	}
+	return pager, nil
+}
+
+func (p *promocodePager) applyFilter(query *PromoCodeQuery) (*PromoCodeQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *promocodePager) toCursor(_m *PromoCode) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *promocodePager) applyCursors(query *PromoCodeQuery, after, before *Cursor) (*PromoCodeQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultPromoCodeOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *promocodePager) applyOrder(query *PromoCodeQuery) *PromoCodeQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultPromoCodeOrder.Field {
+		query = query.Order(DefaultPromoCodeOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *promocodePager) orderExpr(query *PromoCodeQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultPromoCodeOrder.Field {
+			b.Comma().Ident(DefaultPromoCodeOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to PromoCode.
+func (_m *PromoCodeQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...PromoCodePaginateOption,
+) (*PromoCodeConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newPromoCodePager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &PromoCodeConnection{Edges: []*PromoCodeEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// PromoCodeOrderFieldCreatedAt orders PromoCode by created_at.
+	PromoCodeOrderFieldCreatedAt = &PromoCodeOrderField{
+		Value: func(_m *PromoCode) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: promocode.FieldCreatedAt,
+		toTerm: promocode.ByCreatedAt,
+		toCursor: func(_m *PromoCode) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// PromoCodeOrderFieldUpdatedAt orders PromoCode by updated_at.
+	PromoCodeOrderFieldUpdatedAt = &PromoCodeOrderField{
+		Value: func(_m *PromoCode) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: promocode.FieldUpdatedAt,
+		toTerm: promocode.ByUpdatedAt,
+		toCursor: func(_m *PromoCode) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f PromoCodeOrderField) String() string {
+	var str string
+	switch f.column {
+	case PromoCodeOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case PromoCodeOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f PromoCodeOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *PromoCodeOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("PromoCodeOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *PromoCodeOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *PromoCodeOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid PromoCodeOrderField", str)
+	}
+	return nil
+}
+
+// PromoCodeOrderField defines the ordering field of PromoCode.
+type PromoCodeOrderField struct {
+	// Value extracts the ordering value from the given PromoCode.
+	Value    func(*PromoCode) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) promocode.OrderOption
+	toCursor func(*PromoCode) Cursor
+}
+
+// PromoCodeOrder defines the ordering of PromoCode.
+type PromoCodeOrder struct {
+	Direction OrderDirection       `json:"direction"`
+	Field     *PromoCodeOrderField `json:"field"`
+}
+
+// DefaultPromoCodeOrder is the default ordering of PromoCode.
+var DefaultPromoCodeOrder = &PromoCodeOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &PromoCodeOrderField{
+		Value: func(_m *PromoCode) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: promocode.FieldID,
+		toTerm: promocode.ByID,
+		toCursor: func(_m *PromoCode) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts PromoCode into PromoCodeEdge.
+func (_m *PromoCode) ToEdge(order *PromoCodeOrder) *PromoCodeEdge {
+	if order == nil {
+		order = DefaultPromoCodeOrder
+	}
+	return &PromoCodeEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// PromoUsageEdge is the edge representation of PromoUsage.
+type PromoUsageEdge struct {
+	Node   *PromoUsage `json:"node"`
+	Cursor Cursor      `json:"cursor"`
+}
+
+// PromoUsageConnection is the connection containing edges to PromoUsage.
+type PromoUsageConnection struct {
+	Edges      []*PromoUsageEdge `json:"edges"`
+	PageInfo   PageInfo          `json:"pageInfo"`
+	TotalCount int               `json:"totalCount"`
+}
+
+func (c *PromoUsageConnection) build(nodes []*PromoUsage, pager *promousagePager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *PromoUsage
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *PromoUsage {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *PromoUsage {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*PromoUsageEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &PromoUsageEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// PromoUsagePaginateOption enables pagination customization.
+type PromoUsagePaginateOption func(*promousagePager) error
+
+// WithPromoUsageOrder configures pagination ordering.
+func WithPromoUsageOrder(order *PromoUsageOrder) PromoUsagePaginateOption {
+	if order == nil {
+		order = DefaultPromoUsageOrder
+	}
+	o := *order
+	return func(pager *promousagePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultPromoUsageOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithPromoUsageFilter configures pagination filter.
+func WithPromoUsageFilter(filter func(*PromoUsageQuery) (*PromoUsageQuery, error)) PromoUsagePaginateOption {
+	return func(pager *promousagePager) error {
+		if filter == nil {
+			return errors.New("PromoUsageQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type promousagePager struct {
+	reverse bool
+	order   *PromoUsageOrder
+	filter  func(*PromoUsageQuery) (*PromoUsageQuery, error)
+}
+
+func newPromoUsagePager(opts []PromoUsagePaginateOption, reverse bool) (*promousagePager, error) {
+	pager := &promousagePager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultPromoUsageOrder
+	}
+	return pager, nil
+}
+
+func (p *promousagePager) applyFilter(query *PromoUsageQuery) (*PromoUsageQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *promousagePager) toCursor(_m *PromoUsage) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *promousagePager) applyCursors(query *PromoUsageQuery, after, before *Cursor) (*PromoUsageQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultPromoUsageOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *promousagePager) applyOrder(query *PromoUsageQuery) *PromoUsageQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultPromoUsageOrder.Field {
+		query = query.Order(DefaultPromoUsageOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *promousagePager) orderExpr(query *PromoUsageQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultPromoUsageOrder.Field {
+			b.Comma().Ident(DefaultPromoUsageOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to PromoUsage.
+func (_m *PromoUsageQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...PromoUsagePaginateOption,
+) (*PromoUsageConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newPromoUsagePager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &PromoUsageConnection{Edges: []*PromoUsageEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// PromoUsageOrderFieldCreatedAt orders PromoUsage by created_at.
+	PromoUsageOrderFieldCreatedAt = &PromoUsageOrderField{
+		Value: func(_m *PromoUsage) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: promousage.FieldCreatedAt,
+		toTerm: promousage.ByCreatedAt,
+		toCursor: func(_m *PromoUsage) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// PromoUsageOrderFieldUpdatedAt orders PromoUsage by updated_at.
+	PromoUsageOrderFieldUpdatedAt = &PromoUsageOrderField{
+		Value: func(_m *PromoUsage) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: promousage.FieldUpdatedAt,
+		toTerm: promousage.ByUpdatedAt,
+		toCursor: func(_m *PromoUsage) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f PromoUsageOrderField) String() string {
+	var str string
+	switch f.column {
+	case PromoUsageOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case PromoUsageOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f PromoUsageOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *PromoUsageOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("PromoUsageOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *PromoUsageOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *PromoUsageOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid PromoUsageOrderField", str)
+	}
+	return nil
+}
+
+// PromoUsageOrderField defines the ordering field of PromoUsage.
+type PromoUsageOrderField struct {
+	// Value extracts the ordering value from the given PromoUsage.
+	Value    func(*PromoUsage) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) promousage.OrderOption
+	toCursor func(*PromoUsage) Cursor
+}
+
+// PromoUsageOrder defines the ordering of PromoUsage.
+type PromoUsageOrder struct {
+	Direction OrderDirection        `json:"direction"`
+	Field     *PromoUsageOrderField `json:"field"`
+}
+
+// DefaultPromoUsageOrder is the default ordering of PromoUsage.
+var DefaultPromoUsageOrder = &PromoUsageOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &PromoUsageOrderField{
+		Value: func(_m *PromoUsage) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: promousage.FieldID,
+		toTerm: promousage.ByID,
+		toCursor: func(_m *PromoUsage) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts PromoUsage into PromoUsageEdge.
+func (_m *PromoUsage) ToEdge(order *PromoUsageOrder) *PromoUsageEdge {
+	if order == nil {
+		order = DefaultPromoUsageOrder
+	}
+	return &PromoUsageEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

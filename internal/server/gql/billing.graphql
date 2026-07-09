@@ -30,6 +30,7 @@ input CreateSimulatedEPayRechargeCheckoutInput {
   currency: String
   subject: String
   publicBaseUrl: String
+  promoCode: String
   metadata: JSONRawMessageInput
 }
 
@@ -52,6 +53,7 @@ input CreateMyEPayRechargeCheckoutInput {
   subject: String
   projectId: ID
   providerInstanceId: ID
+  promoCode: String
   metadata: JSONRawMessageInput
 }
 
@@ -118,6 +120,42 @@ input SaveSubscriptionPlanInput {
 
 input PurchaseSubscriptionPlanInput {
   planId: ID!
+  promoCode: String
+}
+
+input SavePromoCodeInput {
+  id: ID
+  code: String!
+  description: String
+  discountType: PromoCodeDiscountType
+  discountAmount: DecimalInput!
+  discountPercentBps: Int
+  scope: PromoCodeScope
+  status: PromoCodeStatus
+  currency: String
+  maxUses: Int
+  perUserLimit: Int
+  startsAt: Time
+  expiresAt: Time
+  notes: String
+  metadata: JSONRawMessageInput
+}
+
+input UpdatePromoCodeStatusInput {
+  codeId: ID!
+  status: PromoCodeStatus!
+  notes: String
+}
+
+input QuoteRechargePromoInput {
+  amount: DecimalInput!
+  currency: String
+  promoCode: String
+}
+
+input QuoteSubscriptionPromoInput {
+  planId: ID!
+  promoCode: String
 }
 
 input AdminAssignSubscriptionInput {
@@ -225,6 +263,29 @@ input AdminUserSubscriptionsFilter {
   expiresBefore: Time
 }
 
+input AdminPromoCodesFilter {
+  status: PromoCodeStatus
+  scope: PromoCodeScope
+  code: String
+  createdById: Int
+  from: Time
+  to: Time
+  expiresBefore: Time
+}
+
+input AdminPromoUsagesFilter {
+  promoCodeId: Int
+  userId: Int
+  billingAccountId: Int
+  paymentOrderId: Int
+  userSubscriptionId: Int
+  scope: PromoUsageScope
+  status: PromoUsageStatus
+  code: String
+  from: Time
+  to: Time
+}
+
 input AdminBillingReportFilter {
   from: Time
   to: Time
@@ -308,6 +369,14 @@ type PaymentCheckout {
   currency: String!
 }
 
+type PromoQuote {
+  code: String
+  originalAmountMicros: Int!
+  discountAmountMicros: Int!
+  payableAmountMicros: Int!
+  currency: String!
+}
+
 extend type Mutation {
   createManualRechargeOrder(input: CreateManualRechargeOrderInput!): PaymentOrder!
   confirmManualPayment(input: ConfirmManualPaymentInput!): PaymentOrder!
@@ -323,6 +392,9 @@ extend type Mutation {
   adminCreateAndRedeemCode(input: AdminCreateAndRedeemCodeInput!): RedeemCode!
   updateRedeemCodeStatus(input: UpdateRedeemCodeStatusInput!): RedeemCode!
   deleteRedeemCode(id: ID!): Boolean!
+  savePromoCode(input: SavePromoCodeInput!): PromoCode!
+  updatePromoCodeStatus(input: UpdatePromoCodeStatusInput!): PromoCode!
+  deletePromoCode(id: ID!): Boolean!
   saveSubscriptionPlan(input: SaveSubscriptionPlanInput!): SubscriptionPlan!
   deleteSubscriptionPlan(id: ID!): Boolean!
   purchaseSubscriptionPlan(input: PurchaseSubscriptionPlanInput!): UserSubscription!
@@ -347,6 +419,8 @@ extend type Query {
   myLedgerTransactions(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   userLedgerTransactions(userId: ID!, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
   myRedeemCodes(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: RedeemCodeOrder): RedeemCodeConnection!
+  quoteRechargePromo(input: QuoteRechargePromoInput!): PromoQuote!
+  quoteSubscriptionPromo(input: QuoteSubscriptionPromoInput!): PromoQuote!
   availableSubscriptionPlans(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: SubscriptionPlanOrder): SubscriptionPlanConnection!
   myUserSubscriptions(after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UserSubscriptionOrder): UserSubscriptionConnection!
   adminLedgerTransactions(filter: AdminLedgerTransactionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: LedgerTransactionOrder): LedgerTransactionConnection!
@@ -355,6 +429,8 @@ extend type Query {
   adminPaymentOrders(filter: AdminPaymentOrdersFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentOrderOrder): PaymentOrderConnection!
   adminPaymentEvents(filter: AdminPaymentEventsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PaymentEventOrder): PaymentEventConnection!
   adminRedeemCodes(filter: AdminRedeemCodesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: RedeemCodeOrder): RedeemCodeConnection!
+  adminPromoCodes(filter: AdminPromoCodesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PromoCodeOrder): PromoCodeConnection!
+  adminPromoUsages(filter: AdminPromoUsagesFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: PromoUsageOrder): PromoUsageConnection!
   adminUserSubscriptions(filter: AdminUserSubscriptionsFilter, after: Cursor, first: Int, before: Cursor, last: Int, orderBy: UserSubscriptionOrder): UserSubscriptionConnection!
   adminBillingReport(filter: AdminBillingReportFilter): BillingCommercialReport!
   exportAdminBillingCSV(input: ExportAdminBillingCSVInput!): BillingCSVExportPayload!

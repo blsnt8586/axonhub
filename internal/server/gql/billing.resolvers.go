@@ -17,6 +17,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/billinghold"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"github.com/looplj/axonhub/internal/objects"
@@ -242,6 +244,47 @@ func (r *mutationResolver) DeleteRedeemCode(ctx context.Context, id objects.GUID
 			return false, err
 		}
 
+		return true, nil
+	})
+}
+
+// SavePromoCode is the resolver for the savePromoCode field.
+func (r *mutationResolver) SavePromoCode(ctx context.Context, input biz.SavePromoCodeInput) (*ent.PromoCode, error) {
+	actor, err := requireOwnerUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	input.ActorID = fmt.Sprint(actor.ID)
+
+	return authz.RunWithSystemBypass(ctx, "billing-save-promo-code", func(ctx context.Context) (*ent.PromoCode, error) {
+		return r.promoCodeService.Save(ctx, input)
+	})
+}
+
+// UpdatePromoCodeStatus is the resolver for the updatePromoCodeStatus field.
+func (r *mutationResolver) UpdatePromoCodeStatus(ctx context.Context, input biz.UpdatePromoCodeStatusInput) (*ent.PromoCode, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-update-promo-code-status", func(ctx context.Context) (*ent.PromoCode, error) {
+		return r.promoCodeService.UpdateStatus(ctx, input)
+	})
+}
+
+// DeletePromoCode is the resolver for the deletePromoCode field.
+func (r *mutationResolver) DeletePromoCode(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := requireOwner(ctx); err != nil {
+		return false, err
+	}
+	if id.Type != ent.TypePromoCode {
+		return false, fmt.Errorf("id must be a PromoCode ID")
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-delete-promo-code", func(ctx context.Context) (bool, error) {
+		if err := r.promoCodeService.Delete(ctx, id.ID); err != nil {
+			return false, err
+		}
 		return true, nil
 	})
 }
@@ -544,6 +587,40 @@ func (r *queryResolver) MyRedeemCodes(ctx context.Context, after *entgql.Cursor[
 	return r.userRedeemCodes(ctx, user.ID, after, first, before, last, orderBy)
 }
 
+// QuoteRechargePromo is the resolver for the quoteRechargePromo field.
+func (r *queryResolver) QuoteRechargePromo(ctx context.Context, input biz.QuoteRechargePromoInput) (*PromoQuote, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	input.UserID = user.ID
+
+	return authz.RunWithSystemBypass(ctx, "billing-quote-recharge-promo", func(ctx context.Context) (*PromoQuote, error) {
+		app, err := r.promoCodeService.QuoteRecharge(ctx, input)
+		if err != nil {
+			return nil, err
+		}
+		return promoQuoteFromApplication(app), nil
+	})
+}
+
+// QuoteSubscriptionPromo is the resolver for the quoteSubscriptionPromo field.
+func (r *queryResolver) QuoteSubscriptionPromo(ctx context.Context, input biz.QuoteSubscriptionPromoInput) (*PromoQuote, error) {
+	user, err := requireBillingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	input.UserID = user.ID
+
+	return authz.RunWithSystemBypass(ctx, "billing-quote-subscription-promo", func(ctx context.Context) (*PromoQuote, error) {
+		app, err := r.promoCodeService.QuoteSubscription(ctx, input)
+		if err != nil {
+			return nil, err
+		}
+		return promoQuoteFromApplication(app), nil
+	})
+}
+
 // AvailableSubscriptionPlans is the resolver for the availableSubscriptionPlans field.
 func (r *queryResolver) AvailableSubscriptionPlans(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SubscriptionPlanOrder) (*ent.SubscriptionPlanConnection, error) {
 	if _, err := requireBillingUser(ctx); err != nil {
@@ -631,6 +708,91 @@ func (r *queryResolver) AdminRedeemCodes(ctx context.Context, filter *AdminRedee
 	return r.adminRedeemCodes(ctx, filter, after, first, before, last, orderBy)
 }
 
+// AdminPromoCodes is the resolver for the adminPromoCodes field.
+func (r *queryResolver) AdminPromoCodes(ctx context.Context, filter *AdminPromoCodesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoCodeOrder) (*ent.PromoCodeConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-promo-codes", func(ctx context.Context) (*ent.PromoCodeConnection, error) {
+		query := r.client.PromoCode.Query()
+		if filter != nil {
+			if filter.Status != nil {
+				query.Where(promocode.StatusEQ(*filter.Status))
+			}
+			if filter.Scope != nil {
+				query.Where(promocode.ScopeEQ(*filter.Scope))
+			}
+			if filter.Code != nil && strings.TrimSpace(*filter.Code) != "" {
+				query.Where(promocode.CodeContainsFold(strings.TrimSpace(*filter.Code)))
+			}
+			if filter.CreatedByID != nil {
+				query.Where(promocode.CreatedByIDEQ(*filter.CreatedByID))
+			}
+			if filter.From != nil {
+				query.Where(promocode.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(promocode.CreatedAtLTE(*filter.To))
+			}
+			if filter.ExpiresBefore != nil {
+				query.Where(promocode.ExpiresAtLTE(*filter.ExpiresBefore))
+			}
+		}
+		return query.Paginate(ctx, after, first, before, last, ent.WithPromoCodeOrder(orderBy))
+	})
+}
+
+// AdminPromoUsages is the resolver for the adminPromoUsages field.
+func (r *queryResolver) AdminPromoUsages(ctx context.Context, filter *AdminPromoUsagesFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromoUsageOrder) (*ent.PromoUsageConnection, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return authz.RunWithSystemBypass(ctx, "billing-admin-promo-usages", func(ctx context.Context) (*ent.PromoUsageConnection, error) {
+		query := r.client.PromoUsage.Query()
+		if filter != nil {
+			if filter.PromoCodeID != nil {
+				query.Where(promousage.PromoCodeIDEQ(*filter.PromoCodeID))
+			}
+			if filter.UserID != nil {
+				query.Where(promousage.UserIDEQ(*filter.UserID))
+			}
+			if filter.BillingAccountID != nil {
+				query.Where(promousage.BillingAccountIDEQ(*filter.BillingAccountID))
+			}
+			if filter.PaymentOrderID != nil {
+				query.Where(promousage.PaymentOrderIDEQ(*filter.PaymentOrderID))
+			}
+			if filter.UserSubscriptionID != nil {
+				query.Where(promousage.UserSubscriptionIDEQ(*filter.UserSubscriptionID))
+			}
+			if filter.Scope != nil {
+				query.Where(promousage.ScopeEQ(*filter.Scope))
+			}
+			if filter.Status != nil {
+				query.Where(promousage.StatusEQ(*filter.Status))
+			}
+			if filter.Code != nil && strings.TrimSpace(*filter.Code) != "" {
+				query.Where(promousage.CodeContainsFold(strings.TrimSpace(*filter.Code)))
+			}
+			if filter.From != nil {
+				query.Where(promousage.CreatedAtGTE(*filter.From))
+			}
+			if filter.To != nil {
+				query.Where(promousage.CreatedAtLTE(*filter.To))
+			}
+		}
+		return query.Paginate(ctx, after, first, before, last, ent.WithPromoUsageOrder(orderBy))
+	})
+}
+
 // AdminUserSubscriptions is the resolver for the adminUserSubscriptions field.
 func (r *queryResolver) AdminUserSubscriptions(ctx context.Context, filter *AdminUserSubscriptionsFilter, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserSubscriptionOrder) (*ent.UserSubscriptionConnection, error) {
 	if err := requireOwner(ctx); err != nil {
@@ -708,3 +870,28 @@ func (r *queryResolver) ExportAdminBillingCSV(ctx context.Context, input ExportA
 		return biz.NewBillingReportService(biz.BillingReportServiceParams{Ent: r.client}).ExportCSV(ctx, exportInput)
 	})
 }
+
+// PromoCode is the resolver for the promoCode field.
+func (r *quoteRechargePromoInputResolver) PromoCode(ctx context.Context, obj *biz.QuoteRechargePromoInput, data *string) error {
+	obj.Code = stringValue(data)
+	return nil
+}
+
+// PromoCode is the resolver for the promoCode field.
+func (r *quoteSubscriptionPromoInputResolver) PromoCode(ctx context.Context, obj *biz.QuoteSubscriptionPromoInput, data *string) error {
+	obj.Code = stringValue(data)
+	return nil
+}
+
+// QuoteRechargePromoInput returns QuoteRechargePromoInputResolver implementation.
+func (r *Resolver) QuoteRechargePromoInput() QuoteRechargePromoInputResolver {
+	return &quoteRechargePromoInputResolver{r}
+}
+
+// QuoteSubscriptionPromoInput returns QuoteSubscriptionPromoInputResolver implementation.
+func (r *Resolver) QuoteSubscriptionPromoInput() QuoteSubscriptionPromoInputResolver {
+	return &quoteSubscriptionPromoInputResolver{r}
+}
+
+type quoteRechargePromoInputResolver struct{ *Resolver }
+type quoteSubscriptionPromoInputResolver struct{ *Resolver }

@@ -54,6 +54,10 @@ type Tx struct {
 	PaymentProviderInstance *PaymentProviderInstanceClient
 	// Project is the client for interacting with the Project builders.
 	Project *ProjectClient
+	// PromoCode is the client for interacting with the PromoCode builders.
+	PromoCode *PromoCodeClient
+	// PromoUsage is the client for interacting with the PromoUsage builders.
+	PromoUsage *PromoUsageClient
 	// Prompt is the client for interacting with the Prompt builders.
 	Prompt *PromptClient
 	// PromptProtectionRule is the client for interacting with the PromptProtectionRule builders.
@@ -240,6 +244,8 @@ func (tx *Tx) init() {
 	tx.PaymentOrder = NewPaymentOrderClient(tx.config)
 	tx.PaymentProviderInstance = NewPaymentProviderInstanceClient(tx.config)
 	tx.Project = NewProjectClient(tx.config)
+	tx.PromoCode = NewPromoCodeClient(tx.config)
+	tx.PromoUsage = NewPromoUsageClient(tx.config)
 	tx.Prompt = NewPromptClient(tx.config)
 	tx.PromptProtectionRule = NewPromptProtectionRuleClient(tx.config)
 	tx.ProviderQuotaStatus = NewProviderQuotaStatusClient(tx.config)

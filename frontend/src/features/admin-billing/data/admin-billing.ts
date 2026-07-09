@@ -25,6 +25,11 @@ export type RedeemCodeType = 'balance' | 'credit' | 'subscription';
 export type SubscriptionPlanPeriod = 'day' | 'month' | 'year' | 'custom';
 export type SubscriptionPlanStatus = 'enabled' | 'disabled' | 'archived';
 export type UserSubscriptionStatus = 'active' | 'expired' | 'revoked' | 'canceled';
+export type PromoCodeStatus = 'active' | 'disabled' | 'expired';
+export type PromoCodeScope = 'all' | 'recharge' | 'subscription';
+export type PromoCodeDiscountType = 'amount' | 'percent';
+export type PromoUsageStatus = 'reserved' | 'applied' | 'voided';
+export type PromoUsageScope = 'recharge' | 'subscription';
 
 export interface BillingAccount {
   id: string;
@@ -227,6 +232,46 @@ export interface UserSubscription {
   plan?: Pick<SubscriptionPlan, 'id' | 'name' | 'period' | 'priceMicros' | 'currency'> | null;
 }
 
+export interface PromoCode {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  code: string;
+  description: string;
+  discountType: PromoCodeDiscountType;
+  discountAmountMicros: number;
+  discountPercentBps: number;
+  scope: PromoCodeScope;
+  status: PromoCodeStatus;
+  currency: string;
+  maxUses: number;
+  usedCount: number;
+  perUserLimit: number;
+  startsAt?: string | null;
+  expiresAt?: string | null;
+  createdByID?: string | null;
+  notes: string;
+}
+
+export interface PromoUsage {
+  id: string;
+  createdAt: string;
+  promoCodeID: string;
+  code: string;
+  userID?: string | null;
+  billingAccountID?: string | null;
+  paymentOrderID?: string | null;
+  userSubscriptionID?: string | null;
+  ledgerTransactionID?: string | null;
+  scope: PromoUsageScope;
+  status: PromoUsageStatus;
+  originalAmountMicros: number;
+  discountAmountMicros: number;
+  payableAmountMicros: number;
+  currency: string;
+  idempotencyKey: string;
+}
+
 export interface AdminLedgerTransactionsFilter {
   userId?: number;
   billingAccountId?: number;
@@ -303,6 +348,29 @@ export interface AdminUserSubscriptionsFilter {
   from?: string;
   to?: string;
   expiresBefore?: string;
+}
+
+export interface AdminPromoCodesFilter {
+  status?: PromoCodeStatus;
+  scope?: PromoCodeScope;
+  code?: string;
+  createdById?: number;
+  from?: string;
+  to?: string;
+  expiresBefore?: string;
+}
+
+export interface AdminPromoUsagesFilter {
+  promoCodeId?: number;
+  userId?: number;
+  billingAccountId?: number;
+  paymentOrderId?: number;
+  userSubscriptionId?: number;
+  scope?: PromoUsageScope;
+  status?: PromoUsageStatus;
+  code?: string;
+  from?: string;
+  to?: string;
 }
 
 export interface AdminBillingReportFilter {
@@ -676,6 +744,62 @@ const ADMIN_REDEEM_CODES_QUERY = `
   }
 `;
 
+const ADMIN_PROMO_CODES_QUERY = `
+  query AdminPromoCodes($filter: AdminPromoCodesFilter, $first: Int!) {
+    adminPromoCodes(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          updatedAt
+          code
+          description
+          discountType
+          discountAmountMicros
+          discountPercentBps
+          scope
+          status
+          currency
+          maxUses
+          usedCount
+          perUserLimit
+          startsAt
+          expiresAt
+          createdByID
+          notes
+        }
+      }
+    }
+  }
+`;
+
+const ADMIN_PROMO_USAGES_QUERY = `
+  query AdminPromoUsages($filter: AdminPromoUsagesFilter, $first: Int!) {
+    adminPromoUsages(filter: $filter, first: $first, orderBy: { field: CREATED_AT, direction: DESC }) {
+      edges {
+        node {
+          id
+          createdAt
+          promoCodeID
+          code
+          userID
+          billingAccountID
+          paymentOrderID
+          userSubscriptionID
+          ledgerTransactionID
+          scope
+          status
+          originalAmountMicros
+          discountAmountMicros
+          payableAmountMicros
+          currency
+          idempotencyKey
+        }
+      }
+    }
+  }
+`;
+
 const ADMIN_SUBSCRIPTION_PLANS_QUERY = `
   query AdminSubscriptionPlans($first: Int!) {
     subscriptionPlans(first: $first, orderBy: { field: CREATED_AT, direction: ASC }) {
@@ -980,6 +1104,47 @@ const DELETE_REDEEM_CODE_MUTATION = `
   }
 `;
 
+const SAVE_PROMO_CODE_MUTATION = `
+  mutation SavePromoCode($input: SavePromoCodeInput!) {
+    savePromoCode(input: $input) {
+      id
+      createdAt
+      updatedAt
+      code
+      description
+      discountType
+      discountAmountMicros
+      discountPercentBps
+      scope
+      status
+      currency
+      maxUses
+      usedCount
+      perUserLimit
+      startsAt
+      expiresAt
+      createdByID
+      notes
+    }
+  }
+`;
+
+const UPDATE_PROMO_CODE_STATUS_MUTATION = `
+  mutation UpdatePromoCodeStatus($input: UpdatePromoCodeStatusInput!) {
+    updatePromoCodeStatus(input: $input) {
+      id
+      status
+      notes
+    }
+  }
+`;
+
+const DELETE_PROMO_CODE_MUTATION = `
+  mutation DeletePromoCode($id: ID!) {
+    deletePromoCode(id: $id)
+  }
+`;
+
 const SAVE_SUBSCRIPTION_PLAN_MUTATION = `
   mutation SaveSubscriptionPlan($input: SaveSubscriptionPlanInput!) {
     saveSubscriptionPlan(input: $input) {
@@ -1169,6 +1334,26 @@ export function useAdminRedeemCodes(filter: AdminRedeemCodesFilter = {}, first =
     queryFn: async () => {
       const data = await graphqlRequest<{ adminRedeemCodes: Connection<RedeemCode> }>(ADMIN_REDEEM_CODES_QUERY, { filter, first });
       return nodes(data.adminRedeemCodes);
+    },
+  });
+}
+
+export function useAdminPromoCodes(filter: AdminPromoCodesFilter = {}, first = 50) {
+  return useQuery({
+    queryKey: ['admin-billing', 'promo-codes', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminPromoCodes: Connection<PromoCode> }>(ADMIN_PROMO_CODES_QUERY, { filter, first });
+      return nodes(data.adminPromoCodes);
+    },
+  });
+}
+
+export function useAdminPromoUsages(filter: AdminPromoUsagesFilter = {}, first = 50) {
+  return useQuery({
+    queryKey: ['admin-billing', 'promo-usages', filter, first],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ adminPromoUsages: Connection<PromoUsage> }>(ADMIN_PROMO_USAGES_QUERY, { filter, first });
+      return nodes(data.adminPromoUsages);
     },
   });
 }
@@ -1422,6 +1607,64 @@ export function useDeleteRedeemCode() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'redeem-codes'] });
+    },
+  });
+}
+
+export function useSavePromoCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      id?: string;
+      code: string;
+      description?: string;
+      discountType?: PromoCodeDiscountType;
+      discountAmount: string;
+      discountPercentBps?: number;
+      scope?: PromoCodeScope;
+      status?: PromoCodeStatus;
+      currency?: string;
+      maxUses?: number;
+      perUserLimit?: number;
+      startsAt?: string;
+      expiresAt?: string;
+      notes?: string;
+    }) => {
+      const data = await graphqlRequest<{ savePromoCode: PromoCode }>(SAVE_PROMO_CODE_MUTATION, { input });
+      return data.savePromoCode;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'promo-codes'] });
+    },
+  });
+}
+
+export function useUpdatePromoCodeStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { codeId: string; status: PromoCodeStatus; notes?: string }) => {
+      const data = await graphqlRequest<{ updatePromoCodeStatus: PromoCode }>(UPDATE_PROMO_CODE_STATUS_MUTATION, { input });
+      return data.updatePromoCodeStatus;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'promo-codes'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'promo-usages'] });
+    },
+  });
+}
+
+export function useDeletePromoCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const data = await graphqlRequest<{ deletePromoCode: boolean }>(DELETE_PROMO_CODE_MUTATION, { id });
+      return data.deletePromoCode;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-billing', 'promo-codes'] });
     },
   });
 }

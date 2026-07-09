@@ -23,6 +23,8 @@ import {
   type AdminBillingReportFilter,
   type AdminPaymentEventsFilter,
   type AdminPaymentOrdersFilter,
+  type AdminPromoCodesFilter,
+  type AdminPromoUsagesFilter,
   type AdminRedeemCodesFilter,
   type AdminUserSubscriptionsFilter,
   type AdminUsageBillingRecordsFilter,
@@ -36,6 +38,13 @@ import {
   type PaymentEventStatus,
   type PaymentOrderStatus,
   type PaymentProviderType,
+  type PromoCode,
+  type PromoCodeDiscountType,
+  type PromoCodeScope,
+  type PromoCodeStatus,
+  type PromoUsage,
+  type PromoUsageScope,
+  type PromoUsageStatus,
   type RedeemCode,
   type RedeemCodeStatus,
   type RedeemCodeType,
@@ -53,6 +62,8 @@ import {
   useAdminLedgerTransactions,
   useAdminPaymentEvents,
   useAdminPaymentOrders,
+  useAdminPromoCodes,
+  useAdminPromoUsages,
   useAdminRedeemCodes,
   useAdminSubscriptionPlans,
   useAdminUsageBillingRecords,
@@ -62,6 +73,7 @@ import {
   useCancelPaymentOrder,
   useCreateRedeemCodes,
   useDeleteRedeemCode,
+  useDeletePromoCode,
   useDeleteSubscriptionPlan,
   useExtendUserSubscription,
   useExportAdminBillingCSV,
@@ -71,7 +83,9 @@ import {
   useRevokeUserSubscription,
   useMakeUpPaymentOrder,
   useSaveBillingPriceRule,
+  useSavePromoCode,
   useSaveSubscriptionPlan,
+  useUpdatePromoCodeStatus,
   useUpdateRedeemCodeStatus,
   useUpdateUserBillingAccount,
   useUpsertEPayPaymentProvider,
@@ -173,6 +187,46 @@ type RedeemGrantForm = {
   currency: string;
   expiresAt: string;
   notes: string;
+};
+
+type PromoCodeForm = {
+  id?: string;
+  code: string;
+  description: string;
+  discountType: PromoCodeDiscountType;
+  discountAmount: string;
+  discountPercentBps: string;
+  scope: PromoCodeScope;
+  status: PromoCodeStatus;
+  currency: string;
+  maxUses: string;
+  perUserLimit: string;
+  startsAt: string;
+  expiresAt: string;
+  notes: string;
+};
+
+type PromoFilterForm = {
+  status: 'all' | PromoCodeStatus;
+  scope: 'all' | PromoCodeScope;
+  code: string;
+  createdById: string;
+  from: string;
+  to: string;
+  expiresBefore: string;
+};
+
+type PromoUsageFilterForm = {
+  promoCodeId: string;
+  userId: string;
+  billingAccountId: string;
+  paymentOrderId: string;
+  userSubscriptionId: string;
+  scope: 'all' | PromoUsageScope;
+  status: 'all' | PromoUsageStatus;
+  code: string;
+  from: string;
+  to: string;
 };
 
 type ReportFilterForm = {
@@ -442,6 +496,62 @@ function defaultRedeemGrantForm(): RedeemGrantForm {
   };
 }
 
+function defaultPromoCodeForm(): PromoCodeForm {
+  return {
+    code: '',
+    description: '',
+    discountType: 'amount',
+    discountAmount: '10.00',
+    discountPercentBps: '1000',
+    scope: 'all',
+    status: 'active',
+    currency: 'CNY',
+    maxUses: '0',
+    perUserLimit: '1',
+    startsAt: '',
+    expiresAt: '',
+    notes: '',
+  };
+}
+
+function promoCodeFormFromCode(code: PromoCode): PromoCodeForm {
+  return {
+    id: code.id,
+    code: code.code,
+    description: code.description,
+    discountType: code.discountType,
+    discountAmount: microsToAmount(code.discountAmountMicros).toFixed(2),
+    discountPercentBps: String(code.discountPercentBps),
+    scope: code.scope,
+    status: code.status,
+    currency: code.currency,
+    maxUses: String(code.maxUses),
+    perUserLimit: String(code.perUserLimit),
+    startsAt: code.startsAt ? toDateTimeLocalValue(new Date(code.startsAt)) : '',
+    expiresAt: code.expiresAt ? toDateTimeLocalValue(new Date(code.expiresAt)) : '',
+    notes: code.notes,
+  };
+}
+
+function defaultPromoFilter(): PromoFilterForm {
+  return { status: 'all', scope: 'all', code: '', createdById: '', from: '', to: '', expiresBefore: '' };
+}
+
+function defaultPromoUsageFilter(): PromoUsageFilterForm {
+  return {
+    promoCodeId: '',
+    userId: '',
+    billingAccountId: '',
+    paymentOrderId: '',
+    userSubscriptionId: '',
+    scope: 'all',
+    status: 'all',
+    code: '',
+    from: '',
+    to: '',
+  };
+}
+
 function defaultSubscriptionPlanForm(): SubscriptionPlanForm {
   return {
     name: '',
@@ -581,6 +691,33 @@ function buildRedeemFilter(form: RedeemFilterForm): AdminRedeemCodesFilter {
   };
 }
 
+function buildPromoFilter(form: PromoFilterForm): AdminPromoCodesFilter {
+  return {
+    status: form.status === 'all' ? undefined : form.status,
+    scope: form.scope === 'all' ? undefined : form.scope,
+    code: optionalText(form.code),
+    createdById: optionalInt(form.createdById),
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+    expiresBefore: optionalTime(form.expiresBefore),
+  };
+}
+
+function buildPromoUsageFilter(form: PromoUsageFilterForm): AdminPromoUsagesFilter {
+  return {
+    promoCodeId: optionalInt(form.promoCodeId),
+    userId: optionalInt(form.userId),
+    billingAccountId: optionalInt(form.billingAccountId),
+    paymentOrderId: optionalInt(form.paymentOrderId),
+    userSubscriptionId: optionalInt(form.userSubscriptionId),
+    scope: form.scope === 'all' ? undefined : form.scope,
+    status: form.status === 'all' ? undefined : form.status,
+    code: optionalText(form.code),
+    from: optionalTime(form.from),
+    to: optionalTime(form.to),
+  };
+}
+
 function buildSubscriptionFilter(form: SubscriptionFilterForm): AdminUserSubscriptionsFilter {
   return {
     userId: optionalInt(form.userId),
@@ -646,6 +783,9 @@ export default function AdminBillingPage() {
   const [redeemFilter, setRedeemFilter] = useState<RedeemFilterForm>(() => defaultRedeemFilter());
   const [redeemGenerateForm, setRedeemGenerateForm] = useState<RedeemGenerateForm>(() => defaultRedeemGenerateForm());
   const [redeemGrantForm, setRedeemGrantForm] = useState<RedeemGrantForm>(() => defaultRedeemGrantForm());
+  const [promoCodeForm, setPromoCodeForm] = useState<PromoCodeForm>(() => defaultPromoCodeForm());
+  const [promoFilter, setPromoFilter] = useState<PromoFilterForm>(() => defaultPromoFilter());
+  const [promoUsageFilter, setPromoUsageFilter] = useState<PromoUsageFilterForm>(() => defaultPromoUsageFilter());
   const [subscriptionPlanForm, setSubscriptionPlanForm] = useState<SubscriptionPlanForm>(() => defaultSubscriptionPlanForm());
   const [subscriptionAssignForm, setSubscriptionAssignForm] = useState<SubscriptionAssignForm>(() => defaultSubscriptionAssignForm());
   const [subscriptionFilter, setSubscriptionFilter] = useState<SubscriptionFilterForm>(() => defaultSubscriptionFilter());
@@ -657,6 +797,8 @@ export default function AdminBillingPage() {
   const [appliedOrderFilter, setAppliedOrderFilter] = useState<AdminPaymentOrdersFilter>({});
   const [appliedEventFilter, setAppliedEventFilter] = useState<AdminPaymentEventsFilter>({});
   const [appliedRedeemFilter, setAppliedRedeemFilter] = useState<AdminRedeemCodesFilter>({});
+  const [appliedPromoFilter, setAppliedPromoFilter] = useState<AdminPromoCodesFilter>({});
+  const [appliedPromoUsageFilter, setAppliedPromoUsageFilter] = useState<AdminPromoUsagesFilter>({});
   const [appliedSubscriptionFilter, setAppliedSubscriptionFilter] = useState<AdminUserSubscriptionsFilter>({});
   const [appliedReportFilter, setAppliedReportFilter] = useState<AdminBillingReportFilter>(() => buildReportFilter(defaultReportFilter()));
   const [holdReleaseReasons, setHoldReleaseReasons] = useState<Record<string, string>>({});
@@ -684,6 +826,8 @@ export default function AdminBillingPage() {
   const adminOrders = useAdminPaymentOrders(appliedOrderFilter, 50);
   const adminEvents = useAdminPaymentEvents(appliedEventFilter, 50);
   const adminRedeemCodes = useAdminRedeemCodes(appliedRedeemFilter, 50);
+  const adminPromoCodes = useAdminPromoCodes(appliedPromoFilter, 50);
+  const adminPromoUsages = useAdminPromoUsages(appliedPromoUsageFilter, 50);
   const adminSubscriptionPlans = useAdminSubscriptionPlans(100);
   const adminUserSubscriptions = useAdminUserSubscriptions(appliedSubscriptionFilter, 50);
   const adminReport = useAdminBillingReport(appliedReportFilter);
@@ -697,6 +841,9 @@ export default function AdminBillingPage() {
   const adminCreateAndRedeemCode = useAdminCreateAndRedeemCode();
   const updateRedeemCodeStatus = useUpdateRedeemCodeStatus();
   const deleteRedeemCode = useDeleteRedeemCode();
+  const savePromoCode = useSavePromoCode();
+  const updatePromoCodeStatus = useUpdatePromoCodeStatus();
+  const deletePromoCode = useDeletePromoCode();
   const saveSubscriptionPlan = useSaveSubscriptionPlan();
   const deleteSubscriptionPlan = useDeleteSubscriptionPlan();
   const adminAssignSubscription = useAdminAssignSubscription();
@@ -1023,6 +1170,64 @@ export default function AdminBillingPage() {
     toast.success(t('adminBilling.redeem.exportSuccess'));
   }
 
+  async function handleSavePromoCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const discountAmount = normalizeNonNegativeAmount(promoCodeForm.discountAmount, 2);
+    const discountPercentBps = Number(promoCodeForm.discountPercentBps);
+    const maxUses = Number(promoCodeForm.maxUses);
+    const perUserLimit = Number(promoCodeForm.perUserLimit);
+    if (!promoCodeForm.code.trim()) {
+      toast.error(t('adminBilling.promo.codeRequired'));
+      return;
+    }
+    if (!discountAmount || !Number.isInteger(discountPercentBps) || discountPercentBps < 0 || discountPercentBps > 10000 || !Number.isInteger(maxUses) || maxUses < 0 || !Number.isInteger(perUserLimit) || perUserLimit < 0) {
+      toast.error(t('adminBilling.promo.invalidDiscount'));
+      return;
+    }
+
+    try {
+      await savePromoCode.mutateAsync({
+        id: promoCodeForm.id,
+        code: promoCodeForm.code.trim().toUpperCase(),
+        description: optionalText(promoCodeForm.description),
+        discountType: promoCodeForm.discountType,
+        discountAmount,
+        discountPercentBps,
+        scope: promoCodeForm.scope,
+        status: promoCodeForm.status,
+        currency: promoCodeForm.currency.trim().toUpperCase() || 'CNY',
+        maxUses,
+        perUserLimit,
+        startsAt: optionalTime(promoCodeForm.startsAt),
+        expiresAt: optionalTime(promoCodeForm.expiresAt),
+        notes: optionalText(promoCodeForm.notes),
+      });
+      toast.success(t('adminBilling.promo.saveSuccess'));
+      setPromoCodeForm(defaultPromoCodeForm());
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleUpdatePromoCodeStatus(code: PromoCode, status: PromoCodeStatus) {
+    try {
+      await updatePromoCodeStatus.mutateAsync({ codeId: code.id, status, notes: code.notes || undefined });
+      toast.success(t('adminBilling.promo.statusSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
+  async function handleDeletePromoCode(code: PromoCode) {
+    if (!window.confirm(t('adminBilling.promo.deleteConfirm'))) return;
+    try {
+      await deletePromoCode.mutateAsync(code.id);
+      toast.success(t('adminBilling.promo.deleteSuccess'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.errors.unknownError'));
+    }
+  }
+
   async function handleSaveSubscriptionPlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const price = normalizeNonNegativeAmount(subscriptionPlanForm.price, 2);
@@ -1248,6 +1453,7 @@ export default function AdminBillingPage() {
             <TabsTrigger value='orders'>{t('adminBilling.tabs.orders')}</TabsTrigger>
             <TabsTrigger value='events'>{t('adminBilling.tabs.events')}</TabsTrigger>
             <TabsTrigger value='redeemCodes'>{t('adminBilling.tabs.redeemCodes')}</TabsTrigger>
+            <TabsTrigger value='promoCodes'>{t('adminBilling.tabs.promoCodes')}</TabsTrigger>
             <TabsTrigger value='subscriptions'>{t('adminBilling.tabs.subscriptions')}</TabsTrigger>
             <TabsTrigger value='pricing'>{t('adminBilling.tabs.pricing')}</TabsTrigger>
             <TabsTrigger value='providers'>{t('adminBilling.tabs.providers')}</TabsTrigger>
@@ -2103,6 +2309,48 @@ export default function AdminBillingPage() {
             />
           </TabsContent>
 
+          <TabsContent value='promoCodes' className='mt-0'>
+            <PromoCodesTab
+              codes={adminPromoCodes.data ?? []}
+              usages={adminPromoUsages.data ?? []}
+              codesLoading={adminPromoCodes.isLoading}
+              usagesLoading={adminPromoUsages.isLoading}
+              form={promoCodeForm}
+              setForm={setPromoCodeForm}
+              onSave={handleSavePromoCode}
+              savePending={savePromoCode.isPending}
+              onEdit={(code) => setPromoCodeForm(promoCodeFormFromCode(code))}
+              onNew={() => setPromoCodeForm(defaultPromoCodeForm())}
+              filter={promoFilter}
+              setFilter={setPromoFilter}
+              usageFilter={promoUsageFilter}
+              setUsageFilter={setPromoUsageFilter}
+              onApplyFilter={(event) => {
+                event.preventDefault();
+                setAppliedPromoFilter(buildPromoFilter(promoFilter));
+              }}
+              onResetFilter={() => {
+                const next = defaultPromoFilter();
+                setPromoFilter(next);
+                setAppliedPromoFilter({});
+              }}
+              onApplyUsageFilter={(event) => {
+                event.preventDefault();
+                setAppliedPromoUsageFilter(buildPromoUsageFilter(promoUsageFilter));
+              }}
+              onResetUsageFilter={() => {
+                const next = defaultPromoUsageFilter();
+                setPromoUsageFilter(next);
+                setAppliedPromoUsageFilter({});
+              }}
+              onUpdateStatus={handleUpdatePromoCodeStatus}
+              updatePending={updatePromoCodeStatus.isPending}
+              onDelete={handleDeletePromoCode}
+              deletePending={deletePromoCode.isPending}
+              formatMicros={formatMicros}
+            />
+          </TabsContent>
+
           <TabsContent value='subscriptions' className='mt-0'>
             <SubscriptionsTab
               users={users}
@@ -2723,6 +2971,222 @@ function RedeemCodesTab({
                       {code.status === 'used' && <span className='text-muted-foreground text-xs'>{formatDate(code.usedAt)}</span>}
                     </div>
                   </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function PromoCodesTab({
+  codes,
+  usages,
+  codesLoading,
+  usagesLoading,
+  form,
+  setForm,
+  onSave,
+  savePending,
+  onEdit,
+  onNew,
+  filter,
+  setFilter,
+  usageFilter,
+  setUsageFilter,
+  onApplyFilter,
+  onResetFilter,
+  onApplyUsageFilter,
+  onResetUsageFilter,
+  onUpdateStatus,
+  updatePending,
+  onDelete,
+  deletePending,
+  formatMicros,
+}: {
+  codes: PromoCode[];
+  usages: PromoUsage[];
+  codesLoading: boolean;
+  usagesLoading: boolean;
+  form: PromoCodeForm;
+  setForm: (value: PromoCodeForm | ((prev: PromoCodeForm) => PromoCodeForm)) => void;
+  onSave: (event: FormEvent<HTMLFormElement>) => void;
+  savePending: boolean;
+  onEdit: (code: PromoCode) => void;
+  onNew: () => void;
+  filter: PromoFilterForm;
+  setFilter: (value: PromoFilterForm | ((prev: PromoFilterForm) => PromoFilterForm)) => void;
+  usageFilter: PromoUsageFilterForm;
+  setUsageFilter: (value: PromoUsageFilterForm | ((prev: PromoUsageFilterForm) => PromoUsageFilterForm)) => void;
+  onApplyFilter: (event: FormEvent<HTMLFormElement>) => void;
+  onResetFilter: () => void;
+  onApplyUsageFilter: (event: FormEvent<HTMLFormElement>) => void;
+  onResetUsageFilter: () => void;
+  onUpdateStatus: (code: PromoCode, status: PromoCodeStatus) => void;
+  updatePending: boolean;
+  onDelete: (code: PromoCode) => void;
+  deletePending: boolean;
+  formatMicros: (value: number, valueCurrency?: string, minimumFractionDigits?: number) => string;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className='space-y-4'>
+      <Card className='rounded-lg'>
+        <CardHeader>
+          <CardTitle className='flex items-center gap-2 text-base'>
+            <Ticket className='size-4' />
+            {t('adminBilling.promo.editorTitle')}
+          </CardTitle>
+          <CardDescription>{t('adminBilling.promo.editorDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className='grid gap-3 md:grid-cols-3 xl:grid-cols-6' onSubmit={onSave}>
+            <FilterInput label={t('adminBilling.promo.code')} value={form.code} onChange={(value) => setForm((prev) => ({ ...prev, code: value.toUpperCase() }))} />
+            <FilterInput label={t('adminBilling.promo.description')} value={form.description} onChange={(value) => setForm((prev) => ({ ...prev, description: value }))} />
+            <FilterSelect label={t('adminBilling.promo.discountType')} value={form.discountType} onChange={(value) => setForm((prev) => ({ ...prev, discountType: value as PromoCodeDiscountType }))} options={['amount', 'percent']} />
+            <FilterInput label={t('adminBilling.promo.discountAmount')} value={form.discountAmount} onChange={(value) => setForm((prev) => ({ ...prev, discountAmount: value }))} />
+            <FilterInput label={t('adminBilling.promo.percentBps')} value={form.discountPercentBps} onChange={(value) => setForm((prev) => ({ ...prev, discountPercentBps: value }))} />
+            <FilterSelect label={t('adminBilling.columns.scope')} value={form.scope} onChange={(value) => setForm((prev) => ({ ...prev, scope: value as PromoCodeScope }))} options={['all', 'recharge', 'subscription']} />
+            <FilterSelect label={t('adminBilling.columns.status')} value={form.status} onChange={(value) => setForm((prev) => ({ ...prev, status: value as PromoCodeStatus }))} options={['active', 'disabled', 'expired']} />
+            <FilterInput label={t('adminBilling.columns.currency')} value={form.currency} onChange={(value) => setForm((prev) => ({ ...prev, currency: value.toUpperCase() }))} />
+            <FilterInput label={t('adminBilling.promo.maxUses')} value={form.maxUses} onChange={(value) => setForm((prev) => ({ ...prev, maxUses: value }))} />
+            <FilterInput label={t('adminBilling.promo.perUserLimit')} value={form.perUserLimit} onChange={(value) => setForm((prev) => ({ ...prev, perUserLimit: value }))} />
+            <FilterInput label={t('adminBilling.promo.startsAt')} type='datetime-local' value={form.startsAt} onChange={(value) => setForm((prev) => ({ ...prev, startsAt: value }))} />
+            <FilterInput label={t('adminBilling.columns.expiresAt')} type='datetime-local' value={form.expiresAt} onChange={(value) => setForm((prev) => ({ ...prev, expiresAt: value }))} />
+            <div className='xl:col-span-4'>
+              <FilterInput label={t('adminBilling.redeem.notes')} value={form.notes} onChange={(value) => setForm((prev) => ({ ...prev, notes: value }))} />
+            </div>
+            <div className='flex items-end gap-2 xl:col-span-2'>
+              <Button type='submit' disabled={savePending}>
+                {savePending ? <Loader2 className='size-4 animate-spin' /> : <Save className='size-4' />}
+                {form.id ? t('adminBilling.promo.update') : t('adminBilling.promo.create')}
+              </Button>
+              <Button type='button' variant='outline' onClick={onNew}>{t('adminBilling.promo.newCode')}</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className='rounded-lg'>
+        <CardHeader>
+          <CardTitle className='text-base'>{t('adminBilling.promo.codesTitle')}</CardTitle>
+          <CardDescription>{t('adminBilling.promo.codesDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4 overflow-auto'>
+          <form className='grid gap-3 md:grid-cols-4 xl:grid-cols-8' onSubmit={onApplyFilter}>
+            <FilterInput label={t('adminBilling.promo.code')} value={filter.code} onChange={(value) => setFilter((prev) => ({ ...prev, code: value }))} />
+            <FilterSelect label={t('adminBilling.columns.status')} value={filter.status} onChange={(value) => setFilter((prev) => ({ ...prev, status: value as PromoFilterForm['status'] }))} options={['all', 'active', 'disabled', 'expired']} />
+            <FilterSelect label={t('adminBilling.columns.scope')} value={filter.scope} onChange={(value) => setFilter((prev) => ({ ...prev, scope: value as PromoFilterForm['scope'] }))} options={['all', 'recharge', 'subscription']} />
+            <FilterInput label={t('adminBilling.redeem.createdById')} value={filter.createdById} onChange={(value) => setFilter((prev) => ({ ...prev, createdById: value }))} />
+            <FilterInput label={t('adminBilling.filters.from')} type='datetime-local' value={filter.from} onChange={(value) => setFilter((prev) => ({ ...prev, from: value }))} />
+            <FilterInput label={t('adminBilling.filters.to')} type='datetime-local' value={filter.to} onChange={(value) => setFilter((prev) => ({ ...prev, to: value }))} />
+            <FilterInput label={t('adminBilling.filters.expiresBefore')} type='datetime-local' value={filter.expiresBefore} onChange={(value) => setFilter((prev) => ({ ...prev, expiresBefore: value }))} />
+            <FilterActions onReset={onResetFilter} />
+          </form>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('adminBilling.promo.code')}</TableHead>
+                <TableHead>{t('adminBilling.promo.discount')}</TableHead>
+                <TableHead>{t('adminBilling.columns.scope')}</TableHead>
+                <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                <TableHead>{t('adminBilling.promo.uses')}</TableHead>
+                <TableHead>{t('adminBilling.columns.expiresAt')}</TableHead>
+                <TableHead>{t('adminBilling.columns.action')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <DataStateRow colSpan={7} isLoading={codesLoading} isEmpty={codes.length === 0} />
+              {codes.map((code) => (
+                <TableRow key={code.id}>
+                  <TableCell>
+                    <div className='font-mono text-xs'>{code.code}</div>
+                    <div className='text-muted-foreground max-w-[220px] truncate text-xs'>{code.description || code.notes || '-'}</div>
+                  </TableCell>
+                  <TableCell className='font-mono text-xs'>
+                    {code.discountType === 'amount' ? formatMicros(code.discountAmountMicros, code.currency) : `${(code.discountPercentBps / 100).toFixed(2)}%`}
+                  </TableCell>
+                  <TableCell>{code.scope}</TableCell>
+                  <TableCell><StatusBadge value={code.status} positive={code.status === 'active'} /></TableCell>
+                  <TableCell className='font-mono text-xs'>{code.usedCount} / {code.maxUses || '-'}</TableCell>
+                  <TableCell>{formatDate(code.expiresAt)}</TableCell>
+                  <TableCell className='min-w-[300px]'>
+                    <div className='flex flex-wrap gap-2'>
+                      <Button type='button' size='sm' variant='outline' onClick={() => onEdit(code)}>{t('adminBilling.subscriptions.edit')}</Button>
+                      {code.status === 'active' ? (
+                        <Button type='button' size='sm' variant='outline' disabled={updatePending} onClick={() => onUpdateStatus(code, 'disabled')}>
+                          {updatePending ? <Loader2 className='size-4 animate-spin' /> : <Ban className='size-4' />}
+                          {t('adminBilling.redeem.disable')}
+                        </Button>
+                      ) : (
+                        <Button type='button' size='sm' variant='outline' disabled={updatePending} onClick={() => onUpdateStatus(code, 'active')}>
+                          {updatePending ? <Loader2 className='size-4 animate-spin' /> : <Unlock className='size-4' />}
+                          {t('adminBilling.account.active')}
+                        </Button>
+                      )}
+                      <Button type='button' size='sm' variant='destructive' disabled={deletePending} onClick={() => onDelete(code)}>
+                        {deletePending ? <Loader2 className='size-4 animate-spin' /> : <Trash2 className='size-4' />}
+                        {t('adminBilling.redeem.delete')}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className='rounded-lg'>
+        <CardHeader>
+          <CardTitle className='text-base'>{t('adminBilling.promo.usagesTitle')}</CardTitle>
+          <CardDescription>{t('adminBilling.promo.usagesDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4 overflow-auto'>
+          <form className='grid gap-3 md:grid-cols-4 xl:grid-cols-10' onSubmit={onApplyUsageFilter}>
+            <FilterInput label={t('adminBilling.promo.code')} value={usageFilter.code} onChange={(value) => setUsageFilter((prev) => ({ ...prev, code: value }))} />
+            <FilterInput label={t('adminBilling.promo.promoCodeId')} value={usageFilter.promoCodeId} onChange={(value) => setUsageFilter((prev) => ({ ...prev, promoCodeId: value }))} />
+            <FilterInput label={t('adminBilling.filters.userId')} value={usageFilter.userId} onChange={(value) => setUsageFilter((prev) => ({ ...prev, userId: value }))} />
+            <FilterInput label={t('adminBilling.filters.accountId')} value={usageFilter.billingAccountId} onChange={(value) => setUsageFilter((prev) => ({ ...prev, billingAccountId: value }))} />
+            <FilterInput label={t('adminBilling.filters.paymentOrderId')} value={usageFilter.paymentOrderId} onChange={(value) => setUsageFilter((prev) => ({ ...prev, paymentOrderId: value }))} />
+            <FilterSelect label={t('adminBilling.columns.scope')} value={usageFilter.scope} onChange={(value) => setUsageFilter((prev) => ({ ...prev, scope: value as PromoUsageFilterForm['scope'] }))} options={['all', 'recharge', 'subscription']} />
+            <FilterSelect label={t('adminBilling.columns.status')} value={usageFilter.status} onChange={(value) => setUsageFilter((prev) => ({ ...prev, status: value as PromoUsageFilterForm['status'] }))} options={['all', 'reserved', 'applied', 'voided']} />
+            <FilterInput label={t('adminBilling.filters.from')} type='datetime-local' value={usageFilter.from} onChange={(value) => setUsageFilter((prev) => ({ ...prev, from: value }))} />
+            <FilterInput label={t('adminBilling.filters.to')} type='datetime-local' value={usageFilter.to} onChange={(value) => setUsageFilter((prev) => ({ ...prev, to: value }))} />
+            <FilterActions onReset={onResetUsageFilter} />
+          </form>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('adminBilling.columns.createdAt')}</TableHead>
+                <TableHead>{t('adminBilling.promo.code')}</TableHead>
+                <TableHead>{t('adminBilling.columns.user')}</TableHead>
+                <TableHead>{t('adminBilling.columns.scope')}</TableHead>
+                <TableHead>{t('adminBilling.columns.status')}</TableHead>
+                <TableHead className='text-right'>{t('adminBilling.promo.original')}</TableHead>
+                <TableHead className='text-right'>{t('adminBilling.promo.discount')}</TableHead>
+                <TableHead className='text-right'>{t('adminBilling.promo.payable')}</TableHead>
+                <TableHead>{t('adminBilling.columns.reference')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <DataStateRow colSpan={9} isLoading={usagesLoading} isEmpty={usages.length === 0} />
+              {usages.map((usage) => (
+                <TableRow key={usage.id}>
+                  <TableCell>{formatDate(usage.createdAt)}</TableCell>
+                  <TableCell className='font-mono text-xs'>{usage.code}</TableCell>
+                  <TableCell className='font-mono text-xs'>{usage.userID || '-'}</TableCell>
+                  <TableCell>{usage.scope}</TableCell>
+                  <TableCell><StatusBadge value={usage.status} positive={usage.status === 'applied'} /></TableCell>
+                  <TableCell className='text-right font-mono'>{formatMicros(usage.originalAmountMicros, usage.currency)}</TableCell>
+                  <TableCell className='text-right font-mono'>{formatMicros(usage.discountAmountMicros, usage.currency)}</TableCell>
+                  <TableCell className='text-right font-mono'>{formatMicros(usage.payableAmountMicros, usage.currency)}</TableCell>
+                  <TableCell className='font-mono text-xs'>{usage.paymentOrderID || usage.userSubscriptionID || usage.ledgerTransactionID || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

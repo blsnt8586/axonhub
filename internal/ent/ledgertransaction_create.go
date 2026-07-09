@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/ledgerentry"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
@@ -278,6 +279,21 @@ func (_c *LedgerTransactionCreate) AddPurchasedUserSubscriptions(v ...*UserSubsc
 		ids[i] = v[i].ID
 	}
 	return _c.AddPurchasedUserSubscriptionIDs(ids...)
+}
+
+// AddPromoUsageIDs adds the "promo_usages" edge to the PromoUsage entity by IDs.
+func (_c *LedgerTransactionCreate) AddPromoUsageIDs(ids ...int) *LedgerTransactionCreate {
+	_c.mutation.AddPromoUsageIDs(ids...)
+	return _c
+}
+
+// AddPromoUsages adds the "promo_usages" edges to the PromoUsage entity.
+func (_c *LedgerTransactionCreate) AddPromoUsages(v ...*PromoUsage) *LedgerTransactionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPromoUsageIDs(ids...)
 }
 
 // Mutation returns the LedgerTransactionMutation object of the builder.
@@ -613,6 +629,22 @@ func (_c *LedgerTransactionCreate) createSpec() (*LedgerTransaction, *sqlgraph.C
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PromoUsagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ledgertransaction.PromoUsagesTable,
+			Columns: []string{ledgertransaction.PromoUsagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(promousage.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

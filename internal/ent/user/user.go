@@ -60,6 +60,8 @@ const (
 	EdgeUserSubscriptions = "user_subscriptions"
 	// EdgeAssignedUserSubscriptions holds the string denoting the assigned_user_subscriptions edge name in mutations.
 	EdgeAssignedUserSubscriptions = "assigned_user_subscriptions"
+	// EdgePromoUsages holds the string denoting the promo_usages edge name in mutations.
+	EdgePromoUsages = "promo_usages"
 	// EdgeProjectUsers holds the string denoting the project_users edge name in mutations.
 	EdgeProjectUsers = "project_users"
 	// EdgeUserRoles holds the string denoting the user_roles edge name in mutations.
@@ -125,6 +127,13 @@ const (
 	AssignedUserSubscriptionsInverseTable = "user_subscriptions"
 	// AssignedUserSubscriptionsColumn is the table column denoting the assigned_user_subscriptions relation/edge.
 	AssignedUserSubscriptionsColumn = "assigned_by_id"
+	// PromoUsagesTable is the table that holds the promo_usages relation/edge.
+	PromoUsagesTable = "promo_usages"
+	// PromoUsagesInverseTable is the table name for the PromoUsage entity.
+	// It exists in this package in order to avoid circular dependency with the "promousage" package.
+	PromoUsagesInverseTable = "promo_usages"
+	// PromoUsagesColumn is the table column denoting the promo_usages relation/edge.
+	PromoUsagesColumn = "user_id"
 	// ProjectUsersTable is the table that holds the project_users relation/edge.
 	ProjectUsersTable = "user_projects"
 	// ProjectUsersInverseTable is the table name for the UserProject entity.
@@ -421,6 +430,20 @@ func ByAssignedUserSubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) Ord
 	}
 }
 
+// ByPromoUsagesCount orders the results by promo_usages count.
+func ByPromoUsagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPromoUsagesStep(), opts...)
+	}
+}
+
+// ByPromoUsages orders the results by promo_usages terms.
+func ByPromoUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPromoUsagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProjectUsersCount orders the results by project_users count.
 func ByProjectUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -509,6 +532,13 @@ func newAssignedUserSubscriptionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AssignedUserSubscriptionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AssignedUserSubscriptionsTable, AssignedUserSubscriptionsColumn),
+	)
+}
+func newPromoUsagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PromoUsagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PromoUsagesTable, PromoUsagesColumn),
 	)
 }
 func newProjectUsersStep() *sqlgraph.Step {

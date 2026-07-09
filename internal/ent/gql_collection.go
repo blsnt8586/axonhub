@@ -31,6 +31,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -901,6 +903,95 @@ func (_q *BillingAccountQuery) collectField(ctx context.Context, oneNode bool, o
 				query = pager.applyOrder(query)
 			}
 			_q.WithNamedPaymentOrders(alias, func(wq *PaymentOrderQuery) {
+				*wq = *query
+			})
+
+		case "promoUsages":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PromoUsageClient{config: _q.config}).Query()
+			)
+			args := newPromoUsagePaginateArgs(fieldArgs(ctx, new(PromoUsageWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newPromoUsagePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*BillingAccount) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"billing_account_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(billingaccount.PromoUsagesColumn), ids...))
+						})
+						if err := query.GroupBy(billingaccount.PromoUsagesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[5][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*BillingAccount) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.PromoUsages)
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[5][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, promousageImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(billingaccount.PromoUsagesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedPromoUsages(alias, func(wq *PromoUsageQuery) {
 				*wq = *query
 			})
 		case "createdAt":
@@ -3688,6 +3779,95 @@ func (_q *LedgerTransactionQuery) collectField(ctx context.Context, oneNode bool
 			_q.WithNamedPurchasedUserSubscriptions(alias, func(wq *UserSubscriptionQuery) {
 				*wq = *query
 			})
+
+		case "promoUsages":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PromoUsageClient{config: _q.config}).Query()
+			)
+			args := newPromoUsagePaginateArgs(fieldArgs(ctx, new(PromoUsageWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newPromoUsagePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*LedgerTransaction) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"ledger_transaction_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(ledgertransaction.PromoUsagesColumn), ids...))
+						})
+						if err := query.GroupBy(ledgertransaction.PromoUsagesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*LedgerTransaction) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.PromoUsages)
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[7][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, promousageImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(ledgertransaction.PromoUsagesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedPromoUsages(alias, func(wq *PromoUsageQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[ledgertransaction.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, ledgertransaction.FieldCreatedAt)
@@ -4335,6 +4515,110 @@ func (_q *PaymentOrderQuery) collectField(ctx context.Context, oneNode bool, opC
 				fieldSeen[paymentorder.FieldLedgerTransactionID] = struct{}{}
 			}
 
+		case "promoCode":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PromoCodeClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, promocodeImplementors)...); err != nil {
+				return err
+			}
+			_q.withPromoCode = query
+			if _, ok := fieldSeen[paymentorder.FieldPromoCodeID]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldPromoCodeID)
+				fieldSeen[paymentorder.FieldPromoCodeID] = struct{}{}
+			}
+
+		case "promoUsages":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PromoUsageClient{config: _q.config}).Query()
+			)
+			args := newPromoUsagePaginateArgs(fieldArgs(ctx, new(PromoUsageWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newPromoUsagePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*PaymentOrder) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"payment_order_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(paymentorder.PromoUsagesColumn), ids...))
+						})
+						if err := query.GroupBy(paymentorder.PromoUsagesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*PaymentOrder) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.PromoUsages)
+							if nodes[i].Edges.totalCount[4] == nil {
+								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[4][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, promousageImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(paymentorder.PromoUsagesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedPromoUsages(alias, func(wq *PromoUsageQuery) {
+				*wq = *query
+			})
+
 		case "paymentEvents":
 			var (
 				alias = field.Alias
@@ -4378,10 +4662,10 @@ func (_q *PaymentOrderQuery) collectField(ctx context.Context, oneNode bool, opC
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[3] == nil {
-								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[3][alias] = n
+							nodes[i].Edges.totalCount[5][alias] = n
 						}
 						return nil
 					})
@@ -4389,10 +4673,10 @@ func (_q *PaymentOrderQuery) collectField(ctx context.Context, oneNode bool, opC
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*PaymentOrder) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.PaymentEvents)
-							if nodes[i].Edges.totalCount[3] == nil {
-								nodes[i].Edges.totalCount[3] = make(map[string]int)
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[3][alias] = n
+							nodes[i].Edges.totalCount[5][alias] = n
 						}
 						return nil
 					})
@@ -4467,6 +4751,21 @@ func (_q *PaymentOrderQuery) collectField(ctx context.Context, oneNode bool, opC
 			if _, ok := fieldSeen[paymentorder.FieldAmountMicros]; !ok {
 				selectedFields = append(selectedFields, paymentorder.FieldAmountMicros)
 				fieldSeen[paymentorder.FieldAmountMicros] = struct{}{}
+			}
+		case "payableAmountMicros":
+			if _, ok := fieldSeen[paymentorder.FieldPayableAmountMicros]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldPayableAmountMicros)
+				fieldSeen[paymentorder.FieldPayableAmountMicros] = struct{}{}
+			}
+		case "discountAmountMicros":
+			if _, ok := fieldSeen[paymentorder.FieldDiscountAmountMicros]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldDiscountAmountMicros)
+				fieldSeen[paymentorder.FieldDiscountAmountMicros] = struct{}{}
+			}
+		case "promoCodeID":
+			if _, ok := fieldSeen[paymentorder.FieldPromoCodeID]; !ok {
+				selectedFields = append(selectedFields, paymentorder.FieldPromoCodeID)
+				fieldSeen[paymentorder.FieldPromoCodeID] = struct{}{}
 			}
 		case "currency":
 			if _, ok := fieldSeen[paymentorder.FieldCurrency]; !ok {
@@ -5901,6 +6200,711 @@ func newProjectPaginateArgs(rv map[string]any) *projectPaginateArgs {
 	}
 	if v, ok := rv[whereField].(*ProjectWhereInput); ok {
 		args.opts = append(args.opts, WithProjectFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *PromoCodeQuery) CollectFields(ctx context.Context, satisfies ...string) (*PromoCodeQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *PromoCodeQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(promocode.Columns))
+		selectedFields = []string{promocode.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "usages":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PromoUsageClient{config: _q.config}).Query()
+			)
+			args := newPromoUsagePaginateArgs(fieldArgs(ctx, new(PromoUsageWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newPromoUsagePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*PromoCode) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"promo_code_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(promocode.UsagesColumn), ids...))
+						})
+						if err := query.GroupBy(promocode.UsagesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[0] == nil {
+								nodes[i].Edges.totalCount[0] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[0][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*PromoCode) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.Usages)
+							if nodes[i].Edges.totalCount[0] == nil {
+								nodes[i].Edges.totalCount[0] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[0][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, promousageImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(promocode.UsagesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUsages(alias, func(wq *PromoUsageQuery) {
+				*wq = *query
+			})
+
+		case "paymentOrders":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PaymentOrderClient{config: _q.config}).Query()
+			)
+			args := newPaymentOrderPaginateArgs(fieldArgs(ctx, new(PaymentOrderWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newPaymentOrderPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*PromoCode) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"promo_code_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(promocode.PaymentOrdersColumn), ids...))
+						})
+						if err := query.GroupBy(promocode.PaymentOrdersColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[1] == nil {
+								nodes[i].Edges.totalCount[1] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[1][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*PromoCode) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.PaymentOrders)
+							if nodes[i].Edges.totalCount[1] == nil {
+								nodes[i].Edges.totalCount[1] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[1][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, paymentorderImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(promocode.PaymentOrdersColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedPaymentOrders(alias, func(wq *PaymentOrderQuery) {
+				*wq = *query
+			})
+
+		case "userSubscriptions":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserSubscriptionClient{config: _q.config}).Query()
+			)
+			args := newUserSubscriptionPaginateArgs(fieldArgs(ctx, new(UserSubscriptionWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newUserSubscriptionPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*PromoCode) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"promo_code_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(promocode.UserSubscriptionsColumn), ids...))
+						})
+						if err := query.GroupBy(promocode.UserSubscriptionsColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[2] == nil {
+								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[2][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*PromoCode) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.UserSubscriptions)
+							if nodes[i].Edges.totalCount[2] == nil {
+								nodes[i].Edges.totalCount[2] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[2][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, usersubscriptionImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(promocode.UserSubscriptionsColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedUserSubscriptions(alias, func(wq *UserSubscriptionQuery) {
+				*wq = *query
+			})
+		case "createdAt":
+			if _, ok := fieldSeen[promocode.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldCreatedAt)
+				fieldSeen[promocode.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[promocode.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldUpdatedAt)
+				fieldSeen[promocode.FieldUpdatedAt] = struct{}{}
+			}
+		case "code":
+			if _, ok := fieldSeen[promocode.FieldCode]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldCode)
+				fieldSeen[promocode.FieldCode] = struct{}{}
+			}
+		case "description":
+			if _, ok := fieldSeen[promocode.FieldDescription]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldDescription)
+				fieldSeen[promocode.FieldDescription] = struct{}{}
+			}
+		case "discountType":
+			if _, ok := fieldSeen[promocode.FieldDiscountType]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldDiscountType)
+				fieldSeen[promocode.FieldDiscountType] = struct{}{}
+			}
+		case "discountAmountMicros":
+			if _, ok := fieldSeen[promocode.FieldDiscountAmountMicros]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldDiscountAmountMicros)
+				fieldSeen[promocode.FieldDiscountAmountMicros] = struct{}{}
+			}
+		case "discountPercentBps":
+			if _, ok := fieldSeen[promocode.FieldDiscountPercentBps]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldDiscountPercentBps)
+				fieldSeen[promocode.FieldDiscountPercentBps] = struct{}{}
+			}
+		case "scope":
+			if _, ok := fieldSeen[promocode.FieldScope]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldScope)
+				fieldSeen[promocode.FieldScope] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[promocode.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldStatus)
+				fieldSeen[promocode.FieldStatus] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[promocode.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldCurrency)
+				fieldSeen[promocode.FieldCurrency] = struct{}{}
+			}
+		case "maxUses":
+			if _, ok := fieldSeen[promocode.FieldMaxUses]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldMaxUses)
+				fieldSeen[promocode.FieldMaxUses] = struct{}{}
+			}
+		case "usedCount":
+			if _, ok := fieldSeen[promocode.FieldUsedCount]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldUsedCount)
+				fieldSeen[promocode.FieldUsedCount] = struct{}{}
+			}
+		case "perUserLimit":
+			if _, ok := fieldSeen[promocode.FieldPerUserLimit]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldPerUserLimit)
+				fieldSeen[promocode.FieldPerUserLimit] = struct{}{}
+			}
+		case "startsAt":
+			if _, ok := fieldSeen[promocode.FieldStartsAt]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldStartsAt)
+				fieldSeen[promocode.FieldStartsAt] = struct{}{}
+			}
+		case "expiresAt":
+			if _, ok := fieldSeen[promocode.FieldExpiresAt]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldExpiresAt)
+				fieldSeen[promocode.FieldExpiresAt] = struct{}{}
+			}
+		case "createdByID":
+			if _, ok := fieldSeen[promocode.FieldCreatedByID]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldCreatedByID)
+				fieldSeen[promocode.FieldCreatedByID] = struct{}{}
+			}
+		case "notes":
+			if _, ok := fieldSeen[promocode.FieldNotes]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldNotes)
+				fieldSeen[promocode.FieldNotes] = struct{}{}
+			}
+		case "metadata":
+			if _, ok := fieldSeen[promocode.FieldMetadata]; !ok {
+				selectedFields = append(selectedFields, promocode.FieldMetadata)
+				fieldSeen[promocode.FieldMetadata] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type promocodePaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []PromoCodePaginateOption
+}
+
+func newPromoCodePaginateArgs(rv map[string]any) *promocodePaginateArgs {
+	args := &promocodePaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &PromoCodeOrder{Field: &PromoCodeOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithPromoCodeOrder(order))
+			}
+		case *PromoCodeOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithPromoCodeOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*PromoCodeWhereInput); ok {
+		args.opts = append(args.opts, WithPromoCodeFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *PromoUsageQuery) CollectFields(ctx context.Context, satisfies ...string) (*PromoUsageQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *PromoUsageQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(promousage.Columns))
+		selectedFields = []string{promousage.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "promoCode":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PromoCodeClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, promocodeImplementors)...); err != nil {
+				return err
+			}
+			_q.withPromoCode = query
+			if _, ok := fieldSeen[promousage.FieldPromoCodeID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldPromoCodeID)
+				fieldSeen[promousage.FieldPromoCodeID] = struct{}{}
+			}
+
+		case "user":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withUser = query
+			if _, ok := fieldSeen[promousage.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldUserID)
+				fieldSeen[promousage.FieldUserID] = struct{}{}
+			}
+
+		case "billingAccount":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&BillingAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, billingaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.withBillingAccount = query
+			if _, ok := fieldSeen[promousage.FieldBillingAccountID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldBillingAccountID)
+				fieldSeen[promousage.FieldBillingAccountID] = struct{}{}
+			}
+
+		case "paymentOrder":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PaymentOrderClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, paymentorderImplementors)...); err != nil {
+				return err
+			}
+			_q.withPaymentOrder = query
+			if _, ok := fieldSeen[promousage.FieldPaymentOrderID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldPaymentOrderID)
+				fieldSeen[promousage.FieldPaymentOrderID] = struct{}{}
+			}
+
+		case "userSubscription":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserSubscriptionClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, usersubscriptionImplementors)...); err != nil {
+				return err
+			}
+			_q.withUserSubscription = query
+			if _, ok := fieldSeen[promousage.FieldUserSubscriptionID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldUserSubscriptionID)
+				fieldSeen[promousage.FieldUserSubscriptionID] = struct{}{}
+			}
+
+		case "ledgerTransaction":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&LedgerTransactionClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, ledgertransactionImplementors)...); err != nil {
+				return err
+			}
+			_q.withLedgerTransaction = query
+			if _, ok := fieldSeen[promousage.FieldLedgerTransactionID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldLedgerTransactionID)
+				fieldSeen[promousage.FieldLedgerTransactionID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[promousage.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldCreatedAt)
+				fieldSeen[promousage.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[promousage.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldUpdatedAt)
+				fieldSeen[promousage.FieldUpdatedAt] = struct{}{}
+			}
+		case "promoCodeID":
+			if _, ok := fieldSeen[promousage.FieldPromoCodeID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldPromoCodeID)
+				fieldSeen[promousage.FieldPromoCodeID] = struct{}{}
+			}
+		case "code":
+			if _, ok := fieldSeen[promousage.FieldCode]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldCode)
+				fieldSeen[promousage.FieldCode] = struct{}{}
+			}
+		case "codeSnapshot":
+			if _, ok := fieldSeen[promousage.FieldCodeSnapshot]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldCodeSnapshot)
+				fieldSeen[promousage.FieldCodeSnapshot] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[promousage.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldUserID)
+				fieldSeen[promousage.FieldUserID] = struct{}{}
+			}
+		case "billingAccountID":
+			if _, ok := fieldSeen[promousage.FieldBillingAccountID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldBillingAccountID)
+				fieldSeen[promousage.FieldBillingAccountID] = struct{}{}
+			}
+		case "paymentOrderID":
+			if _, ok := fieldSeen[promousage.FieldPaymentOrderID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldPaymentOrderID)
+				fieldSeen[promousage.FieldPaymentOrderID] = struct{}{}
+			}
+		case "userSubscriptionID":
+			if _, ok := fieldSeen[promousage.FieldUserSubscriptionID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldUserSubscriptionID)
+				fieldSeen[promousage.FieldUserSubscriptionID] = struct{}{}
+			}
+		case "ledgerTransactionID":
+			if _, ok := fieldSeen[promousage.FieldLedgerTransactionID]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldLedgerTransactionID)
+				fieldSeen[promousage.FieldLedgerTransactionID] = struct{}{}
+			}
+		case "scope":
+			if _, ok := fieldSeen[promousage.FieldScope]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldScope)
+				fieldSeen[promousage.FieldScope] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[promousage.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldStatus)
+				fieldSeen[promousage.FieldStatus] = struct{}{}
+			}
+		case "originalAmountMicros":
+			if _, ok := fieldSeen[promousage.FieldOriginalAmountMicros]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldOriginalAmountMicros)
+				fieldSeen[promousage.FieldOriginalAmountMicros] = struct{}{}
+			}
+		case "discountAmountMicros":
+			if _, ok := fieldSeen[promousage.FieldDiscountAmountMicros]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldDiscountAmountMicros)
+				fieldSeen[promousage.FieldDiscountAmountMicros] = struct{}{}
+			}
+		case "payableAmountMicros":
+			if _, ok := fieldSeen[promousage.FieldPayableAmountMicros]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldPayableAmountMicros)
+				fieldSeen[promousage.FieldPayableAmountMicros] = struct{}{}
+			}
+		case "currency":
+			if _, ok := fieldSeen[promousage.FieldCurrency]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldCurrency)
+				fieldSeen[promousage.FieldCurrency] = struct{}{}
+			}
+		case "idempotencyKey":
+			if _, ok := fieldSeen[promousage.FieldIdempotencyKey]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldIdempotencyKey)
+				fieldSeen[promousage.FieldIdempotencyKey] = struct{}{}
+			}
+		case "failureReason":
+			if _, ok := fieldSeen[promousage.FieldFailureReason]; !ok {
+				selectedFields = append(selectedFields, promousage.FieldFailureReason)
+				fieldSeen[promousage.FieldFailureReason] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type promousagePaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []PromoUsagePaginateOption
+}
+
+func newPromoUsagePaginateArgs(rv map[string]any) *promousagePaginateArgs {
+	args := &promousagePaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &PromoUsageOrder{Field: &PromoUsageOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithPromoUsageOrder(order))
+			}
+		case *PromoUsageOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithPromoUsageOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*PromoUsageWhereInput); ok {
+		args.opts = append(args.opts, WithPromoUsageFilter(v.Filter))
 	}
 	return args
 }
@@ -10000,6 +11004,95 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				*wq = *query
 			})
 
+		case "promoUsages":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PromoUsageClient{config: _q.config}).Query()
+			)
+			args := newPromoUsagePaginateArgs(fieldArgs(ctx, new(PromoUsageWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newPromoUsagePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"user_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.PromoUsagesColumn), ids...))
+						})
+						if err := query.GroupBy(user.PromoUsagesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[9] == nil {
+								nodes[i].Edges.totalCount[9] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[9][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.PromoUsages)
+							if nodes[i].Edges.totalCount[9] == nil {
+								nodes[i].Edges.totalCount[9] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[9][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, promousageImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(user.PromoUsagesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedPromoUsages(alias, func(wq *PromoUsageQuery) {
+				*wq = *query
+			})
+
 		case "projectUsers":
 			var (
 				alias = field.Alias
@@ -10043,10 +11136,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[9] == nil {
-								nodes[i].Edges.totalCount[9] = make(map[string]int)
+							if nodes[i].Edges.totalCount[10] == nil {
+								nodes[i].Edges.totalCount[10] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[9][alias] = n
+							nodes[i].Edges.totalCount[10][alias] = n
 						}
 						return nil
 					})
@@ -10054,10 +11147,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.ProjectUsers)
-							if nodes[i].Edges.totalCount[9] == nil {
-								nodes[i].Edges.totalCount[9] = make(map[string]int)
+							if nodes[i].Edges.totalCount[10] == nil {
+								nodes[i].Edges.totalCount[10] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[9][alias] = n
+							nodes[i].Edges.totalCount[10][alias] = n
 						}
 						return nil
 					})
@@ -10132,10 +11225,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[10] == nil {
-								nodes[i].Edges.totalCount[10] = make(map[string]int)
+							if nodes[i].Edges.totalCount[11] == nil {
+								nodes[i].Edges.totalCount[11] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[10][alias] = n
+							nodes[i].Edges.totalCount[11][alias] = n
 						}
 						return nil
 					})
@@ -10143,10 +11236,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UserRoles)
-							if nodes[i].Edges.totalCount[10] == nil {
-								nodes[i].Edges.totalCount[10] = make(map[string]int)
+							if nodes[i].Edges.totalCount[11] == nil {
+								nodes[i].Edges.totalCount[11] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[10][alias] = n
+							nodes[i].Edges.totalCount[11][alias] = n
 						}
 						return nil
 					})
@@ -10650,6 +11743,110 @@ func (_q *UserSubscriptionQuery) collectField(ctx context.Context, oneNode bool,
 				fieldSeen[usersubscription.FieldPurchaseLedgerTransactionID] = struct{}{}
 			}
 
+		case "promoCode":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PromoCodeClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, promocodeImplementors)...); err != nil {
+				return err
+			}
+			_q.withPromoCode = query
+			if _, ok := fieldSeen[usersubscription.FieldPromoCodeID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldPromoCodeID)
+				fieldSeen[usersubscription.FieldPromoCodeID] = struct{}{}
+			}
+
+		case "promoUsages":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PromoUsageClient{config: _q.config}).Query()
+			)
+			args := newPromoUsagePaginateArgs(fieldArgs(ctx, new(PromoUsageWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newPromoUsagePager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
+				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					_q.loadTotal = append(_q.loadTotal, func(ctx context.Context, nodes []*UserSubscription) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID int `sql:"user_subscription_id"`
+							Count  int `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(usersubscription.PromoUsagesColumn), ids...))
+						})
+						if err := query.GroupBy(usersubscription.PromoUsagesColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[int]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[5][alias] = n
+						}
+						return nil
+					})
+				} else {
+					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UserSubscription) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.PromoUsages)
+							if nodes[i].Edges.totalCount[5] == nil {
+								nodes[i].Edges.totalCount[5] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[5][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, false, opCtx, *field, path, mayAddCondition(satisfies, promousageImplementors)...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				if oneNode {
+					pager.applyOrder(query.Limit(limit))
+				} else {
+					modify := entgql.LimitPerRow(usersubscription.PromoUsagesColumn, limit, pager.orderExpr(query))
+					query.modifiers = append(query.modifiers, modify)
+				}
+			} else {
+				query = pager.applyOrder(query)
+			}
+			_q.WithNamedPromoUsages(alias, func(wq *PromoUsageQuery) {
+				*wq = *query
+			})
+
 		case "usageBillingRecords":
 			var (
 				alias = field.Alias
@@ -10693,10 +11890,10 @@ func (_q *UserSubscriptionQuery) collectField(ctx context.Context, oneNode bool,
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[4] == nil {
-								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[4][alias] = n
+							nodes[i].Edges.totalCount[6][alias] = n
 						}
 						return nil
 					})
@@ -10704,10 +11901,10 @@ func (_q *UserSubscriptionQuery) collectField(ctx context.Context, oneNode bool,
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*UserSubscription) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UsageBillingRecords)
-							if nodes[i].Edges.totalCount[4] == nil {
-								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[4][alias] = n
+							nodes[i].Edges.totalCount[6][alias] = n
 						}
 						return nil
 					})
@@ -10842,6 +12039,26 @@ func (_q *UserSubscriptionQuery) collectField(ctx context.Context, oneNode bool,
 			if _, ok := fieldSeen[usersubscription.FieldPurchaseLedgerTransactionID]; !ok {
 				selectedFields = append(selectedFields, usersubscription.FieldPurchaseLedgerTransactionID)
 				fieldSeen[usersubscription.FieldPurchaseLedgerTransactionID] = struct{}{}
+			}
+		case "originalPriceMicros":
+			if _, ok := fieldSeen[usersubscription.FieldOriginalPriceMicros]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldOriginalPriceMicros)
+				fieldSeen[usersubscription.FieldOriginalPriceMicros] = struct{}{}
+			}
+		case "discountAmountMicros":
+			if _, ok := fieldSeen[usersubscription.FieldDiscountAmountMicros]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldDiscountAmountMicros)
+				fieldSeen[usersubscription.FieldDiscountAmountMicros] = struct{}{}
+			}
+		case "payableAmountMicros":
+			if _, ok := fieldSeen[usersubscription.FieldPayableAmountMicros]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldPayableAmountMicros)
+				fieldSeen[usersubscription.FieldPayableAmountMicros] = struct{}{}
+			}
+		case "promoCodeID":
+			if _, ok := fieldSeen[usersubscription.FieldPromoCodeID]; !ok {
+				selectedFields = append(selectedFields, usersubscription.FieldPromoCodeID)
+				fieldSeen[usersubscription.FieldPromoCodeID] = struct{}{}
 			}
 		case "notes":
 			if _, ok := fieldSeen[usersubscription.FieldNotes]; !ok {

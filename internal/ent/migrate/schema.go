@@ -695,6 +695,8 @@ var (
 		{Name: "provider_type", Type: field.TypeEnum, Enums: []string{"manual", "epay", "stripe", "custom"}},
 		{Name: "purpose", Type: field.TypeEnum, Enums: []string{"recharge", "subscription"}, Default: "recharge"},
 		{Name: "amount_micros", Type: field.TypeInt64},
+		{Name: "payable_amount_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "discount_amount_micros", Type: field.TypeInt64, Default: 0},
 		{Name: "currency", Type: field.TypeString, Default: "CNY"},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "paid", "failed", "canceled", "expired", "refunded"}, Default: "pending"},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
@@ -711,6 +713,7 @@ var (
 		{Name: "billing_account_id", Type: field.TypeInt},
 		{Name: "ledger_transaction_id", Type: field.TypeInt, Nullable: true},
 		{Name: "provider_instance_id", Type: field.TypeInt, Nullable: true},
+		{Name: "promo_code_id", Type: field.TypeInt, Nullable: true},
 	}
 	// PaymentOrdersTable holds the schema information for the "payment_orders" table.
 	PaymentOrdersTable = &schema.Table{
@@ -720,20 +723,26 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "payment_orders_billing_accounts_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[21]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[23]},
 				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "payment_orders_ledger_transactions_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[22]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[24]},
 				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "payment_orders_payment_provider_instances_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[23]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[25]},
 				RefColumns: []*schema.Column{PaymentProviderInstancesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "payment_orders_promo_codes_payment_orders",
+				Columns:    []*schema.Column{PaymentOrdersColumns[26]},
+				RefColumns: []*schema.Column{PromoCodesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -751,12 +760,12 @@ var (
 			{
 				Name:    "payment_orders_by_account_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{PaymentOrdersColumns[21], PaymentOrdersColumns[1]},
+				Columns: []*schema.Column{PaymentOrdersColumns[23], PaymentOrdersColumns[1]},
 			},
 			{
 				Name:    "payment_orders_by_provider_trade_no",
 				Unique:  true,
-				Columns: []*schema.Column{PaymentOrdersColumns[5], PaymentOrdersColumns[18]},
+				Columns: []*schema.Column{PaymentOrdersColumns[5], PaymentOrdersColumns[20]},
 			},
 		},
 	}
@@ -805,6 +814,149 @@ var (
 				Name:    "projects_by_name",
 				Unique:  true,
 				Columns: []*schema.Column{ProjectsColumns[4], ProjectsColumns[3]},
+			},
+		},
+	}
+	// PromoCodesColumns holds the columns for the "promo_codes" table.
+	PromoCodesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "code", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Default: ""},
+		{Name: "discount_type", Type: field.TypeEnum, Enums: []string{"amount", "percent"}, Default: "amount"},
+		{Name: "discount_amount_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "discount_percent_bps", Type: field.TypeInt, Default: 0},
+		{Name: "scope", Type: field.TypeEnum, Enums: []string{"all", "recharge", "subscription"}, Default: "all"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled", "expired"}, Default: "active"},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "max_uses", Type: field.TypeInt, Default: 0},
+		{Name: "used_count", Type: field.TypeInt, Default: 0},
+		{Name: "per_user_limit", Type: field.TypeInt, Default: 0},
+		{Name: "starts_at", Type: field.TypeTime, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_by_id", Type: field.TypeInt, Nullable: true},
+		{Name: "notes", Type: field.TypeString, Default: ""},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+	}
+	// PromoCodesTable holds the schema information for the "promo_codes" table.
+	PromoCodesTable = &schema.Table{
+		Name:       "promo_codes",
+		Columns:    PromoCodesColumns,
+		PrimaryKey: []*schema.Column{PromoCodesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "promo_codes_by_code",
+				Unique:  true,
+				Columns: []*schema.Column{PromoCodesColumns[3]},
+			},
+			{
+				Name:    "promo_codes_by_status_scope",
+				Unique:  false,
+				Columns: []*schema.Column{PromoCodesColumns[9], PromoCodesColumns[8]},
+			},
+			{
+				Name:    "promo_codes_by_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{PromoCodesColumns[15]},
+			},
+			{
+				Name:    "promo_codes_by_creator_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{PromoCodesColumns[16], PromoCodesColumns[1]},
+			},
+		},
+	}
+	// PromoUsagesColumns holds the columns for the "promo_usages" table.
+	PromoUsagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "code", Type: field.TypeString},
+		{Name: "code_snapshot", Type: field.TypeJSON, Nullable: true},
+		{Name: "scope", Type: field.TypeEnum, Enums: []string{"recharge", "subscription"}},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"reserved", "applied", "voided"}, Default: "reserved"},
+		{Name: "original_amount_micros", Type: field.TypeInt64},
+		{Name: "discount_amount_micros", Type: field.TypeInt64},
+		{Name: "payable_amount_micros", Type: field.TypeInt64},
+		{Name: "currency", Type: field.TypeString, Default: "CNY"},
+		{Name: "idempotency_key", Type: field.TypeString},
+		{Name: "failure_reason", Type: field.TypeString, Default: ""},
+		{Name: "billing_account_id", Type: field.TypeInt, Nullable: true},
+		{Name: "ledger_transaction_id", Type: field.TypeInt, Nullable: true},
+		{Name: "payment_order_id", Type: field.TypeInt, Nullable: true},
+		{Name: "promo_code_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_subscription_id", Type: field.TypeInt, Nullable: true},
+	}
+	// PromoUsagesTable holds the schema information for the "promo_usages" table.
+	PromoUsagesTable = &schema.Table{
+		Name:       "promo_usages",
+		Columns:    PromoUsagesColumns,
+		PrimaryKey: []*schema.Column{PromoUsagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "promo_usages_billing_accounts_promo_usages",
+				Columns:    []*schema.Column{PromoUsagesColumns[13]},
+				RefColumns: []*schema.Column{BillingAccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "promo_usages_ledger_transactions_promo_usages",
+				Columns:    []*schema.Column{PromoUsagesColumns[14]},
+				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "promo_usages_payment_orders_promo_usages",
+				Columns:    []*schema.Column{PromoUsagesColumns[15]},
+				RefColumns: []*schema.Column{PaymentOrdersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "promo_usages_promo_codes_usages",
+				Columns:    []*schema.Column{PromoUsagesColumns[16]},
+				RefColumns: []*schema.Column{PromoCodesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "promo_usages_users_promo_usages",
+				Columns:    []*schema.Column{PromoUsagesColumns[17]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "promo_usages_user_subscriptions_promo_usages",
+				Columns:    []*schema.Column{PromoUsagesColumns[18]},
+				RefColumns: []*schema.Column{UserSubscriptionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "promo_usages_by_idempotency_key",
+				Unique:  true,
+				Columns: []*schema.Column{PromoUsagesColumns[11]},
+			},
+			{
+				Name:    "promo_usages_by_code_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{PromoUsagesColumns[16], PromoUsagesColumns[1]},
+			},
+			{
+				Name:    "promo_usages_by_user_code",
+				Unique:  false,
+				Columns: []*schema.Column{PromoUsagesColumns[17], PromoUsagesColumns[16]},
+			},
+			{
+				Name:    "promo_usages_by_payment_order",
+				Unique:  false,
+				Columns: []*schema.Column{PromoUsagesColumns[15]},
+			},
+			{
+				Name:    "promo_usages_by_user_subscription",
+				Unique:  false,
+				Columns: []*schema.Column{PromoUsagesColumns[18]},
 			},
 		},
 	}
@@ -1612,9 +1764,13 @@ var (
 		{Name: "supported_project_ids", Type: field.TypeJSON},
 		{Name: "supported_group_ids", Type: field.TypeJSON},
 		{Name: "allow_wallet_fallback", Type: field.TypeBool, Default: true},
+		{Name: "original_price_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "discount_amount_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "payable_amount_micros", Type: field.TypeInt64, Default: 0},
 		{Name: "notes", Type: field.TypeString, Default: ""},
 		{Name: "revoke_reason", Type: field.TypeString, Default: ""},
 		{Name: "purchase_ledger_transaction_id", Type: field.TypeInt, Nullable: true},
+		{Name: "promo_code_id", Type: field.TypeInt, Nullable: true},
 		{Name: "plan_id", Type: field.TypeInt, Nullable: true},
 		{Name: "user_id", Type: field.TypeInt},
 		{Name: "assigned_by_id", Type: field.TypeInt, Nullable: true},
@@ -1627,25 +1783,31 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "user_subscriptions_ledger_transactions_purchased_user_subscriptions",
-				Columns:    []*schema.Column{UserSubscriptionsColumns[20]},
+				Columns:    []*schema.Column{UserSubscriptionsColumns[23]},
 				RefColumns: []*schema.Column{LedgerTransactionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
+				Symbol:     "user_subscriptions_promo_codes_user_subscriptions",
+				Columns:    []*schema.Column{UserSubscriptionsColumns[24]},
+				RefColumns: []*schema.Column{PromoCodesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
 				Symbol:     "user_subscriptions_subscription_plans_user_subscriptions",
-				Columns:    []*schema.Column{UserSubscriptionsColumns[21]},
+				Columns:    []*schema.Column{UserSubscriptionsColumns[25]},
 				RefColumns: []*schema.Column{SubscriptionPlansColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "user_subscriptions_users_user_subscriptions",
-				Columns:    []*schema.Column{UserSubscriptionsColumns[22]},
+				Columns:    []*schema.Column{UserSubscriptionsColumns[26]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "user_subscriptions_users_assigned_user_subscriptions",
-				Columns:    []*schema.Column{UserSubscriptionsColumns[23]},
+				Columns:    []*schema.Column{UserSubscriptionsColumns[27]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1654,12 +1816,12 @@ var (
 			{
 				Name:    "user_subscriptions_by_user_status_expiry",
 				Unique:  false,
-				Columns: []*schema.Column{UserSubscriptionsColumns[22], UserSubscriptionsColumns[4], UserSubscriptionsColumns[6]},
+				Columns: []*schema.Column{UserSubscriptionsColumns[26], UserSubscriptionsColumns[4], UserSubscriptionsColumns[6]},
 			},
 			{
 				Name:    "user_subscriptions_by_plan_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{UserSubscriptionsColumns[21], UserSubscriptionsColumns[1]},
+				Columns: []*schema.Column{UserSubscriptionsColumns[25], UserSubscriptionsColumns[1]},
 			},
 			{
 				Name:    "user_subscriptions_by_reset_at",
@@ -1716,6 +1878,8 @@ var (
 		PaymentOrdersTable,
 		PaymentProviderInstancesTable,
 		ProjectsTable,
+		PromoCodesTable,
+		PromoUsagesTable,
 		PromptsTable,
 		PromptProtectionRulesTable,
 		ProviderQuotaStatusTable,
@@ -1758,6 +1922,13 @@ func init() {
 	PaymentOrdersTable.ForeignKeys[0].RefTable = BillingAccountsTable
 	PaymentOrdersTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
 	PaymentOrdersTable.ForeignKeys[2].RefTable = PaymentProviderInstancesTable
+	PaymentOrdersTable.ForeignKeys[3].RefTable = PromoCodesTable
+	PromoUsagesTable.ForeignKeys[0].RefTable = BillingAccountsTable
+	PromoUsagesTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
+	PromoUsagesTable.ForeignKeys[2].RefTable = PaymentOrdersTable
+	PromoUsagesTable.ForeignKeys[3].RefTable = PromoCodesTable
+	PromoUsagesTable.ForeignKeys[4].RefTable = UsersTable
+	PromoUsagesTable.ForeignKeys[5].RefTable = UserSubscriptionsTable
 	ProviderQuotaStatusTable.ForeignKeys[0].RefTable = ChannelsTable
 	RedeemCodesTable.ForeignKeys[0].RefTable = LedgerTransactionsTable
 	RedeemCodesTable.ForeignKeys[1].RefTable = UsersTable
@@ -1786,9 +1957,10 @@ func init() {
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable
 	UserRolesTable.ForeignKeys[1].RefTable = RolesTable
 	UserSubscriptionsTable.ForeignKeys[0].RefTable = LedgerTransactionsTable
-	UserSubscriptionsTable.ForeignKeys[1].RefTable = SubscriptionPlansTable
-	UserSubscriptionsTable.ForeignKeys[2].RefTable = UsersTable
+	UserSubscriptionsTable.ForeignKeys[1].RefTable = PromoCodesTable
+	UserSubscriptionsTable.ForeignKeys[2].RefTable = SubscriptionPlansTable
 	UserSubscriptionsTable.ForeignKeys[3].RefTable = UsersTable
+	UserSubscriptionsTable.ForeignKeys[4].RefTable = UsersTable
 	ProjectPromptsTable.ForeignKeys[0].RefTable = ProjectsTable
 	ProjectPromptsTable.ForeignKeys[1].RefTable = PromptsTable
 }

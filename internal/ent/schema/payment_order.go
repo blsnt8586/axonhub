@@ -65,7 +65,20 @@ func (PaymentOrder) Fields() []ent.Field {
 		field.Int64("amount_micros").
 			Positive().
 			Immutable().
-			Comment("Order amount in micro currency units."),
+			Comment("Wallet credit amount in micro currency units for recharge orders."),
+		field.Int64("payable_amount_micros").
+			NonNegative().
+			Default(0).
+			Immutable().
+			Comment("Provider payable amount after discounts. Zero means same as amount_micros for legacy orders."),
+		field.Int64("discount_amount_micros").
+			NonNegative().
+			Default(0).
+			Immutable(),
+		field.Int("promo_code_id").
+			Optional().
+			Nillable().
+			Immutable(),
 		field.String("currency").
 			Default("CNY").
 			Immutable(),
@@ -128,6 +141,16 @@ func (PaymentOrder) Edges() []ent.Edge {
 			Ref("payment_orders").
 			Field("ledger_transaction_id").
 			Unique(),
+		edge.From("promo_code", PromoCode.Type).
+			Ref("payment_orders").
+			Field("promo_code_id").
+			Unique().
+			Immutable(),
+		edge.To("promo_usages", PromoUsage.Type).
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+				entgql.RelayConnection(),
+			),
 		edge.To("payment_events", PaymentEvent.Type).
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),

@@ -35,6 +35,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/ent/project"
+	"github.com/looplj/axonhub/internal/ent/promocode"
+	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/prompt"
 	"github.com/looplj/axonhub/internal/ent/promptprotectionrule"
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
@@ -165,6 +167,16 @@ var projectImplementors = []string{"Project", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*Project) IsNode() {}
+
+var promocodeImplementors = []string{"PromoCode", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*PromoCode) IsNode() {}
+
+var promousageImplementors = []string{"PromoUsage", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*PromoUsage) IsNode() {}
 
 var promptImplementors = []string{"Prompt", "Node"}
 
@@ -494,6 +506,24 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(project.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, projectImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case promocode.Table:
+		query := c.PromoCode.Query().
+			Where(promocode.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, promocodeImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case promousage.Table:
+		query := c.PromoUsage.Query().
+			Where(promousage.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, promousageImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -1048,6 +1078,38 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.Project.Query().
 			Where(project.IDIn(ids...))
 		query, err := query.CollectFields(ctx, projectImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case promocode.Table:
+		query := c.PromoCode.Query().
+			Where(promocode.IDIn(ids...))
+		query, err := query.CollectFields(ctx, promocodeImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case promousage.Table:
+		query := c.PromoUsage.Query().
+			Where(promousage.IDIn(ids...))
+		query, err := query.CollectFields(ctx, promousageImplementors...)
 		if err != nil {
 			return nil, err
 		}

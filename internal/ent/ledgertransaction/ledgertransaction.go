@@ -60,6 +60,8 @@ const (
 	EdgeRedeemCodes = "redeem_codes"
 	// EdgePurchasedUserSubscriptions holds the string denoting the purchased_user_subscriptions edge name in mutations.
 	EdgePurchasedUserSubscriptions = "purchased_user_subscriptions"
+	// EdgePromoUsages holds the string denoting the promo_usages edge name in mutations.
+	EdgePromoUsages = "promo_usages"
 	// Table holds the table name of the ledgertransaction in the database.
 	Table = "ledger_transactions"
 	// BillingAccountTable is the table that holds the billing_account relation/edge.
@@ -111,6 +113,13 @@ const (
 	PurchasedUserSubscriptionsInverseTable = "user_subscriptions"
 	// PurchasedUserSubscriptionsColumn is the table column denoting the purchased_user_subscriptions relation/edge.
 	PurchasedUserSubscriptionsColumn = "purchase_ledger_transaction_id"
+	// PromoUsagesTable is the table that holds the promo_usages relation/edge.
+	PromoUsagesTable = "promo_usages"
+	// PromoUsagesInverseTable is the table name for the PromoUsage entity.
+	// It exists in this package in order to avoid circular dependency with the "promousage" package.
+	PromoUsagesInverseTable = "promo_usages"
+	// PromoUsagesColumn is the table column denoting the promo_usages relation/edge.
+	PromoUsagesColumn = "ledger_transaction_id"
 )
 
 // Columns holds all SQL columns for ledgertransaction fields.
@@ -443,6 +452,20 @@ func ByPurchasedUserSubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) Or
 		sqlgraph.OrderByNeighborTerms(s, newPurchasedUserSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPromoUsagesCount orders the results by promo_usages count.
+func ByPromoUsagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPromoUsagesStep(), opts...)
+	}
+}
+
+// ByPromoUsages orders the results by promo_usages terms.
+func ByPromoUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPromoUsagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newBillingAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -490,6 +513,13 @@ func newPurchasedUserSubscriptionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PurchasedUserSubscriptionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PurchasedUserSubscriptionsTable, PurchasedUserSubscriptionsColumn),
+	)
+}
+func newPromoUsagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PromoUsagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PromoUsagesTable, PromoUsagesColumn),
 	)
 }
 
