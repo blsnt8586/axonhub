@@ -25,6 +25,7 @@ import { ChannelsRateLimitDialog } from './channels-rate-limit-dialog';
 import { ChannelsTransformOptionsDialog } from './channels-transform-options-dialog';
 import { ChannelsEndpointsDialog } from './channels-endpoints-dialog';
 import { ChannelsSystemSettingsDialog } from './channels-system-settings-dialog';
+import { ChannelsUpstreamAccountsDialog } from './channels-upstream-accounts-dialog';
 
 export function ChannelsDialogs() {
   const { open, setOpen, currentRow, setCurrentRow, selectedChannels } = useChannels();
@@ -282,6 +283,19 @@ export function ChannelsDialogs() {
               }
             }}
             currentRow={currentRow}
+          />
+
+          <ChannelsUpstreamAccountsDialog
+            key={`channel-upstream-accounts-${currentRow.id}`}
+            open={open === 'upstreamAccounts'}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) {
+                setOpen(null);
+                setTimeout(() => {
+                  setCurrentRow(null);
+                }, 500);
+              }
+            }}
           />
 
           <ChannelsEndpointsDialog

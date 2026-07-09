@@ -47,6 +47,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -64,7 +66,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 51)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 53)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -1124,6 +1126,66 @@ var schemaGraph = func() *sqlgraph.Schema {
 	}
 	graph.Nodes[43] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
+			Table:   upstreamaccount.Table,
+			Columns: upstreamaccount.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: upstreamaccount.FieldID,
+			},
+		},
+		Type: "UpstreamAccount",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			upstreamaccount.FieldCreatedAt:        {Type: field.TypeTime, Column: upstreamaccount.FieldCreatedAt},
+			upstreamaccount.FieldUpdatedAt:        {Type: field.TypeTime, Column: upstreamaccount.FieldUpdatedAt},
+			upstreamaccount.FieldDeletedAt:        {Type: field.TypeInt, Column: upstreamaccount.FieldDeletedAt},
+			upstreamaccount.FieldChannelID:        {Type: field.TypeInt, Column: upstreamaccount.FieldChannelID},
+			upstreamaccount.FieldPoolID:           {Type: field.TypeInt, Column: upstreamaccount.FieldPoolID},
+			upstreamaccount.FieldName:             {Type: field.TypeString, Column: upstreamaccount.FieldName},
+			upstreamaccount.FieldCredentialType:   {Type: field.TypeEnum, Column: upstreamaccount.FieldCredentialType},
+			upstreamaccount.FieldCredentials:      {Type: field.TypeJSON, Column: upstreamaccount.FieldCredentials},
+			upstreamaccount.FieldStatus:           {Type: field.TypeEnum, Column: upstreamaccount.FieldStatus},
+			upstreamaccount.FieldSchedulable:      {Type: field.TypeBool, Column: upstreamaccount.FieldSchedulable},
+			upstreamaccount.FieldPriority:         {Type: field.TypeInt, Column: upstreamaccount.FieldPriority},
+			upstreamaccount.FieldWeight:           {Type: field.TypeInt, Column: upstreamaccount.FieldWeight},
+			upstreamaccount.FieldConcurrencyLimit: {Type: field.TypeInt, Column: upstreamaccount.FieldConcurrencyLimit},
+			upstreamaccount.FieldProxyConfig:      {Type: field.TypeJSON, Column: upstreamaccount.FieldProxyConfig},
+			upstreamaccount.FieldRateMultiplier:   {Type: field.TypeFloat64, Column: upstreamaccount.FieldRateMultiplier},
+			upstreamaccount.FieldExpiresAt:        {Type: field.TypeTime, Column: upstreamaccount.FieldExpiresAt},
+			upstreamaccount.FieldLastUsedAt:       {Type: field.TypeTime, Column: upstreamaccount.FieldLastUsedAt},
+			upstreamaccount.FieldErrorMessage:     {Type: field.TypeString, Column: upstreamaccount.FieldErrorMessage},
+			upstreamaccount.FieldRateLimitResetAt: {Type: field.TypeTime, Column: upstreamaccount.FieldRateLimitResetAt},
+			upstreamaccount.FieldOverloadUntil:    {Type: field.TypeTime, Column: upstreamaccount.FieldOverloadUntil},
+			upstreamaccount.FieldCooldownUntil:    {Type: field.TypeTime, Column: upstreamaccount.FieldCooldownUntil},
+			upstreamaccount.FieldCooldownReason:   {Type: field.TypeString, Column: upstreamaccount.FieldCooldownReason},
+			upstreamaccount.FieldQuotaLimitMicros: {Type: field.TypeInt64, Column: upstreamaccount.FieldQuotaLimitMicros},
+			upstreamaccount.FieldQuotaUsedMicros:  {Type: field.TypeInt64, Column: upstreamaccount.FieldQuotaUsedMicros},
+		},
+	}
+	graph.Nodes[44] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   upstreamaccountpool.Table,
+			Columns: upstreamaccountpool.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: upstreamaccountpool.FieldID,
+			},
+		},
+		Type: "UpstreamAccountPool",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			upstreamaccountpool.FieldCreatedAt:     {Type: field.TypeTime, Column: upstreamaccountpool.FieldCreatedAt},
+			upstreamaccountpool.FieldUpdatedAt:     {Type: field.TypeTime, Column: upstreamaccountpool.FieldUpdatedAt},
+			upstreamaccountpool.FieldDeletedAt:     {Type: field.TypeInt, Column: upstreamaccountpool.FieldDeletedAt},
+			upstreamaccountpool.FieldChannelID:     {Type: field.TypeInt, Column: upstreamaccountpool.FieldChannelID},
+			upstreamaccountpool.FieldName:          {Type: field.TypeString, Column: upstreamaccountpool.FieldName},
+			upstreamaccountpool.FieldStatus:        {Type: field.TypeEnum, Column: upstreamaccountpool.FieldStatus},
+			upstreamaccountpool.FieldPriority:      {Type: field.TypeInt, Column: upstreamaccountpool.FieldPriority},
+			upstreamaccountpool.FieldModelPatterns: {Type: field.TypeJSON, Column: upstreamaccountpool.FieldModelPatterns},
+			upstreamaccountpool.FieldProjectIds:    {Type: field.TypeJSON, Column: upstreamaccountpool.FieldProjectIds},
+			upstreamaccountpool.FieldRemark:        {Type: field.TypeString, Column: upstreamaccountpool.FieldRemark},
+		},
+	}
+	graph.Nodes[45] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagebillingrecord.Table,
 			Columns: usagebillingrecord.Columns,
 			ID: &sqlgraph.FieldSpec{
@@ -1156,7 +1218,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagebillingrecord.FieldError:               {Type: field.TypeString, Column: usagebillingrecord.FieldError},
 		},
 	}
-	graph.Nodes[44] = &sqlgraph.Node{
+	graph.Nodes[46] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagedailyaggregate.Table,
 			Columns: usagedailyaggregate.Columns,
@@ -1190,7 +1252,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagedailyaggregate.FieldGrossMarginMicros:  {Type: field.TypeInt64, Column: usagedailyaggregate.FieldGrossMarginMicros},
 		},
 	}
-	graph.Nodes[45] = &sqlgraph.Node{
+	graph.Nodes[47] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagehourlyaggregate.Table,
 			Columns: usagehourlyaggregate.Columns,
@@ -1224,7 +1286,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagehourlyaggregate.FieldGrossMarginMicros:  {Type: field.TypeInt64, Column: usagehourlyaggregate.FieldGrossMarginMicros},
 		},
 	}
-	graph.Nodes[46] = &sqlgraph.Node{
+	graph.Nodes[48] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usagelog.Table,
 			Columns: usagelog.Columns,
@@ -1261,7 +1323,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagelog.FieldCostPriceReferenceID:               {Type: field.TypeString, Column: usagelog.FieldCostPriceReferenceID},
 		},
 	}
-	graph.Nodes[47] = &sqlgraph.Node{
+	graph.Nodes[49] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -1286,7 +1348,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldScopes:         {Type: field.TypeJSON, Column: user.FieldScopes},
 		},
 	}
-	graph.Nodes[48] = &sqlgraph.Node{
+	graph.Nodes[50] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userproject.Table,
 			Columns: userproject.Columns,
@@ -1305,7 +1367,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userproject.FieldScopes:    {Type: field.TypeJSON, Column: userproject.FieldScopes},
 		},
 	}
-	graph.Nodes[49] = &sqlgraph.Node{
+	graph.Nodes[51] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userrole.Table,
 			Columns: userrole.Columns,
@@ -1322,7 +1384,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userrole.FieldUpdatedAt: {Type: field.TypeTime, Column: userrole.FieldUpdatedAt},
 		},
 	}
-	graph.Nodes[50] = &sqlgraph.Node{
+	graph.Nodes[52] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   usersubscription.Table,
 			Columns: usersubscription.Columns,
@@ -1805,6 +1867,30 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"Channel",
 		"ChannelModelPrice",
+	)
+	graph.MustAddE(
+		"upstream_account_pools",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountPoolsTable,
+			Columns: []string{channel.UpstreamAccountPoolsColumn},
+			Bidi:    false,
+		},
+		"Channel",
+		"UpstreamAccountPool",
+	)
+	graph.MustAddE(
+		"upstream_accounts",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountsTable,
+			Columns: []string{channel.UpstreamAccountsColumn},
+			Bidi:    false,
+		},
+		"Channel",
+		"UpstreamAccount",
 	)
 	graph.MustAddE(
 		"provider_quota_status",
@@ -2705,6 +2791,54 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"Trace",
 		"Request",
+	)
+	graph.MustAddE(
+		"channel",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   upstreamaccount.ChannelTable,
+			Columns: []string{upstreamaccount.ChannelColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccount",
+		"Channel",
+	)
+	graph.MustAddE(
+		"pool",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   upstreamaccount.PoolTable,
+			Columns: []string{upstreamaccount.PoolColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccount",
+		"UpstreamAccountPool",
+	)
+	graph.MustAddE(
+		"channel",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   upstreamaccountpool.ChannelTable,
+			Columns: []string{upstreamaccountpool.ChannelColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccountPool",
+		"Channel",
+	)
+	graph.MustAddE(
+		"accounts",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   upstreamaccountpool.AccountsTable,
+			Columns: []string{upstreamaccountpool.AccountsColumn},
+			Bidi:    false,
+		},
+		"UpstreamAccountPool",
+		"UpstreamAccount",
 	)
 	graph.MustAddE(
 		"usage_log",
@@ -5291,6 +5425,34 @@ func (f *ChannelFilter) WhereHasChannelModelPrices() {
 // WhereHasChannelModelPricesWith applies a predicate to check if query has an edge channel_model_prices with a given conditions (other predicates).
 func (f *ChannelFilter) WhereHasChannelModelPricesWith(preds ...predicate.ChannelModelPrice) {
 	f.Where(entql.HasEdgeWith("channel_model_prices", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUpstreamAccountPools applies a predicate to check if query has an edge upstream_account_pools.
+func (f *ChannelFilter) WhereHasUpstreamAccountPools() {
+	f.Where(entql.HasEdge("upstream_account_pools"))
+}
+
+// WhereHasUpstreamAccountPoolsWith applies a predicate to check if query has an edge upstream_account_pools with a given conditions (other predicates).
+func (f *ChannelFilter) WhereHasUpstreamAccountPoolsWith(preds ...predicate.UpstreamAccountPool) {
+	f.Where(entql.HasEdgeWith("upstream_account_pools", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUpstreamAccounts applies a predicate to check if query has an edge upstream_accounts.
+func (f *ChannelFilter) WhereHasUpstreamAccounts() {
+	f.Where(entql.HasEdge("upstream_accounts"))
+}
+
+// WhereHasUpstreamAccountsWith applies a predicate to check if query has an edge upstream_accounts with a given conditions (other predicates).
+func (f *ChannelFilter) WhereHasUpstreamAccountsWith(preds ...predicate.UpstreamAccount) {
+	f.Where(entql.HasEdgeWith("upstream_accounts", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -8998,6 +9160,312 @@ func (f *TraceFilter) WhereHasRequestsWith(preds ...predicate.Request) {
 }
 
 // addPredicate implements the predicateAdder interface.
+func (_q *UpstreamAccountQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the UpstreamAccountQuery builder.
+func (_q *UpstreamAccountQuery) Filter() *UpstreamAccountFilter {
+	return &UpstreamAccountFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *UpstreamAccountMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the UpstreamAccountMutation builder.
+func (m *UpstreamAccountMutation) Filter() *UpstreamAccountFilter {
+	return &UpstreamAccountFilter{config: m.config, predicateAdder: m}
+}
+
+// UpstreamAccountFilter provides a generic filtering capability at runtime for UpstreamAccountQuery.
+type UpstreamAccountFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *UpstreamAccountFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[43].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *UpstreamAccountFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccount.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *UpstreamAccountFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccount.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *UpstreamAccountFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccount.FieldUpdatedAt))
+}
+
+// WhereDeletedAt applies the entql int predicate on the deleted_at field.
+func (f *UpstreamAccountFilter) WhereDeletedAt(p entql.IntP) {
+	f.Where(p.Field(upstreamaccount.FieldDeletedAt))
+}
+
+// WhereChannelID applies the entql int predicate on the channel_id field.
+func (f *UpstreamAccountFilter) WhereChannelID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccount.FieldChannelID))
+}
+
+// WherePoolID applies the entql int predicate on the pool_id field.
+func (f *UpstreamAccountFilter) WherePoolID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccount.FieldPoolID))
+}
+
+// WhereName applies the entql string predicate on the name field.
+func (f *UpstreamAccountFilter) WhereName(p entql.StringP) {
+	f.Where(p.Field(upstreamaccount.FieldName))
+}
+
+// WhereCredentialType applies the entql string predicate on the credential_type field.
+func (f *UpstreamAccountFilter) WhereCredentialType(p entql.StringP) {
+	f.Where(p.Field(upstreamaccount.FieldCredentialType))
+}
+
+// WhereCredentials applies the entql json.RawMessage predicate on the credentials field.
+func (f *UpstreamAccountFilter) WhereCredentials(p entql.BytesP) {
+	f.Where(p.Field(upstreamaccount.FieldCredentials))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *UpstreamAccountFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(upstreamaccount.FieldStatus))
+}
+
+// WhereSchedulable applies the entql bool predicate on the schedulable field.
+func (f *UpstreamAccountFilter) WhereSchedulable(p entql.BoolP) {
+	f.Where(p.Field(upstreamaccount.FieldSchedulable))
+}
+
+// WherePriority applies the entql int predicate on the priority field.
+func (f *UpstreamAccountFilter) WherePriority(p entql.IntP) {
+	f.Where(p.Field(upstreamaccount.FieldPriority))
+}
+
+// WhereWeight applies the entql int predicate on the weight field.
+func (f *UpstreamAccountFilter) WhereWeight(p entql.IntP) {
+	f.Where(p.Field(upstreamaccount.FieldWeight))
+}
+
+// WhereConcurrencyLimit applies the entql int predicate on the concurrency_limit field.
+func (f *UpstreamAccountFilter) WhereConcurrencyLimit(p entql.IntP) {
+	f.Where(p.Field(upstreamaccount.FieldConcurrencyLimit))
+}
+
+// WhereProxyConfig applies the entql json.RawMessage predicate on the proxy_config field.
+func (f *UpstreamAccountFilter) WhereProxyConfig(p entql.BytesP) {
+	f.Where(p.Field(upstreamaccount.FieldProxyConfig))
+}
+
+// WhereRateMultiplier applies the entql float64 predicate on the rate_multiplier field.
+func (f *UpstreamAccountFilter) WhereRateMultiplier(p entql.Float64P) {
+	f.Where(p.Field(upstreamaccount.FieldRateMultiplier))
+}
+
+// WhereExpiresAt applies the entql time.Time predicate on the expires_at field.
+func (f *UpstreamAccountFilter) WhereExpiresAt(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccount.FieldExpiresAt))
+}
+
+// WhereLastUsedAt applies the entql time.Time predicate on the last_used_at field.
+func (f *UpstreamAccountFilter) WhereLastUsedAt(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccount.FieldLastUsedAt))
+}
+
+// WhereErrorMessage applies the entql string predicate on the error_message field.
+func (f *UpstreamAccountFilter) WhereErrorMessage(p entql.StringP) {
+	f.Where(p.Field(upstreamaccount.FieldErrorMessage))
+}
+
+// WhereRateLimitResetAt applies the entql time.Time predicate on the rate_limit_reset_at field.
+func (f *UpstreamAccountFilter) WhereRateLimitResetAt(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccount.FieldRateLimitResetAt))
+}
+
+// WhereOverloadUntil applies the entql time.Time predicate on the overload_until field.
+func (f *UpstreamAccountFilter) WhereOverloadUntil(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccount.FieldOverloadUntil))
+}
+
+// WhereCooldownUntil applies the entql time.Time predicate on the cooldown_until field.
+func (f *UpstreamAccountFilter) WhereCooldownUntil(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccount.FieldCooldownUntil))
+}
+
+// WhereCooldownReason applies the entql string predicate on the cooldown_reason field.
+func (f *UpstreamAccountFilter) WhereCooldownReason(p entql.StringP) {
+	f.Where(p.Field(upstreamaccount.FieldCooldownReason))
+}
+
+// WhereQuotaLimitMicros applies the entql int64 predicate on the quota_limit_micros field.
+func (f *UpstreamAccountFilter) WhereQuotaLimitMicros(p entql.Int64P) {
+	f.Where(p.Field(upstreamaccount.FieldQuotaLimitMicros))
+}
+
+// WhereQuotaUsedMicros applies the entql int64 predicate on the quota_used_micros field.
+func (f *UpstreamAccountFilter) WhereQuotaUsedMicros(p entql.Int64P) {
+	f.Where(p.Field(upstreamaccount.FieldQuotaUsedMicros))
+}
+
+// WhereHasChannel applies a predicate to check if query has an edge channel.
+func (f *UpstreamAccountFilter) WhereHasChannel() {
+	f.Where(entql.HasEdge("channel"))
+}
+
+// WhereHasChannelWith applies a predicate to check if query has an edge channel with a given conditions (other predicates).
+func (f *UpstreamAccountFilter) WhereHasChannelWith(preds ...predicate.Channel) {
+	f.Where(entql.HasEdgeWith("channel", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPool applies a predicate to check if query has an edge pool.
+func (f *UpstreamAccountFilter) WhereHasPool() {
+	f.Where(entql.HasEdge("pool"))
+}
+
+// WhereHasPoolWith applies a predicate to check if query has an edge pool with a given conditions (other predicates).
+func (f *UpstreamAccountFilter) WhereHasPoolWith(preds ...predicate.UpstreamAccountPool) {
+	f.Where(entql.HasEdgeWith("pool", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (_q *UpstreamAccountPoolQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the UpstreamAccountPoolQuery builder.
+func (_q *UpstreamAccountPoolQuery) Filter() *UpstreamAccountPoolFilter {
+	return &UpstreamAccountPoolFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *UpstreamAccountPoolMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the UpstreamAccountPoolMutation builder.
+func (m *UpstreamAccountPoolMutation) Filter() *UpstreamAccountPoolFilter {
+	return &UpstreamAccountPoolFilter{config: m.config, predicateAdder: m}
+}
+
+// UpstreamAccountPoolFilter provides a generic filtering capability at runtime for UpstreamAccountPoolQuery.
+type UpstreamAccountPoolFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *UpstreamAccountPoolFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[44].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *UpstreamAccountPoolFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountpool.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *UpstreamAccountPoolFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccountpool.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *UpstreamAccountPoolFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(upstreamaccountpool.FieldUpdatedAt))
+}
+
+// WhereDeletedAt applies the entql int predicate on the deleted_at field.
+func (f *UpstreamAccountPoolFilter) WhereDeletedAt(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountpool.FieldDeletedAt))
+}
+
+// WhereChannelID applies the entql int predicate on the channel_id field.
+func (f *UpstreamAccountPoolFilter) WhereChannelID(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountpool.FieldChannelID))
+}
+
+// WhereName applies the entql string predicate on the name field.
+func (f *UpstreamAccountPoolFilter) WhereName(p entql.StringP) {
+	f.Where(p.Field(upstreamaccountpool.FieldName))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *UpstreamAccountPoolFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(upstreamaccountpool.FieldStatus))
+}
+
+// WherePriority applies the entql int predicate on the priority field.
+func (f *UpstreamAccountPoolFilter) WherePriority(p entql.IntP) {
+	f.Where(p.Field(upstreamaccountpool.FieldPriority))
+}
+
+// WhereModelPatterns applies the entql json.RawMessage predicate on the model_patterns field.
+func (f *UpstreamAccountPoolFilter) WhereModelPatterns(p entql.BytesP) {
+	f.Where(p.Field(upstreamaccountpool.FieldModelPatterns))
+}
+
+// WhereProjectIds applies the entql json.RawMessage predicate on the project_ids field.
+func (f *UpstreamAccountPoolFilter) WhereProjectIds(p entql.BytesP) {
+	f.Where(p.Field(upstreamaccountpool.FieldProjectIds))
+}
+
+// WhereRemark applies the entql string predicate on the remark field.
+func (f *UpstreamAccountPoolFilter) WhereRemark(p entql.StringP) {
+	f.Where(p.Field(upstreamaccountpool.FieldRemark))
+}
+
+// WhereHasChannel applies a predicate to check if query has an edge channel.
+func (f *UpstreamAccountPoolFilter) WhereHasChannel() {
+	f.Where(entql.HasEdge("channel"))
+}
+
+// WhereHasChannelWith applies a predicate to check if query has an edge channel with a given conditions (other predicates).
+func (f *UpstreamAccountPoolFilter) WhereHasChannelWith(preds ...predicate.Channel) {
+	f.Where(entql.HasEdgeWith("channel", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasAccounts applies a predicate to check if query has an edge accounts.
+func (f *UpstreamAccountPoolFilter) WhereHasAccounts() {
+	f.Where(entql.HasEdge("accounts"))
+}
+
+// WhereHasAccountsWith applies a predicate to check if query has an edge accounts with a given conditions (other predicates).
+func (f *UpstreamAccountPoolFilter) WhereHasAccountsWith(preds ...predicate.UpstreamAccount) {
+	f.Where(entql.HasEdgeWith("accounts", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (_q *UsageBillingRecordQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
 }
@@ -9026,7 +9494,7 @@ type UsageBillingRecordFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageBillingRecordFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[43].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[45].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9241,7 +9709,7 @@ type UsageDailyAggregateFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageDailyAggregateFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[44].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[46].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9386,7 +9854,7 @@ type UsageHourlyAggregateFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageHourlyAggregateFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[45].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[47].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9531,7 +9999,7 @@ type UsageLogFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UsageLogFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[46].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[48].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -9761,7 +10229,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[47].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[49].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -10127,7 +10595,7 @@ type UserProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[48].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[50].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -10225,7 +10693,7 @@ type UserRoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserRoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[49].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[51].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -10313,7 +10781,7 @@ type UserSubscriptionFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserSubscriptionFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[50].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[52].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})

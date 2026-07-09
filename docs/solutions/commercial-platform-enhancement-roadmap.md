@@ -152,41 +152,41 @@ Verification:
 
 ## Stage 15: Upstream Account Pool Model
 
-Status: [ ] Planned
+Status: [x] Completed
 
 Goal: add `sub2api`-style upstream account pools as a first-class Channel
 enhancement without removing existing Channel credentials.
 
 Backend scope:
 
-- [ ] Add an UpstreamAccount entity owned by a Channel.
-- [ ] Store account name, Channel ID, credential type, encrypted credentials,
+- [x] Add an UpstreamAccount entity owned by a Channel.
+- [x] Store account name, Channel ID, credential type, encrypted credentials,
   status, schedulable flag, priority, weight, concurrency limit, optional proxy
   configuration, rate multiplier, expires_at, last_used_at, error message,
   rate_limit_reset_at, overload_until, cooldown_until, cooldown_reason,
   quota_limit_micros, and quota_used_micros.
-- [ ] Add an UpstreamAccountPool or equivalent grouping model for model/project
+- [x] Add an UpstreamAccountPool or equivalent grouping model for model/project
   targeting when a Channel needs more than one pool.
-- [ ] Keep existing Channel credentials as fallback when no account pool is
+- [x] Keep existing Channel credentials as fallback when no account pool is
   configured.
-- [ ] Treat upstream credentials as sensitive data: never return plaintext
+- [x] Treat upstream credentials as sensitive data: never return plaintext
   credentials through GraphQL or REST.
 
 Frontend scope:
 
-- [ ] Add an account-pool tab to Channel detail pages.
-- [ ] Support account create, edit, enable, disable, delete/archive, and test
+- [x] Add an account-pool tab to Channel detail pages.
+- [x] Support account create, edit, enable, disable, delete/archive, and test
   operations.
-- [ ] Display status, schedulability, quota, cooldown, last used time, failure
+- [x] Display status, schedulability, quota, cooldown, last used time, failure
   reason, priority, weight, and concurrency.
 
 Verification:
 
-- [ ] Channels without account pools keep current behavior.
-- [ ] Disabled, expired, quota-exhausted, and cooling-down accounts are not
+- [x] Channels without account pools keep current behavior.
+- [x] Disabled, expired, quota-exhausted, and cooling-down accounts are not
   schedulable.
-- [ ] Account credentials are write-only from the browser's perspective.
-- [ ] Non-owner users cannot manage upstream accounts.
+- [x] Account credentials are write-only from the browser's perspective.
+- [x] Non-owner users cannot manage upstream accounts.
 
 ## Stage 16: Account-Level Scheduling And Circuit Breaker Integration
 

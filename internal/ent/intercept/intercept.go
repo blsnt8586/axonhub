@@ -52,6 +52,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -1279,6 +1281,60 @@ func (f TraverseTrace) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.TraceQuery", q)
 }
 
+// The UpstreamAccountFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UpstreamAccountFunc func(context.Context, *ent.UpstreamAccountQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f UpstreamAccountFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.UpstreamAccountQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.UpstreamAccountQuery", q)
+}
+
+// The TraverseUpstreamAccount type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUpstreamAccount func(context.Context, *ent.UpstreamAccountQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUpstreamAccount) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUpstreamAccount) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UpstreamAccountQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.UpstreamAccountQuery", q)
+}
+
+// The UpstreamAccountPoolFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UpstreamAccountPoolFunc func(context.Context, *ent.UpstreamAccountPoolQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f UpstreamAccountPoolFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.UpstreamAccountPoolQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.UpstreamAccountPoolQuery", q)
+}
+
+// The TraverseUpstreamAccountPool type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUpstreamAccountPool func(context.Context, *ent.UpstreamAccountPoolQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUpstreamAccountPool) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUpstreamAccountPool) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UpstreamAccountPoolQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.UpstreamAccountPoolQuery", q)
+}
+
 // The UsageBillingRecordFunc type is an adapter to allow the use of ordinary function as a Querier.
 type UsageBillingRecordFunc func(context.Context, *ent.UsageBillingRecordQuery) (ent.Value, error)
 
@@ -1584,6 +1640,10 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.ThreadQuery, predicate.Thread, thread.OrderOption]{typ: ent.TypeThread, tq: q}, nil
 	case *ent.TraceQuery:
 		return &query[*ent.TraceQuery, predicate.Trace, trace.OrderOption]{typ: ent.TypeTrace, tq: q}, nil
+	case *ent.UpstreamAccountQuery:
+		return &query[*ent.UpstreamAccountQuery, predicate.UpstreamAccount, upstreamaccount.OrderOption]{typ: ent.TypeUpstreamAccount, tq: q}, nil
+	case *ent.UpstreamAccountPoolQuery:
+		return &query[*ent.UpstreamAccountPoolQuery, predicate.UpstreamAccountPool, upstreamaccountpool.OrderOption]{typ: ent.TypeUpstreamAccountPool, tq: q}, nil
 	case *ent.UsageBillingRecordQuery:
 		return &query[*ent.UsageBillingRecordQuery, predicate.UsageBillingRecord, usagebillingrecord.OrderOption]{typ: ent.TypeUsageBillingRecord, tq: q}, nil
 	case *ent.UsageDailyAggregateQuery:

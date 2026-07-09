@@ -468,6 +468,30 @@ func (_m *Channel) ChannelModelPrices(ctx context.Context) (result []*ChannelMod
 	return result, err
 }
 
+func (_m *Channel) UpstreamAccountPools(ctx context.Context) (result []*UpstreamAccountPool, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedUpstreamAccountPools(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.UpstreamAccountPoolsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUpstreamAccountPools().All(ctx)
+	}
+	return result, err
+}
+
+func (_m *Channel) UpstreamAccounts(ctx context.Context) (result []*UpstreamAccount, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedUpstreamAccounts(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.UpstreamAccountsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUpstreamAccounts().All(ctx)
+	}
+	return result, err
+}
+
 func (_m *Channel) ProviderQuotaStatus(ctx context.Context) (*ProviderQuotaStatus, error) {
 	result, err := _m.Edges.ProviderQuotaStatusOrErr()
 	if IsNotLoaded(err) {
@@ -1564,6 +1588,42 @@ func (_m *Trace) Requests(
 		return conn, nil
 	}
 	return _m.QueryRequests().Paginate(ctx, after, first, before, last, opts...)
+}
+
+func (_m *UpstreamAccount) Channel(ctx context.Context) (*Channel, error) {
+	result, err := _m.Edges.ChannelOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryChannel().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *UpstreamAccount) Pool(ctx context.Context) (*UpstreamAccountPool, error) {
+	result, err := _m.Edges.PoolOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPool().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UpstreamAccountPool) Channel(ctx context.Context) (*Channel, error) {
+	result, err := _m.Edges.ChannelOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryChannel().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *UpstreamAccountPool) Accounts(ctx context.Context) (result []*UpstreamAccount, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedAccounts(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.AccountsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryAccounts().All(ctx)
+	}
+	return result, err
 }
 
 func (_m *UsageBillingRecord) UsageLog(ctx context.Context) (*UsageLog, error) {

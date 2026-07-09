@@ -23,6 +23,7 @@ import {
   IconGauge,
   IconHistory,
   IconPlugConnected,
+  IconServer,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -205,6 +206,15 @@ const ActionCell = memo(({ row }: { row: Row<Channel> }) => {
           >
             <IconGauge size={16} className='mr-2' />
             {t('channels.dialogs.rateLimit.action')}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(channel);
+              setOpen('upstreamAccounts');
+            }}
+          >
+            <IconServer size={16} className='mr-2' />
+            Upstream accounts
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {

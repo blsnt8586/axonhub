@@ -1526,6 +1526,49 @@ func (r *traceResolver) ThreadID(ctx context.Context, obj *ent.Trace) (*objects.
 }
 
 // ID is the resolver for the id field.
+func (r *upstreamAccountResolver) ID(ctx context.Context, obj *ent.UpstreamAccount) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeUpstreamAccount,
+		ID:   obj.ID,
+	}, nil
+}
+
+// ChannelID is the resolver for the channelID field.
+func (r *upstreamAccountResolver) ChannelID(ctx context.Context, obj *ent.UpstreamAccount) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeChannel,
+		ID:   obj.ChannelID,
+	}, nil
+}
+
+// PoolID is the resolver for the poolID field.
+func (r *upstreamAccountResolver) PoolID(ctx context.Context, obj *ent.UpstreamAccount) (*objects.GUID, error) {
+	if obj.PoolID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{
+		Type: ent.TypeUpstreamAccountPool,
+		ID:   *obj.PoolID,
+	}, nil
+}
+
+// ID is the resolver for the id field.
+func (r *upstreamAccountPoolResolver) ID(ctx context.Context, obj *ent.UpstreamAccountPool) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeUpstreamAccountPool,
+		ID:   obj.ID,
+	}, nil
+}
+
+// ChannelID is the resolver for the channelID field.
+func (r *upstreamAccountPoolResolver) ChannelID(ctx context.Context, obj *ent.UpstreamAccountPool) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeChannel,
+		ID:   obj.ChannelID,
+	}, nil
+}
+
+// ID is the resolver for the id field.
 func (r *usageBillingRecordResolver) ID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeUsageBillingRecord,
@@ -1906,6 +1949,14 @@ func (r *Resolver) Thread() ThreadResolver { return &threadResolver{r} }
 // Trace returns TraceResolver implementation.
 func (r *Resolver) Trace() TraceResolver { return &traceResolver{r} }
 
+// UpstreamAccount returns UpstreamAccountResolver implementation.
+func (r *Resolver) UpstreamAccount() UpstreamAccountResolver { return &upstreamAccountResolver{r} }
+
+// UpstreamAccountPool returns UpstreamAccountPoolResolver implementation.
+func (r *Resolver) UpstreamAccountPool() UpstreamAccountPoolResolver {
+	return &upstreamAccountPoolResolver{r}
+}
+
 // UsageBillingRecord returns UsageBillingRecordResolver implementation.
 func (r *Resolver) UsageBillingRecord() UsageBillingRecordResolver {
 	return &usageBillingRecordResolver{r}
@@ -1980,6 +2031,8 @@ type subscriptionPlanResolver struct{ *Resolver }
 type systemResolver struct{ *Resolver }
 type threadResolver struct{ *Resolver }
 type traceResolver struct{ *Resolver }
+type upstreamAccountResolver struct{ *Resolver }
+type upstreamAccountPoolResolver struct{ *Resolver }
 type usageBillingRecordResolver struct{ *Resolver }
 type usageDailyAggregateResolver struct{ *Resolver }
 type usageHourlyAggregateResolver struct{ *Resolver }

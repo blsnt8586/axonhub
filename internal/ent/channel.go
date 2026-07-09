@@ -80,19 +80,25 @@ type ChannelEdges struct {
 	ChannelProbes []*ChannelProbe `json:"channel_probes,omitempty"`
 	// ChannelModelPrices holds the value of the channel_model_prices edge.
 	ChannelModelPrices []*ChannelModelPrice `json:"channel_model_prices,omitempty"`
+	// UpstreamAccountPools holds the value of the upstream_account_pools edge.
+	UpstreamAccountPools []*UpstreamAccountPool `json:"upstream_account_pools,omitempty"`
+	// UpstreamAccounts holds the value of the upstream_accounts edge.
+	UpstreamAccounts []*UpstreamAccount `json:"upstream_accounts,omitempty"`
 	// ProviderQuotaStatus holds the value of the provider_quota_status edge.
 	ProviderQuotaStatus *ProviderQuotaStatus `json:"provider_quota_status,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [8]bool
 	// totalCount holds the count of the edges above.
-	totalCount [6]map[string]int
+	totalCount [8]map[string]int
 
-	namedRequests           map[string][]*Request
-	namedExecutions         map[string][]*RequestExecution
-	namedUsageLogs          map[string][]*UsageLog
-	namedChannelProbes      map[string][]*ChannelProbe
-	namedChannelModelPrices map[string][]*ChannelModelPrice
+	namedRequests             map[string][]*Request
+	namedExecutions           map[string][]*RequestExecution
+	namedUsageLogs            map[string][]*UsageLog
+	namedChannelProbes        map[string][]*ChannelProbe
+	namedChannelModelPrices   map[string][]*ChannelModelPrice
+	namedUpstreamAccountPools map[string][]*UpstreamAccountPool
+	namedUpstreamAccounts     map[string][]*UpstreamAccount
 }
 
 // RequestsOrErr returns the Requests value or an error if the edge
@@ -140,12 +146,30 @@ func (e ChannelEdges) ChannelModelPricesOrErr() ([]*ChannelModelPrice, error) {
 	return nil, &NotLoadedError{edge: "channel_model_prices"}
 }
 
+// UpstreamAccountPoolsOrErr returns the UpstreamAccountPools value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChannelEdges) UpstreamAccountPoolsOrErr() ([]*UpstreamAccountPool, error) {
+	if e.loadedTypes[5] {
+		return e.UpstreamAccountPools, nil
+	}
+	return nil, &NotLoadedError{edge: "upstream_account_pools"}
+}
+
+// UpstreamAccountsOrErr returns the UpstreamAccounts value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChannelEdges) UpstreamAccountsOrErr() ([]*UpstreamAccount, error) {
+	if e.loadedTypes[6] {
+		return e.UpstreamAccounts, nil
+	}
+	return nil, &NotLoadedError{edge: "upstream_accounts"}
+}
+
 // ProviderQuotaStatusOrErr returns the ProviderQuotaStatus value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e ChannelEdges) ProviderQuotaStatusOrErr() (*ProviderQuotaStatus, error) {
 	if e.ProviderQuotaStatus != nil {
 		return e.ProviderQuotaStatus, nil
-	} else if e.loadedTypes[5] {
+	} else if e.loadedTypes[7] {
 		return nil, &NotFoundError{label: providerquotastatus.Label}
 	}
 	return nil, &NotLoadedError{edge: "provider_quota_status"}
@@ -369,6 +393,16 @@ func (_m *Channel) QueryChannelModelPrices() *ChannelModelPriceQuery {
 	return NewChannelClient(_m.config).QueryChannelModelPrices(_m)
 }
 
+// QueryUpstreamAccountPools queries the "upstream_account_pools" edge of the Channel entity.
+func (_m *Channel) QueryUpstreamAccountPools() *UpstreamAccountPoolQuery {
+	return NewChannelClient(_m.config).QueryUpstreamAccountPools(_m)
+}
+
+// QueryUpstreamAccounts queries the "upstream_accounts" edge of the Channel entity.
+func (_m *Channel) QueryUpstreamAccounts() *UpstreamAccountQuery {
+	return NewChannelClient(_m.config).QueryUpstreamAccounts(_m)
+}
+
 // QueryProviderQuotaStatus queries the "provider_quota_status" edge of the Channel entity.
 func (_m *Channel) QueryProviderQuotaStatus() *ProviderQuotaStatusQuery {
 	return NewChannelClient(_m.config).QueryProviderQuotaStatus(_m)
@@ -582,6 +616,54 @@ func (_m *Channel) appendNamedChannelModelPrices(name string, edges ...*ChannelM
 		_m.Edges.namedChannelModelPrices[name] = []*ChannelModelPrice{}
 	} else {
 		_m.Edges.namedChannelModelPrices[name] = append(_m.Edges.namedChannelModelPrices[name], edges...)
+	}
+}
+
+// NamedUpstreamAccountPools returns the UpstreamAccountPools named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Channel) NamedUpstreamAccountPools(name string) ([]*UpstreamAccountPool, error) {
+	if _m.Edges.namedUpstreamAccountPools == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUpstreamAccountPools[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Channel) appendNamedUpstreamAccountPools(name string, edges ...*UpstreamAccountPool) {
+	if _m.Edges.namedUpstreamAccountPools == nil {
+		_m.Edges.namedUpstreamAccountPools = make(map[string][]*UpstreamAccountPool)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUpstreamAccountPools[name] = []*UpstreamAccountPool{}
+	} else {
+		_m.Edges.namedUpstreamAccountPools[name] = append(_m.Edges.namedUpstreamAccountPools[name], edges...)
+	}
+}
+
+// NamedUpstreamAccounts returns the UpstreamAccounts named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Channel) NamedUpstreamAccounts(name string) ([]*UpstreamAccount, error) {
+	if _m.Edges.namedUpstreamAccounts == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUpstreamAccounts[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Channel) appendNamedUpstreamAccounts(name string, edges ...*UpstreamAccount) {
+	if _m.Edges.namedUpstreamAccounts == nil {
+		_m.Edges.namedUpstreamAccounts = make(map[string][]*UpstreamAccount)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUpstreamAccounts[name] = []*UpstreamAccount{}
+	} else {
+		_m.Edges.namedUpstreamAccounts[name] = append(_m.Edges.namedUpstreamAccounts[name], edges...)
 	}
 }
 

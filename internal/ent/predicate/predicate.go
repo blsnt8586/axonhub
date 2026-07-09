@@ -135,6 +135,12 @@ type Thread func(*sql.Selector)
 // Trace is the predicate function for trace builders.
 type Trace func(*sql.Selector)
 
+// UpstreamAccount is the predicate function for upstreamaccount builders.
+type UpstreamAccount func(*sql.Selector)
+
+// UpstreamAccountPool is the predicate function for upstreamaccountpool builders.
+type UpstreamAccountPool func(*sql.Selector)
+
 // UsageBillingRecord is the predicate function for usagebillingrecord builders.
 type UsageBillingRecord func(*sql.Selector)
 

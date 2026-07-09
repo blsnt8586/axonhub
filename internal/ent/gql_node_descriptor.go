@@ -40,6 +40,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/ent/user"
@@ -1864,7 +1866,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "Channel",
 		Fields: make([]*Field, 20),
-		Edges:  make([]*Edge, 6),
+		Edges:  make([]*Edge, 8),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -2078,12 +2080,32 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[5] = &Edge{
+		Type: "UpstreamAccountPool",
+		Name: "upstream_account_pools",
+	}
+	err = _m.QueryUpstreamAccountPools().
+		Select(upstreamaccountpool.FieldID).
+		Scan(ctx, &node.Edges[5].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[6] = &Edge{
+		Type: "UpstreamAccount",
+		Name: "upstream_accounts",
+	}
+	err = _m.QueryUpstreamAccounts().
+		Select(upstreamaccount.FieldID).
+		Scan(ctx, &node.Edges[6].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[7] = &Edge{
 		Type: "ProviderQuotaStatus",
 		Name: "provider_quota_status",
 	}
 	err = _m.QueryProviderQuotaStatus().
 		Select(providerquotastatus.FieldID).
-		Scan(ctx, &node.Edges[5].IDs)
+		Scan(ctx, &node.Edges[7].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -5564,6 +5586,310 @@ func (_m *Trace) Node(ctx context.Context) (node *Node, err error) {
 	err = _m.QueryRequests().
 		Select(request.FieldID).
 		Scan(ctx, &node.Edges[2].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *UpstreamAccount) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "UpstreamAccount",
+		Fields: make([]*Field, 21),
+		Edges:  make([]*Edge, 2),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ChannelID); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "int",
+		Name:  "channel_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.PoolID); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "int",
+		Name:  "pool_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.CredentialType); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "upstreamaccount.CredentialType",
+		Name:  "credential_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "upstreamaccount.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Schedulable); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "bool",
+		Name:  "schedulable",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Priority); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "int",
+		Name:  "priority",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Weight); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "int",
+		Name:  "weight",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ConcurrencyLimit); err != nil {
+		return nil, err
+	}
+	node.Fields[10] = &Field{
+		Type:  "int",
+		Name:  "concurrency_limit",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RateMultiplier); err != nil {
+		return nil, err
+	}
+	node.Fields[11] = &Field{
+		Type:  "float64",
+		Name:  "rate_multiplier",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ExpiresAt); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
+		Type:  "time.Time",
+		Name:  "expires_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LastUsedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[13] = &Field{
+		Type:  "time.Time",
+		Name:  "last_used_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ErrorMessage); err != nil {
+		return nil, err
+	}
+	node.Fields[14] = &Field{
+		Type:  "string",
+		Name:  "error_message",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RateLimitResetAt); err != nil {
+		return nil, err
+	}
+	node.Fields[15] = &Field{
+		Type:  "time.Time",
+		Name:  "rate_limit_reset_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.OverloadUntil); err != nil {
+		return nil, err
+	}
+	node.Fields[16] = &Field{
+		Type:  "time.Time",
+		Name:  "overload_until",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.CooldownUntil); err != nil {
+		return nil, err
+	}
+	node.Fields[17] = &Field{
+		Type:  "time.Time",
+		Name:  "cooldown_until",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.CooldownReason); err != nil {
+		return nil, err
+	}
+	node.Fields[18] = &Field{
+		Type:  "string",
+		Name:  "cooldown_reason",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.QuotaLimitMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[19] = &Field{
+		Type:  "int64",
+		Name:  "quota_limit_micros",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.QuotaUsedMicros); err != nil {
+		return nil, err
+	}
+	node.Fields[20] = &Field{
+		Type:  "int64",
+		Name:  "quota_used_micros",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Channel",
+		Name: "channel",
+	}
+	err = _m.QueryChannel().
+		Select(channel.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "UpstreamAccountPool",
+		Name: "pool",
+	}
+	err = _m.QueryPool().
+		Select(upstreamaccountpool.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *UpstreamAccountPool) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "UpstreamAccountPool",
+		Fields: make([]*Field, 9),
+		Edges:  make([]*Edge, 2),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ChannelID); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "int",
+		Name:  "channel_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "upstreamaccountpool.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Priority); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "int",
+		Name:  "priority",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ModelPatterns); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "[]string",
+		Name:  "model_patterns",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ProjectIds); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "[]int",
+		Name:  "project_ids",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Remark); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "string",
+		Name:  "remark",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Channel",
+		Name: "channel",
+	}
+	err = _m.QueryChannel().
+		Select(channel.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "UpstreamAccount",
+		Name: "accounts",
+	}
+	err = _m.QueryAccounts().
+		Select(upstreamaccount.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
 	if err != nil {
 		return nil, err
 	}

@@ -17,6 +17,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/objects"
 )
@@ -316,6 +318,36 @@ func (_c *ChannelCreate) AddChannelModelPrices(v ...*ChannelModelPrice) *Channel
 		ids[i] = v[i].ID
 	}
 	return _c.AddChannelModelPriceIDs(ids...)
+}
+
+// AddUpstreamAccountPoolIDs adds the "upstream_account_pools" edge to the UpstreamAccountPool entity by IDs.
+func (_c *ChannelCreate) AddUpstreamAccountPoolIDs(ids ...int) *ChannelCreate {
+	_c.mutation.AddUpstreamAccountPoolIDs(ids...)
+	return _c
+}
+
+// AddUpstreamAccountPools adds the "upstream_account_pools" edges to the UpstreamAccountPool entity.
+func (_c *ChannelCreate) AddUpstreamAccountPools(v ...*UpstreamAccountPool) *ChannelCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUpstreamAccountPoolIDs(ids...)
+}
+
+// AddUpstreamAccountIDs adds the "upstream_accounts" edge to the UpstreamAccount entity by IDs.
+func (_c *ChannelCreate) AddUpstreamAccountIDs(ids ...int) *ChannelCreate {
+	_c.mutation.AddUpstreamAccountIDs(ids...)
+	return _c
+}
+
+// AddUpstreamAccounts adds the "upstream_accounts" edges to the UpstreamAccount entity.
+func (_c *ChannelCreate) AddUpstreamAccounts(v ...*UpstreamAccount) *ChannelCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUpstreamAccountIDs(ids...)
 }
 
 // SetProviderQuotaStatusID sets the "provider_quota_status" edge to the ProviderQuotaStatus entity by ID.
@@ -658,6 +690,38 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(channelmodelprice.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UpstreamAccountPoolsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountPoolsTable,
+			Columns: []string{channel.UpstreamAccountPoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountpool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UpstreamAccountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountsTable,
+			Columns: []string{channel.UpstreamAccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

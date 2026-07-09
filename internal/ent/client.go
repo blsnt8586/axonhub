@@ -58,6 +58,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -159,6 +161,10 @@ type Client struct {
 	Thread *ThreadClient
 	// Trace is the client for interacting with the Trace builders.
 	Trace *TraceClient
+	// UpstreamAccount is the client for interacting with the UpstreamAccount builders.
+	UpstreamAccount *UpstreamAccountClient
+	// UpstreamAccountPool is the client for interacting with the UpstreamAccountPool builders.
+	UpstreamAccountPool *UpstreamAccountPoolClient
 	// UsageBillingRecord is the client for interacting with the UsageBillingRecord builders.
 	UsageBillingRecord *UsageBillingRecordClient
 	// UsageDailyAggregate is the client for interacting with the UsageDailyAggregate builders.
@@ -231,6 +237,8 @@ func (c *Client) init() {
 	c.System = NewSystemClient(c.config)
 	c.Thread = NewThreadClient(c.config)
 	c.Trace = NewTraceClient(c.config)
+	c.UpstreamAccount = NewUpstreamAccountClient(c.config)
+	c.UpstreamAccountPool = NewUpstreamAccountPoolClient(c.config)
 	c.UsageBillingRecord = NewUsageBillingRecordClient(c.config)
 	c.UsageDailyAggregate = NewUsageDailyAggregateClient(c.config)
 	c.UsageHourlyAggregate = NewUsageHourlyAggregateClient(c.config)
@@ -374,6 +382,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		System:                        NewSystemClient(cfg),
 		Thread:                        NewThreadClient(cfg),
 		Trace:                         NewTraceClient(cfg),
+		UpstreamAccount:               NewUpstreamAccountClient(cfg),
+		UpstreamAccountPool:           NewUpstreamAccountPoolClient(cfg),
 		UsageBillingRecord:            NewUsageBillingRecordClient(cfg),
 		UsageDailyAggregate:           NewUsageDailyAggregateClient(cfg),
 		UsageHourlyAggregate:          NewUsageHourlyAggregateClient(cfg),
@@ -444,6 +454,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		System:                        NewSystemClient(cfg),
 		Thread:                        NewThreadClient(cfg),
 		Trace:                         NewTraceClient(cfg),
+		UpstreamAccount:               NewUpstreamAccountClient(cfg),
+		UpstreamAccountPool:           NewUpstreamAccountPoolClient(cfg),
 		UsageBillingRecord:            NewUsageBillingRecordClient(cfg),
 		UsageDailyAggregate:           NewUsageDailyAggregateClient(cfg),
 		UsageHourlyAggregate:          NewUsageHourlyAggregateClient(cfg),
@@ -492,8 +504,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
 		c.RequestExecution, c.Role, c.SubscriptionPlan, c.System, c.Thread, c.Trace,
-		c.UsageBillingRecord, c.UsageDailyAggregate, c.UsageHourlyAggregate,
-		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
+		c.UpstreamAccount, c.UpstreamAccountPool, c.UsageBillingRecord,
+		c.UsageDailyAggregate, c.UsageHourlyAggregate, c.UsageLog, c.User,
+		c.UserProject, c.UserRole, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -514,8 +527,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.PaymentProviderInstance, c.Project, c.PromoCode, c.PromoUsage, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.RedeemCode, c.Request,
 		c.RequestExecution, c.Role, c.SubscriptionPlan, c.System, c.Thread, c.Trace,
-		c.UsageBillingRecord, c.UsageDailyAggregate, c.UsageHourlyAggregate,
-		c.UsageLog, c.User, c.UserProject, c.UserRole, c.UserSubscription,
+		c.UpstreamAccount, c.UpstreamAccountPool, c.UsageBillingRecord,
+		c.UsageDailyAggregate, c.UsageHourlyAggregate, c.UsageLog, c.User,
+		c.UserProject, c.UserRole, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -610,6 +624,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Thread.mutate(ctx, m)
 	case *TraceMutation:
 		return c.Trace.mutate(ctx, m)
+	case *UpstreamAccountMutation:
+		return c.UpstreamAccount.mutate(ctx, m)
+	case *UpstreamAccountPoolMutation:
+		return c.UpstreamAccountPool.mutate(ctx, m)
 	case *UsageBillingRecordMutation:
 		return c.UsageBillingRecord.mutate(ctx, m)
 	case *UsageDailyAggregateMutation:
@@ -3336,6 +3354,38 @@ func (c *ChannelClient) QueryChannelModelPrices(_m *Channel) *ChannelModelPriceQ
 			sqlgraph.From(channel.Table, channel.FieldID, id),
 			sqlgraph.To(channelmodelprice.Table, channelmodelprice.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, channel.ChannelModelPricesTable, channel.ChannelModelPricesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccountPools queries the upstream_account_pools edge of a Channel.
+func (c *ChannelClient) QueryUpstreamAccountPools(_m *Channel) *UpstreamAccountPoolQuery {
+	query := (&UpstreamAccountPoolClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(upstreamaccountpool.Table, upstreamaccountpool.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.UpstreamAccountPoolsTable, channel.UpstreamAccountPoolsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUpstreamAccounts queries the upstream_accounts edge of a Channel.
+func (c *ChannelClient) QueryUpstreamAccounts(_m *Channel) *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.UpstreamAccountsTable, channel.UpstreamAccountsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -8197,6 +8247,340 @@ func (c *TraceClient) mutate(ctx context.Context, m *TraceMutation) (Value, erro
 	}
 }
 
+// UpstreamAccountClient is a client for the UpstreamAccount schema.
+type UpstreamAccountClient struct {
+	config
+}
+
+// NewUpstreamAccountClient returns a client for the UpstreamAccount from the given config.
+func NewUpstreamAccountClient(c config) *UpstreamAccountClient {
+	return &UpstreamAccountClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `upstreamaccount.Hooks(f(g(h())))`.
+func (c *UpstreamAccountClient) Use(hooks ...Hook) {
+	c.hooks.UpstreamAccount = append(c.hooks.UpstreamAccount, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `upstreamaccount.Intercept(f(g(h())))`.
+func (c *UpstreamAccountClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UpstreamAccount = append(c.inters.UpstreamAccount, interceptors...)
+}
+
+// Create returns a builder for creating a UpstreamAccount entity.
+func (c *UpstreamAccountClient) Create() *UpstreamAccountCreate {
+	mutation := newUpstreamAccountMutation(c.config, OpCreate)
+	return &UpstreamAccountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UpstreamAccount entities.
+func (c *UpstreamAccountClient) CreateBulk(builders ...*UpstreamAccountCreate) *UpstreamAccountCreateBulk {
+	return &UpstreamAccountCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UpstreamAccountClient) MapCreateBulk(slice any, setFunc func(*UpstreamAccountCreate, int)) *UpstreamAccountCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UpstreamAccountCreateBulk{err: fmt.Errorf("calling to UpstreamAccountClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UpstreamAccountCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UpstreamAccountCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UpstreamAccount.
+func (c *UpstreamAccountClient) Update() *UpstreamAccountUpdate {
+	mutation := newUpstreamAccountMutation(c.config, OpUpdate)
+	return &UpstreamAccountUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UpstreamAccountClient) UpdateOne(_m *UpstreamAccount) *UpstreamAccountUpdateOne {
+	mutation := newUpstreamAccountMutation(c.config, OpUpdateOne, withUpstreamAccount(_m))
+	return &UpstreamAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UpstreamAccountClient) UpdateOneID(id int) *UpstreamAccountUpdateOne {
+	mutation := newUpstreamAccountMutation(c.config, OpUpdateOne, withUpstreamAccountID(id))
+	return &UpstreamAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UpstreamAccount.
+func (c *UpstreamAccountClient) Delete() *UpstreamAccountDelete {
+	mutation := newUpstreamAccountMutation(c.config, OpDelete)
+	return &UpstreamAccountDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UpstreamAccountClient) DeleteOne(_m *UpstreamAccount) *UpstreamAccountDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UpstreamAccountClient) DeleteOneID(id int) *UpstreamAccountDeleteOne {
+	builder := c.Delete().Where(upstreamaccount.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UpstreamAccountDeleteOne{builder}
+}
+
+// Query returns a query builder for UpstreamAccount.
+func (c *UpstreamAccountClient) Query() *UpstreamAccountQuery {
+	return &UpstreamAccountQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUpstreamAccount},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UpstreamAccount entity by its id.
+func (c *UpstreamAccountClient) Get(ctx context.Context, id int) (*UpstreamAccount, error) {
+	return c.Query().Where(upstreamaccount.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UpstreamAccountClient) GetX(ctx context.Context, id int) *UpstreamAccount {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryChannel queries the channel edge of a UpstreamAccount.
+func (c *UpstreamAccountClient) QueryChannel(_m *UpstreamAccount) *ChannelQuery {
+	query := (&ChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, id),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccount.ChannelTable, upstreamaccount.ChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPool queries the pool edge of a UpstreamAccount.
+func (c *UpstreamAccountClient) QueryPool(_m *UpstreamAccount) *UpstreamAccountPoolQuery {
+	query := (&UpstreamAccountPoolClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccount.Table, upstreamaccount.FieldID, id),
+			sqlgraph.To(upstreamaccountpool.Table, upstreamaccountpool.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccount.PoolTable, upstreamaccount.PoolColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UpstreamAccountClient) Hooks() []Hook {
+	hooks := c.hooks.UpstreamAccount
+	return append(hooks[:len(hooks):len(hooks)], upstreamaccount.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *UpstreamAccountClient) Interceptors() []Interceptor {
+	inters := c.inters.UpstreamAccount
+	return append(inters[:len(inters):len(inters)], upstreamaccount.Interceptors[:]...)
+}
+
+func (c *UpstreamAccountClient) mutate(ctx context.Context, m *UpstreamAccountMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UpstreamAccountCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UpstreamAccountUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UpstreamAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UpstreamAccountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UpstreamAccount mutation op: %q", m.Op())
+	}
+}
+
+// UpstreamAccountPoolClient is a client for the UpstreamAccountPool schema.
+type UpstreamAccountPoolClient struct {
+	config
+}
+
+// NewUpstreamAccountPoolClient returns a client for the UpstreamAccountPool from the given config.
+func NewUpstreamAccountPoolClient(c config) *UpstreamAccountPoolClient {
+	return &UpstreamAccountPoolClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `upstreamaccountpool.Hooks(f(g(h())))`.
+func (c *UpstreamAccountPoolClient) Use(hooks ...Hook) {
+	c.hooks.UpstreamAccountPool = append(c.hooks.UpstreamAccountPool, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `upstreamaccountpool.Intercept(f(g(h())))`.
+func (c *UpstreamAccountPoolClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UpstreamAccountPool = append(c.inters.UpstreamAccountPool, interceptors...)
+}
+
+// Create returns a builder for creating a UpstreamAccountPool entity.
+func (c *UpstreamAccountPoolClient) Create() *UpstreamAccountPoolCreate {
+	mutation := newUpstreamAccountPoolMutation(c.config, OpCreate)
+	return &UpstreamAccountPoolCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UpstreamAccountPool entities.
+func (c *UpstreamAccountPoolClient) CreateBulk(builders ...*UpstreamAccountPoolCreate) *UpstreamAccountPoolCreateBulk {
+	return &UpstreamAccountPoolCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UpstreamAccountPoolClient) MapCreateBulk(slice any, setFunc func(*UpstreamAccountPoolCreate, int)) *UpstreamAccountPoolCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UpstreamAccountPoolCreateBulk{err: fmt.Errorf("calling to UpstreamAccountPoolClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UpstreamAccountPoolCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UpstreamAccountPoolCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UpstreamAccountPool.
+func (c *UpstreamAccountPoolClient) Update() *UpstreamAccountPoolUpdate {
+	mutation := newUpstreamAccountPoolMutation(c.config, OpUpdate)
+	return &UpstreamAccountPoolUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UpstreamAccountPoolClient) UpdateOne(_m *UpstreamAccountPool) *UpstreamAccountPoolUpdateOne {
+	mutation := newUpstreamAccountPoolMutation(c.config, OpUpdateOne, withUpstreamAccountPool(_m))
+	return &UpstreamAccountPoolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UpstreamAccountPoolClient) UpdateOneID(id int) *UpstreamAccountPoolUpdateOne {
+	mutation := newUpstreamAccountPoolMutation(c.config, OpUpdateOne, withUpstreamAccountPoolID(id))
+	return &UpstreamAccountPoolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UpstreamAccountPool.
+func (c *UpstreamAccountPoolClient) Delete() *UpstreamAccountPoolDelete {
+	mutation := newUpstreamAccountPoolMutation(c.config, OpDelete)
+	return &UpstreamAccountPoolDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UpstreamAccountPoolClient) DeleteOne(_m *UpstreamAccountPool) *UpstreamAccountPoolDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UpstreamAccountPoolClient) DeleteOneID(id int) *UpstreamAccountPoolDeleteOne {
+	builder := c.Delete().Where(upstreamaccountpool.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UpstreamAccountPoolDeleteOne{builder}
+}
+
+// Query returns a query builder for UpstreamAccountPool.
+func (c *UpstreamAccountPoolClient) Query() *UpstreamAccountPoolQuery {
+	return &UpstreamAccountPoolQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUpstreamAccountPool},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UpstreamAccountPool entity by its id.
+func (c *UpstreamAccountPoolClient) Get(ctx context.Context, id int) (*UpstreamAccountPool, error) {
+	return c.Query().Where(upstreamaccountpool.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UpstreamAccountPoolClient) GetX(ctx context.Context, id int) *UpstreamAccountPool {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryChannel queries the channel edge of a UpstreamAccountPool.
+func (c *UpstreamAccountPoolClient) QueryChannel(_m *UpstreamAccountPool) *ChannelQuery {
+	query := (&ChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccountpool.Table, upstreamaccountpool.FieldID, id),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, upstreamaccountpool.ChannelTable, upstreamaccountpool.ChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccounts queries the accounts edge of a UpstreamAccountPool.
+func (c *UpstreamAccountPoolClient) QueryAccounts(_m *UpstreamAccountPool) *UpstreamAccountQuery {
+	query := (&UpstreamAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(upstreamaccountpool.Table, upstreamaccountpool.FieldID, id),
+			sqlgraph.To(upstreamaccount.Table, upstreamaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, upstreamaccountpool.AccountsTable, upstreamaccountpool.AccountsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UpstreamAccountPoolClient) Hooks() []Hook {
+	hooks := c.hooks.UpstreamAccountPool
+	return append(hooks[:len(hooks):len(hooks)], upstreamaccountpool.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *UpstreamAccountPoolClient) Interceptors() []Interceptor {
+	inters := c.inters.UpstreamAccountPool
+	return append(inters[:len(inters):len(inters)], upstreamaccountpool.Interceptors[:]...)
+}
+
+func (c *UpstreamAccountPoolClient) mutate(ctx context.Context, m *UpstreamAccountPoolMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UpstreamAccountPoolCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UpstreamAccountPoolUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UpstreamAccountPoolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UpstreamAccountPoolDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UpstreamAccountPool mutation op: %q", m.Op())
+	}
+}
+
 // UsageBillingRecordClient is a client for the UsageBillingRecord schema.
 type UsageBillingRecordClient struct {
 	config
@@ -9954,8 +10338,9 @@ type (
 		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
 		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
 		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
-		UsageBillingRecord, UsageDailyAggregate, UsageHourlyAggregate, UsageLog, User,
-		UserProject, UserRole, UserSubscription []ent.Hook
+		UpstreamAccount, UpstreamAccountPool, UsageBillingRecord, UsageDailyAggregate,
+		UsageHourlyAggregate, UsageLog, User, UserProject, UserRole,
+		UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, AffiliateInvitation, AffiliateProfile,
@@ -9968,7 +10353,8 @@ type (
 		PaymentOrder, PaymentProviderInstance, Project, PromoCode, PromoUsage, Prompt,
 		PromptProtectionRule, ProviderQuotaStatus, RedeemCode, Request,
 		RequestExecution, Role, SubscriptionPlan, System, Thread, Trace,
-		UsageBillingRecord, UsageDailyAggregate, UsageHourlyAggregate, UsageLog, User,
-		UserProject, UserRole, UserSubscription []ent.Interceptor
+		UpstreamAccount, UpstreamAccountPool, UsageBillingRecord, UsageDailyAggregate,
+		UsageHourlyAggregate, UsageLog, User, UserProject, UserRole,
+		UserSubscription []ent.Interceptor
 	}
 )

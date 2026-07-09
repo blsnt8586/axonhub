@@ -50,6 +50,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
 	"github.com/looplj/axonhub/internal/ent/role"
 	"github.com/looplj/axonhub/internal/ent/subscriptionplan"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -136,6 +138,9 @@ type ResolverRoot interface {
 	System() SystemResolver
 	Thread() ThreadResolver
 	Trace() TraceResolver
+	UpstreamAccount() UpstreamAccountResolver
+	UpstreamAccountPool() UpstreamAccountPoolResolver
+	UpstreamAccountTestResult() UpstreamAccountTestResultResolver
 	UsageBillingRecord() UsageBillingRecordResolver
 	UsageDailyAggregate() UsageDailyAggregateResolver
 	UsageHourlyAggregate() UsageHourlyAggregateResolver
@@ -829,36 +834,39 @@ type ComplexityRoot struct {
 	}
 
 	Channel struct {
-		AllModelEntries         func(childComplexity int) int
-		AutoSyncModelPattern    func(childComplexity int) int
-		AutoSyncSupportedModels func(childComplexity int) int
-		BaseURL                 func(childComplexity int) int
-		ChannelModelPrices      func(childComplexity int) int
-		ChannelProbes           func(childComplexity int) int
-		CreatedAt               func(childComplexity int) int
-		Credentials             func(childComplexity int) int
-		DefaultEndpoints        func(childComplexity int) int
-		DefaultTestModel        func(childComplexity int) int
-		DisabledAPIKeys         func(childComplexity int) int
-		Endpoints               func(childComplexity int) int
-		ErrorMessage            func(childComplexity int) int
-		Executions              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestExecutionOrder, where *ent.RequestExecutionWhereInput) int
-		ID                      func(childComplexity int) int
-		LiveLimiterStats        func(childComplexity int) int
-		ManualModels            func(childComplexity int) int
-		Name                    func(childComplexity int) int
-		OrderingWeight          func(childComplexity int) int
-		Policies                func(childComplexity int) int
-		ProviderQuotaStatus     func(childComplexity int) int
-		Remark                  func(childComplexity int) int
-		Requests                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
-		Settings                func(childComplexity int) int
-		Status                  func(childComplexity int) int
-		SupportedModels         func(childComplexity int) int
-		Tags                    func(childComplexity int) int
-		Type                    func(childComplexity int) int
-		UpdatedAt               func(childComplexity int) int
-		UsageLogs               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
+		AllModelEntries            func(childComplexity int) int
+		AutoSyncModelPattern       func(childComplexity int) int
+		AutoSyncSupportedModels    func(childComplexity int) int
+		BaseURL                    func(childComplexity int) int
+		ChannelModelPrices         func(childComplexity int) int
+		ChannelProbes              func(childComplexity int) int
+		CreatedAt                  func(childComplexity int) int
+		Credentials                func(childComplexity int) int
+		DefaultEndpoints           func(childComplexity int) int
+		DefaultTestModel           func(childComplexity int) int
+		DisabledAPIKeys            func(childComplexity int) int
+		Endpoints                  func(childComplexity int) int
+		ErrorMessage               func(childComplexity int) int
+		Executions                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestExecutionOrder, where *ent.RequestExecutionWhereInput) int
+		ID                         func(childComplexity int) int
+		LiveLimiterStats           func(childComplexity int) int
+		ManualModels               func(childComplexity int) int
+		Name                       func(childComplexity int) int
+		OrderingWeight             func(childComplexity int) int
+		Policies                   func(childComplexity int) int
+		ProviderQuotaStatus        func(childComplexity int) int
+		Remark                     func(childComplexity int) int
+		Requests                   func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
+		Settings                   func(childComplexity int) int
+		Status                     func(childComplexity int) int
+		SupportedModels            func(childComplexity int) int
+		Tags                       func(childComplexity int) int
+		Type                       func(childComplexity int) int
+		UpdatedAt                  func(childComplexity int) int
+		UpstreamAccountPools       func(childComplexity int) int
+		UpstreamAccounts           func(childComplexity int) int
+		UpstreamCredentialFallback func(childComplexity int) int
+		UsageLogs                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
 	}
 
 	ChannelConnection struct {
@@ -1518,6 +1526,8 @@ type ComplexityRoot struct {
 		AdminAssignSubscription              func(childComplexity int, input biz.AdminAssignSubscriptionInput) int
 		AdminCreateAndRedeemCode             func(childComplexity int, input biz.AdminCreateAndRedeemCodeInput) int
 		ApplyChannelOverrideTemplate         func(childComplexity int, input ApplyChannelOverrideTemplateInput) int
+		ArchiveUpstreamAccount               func(childComplexity int, id objects.GUID) int
+		ArchiveUpstreamAccountPool           func(childComplexity int, id objects.GUID) int
 		Backup                               func(childComplexity int, input backup.BackupOptions) int
 		BindAffiliateInvite                  func(childComplexity int, input biz.BindAffiliateInviteInput) int
 		BulkArchiveAPIKeys                   func(childComplexity int, ids []*objects.GUID) int
@@ -1565,6 +1575,8 @@ type ComplexityRoot struct {
 		CreateRedeemCodes                    func(childComplexity int, input biz.CreateRedeemCodesInput) int
 		CreateRole                           func(childComplexity int, input ent.CreateRoleInput) int
 		CreateSimulatedEPayRechargeCheckout  func(childComplexity int, input CreateSimulatedEPayRechargeCheckoutInput) int
+		CreateUpstreamAccount                func(childComplexity int, input CreateUpstreamAccountInput) int
+		CreateUpstreamAccountPool            func(childComplexity int, input CreateUpstreamAccountPoolInput) int
 		CreateUser                           func(childComplexity int, input ent.CreateUserInput) int
 		DeleteAPIKeyProfileTemplate          func(childComplexity int, id objects.GUID) int
 		DeleteBillingPriceRule               func(childComplexity int, id objects.GUID) int
@@ -1618,6 +1630,7 @@ type ComplexityRoot struct {
 		TestChannel                          func(childComplexity int, input TestChannelInput) int
 		TestChannelAPIKey                    func(childComplexity int, channelID objects.GUID, key string, modelID *string) int
 		TestChannelAPIKeys                   func(childComplexity int, channelID objects.GUID, modelID *string) int
+		TestUpstreamAccount                  func(childComplexity int, id objects.GUID) int
 		TransferAffiliateRebates             func(childComplexity int) int
 		TriggerAutoBackup                    func(childComplexity int) int
 		TriggerGcCleanup                     func(childComplexity int, input gc.TriggerGcCleanupInput) int
@@ -1656,6 +1669,8 @@ type ComplexityRoot struct {
 		UpdateSystemChannelSettings          func(childComplexity int, input biz.SystemChannelSettings) int
 		UpdateSystemGeneralSettings          func(childComplexity int, input biz.SystemGeneralSettings) int
 		UpdateSystemModelSettings            func(childComplexity int, input biz.SystemModelSettings) int
+		UpdateUpstreamAccount                func(childComplexity int, id objects.GUID, input UpdateUpstreamAccountInput) int
+		UpdateUpstreamAccountPool            func(childComplexity int, id objects.GUID, input UpdateUpstreamAccountPoolInput) int
 		UpdateUser                           func(childComplexity int, id objects.GUID, input ent.UpdateUserInput) int
 		UpdateUserAgentPassThroughSettings   func(childComplexity int, input UpdateUserAgentPassThroughSettingsInput) int
 		UpdateUserBillingAccount             func(childComplexity int, input biz.UpdateUserBillingAccountInput) int
@@ -2232,6 +2247,8 @@ type ComplexityRoot struct {
 		TokenStatsByModel               func(childComplexity int, timeWindow *string) int
 		TopRequestsProjects             func(childComplexity int) int
 		Traces                          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.TraceOrder, where *ent.TraceWhereInput) int
+		UpstreamAccountPools            func(childComplexity int, channelID objects.GUID, includeArchived *bool) int
+		UpstreamAccounts                func(childComplexity int, channelID objects.GUID, includeArchived *bool) int
 		UsageBillingRecords             func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageBillingRecordOrder, where *ent.UsageBillingRecordWhereInput) int
 		UsageLogs                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
 		UsageStatsByUser                func(childComplexity int, timeWindow *string) int
@@ -2803,6 +2820,82 @@ type ComplexityRoot struct {
 		Models  func(childComplexity int) int
 	}
 
+	UpstreamAccount struct {
+		Channel          func(childComplexity int) int
+		ChannelID        func(childComplexity int) int
+		ConcurrencyLimit func(childComplexity int) int
+		CooldownReason   func(childComplexity int) int
+		CooldownUntil    func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		CredentialType   func(childComplexity int) int
+		EligibleNow      func(childComplexity int) int
+		ErrorMessage     func(childComplexity int) int
+		ExpiresAt        func(childComplexity int) int
+		HasCredentials   func(childComplexity int) int
+		HasProxyConfig   func(childComplexity int) int
+		ID               func(childComplexity int) int
+		IneligibleReason func(childComplexity int) int
+		LastUsedAt       func(childComplexity int) int
+		Name             func(childComplexity int) int
+		OverloadUntil    func(childComplexity int) int
+		Pool             func(childComplexity int) int
+		PoolID           func(childComplexity int) int
+		Priority         func(childComplexity int) int
+		QuotaLimitMicros func(childComplexity int) int
+		QuotaUsedMicros  func(childComplexity int) int
+		RateLimitResetAt func(childComplexity int) int
+		RateMultiplier   func(childComplexity int) int
+		Schedulable      func(childComplexity int) int
+		Status           func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
+		Weight           func(childComplexity int) int
+	}
+
+	UpstreamAccountConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	UpstreamAccountEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	UpstreamAccountPool struct {
+		Accounts      func(childComplexity int) int
+		Channel       func(childComplexity int) int
+		ChannelID     func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		ModelPatterns func(childComplexity int) int
+		Name          func(childComplexity int) int
+		Priority      func(childComplexity int) int
+		ProjectIds    func(childComplexity int) int
+		Remark        func(childComplexity int) int
+		Status        func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+	}
+
+	UpstreamAccountPoolConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	UpstreamAccountPoolEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	UpstreamAccountTestResult struct {
+		AccountID        func(childComplexity int) int
+		Eligible         func(childComplexity int) int
+		IneligibleReason func(childComplexity int) int
+		Message          func(childComplexity int) int
+		Success          func(childComplexity int) int
+	}
+
 	UpstreamErrorPolicy struct {
 		CustomMessage func(childComplexity int) int
 		Mode          func(childComplexity int) int
@@ -3243,6 +3336,7 @@ type ChannelResolver interface {
 	Credentials(ctx context.Context, obj *ent.Channel) (*objects.ChannelCredentials, error)
 	DisabledAPIKeys(ctx context.Context, obj *ent.Channel) ([]*objects.DisabledAPIKey, error)
 	LiveLimiterStats(ctx context.Context, obj *ent.Channel) (*ChannelLimiterStats, error)
+	UpstreamCredentialFallback(ctx context.Context, obj *ent.Channel) (bool, error)
 }
 type ChannelModelPriceResolver interface {
 	ID(ctx context.Context, obj *ent.ChannelModelPrice) (*objects.GUID, error)
@@ -3318,6 +3412,13 @@ type MutationResolver interface {
 	EnableAllChannelAPIKeys(ctx context.Context, channelID objects.GUID) (bool, error)
 	EnableSelectedChannelAPIKeys(ctx context.Context, channelID objects.GUID, keys []string) (bool, error)
 	DeleteDisabledChannelAPIKeys(ctx context.Context, channelID objects.GUID, keys []string) (*biz.DeleteDisabledAPIKeysResult, error)
+	CreateUpstreamAccountPool(ctx context.Context, input CreateUpstreamAccountPoolInput) (*ent.UpstreamAccountPool, error)
+	UpdateUpstreamAccountPool(ctx context.Context, id objects.GUID, input UpdateUpstreamAccountPoolInput) (*ent.UpstreamAccountPool, error)
+	ArchiveUpstreamAccountPool(ctx context.Context, id objects.GUID) (*ent.UpstreamAccountPool, error)
+	CreateUpstreamAccount(ctx context.Context, input CreateUpstreamAccountInput) (*ent.UpstreamAccount, error)
+	UpdateUpstreamAccount(ctx context.Context, id objects.GUID, input UpdateUpstreamAccountInput) (*ent.UpstreamAccount, error)
+	ArchiveUpstreamAccount(ctx context.Context, id objects.GUID) (*ent.UpstreamAccount, error)
+	TestUpstreamAccount(ctx context.Context, id objects.GUID) (*biz.UpstreamAccountTestResult, error)
 	CreateAPIKey(ctx context.Context, input ent.CreateAPIKeyInput) (*ent.APIKey, error)
 	UpdateAPIKey(ctx context.Context, id objects.GUID, input ent.UpdateAPIKeyInput) (*ent.APIKey, error)
 	UpdateAPIKeyStatus(ctx context.Context, id objects.GUID, status apikey.Status) (*ent.APIKey, error)
@@ -3550,6 +3651,8 @@ type QueryResolver interface {
 	AllChannelTags(ctx context.Context) ([]string, error)
 	CountChannelsByType(ctx context.Context, input CountChannelsByTypeInput) ([]*ChannelTypeCount, error)
 	QueryChannels(ctx context.Context, input biz.QueryChannelsInput) (*ent.ChannelConnection, error)
+	UpstreamAccountPools(ctx context.Context, channelID objects.GUID, includeArchived *bool) ([]*ent.UpstreamAccountPool, error)
+	UpstreamAccounts(ctx context.Context, channelID objects.GUID, includeArchived *bool) ([]*ent.UpstreamAccount, error)
 	APIKeyQuotaUsages(ctx context.Context, apiKeyID objects.GUID) ([]*APIKeyProfileQuotaUsage, error)
 	APIKeyCommercialLimitUsage(ctx context.Context, apiKeyID objects.GUID) (*APIKeyCommercialLimitUsage, error)
 	DashboardOverview(ctx context.Context) (*DashboardOverview, error)
@@ -3714,6 +3817,25 @@ type TraceResolver interface {
 	FirstUserQuery(ctx context.Context, obj *ent.Trace) (*string, error)
 	FirstText(ctx context.Context, obj *ent.Trace) (*string, error)
 	UsageMetadata(ctx context.Context, obj *ent.Trace) (*biz.UsageMetadata, error)
+}
+type UpstreamAccountResolver interface {
+	ID(ctx context.Context, obj *ent.UpstreamAccount) (*objects.GUID, error)
+
+	ChannelID(ctx context.Context, obj *ent.UpstreamAccount) (*objects.GUID, error)
+	PoolID(ctx context.Context, obj *ent.UpstreamAccount) (*objects.GUID, error)
+
+	HasCredentials(ctx context.Context, obj *ent.UpstreamAccount) (bool, error)
+	HasProxyConfig(ctx context.Context, obj *ent.UpstreamAccount) (bool, error)
+	EligibleNow(ctx context.Context, obj *ent.UpstreamAccount) (bool, error)
+	IneligibleReason(ctx context.Context, obj *ent.UpstreamAccount) (*string, error)
+}
+type UpstreamAccountPoolResolver interface {
+	ID(ctx context.Context, obj *ent.UpstreamAccountPool) (*objects.GUID, error)
+
+	ChannelID(ctx context.Context, obj *ent.UpstreamAccountPool) (*objects.GUID, error)
+}
+type UpstreamAccountTestResultResolver interface {
+	AccountID(ctx context.Context, obj *biz.UpstreamAccountTestResult) (*objects.GUID, error)
 }
 type UsageBillingRecordResolver interface {
 	ID(ctx context.Context, obj *ent.UsageBillingRecord) (*objects.GUID, error)
@@ -6718,6 +6840,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.UpdatedAt(childComplexity), true
+	case "Channel.upstreamAccountPools":
+		if e.complexity.Channel.UpstreamAccountPools == nil {
+			break
+		}
+
+		return e.complexity.Channel.UpstreamAccountPools(childComplexity), true
+	case "Channel.upstreamAccounts":
+		if e.complexity.Channel.UpstreamAccounts == nil {
+			break
+		}
+
+		return e.complexity.Channel.UpstreamAccounts(childComplexity), true
+	case "Channel.upstreamCredentialFallback":
+		if e.complexity.Channel.UpstreamCredentialFallback == nil {
+			break
+		}
+
+		return e.complexity.Channel.UpstreamCredentialFallback(childComplexity), true
 	case "Channel.usageLogs":
 		if e.complexity.Channel.UsageLogs == nil {
 			break
@@ -9228,6 +9368,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.ApplyChannelOverrideTemplate(childComplexity, args["input"].(ApplyChannelOverrideTemplateInput)), true
+	case "Mutation.archiveUpstreamAccount":
+		if e.complexity.Mutation.ArchiveUpstreamAccount == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_archiveUpstreamAccount_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ArchiveUpstreamAccount(childComplexity, args["id"].(objects.GUID)), true
+	case "Mutation.archiveUpstreamAccountPool":
+		if e.complexity.Mutation.ArchiveUpstreamAccountPool == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_archiveUpstreamAccountPool_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ArchiveUpstreamAccountPool(childComplexity, args["id"].(objects.GUID)), true
 	case "Mutation.backup":
 		if e.complexity.Mutation.Backup == nil {
 			break
@@ -9740,6 +9902,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateSimulatedEPayRechargeCheckout(childComplexity, args["input"].(CreateSimulatedEPayRechargeCheckoutInput)), true
+	case "Mutation.createUpstreamAccount":
+		if e.complexity.Mutation.CreateUpstreamAccount == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createUpstreamAccount_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateUpstreamAccount(childComplexity, args["input"].(CreateUpstreamAccountInput)), true
+	case "Mutation.createUpstreamAccountPool":
+		if e.complexity.Mutation.CreateUpstreamAccountPool == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createUpstreamAccountPool_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateUpstreamAccountPool(childComplexity, args["input"].(CreateUpstreamAccountPoolInput)), true
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
 			break
@@ -10318,6 +10502,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.TestChannelAPIKeys(childComplexity, args["channelID"].(objects.GUID), args["modelID"].(*string)), true
+	case "Mutation.testUpstreamAccount":
+		if e.complexity.Mutation.TestUpstreamAccount == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_testUpstreamAccount_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TestUpstreamAccount(childComplexity, args["id"].(objects.GUID)), true
 	case "Mutation.transferAffiliateRebates":
 		if e.complexity.Mutation.TransferAffiliateRebates == nil {
 			break
@@ -10726,6 +10921,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateSystemModelSettings(childComplexity, args["input"].(biz.SystemModelSettings)), true
+	case "Mutation.updateUpstreamAccount":
+		if e.complexity.Mutation.UpdateUpstreamAccount == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUpstreamAccount_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUpstreamAccount(childComplexity, args["id"].(objects.GUID), args["input"].(UpdateUpstreamAccountInput)), true
+	case "Mutation.updateUpstreamAccountPool":
+		if e.complexity.Mutation.UpdateUpstreamAccountPool == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUpstreamAccountPool_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUpstreamAccountPool(childComplexity, args["id"].(objects.GUID), args["input"].(UpdateUpstreamAccountPoolInput)), true
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
 			break
@@ -13893,6 +14110,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Traces(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.TraceOrder), args["where"].(*ent.TraceWhereInput)), true
+	case "Query.upstreamAccountPools":
+		if e.complexity.Query.UpstreamAccountPools == nil {
+			break
+		}
+
+		args, err := ec.field_Query_upstreamAccountPools_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UpstreamAccountPools(childComplexity, args["channelID"].(objects.GUID), args["includeArchived"].(*bool)), true
+	case "Query.upstreamAccounts":
+		if e.complexity.Query.UpstreamAccounts == nil {
+			break
+		}
+
+		args, err := ec.field_Query_upstreamAccounts_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UpstreamAccounts(childComplexity, args["channelID"].(objects.GUID), args["includeArchived"].(*bool)), true
 	case "Query.usageBillingRecords":
 		if e.complexity.Query.UsageBillingRecords == nil {
 			break
@@ -16181,6 +16420,343 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.UnassociatedChannel.Models(childComplexity), true
 
+	case "UpstreamAccount.channel":
+		if e.complexity.UpstreamAccount.Channel == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.Channel(childComplexity), true
+	case "UpstreamAccount.channelID":
+		if e.complexity.UpstreamAccount.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.ChannelID(childComplexity), true
+	case "UpstreamAccount.concurrencyLimit":
+		if e.complexity.UpstreamAccount.ConcurrencyLimit == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.ConcurrencyLimit(childComplexity), true
+	case "UpstreamAccount.cooldownReason":
+		if e.complexity.UpstreamAccount.CooldownReason == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.CooldownReason(childComplexity), true
+	case "UpstreamAccount.cooldownUntil":
+		if e.complexity.UpstreamAccount.CooldownUntil == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.CooldownUntil(childComplexity), true
+	case "UpstreamAccount.createdAt":
+		if e.complexity.UpstreamAccount.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.CreatedAt(childComplexity), true
+	case "UpstreamAccount.credentialType":
+		if e.complexity.UpstreamAccount.CredentialType == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.CredentialType(childComplexity), true
+	case "UpstreamAccount.eligibleNow":
+		if e.complexity.UpstreamAccount.EligibleNow == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.EligibleNow(childComplexity), true
+	case "UpstreamAccount.errorMessage":
+		if e.complexity.UpstreamAccount.ErrorMessage == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.ErrorMessage(childComplexity), true
+	case "UpstreamAccount.expiresAt":
+		if e.complexity.UpstreamAccount.ExpiresAt == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.ExpiresAt(childComplexity), true
+	case "UpstreamAccount.hasCredentials":
+		if e.complexity.UpstreamAccount.HasCredentials == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.HasCredentials(childComplexity), true
+	case "UpstreamAccount.hasProxyConfig":
+		if e.complexity.UpstreamAccount.HasProxyConfig == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.HasProxyConfig(childComplexity), true
+	case "UpstreamAccount.id":
+		if e.complexity.UpstreamAccount.ID == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.ID(childComplexity), true
+	case "UpstreamAccount.ineligibleReason":
+		if e.complexity.UpstreamAccount.IneligibleReason == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.IneligibleReason(childComplexity), true
+	case "UpstreamAccount.lastUsedAt":
+		if e.complexity.UpstreamAccount.LastUsedAt == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.LastUsedAt(childComplexity), true
+	case "UpstreamAccount.name":
+		if e.complexity.UpstreamAccount.Name == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.Name(childComplexity), true
+	case "UpstreamAccount.overloadUntil":
+		if e.complexity.UpstreamAccount.OverloadUntil == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.OverloadUntil(childComplexity), true
+	case "UpstreamAccount.pool":
+		if e.complexity.UpstreamAccount.Pool == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.Pool(childComplexity), true
+	case "UpstreamAccount.poolID":
+		if e.complexity.UpstreamAccount.PoolID == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.PoolID(childComplexity), true
+	case "UpstreamAccount.priority":
+		if e.complexity.UpstreamAccount.Priority == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.Priority(childComplexity), true
+	case "UpstreamAccount.quotaLimitMicros":
+		if e.complexity.UpstreamAccount.QuotaLimitMicros == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.QuotaLimitMicros(childComplexity), true
+	case "UpstreamAccount.quotaUsedMicros":
+		if e.complexity.UpstreamAccount.QuotaUsedMicros == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.QuotaUsedMicros(childComplexity), true
+	case "UpstreamAccount.rateLimitResetAt":
+		if e.complexity.UpstreamAccount.RateLimitResetAt == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.RateLimitResetAt(childComplexity), true
+	case "UpstreamAccount.rateMultiplier":
+		if e.complexity.UpstreamAccount.RateMultiplier == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.RateMultiplier(childComplexity), true
+	case "UpstreamAccount.schedulable":
+		if e.complexity.UpstreamAccount.Schedulable == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.Schedulable(childComplexity), true
+	case "UpstreamAccount.status":
+		if e.complexity.UpstreamAccount.Status == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.Status(childComplexity), true
+	case "UpstreamAccount.updatedAt":
+		if e.complexity.UpstreamAccount.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.UpdatedAt(childComplexity), true
+	case "UpstreamAccount.weight":
+		if e.complexity.UpstreamAccount.Weight == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccount.Weight(childComplexity), true
+
+	case "UpstreamAccountConnection.edges":
+		if e.complexity.UpstreamAccountConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountConnection.Edges(childComplexity), true
+	case "UpstreamAccountConnection.pageInfo":
+		if e.complexity.UpstreamAccountConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountConnection.PageInfo(childComplexity), true
+	case "UpstreamAccountConnection.totalCount":
+		if e.complexity.UpstreamAccountConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountConnection.TotalCount(childComplexity), true
+
+	case "UpstreamAccountEdge.cursor":
+		if e.complexity.UpstreamAccountEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountEdge.Cursor(childComplexity), true
+	case "UpstreamAccountEdge.node":
+		if e.complexity.UpstreamAccountEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountEdge.Node(childComplexity), true
+
+	case "UpstreamAccountPool.accounts":
+		if e.complexity.UpstreamAccountPool.Accounts == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.Accounts(childComplexity), true
+	case "UpstreamAccountPool.channel":
+		if e.complexity.UpstreamAccountPool.Channel == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.Channel(childComplexity), true
+	case "UpstreamAccountPool.channelID":
+		if e.complexity.UpstreamAccountPool.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.ChannelID(childComplexity), true
+	case "UpstreamAccountPool.createdAt":
+		if e.complexity.UpstreamAccountPool.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.CreatedAt(childComplexity), true
+	case "UpstreamAccountPool.id":
+		if e.complexity.UpstreamAccountPool.ID == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.ID(childComplexity), true
+	case "UpstreamAccountPool.modelPatterns":
+		if e.complexity.UpstreamAccountPool.ModelPatterns == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.ModelPatterns(childComplexity), true
+	case "UpstreamAccountPool.name":
+		if e.complexity.UpstreamAccountPool.Name == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.Name(childComplexity), true
+	case "UpstreamAccountPool.priority":
+		if e.complexity.UpstreamAccountPool.Priority == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.Priority(childComplexity), true
+	case "UpstreamAccountPool.projectIds":
+		if e.complexity.UpstreamAccountPool.ProjectIds == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.ProjectIds(childComplexity), true
+	case "UpstreamAccountPool.remark":
+		if e.complexity.UpstreamAccountPool.Remark == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.Remark(childComplexity), true
+	case "UpstreamAccountPool.status":
+		if e.complexity.UpstreamAccountPool.Status == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.Status(childComplexity), true
+	case "UpstreamAccountPool.updatedAt":
+		if e.complexity.UpstreamAccountPool.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPool.UpdatedAt(childComplexity), true
+
+	case "UpstreamAccountPoolConnection.edges":
+		if e.complexity.UpstreamAccountPoolConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPoolConnection.Edges(childComplexity), true
+	case "UpstreamAccountPoolConnection.pageInfo":
+		if e.complexity.UpstreamAccountPoolConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPoolConnection.PageInfo(childComplexity), true
+	case "UpstreamAccountPoolConnection.totalCount":
+		if e.complexity.UpstreamAccountPoolConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPoolConnection.TotalCount(childComplexity), true
+
+	case "UpstreamAccountPoolEdge.cursor":
+		if e.complexity.UpstreamAccountPoolEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPoolEdge.Cursor(childComplexity), true
+	case "UpstreamAccountPoolEdge.node":
+		if e.complexity.UpstreamAccountPoolEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountPoolEdge.Node(childComplexity), true
+
+	case "UpstreamAccountTestResult.accountID":
+		if e.complexity.UpstreamAccountTestResult.AccountID == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountTestResult.AccountID(childComplexity), true
+	case "UpstreamAccountTestResult.eligible":
+		if e.complexity.UpstreamAccountTestResult.Eligible == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountTestResult.Eligible(childComplexity), true
+	case "UpstreamAccountTestResult.ineligibleReason":
+		if e.complexity.UpstreamAccountTestResult.IneligibleReason == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountTestResult.IneligibleReason(childComplexity), true
+	case "UpstreamAccountTestResult.message":
+		if e.complexity.UpstreamAccountTestResult.Message == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountTestResult.Message(childComplexity), true
+	case "UpstreamAccountTestResult.success":
+		if e.complexity.UpstreamAccountTestResult.Success == nil {
+			break
+		}
+
+		return e.complexity.UpstreamAccountTestResult.Success(childComplexity), true
+
 	case "UpstreamErrorPolicy.customMessage":
 		if e.complexity.UpstreamErrorPolicy.CustomMessage == nil {
 			break
@@ -18000,6 +18576,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateSystemInput,
 		ec.unmarshalInputCreateThreadInput,
 		ec.unmarshalInputCreateTraceInput,
+		ec.unmarshalInputCreateUpstreamAccountInput,
+		ec.unmarshalInputCreateUpstreamAccountPoolInput,
 		ec.unmarshalInputCreateUsageLogInput,
 		ec.unmarshalInputCreateUserInput,
 		ec.unmarshalInputDataStorageOrder,
@@ -18154,12 +18732,19 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateSystemModelSettingsInput,
 		ec.unmarshalInputUpdateThreadInput,
 		ec.unmarshalInputUpdateTraceInput,
+		ec.unmarshalInputUpdateUpstreamAccountInput,
+		ec.unmarshalInputUpdateUpstreamAccountPoolInput,
 		ec.unmarshalInputUpdateUsageLogInput,
 		ec.unmarshalInputUpdateUserAgentPassThroughSettingsInput,
 		ec.unmarshalInputUpdateUserBillingAccountInput,
 		ec.unmarshalInputUpdateUserInput,
 		ec.unmarshalInputUpdateVideoStorageSettingsInput,
 		ec.unmarshalInputUpsertEPayPaymentProviderInput,
+		ec.unmarshalInputUpstreamAccountCredentialsInput,
+		ec.unmarshalInputUpstreamAccountOrder,
+		ec.unmarshalInputUpstreamAccountPoolOrder,
+		ec.unmarshalInputUpstreamAccountPoolWhereInput,
+		ec.unmarshalInputUpstreamAccountWhereInput,
 		ec.unmarshalInputUpstreamErrorPolicyInput,
 		ec.unmarshalInputUsageBillingRecordOrder,
 		ec.unmarshalInputUsageBillingRecordWhereInput,
@@ -19158,6 +19743,28 @@ func (ec *executionContext) field_Mutation_applyChannelOverrideTemplate_args(ctx
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_archiveUpstreamAccountPool_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_archiveUpstreamAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_backup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -19662,6 +20269,28 @@ func (ec *executionContext) field_Mutation_createSimulatedEPayRechargeCheckout_a
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateSimulatedEPayRechargeCheckoutInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateSimulatedEPayRechargeCheckoutInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createUpstreamAccountPool_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateUpstreamAccountPoolInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateUpstreamAccountPoolInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createUpstreamAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateUpstreamAccountInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateUpstreamAccountInput)
 	if err != nil {
 		return nil, err
 	}
@@ -20306,6 +20935,17 @@ func (ec *executionContext) field_Mutation_testChannel_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_testUpstreamAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_triggerGcCleanup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -20794,6 +21434,38 @@ func (ec *executionContext) field_Mutation_updateSystemModelSettings_args(ctx co
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUpstreamAccountPool_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUpstreamAccountPoolInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateUpstreamAccountPoolInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUpstreamAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUpstreamAccountInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateUpstreamAccountInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -24079,6 +24751,38 @@ func (ec *executionContext) field_Query_traces_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_upstreamAccountPools_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "channelID", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["channelID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "includeArchived", ec.unmarshalOBoolean2ᚖbool)
+	if err != nil {
+		return nil, err
+	}
+	args["includeArchived"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_upstreamAccounts_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "channelID", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["channelID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "includeArchived", ec.unmarshalOBoolean2ᚖbool)
+	if err != nil {
+		return nil, err
+	}
+	args["includeArchived"] = arg1
 	return args, nil
 }
 
@@ -31904,6 +32608,10 @@ func (ec *executionContext) fieldContext_ApplyChannelOverrideTemplatePayload_cha
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -31916,6 +32624,8 @@ func (ec *executionContext) fieldContext_ApplyChannelOverrideTemplatePayload_cha
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -40641,6 +41351,10 @@ func (ec *executionContext) fieldContext_BulkImportChannelsResult_channels(_ con
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -40653,6 +41367,8 @@ func (ec *executionContext) fieldContext_BulkImportChannelsResult_channels(_ con
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -40790,6 +41506,10 @@ func (ec *executionContext) fieldContext_BulkUpdateChannelOrderingResult_channel
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -40802,6 +41522,8 @@ func (ec *executionContext) fieldContext_BulkUpdateChannelOrderingResult_channel
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -41651,6 +42373,148 @@ func (ec *executionContext) fieldContext_Channel_channelModelPrices(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Channel_upstreamAccountPools(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_upstreamAccountPools,
+		func(ctx context.Context) (any, error) {
+			return obj.UpstreamAccountPools(ctx)
+		},
+		nil,
+		ec.marshalOUpstreamAccountPool2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_upstreamAccountPools(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccountPool_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccountPool_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccountPool_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccountPool_channelID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccountPool_name(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccountPool_status(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccountPool_priority(ctx, field)
+			case "modelPatterns":
+				return ec.fieldContext_UpstreamAccountPool_modelPatterns(ctx, field)
+			case "projectIds":
+				return ec.fieldContext_UpstreamAccountPool_projectIds(ctx, field)
+			case "remark":
+				return ec.fieldContext_UpstreamAccountPool_remark(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccountPool_channel(ctx, field)
+			case "accounts":
+				return ec.fieldContext_UpstreamAccountPool_accounts(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountPool", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_upstreamAccounts(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_upstreamAccounts,
+		func(ctx context.Context) (any, error) {
+			return obj.UpstreamAccounts(ctx)
+		},
+		nil,
+		ec.marshalOUpstreamAccount2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_upstreamAccounts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccount_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccount_channelID(ctx, field)
+			case "poolID":
+				return ec.fieldContext_UpstreamAccount_poolID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccount_name(ctx, field)
+			case "credentialType":
+				return ec.fieldContext_UpstreamAccount_credentialType(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccount_status(ctx, field)
+			case "schedulable":
+				return ec.fieldContext_UpstreamAccount_schedulable(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccount_priority(ctx, field)
+			case "weight":
+				return ec.fieldContext_UpstreamAccount_weight(ctx, field)
+			case "concurrencyLimit":
+				return ec.fieldContext_UpstreamAccount_concurrencyLimit(ctx, field)
+			case "rateMultiplier":
+				return ec.fieldContext_UpstreamAccount_rateMultiplier(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UpstreamAccount_expiresAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_UpstreamAccount_lastUsedAt(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_UpstreamAccount_errorMessage(ctx, field)
+			case "rateLimitResetAt":
+				return ec.fieldContext_UpstreamAccount_rateLimitResetAt(ctx, field)
+			case "overloadUntil":
+				return ec.fieldContext_UpstreamAccount_overloadUntil(ctx, field)
+			case "cooldownUntil":
+				return ec.fieldContext_UpstreamAccount_cooldownUntil(ctx, field)
+			case "cooldownReason":
+				return ec.fieldContext_UpstreamAccount_cooldownReason(ctx, field)
+			case "quotaLimitMicros":
+				return ec.fieldContext_UpstreamAccount_quotaLimitMicros(ctx, field)
+			case "quotaUsedMicros":
+				return ec.fieldContext_UpstreamAccount_quotaUsedMicros(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccount_channel(ctx, field)
+			case "pool":
+				return ec.fieldContext_UpstreamAccount_pool(ctx, field)
+			case "hasCredentials":
+				return ec.fieldContext_UpstreamAccount_hasCredentials(ctx, field)
+			case "hasProxyConfig":
+				return ec.fieldContext_UpstreamAccount_hasProxyConfig(ctx, field)
+			case "eligibleNow":
+				return ec.fieldContext_UpstreamAccount_eligibleNow(ctx, field)
+			case "ineligibleReason":
+				return ec.fieldContext_UpstreamAccount_ineligibleReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Channel_providerQuotaStatus(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -41892,6 +42756,35 @@ func (ec *executionContext) fieldContext_Channel_liveLimiterStats(_ context.Cont
 				return ec.fieldContext_ChannelLimiterStats_queueSize(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelLimiterStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_upstreamCredentialFallback(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_upstreamCredentialFallback,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Channel().UpstreamCredentialFallback(ctx, obj)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_upstreamCredentialFallback(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -42210,6 +43103,10 @@ func (ec *executionContext) fieldContext_ChannelEdge_node(_ context.Context, fie
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -42222,6 +43119,8 @@ func (ec *executionContext) fieldContext_ChannelEdge_node(_ context.Context, fie
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -42943,6 +43842,10 @@ func (ec *executionContext) fieldContext_ChannelModelPrice_channel(_ context.Con
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -42955,6 +43858,8 @@ func (ec *executionContext) fieldContext_ChannelModelPrice_channel(_ context.Con
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -44847,6 +45752,10 @@ func (ec *executionContext) fieldContext_ChannelProbe_channel(_ context.Context,
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -44859,6 +45768,8 @@ func (ec *executionContext) fieldContext_ChannelProbe_channel(_ context.Context,
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -46637,6 +47548,10 @@ func (ec *executionContext) fieldContext_ClearChannelOverrideTemplatesPayload_ch
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -46649,6 +47564,8 @@ func (ec *executionContext) fieldContext_ClearChannelOverrideTemplatesPayload_ch
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -53624,6 +54541,10 @@ func (ec *executionContext) fieldContext_ModelChannelConnection_channel(_ contex
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -53636,6 +54557,8 @@ func (ec *executionContext) fieldContext_ModelChannelConnection_channel(_ contex
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -54694,6 +55617,10 @@ func (ec *executionContext) fieldContext_Mutation_createChannel(ctx context.Cont
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -54706,6 +55633,8 @@ func (ec *executionContext) fieldContext_Mutation_createChannel(ctx context.Cont
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -54797,6 +55726,10 @@ func (ec *executionContext) fieldContext_Mutation_duplicateChannel(ctx context.C
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -54809,6 +55742,8 @@ func (ec *executionContext) fieldContext_Mutation_duplicateChannel(ctx context.C
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -54900,6 +55835,10 @@ func (ec *executionContext) fieldContext_Mutation_bulkCreateChannels(ctx context
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -54912,6 +55851,8 @@ func (ec *executionContext) fieldContext_Mutation_bulkCreateChannels(ctx context
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -55003,6 +55944,10 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -55015,6 +55960,8 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -55106,6 +56053,10 @@ func (ec *executionContext) fieldContext_Mutation_saveChannelEndpoints(ctx conte
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -55118,6 +56069,8 @@ func (ec *executionContext) fieldContext_Mutation_saveChannelEndpoints(ctx conte
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -55209,6 +56162,10 @@ func (ec *executionContext) fieldContext_Mutation_updateChannelStatus(ctx contex
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -55221,6 +56178,8 @@ func (ec *executionContext) fieldContext_Mutation_updateChannelStatus(ctx contex
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -55949,6 +56908,557 @@ func (ec *executionContext) fieldContext_Mutation_deleteDisabledChannelAPIKeys(c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteDisabledChannelAPIKeys_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createUpstreamAccountPool(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createUpstreamAccountPool,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateUpstreamAccountPool(ctx, fc.Args["input"].(CreateUpstreamAccountPoolInput))
+		},
+		nil,
+		ec.marshalNUpstreamAccountPool2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createUpstreamAccountPool(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccountPool_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccountPool_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccountPool_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccountPool_channelID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccountPool_name(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccountPool_status(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccountPool_priority(ctx, field)
+			case "modelPatterns":
+				return ec.fieldContext_UpstreamAccountPool_modelPatterns(ctx, field)
+			case "projectIds":
+				return ec.fieldContext_UpstreamAccountPool_projectIds(ctx, field)
+			case "remark":
+				return ec.fieldContext_UpstreamAccountPool_remark(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccountPool_channel(ctx, field)
+			case "accounts":
+				return ec.fieldContext_UpstreamAccountPool_accounts(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountPool", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createUpstreamAccountPool_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUpstreamAccountPool(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateUpstreamAccountPool,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateUpstreamAccountPool(ctx, fc.Args["id"].(objects.GUID), fc.Args["input"].(UpdateUpstreamAccountPoolInput))
+		},
+		nil,
+		ec.marshalNUpstreamAccountPool2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUpstreamAccountPool(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccountPool_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccountPool_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccountPool_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccountPool_channelID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccountPool_name(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccountPool_status(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccountPool_priority(ctx, field)
+			case "modelPatterns":
+				return ec.fieldContext_UpstreamAccountPool_modelPatterns(ctx, field)
+			case "projectIds":
+				return ec.fieldContext_UpstreamAccountPool_projectIds(ctx, field)
+			case "remark":
+				return ec.fieldContext_UpstreamAccountPool_remark(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccountPool_channel(ctx, field)
+			case "accounts":
+				return ec.fieldContext_UpstreamAccountPool_accounts(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountPool", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUpstreamAccountPool_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_archiveUpstreamAccountPool(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_archiveUpstreamAccountPool,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ArchiveUpstreamAccountPool(ctx, fc.Args["id"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNUpstreamAccountPool2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_archiveUpstreamAccountPool(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccountPool_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccountPool_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccountPool_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccountPool_channelID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccountPool_name(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccountPool_status(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccountPool_priority(ctx, field)
+			case "modelPatterns":
+				return ec.fieldContext_UpstreamAccountPool_modelPatterns(ctx, field)
+			case "projectIds":
+				return ec.fieldContext_UpstreamAccountPool_projectIds(ctx, field)
+			case "remark":
+				return ec.fieldContext_UpstreamAccountPool_remark(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccountPool_channel(ctx, field)
+			case "accounts":
+				return ec.fieldContext_UpstreamAccountPool_accounts(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountPool", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_archiveUpstreamAccountPool_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createUpstreamAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createUpstreamAccount,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateUpstreamAccount(ctx, fc.Args["input"].(CreateUpstreamAccountInput))
+		},
+		nil,
+		ec.marshalNUpstreamAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createUpstreamAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccount_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccount_channelID(ctx, field)
+			case "poolID":
+				return ec.fieldContext_UpstreamAccount_poolID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccount_name(ctx, field)
+			case "credentialType":
+				return ec.fieldContext_UpstreamAccount_credentialType(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccount_status(ctx, field)
+			case "schedulable":
+				return ec.fieldContext_UpstreamAccount_schedulable(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccount_priority(ctx, field)
+			case "weight":
+				return ec.fieldContext_UpstreamAccount_weight(ctx, field)
+			case "concurrencyLimit":
+				return ec.fieldContext_UpstreamAccount_concurrencyLimit(ctx, field)
+			case "rateMultiplier":
+				return ec.fieldContext_UpstreamAccount_rateMultiplier(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UpstreamAccount_expiresAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_UpstreamAccount_lastUsedAt(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_UpstreamAccount_errorMessage(ctx, field)
+			case "rateLimitResetAt":
+				return ec.fieldContext_UpstreamAccount_rateLimitResetAt(ctx, field)
+			case "overloadUntil":
+				return ec.fieldContext_UpstreamAccount_overloadUntil(ctx, field)
+			case "cooldownUntil":
+				return ec.fieldContext_UpstreamAccount_cooldownUntil(ctx, field)
+			case "cooldownReason":
+				return ec.fieldContext_UpstreamAccount_cooldownReason(ctx, field)
+			case "quotaLimitMicros":
+				return ec.fieldContext_UpstreamAccount_quotaLimitMicros(ctx, field)
+			case "quotaUsedMicros":
+				return ec.fieldContext_UpstreamAccount_quotaUsedMicros(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccount_channel(ctx, field)
+			case "pool":
+				return ec.fieldContext_UpstreamAccount_pool(ctx, field)
+			case "hasCredentials":
+				return ec.fieldContext_UpstreamAccount_hasCredentials(ctx, field)
+			case "hasProxyConfig":
+				return ec.fieldContext_UpstreamAccount_hasProxyConfig(ctx, field)
+			case "eligibleNow":
+				return ec.fieldContext_UpstreamAccount_eligibleNow(ctx, field)
+			case "ineligibleReason":
+				return ec.fieldContext_UpstreamAccount_ineligibleReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccount", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createUpstreamAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUpstreamAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateUpstreamAccount,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateUpstreamAccount(ctx, fc.Args["id"].(objects.GUID), fc.Args["input"].(UpdateUpstreamAccountInput))
+		},
+		nil,
+		ec.marshalNUpstreamAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUpstreamAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccount_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccount_channelID(ctx, field)
+			case "poolID":
+				return ec.fieldContext_UpstreamAccount_poolID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccount_name(ctx, field)
+			case "credentialType":
+				return ec.fieldContext_UpstreamAccount_credentialType(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccount_status(ctx, field)
+			case "schedulable":
+				return ec.fieldContext_UpstreamAccount_schedulable(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccount_priority(ctx, field)
+			case "weight":
+				return ec.fieldContext_UpstreamAccount_weight(ctx, field)
+			case "concurrencyLimit":
+				return ec.fieldContext_UpstreamAccount_concurrencyLimit(ctx, field)
+			case "rateMultiplier":
+				return ec.fieldContext_UpstreamAccount_rateMultiplier(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UpstreamAccount_expiresAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_UpstreamAccount_lastUsedAt(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_UpstreamAccount_errorMessage(ctx, field)
+			case "rateLimitResetAt":
+				return ec.fieldContext_UpstreamAccount_rateLimitResetAt(ctx, field)
+			case "overloadUntil":
+				return ec.fieldContext_UpstreamAccount_overloadUntil(ctx, field)
+			case "cooldownUntil":
+				return ec.fieldContext_UpstreamAccount_cooldownUntil(ctx, field)
+			case "cooldownReason":
+				return ec.fieldContext_UpstreamAccount_cooldownReason(ctx, field)
+			case "quotaLimitMicros":
+				return ec.fieldContext_UpstreamAccount_quotaLimitMicros(ctx, field)
+			case "quotaUsedMicros":
+				return ec.fieldContext_UpstreamAccount_quotaUsedMicros(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccount_channel(ctx, field)
+			case "pool":
+				return ec.fieldContext_UpstreamAccount_pool(ctx, field)
+			case "hasCredentials":
+				return ec.fieldContext_UpstreamAccount_hasCredentials(ctx, field)
+			case "hasProxyConfig":
+				return ec.fieldContext_UpstreamAccount_hasProxyConfig(ctx, field)
+			case "eligibleNow":
+				return ec.fieldContext_UpstreamAccount_eligibleNow(ctx, field)
+			case "ineligibleReason":
+				return ec.fieldContext_UpstreamAccount_ineligibleReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccount", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUpstreamAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_archiveUpstreamAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_archiveUpstreamAccount,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ArchiveUpstreamAccount(ctx, fc.Args["id"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNUpstreamAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_archiveUpstreamAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccount_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccount_channelID(ctx, field)
+			case "poolID":
+				return ec.fieldContext_UpstreamAccount_poolID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccount_name(ctx, field)
+			case "credentialType":
+				return ec.fieldContext_UpstreamAccount_credentialType(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccount_status(ctx, field)
+			case "schedulable":
+				return ec.fieldContext_UpstreamAccount_schedulable(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccount_priority(ctx, field)
+			case "weight":
+				return ec.fieldContext_UpstreamAccount_weight(ctx, field)
+			case "concurrencyLimit":
+				return ec.fieldContext_UpstreamAccount_concurrencyLimit(ctx, field)
+			case "rateMultiplier":
+				return ec.fieldContext_UpstreamAccount_rateMultiplier(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UpstreamAccount_expiresAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_UpstreamAccount_lastUsedAt(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_UpstreamAccount_errorMessage(ctx, field)
+			case "rateLimitResetAt":
+				return ec.fieldContext_UpstreamAccount_rateLimitResetAt(ctx, field)
+			case "overloadUntil":
+				return ec.fieldContext_UpstreamAccount_overloadUntil(ctx, field)
+			case "cooldownUntil":
+				return ec.fieldContext_UpstreamAccount_cooldownUntil(ctx, field)
+			case "cooldownReason":
+				return ec.fieldContext_UpstreamAccount_cooldownReason(ctx, field)
+			case "quotaLimitMicros":
+				return ec.fieldContext_UpstreamAccount_quotaLimitMicros(ctx, field)
+			case "quotaUsedMicros":
+				return ec.fieldContext_UpstreamAccount_quotaUsedMicros(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccount_channel(ctx, field)
+			case "pool":
+				return ec.fieldContext_UpstreamAccount_pool(ctx, field)
+			case "hasCredentials":
+				return ec.fieldContext_UpstreamAccount_hasCredentials(ctx, field)
+			case "hasProxyConfig":
+				return ec.fieldContext_UpstreamAccount_hasProxyConfig(ctx, field)
+			case "eligibleNow":
+				return ec.fieldContext_UpstreamAccount_eligibleNow(ctx, field)
+			case "ineligibleReason":
+				return ec.fieldContext_UpstreamAccount_ineligibleReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccount", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_archiveUpstreamAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_testUpstreamAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_testUpstreamAccount,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().TestUpstreamAccount(ctx, fc.Args["id"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNUpstreamAccountTestResult2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamAccountTestResult,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_testUpstreamAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accountID":
+				return ec.fieldContext_UpstreamAccountTestResult_accountID(ctx, field)
+			case "success":
+				return ec.fieldContext_UpstreamAccountTestResult_success(ctx, field)
+			case "eligible":
+				return ec.fieldContext_UpstreamAccountTestResult_eligible(ctx, field)
+			case "message":
+				return ec.fieldContext_UpstreamAccountTestResult_message(ctx, field)
+			case "ineligibleReason":
+				return ec.fieldContext_UpstreamAccountTestResult_ineligibleReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountTestResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_testUpstreamAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -73423,6 +74933,10 @@ func (ec *executionContext) fieldContext_ProviderQuotaStatus_channel(_ context.C
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -73435,6 +74949,8 @@ func (ec *executionContext) fieldContext_ProviderQuotaStatus_channel(_ context.C
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -75887,6 +77403,10 @@ func (ec *executionContext) fieldContext_Query_allChannelSummarys(ctx context.Co
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -75899,6 +77419,8 @@ func (ec *executionContext) fieldContext_Query_allChannelSummarys(ctx context.Co
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -76036,6 +77558,172 @@ func (ec *executionContext) fieldContext_Query_queryChannels(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_queryChannels_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_upstreamAccountPools(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_upstreamAccountPools,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().UpstreamAccountPools(ctx, fc.Args["channelID"].(objects.GUID), fc.Args["includeArchived"].(*bool))
+		},
+		nil,
+		ec.marshalNUpstreamAccountPool2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_upstreamAccountPools(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccountPool_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccountPool_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccountPool_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccountPool_channelID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccountPool_name(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccountPool_status(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccountPool_priority(ctx, field)
+			case "modelPatterns":
+				return ec.fieldContext_UpstreamAccountPool_modelPatterns(ctx, field)
+			case "projectIds":
+				return ec.fieldContext_UpstreamAccountPool_projectIds(ctx, field)
+			case "remark":
+				return ec.fieldContext_UpstreamAccountPool_remark(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccountPool_channel(ctx, field)
+			case "accounts":
+				return ec.fieldContext_UpstreamAccountPool_accounts(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountPool", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_upstreamAccountPools_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_upstreamAccounts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_upstreamAccounts,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().UpstreamAccounts(ctx, fc.Args["channelID"].(objects.GUID), fc.Args["includeArchived"].(*bool))
+		},
+		nil,
+		ec.marshalNUpstreamAccount2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_upstreamAccounts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccount_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccount_channelID(ctx, field)
+			case "poolID":
+				return ec.fieldContext_UpstreamAccount_poolID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccount_name(ctx, field)
+			case "credentialType":
+				return ec.fieldContext_UpstreamAccount_credentialType(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccount_status(ctx, field)
+			case "schedulable":
+				return ec.fieldContext_UpstreamAccount_schedulable(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccount_priority(ctx, field)
+			case "weight":
+				return ec.fieldContext_UpstreamAccount_weight(ctx, field)
+			case "concurrencyLimit":
+				return ec.fieldContext_UpstreamAccount_concurrencyLimit(ctx, field)
+			case "rateMultiplier":
+				return ec.fieldContext_UpstreamAccount_rateMultiplier(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UpstreamAccount_expiresAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_UpstreamAccount_lastUsedAt(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_UpstreamAccount_errorMessage(ctx, field)
+			case "rateLimitResetAt":
+				return ec.fieldContext_UpstreamAccount_rateLimitResetAt(ctx, field)
+			case "overloadUntil":
+				return ec.fieldContext_UpstreamAccount_overloadUntil(ctx, field)
+			case "cooldownUntil":
+				return ec.fieldContext_UpstreamAccount_cooldownUntil(ctx, field)
+			case "cooldownReason":
+				return ec.fieldContext_UpstreamAccount_cooldownReason(ctx, field)
+			case "quotaLimitMicros":
+				return ec.fieldContext_UpstreamAccount_quotaLimitMicros(ctx, field)
+			case "quotaUsedMicros":
+				return ec.fieldContext_UpstreamAccount_quotaUsedMicros(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccount_channel(ctx, field)
+			case "pool":
+				return ec.fieldContext_UpstreamAccount_pool(ctx, field)
+			case "hasCredentials":
+				return ec.fieldContext_UpstreamAccount_hasCredentials(ctx, field)
+			case "hasProxyConfig":
+				return ec.fieldContext_UpstreamAccount_hasProxyConfig(ctx, field)
+			case "eligibleNow":
+				return ec.fieldContext_UpstreamAccount_eligibleNow(ctx, field)
+			case "ineligibleReason":
+				return ec.fieldContext_UpstreamAccount_ineligibleReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccount", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_upstreamAccounts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -82651,6 +84339,10 @@ func (ec *executionContext) fieldContext_Request_channel(_ context.Context, fiel
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -82663,6 +84355,8 @@ func (ec *executionContext) fieldContext_Request_channel(_ context.Context, fiel
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -83841,6 +85535,10 @@ func (ec *executionContext) fieldContext_RequestExecution_channel(_ context.Cont
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -83853,6 +85551,8 @@ func (ec *executionContext) fieldContext_RequestExecution_channel(_ context.Cont
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -91984,6 +93684,10 @@ func (ec *executionContext) fieldContext_UnassociatedChannel_channel(_ context.C
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -91996,6 +93700,8 @@ func (ec *executionContext) fieldContext_UnassociatedChannel_channel(_ context.C
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -92022,6 +93728,1937 @@ func (ec *executionContext) _UnassociatedChannel_models(ctx context.Context, fie
 func (ec *executionContext) fieldContext_UnassociatedChannel_models(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UnassociatedChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_id(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccount().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_channelID(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_channelID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccount().ChannelID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_channelID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_poolID(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_poolID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccount().PoolID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_poolID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_name(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_name,
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_credentialType(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_credentialType,
+		func(ctx context.Context) (any, error) {
+			return obj.CredentialType, nil
+		},
+		nil,
+		ec.marshalNUpstreamAccountCredentialType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_credentialType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UpstreamAccountCredentialType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_status(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNUpstreamAccountStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UpstreamAccountStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_schedulable(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_schedulable,
+		func(ctx context.Context) (any, error) {
+			return obj.Schedulable, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_schedulable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_priority(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_priority,
+		func(ctx context.Context) (any, error) {
+			return obj.Priority, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_priority(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_weight(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_weight,
+		func(ctx context.Context) (any, error) {
+			return obj.Weight, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_weight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_concurrencyLimit(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_concurrencyLimit,
+		func(ctx context.Context) (any, error) {
+			return obj.ConcurrencyLimit, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_concurrencyLimit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_rateMultiplier(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_rateMultiplier,
+		func(ctx context.Context) (any, error) {
+			return obj.RateMultiplier, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_rateMultiplier(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_expiresAt(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_expiresAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ExpiresAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_expiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_lastUsedAt(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_lastUsedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.LastUsedAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_lastUsedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_errorMessage(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_errorMessage,
+		func(ctx context.Context) (any, error) {
+			return obj.ErrorMessage, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_errorMessage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_rateLimitResetAt(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_rateLimitResetAt,
+		func(ctx context.Context) (any, error) {
+			return obj.RateLimitResetAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_rateLimitResetAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_overloadUntil(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_overloadUntil,
+		func(ctx context.Context) (any, error) {
+			return obj.OverloadUntil, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_overloadUntil(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_cooldownUntil(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_cooldownUntil,
+		func(ctx context.Context) (any, error) {
+			return obj.CooldownUntil, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_cooldownUntil(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_cooldownReason(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_cooldownReason,
+		func(ctx context.Context) (any, error) {
+			return obj.CooldownReason, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_cooldownReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_quotaLimitMicros(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_quotaLimitMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaLimitMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_quotaLimitMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_quotaUsedMicros(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_quotaUsedMicros,
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaUsedMicros, nil
+		},
+		nil,
+		ec.marshalNInt2int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_quotaUsedMicros(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_channel(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_channel,
+		func(ctx context.Context) (any, error) {
+			return obj.Channel(ctx)
+		},
+		nil,
+		ec.marshalNChannel2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐChannel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_channel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_Channel_type(ctx, field)
+			case "baseURL":
+				return ec.fieldContext_Channel_baseURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Channel_name(ctx, field)
+			case "status":
+				return ec.fieldContext_Channel_status(ctx, field)
+			case "supportedModels":
+				return ec.fieldContext_Channel_supportedModels(ctx, field)
+			case "manualModels":
+				return ec.fieldContext_Channel_manualModels(ctx, field)
+			case "autoSyncSupportedModels":
+				return ec.fieldContext_Channel_autoSyncSupportedModels(ctx, field)
+			case "autoSyncModelPattern":
+				return ec.fieldContext_Channel_autoSyncModelPattern(ctx, field)
+			case "tags":
+				return ec.fieldContext_Channel_tags(ctx, field)
+			case "defaultTestModel":
+				return ec.fieldContext_Channel_defaultTestModel(ctx, field)
+			case "policies":
+				return ec.fieldContext_Channel_policies(ctx, field)
+			case "settings":
+				return ec.fieldContext_Channel_settings(ctx, field)
+			case "orderingWeight":
+				return ec.fieldContext_Channel_orderingWeight(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "remark":
+				return ec.fieldContext_Channel_remark(ctx, field)
+			case "endpoints":
+				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "requests":
+				return ec.fieldContext_Channel_requests(ctx, field)
+			case "executions":
+				return ec.fieldContext_Channel_executions(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Channel_usageLogs(ctx, field)
+			case "channelProbes":
+				return ec.fieldContext_Channel_channelProbes(ctx, field)
+			case "channelModelPrices":
+				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
+			case "providerQuotaStatus":
+				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
+			case "defaultEndpoints":
+				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
+			case "allModelEntries":
+				return ec.fieldContext_Channel_allModelEntries(ctx, field)
+			case "credentials":
+				return ec.fieldContext_Channel_credentials(ctx, field)
+			case "disabledAPIKeys":
+				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
+			case "liveLimiterStats":
+				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_pool(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_pool,
+		func(ctx context.Context) (any, error) {
+			return obj.Pool(ctx)
+		},
+		nil,
+		ec.marshalOUpstreamAccountPool2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_pool(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccountPool_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccountPool_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccountPool_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccountPool_channelID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccountPool_name(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccountPool_status(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccountPool_priority(ctx, field)
+			case "modelPatterns":
+				return ec.fieldContext_UpstreamAccountPool_modelPatterns(ctx, field)
+			case "projectIds":
+				return ec.fieldContext_UpstreamAccountPool_projectIds(ctx, field)
+			case "remark":
+				return ec.fieldContext_UpstreamAccountPool_remark(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccountPool_channel(ctx, field)
+			case "accounts":
+				return ec.fieldContext_UpstreamAccountPool_accounts(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountPool", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_hasCredentials(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_hasCredentials,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccount().HasCredentials(ctx, obj)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_hasCredentials(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_hasProxyConfig(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_hasProxyConfig,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccount().HasProxyConfig(ctx, obj)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_hasProxyConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_eligibleNow(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_eligibleNow,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccount().EligibleNow(ctx, obj)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_eligibleNow(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccount_ineligibleReason(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccount_ineligibleReason,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccount().IneligibleReason(ctx, obj)
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccount_ineligibleReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccount",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOUpstreamAccountEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_UpstreamAccountEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_UpstreamAccountEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOUpstreamAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccount,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccount_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccount_channelID(ctx, field)
+			case "poolID":
+				return ec.fieldContext_UpstreamAccount_poolID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccount_name(ctx, field)
+			case "credentialType":
+				return ec.fieldContext_UpstreamAccount_credentialType(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccount_status(ctx, field)
+			case "schedulable":
+				return ec.fieldContext_UpstreamAccount_schedulable(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccount_priority(ctx, field)
+			case "weight":
+				return ec.fieldContext_UpstreamAccount_weight(ctx, field)
+			case "concurrencyLimit":
+				return ec.fieldContext_UpstreamAccount_concurrencyLimit(ctx, field)
+			case "rateMultiplier":
+				return ec.fieldContext_UpstreamAccount_rateMultiplier(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UpstreamAccount_expiresAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_UpstreamAccount_lastUsedAt(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_UpstreamAccount_errorMessage(ctx, field)
+			case "rateLimitResetAt":
+				return ec.fieldContext_UpstreamAccount_rateLimitResetAt(ctx, field)
+			case "overloadUntil":
+				return ec.fieldContext_UpstreamAccount_overloadUntil(ctx, field)
+			case "cooldownUntil":
+				return ec.fieldContext_UpstreamAccount_cooldownUntil(ctx, field)
+			case "cooldownReason":
+				return ec.fieldContext_UpstreamAccount_cooldownReason(ctx, field)
+			case "quotaLimitMicros":
+				return ec.fieldContext_UpstreamAccount_quotaLimitMicros(ctx, field)
+			case "quotaUsedMicros":
+				return ec.fieldContext_UpstreamAccount_quotaUsedMicros(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccount_channel(ctx, field)
+			case "pool":
+				return ec.fieldContext_UpstreamAccount_pool(ctx, field)
+			case "hasCredentials":
+				return ec.fieldContext_UpstreamAccount_hasCredentials(ctx, field)
+			case "hasProxyConfig":
+				return ec.fieldContext_UpstreamAccount_hasProxyConfig(ctx, field)
+			case "eligibleNow":
+				return ec.fieldContext_UpstreamAccount_eligibleNow(ctx, field)
+			case "ineligibleReason":
+				return ec.fieldContext_UpstreamAccount_ineligibleReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_id(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccountPool().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_channelID(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_channelID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccountPool().ChannelID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_channelID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_name(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_name,
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_status(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNUpstreamAccountPoolStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UpstreamAccountPoolStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_priority(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_priority,
+		func(ctx context.Context) (any, error) {
+			return obj.Priority, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_priority(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_modelPatterns(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_modelPatterns,
+		func(ctx context.Context) (any, error) {
+			return obj.ModelPatterns, nil
+		},
+		nil,
+		ec.marshalOString2ᚕstringᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_modelPatterns(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_projectIds(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_projectIds,
+		func(ctx context.Context) (any, error) {
+			return obj.ProjectIds, nil
+		},
+		nil,
+		ec.marshalOInt2ᚕintᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_projectIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_remark(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_remark,
+		func(ctx context.Context) (any, error) {
+			return obj.Remark, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_remark(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_channel(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_channel,
+		func(ctx context.Context) (any, error) {
+			return obj.Channel(ctx)
+		},
+		nil,
+		ec.marshalNChannel2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐChannel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_channel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_Channel_type(ctx, field)
+			case "baseURL":
+				return ec.fieldContext_Channel_baseURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Channel_name(ctx, field)
+			case "status":
+				return ec.fieldContext_Channel_status(ctx, field)
+			case "supportedModels":
+				return ec.fieldContext_Channel_supportedModels(ctx, field)
+			case "manualModels":
+				return ec.fieldContext_Channel_manualModels(ctx, field)
+			case "autoSyncSupportedModels":
+				return ec.fieldContext_Channel_autoSyncSupportedModels(ctx, field)
+			case "autoSyncModelPattern":
+				return ec.fieldContext_Channel_autoSyncModelPattern(ctx, field)
+			case "tags":
+				return ec.fieldContext_Channel_tags(ctx, field)
+			case "defaultTestModel":
+				return ec.fieldContext_Channel_defaultTestModel(ctx, field)
+			case "policies":
+				return ec.fieldContext_Channel_policies(ctx, field)
+			case "settings":
+				return ec.fieldContext_Channel_settings(ctx, field)
+			case "orderingWeight":
+				return ec.fieldContext_Channel_orderingWeight(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "remark":
+				return ec.fieldContext_Channel_remark(ctx, field)
+			case "endpoints":
+				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "requests":
+				return ec.fieldContext_Channel_requests(ctx, field)
+			case "executions":
+				return ec.fieldContext_Channel_executions(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Channel_usageLogs(ctx, field)
+			case "channelProbes":
+				return ec.fieldContext_Channel_channelProbes(ctx, field)
+			case "channelModelPrices":
+				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
+			case "providerQuotaStatus":
+				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
+			case "defaultEndpoints":
+				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
+			case "allModelEntries":
+				return ec.fieldContext_Channel_allModelEntries(ctx, field)
+			case "credentials":
+				return ec.fieldContext_Channel_credentials(ctx, field)
+			case "disabledAPIKeys":
+				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
+			case "liveLimiterStats":
+				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPool_accounts(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPool) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPool_accounts,
+		func(ctx context.Context) (any, error) {
+			return obj.Accounts(ctx)
+		},
+		nil,
+		ec.marshalOUpstreamAccount2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPool_accounts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPool",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccount_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccount_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccount_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccount_channelID(ctx, field)
+			case "poolID":
+				return ec.fieldContext_UpstreamAccount_poolID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccount_name(ctx, field)
+			case "credentialType":
+				return ec.fieldContext_UpstreamAccount_credentialType(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccount_status(ctx, field)
+			case "schedulable":
+				return ec.fieldContext_UpstreamAccount_schedulable(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccount_priority(ctx, field)
+			case "weight":
+				return ec.fieldContext_UpstreamAccount_weight(ctx, field)
+			case "concurrencyLimit":
+				return ec.fieldContext_UpstreamAccount_concurrencyLimit(ctx, field)
+			case "rateMultiplier":
+				return ec.fieldContext_UpstreamAccount_rateMultiplier(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_UpstreamAccount_expiresAt(ctx, field)
+			case "lastUsedAt":
+				return ec.fieldContext_UpstreamAccount_lastUsedAt(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_UpstreamAccount_errorMessage(ctx, field)
+			case "rateLimitResetAt":
+				return ec.fieldContext_UpstreamAccount_rateLimitResetAt(ctx, field)
+			case "overloadUntil":
+				return ec.fieldContext_UpstreamAccount_overloadUntil(ctx, field)
+			case "cooldownUntil":
+				return ec.fieldContext_UpstreamAccount_cooldownUntil(ctx, field)
+			case "cooldownReason":
+				return ec.fieldContext_UpstreamAccount_cooldownReason(ctx, field)
+			case "quotaLimitMicros":
+				return ec.fieldContext_UpstreamAccount_quotaLimitMicros(ctx, field)
+			case "quotaUsedMicros":
+				return ec.fieldContext_UpstreamAccount_quotaUsedMicros(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccount_channel(ctx, field)
+			case "pool":
+				return ec.fieldContext_UpstreamAccount_pool(ctx, field)
+			case "hasCredentials":
+				return ec.fieldContext_UpstreamAccount_hasCredentials(ctx, field)
+			case "hasProxyConfig":
+				return ec.fieldContext_UpstreamAccount_hasProxyConfig(ctx, field)
+			case "eligibleNow":
+				return ec.fieldContext_UpstreamAccount_eligibleNow(ctx, field)
+			case "ineligibleReason":
+				return ec.fieldContext_UpstreamAccount_ineligibleReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPoolConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPoolConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPoolConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOUpstreamAccountPoolEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPoolConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPoolConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_UpstreamAccountPoolEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_UpstreamAccountPoolEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountPoolEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPoolConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPoolConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPoolConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPoolConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPoolConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPoolConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPoolConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPoolConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPoolConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPoolConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPoolEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPoolEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPoolEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOUpstreamAccountPool2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPoolEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPoolEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UpstreamAccountPool_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UpstreamAccountPool_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UpstreamAccountPool_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UpstreamAccountPool_channelID(ctx, field)
+			case "name":
+				return ec.fieldContext_UpstreamAccountPool_name(ctx, field)
+			case "status":
+				return ec.fieldContext_UpstreamAccountPool_status(ctx, field)
+			case "priority":
+				return ec.fieldContext_UpstreamAccountPool_priority(ctx, field)
+			case "modelPatterns":
+				return ec.fieldContext_UpstreamAccountPool_modelPatterns(ctx, field)
+			case "projectIds":
+				return ec.fieldContext_UpstreamAccountPool_projectIds(ctx, field)
+			case "remark":
+				return ec.fieldContext_UpstreamAccountPool_remark(ctx, field)
+			case "channel":
+				return ec.fieldContext_UpstreamAccountPool_channel(ctx, field)
+			case "accounts":
+				return ec.fieldContext_UpstreamAccountPool_accounts(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpstreamAccountPool", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountPoolEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.UpstreamAccountPoolEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountPoolEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountPoolEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountPoolEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountTestResult_accountID(ctx context.Context, field graphql.CollectedField, obj *biz.UpstreamAccountTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountTestResult_accountID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UpstreamAccountTestResult().AccountID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountTestResult_accountID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountTestResult",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountTestResult_success(ctx context.Context, field graphql.CollectedField, obj *biz.UpstreamAccountTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountTestResult_success,
+		func(ctx context.Context) (any, error) {
+			return obj.Success, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountTestResult_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountTestResult_eligible(ctx context.Context, field graphql.CollectedField, obj *biz.UpstreamAccountTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountTestResult_eligible,
+		func(ctx context.Context) (any, error) {
+			return obj.Eligible, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountTestResult_eligible(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountTestResult_message(ctx context.Context, field graphql.CollectedField, obj *biz.UpstreamAccountTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountTestResult_message,
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountTestResult_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpstreamAccountTestResult_ineligibleReason(ctx context.Context, field graphql.CollectedField, obj *biz.UpstreamAccountTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpstreamAccountTestResult_ineligibleReason,
+		func(ctx context.Context) (any, error) {
+			return obj.IneligibleReason, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpstreamAccountTestResult_ineligibleReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpstreamAccountTestResult",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -95597,6 +99234,10 @@ func (ec *executionContext) fieldContext_UsageLog_channel(_ context.Context, fie
 				return ec.fieldContext_Channel_channelProbes(ctx, field)
 			case "channelModelPrices":
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "upstreamAccountPools":
+				return ec.fieldContext_Channel_upstreamAccountPools(ctx, field)
+			case "upstreamAccounts":
+				return ec.fieldContext_Channel_upstreamAccounts(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "defaultEndpoints":
@@ -95609,6 +99250,8 @@ func (ec *executionContext) fieldContext_UsageLog_channel(_ context.Context, fie
 				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
 			case "liveLimiterStats":
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "upstreamCredentialFallback":
+				return ec.fieldContext_Channel_upstreamCredentialFallback(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
 		},
@@ -119695,7 +123338,7 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasUpstreamAccountPools", "hasUpstreamAccountPoolsWith", "hasUpstreamAccounts", "hasUpstreamAccountsWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -120721,6 +124364,34 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 				return it, err
 			}
 			it.HasChannelModelPricesWith = data
+		case "hasUpstreamAccountPools":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUpstreamAccountPools"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUpstreamAccountPools = data
+		case "hasUpstreamAccountPoolsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUpstreamAccountPoolsWith"))
+			data, err := ec.unmarshalOUpstreamAccountPoolWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUpstreamAccountPoolsWith = data
+		case "hasUpstreamAccounts":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUpstreamAccounts"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUpstreamAccounts = data
+		case "hasUpstreamAccountsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUpstreamAccountsWith"))
+			data, err := ec.unmarshalOUpstreamAccountWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUpstreamAccountsWith = data
 		case "hasProviderQuotaStatus":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasProviderQuotaStatus"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -123013,6 +126684,235 @@ func (ec *executionContext) unmarshalInputCreateTraceInput(ctx context.Context, 
 				return it, graphql.ErrorOnPath(ctx, err)
 			}
 			it.ThreadID = converted
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateUpstreamAccountInput(ctx context.Context, obj any) (CreateUpstreamAccountInput, error) {
+	var it CreateUpstreamAccountInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"channelID", "poolID", "name", "credentialType", "credentials", "status", "schedulable", "priority", "weight", "concurrencyLimit", "proxyConfig", "rateMultiplier", "expiresAt", "quotaLimitMicros", "quotaUsedMicros", "errorMessage", "rateLimitResetAt", "overloadUntil", "cooldownUntil", "cooldownReason"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "channelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelID"))
+			data, err := ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ChannelID = data
+		case "poolID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("poolID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PoolID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "credentialType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentialType"))
+			data, err := ec.unmarshalOUpstreamAccountCredentialType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CredentialType = data
+		case "credentials":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentials"))
+			data, err := ec.unmarshalNUpstreamAccountCredentialsInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamAccountCredentialsInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Credentials = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOUpstreamAccountStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "schedulable":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("schedulable"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Schedulable = data
+		case "priority":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Priority = data
+		case "weight":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weight"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Weight = data
+		case "concurrencyLimit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimit = data
+		case "proxyConfig":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("proxyConfig"))
+			data, err := ec.unmarshalOProxyConfigInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋllmᚋhttpclientᚐProxyConfig(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProxyConfig = data
+		case "rateMultiplier":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplier"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplier = data
+		case "expiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAt = data
+		case "quotaLimitMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicros"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicros = data
+		case "quotaUsedMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicros"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicros = data
+		case "errorMessage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessage"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessage = data
+		case "rateLimitResetAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAt = data
+		case "overloadUntil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntil"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntil = data
+		case "cooldownUntil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntil"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntil = data
+		case "cooldownReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReason = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateUpstreamAccountPoolInput(ctx context.Context, obj any) (CreateUpstreamAccountPoolInput, error) {
+	var it CreateUpstreamAccountPoolInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"channelID", "name", "status", "priority", "modelPatterns", "projectIDs", "remark"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "channelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelID"))
+			data, err := ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ChannelID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOUpstreamAccountPoolStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "priority":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Priority = data
+		case "modelPatterns":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelPatterns"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelPatterns = data
+		case "projectIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDs"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDs = data
+		case "remark":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remark"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Remark = data
 		}
 	}
 
@@ -148126,6 +152026,284 @@ func (ec *executionContext) unmarshalInputUpdateTraceInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateUpstreamAccountInput(ctx context.Context, obj any) (UpdateUpstreamAccountInput, error) {
+	var it UpdateUpstreamAccountInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"poolID", "clearPool", "name", "credentialType", "credentials", "status", "schedulable", "priority", "weight", "concurrencyLimit", "proxyConfig", "clearProxyConfig", "rateMultiplier", "expiresAt", "clearExpiresAt", "quotaLimitMicros", "quotaUsedMicros", "errorMessage", "clearErrorMessage", "rateLimitResetAt", "clearRateLimitResetAt", "overloadUntil", "clearOverloadUntil", "cooldownUntil", "clearCooldownUntil", "cooldownReason", "clearCooldownReason"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "poolID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("poolID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PoolID = data
+		case "clearPool":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearPool"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearPool = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "credentialType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentialType"))
+			data, err := ec.unmarshalOUpstreamAccountCredentialType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CredentialType = data
+		case "credentials":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentials"))
+			data, err := ec.unmarshalOUpstreamAccountCredentialsInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamAccountCredentialsInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Credentials = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOUpstreamAccountStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "schedulable":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("schedulable"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Schedulable = data
+		case "priority":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Priority = data
+		case "weight":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weight"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Weight = data
+		case "concurrencyLimit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimit = data
+		case "proxyConfig":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("proxyConfig"))
+			data, err := ec.unmarshalOProxyConfigInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋllmᚋhttpclientᚐProxyConfig(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProxyConfig = data
+		case "clearProxyConfig":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearProxyConfig"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearProxyConfig = data
+		case "rateMultiplier":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplier"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplier = data
+		case "expiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAt = data
+		case "clearExpiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearExpiresAt"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearExpiresAt = data
+		case "quotaLimitMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicros"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicros = data
+		case "quotaUsedMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicros"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicros = data
+		case "errorMessage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessage"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessage = data
+		case "clearErrorMessage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearErrorMessage"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearErrorMessage = data
+		case "rateLimitResetAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAt = data
+		case "clearRateLimitResetAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearRateLimitResetAt"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearRateLimitResetAt = data
+		case "overloadUntil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntil"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntil = data
+		case "clearOverloadUntil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearOverloadUntil"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearOverloadUntil = data
+		case "cooldownUntil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntil"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntil = data
+		case "clearCooldownUntil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearCooldownUntil"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearCooldownUntil = data
+		case "cooldownReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReason = data
+		case "clearCooldownReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearCooldownReason"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearCooldownReason = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateUpstreamAccountPoolInput(ctx context.Context, obj any) (UpdateUpstreamAccountPoolInput, error) {
+	var it UpdateUpstreamAccountPoolInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "status", "priority", "modelPatterns", "projectIDs", "remark", "clearRemark"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOUpstreamAccountPoolStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "priority":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Priority = data
+		case "modelPatterns":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelPatterns"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelPatterns = data
+		case "projectIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDs"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProjectIDs = data
+		case "remark":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remark"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Remark = data
+		case "clearRemark":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearRemark"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearRemark = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateUsageLogInput(ctx context.Context, obj any) (ent.UpdateUsageLogInput, error) {
 	var it ent.UpdateUsageLogInput
 	asMap := map[string]any{}
@@ -148708,6 +152886,2151 @@ func (ec *executionContext) unmarshalInputUpsertEPayPaymentProviderInput(ctx con
 				return it, err
 			}
 			it.SiteName = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpstreamAccountCredentialsInput(ctx context.Context, obj any) (biz.UpstreamAccountCredentialsInput, error) {
+	var it biz.UpstreamAccountCredentialsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"apiKey", "oauth", "rawJson", "headers"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "apiKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKey = data
+		case "oauth":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("oauth"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OAuth = data
+		case "rawJson":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rawJson"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RawJSON = data
+		case "headers":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("headers"))
+			data, err := ec.unmarshalOHeaderEntryInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐHeaderEntryᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Headers = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpstreamAccountOrder(ctx context.Context, obj any) (ent.UpstreamAccountOrder, error) {
+	var it ent.UpstreamAccountOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNUpstreamAccountOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpstreamAccountPoolOrder(ctx context.Context, obj any) (ent.UpstreamAccountPoolOrder, error) {
+	var it ent.UpstreamAccountPoolOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNUpstreamAccountPoolOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpstreamAccountPoolWhereInput(ctx context.Context, obj any) (ent.UpstreamAccountPoolWhereInput, error) {
+	var it ent.UpstreamAccountPoolWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "priority", "priorityNEQ", "priorityIn", "priorityNotIn", "priorityGT", "priorityGTE", "priorityLT", "priorityLTE", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "hasChannel", "hasChannelWith", "hasAccounts", "hasAccountsWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOUpstreamAccountPoolWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOUpstreamAccountPoolWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOUpstreamAccountPoolWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "channelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelID = converted
+		case "channelIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelIDNEQ = converted
+		case "channelIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelIDIn = converted
+		case "channelIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelIDNotIn = converted
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "nameNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameNEQ = data
+		case "nameIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameIn = data
+		case "nameNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameNotIn = data
+		case "nameGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameGT = data
+		case "nameGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameGTE = data
+		case "nameLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameLT = data
+		case "nameLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameLTE = data
+		case "nameContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameContains = data
+		case "nameHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameHasPrefix = data
+		case "nameHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameHasSuffix = data
+		case "nameEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameEqualFold = data
+		case "nameContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameContainsFold = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOUpstreamAccountPoolStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOUpstreamAccountPoolStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOUpstreamAccountPoolStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOUpstreamAccountPoolStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "priority":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Priority = data
+		case "priorityNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityNEQ = data
+		case "priorityIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityIn = data
+		case "priorityNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityNotIn = data
+		case "priorityGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityGT = data
+		case "priorityGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityGTE = data
+		case "priorityLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityLT = data
+		case "priorityLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityLTE = data
+		case "remark":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remark"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Remark = data
+		case "remarkNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkNEQ = data
+		case "remarkIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkIn = data
+		case "remarkNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkNotIn = data
+		case "remarkGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkGT = data
+		case "remarkGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkGTE = data
+		case "remarkLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkLT = data
+		case "remarkLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkLTE = data
+		case "remarkContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkContains = data
+		case "remarkHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkHasPrefix = data
+		case "remarkHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkHasSuffix = data
+		case "remarkIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkIsNil = data
+		case "remarkNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkNotNil = data
+		case "remarkEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkEqualFold = data
+		case "remarkContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remarkContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RemarkContainsFold = data
+		case "hasChannel":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannel"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasChannel = data
+		case "hasChannelWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannelWith"))
+			data, err := ec.unmarshalOChannelWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐChannelWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasChannelWith = data
+		case "hasAccounts":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAccounts"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAccounts = data
+		case "hasAccountsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAccountsWith"))
+			data, err := ec.unmarshalOUpstreamAccountWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasAccountsWith = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpstreamAccountWhereInput(ctx context.Context, obj any) (ent.UpstreamAccountWhereInput, error) {
+	var it ent.UpstreamAccountWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "poolID", "poolIDNEQ", "poolIDIn", "poolIDNotIn", "poolIDIsNil", "poolIDNotNil", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "credentialType", "credentialTypeNEQ", "credentialTypeIn", "credentialTypeNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "schedulable", "schedulableNEQ", "priority", "priorityNEQ", "priorityIn", "priorityNotIn", "priorityGT", "priorityGTE", "priorityLT", "priorityLTE", "weight", "weightNEQ", "weightIn", "weightNotIn", "weightGT", "weightGTE", "weightLT", "weightLTE", "concurrencyLimit", "concurrencyLimitNEQ", "concurrencyLimitIn", "concurrencyLimitNotIn", "concurrencyLimitGT", "concurrencyLimitGTE", "concurrencyLimitLT", "concurrencyLimitLTE", "rateMultiplier", "rateMultiplierNEQ", "rateMultiplierIn", "rateMultiplierNotIn", "rateMultiplierGT", "rateMultiplierGTE", "rateMultiplierLT", "rateMultiplierLTE", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "expiresAtIsNil", "expiresAtNotNil", "lastUsedAt", "lastUsedAtNEQ", "lastUsedAtIn", "lastUsedAtNotIn", "lastUsedAtGT", "lastUsedAtGTE", "lastUsedAtLT", "lastUsedAtLTE", "lastUsedAtIsNil", "lastUsedAtNotNil", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "rateLimitResetAt", "rateLimitResetAtNEQ", "rateLimitResetAtIn", "rateLimitResetAtNotIn", "rateLimitResetAtGT", "rateLimitResetAtGTE", "rateLimitResetAtLT", "rateLimitResetAtLTE", "rateLimitResetAtIsNil", "rateLimitResetAtNotNil", "overloadUntil", "overloadUntilNEQ", "overloadUntilIn", "overloadUntilNotIn", "overloadUntilGT", "overloadUntilGTE", "overloadUntilLT", "overloadUntilLTE", "overloadUntilIsNil", "overloadUntilNotNil", "cooldownUntil", "cooldownUntilNEQ", "cooldownUntilIn", "cooldownUntilNotIn", "cooldownUntilGT", "cooldownUntilGTE", "cooldownUntilLT", "cooldownUntilLTE", "cooldownUntilIsNil", "cooldownUntilNotNil", "cooldownReason", "cooldownReasonNEQ", "cooldownReasonIn", "cooldownReasonNotIn", "cooldownReasonGT", "cooldownReasonGTE", "cooldownReasonLT", "cooldownReasonLTE", "cooldownReasonContains", "cooldownReasonHasPrefix", "cooldownReasonHasSuffix", "cooldownReasonIsNil", "cooldownReasonNotNil", "cooldownReasonEqualFold", "cooldownReasonContainsFold", "quotaLimitMicros", "quotaLimitMicrosNEQ", "quotaLimitMicrosIn", "quotaLimitMicrosNotIn", "quotaLimitMicrosGT", "quotaLimitMicrosGTE", "quotaLimitMicrosLT", "quotaLimitMicrosLTE", "quotaUsedMicros", "quotaUsedMicrosNEQ", "quotaUsedMicrosIn", "quotaUsedMicrosNotIn", "quotaUsedMicrosGT", "quotaUsedMicrosGTE", "quotaUsedMicrosLT", "quotaUsedMicrosLTE", "hasChannel", "hasChannelWith", "hasPool", "hasPoolWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOUpstreamAccountWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOUpstreamAccountWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOUpstreamAccountWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "channelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelID = converted
+		case "channelIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelIDNEQ = converted
+		case "channelIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelIDIn = converted
+		case "channelIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelIDNotIn = converted
+		case "poolID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("poolID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PoolID = converted
+		case "poolIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("poolIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PoolIDNEQ = converted
+		case "poolIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("poolIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PoolIDIn = converted
+		case "poolIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("poolIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PoolIDNotIn = converted
+		case "poolIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("poolIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PoolIDIsNil = data
+		case "poolIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("poolIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PoolIDNotNil = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "nameNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameNEQ = data
+		case "nameIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameIn = data
+		case "nameNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameNotIn = data
+		case "nameGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameGT = data
+		case "nameGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameGTE = data
+		case "nameLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameLT = data
+		case "nameLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameLTE = data
+		case "nameContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameContains = data
+		case "nameHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameHasPrefix = data
+		case "nameHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameHasSuffix = data
+		case "nameEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameEqualFold = data
+		case "nameContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameContainsFold = data
+		case "credentialType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentialType"))
+			data, err := ec.unmarshalOUpstreamAccountCredentialType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CredentialType = data
+		case "credentialTypeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentialTypeNEQ"))
+			data, err := ec.unmarshalOUpstreamAccountCredentialType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CredentialTypeNEQ = data
+		case "credentialTypeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentialTypeIn"))
+			data, err := ec.unmarshalOUpstreamAccountCredentialType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CredentialTypeIn = data
+		case "credentialTypeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentialTypeNotIn"))
+			data, err := ec.unmarshalOUpstreamAccountCredentialType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CredentialTypeNotIn = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOUpstreamAccountStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOUpstreamAccountStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOUpstreamAccountStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOUpstreamAccountStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "schedulable":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("schedulable"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Schedulable = data
+		case "schedulableNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("schedulableNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SchedulableNEQ = data
+		case "priority":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Priority = data
+		case "priorityNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityNEQ = data
+		case "priorityIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityIn = data
+		case "priorityNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityNotIn = data
+		case "priorityGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityGT = data
+		case "priorityGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityGTE = data
+		case "priorityLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityLT = data
+		case "priorityLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priorityLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriorityLTE = data
+		case "weight":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weight"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Weight = data
+		case "weightNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weightNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WeightNEQ = data
+		case "weightIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weightIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WeightIn = data
+		case "weightNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weightNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WeightNotIn = data
+		case "weightGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weightGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WeightGT = data
+		case "weightGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weightGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WeightGTE = data
+		case "weightLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weightLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WeightLT = data
+		case "weightLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weightLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WeightLTE = data
+		case "concurrencyLimit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimit = data
+		case "concurrencyLimitNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimitNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimitNEQ = data
+		case "concurrencyLimitIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimitIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimitIn = data
+		case "concurrencyLimitNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimitNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimitNotIn = data
+		case "concurrencyLimitGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimitGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimitGT = data
+		case "concurrencyLimitGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimitGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimitGTE = data
+		case "concurrencyLimitLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimitLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimitLT = data
+		case "concurrencyLimitLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("concurrencyLimitLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConcurrencyLimitLTE = data
+		case "rateMultiplier":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplier"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplier = data
+		case "rateMultiplierNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplierNEQ"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplierNEQ = data
+		case "rateMultiplierIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplierIn"))
+			data, err := ec.unmarshalOFloat2ᚕfloat64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplierIn = data
+		case "rateMultiplierNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplierNotIn"))
+			data, err := ec.unmarshalOFloat2ᚕfloat64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplierNotIn = data
+		case "rateMultiplierGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplierGT"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplierGT = data
+		case "rateMultiplierGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplierGTE"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplierGTE = data
+		case "rateMultiplierLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplierLT"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplierLT = data
+		case "rateMultiplierLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateMultiplierLTE"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateMultiplierLTE = data
+		case "expiresAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAt = data
+		case "expiresAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNEQ = data
+		case "expiresAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtIn = data
+		case "expiresAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNotIn = data
+		case "expiresAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtGT = data
+		case "expiresAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtGTE = data
+		case "expiresAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtLT = data
+		case "expiresAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtLTE = data
+		case "expiresAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtIsNil = data
+		case "expiresAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresAtNotNil = data
+		case "lastUsedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAt = data
+		case "lastUsedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAtNEQ = data
+		case "lastUsedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAtIn = data
+		case "lastUsedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAtNotIn = data
+		case "lastUsedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAtGT = data
+		case "lastUsedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAtGTE = data
+		case "lastUsedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAtLT = data
+		case "lastUsedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAtLTE = data
+		case "lastUsedAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAtIsNil = data
+		case "lastUsedAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastUsedAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastUsedAtNotNil = data
+		case "errorMessage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessage"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessage = data
+		case "errorMessageNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageNEQ = data
+		case "errorMessageIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageIn = data
+		case "errorMessageNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageNotIn = data
+		case "errorMessageGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageGT = data
+		case "errorMessageGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageGTE = data
+		case "errorMessageLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageLT = data
+		case "errorMessageLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageLTE = data
+		case "errorMessageContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageContains = data
+		case "errorMessageHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageHasPrefix = data
+		case "errorMessageHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageHasSuffix = data
+		case "errorMessageIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageIsNil = data
+		case "errorMessageNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageNotNil = data
+		case "errorMessageEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageEqualFold = data
+		case "errorMessageContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessageContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorMessageContainsFold = data
+		case "rateLimitResetAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAt = data
+		case "rateLimitResetAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAtNEQ = data
+		case "rateLimitResetAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAtIn = data
+		case "rateLimitResetAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAtNotIn = data
+		case "rateLimitResetAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAtGT = data
+		case "rateLimitResetAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAtGTE = data
+		case "rateLimitResetAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAtLT = data
+		case "rateLimitResetAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAtLTE = data
+		case "rateLimitResetAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAtIsNil = data
+		case "rateLimitResetAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimitResetAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimitResetAtNotNil = data
+		case "overloadUntil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntil"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntil = data
+		case "overloadUntilNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntilNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntilNEQ = data
+		case "overloadUntilIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntilIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntilIn = data
+		case "overloadUntilNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntilNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntilNotIn = data
+		case "overloadUntilGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntilGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntilGT = data
+		case "overloadUntilGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntilGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntilGTE = data
+		case "overloadUntilLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntilLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntilLT = data
+		case "overloadUntilLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntilLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntilLTE = data
+		case "overloadUntilIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntilIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntilIsNil = data
+		case "overloadUntilNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overloadUntilNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OverloadUntilNotNil = data
+		case "cooldownUntil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntil"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntil = data
+		case "cooldownUntilNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntilNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntilNEQ = data
+		case "cooldownUntilIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntilIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntilIn = data
+		case "cooldownUntilNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntilNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntilNotIn = data
+		case "cooldownUntilGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntilGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntilGT = data
+		case "cooldownUntilGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntilGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntilGTE = data
+		case "cooldownUntilLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntilLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntilLT = data
+		case "cooldownUntilLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntilLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntilLTE = data
+		case "cooldownUntilIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntilIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntilIsNil = data
+		case "cooldownUntilNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownUntilNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownUntilNotNil = data
+		case "cooldownReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReason = data
+		case "cooldownReasonNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonNEQ = data
+		case "cooldownReasonIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonIn = data
+		case "cooldownReasonNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonNotIn = data
+		case "cooldownReasonGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonGT = data
+		case "cooldownReasonGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonGTE = data
+		case "cooldownReasonLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonLT = data
+		case "cooldownReasonLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonLTE = data
+		case "cooldownReasonContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonContains = data
+		case "cooldownReasonHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonHasPrefix = data
+		case "cooldownReasonHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonHasSuffix = data
+		case "cooldownReasonIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonIsNil = data
+		case "cooldownReasonNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonNotNil = data
+		case "cooldownReasonEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonEqualFold = data
+		case "cooldownReasonContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cooldownReasonContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CooldownReasonContainsFold = data
+		case "quotaLimitMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicros = data
+		case "quotaLimitMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicrosNEQ = data
+		case "quotaLimitMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicrosIn = data
+		case "quotaLimitMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicrosNotIn = data
+		case "quotaLimitMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicrosGT = data
+		case "quotaLimitMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicrosGTE = data
+		case "quotaLimitMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicrosLT = data
+		case "quotaLimitMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaLimitMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaLimitMicrosLTE = data
+		case "quotaUsedMicros":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicros"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicros = data
+		case "quotaUsedMicrosNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicrosNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicrosNEQ = data
+		case "quotaUsedMicrosIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicrosIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicrosIn = data
+		case "quotaUsedMicrosNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicrosNotIn"))
+			data, err := ec.unmarshalOInt2ᚕint64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicrosNotIn = data
+		case "quotaUsedMicrosGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicrosGT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicrosGT = data
+		case "quotaUsedMicrosGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicrosGTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicrosGTE = data
+		case "quotaUsedMicrosLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicrosLT"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicrosLT = data
+		case "quotaUsedMicrosLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaUsedMicrosLTE"))
+			data, err := ec.unmarshalOInt2ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaUsedMicrosLTE = data
+		case "hasChannel":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannel"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasChannel = data
+		case "hasChannelWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannelWith"))
+			data, err := ec.unmarshalOChannelWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐChannelWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasChannelWith = data
+		case "hasPool":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPool"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPool = data
+		case "hasPoolWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPoolWith"))
+			data, err := ec.unmarshalOUpstreamAccountPoolWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPoolWith = data
 		}
 	}
 
@@ -158090,6 +164413,16 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._UsageBillingRecord(ctx, sel, obj)
+	case *ent.UpstreamAccountPool:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UpstreamAccountPool(ctx, sel, obj)
+	case *ent.UpstreamAccount:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UpstreamAccount(ctx, sel, obj)
 	case *ent.Trace:
 		if obj == nil {
 			return graphql.Null
@@ -165398,6 +171731,72 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "upstreamAccountPools":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Channel_upstreamAccountPools(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "upstreamAccounts":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Channel_upstreamAccounts(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "providerQuotaStatus":
 			field := field
 
@@ -165579,6 +171978,42 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Channel_liveLimiterStats(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "upstreamCredentialFallback":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Channel_upstreamCredentialFallback(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -171630,6 +178065,55 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteDisabledChannelAPIKeys":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteDisabledChannelAPIKeys(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createUpstreamAccountPool":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createUpstreamAccountPool(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateUpstreamAccountPool":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUpstreamAccountPool(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "archiveUpstreamAccountPool":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_archiveUpstreamAccountPool(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createUpstreamAccount":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createUpstreamAccount(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateUpstreamAccount":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUpstreamAccount(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "archiveUpstreamAccount":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_archiveUpstreamAccount(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "testUpstreamAccount":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_testUpstreamAccount(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -178280,6 +184764,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_queryChannels(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "upstreamAccountPools":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_upstreamAccountPools(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "upstreamAccounts":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_upstreamAccounts(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -185992,6 +192520,896 @@ func (ec *executionContext) _UnassociatedChannel(ctx context.Context, sel ast.Se
 	return out
 }
 
+var upstreamAccountImplementors = []string{"UpstreamAccount", "Node"}
+
+func (ec *executionContext) _UpstreamAccount(ctx context.Context, sel ast.SelectionSet, obj *ent.UpstreamAccount) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upstreamAccountImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpstreamAccount")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccount_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._UpstreamAccount_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._UpstreamAccount_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "channelID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccount_channelID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "poolID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccount_poolID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "name":
+			out.Values[i] = ec._UpstreamAccount_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "credentialType":
+			out.Values[i] = ec._UpstreamAccount_credentialType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._UpstreamAccount_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "schedulable":
+			out.Values[i] = ec._UpstreamAccount_schedulable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "priority":
+			out.Values[i] = ec._UpstreamAccount_priority(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "weight":
+			out.Values[i] = ec._UpstreamAccount_weight(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "concurrencyLimit":
+			out.Values[i] = ec._UpstreamAccount_concurrencyLimit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "rateMultiplier":
+			out.Values[i] = ec._UpstreamAccount_rateMultiplier(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "expiresAt":
+			out.Values[i] = ec._UpstreamAccount_expiresAt(ctx, field, obj)
+		case "lastUsedAt":
+			out.Values[i] = ec._UpstreamAccount_lastUsedAt(ctx, field, obj)
+		case "errorMessage":
+			out.Values[i] = ec._UpstreamAccount_errorMessage(ctx, field, obj)
+		case "rateLimitResetAt":
+			out.Values[i] = ec._UpstreamAccount_rateLimitResetAt(ctx, field, obj)
+		case "overloadUntil":
+			out.Values[i] = ec._UpstreamAccount_overloadUntil(ctx, field, obj)
+		case "cooldownUntil":
+			out.Values[i] = ec._UpstreamAccount_cooldownUntil(ctx, field, obj)
+		case "cooldownReason":
+			out.Values[i] = ec._UpstreamAccount_cooldownReason(ctx, field, obj)
+		case "quotaLimitMicros":
+			out.Values[i] = ec._UpstreamAccount_quotaLimitMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "quotaUsedMicros":
+			out.Values[i] = ec._UpstreamAccount_quotaUsedMicros(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "channel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccount_channel(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "pool":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccount_pool(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "hasCredentials":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccount_hasCredentials(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "hasProxyConfig":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccount_hasProxyConfig(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "eligibleNow":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccount_eligibleNow(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "ineligibleReason":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccount_ineligibleReason(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var upstreamAccountConnectionImplementors = []string{"UpstreamAccountConnection"}
+
+func (ec *executionContext) _UpstreamAccountConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.UpstreamAccountConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upstreamAccountConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpstreamAccountConnection")
+		case "edges":
+			out.Values[i] = ec._UpstreamAccountConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._UpstreamAccountConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._UpstreamAccountConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var upstreamAccountEdgeImplementors = []string{"UpstreamAccountEdge"}
+
+func (ec *executionContext) _UpstreamAccountEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.UpstreamAccountEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upstreamAccountEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpstreamAccountEdge")
+		case "node":
+			out.Values[i] = ec._UpstreamAccountEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._UpstreamAccountEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var upstreamAccountPoolImplementors = []string{"UpstreamAccountPool", "Node"}
+
+func (ec *executionContext) _UpstreamAccountPool(ctx context.Context, sel ast.SelectionSet, obj *ent.UpstreamAccountPool) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upstreamAccountPoolImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpstreamAccountPool")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccountPool_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._UpstreamAccountPool_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._UpstreamAccountPool_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "channelID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccountPool_channelID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "name":
+			out.Values[i] = ec._UpstreamAccountPool_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._UpstreamAccountPool_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "priority":
+			out.Values[i] = ec._UpstreamAccountPool_priority(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "modelPatterns":
+			out.Values[i] = ec._UpstreamAccountPool_modelPatterns(ctx, field, obj)
+		case "projectIds":
+			out.Values[i] = ec._UpstreamAccountPool_projectIds(ctx, field, obj)
+		case "remark":
+			out.Values[i] = ec._UpstreamAccountPool_remark(ctx, field, obj)
+		case "channel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccountPool_channel(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "accounts":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccountPool_accounts(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var upstreamAccountPoolConnectionImplementors = []string{"UpstreamAccountPoolConnection"}
+
+func (ec *executionContext) _UpstreamAccountPoolConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.UpstreamAccountPoolConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upstreamAccountPoolConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpstreamAccountPoolConnection")
+		case "edges":
+			out.Values[i] = ec._UpstreamAccountPoolConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._UpstreamAccountPoolConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._UpstreamAccountPoolConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var upstreamAccountPoolEdgeImplementors = []string{"UpstreamAccountPoolEdge"}
+
+func (ec *executionContext) _UpstreamAccountPoolEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.UpstreamAccountPoolEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upstreamAccountPoolEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpstreamAccountPoolEdge")
+		case "node":
+			out.Values[i] = ec._UpstreamAccountPoolEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._UpstreamAccountPoolEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var upstreamAccountTestResultImplementors = []string{"UpstreamAccountTestResult"}
+
+func (ec *executionContext) _UpstreamAccountTestResult(ctx context.Context, sel ast.SelectionSet, obj *biz.UpstreamAccountTestResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upstreamAccountTestResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpstreamAccountTestResult")
+		case "accountID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UpstreamAccountTestResult_accountID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "success":
+			out.Values[i] = ec._UpstreamAccountTestResult_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "eligible":
+			out.Values[i] = ec._UpstreamAccountTestResult_eligible(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "message":
+			out.Values[i] = ec._UpstreamAccountTestResult_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "ineligibleReason":
+			out.Values[i] = ec._UpstreamAccountTestResult_ineligibleReason(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var upstreamErrorPolicyImplementors = []string{"UpstreamErrorPolicy"}
 
 func (ec *executionContext) _UpstreamErrorPolicy(ctx context.Context, sel ast.SelectionSet, obj *biz.UpstreamErrorPolicy) graphql.Marshaler {
@@ -193538,6 +200956,16 @@ func (ec *executionContext) unmarshalNCreateSimulatedEPayRechargeCheckoutInput2g
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateUpstreamAccountInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateUpstreamAccountInput(ctx context.Context, v any) (CreateUpstreamAccountInput, error) {
+	res, err := ec.unmarshalInputCreateUpstreamAccountInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateUpstreamAccountPoolInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateUpstreamAccountPoolInput(ctx context.Context, v any) (CreateUpstreamAccountPoolInput, error) {
+	res, err := ec.unmarshalInputCreateUpstreamAccountPoolInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateUserInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐCreateUserInput(ctx context.Context, v any) (ent.CreateUserInput, error) {
 	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -194218,6 +201646,11 @@ func (ec *executionContext) marshalNHeaderEntry2ᚕgithubᚗcomᚋloopljᚋaxonh
 func (ec *executionContext) unmarshalNHeaderEntryInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐHeaderEntry(ctx context.Context, v any) (objects.HeaderEntry, error) {
 	res, err := ec.unmarshalInputHeaderEntryInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNHeaderEntryInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐHeaderEntry(ctx context.Context, v any) (*objects.HeaderEntry, error) {
+	res, err := ec.unmarshalInputHeaderEntryInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx context.Context, v any) (objects.GUID, error) {
@@ -198058,6 +205491,16 @@ func (ec *executionContext) unmarshalNUpdateSystemModelSettingsInput2githubᚗco
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpdateUpstreamAccountInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateUpstreamAccountInput(ctx context.Context, v any) (UpdateUpstreamAccountInput, error) {
+	res, err := ec.unmarshalInputUpdateUpstreamAccountInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateUpstreamAccountPoolInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateUpstreamAccountPoolInput(ctx context.Context, v any) (UpdateUpstreamAccountPoolInput, error) {
+	res, err := ec.unmarshalInputUpdateUpstreamAccountPoolInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNUpdateUserAgentPassThroughSettingsInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateUserAgentPassThroughSettingsInput(ctx context.Context, v any) (UpdateUserAgentPassThroughSettingsInput, error) {
 	res, err := ec.unmarshalInputUpdateUserAgentPassThroughSettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -198097,6 +205540,213 @@ func (ec *executionContext) marshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋg
 func (ec *executionContext) unmarshalNUpsertEPayPaymentProviderInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpsertEPayPaymentProviderInput(ctx context.Context, v any) (UpsertEPayPaymentProviderInput, error) {
 	res, err := ec.unmarshalInputUpsertEPayPaymentProviderInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpstreamAccount2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccount(ctx context.Context, sel ast.SelectionSet, v ent.UpstreamAccount) graphql.Marshaler {
+	return ec._UpstreamAccount(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUpstreamAccount2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.UpstreamAccount) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUpstreamAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccount(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUpstreamAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccount(ctx context.Context, sel ast.SelectionSet, v *ent.UpstreamAccount) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UpstreamAccount(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUpstreamAccountCredentialType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx context.Context, v any) (upstreamaccount.CredentialType, error) {
+	var res upstreamaccount.CredentialType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpstreamAccountCredentialType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx context.Context, sel ast.SelectionSet, v upstreamaccount.CredentialType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNUpstreamAccountCredentialsInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamAccountCredentialsInput(ctx context.Context, v any) (*biz.UpstreamAccountCredentialsInput, error) {
+	res, err := ec.unmarshalInputUpstreamAccountCredentialsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpstreamAccountOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountOrderField(ctx context.Context, v any) (*ent.UpstreamAccountOrderField, error) {
+	var res = new(ent.UpstreamAccountOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpstreamAccountOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.UpstreamAccountOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) marshalNUpstreamAccountPool2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool(ctx context.Context, sel ast.SelectionSet, v ent.UpstreamAccountPool) graphql.Marshaler {
+	return ec._UpstreamAccountPool(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUpstreamAccountPool2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.UpstreamAccountPool) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUpstreamAccountPool2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUpstreamAccountPool2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool(ctx context.Context, sel ast.SelectionSet, v *ent.UpstreamAccountPool) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UpstreamAccountPool(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUpstreamAccountPoolOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolOrderField(ctx context.Context, v any) (*ent.UpstreamAccountPoolOrderField, error) {
+	var res = new(ent.UpstreamAccountPoolOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpstreamAccountPoolOrderField2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.UpstreamAccountPoolOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNUpstreamAccountPoolStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx context.Context, v any) (upstreamaccountpool.Status, error) {
+	var res upstreamaccountpool.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpstreamAccountPoolStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx context.Context, sel ast.SelectionSet, v upstreamaccountpool.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNUpstreamAccountPoolWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolWhereInput(ctx context.Context, v any) (*ent.UpstreamAccountPoolWhereInput, error) {
+	res, err := ec.unmarshalInputUpstreamAccountPoolWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpstreamAccountStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx context.Context, v any) (upstreamaccount.Status, error) {
+	var res upstreamaccount.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpstreamAccountStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx context.Context, sel ast.SelectionSet, v upstreamaccount.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNUpstreamAccountTestResult2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamAccountTestResult(ctx context.Context, sel ast.SelectionSet, v biz.UpstreamAccountTestResult) graphql.Marshaler {
+	return ec._UpstreamAccountTestResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUpstreamAccountTestResult2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamAccountTestResult(ctx context.Context, sel ast.SelectionSet, v *biz.UpstreamAccountTestResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UpstreamAccountTestResult(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUpstreamAccountWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountWhereInput(ctx context.Context, v any) (*ent.UpstreamAccountWhereInput, error) {
+	res, err := ec.unmarshalInputUpstreamAccountWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNUpstreamErrorPolicy2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamErrorPolicy(ctx context.Context, sel ast.SelectionSet, v biz.UpstreamErrorPolicy) graphql.Marshaler {
@@ -204219,6 +211869,24 @@ func (ec *executionContext) unmarshalOHeaderEntryInput2ᚕgithubᚗcomᚋlooplj�
 	return res, nil
 }
 
+func (ec *executionContext) unmarshalOHeaderEntryInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐHeaderEntryᚄ(ctx context.Context, v any) ([]*objects.HeaderEntry, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*objects.HeaderEntry, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNHeaderEntryInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐHeaderEntry(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOID2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx context.Context, v any) ([]*objects.GUID, error) {
 	if v == nil {
 		return nil, nil
@@ -210223,6 +217891,513 @@ func (ec *executionContext) unmarshalOUpdateChannelModelAutoSyncSettingInput2git
 func (ec *executionContext) unmarshalOUpdateChannelProbeSettingInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelProbeSetting(ctx context.Context, v any) (biz.ChannelProbeSetting, error) {
 	res, err := ec.unmarshalInputUpdateChannelProbeSettingInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUpstreamAccount2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.UpstreamAccount) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUpstreamAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccount(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOUpstreamAccount2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccount(ctx context.Context, sel ast.SelectionSet, v *ent.UpstreamAccount) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UpstreamAccount(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountCredentialType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialTypeᚄ(ctx context.Context, v any) ([]upstreamaccount.CredentialType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]upstreamaccount.CredentialType, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpstreamAccountCredentialType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOUpstreamAccountCredentialType2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []upstreamaccount.CredentialType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUpstreamAccountCredentialType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountCredentialType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx context.Context, v any) (*upstreamaccount.CredentialType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(upstreamaccount.CredentialType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUpstreamAccountCredentialType2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐCredentialType(ctx context.Context, sel ast.SelectionSet, v *upstreamaccount.CredentialType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountCredentialsInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamAccountCredentialsInput(ctx context.Context, v any) (*biz.UpstreamAccountCredentialsInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputUpstreamAccountCredentialsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUpstreamAccountEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.UpstreamAccountEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOUpstreamAccountEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOUpstreamAccountEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountEdge(ctx context.Context, sel ast.SelectionSet, v *ent.UpstreamAccountEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UpstreamAccountEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUpstreamAccountPool2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.UpstreamAccountPool) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUpstreamAccountPool2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOUpstreamAccountPool2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPool(ctx context.Context, sel ast.SelectionSet, v *ent.UpstreamAccountPool) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UpstreamAccountPool(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUpstreamAccountPoolEdge2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.UpstreamAccountPoolEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOUpstreamAccountPoolEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOUpstreamAccountPoolEdge2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolEdge(ctx context.Context, sel ast.SelectionSet, v *ent.UpstreamAccountPoolEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UpstreamAccountPoolEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountPoolStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatusᚄ(ctx context.Context, v any) ([]upstreamaccountpool.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]upstreamaccountpool.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpstreamAccountPoolStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOUpstreamAccountPoolStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []upstreamaccountpool.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUpstreamAccountPoolStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountPoolStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx context.Context, v any) (*upstreamaccountpool.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(upstreamaccountpool.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUpstreamAccountPoolStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountpoolᚐStatus(ctx context.Context, sel ast.SelectionSet, v *upstreamaccountpool.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountPoolWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolWhereInputᚄ(ctx context.Context, v any) ([]*ent.UpstreamAccountPoolWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.UpstreamAccountPoolWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpstreamAccountPoolWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountPoolWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountPoolWhereInput(ctx context.Context, v any) (*ent.UpstreamAccountPoolWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputUpstreamAccountPoolWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatusᚄ(ctx context.Context, v any) ([]upstreamaccount.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]upstreamaccount.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpstreamAccountStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOUpstreamAccountStatus2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []upstreamaccount.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUpstreamAccountStatus2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx context.Context, v any) (*upstreamaccount.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(upstreamaccount.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUpstreamAccountStatus2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚋupstreamaccountᚐStatus(ctx context.Context, sel ast.SelectionSet, v *upstreamaccount.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountWhereInput2ᚕᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountWhereInputᚄ(ctx context.Context, v any) ([]*ent.UpstreamAccountWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.UpstreamAccountWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpstreamAccountWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOUpstreamAccountWhereInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐUpstreamAccountWhereInput(ctx context.Context, v any) (*ent.UpstreamAccountWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputUpstreamAccountWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOUpstreamErrorPolicyInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋbizᚐUpstreamErrorPolicy(ctx context.Context, v any) (biz.UpstreamErrorPolicy, error) {

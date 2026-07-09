@@ -57,6 +57,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -13706,6 +13708,634 @@ func (_m *Trace) ToEdge(order *TraceOrder) *TraceEdge {
 		order = DefaultTraceOrder
 	}
 	return &TraceEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// UpstreamAccountEdge is the edge representation of UpstreamAccount.
+type UpstreamAccountEdge struct {
+	Node   *UpstreamAccount `json:"node"`
+	Cursor Cursor           `json:"cursor"`
+}
+
+// UpstreamAccountConnection is the connection containing edges to UpstreamAccount.
+type UpstreamAccountConnection struct {
+	Edges      []*UpstreamAccountEdge `json:"edges"`
+	PageInfo   PageInfo               `json:"pageInfo"`
+	TotalCount int                    `json:"totalCount"`
+}
+
+func (c *UpstreamAccountConnection) build(nodes []*UpstreamAccount, pager *upstreamaccountPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *UpstreamAccount
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *UpstreamAccount {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *UpstreamAccount {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*UpstreamAccountEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &UpstreamAccountEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// UpstreamAccountPaginateOption enables pagination customization.
+type UpstreamAccountPaginateOption func(*upstreamaccountPager) error
+
+// WithUpstreamAccountOrder configures pagination ordering.
+func WithUpstreamAccountOrder(order *UpstreamAccountOrder) UpstreamAccountPaginateOption {
+	if order == nil {
+		order = DefaultUpstreamAccountOrder
+	}
+	o := *order
+	return func(pager *upstreamaccountPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultUpstreamAccountOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithUpstreamAccountFilter configures pagination filter.
+func WithUpstreamAccountFilter(filter func(*UpstreamAccountQuery) (*UpstreamAccountQuery, error)) UpstreamAccountPaginateOption {
+	return func(pager *upstreamaccountPager) error {
+		if filter == nil {
+			return errors.New("UpstreamAccountQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type upstreamaccountPager struct {
+	reverse bool
+	order   *UpstreamAccountOrder
+	filter  func(*UpstreamAccountQuery) (*UpstreamAccountQuery, error)
+}
+
+func newUpstreamAccountPager(opts []UpstreamAccountPaginateOption, reverse bool) (*upstreamaccountPager, error) {
+	pager := &upstreamaccountPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultUpstreamAccountOrder
+	}
+	return pager, nil
+}
+
+func (p *upstreamaccountPager) applyFilter(query *UpstreamAccountQuery) (*UpstreamAccountQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *upstreamaccountPager) toCursor(_m *UpstreamAccount) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *upstreamaccountPager) applyCursors(query *UpstreamAccountQuery, after, before *Cursor) (*UpstreamAccountQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultUpstreamAccountOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *upstreamaccountPager) applyOrder(query *UpstreamAccountQuery) *UpstreamAccountQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultUpstreamAccountOrder.Field {
+		query = query.Order(DefaultUpstreamAccountOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *upstreamaccountPager) orderExpr(query *UpstreamAccountQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultUpstreamAccountOrder.Field {
+			b.Comma().Ident(DefaultUpstreamAccountOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to UpstreamAccount.
+func (_m *UpstreamAccountQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...UpstreamAccountPaginateOption,
+) (*UpstreamAccountConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newUpstreamAccountPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &UpstreamAccountConnection{Edges: []*UpstreamAccountEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// UpstreamAccountOrderFieldCreatedAt orders UpstreamAccount by created_at.
+	UpstreamAccountOrderFieldCreatedAt = &UpstreamAccountOrderField{
+		Value: func(_m *UpstreamAccount) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: upstreamaccount.FieldCreatedAt,
+		toTerm: upstreamaccount.ByCreatedAt,
+		toCursor: func(_m *UpstreamAccount) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// UpstreamAccountOrderFieldUpdatedAt orders UpstreamAccount by updated_at.
+	UpstreamAccountOrderFieldUpdatedAt = &UpstreamAccountOrderField{
+		Value: func(_m *UpstreamAccount) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: upstreamaccount.FieldUpdatedAt,
+		toTerm: upstreamaccount.ByUpdatedAt,
+		toCursor: func(_m *UpstreamAccount) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f UpstreamAccountOrderField) String() string {
+	var str string
+	switch f.column {
+	case UpstreamAccountOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case UpstreamAccountOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f UpstreamAccountOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *UpstreamAccountOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("UpstreamAccountOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *UpstreamAccountOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *UpstreamAccountOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid UpstreamAccountOrderField", str)
+	}
+	return nil
+}
+
+// UpstreamAccountOrderField defines the ordering field of UpstreamAccount.
+type UpstreamAccountOrderField struct {
+	// Value extracts the ordering value from the given UpstreamAccount.
+	Value    func(*UpstreamAccount) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) upstreamaccount.OrderOption
+	toCursor func(*UpstreamAccount) Cursor
+}
+
+// UpstreamAccountOrder defines the ordering of UpstreamAccount.
+type UpstreamAccountOrder struct {
+	Direction OrderDirection             `json:"direction"`
+	Field     *UpstreamAccountOrderField `json:"field"`
+}
+
+// DefaultUpstreamAccountOrder is the default ordering of UpstreamAccount.
+var DefaultUpstreamAccountOrder = &UpstreamAccountOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &UpstreamAccountOrderField{
+		Value: func(_m *UpstreamAccount) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: upstreamaccount.FieldID,
+		toTerm: upstreamaccount.ByID,
+		toCursor: func(_m *UpstreamAccount) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts UpstreamAccount into UpstreamAccountEdge.
+func (_m *UpstreamAccount) ToEdge(order *UpstreamAccountOrder) *UpstreamAccountEdge {
+	if order == nil {
+		order = DefaultUpstreamAccountOrder
+	}
+	return &UpstreamAccountEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// UpstreamAccountPoolEdge is the edge representation of UpstreamAccountPool.
+type UpstreamAccountPoolEdge struct {
+	Node   *UpstreamAccountPool `json:"node"`
+	Cursor Cursor               `json:"cursor"`
+}
+
+// UpstreamAccountPoolConnection is the connection containing edges to UpstreamAccountPool.
+type UpstreamAccountPoolConnection struct {
+	Edges      []*UpstreamAccountPoolEdge `json:"edges"`
+	PageInfo   PageInfo                   `json:"pageInfo"`
+	TotalCount int                        `json:"totalCount"`
+}
+
+func (c *UpstreamAccountPoolConnection) build(nodes []*UpstreamAccountPool, pager *upstreamaccountpoolPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *UpstreamAccountPool
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *UpstreamAccountPool {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *UpstreamAccountPool {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*UpstreamAccountPoolEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &UpstreamAccountPoolEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// UpstreamAccountPoolPaginateOption enables pagination customization.
+type UpstreamAccountPoolPaginateOption func(*upstreamaccountpoolPager) error
+
+// WithUpstreamAccountPoolOrder configures pagination ordering.
+func WithUpstreamAccountPoolOrder(order *UpstreamAccountPoolOrder) UpstreamAccountPoolPaginateOption {
+	if order == nil {
+		order = DefaultUpstreamAccountPoolOrder
+	}
+	o := *order
+	return func(pager *upstreamaccountpoolPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultUpstreamAccountPoolOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithUpstreamAccountPoolFilter configures pagination filter.
+func WithUpstreamAccountPoolFilter(filter func(*UpstreamAccountPoolQuery) (*UpstreamAccountPoolQuery, error)) UpstreamAccountPoolPaginateOption {
+	return func(pager *upstreamaccountpoolPager) error {
+		if filter == nil {
+			return errors.New("UpstreamAccountPoolQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type upstreamaccountpoolPager struct {
+	reverse bool
+	order   *UpstreamAccountPoolOrder
+	filter  func(*UpstreamAccountPoolQuery) (*UpstreamAccountPoolQuery, error)
+}
+
+func newUpstreamAccountPoolPager(opts []UpstreamAccountPoolPaginateOption, reverse bool) (*upstreamaccountpoolPager, error) {
+	pager := &upstreamaccountpoolPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultUpstreamAccountPoolOrder
+	}
+	return pager, nil
+}
+
+func (p *upstreamaccountpoolPager) applyFilter(query *UpstreamAccountPoolQuery) (*UpstreamAccountPoolQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *upstreamaccountpoolPager) toCursor(_m *UpstreamAccountPool) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *upstreamaccountpoolPager) applyCursors(query *UpstreamAccountPoolQuery, after, before *Cursor) (*UpstreamAccountPoolQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultUpstreamAccountPoolOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *upstreamaccountpoolPager) applyOrder(query *UpstreamAccountPoolQuery) *UpstreamAccountPoolQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultUpstreamAccountPoolOrder.Field {
+		query = query.Order(DefaultUpstreamAccountPoolOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *upstreamaccountpoolPager) orderExpr(query *UpstreamAccountPoolQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultUpstreamAccountPoolOrder.Field {
+			b.Comma().Ident(DefaultUpstreamAccountPoolOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to UpstreamAccountPool.
+func (_m *UpstreamAccountPoolQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...UpstreamAccountPoolPaginateOption,
+) (*UpstreamAccountPoolConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newUpstreamAccountPoolPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &UpstreamAccountPoolConnection{Edges: []*UpstreamAccountPoolEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// UpstreamAccountPoolOrderFieldCreatedAt orders UpstreamAccountPool by created_at.
+	UpstreamAccountPoolOrderFieldCreatedAt = &UpstreamAccountPoolOrderField{
+		Value: func(_m *UpstreamAccountPool) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: upstreamaccountpool.FieldCreatedAt,
+		toTerm: upstreamaccountpool.ByCreatedAt,
+		toCursor: func(_m *UpstreamAccountPool) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// UpstreamAccountPoolOrderFieldUpdatedAt orders UpstreamAccountPool by updated_at.
+	UpstreamAccountPoolOrderFieldUpdatedAt = &UpstreamAccountPoolOrderField{
+		Value: func(_m *UpstreamAccountPool) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: upstreamaccountpool.FieldUpdatedAt,
+		toTerm: upstreamaccountpool.ByUpdatedAt,
+		toCursor: func(_m *UpstreamAccountPool) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f UpstreamAccountPoolOrderField) String() string {
+	var str string
+	switch f.column {
+	case UpstreamAccountPoolOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case UpstreamAccountPoolOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f UpstreamAccountPoolOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *UpstreamAccountPoolOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("UpstreamAccountPoolOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *UpstreamAccountPoolOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *UpstreamAccountPoolOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid UpstreamAccountPoolOrderField", str)
+	}
+	return nil
+}
+
+// UpstreamAccountPoolOrderField defines the ordering field of UpstreamAccountPool.
+type UpstreamAccountPoolOrderField struct {
+	// Value extracts the ordering value from the given UpstreamAccountPool.
+	Value    func(*UpstreamAccountPool) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) upstreamaccountpool.OrderOption
+	toCursor func(*UpstreamAccountPool) Cursor
+}
+
+// UpstreamAccountPoolOrder defines the ordering of UpstreamAccountPool.
+type UpstreamAccountPoolOrder struct {
+	Direction OrderDirection                 `json:"direction"`
+	Field     *UpstreamAccountPoolOrderField `json:"field"`
+}
+
+// DefaultUpstreamAccountPoolOrder is the default ordering of UpstreamAccountPool.
+var DefaultUpstreamAccountPoolOrder = &UpstreamAccountPoolOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &UpstreamAccountPoolOrderField{
+		Value: func(_m *UpstreamAccountPool) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: upstreamaccountpool.FieldID,
+		toTerm: upstreamaccountpool.ByID,
+		toCursor: func(_m *UpstreamAccountPool) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts UpstreamAccountPool into UpstreamAccountPoolEdge.
+func (_m *UpstreamAccountPool) ToEdge(order *UpstreamAccountPoolOrder) *UpstreamAccountPoolEdge {
+	if order == nil {
+		order = DefaultUpstreamAccountPoolOrder
+	}
+	return &UpstreamAccountPoolEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

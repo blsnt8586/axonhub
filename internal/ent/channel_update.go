@@ -19,6 +19,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/ent/requestexecution"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagelog"
 	"github.com/looplj/axonhub/internal/objects"
 )
@@ -440,6 +442,36 @@ func (_u *ChannelUpdate) AddChannelModelPrices(v ...*ChannelModelPrice) *Channel
 	return _u.AddChannelModelPriceIDs(ids...)
 }
 
+// AddUpstreamAccountPoolIDs adds the "upstream_account_pools" edge to the UpstreamAccountPool entity by IDs.
+func (_u *ChannelUpdate) AddUpstreamAccountPoolIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.AddUpstreamAccountPoolIDs(ids...)
+	return _u
+}
+
+// AddUpstreamAccountPools adds the "upstream_account_pools" edges to the UpstreamAccountPool entity.
+func (_u *ChannelUpdate) AddUpstreamAccountPools(v ...*UpstreamAccountPool) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUpstreamAccountPoolIDs(ids...)
+}
+
+// AddUpstreamAccountIDs adds the "upstream_accounts" edge to the UpstreamAccount entity by IDs.
+func (_u *ChannelUpdate) AddUpstreamAccountIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.AddUpstreamAccountIDs(ids...)
+	return _u
+}
+
+// AddUpstreamAccounts adds the "upstream_accounts" edges to the UpstreamAccount entity.
+func (_u *ChannelUpdate) AddUpstreamAccounts(v ...*UpstreamAccount) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUpstreamAccountIDs(ids...)
+}
+
 // SetProviderQuotaStatusID sets the "provider_quota_status" edge to the ProviderQuotaStatus entity by ID.
 func (_u *ChannelUpdate) SetProviderQuotaStatusID(id int) *ChannelUpdate {
 	_u.mutation.SetProviderQuotaStatusID(id)
@@ -567,6 +599,48 @@ func (_u *ChannelUpdate) RemoveChannelModelPrices(v ...*ChannelModelPrice) *Chan
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveChannelModelPriceIDs(ids...)
+}
+
+// ClearUpstreamAccountPools clears all "upstream_account_pools" edges to the UpstreamAccountPool entity.
+func (_u *ChannelUpdate) ClearUpstreamAccountPools() *ChannelUpdate {
+	_u.mutation.ClearUpstreamAccountPools()
+	return _u
+}
+
+// RemoveUpstreamAccountPoolIDs removes the "upstream_account_pools" edge to UpstreamAccountPool entities by IDs.
+func (_u *ChannelUpdate) RemoveUpstreamAccountPoolIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.RemoveUpstreamAccountPoolIDs(ids...)
+	return _u
+}
+
+// RemoveUpstreamAccountPools removes "upstream_account_pools" edges to UpstreamAccountPool entities.
+func (_u *ChannelUpdate) RemoveUpstreamAccountPools(v ...*UpstreamAccountPool) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUpstreamAccountPoolIDs(ids...)
+}
+
+// ClearUpstreamAccounts clears all "upstream_accounts" edges to the UpstreamAccount entity.
+func (_u *ChannelUpdate) ClearUpstreamAccounts() *ChannelUpdate {
+	_u.mutation.ClearUpstreamAccounts()
+	return _u
+}
+
+// RemoveUpstreamAccountIDs removes the "upstream_accounts" edge to UpstreamAccount entities by IDs.
+func (_u *ChannelUpdate) RemoveUpstreamAccountIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.RemoveUpstreamAccountIDs(ids...)
+	return _u
+}
+
+// RemoveUpstreamAccounts removes "upstream_accounts" edges to UpstreamAccount entities.
+func (_u *ChannelUpdate) RemoveUpstreamAccounts(v ...*UpstreamAccount) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUpstreamAccountIDs(ids...)
 }
 
 // ClearProviderQuotaStatus clears the "provider_quota_status" edge to the ProviderQuotaStatus entity.
@@ -989,6 +1063,96 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(channelmodelprice.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UpstreamAccountPoolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountPoolsTable,
+			Columns: []string{channel.UpstreamAccountPoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountpool.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUpstreamAccountPoolsIDs(); len(nodes) > 0 && !_u.mutation.UpstreamAccountPoolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountPoolsTable,
+			Columns: []string{channel.UpstreamAccountPoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountpool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UpstreamAccountPoolsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountPoolsTable,
+			Columns: []string{channel.UpstreamAccountPoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountpool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UpstreamAccountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountsTable,
+			Columns: []string{channel.UpstreamAccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUpstreamAccountsIDs(); len(nodes) > 0 && !_u.mutation.UpstreamAccountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountsTable,
+			Columns: []string{channel.UpstreamAccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UpstreamAccountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountsTable,
+			Columns: []string{channel.UpstreamAccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1450,6 +1614,36 @@ func (_u *ChannelUpdateOne) AddChannelModelPrices(v ...*ChannelModelPrice) *Chan
 	return _u.AddChannelModelPriceIDs(ids...)
 }
 
+// AddUpstreamAccountPoolIDs adds the "upstream_account_pools" edge to the UpstreamAccountPool entity by IDs.
+func (_u *ChannelUpdateOne) AddUpstreamAccountPoolIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.AddUpstreamAccountPoolIDs(ids...)
+	return _u
+}
+
+// AddUpstreamAccountPools adds the "upstream_account_pools" edges to the UpstreamAccountPool entity.
+func (_u *ChannelUpdateOne) AddUpstreamAccountPools(v ...*UpstreamAccountPool) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUpstreamAccountPoolIDs(ids...)
+}
+
+// AddUpstreamAccountIDs adds the "upstream_accounts" edge to the UpstreamAccount entity by IDs.
+func (_u *ChannelUpdateOne) AddUpstreamAccountIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.AddUpstreamAccountIDs(ids...)
+	return _u
+}
+
+// AddUpstreamAccounts adds the "upstream_accounts" edges to the UpstreamAccount entity.
+func (_u *ChannelUpdateOne) AddUpstreamAccounts(v ...*UpstreamAccount) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUpstreamAccountIDs(ids...)
+}
+
 // SetProviderQuotaStatusID sets the "provider_quota_status" edge to the ProviderQuotaStatus entity by ID.
 func (_u *ChannelUpdateOne) SetProviderQuotaStatusID(id int) *ChannelUpdateOne {
 	_u.mutation.SetProviderQuotaStatusID(id)
@@ -1577,6 +1771,48 @@ func (_u *ChannelUpdateOne) RemoveChannelModelPrices(v ...*ChannelModelPrice) *C
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveChannelModelPriceIDs(ids...)
+}
+
+// ClearUpstreamAccountPools clears all "upstream_account_pools" edges to the UpstreamAccountPool entity.
+func (_u *ChannelUpdateOne) ClearUpstreamAccountPools() *ChannelUpdateOne {
+	_u.mutation.ClearUpstreamAccountPools()
+	return _u
+}
+
+// RemoveUpstreamAccountPoolIDs removes the "upstream_account_pools" edge to UpstreamAccountPool entities by IDs.
+func (_u *ChannelUpdateOne) RemoveUpstreamAccountPoolIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.RemoveUpstreamAccountPoolIDs(ids...)
+	return _u
+}
+
+// RemoveUpstreamAccountPools removes "upstream_account_pools" edges to UpstreamAccountPool entities.
+func (_u *ChannelUpdateOne) RemoveUpstreamAccountPools(v ...*UpstreamAccountPool) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUpstreamAccountPoolIDs(ids...)
+}
+
+// ClearUpstreamAccounts clears all "upstream_accounts" edges to the UpstreamAccount entity.
+func (_u *ChannelUpdateOne) ClearUpstreamAccounts() *ChannelUpdateOne {
+	_u.mutation.ClearUpstreamAccounts()
+	return _u
+}
+
+// RemoveUpstreamAccountIDs removes the "upstream_accounts" edge to UpstreamAccount entities by IDs.
+func (_u *ChannelUpdateOne) RemoveUpstreamAccountIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.RemoveUpstreamAccountIDs(ids...)
+	return _u
+}
+
+// RemoveUpstreamAccounts removes "upstream_accounts" edges to UpstreamAccount entities.
+func (_u *ChannelUpdateOne) RemoveUpstreamAccounts(v ...*UpstreamAccount) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUpstreamAccountIDs(ids...)
 }
 
 // ClearProviderQuotaStatus clears the "provider_quota_status" edge to the ProviderQuotaStatus entity.
@@ -2029,6 +2265,96 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(channelmodelprice.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UpstreamAccountPoolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountPoolsTable,
+			Columns: []string{channel.UpstreamAccountPoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountpool.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUpstreamAccountPoolsIDs(); len(nodes) > 0 && !_u.mutation.UpstreamAccountPoolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountPoolsTable,
+			Columns: []string{channel.UpstreamAccountPoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountpool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UpstreamAccountPoolsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountPoolsTable,
+			Columns: []string{channel.UpstreamAccountPoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccountpool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UpstreamAccountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountsTable,
+			Columns: []string{channel.UpstreamAccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUpstreamAccountsIDs(); len(nodes) > 0 && !_u.mutation.UpstreamAccountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountsTable,
+			Columns: []string{channel.UpstreamAccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UpstreamAccountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UpstreamAccountsTable,
+			Columns: []string{channel.UpstreamAccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(upstreamaccount.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -49,6 +49,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -1836,6 +1838,124 @@ func init() {
 	trace.DefaultUpdatedAt = traceDescUpdatedAt.Default.(func() time.Time)
 	// trace.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	trace.UpdateDefaultUpdatedAt = traceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	upstreamaccountMixin := schema.UpstreamAccount{}.Mixin()
+	upstreamaccount.Policy = privacy.NewPolicies(schema.UpstreamAccount{})
+	upstreamaccount.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := upstreamaccount.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	upstreamaccountMixinHooks1 := upstreamaccountMixin[1].Hooks()
+
+	upstreamaccount.Hooks[1] = upstreamaccountMixinHooks1[0]
+	upstreamaccountMixinInters1 := upstreamaccountMixin[1].Interceptors()
+	upstreamaccount.Interceptors[0] = upstreamaccountMixinInters1[0]
+	upstreamaccountMixinFields0 := upstreamaccountMixin[0].Fields()
+	_ = upstreamaccountMixinFields0
+	upstreamaccountMixinFields1 := upstreamaccountMixin[1].Fields()
+	_ = upstreamaccountMixinFields1
+	upstreamaccountFields := schema.UpstreamAccount{}.Fields()
+	_ = upstreamaccountFields
+	// upstreamaccountDescCreatedAt is the schema descriptor for created_at field.
+	upstreamaccountDescCreatedAt := upstreamaccountMixinFields0[0].Descriptor()
+	// upstreamaccount.DefaultCreatedAt holds the default value on creation for the created_at field.
+	upstreamaccount.DefaultCreatedAt = upstreamaccountDescCreatedAt.Default.(func() time.Time)
+	// upstreamaccountDescUpdatedAt is the schema descriptor for updated_at field.
+	upstreamaccountDescUpdatedAt := upstreamaccountMixinFields0[1].Descriptor()
+	// upstreamaccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	upstreamaccount.DefaultUpdatedAt = upstreamaccountDescUpdatedAt.Default.(func() time.Time)
+	// upstreamaccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	upstreamaccount.UpdateDefaultUpdatedAt = upstreamaccountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// upstreamaccountDescDeletedAt is the schema descriptor for deleted_at field.
+	upstreamaccountDescDeletedAt := upstreamaccountMixinFields1[0].Descriptor()
+	// upstreamaccount.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	upstreamaccount.DefaultDeletedAt = upstreamaccountDescDeletedAt.Default.(int)
+	// upstreamaccountDescName is the schema descriptor for name field.
+	upstreamaccountDescName := upstreamaccountFields[2].Descriptor()
+	// upstreamaccount.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	upstreamaccount.NameValidator = upstreamaccountDescName.Validators[0].(func(string) error)
+	// upstreamaccountDescSchedulable is the schema descriptor for schedulable field.
+	upstreamaccountDescSchedulable := upstreamaccountFields[6].Descriptor()
+	// upstreamaccount.DefaultSchedulable holds the default value on creation for the schedulable field.
+	upstreamaccount.DefaultSchedulable = upstreamaccountDescSchedulable.Default.(bool)
+	// upstreamaccountDescPriority is the schema descriptor for priority field.
+	upstreamaccountDescPriority := upstreamaccountFields[7].Descriptor()
+	// upstreamaccount.DefaultPriority holds the default value on creation for the priority field.
+	upstreamaccount.DefaultPriority = upstreamaccountDescPriority.Default.(int)
+	// upstreamaccountDescWeight is the schema descriptor for weight field.
+	upstreamaccountDescWeight := upstreamaccountFields[8].Descriptor()
+	// upstreamaccount.DefaultWeight holds the default value on creation for the weight field.
+	upstreamaccount.DefaultWeight = upstreamaccountDescWeight.Default.(int)
+	// upstreamaccountDescConcurrencyLimit is the schema descriptor for concurrency_limit field.
+	upstreamaccountDescConcurrencyLimit := upstreamaccountFields[9].Descriptor()
+	// upstreamaccount.DefaultConcurrencyLimit holds the default value on creation for the concurrency_limit field.
+	upstreamaccount.DefaultConcurrencyLimit = upstreamaccountDescConcurrencyLimit.Default.(int)
+	// upstreamaccountDescRateMultiplier is the schema descriptor for rate_multiplier field.
+	upstreamaccountDescRateMultiplier := upstreamaccountFields[11].Descriptor()
+	// upstreamaccount.DefaultRateMultiplier holds the default value on creation for the rate_multiplier field.
+	upstreamaccount.DefaultRateMultiplier = upstreamaccountDescRateMultiplier.Default.(float64)
+	// upstreamaccountDescQuotaLimitMicros is the schema descriptor for quota_limit_micros field.
+	upstreamaccountDescQuotaLimitMicros := upstreamaccountFields[19].Descriptor()
+	// upstreamaccount.DefaultQuotaLimitMicros holds the default value on creation for the quota_limit_micros field.
+	upstreamaccount.DefaultQuotaLimitMicros = upstreamaccountDescQuotaLimitMicros.Default.(int64)
+	// upstreamaccountDescQuotaUsedMicros is the schema descriptor for quota_used_micros field.
+	upstreamaccountDescQuotaUsedMicros := upstreamaccountFields[20].Descriptor()
+	// upstreamaccount.DefaultQuotaUsedMicros holds the default value on creation for the quota_used_micros field.
+	upstreamaccount.DefaultQuotaUsedMicros = upstreamaccountDescQuotaUsedMicros.Default.(int64)
+	upstreamaccountpoolMixin := schema.UpstreamAccountPool{}.Mixin()
+	upstreamaccountpool.Policy = privacy.NewPolicies(schema.UpstreamAccountPool{})
+	upstreamaccountpool.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := upstreamaccountpool.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	upstreamaccountpoolMixinHooks1 := upstreamaccountpoolMixin[1].Hooks()
+
+	upstreamaccountpool.Hooks[1] = upstreamaccountpoolMixinHooks1[0]
+	upstreamaccountpoolMixinInters1 := upstreamaccountpoolMixin[1].Interceptors()
+	upstreamaccountpool.Interceptors[0] = upstreamaccountpoolMixinInters1[0]
+	upstreamaccountpoolMixinFields0 := upstreamaccountpoolMixin[0].Fields()
+	_ = upstreamaccountpoolMixinFields0
+	upstreamaccountpoolMixinFields1 := upstreamaccountpoolMixin[1].Fields()
+	_ = upstreamaccountpoolMixinFields1
+	upstreamaccountpoolFields := schema.UpstreamAccountPool{}.Fields()
+	_ = upstreamaccountpoolFields
+	// upstreamaccountpoolDescCreatedAt is the schema descriptor for created_at field.
+	upstreamaccountpoolDescCreatedAt := upstreamaccountpoolMixinFields0[0].Descriptor()
+	// upstreamaccountpool.DefaultCreatedAt holds the default value on creation for the created_at field.
+	upstreamaccountpool.DefaultCreatedAt = upstreamaccountpoolDescCreatedAt.Default.(func() time.Time)
+	// upstreamaccountpoolDescUpdatedAt is the schema descriptor for updated_at field.
+	upstreamaccountpoolDescUpdatedAt := upstreamaccountpoolMixinFields0[1].Descriptor()
+	// upstreamaccountpool.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	upstreamaccountpool.DefaultUpdatedAt = upstreamaccountpoolDescUpdatedAt.Default.(func() time.Time)
+	// upstreamaccountpool.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	upstreamaccountpool.UpdateDefaultUpdatedAt = upstreamaccountpoolDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// upstreamaccountpoolDescDeletedAt is the schema descriptor for deleted_at field.
+	upstreamaccountpoolDescDeletedAt := upstreamaccountpoolMixinFields1[0].Descriptor()
+	// upstreamaccountpool.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	upstreamaccountpool.DefaultDeletedAt = upstreamaccountpoolDescDeletedAt.Default.(int)
+	// upstreamaccountpoolDescName is the schema descriptor for name field.
+	upstreamaccountpoolDescName := upstreamaccountpoolFields[1].Descriptor()
+	// upstreamaccountpool.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	upstreamaccountpool.NameValidator = upstreamaccountpoolDescName.Validators[0].(func(string) error)
+	// upstreamaccountpoolDescPriority is the schema descriptor for priority field.
+	upstreamaccountpoolDescPriority := upstreamaccountpoolFields[3].Descriptor()
+	// upstreamaccountpool.DefaultPriority holds the default value on creation for the priority field.
+	upstreamaccountpool.DefaultPriority = upstreamaccountpoolDescPriority.Default.(int)
+	// upstreamaccountpoolDescModelPatterns is the schema descriptor for model_patterns field.
+	upstreamaccountpoolDescModelPatterns := upstreamaccountpoolFields[4].Descriptor()
+	// upstreamaccountpool.DefaultModelPatterns holds the default value on creation for the model_patterns field.
+	upstreamaccountpool.DefaultModelPatterns = upstreamaccountpoolDescModelPatterns.Default.([]string)
+	// upstreamaccountpoolDescProjectIds is the schema descriptor for project_ids field.
+	upstreamaccountpoolDescProjectIds := upstreamaccountpoolFields[5].Descriptor()
+	// upstreamaccountpool.DefaultProjectIds holds the default value on creation for the project_ids field.
+	upstreamaccountpool.DefaultProjectIds = upstreamaccountpoolDescProjectIds.Default.([]int)
 	usagebillingrecordMixin := schema.UsageBillingRecord{}.Mixin()
 	usagebillingrecord.Policy = privacy.NewPolicies(schema.UsageBillingRecord{})
 	usagebillingrecord.Hooks[0] = func(next ent.Mutator) ent.Mutator {

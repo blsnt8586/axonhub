@@ -302,6 +302,76 @@ export const disabledAPIKeySchema = z.object({
 });
 export type DisabledAPIKey = z.infer<typeof disabledAPIKeySchema>;
 
+export const upstreamAccountPoolStatusSchema = z.enum(['enabled', 'disabled', 'archived']);
+export type UpstreamAccountPoolStatus = z.infer<typeof upstreamAccountPoolStatusSchema>;
+
+export const upstreamAccountStatusSchema = z.enum(['active', 'disabled', 'archived', 'error']);
+export type UpstreamAccountStatus = z.infer<typeof upstreamAccountStatusSchema>;
+
+export const upstreamAccountCredentialTypeSchema = z.enum(['api_key', 'oauth', 'custom']);
+export type UpstreamAccountCredentialType = z.infer<typeof upstreamAccountCredentialTypeSchema>;
+
+export const upstreamAccountPoolSchema = z.object({
+  id: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  channelID: z.string(),
+  name: z.string(),
+  status: upstreamAccountPoolStatusSchema,
+  priority: z.number().int(),
+  modelPatterns: z.array(z.string()).optional().nullable(),
+  projectIds: z.array(z.number().int()).optional().nullable(),
+  remark: z.string().optional().nullable(),
+});
+export type UpstreamAccountPool = z.infer<typeof upstreamAccountPoolSchema>;
+
+export const upstreamAccountSchema = z.object({
+  id: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  channelID: z.string(),
+  poolID: z.string().optional().nullable(),
+  name: z.string(),
+  credentialType: upstreamAccountCredentialTypeSchema,
+  status: upstreamAccountStatusSchema,
+  schedulable: z.boolean(),
+  priority: z.number().int(),
+  weight: z.number().int(),
+  concurrencyLimit: z.number().int(),
+  rateMultiplier: z.number(),
+  expiresAt: z.string().optional().nullable(),
+  lastUsedAt: z.string().optional().nullable(),
+  errorMessage: z.string().optional().nullable(),
+  rateLimitResetAt: z.string().optional().nullable(),
+  overloadUntil: z.string().optional().nullable(),
+  cooldownUntil: z.string().optional().nullable(),
+  cooldownReason: z.string().optional().nullable(),
+  quotaLimitMicros: z.number().int(),
+  quotaUsedMicros: z.number().int(),
+  hasCredentials: z.boolean(),
+  hasProxyConfig: z.boolean(),
+  eligibleNow: z.boolean(),
+  ineligibleReason: z.string().optional().nullable(),
+});
+export type UpstreamAccount = z.infer<typeof upstreamAccountSchema>;
+
+export const upstreamAccountCredentialsInputSchema = z.object({
+  apiKey: z.string().optional(),
+  oauth: z.string().optional(),
+  rawJson: z.string().optional(),
+  headers: z.array(headerEntrySchema).optional(),
+});
+export type UpstreamAccountCredentialsInput = z.infer<typeof upstreamAccountCredentialsInputSchema>;
+
+export const upstreamAccountTestResultSchema = z.object({
+  accountID: z.string(),
+  success: z.boolean(),
+  eligible: z.boolean(),
+  message: z.string(),
+  ineligibleReason: z.string().optional().nullable(),
+});
+export type UpstreamAccountTestResult = z.infer<typeof upstreamAccountTestResultSchema>;
+
 // Channel
 export const channelSchema = z.object({
   id: z.string(),

@@ -23,6 +23,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/promocode"
 	"github.com/looplj/axonhub/internal/ent/promousage"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"github.com/looplj/axonhub/internal/objects"
@@ -407,6 +409,39 @@ type CreateSimulatedEPayRechargeCheckoutInput struct {
 	PublicBaseURL *string                `json:"publicBaseUrl,omitempty"`
 	PromoCode     *string                `json:"promoCode,omitempty"`
 	Metadata      objects.JSONRawMessage `json:"metadata,omitempty"`
+}
+
+type CreateUpstreamAccountInput struct {
+	ChannelID        objects.GUID                         `json:"channelID"`
+	PoolID           *objects.GUID                        `json:"poolID,omitempty"`
+	Name             string                               `json:"name"`
+	CredentialType   *upstreamaccount.CredentialType      `json:"credentialType,omitempty"`
+	Credentials      *biz.UpstreamAccountCredentialsInput `json:"credentials"`
+	Status           *upstreamaccount.Status              `json:"status,omitempty"`
+	Schedulable      *bool                                `json:"schedulable,omitempty"`
+	Priority         *int                                 `json:"priority,omitempty"`
+	Weight           *int                                 `json:"weight,omitempty"`
+	ConcurrencyLimit *int                                 `json:"concurrencyLimit,omitempty"`
+	ProxyConfig      *httpclient.ProxyConfig              `json:"proxyConfig,omitempty"`
+	RateMultiplier   *float64                             `json:"rateMultiplier,omitempty"`
+	ExpiresAt        *time.Time                           `json:"expiresAt,omitempty"`
+	QuotaLimitMicros *int                                 `json:"quotaLimitMicros,omitempty"`
+	QuotaUsedMicros  *int                                 `json:"quotaUsedMicros,omitempty"`
+	ErrorMessage     *string                              `json:"errorMessage,omitempty"`
+	RateLimitResetAt *time.Time                           `json:"rateLimitResetAt,omitempty"`
+	OverloadUntil    *time.Time                           `json:"overloadUntil,omitempty"`
+	CooldownUntil    *time.Time                           `json:"cooldownUntil,omitempty"`
+	CooldownReason   *string                              `json:"cooldownReason,omitempty"`
+}
+
+type CreateUpstreamAccountPoolInput struct {
+	ChannelID     objects.GUID                `json:"channelID"`
+	Name          string                      `json:"name"`
+	Status        *upstreamaccountpool.Status `json:"status,omitempty"`
+	Priority      *int                        `json:"priority,omitempty"`
+	ModelPatterns []string                    `json:"modelPatterns,omitempty"`
+	ProjectIDs    []int                       `json:"projectIDs,omitempty"`
+	Remark        *string                     `json:"remark,omitempty"`
 }
 
 type DailyRequestStats struct {
@@ -799,6 +834,46 @@ type UpdateQuotaEnforcementSettingsInput struct {
 type UpdateSecuritySettingsInput struct {
 	BlockedIPs              []string `json:"blockedIPs,omitempty"`
 	ShowRequestLogIPBanIcon *bool    `json:"showRequestLogIPBanIcon,omitempty"`
+}
+
+type UpdateUpstreamAccountInput struct {
+	PoolID                *objects.GUID                        `json:"poolID,omitempty"`
+	ClearPool             *bool                                `json:"clearPool,omitempty"`
+	Name                  *string                              `json:"name,omitempty"`
+	CredentialType        *upstreamaccount.CredentialType      `json:"credentialType,omitempty"`
+	Credentials           *biz.UpstreamAccountCredentialsInput `json:"credentials,omitempty"`
+	Status                *upstreamaccount.Status              `json:"status,omitempty"`
+	Schedulable           *bool                                `json:"schedulable,omitempty"`
+	Priority              *int                                 `json:"priority,omitempty"`
+	Weight                *int                                 `json:"weight,omitempty"`
+	ConcurrencyLimit      *int                                 `json:"concurrencyLimit,omitempty"`
+	ProxyConfig           *httpclient.ProxyConfig              `json:"proxyConfig,omitempty"`
+	ClearProxyConfig      *bool                                `json:"clearProxyConfig,omitempty"`
+	RateMultiplier        *float64                             `json:"rateMultiplier,omitempty"`
+	ExpiresAt             *time.Time                           `json:"expiresAt,omitempty"`
+	ClearExpiresAt        *bool                                `json:"clearExpiresAt,omitempty"`
+	QuotaLimitMicros      *int                                 `json:"quotaLimitMicros,omitempty"`
+	QuotaUsedMicros       *int                                 `json:"quotaUsedMicros,omitempty"`
+	ErrorMessage          *string                              `json:"errorMessage,omitempty"`
+	ClearErrorMessage     *bool                                `json:"clearErrorMessage,omitempty"`
+	RateLimitResetAt      *time.Time                           `json:"rateLimitResetAt,omitempty"`
+	ClearRateLimitResetAt *bool                                `json:"clearRateLimitResetAt,omitempty"`
+	OverloadUntil         *time.Time                           `json:"overloadUntil,omitempty"`
+	ClearOverloadUntil    *bool                                `json:"clearOverloadUntil,omitempty"`
+	CooldownUntil         *time.Time                           `json:"cooldownUntil,omitempty"`
+	ClearCooldownUntil    *bool                                `json:"clearCooldownUntil,omitempty"`
+	CooldownReason        *string                              `json:"cooldownReason,omitempty"`
+	ClearCooldownReason   *bool                                `json:"clearCooldownReason,omitempty"`
+}
+
+type UpdateUpstreamAccountPoolInput struct {
+	Name          *string                     `json:"name,omitempty"`
+	Status        *upstreamaccountpool.Status `json:"status,omitempty"`
+	Priority      *int                        `json:"priority,omitempty"`
+	ModelPatterns []string                    `json:"modelPatterns,omitempty"`
+	ProjectIDs    []int                       `json:"projectIDs,omitempty"`
+	Remark        *string                     `json:"remark,omitempty"`
+	ClearRemark   *bool                       `json:"clearRemark,omitempty"`
 }
 
 type UpdateUserAgentPassThroughSettingsInput struct {

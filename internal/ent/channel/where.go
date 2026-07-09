@@ -925,6 +925,52 @@ func HasChannelModelPricesWith(preds ...predicate.ChannelModelPrice) predicate.C
 	})
 }
 
+// HasUpstreamAccountPools applies the HasEdge predicate on the "upstream_account_pools" edge.
+func HasUpstreamAccountPools() predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountPoolsTable, UpstreamAccountPoolsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUpstreamAccountPoolsWith applies the HasEdge predicate on the "upstream_account_pools" edge with a given conditions (other predicates).
+func HasUpstreamAccountPoolsWith(preds ...predicate.UpstreamAccountPool) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := newUpstreamAccountPoolsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUpstreamAccounts applies the HasEdge predicate on the "upstream_accounts" edge.
+func HasUpstreamAccounts() predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountsTable, UpstreamAccountsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUpstreamAccountsWith applies the HasEdge predicate on the "upstream_accounts" edge with a given conditions (other predicates).
+func HasUpstreamAccountsWith(preds ...predicate.UpstreamAccount) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := newUpstreamAccountsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasProviderQuotaStatus applies the HasEdge predicate on the "provider_quota_status" edge.
 func HasProviderQuotaStatus() predicate.Channel {
 	return predicate.Channel(func(s *sql.Selector) {

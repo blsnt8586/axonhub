@@ -51,6 +51,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -8028,6 +8030,14 @@ type ChannelWhereInput struct {
 	HasChannelModelPrices     *bool                          `json:"hasChannelModelPrices,omitempty"`
 	HasChannelModelPricesWith []*ChannelModelPriceWhereInput `json:"hasChannelModelPricesWith,omitempty"`
 
+	// "upstream_account_pools" edge predicates.
+	HasUpstreamAccountPools     *bool                            `json:"hasUpstreamAccountPools,omitempty"`
+	HasUpstreamAccountPoolsWith []*UpstreamAccountPoolWhereInput `json:"hasUpstreamAccountPoolsWith,omitempty"`
+
+	// "upstream_accounts" edge predicates.
+	HasUpstreamAccounts     *bool                        `json:"hasUpstreamAccounts,omitempty"`
+	HasUpstreamAccountsWith []*UpstreamAccountWhereInput `json:"hasUpstreamAccountsWith,omitempty"`
+
 	// "provider_quota_status" edge predicates.
 	HasProviderQuotaStatus     *bool                            `json:"hasProviderQuotaStatus,omitempty"`
 	HasProviderQuotaStatusWith []*ProviderQuotaStatusWhereInput `json:"hasProviderQuotaStatusWith,omitempty"`
@@ -8578,6 +8588,42 @@ func (i *ChannelWhereInput) P() (predicate.Channel, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, channel.HasChannelModelPricesWith(with...))
+	}
+	if i.HasUpstreamAccountPools != nil {
+		p := channel.HasUpstreamAccountPools()
+		if !*i.HasUpstreamAccountPools {
+			p = channel.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUpstreamAccountPoolsWith) > 0 {
+		with := make([]predicate.UpstreamAccountPool, 0, len(i.HasUpstreamAccountPoolsWith))
+		for _, w := range i.HasUpstreamAccountPoolsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUpstreamAccountPoolsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, channel.HasUpstreamAccountPoolsWith(with...))
+	}
+	if i.HasUpstreamAccounts != nil {
+		p := channel.HasUpstreamAccounts()
+		if !*i.HasUpstreamAccounts {
+			p = channel.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUpstreamAccountsWith) > 0 {
+		with := make([]predicate.UpstreamAccount, 0, len(i.HasUpstreamAccountsWith))
+		for _, w := range i.HasUpstreamAccountsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUpstreamAccountsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, channel.HasUpstreamAccountsWith(with...))
 	}
 	if i.HasProviderQuotaStatus != nil {
 		p := channel.HasProviderQuotaStatus()
@@ -23374,6 +23420,1346 @@ func (i *TraceWhereInput) P() (predicate.Trace, error) {
 		return predicates[0], nil
 	default:
 		return trace.And(predicates...), nil
+	}
+}
+
+// UpstreamAccountWhereInput represents a where input for filtering UpstreamAccount queries.
+type UpstreamAccountWhereInput struct {
+	Predicates []predicate.UpstreamAccount  `json:"-"`
+	Not        *UpstreamAccountWhereInput   `json:"not,omitempty"`
+	Or         []*UpstreamAccountWhereInput `json:"or,omitempty"`
+	And        []*UpstreamAccountWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "channel_id" field predicates.
+	ChannelID      *int  `json:"channelID,omitempty"`
+	ChannelIDNEQ   *int  `json:"channelIDNEQ,omitempty"`
+	ChannelIDIn    []int `json:"channelIDIn,omitempty"`
+	ChannelIDNotIn []int `json:"channelIDNotIn,omitempty"`
+
+	// "pool_id" field predicates.
+	PoolID       *int  `json:"poolID,omitempty"`
+	PoolIDNEQ    *int  `json:"poolIDNEQ,omitempty"`
+	PoolIDIn     []int `json:"poolIDIn,omitempty"`
+	PoolIDNotIn  []int `json:"poolIDNotIn,omitempty"`
+	PoolIDIsNil  bool  `json:"poolIDIsNil,omitempty"`
+	PoolIDNotNil bool  `json:"poolIDNotNil,omitempty"`
+
+	// "name" field predicates.
+	Name             *string  `json:"name,omitempty"`
+	NameNEQ          *string  `json:"nameNEQ,omitempty"`
+	NameIn           []string `json:"nameIn,omitempty"`
+	NameNotIn        []string `json:"nameNotIn,omitempty"`
+	NameGT           *string  `json:"nameGT,omitempty"`
+	NameGTE          *string  `json:"nameGTE,omitempty"`
+	NameLT           *string  `json:"nameLT,omitempty"`
+	NameLTE          *string  `json:"nameLTE,omitempty"`
+	NameContains     *string  `json:"nameContains,omitempty"`
+	NameHasPrefix    *string  `json:"nameHasPrefix,omitempty"`
+	NameHasSuffix    *string  `json:"nameHasSuffix,omitempty"`
+	NameEqualFold    *string  `json:"nameEqualFold,omitempty"`
+	NameContainsFold *string  `json:"nameContainsFold,omitempty"`
+
+	// "credential_type" field predicates.
+	CredentialType      *upstreamaccount.CredentialType  `json:"credentialType,omitempty"`
+	CredentialTypeNEQ   *upstreamaccount.CredentialType  `json:"credentialTypeNEQ,omitempty"`
+	CredentialTypeIn    []upstreamaccount.CredentialType `json:"credentialTypeIn,omitempty"`
+	CredentialTypeNotIn []upstreamaccount.CredentialType `json:"credentialTypeNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *upstreamaccount.Status  `json:"status,omitempty"`
+	StatusNEQ   *upstreamaccount.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []upstreamaccount.Status `json:"statusIn,omitempty"`
+	StatusNotIn []upstreamaccount.Status `json:"statusNotIn,omitempty"`
+
+	// "schedulable" field predicates.
+	Schedulable    *bool `json:"schedulable,omitempty"`
+	SchedulableNEQ *bool `json:"schedulableNEQ,omitempty"`
+
+	// "priority" field predicates.
+	Priority      *int  `json:"priority,omitempty"`
+	PriorityNEQ   *int  `json:"priorityNEQ,omitempty"`
+	PriorityIn    []int `json:"priorityIn,omitempty"`
+	PriorityNotIn []int `json:"priorityNotIn,omitempty"`
+	PriorityGT    *int  `json:"priorityGT,omitempty"`
+	PriorityGTE   *int  `json:"priorityGTE,omitempty"`
+	PriorityLT    *int  `json:"priorityLT,omitempty"`
+	PriorityLTE   *int  `json:"priorityLTE,omitempty"`
+
+	// "weight" field predicates.
+	Weight      *int  `json:"weight,omitempty"`
+	WeightNEQ   *int  `json:"weightNEQ,omitempty"`
+	WeightIn    []int `json:"weightIn,omitempty"`
+	WeightNotIn []int `json:"weightNotIn,omitempty"`
+	WeightGT    *int  `json:"weightGT,omitempty"`
+	WeightGTE   *int  `json:"weightGTE,omitempty"`
+	WeightLT    *int  `json:"weightLT,omitempty"`
+	WeightLTE   *int  `json:"weightLTE,omitempty"`
+
+	// "concurrency_limit" field predicates.
+	ConcurrencyLimit      *int  `json:"concurrencyLimit,omitempty"`
+	ConcurrencyLimitNEQ   *int  `json:"concurrencyLimitNEQ,omitempty"`
+	ConcurrencyLimitIn    []int `json:"concurrencyLimitIn,omitempty"`
+	ConcurrencyLimitNotIn []int `json:"concurrencyLimitNotIn,omitempty"`
+	ConcurrencyLimitGT    *int  `json:"concurrencyLimitGT,omitempty"`
+	ConcurrencyLimitGTE   *int  `json:"concurrencyLimitGTE,omitempty"`
+	ConcurrencyLimitLT    *int  `json:"concurrencyLimitLT,omitempty"`
+	ConcurrencyLimitLTE   *int  `json:"concurrencyLimitLTE,omitempty"`
+
+	// "rate_multiplier" field predicates.
+	RateMultiplier      *float64  `json:"rateMultiplier,omitempty"`
+	RateMultiplierNEQ   *float64  `json:"rateMultiplierNEQ,omitempty"`
+	RateMultiplierIn    []float64 `json:"rateMultiplierIn,omitempty"`
+	RateMultiplierNotIn []float64 `json:"rateMultiplierNotIn,omitempty"`
+	RateMultiplierGT    *float64  `json:"rateMultiplierGT,omitempty"`
+	RateMultiplierGTE   *float64  `json:"rateMultiplierGTE,omitempty"`
+	RateMultiplierLT    *float64  `json:"rateMultiplierLT,omitempty"`
+	RateMultiplierLTE   *float64  `json:"rateMultiplierLTE,omitempty"`
+
+	// "expires_at" field predicates.
+	ExpiresAt       *time.Time  `json:"expiresAt,omitempty"`
+	ExpiresAtNEQ    *time.Time  `json:"expiresAtNEQ,omitempty"`
+	ExpiresAtIn     []time.Time `json:"expiresAtIn,omitempty"`
+	ExpiresAtNotIn  []time.Time `json:"expiresAtNotIn,omitempty"`
+	ExpiresAtGT     *time.Time  `json:"expiresAtGT,omitempty"`
+	ExpiresAtGTE    *time.Time  `json:"expiresAtGTE,omitempty"`
+	ExpiresAtLT     *time.Time  `json:"expiresAtLT,omitempty"`
+	ExpiresAtLTE    *time.Time  `json:"expiresAtLTE,omitempty"`
+	ExpiresAtIsNil  bool        `json:"expiresAtIsNil,omitempty"`
+	ExpiresAtNotNil bool        `json:"expiresAtNotNil,omitempty"`
+
+	// "last_used_at" field predicates.
+	LastUsedAt       *time.Time  `json:"lastUsedAt,omitempty"`
+	LastUsedAtNEQ    *time.Time  `json:"lastUsedAtNEQ,omitempty"`
+	LastUsedAtIn     []time.Time `json:"lastUsedAtIn,omitempty"`
+	LastUsedAtNotIn  []time.Time `json:"lastUsedAtNotIn,omitempty"`
+	LastUsedAtGT     *time.Time  `json:"lastUsedAtGT,omitempty"`
+	LastUsedAtGTE    *time.Time  `json:"lastUsedAtGTE,omitempty"`
+	LastUsedAtLT     *time.Time  `json:"lastUsedAtLT,omitempty"`
+	LastUsedAtLTE    *time.Time  `json:"lastUsedAtLTE,omitempty"`
+	LastUsedAtIsNil  bool        `json:"lastUsedAtIsNil,omitempty"`
+	LastUsedAtNotNil bool        `json:"lastUsedAtNotNil,omitempty"`
+
+	// "error_message" field predicates.
+	ErrorMessage             *string  `json:"errorMessage,omitempty"`
+	ErrorMessageNEQ          *string  `json:"errorMessageNEQ,omitempty"`
+	ErrorMessageIn           []string `json:"errorMessageIn,omitempty"`
+	ErrorMessageNotIn        []string `json:"errorMessageNotIn,omitempty"`
+	ErrorMessageGT           *string  `json:"errorMessageGT,omitempty"`
+	ErrorMessageGTE          *string  `json:"errorMessageGTE,omitempty"`
+	ErrorMessageLT           *string  `json:"errorMessageLT,omitempty"`
+	ErrorMessageLTE          *string  `json:"errorMessageLTE,omitempty"`
+	ErrorMessageContains     *string  `json:"errorMessageContains,omitempty"`
+	ErrorMessageHasPrefix    *string  `json:"errorMessageHasPrefix,omitempty"`
+	ErrorMessageHasSuffix    *string  `json:"errorMessageHasSuffix,omitempty"`
+	ErrorMessageIsNil        bool     `json:"errorMessageIsNil,omitempty"`
+	ErrorMessageNotNil       bool     `json:"errorMessageNotNil,omitempty"`
+	ErrorMessageEqualFold    *string  `json:"errorMessageEqualFold,omitempty"`
+	ErrorMessageContainsFold *string  `json:"errorMessageContainsFold,omitempty"`
+
+	// "rate_limit_reset_at" field predicates.
+	RateLimitResetAt       *time.Time  `json:"rateLimitResetAt,omitempty"`
+	RateLimitResetAtNEQ    *time.Time  `json:"rateLimitResetAtNEQ,omitempty"`
+	RateLimitResetAtIn     []time.Time `json:"rateLimitResetAtIn,omitempty"`
+	RateLimitResetAtNotIn  []time.Time `json:"rateLimitResetAtNotIn,omitempty"`
+	RateLimitResetAtGT     *time.Time  `json:"rateLimitResetAtGT,omitempty"`
+	RateLimitResetAtGTE    *time.Time  `json:"rateLimitResetAtGTE,omitempty"`
+	RateLimitResetAtLT     *time.Time  `json:"rateLimitResetAtLT,omitempty"`
+	RateLimitResetAtLTE    *time.Time  `json:"rateLimitResetAtLTE,omitempty"`
+	RateLimitResetAtIsNil  bool        `json:"rateLimitResetAtIsNil,omitempty"`
+	RateLimitResetAtNotNil bool        `json:"rateLimitResetAtNotNil,omitempty"`
+
+	// "overload_until" field predicates.
+	OverloadUntil       *time.Time  `json:"overloadUntil,omitempty"`
+	OverloadUntilNEQ    *time.Time  `json:"overloadUntilNEQ,omitempty"`
+	OverloadUntilIn     []time.Time `json:"overloadUntilIn,omitempty"`
+	OverloadUntilNotIn  []time.Time `json:"overloadUntilNotIn,omitempty"`
+	OverloadUntilGT     *time.Time  `json:"overloadUntilGT,omitempty"`
+	OverloadUntilGTE    *time.Time  `json:"overloadUntilGTE,omitempty"`
+	OverloadUntilLT     *time.Time  `json:"overloadUntilLT,omitempty"`
+	OverloadUntilLTE    *time.Time  `json:"overloadUntilLTE,omitempty"`
+	OverloadUntilIsNil  bool        `json:"overloadUntilIsNil,omitempty"`
+	OverloadUntilNotNil bool        `json:"overloadUntilNotNil,omitempty"`
+
+	// "cooldown_until" field predicates.
+	CooldownUntil       *time.Time  `json:"cooldownUntil,omitempty"`
+	CooldownUntilNEQ    *time.Time  `json:"cooldownUntilNEQ,omitempty"`
+	CooldownUntilIn     []time.Time `json:"cooldownUntilIn,omitempty"`
+	CooldownUntilNotIn  []time.Time `json:"cooldownUntilNotIn,omitempty"`
+	CooldownUntilGT     *time.Time  `json:"cooldownUntilGT,omitempty"`
+	CooldownUntilGTE    *time.Time  `json:"cooldownUntilGTE,omitempty"`
+	CooldownUntilLT     *time.Time  `json:"cooldownUntilLT,omitempty"`
+	CooldownUntilLTE    *time.Time  `json:"cooldownUntilLTE,omitempty"`
+	CooldownUntilIsNil  bool        `json:"cooldownUntilIsNil,omitempty"`
+	CooldownUntilNotNil bool        `json:"cooldownUntilNotNil,omitempty"`
+
+	// "cooldown_reason" field predicates.
+	CooldownReason             *string  `json:"cooldownReason,omitempty"`
+	CooldownReasonNEQ          *string  `json:"cooldownReasonNEQ,omitempty"`
+	CooldownReasonIn           []string `json:"cooldownReasonIn,omitempty"`
+	CooldownReasonNotIn        []string `json:"cooldownReasonNotIn,omitempty"`
+	CooldownReasonGT           *string  `json:"cooldownReasonGT,omitempty"`
+	CooldownReasonGTE          *string  `json:"cooldownReasonGTE,omitempty"`
+	CooldownReasonLT           *string  `json:"cooldownReasonLT,omitempty"`
+	CooldownReasonLTE          *string  `json:"cooldownReasonLTE,omitempty"`
+	CooldownReasonContains     *string  `json:"cooldownReasonContains,omitempty"`
+	CooldownReasonHasPrefix    *string  `json:"cooldownReasonHasPrefix,omitempty"`
+	CooldownReasonHasSuffix    *string  `json:"cooldownReasonHasSuffix,omitempty"`
+	CooldownReasonIsNil        bool     `json:"cooldownReasonIsNil,omitempty"`
+	CooldownReasonNotNil       bool     `json:"cooldownReasonNotNil,omitempty"`
+	CooldownReasonEqualFold    *string  `json:"cooldownReasonEqualFold,omitempty"`
+	CooldownReasonContainsFold *string  `json:"cooldownReasonContainsFold,omitempty"`
+
+	// "quota_limit_micros" field predicates.
+	QuotaLimitMicros      *int64  `json:"quotaLimitMicros,omitempty"`
+	QuotaLimitMicrosNEQ   *int64  `json:"quotaLimitMicrosNEQ,omitempty"`
+	QuotaLimitMicrosIn    []int64 `json:"quotaLimitMicrosIn,omitempty"`
+	QuotaLimitMicrosNotIn []int64 `json:"quotaLimitMicrosNotIn,omitempty"`
+	QuotaLimitMicrosGT    *int64  `json:"quotaLimitMicrosGT,omitempty"`
+	QuotaLimitMicrosGTE   *int64  `json:"quotaLimitMicrosGTE,omitempty"`
+	QuotaLimitMicrosLT    *int64  `json:"quotaLimitMicrosLT,omitempty"`
+	QuotaLimitMicrosLTE   *int64  `json:"quotaLimitMicrosLTE,omitempty"`
+
+	// "quota_used_micros" field predicates.
+	QuotaUsedMicros      *int64  `json:"quotaUsedMicros,omitempty"`
+	QuotaUsedMicrosNEQ   *int64  `json:"quotaUsedMicrosNEQ,omitempty"`
+	QuotaUsedMicrosIn    []int64 `json:"quotaUsedMicrosIn,omitempty"`
+	QuotaUsedMicrosNotIn []int64 `json:"quotaUsedMicrosNotIn,omitempty"`
+	QuotaUsedMicrosGT    *int64  `json:"quotaUsedMicrosGT,omitempty"`
+	QuotaUsedMicrosGTE   *int64  `json:"quotaUsedMicrosGTE,omitempty"`
+	QuotaUsedMicrosLT    *int64  `json:"quotaUsedMicrosLT,omitempty"`
+	QuotaUsedMicrosLTE   *int64  `json:"quotaUsedMicrosLTE,omitempty"`
+
+	// "channel" edge predicates.
+	HasChannel     *bool                `json:"hasChannel,omitempty"`
+	HasChannelWith []*ChannelWhereInput `json:"hasChannelWith,omitempty"`
+
+	// "pool" edge predicates.
+	HasPool     *bool                            `json:"hasPool,omitempty"`
+	HasPoolWith []*UpstreamAccountPoolWhereInput `json:"hasPoolWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *UpstreamAccountWhereInput) AddPredicates(predicates ...predicate.UpstreamAccount) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the UpstreamAccountWhereInput filter on the UpstreamAccountQuery builder.
+func (i *UpstreamAccountWhereInput) Filter(q *UpstreamAccountQuery) (*UpstreamAccountQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyUpstreamAccountWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyUpstreamAccountWhereInput is returned in case the UpstreamAccountWhereInput is empty.
+var ErrEmptyUpstreamAccountWhereInput = errors.New("ent: empty predicate UpstreamAccountWhereInput")
+
+// P returns a predicate for filtering upstreamaccounts.
+// An error is returned if the input is empty or invalid.
+func (i *UpstreamAccountWhereInput) P() (predicate.UpstreamAccount, error) {
+	var predicates []predicate.UpstreamAccount
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, upstreamaccount.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.UpstreamAccount, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, upstreamaccount.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.UpstreamAccount, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, upstreamaccount.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, upstreamaccount.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, upstreamaccount.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, upstreamaccount.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, upstreamaccount.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, upstreamaccount.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, upstreamaccount.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, upstreamaccount.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, upstreamaccount.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, upstreamaccount.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, upstreamaccount.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, upstreamaccount.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, upstreamaccount.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, upstreamaccount.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, upstreamaccount.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, upstreamaccount.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, upstreamaccount.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, upstreamaccount.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, upstreamaccount.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, upstreamaccount.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, upstreamaccount.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, upstreamaccount.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.ChannelID != nil {
+		predicates = append(predicates, upstreamaccount.ChannelIDEQ(*i.ChannelID))
+	}
+	if i.ChannelIDNEQ != nil {
+		predicates = append(predicates, upstreamaccount.ChannelIDNEQ(*i.ChannelIDNEQ))
+	}
+	if len(i.ChannelIDIn) > 0 {
+		predicates = append(predicates, upstreamaccount.ChannelIDIn(i.ChannelIDIn...))
+	}
+	if len(i.ChannelIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.ChannelIDNotIn(i.ChannelIDNotIn...))
+	}
+	if i.PoolID != nil {
+		predicates = append(predicates, upstreamaccount.PoolIDEQ(*i.PoolID))
+	}
+	if i.PoolIDNEQ != nil {
+		predicates = append(predicates, upstreamaccount.PoolIDNEQ(*i.PoolIDNEQ))
+	}
+	if len(i.PoolIDIn) > 0 {
+		predicates = append(predicates, upstreamaccount.PoolIDIn(i.PoolIDIn...))
+	}
+	if len(i.PoolIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.PoolIDNotIn(i.PoolIDNotIn...))
+	}
+	if i.PoolIDIsNil {
+		predicates = append(predicates, upstreamaccount.PoolIDIsNil())
+	}
+	if i.PoolIDNotNil {
+		predicates = append(predicates, upstreamaccount.PoolIDNotNil())
+	}
+	if i.Name != nil {
+		predicates = append(predicates, upstreamaccount.NameEQ(*i.Name))
+	}
+	if i.NameNEQ != nil {
+		predicates = append(predicates, upstreamaccount.NameNEQ(*i.NameNEQ))
+	}
+	if len(i.NameIn) > 0 {
+		predicates = append(predicates, upstreamaccount.NameIn(i.NameIn...))
+	}
+	if len(i.NameNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.NameNotIn(i.NameNotIn...))
+	}
+	if i.NameGT != nil {
+		predicates = append(predicates, upstreamaccount.NameGT(*i.NameGT))
+	}
+	if i.NameGTE != nil {
+		predicates = append(predicates, upstreamaccount.NameGTE(*i.NameGTE))
+	}
+	if i.NameLT != nil {
+		predicates = append(predicates, upstreamaccount.NameLT(*i.NameLT))
+	}
+	if i.NameLTE != nil {
+		predicates = append(predicates, upstreamaccount.NameLTE(*i.NameLTE))
+	}
+	if i.NameContains != nil {
+		predicates = append(predicates, upstreamaccount.NameContains(*i.NameContains))
+	}
+	if i.NameHasPrefix != nil {
+		predicates = append(predicates, upstreamaccount.NameHasPrefix(*i.NameHasPrefix))
+	}
+	if i.NameHasSuffix != nil {
+		predicates = append(predicates, upstreamaccount.NameHasSuffix(*i.NameHasSuffix))
+	}
+	if i.NameEqualFold != nil {
+		predicates = append(predicates, upstreamaccount.NameEqualFold(*i.NameEqualFold))
+	}
+	if i.NameContainsFold != nil {
+		predicates = append(predicates, upstreamaccount.NameContainsFold(*i.NameContainsFold))
+	}
+	if i.CredentialType != nil {
+		predicates = append(predicates, upstreamaccount.CredentialTypeEQ(*i.CredentialType))
+	}
+	if i.CredentialTypeNEQ != nil {
+		predicates = append(predicates, upstreamaccount.CredentialTypeNEQ(*i.CredentialTypeNEQ))
+	}
+	if len(i.CredentialTypeIn) > 0 {
+		predicates = append(predicates, upstreamaccount.CredentialTypeIn(i.CredentialTypeIn...))
+	}
+	if len(i.CredentialTypeNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.CredentialTypeNotIn(i.CredentialTypeNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, upstreamaccount.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, upstreamaccount.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, upstreamaccount.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.Schedulable != nil {
+		predicates = append(predicates, upstreamaccount.SchedulableEQ(*i.Schedulable))
+	}
+	if i.SchedulableNEQ != nil {
+		predicates = append(predicates, upstreamaccount.SchedulableNEQ(*i.SchedulableNEQ))
+	}
+	if i.Priority != nil {
+		predicates = append(predicates, upstreamaccount.PriorityEQ(*i.Priority))
+	}
+	if i.PriorityNEQ != nil {
+		predicates = append(predicates, upstreamaccount.PriorityNEQ(*i.PriorityNEQ))
+	}
+	if len(i.PriorityIn) > 0 {
+		predicates = append(predicates, upstreamaccount.PriorityIn(i.PriorityIn...))
+	}
+	if len(i.PriorityNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.PriorityNotIn(i.PriorityNotIn...))
+	}
+	if i.PriorityGT != nil {
+		predicates = append(predicates, upstreamaccount.PriorityGT(*i.PriorityGT))
+	}
+	if i.PriorityGTE != nil {
+		predicates = append(predicates, upstreamaccount.PriorityGTE(*i.PriorityGTE))
+	}
+	if i.PriorityLT != nil {
+		predicates = append(predicates, upstreamaccount.PriorityLT(*i.PriorityLT))
+	}
+	if i.PriorityLTE != nil {
+		predicates = append(predicates, upstreamaccount.PriorityLTE(*i.PriorityLTE))
+	}
+	if i.Weight != nil {
+		predicates = append(predicates, upstreamaccount.WeightEQ(*i.Weight))
+	}
+	if i.WeightNEQ != nil {
+		predicates = append(predicates, upstreamaccount.WeightNEQ(*i.WeightNEQ))
+	}
+	if len(i.WeightIn) > 0 {
+		predicates = append(predicates, upstreamaccount.WeightIn(i.WeightIn...))
+	}
+	if len(i.WeightNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.WeightNotIn(i.WeightNotIn...))
+	}
+	if i.WeightGT != nil {
+		predicates = append(predicates, upstreamaccount.WeightGT(*i.WeightGT))
+	}
+	if i.WeightGTE != nil {
+		predicates = append(predicates, upstreamaccount.WeightGTE(*i.WeightGTE))
+	}
+	if i.WeightLT != nil {
+		predicates = append(predicates, upstreamaccount.WeightLT(*i.WeightLT))
+	}
+	if i.WeightLTE != nil {
+		predicates = append(predicates, upstreamaccount.WeightLTE(*i.WeightLTE))
+	}
+	if i.ConcurrencyLimit != nil {
+		predicates = append(predicates, upstreamaccount.ConcurrencyLimitEQ(*i.ConcurrencyLimit))
+	}
+	if i.ConcurrencyLimitNEQ != nil {
+		predicates = append(predicates, upstreamaccount.ConcurrencyLimitNEQ(*i.ConcurrencyLimitNEQ))
+	}
+	if len(i.ConcurrencyLimitIn) > 0 {
+		predicates = append(predicates, upstreamaccount.ConcurrencyLimitIn(i.ConcurrencyLimitIn...))
+	}
+	if len(i.ConcurrencyLimitNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.ConcurrencyLimitNotIn(i.ConcurrencyLimitNotIn...))
+	}
+	if i.ConcurrencyLimitGT != nil {
+		predicates = append(predicates, upstreamaccount.ConcurrencyLimitGT(*i.ConcurrencyLimitGT))
+	}
+	if i.ConcurrencyLimitGTE != nil {
+		predicates = append(predicates, upstreamaccount.ConcurrencyLimitGTE(*i.ConcurrencyLimitGTE))
+	}
+	if i.ConcurrencyLimitLT != nil {
+		predicates = append(predicates, upstreamaccount.ConcurrencyLimitLT(*i.ConcurrencyLimitLT))
+	}
+	if i.ConcurrencyLimitLTE != nil {
+		predicates = append(predicates, upstreamaccount.ConcurrencyLimitLTE(*i.ConcurrencyLimitLTE))
+	}
+	if i.RateMultiplier != nil {
+		predicates = append(predicates, upstreamaccount.RateMultiplierEQ(*i.RateMultiplier))
+	}
+	if i.RateMultiplierNEQ != nil {
+		predicates = append(predicates, upstreamaccount.RateMultiplierNEQ(*i.RateMultiplierNEQ))
+	}
+	if len(i.RateMultiplierIn) > 0 {
+		predicates = append(predicates, upstreamaccount.RateMultiplierIn(i.RateMultiplierIn...))
+	}
+	if len(i.RateMultiplierNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.RateMultiplierNotIn(i.RateMultiplierNotIn...))
+	}
+	if i.RateMultiplierGT != nil {
+		predicates = append(predicates, upstreamaccount.RateMultiplierGT(*i.RateMultiplierGT))
+	}
+	if i.RateMultiplierGTE != nil {
+		predicates = append(predicates, upstreamaccount.RateMultiplierGTE(*i.RateMultiplierGTE))
+	}
+	if i.RateMultiplierLT != nil {
+		predicates = append(predicates, upstreamaccount.RateMultiplierLT(*i.RateMultiplierLT))
+	}
+	if i.RateMultiplierLTE != nil {
+		predicates = append(predicates, upstreamaccount.RateMultiplierLTE(*i.RateMultiplierLTE))
+	}
+	if i.ExpiresAt != nil {
+		predicates = append(predicates, upstreamaccount.ExpiresAtEQ(*i.ExpiresAt))
+	}
+	if i.ExpiresAtNEQ != nil {
+		predicates = append(predicates, upstreamaccount.ExpiresAtNEQ(*i.ExpiresAtNEQ))
+	}
+	if len(i.ExpiresAtIn) > 0 {
+		predicates = append(predicates, upstreamaccount.ExpiresAtIn(i.ExpiresAtIn...))
+	}
+	if len(i.ExpiresAtNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.ExpiresAtNotIn(i.ExpiresAtNotIn...))
+	}
+	if i.ExpiresAtGT != nil {
+		predicates = append(predicates, upstreamaccount.ExpiresAtGT(*i.ExpiresAtGT))
+	}
+	if i.ExpiresAtGTE != nil {
+		predicates = append(predicates, upstreamaccount.ExpiresAtGTE(*i.ExpiresAtGTE))
+	}
+	if i.ExpiresAtLT != nil {
+		predicates = append(predicates, upstreamaccount.ExpiresAtLT(*i.ExpiresAtLT))
+	}
+	if i.ExpiresAtLTE != nil {
+		predicates = append(predicates, upstreamaccount.ExpiresAtLTE(*i.ExpiresAtLTE))
+	}
+	if i.ExpiresAtIsNil {
+		predicates = append(predicates, upstreamaccount.ExpiresAtIsNil())
+	}
+	if i.ExpiresAtNotNil {
+		predicates = append(predicates, upstreamaccount.ExpiresAtNotNil())
+	}
+	if i.LastUsedAt != nil {
+		predicates = append(predicates, upstreamaccount.LastUsedAtEQ(*i.LastUsedAt))
+	}
+	if i.LastUsedAtNEQ != nil {
+		predicates = append(predicates, upstreamaccount.LastUsedAtNEQ(*i.LastUsedAtNEQ))
+	}
+	if len(i.LastUsedAtIn) > 0 {
+		predicates = append(predicates, upstreamaccount.LastUsedAtIn(i.LastUsedAtIn...))
+	}
+	if len(i.LastUsedAtNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.LastUsedAtNotIn(i.LastUsedAtNotIn...))
+	}
+	if i.LastUsedAtGT != nil {
+		predicates = append(predicates, upstreamaccount.LastUsedAtGT(*i.LastUsedAtGT))
+	}
+	if i.LastUsedAtGTE != nil {
+		predicates = append(predicates, upstreamaccount.LastUsedAtGTE(*i.LastUsedAtGTE))
+	}
+	if i.LastUsedAtLT != nil {
+		predicates = append(predicates, upstreamaccount.LastUsedAtLT(*i.LastUsedAtLT))
+	}
+	if i.LastUsedAtLTE != nil {
+		predicates = append(predicates, upstreamaccount.LastUsedAtLTE(*i.LastUsedAtLTE))
+	}
+	if i.LastUsedAtIsNil {
+		predicates = append(predicates, upstreamaccount.LastUsedAtIsNil())
+	}
+	if i.LastUsedAtNotNil {
+		predicates = append(predicates, upstreamaccount.LastUsedAtNotNil())
+	}
+	if i.ErrorMessage != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageEQ(*i.ErrorMessage))
+	}
+	if i.ErrorMessageNEQ != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageNEQ(*i.ErrorMessageNEQ))
+	}
+	if len(i.ErrorMessageIn) > 0 {
+		predicates = append(predicates, upstreamaccount.ErrorMessageIn(i.ErrorMessageIn...))
+	}
+	if len(i.ErrorMessageNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.ErrorMessageNotIn(i.ErrorMessageNotIn...))
+	}
+	if i.ErrorMessageGT != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageGT(*i.ErrorMessageGT))
+	}
+	if i.ErrorMessageGTE != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageGTE(*i.ErrorMessageGTE))
+	}
+	if i.ErrorMessageLT != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageLT(*i.ErrorMessageLT))
+	}
+	if i.ErrorMessageLTE != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageLTE(*i.ErrorMessageLTE))
+	}
+	if i.ErrorMessageContains != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageContains(*i.ErrorMessageContains))
+	}
+	if i.ErrorMessageHasPrefix != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageHasPrefix(*i.ErrorMessageHasPrefix))
+	}
+	if i.ErrorMessageHasSuffix != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageHasSuffix(*i.ErrorMessageHasSuffix))
+	}
+	if i.ErrorMessageIsNil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageIsNil())
+	}
+	if i.ErrorMessageNotNil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageNotNil())
+	}
+	if i.ErrorMessageEqualFold != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageEqualFold(*i.ErrorMessageEqualFold))
+	}
+	if i.ErrorMessageContainsFold != nil {
+		predicates = append(predicates, upstreamaccount.ErrorMessageContainsFold(*i.ErrorMessageContainsFold))
+	}
+	if i.RateLimitResetAt != nil {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtEQ(*i.RateLimitResetAt))
+	}
+	if i.RateLimitResetAtNEQ != nil {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtNEQ(*i.RateLimitResetAtNEQ))
+	}
+	if len(i.RateLimitResetAtIn) > 0 {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtIn(i.RateLimitResetAtIn...))
+	}
+	if len(i.RateLimitResetAtNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtNotIn(i.RateLimitResetAtNotIn...))
+	}
+	if i.RateLimitResetAtGT != nil {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtGT(*i.RateLimitResetAtGT))
+	}
+	if i.RateLimitResetAtGTE != nil {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtGTE(*i.RateLimitResetAtGTE))
+	}
+	if i.RateLimitResetAtLT != nil {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtLT(*i.RateLimitResetAtLT))
+	}
+	if i.RateLimitResetAtLTE != nil {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtLTE(*i.RateLimitResetAtLTE))
+	}
+	if i.RateLimitResetAtIsNil {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtIsNil())
+	}
+	if i.RateLimitResetAtNotNil {
+		predicates = append(predicates, upstreamaccount.RateLimitResetAtNotNil())
+	}
+	if i.OverloadUntil != nil {
+		predicates = append(predicates, upstreamaccount.OverloadUntilEQ(*i.OverloadUntil))
+	}
+	if i.OverloadUntilNEQ != nil {
+		predicates = append(predicates, upstreamaccount.OverloadUntilNEQ(*i.OverloadUntilNEQ))
+	}
+	if len(i.OverloadUntilIn) > 0 {
+		predicates = append(predicates, upstreamaccount.OverloadUntilIn(i.OverloadUntilIn...))
+	}
+	if len(i.OverloadUntilNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.OverloadUntilNotIn(i.OverloadUntilNotIn...))
+	}
+	if i.OverloadUntilGT != nil {
+		predicates = append(predicates, upstreamaccount.OverloadUntilGT(*i.OverloadUntilGT))
+	}
+	if i.OverloadUntilGTE != nil {
+		predicates = append(predicates, upstreamaccount.OverloadUntilGTE(*i.OverloadUntilGTE))
+	}
+	if i.OverloadUntilLT != nil {
+		predicates = append(predicates, upstreamaccount.OverloadUntilLT(*i.OverloadUntilLT))
+	}
+	if i.OverloadUntilLTE != nil {
+		predicates = append(predicates, upstreamaccount.OverloadUntilLTE(*i.OverloadUntilLTE))
+	}
+	if i.OverloadUntilIsNil {
+		predicates = append(predicates, upstreamaccount.OverloadUntilIsNil())
+	}
+	if i.OverloadUntilNotNil {
+		predicates = append(predicates, upstreamaccount.OverloadUntilNotNil())
+	}
+	if i.CooldownUntil != nil {
+		predicates = append(predicates, upstreamaccount.CooldownUntilEQ(*i.CooldownUntil))
+	}
+	if i.CooldownUntilNEQ != nil {
+		predicates = append(predicates, upstreamaccount.CooldownUntilNEQ(*i.CooldownUntilNEQ))
+	}
+	if len(i.CooldownUntilIn) > 0 {
+		predicates = append(predicates, upstreamaccount.CooldownUntilIn(i.CooldownUntilIn...))
+	}
+	if len(i.CooldownUntilNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.CooldownUntilNotIn(i.CooldownUntilNotIn...))
+	}
+	if i.CooldownUntilGT != nil {
+		predicates = append(predicates, upstreamaccount.CooldownUntilGT(*i.CooldownUntilGT))
+	}
+	if i.CooldownUntilGTE != nil {
+		predicates = append(predicates, upstreamaccount.CooldownUntilGTE(*i.CooldownUntilGTE))
+	}
+	if i.CooldownUntilLT != nil {
+		predicates = append(predicates, upstreamaccount.CooldownUntilLT(*i.CooldownUntilLT))
+	}
+	if i.CooldownUntilLTE != nil {
+		predicates = append(predicates, upstreamaccount.CooldownUntilLTE(*i.CooldownUntilLTE))
+	}
+	if i.CooldownUntilIsNil {
+		predicates = append(predicates, upstreamaccount.CooldownUntilIsNil())
+	}
+	if i.CooldownUntilNotNil {
+		predicates = append(predicates, upstreamaccount.CooldownUntilNotNil())
+	}
+	if i.CooldownReason != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonEQ(*i.CooldownReason))
+	}
+	if i.CooldownReasonNEQ != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonNEQ(*i.CooldownReasonNEQ))
+	}
+	if len(i.CooldownReasonIn) > 0 {
+		predicates = append(predicates, upstreamaccount.CooldownReasonIn(i.CooldownReasonIn...))
+	}
+	if len(i.CooldownReasonNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.CooldownReasonNotIn(i.CooldownReasonNotIn...))
+	}
+	if i.CooldownReasonGT != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonGT(*i.CooldownReasonGT))
+	}
+	if i.CooldownReasonGTE != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonGTE(*i.CooldownReasonGTE))
+	}
+	if i.CooldownReasonLT != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonLT(*i.CooldownReasonLT))
+	}
+	if i.CooldownReasonLTE != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonLTE(*i.CooldownReasonLTE))
+	}
+	if i.CooldownReasonContains != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonContains(*i.CooldownReasonContains))
+	}
+	if i.CooldownReasonHasPrefix != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonHasPrefix(*i.CooldownReasonHasPrefix))
+	}
+	if i.CooldownReasonHasSuffix != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonHasSuffix(*i.CooldownReasonHasSuffix))
+	}
+	if i.CooldownReasonIsNil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonIsNil())
+	}
+	if i.CooldownReasonNotNil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonNotNil())
+	}
+	if i.CooldownReasonEqualFold != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonEqualFold(*i.CooldownReasonEqualFold))
+	}
+	if i.CooldownReasonContainsFold != nil {
+		predicates = append(predicates, upstreamaccount.CooldownReasonContainsFold(*i.CooldownReasonContainsFold))
+	}
+	if i.QuotaLimitMicros != nil {
+		predicates = append(predicates, upstreamaccount.QuotaLimitMicrosEQ(*i.QuotaLimitMicros))
+	}
+	if i.QuotaLimitMicrosNEQ != nil {
+		predicates = append(predicates, upstreamaccount.QuotaLimitMicrosNEQ(*i.QuotaLimitMicrosNEQ))
+	}
+	if len(i.QuotaLimitMicrosIn) > 0 {
+		predicates = append(predicates, upstreamaccount.QuotaLimitMicrosIn(i.QuotaLimitMicrosIn...))
+	}
+	if len(i.QuotaLimitMicrosNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.QuotaLimitMicrosNotIn(i.QuotaLimitMicrosNotIn...))
+	}
+	if i.QuotaLimitMicrosGT != nil {
+		predicates = append(predicates, upstreamaccount.QuotaLimitMicrosGT(*i.QuotaLimitMicrosGT))
+	}
+	if i.QuotaLimitMicrosGTE != nil {
+		predicates = append(predicates, upstreamaccount.QuotaLimitMicrosGTE(*i.QuotaLimitMicrosGTE))
+	}
+	if i.QuotaLimitMicrosLT != nil {
+		predicates = append(predicates, upstreamaccount.QuotaLimitMicrosLT(*i.QuotaLimitMicrosLT))
+	}
+	if i.QuotaLimitMicrosLTE != nil {
+		predicates = append(predicates, upstreamaccount.QuotaLimitMicrosLTE(*i.QuotaLimitMicrosLTE))
+	}
+	if i.QuotaUsedMicros != nil {
+		predicates = append(predicates, upstreamaccount.QuotaUsedMicrosEQ(*i.QuotaUsedMicros))
+	}
+	if i.QuotaUsedMicrosNEQ != nil {
+		predicates = append(predicates, upstreamaccount.QuotaUsedMicrosNEQ(*i.QuotaUsedMicrosNEQ))
+	}
+	if len(i.QuotaUsedMicrosIn) > 0 {
+		predicates = append(predicates, upstreamaccount.QuotaUsedMicrosIn(i.QuotaUsedMicrosIn...))
+	}
+	if len(i.QuotaUsedMicrosNotIn) > 0 {
+		predicates = append(predicates, upstreamaccount.QuotaUsedMicrosNotIn(i.QuotaUsedMicrosNotIn...))
+	}
+	if i.QuotaUsedMicrosGT != nil {
+		predicates = append(predicates, upstreamaccount.QuotaUsedMicrosGT(*i.QuotaUsedMicrosGT))
+	}
+	if i.QuotaUsedMicrosGTE != nil {
+		predicates = append(predicates, upstreamaccount.QuotaUsedMicrosGTE(*i.QuotaUsedMicrosGTE))
+	}
+	if i.QuotaUsedMicrosLT != nil {
+		predicates = append(predicates, upstreamaccount.QuotaUsedMicrosLT(*i.QuotaUsedMicrosLT))
+	}
+	if i.QuotaUsedMicrosLTE != nil {
+		predicates = append(predicates, upstreamaccount.QuotaUsedMicrosLTE(*i.QuotaUsedMicrosLTE))
+	}
+
+	if i.HasChannel != nil {
+		p := upstreamaccount.HasChannel()
+		if !*i.HasChannel {
+			p = upstreamaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasChannelWith) > 0 {
+		with := make([]predicate.Channel, 0, len(i.HasChannelWith))
+		for _, w := range i.HasChannelWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasChannelWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccount.HasChannelWith(with...))
+	}
+	if i.HasPool != nil {
+		p := upstreamaccount.HasPool()
+		if !*i.HasPool {
+			p = upstreamaccount.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPoolWith) > 0 {
+		with := make([]predicate.UpstreamAccountPool, 0, len(i.HasPoolWith))
+		for _, w := range i.HasPoolWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPoolWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccount.HasPoolWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyUpstreamAccountWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return upstreamaccount.And(predicates...), nil
+	}
+}
+
+// UpstreamAccountPoolWhereInput represents a where input for filtering UpstreamAccountPool queries.
+type UpstreamAccountPoolWhereInput struct {
+	Predicates []predicate.UpstreamAccountPool  `json:"-"`
+	Not        *UpstreamAccountPoolWhereInput   `json:"not,omitempty"`
+	Or         []*UpstreamAccountPoolWhereInput `json:"or,omitempty"`
+	And        []*UpstreamAccountPoolWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "channel_id" field predicates.
+	ChannelID      *int  `json:"channelID,omitempty"`
+	ChannelIDNEQ   *int  `json:"channelIDNEQ,omitempty"`
+	ChannelIDIn    []int `json:"channelIDIn,omitempty"`
+	ChannelIDNotIn []int `json:"channelIDNotIn,omitempty"`
+
+	// "name" field predicates.
+	Name             *string  `json:"name,omitempty"`
+	NameNEQ          *string  `json:"nameNEQ,omitempty"`
+	NameIn           []string `json:"nameIn,omitempty"`
+	NameNotIn        []string `json:"nameNotIn,omitempty"`
+	NameGT           *string  `json:"nameGT,omitempty"`
+	NameGTE          *string  `json:"nameGTE,omitempty"`
+	NameLT           *string  `json:"nameLT,omitempty"`
+	NameLTE          *string  `json:"nameLTE,omitempty"`
+	NameContains     *string  `json:"nameContains,omitempty"`
+	NameHasPrefix    *string  `json:"nameHasPrefix,omitempty"`
+	NameHasSuffix    *string  `json:"nameHasSuffix,omitempty"`
+	NameEqualFold    *string  `json:"nameEqualFold,omitempty"`
+	NameContainsFold *string  `json:"nameContainsFold,omitempty"`
+
+	// "status" field predicates.
+	Status      *upstreamaccountpool.Status  `json:"status,omitempty"`
+	StatusNEQ   *upstreamaccountpool.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []upstreamaccountpool.Status `json:"statusIn,omitempty"`
+	StatusNotIn []upstreamaccountpool.Status `json:"statusNotIn,omitempty"`
+
+	// "priority" field predicates.
+	Priority      *int  `json:"priority,omitempty"`
+	PriorityNEQ   *int  `json:"priorityNEQ,omitempty"`
+	PriorityIn    []int `json:"priorityIn,omitempty"`
+	PriorityNotIn []int `json:"priorityNotIn,omitempty"`
+	PriorityGT    *int  `json:"priorityGT,omitempty"`
+	PriorityGTE   *int  `json:"priorityGTE,omitempty"`
+	PriorityLT    *int  `json:"priorityLT,omitempty"`
+	PriorityLTE   *int  `json:"priorityLTE,omitempty"`
+
+	// "remark" field predicates.
+	Remark             *string  `json:"remark,omitempty"`
+	RemarkNEQ          *string  `json:"remarkNEQ,omitempty"`
+	RemarkIn           []string `json:"remarkIn,omitempty"`
+	RemarkNotIn        []string `json:"remarkNotIn,omitempty"`
+	RemarkGT           *string  `json:"remarkGT,omitempty"`
+	RemarkGTE          *string  `json:"remarkGTE,omitempty"`
+	RemarkLT           *string  `json:"remarkLT,omitempty"`
+	RemarkLTE          *string  `json:"remarkLTE,omitempty"`
+	RemarkContains     *string  `json:"remarkContains,omitempty"`
+	RemarkHasPrefix    *string  `json:"remarkHasPrefix,omitempty"`
+	RemarkHasSuffix    *string  `json:"remarkHasSuffix,omitempty"`
+	RemarkIsNil        bool     `json:"remarkIsNil,omitempty"`
+	RemarkNotNil       bool     `json:"remarkNotNil,omitempty"`
+	RemarkEqualFold    *string  `json:"remarkEqualFold,omitempty"`
+	RemarkContainsFold *string  `json:"remarkContainsFold,omitempty"`
+
+	// "channel" edge predicates.
+	HasChannel     *bool                `json:"hasChannel,omitempty"`
+	HasChannelWith []*ChannelWhereInput `json:"hasChannelWith,omitempty"`
+
+	// "accounts" edge predicates.
+	HasAccounts     *bool                        `json:"hasAccounts,omitempty"`
+	HasAccountsWith []*UpstreamAccountWhereInput `json:"hasAccountsWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *UpstreamAccountPoolWhereInput) AddPredicates(predicates ...predicate.UpstreamAccountPool) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the UpstreamAccountPoolWhereInput filter on the UpstreamAccountPoolQuery builder.
+func (i *UpstreamAccountPoolWhereInput) Filter(q *UpstreamAccountPoolQuery) (*UpstreamAccountPoolQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyUpstreamAccountPoolWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyUpstreamAccountPoolWhereInput is returned in case the UpstreamAccountPoolWhereInput is empty.
+var ErrEmptyUpstreamAccountPoolWhereInput = errors.New("ent: empty predicate UpstreamAccountPoolWhereInput")
+
+// P returns a predicate for filtering upstreamaccountpools.
+// An error is returned if the input is empty or invalid.
+func (i *UpstreamAccountPoolWhereInput) P() (predicate.UpstreamAccountPool, error) {
+	var predicates []predicate.UpstreamAccountPool
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, upstreamaccountpool.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.UpstreamAccountPool, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, upstreamaccountpool.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.UpstreamAccountPool, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, upstreamaccountpool.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, upstreamaccountpool.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, upstreamaccountpool.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, upstreamaccountpool.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, upstreamaccountpool.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, upstreamaccountpool.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, upstreamaccountpool.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, upstreamaccountpool.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, upstreamaccountpool.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, upstreamaccountpool.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, upstreamaccountpool.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, upstreamaccountpool.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, upstreamaccountpool.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, upstreamaccountpool.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, upstreamaccountpool.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, upstreamaccountpool.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, upstreamaccountpool.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, upstreamaccountpool.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, upstreamaccountpool.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.ChannelID != nil {
+		predicates = append(predicates, upstreamaccountpool.ChannelIDEQ(*i.ChannelID))
+	}
+	if i.ChannelIDNEQ != nil {
+		predicates = append(predicates, upstreamaccountpool.ChannelIDNEQ(*i.ChannelIDNEQ))
+	}
+	if len(i.ChannelIDIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.ChannelIDIn(i.ChannelIDIn...))
+	}
+	if len(i.ChannelIDNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.ChannelIDNotIn(i.ChannelIDNotIn...))
+	}
+	if i.Name != nil {
+		predicates = append(predicates, upstreamaccountpool.NameEQ(*i.Name))
+	}
+	if i.NameNEQ != nil {
+		predicates = append(predicates, upstreamaccountpool.NameNEQ(*i.NameNEQ))
+	}
+	if len(i.NameIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.NameIn(i.NameIn...))
+	}
+	if len(i.NameNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.NameNotIn(i.NameNotIn...))
+	}
+	if i.NameGT != nil {
+		predicates = append(predicates, upstreamaccountpool.NameGT(*i.NameGT))
+	}
+	if i.NameGTE != nil {
+		predicates = append(predicates, upstreamaccountpool.NameGTE(*i.NameGTE))
+	}
+	if i.NameLT != nil {
+		predicates = append(predicates, upstreamaccountpool.NameLT(*i.NameLT))
+	}
+	if i.NameLTE != nil {
+		predicates = append(predicates, upstreamaccountpool.NameLTE(*i.NameLTE))
+	}
+	if i.NameContains != nil {
+		predicates = append(predicates, upstreamaccountpool.NameContains(*i.NameContains))
+	}
+	if i.NameHasPrefix != nil {
+		predicates = append(predicates, upstreamaccountpool.NameHasPrefix(*i.NameHasPrefix))
+	}
+	if i.NameHasSuffix != nil {
+		predicates = append(predicates, upstreamaccountpool.NameHasSuffix(*i.NameHasSuffix))
+	}
+	if i.NameEqualFold != nil {
+		predicates = append(predicates, upstreamaccountpool.NameEqualFold(*i.NameEqualFold))
+	}
+	if i.NameContainsFold != nil {
+		predicates = append(predicates, upstreamaccountpool.NameContainsFold(*i.NameContainsFold))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, upstreamaccountpool.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, upstreamaccountpool.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.Priority != nil {
+		predicates = append(predicates, upstreamaccountpool.PriorityEQ(*i.Priority))
+	}
+	if i.PriorityNEQ != nil {
+		predicates = append(predicates, upstreamaccountpool.PriorityNEQ(*i.PriorityNEQ))
+	}
+	if len(i.PriorityIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.PriorityIn(i.PriorityIn...))
+	}
+	if len(i.PriorityNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.PriorityNotIn(i.PriorityNotIn...))
+	}
+	if i.PriorityGT != nil {
+		predicates = append(predicates, upstreamaccountpool.PriorityGT(*i.PriorityGT))
+	}
+	if i.PriorityGTE != nil {
+		predicates = append(predicates, upstreamaccountpool.PriorityGTE(*i.PriorityGTE))
+	}
+	if i.PriorityLT != nil {
+		predicates = append(predicates, upstreamaccountpool.PriorityLT(*i.PriorityLT))
+	}
+	if i.PriorityLTE != nil {
+		predicates = append(predicates, upstreamaccountpool.PriorityLTE(*i.PriorityLTE))
+	}
+	if i.Remark != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkEQ(*i.Remark))
+	}
+	if i.RemarkNEQ != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkNEQ(*i.RemarkNEQ))
+	}
+	if len(i.RemarkIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.RemarkIn(i.RemarkIn...))
+	}
+	if len(i.RemarkNotIn) > 0 {
+		predicates = append(predicates, upstreamaccountpool.RemarkNotIn(i.RemarkNotIn...))
+	}
+	if i.RemarkGT != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkGT(*i.RemarkGT))
+	}
+	if i.RemarkGTE != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkGTE(*i.RemarkGTE))
+	}
+	if i.RemarkLT != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkLT(*i.RemarkLT))
+	}
+	if i.RemarkLTE != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkLTE(*i.RemarkLTE))
+	}
+	if i.RemarkContains != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkContains(*i.RemarkContains))
+	}
+	if i.RemarkHasPrefix != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkHasPrefix(*i.RemarkHasPrefix))
+	}
+	if i.RemarkHasSuffix != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkHasSuffix(*i.RemarkHasSuffix))
+	}
+	if i.RemarkIsNil {
+		predicates = append(predicates, upstreamaccountpool.RemarkIsNil())
+	}
+	if i.RemarkNotNil {
+		predicates = append(predicates, upstreamaccountpool.RemarkNotNil())
+	}
+	if i.RemarkEqualFold != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkEqualFold(*i.RemarkEqualFold))
+	}
+	if i.RemarkContainsFold != nil {
+		predicates = append(predicates, upstreamaccountpool.RemarkContainsFold(*i.RemarkContainsFold))
+	}
+
+	if i.HasChannel != nil {
+		p := upstreamaccountpool.HasChannel()
+		if !*i.HasChannel {
+			p = upstreamaccountpool.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasChannelWith) > 0 {
+		with := make([]predicate.Channel, 0, len(i.HasChannelWith))
+		for _, w := range i.HasChannelWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasChannelWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccountpool.HasChannelWith(with...))
+	}
+	if i.HasAccounts != nil {
+		p := upstreamaccountpool.HasAccounts()
+		if !*i.HasAccounts {
+			p = upstreamaccountpool.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasAccountsWith) > 0 {
+		with := make([]predicate.UpstreamAccount, 0, len(i.HasAccountsWith))
+		for _, w := range i.HasAccountsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasAccountsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, upstreamaccountpool.HasAccountsWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyUpstreamAccountPoolWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return upstreamaccountpool.And(predicates...), nil
 	}
 }
 

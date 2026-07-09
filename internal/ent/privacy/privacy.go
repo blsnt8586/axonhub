@@ -1143,6 +1143,54 @@ func (f TraceMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation)
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.TraceMutation", m)
 }
 
+// The UpstreamAccountQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type UpstreamAccountQueryRuleFunc func(context.Context, *ent.UpstreamAccountQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f UpstreamAccountQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UpstreamAccountQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.UpstreamAccountQuery", q)
+}
+
+// The UpstreamAccountMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type UpstreamAccountMutationRuleFunc func(context.Context, *ent.UpstreamAccountMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f UpstreamAccountMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.UpstreamAccountMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UpstreamAccountMutation", m)
+}
+
+// The UpstreamAccountPoolQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type UpstreamAccountPoolQueryRuleFunc func(context.Context, *ent.UpstreamAccountPoolQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f UpstreamAccountPoolQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UpstreamAccountPoolQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.UpstreamAccountPoolQuery", q)
+}
+
+// The UpstreamAccountPoolMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type UpstreamAccountPoolMutationRuleFunc func(context.Context, *ent.UpstreamAccountPoolMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f UpstreamAccountPoolMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.UpstreamAccountPoolMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UpstreamAccountPoolMutation", m)
+}
+
 // The UsageBillingRecordQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type UsageBillingRecordQueryRuleFunc func(context.Context, *ent.UsageBillingRecordQuery) error
@@ -1456,6 +1504,10 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.TraceQuery:
 		return q.Filter(), nil
+	case *ent.UpstreamAccountQuery:
+		return q.Filter(), nil
+	case *ent.UpstreamAccountPoolQuery:
+		return q.Filter(), nil
 	case *ent.UsageBillingRecordQuery:
 		return q.Filter(), nil
 	case *ent.UsageDailyAggregateQuery:
@@ -1564,6 +1616,10 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.ThreadMutation:
 		return m.Filter(), nil
 	case *ent.TraceMutation:
+		return m.Filter(), nil
+	case *ent.UpstreamAccountMutation:
+		return m.Filter(), nil
+	case *ent.UpstreamAccountPoolMutation:
 		return m.Filter(), nil
 	case *ent.UsageBillingRecordMutation:
 		return m.Filter(), nil

@@ -53,6 +53,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -3586,6 +3588,32 @@ func (_q *ChannelQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 				return err
 			}
 			_q.WithNamedChannelModelPrices(alias, func(wq *ChannelModelPriceQuery) {
+				*wq = *query
+			})
+
+		case "upstreamAccountPools":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountPoolClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, upstreamaccountpoolImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedUpstreamAccountPools(alias, func(wq *UpstreamAccountPoolQuery) {
+				*wq = *query
+			})
+
+		case "upstreamAccounts":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, upstreamaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedUpstreamAccounts(alias, func(wq *UpstreamAccountQuery) {
 				*wq = *query
 			})
 
@@ -11440,6 +11468,382 @@ func newTracePaginateArgs(rv map[string]any) *tracePaginateArgs {
 	}
 	if v, ok := rv[whereField].(*TraceWhereInput); ok {
 		args.opts = append(args.opts, WithTraceFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *UpstreamAccountQuery) CollectFields(ctx context.Context, satisfies ...string) (*UpstreamAccountQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *UpstreamAccountQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(upstreamaccount.Columns))
+		selectedFields = []string{upstreamaccount.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "channel":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&ChannelClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, channelImplementors)...); err != nil {
+				return err
+			}
+			_q.withChannel = query
+			if _, ok := fieldSeen[upstreamaccount.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldChannelID)
+				fieldSeen[upstreamaccount.FieldChannelID] = struct{}{}
+			}
+
+		case "pool":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountPoolClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, upstreamaccountpoolImplementors)...); err != nil {
+				return err
+			}
+			_q.withPool = query
+			if _, ok := fieldSeen[upstreamaccount.FieldPoolID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldPoolID)
+				fieldSeen[upstreamaccount.FieldPoolID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[upstreamaccount.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldCreatedAt)
+				fieldSeen[upstreamaccount.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[upstreamaccount.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldUpdatedAt)
+				fieldSeen[upstreamaccount.FieldUpdatedAt] = struct{}{}
+			}
+		case "channelID":
+			if _, ok := fieldSeen[upstreamaccount.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldChannelID)
+				fieldSeen[upstreamaccount.FieldChannelID] = struct{}{}
+			}
+		case "poolID":
+			if _, ok := fieldSeen[upstreamaccount.FieldPoolID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldPoolID)
+				fieldSeen[upstreamaccount.FieldPoolID] = struct{}{}
+			}
+		case "name":
+			if _, ok := fieldSeen[upstreamaccount.FieldName]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldName)
+				fieldSeen[upstreamaccount.FieldName] = struct{}{}
+			}
+		case "credentialType":
+			if _, ok := fieldSeen[upstreamaccount.FieldCredentialType]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldCredentialType)
+				fieldSeen[upstreamaccount.FieldCredentialType] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[upstreamaccount.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldStatus)
+				fieldSeen[upstreamaccount.FieldStatus] = struct{}{}
+			}
+		case "schedulable":
+			if _, ok := fieldSeen[upstreamaccount.FieldSchedulable]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldSchedulable)
+				fieldSeen[upstreamaccount.FieldSchedulable] = struct{}{}
+			}
+		case "priority":
+			if _, ok := fieldSeen[upstreamaccount.FieldPriority]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldPriority)
+				fieldSeen[upstreamaccount.FieldPriority] = struct{}{}
+			}
+		case "weight":
+			if _, ok := fieldSeen[upstreamaccount.FieldWeight]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldWeight)
+				fieldSeen[upstreamaccount.FieldWeight] = struct{}{}
+			}
+		case "concurrencyLimit":
+			if _, ok := fieldSeen[upstreamaccount.FieldConcurrencyLimit]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldConcurrencyLimit)
+				fieldSeen[upstreamaccount.FieldConcurrencyLimit] = struct{}{}
+			}
+		case "rateMultiplier":
+			if _, ok := fieldSeen[upstreamaccount.FieldRateMultiplier]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldRateMultiplier)
+				fieldSeen[upstreamaccount.FieldRateMultiplier] = struct{}{}
+			}
+		case "expiresAt":
+			if _, ok := fieldSeen[upstreamaccount.FieldExpiresAt]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldExpiresAt)
+				fieldSeen[upstreamaccount.FieldExpiresAt] = struct{}{}
+			}
+		case "lastUsedAt":
+			if _, ok := fieldSeen[upstreamaccount.FieldLastUsedAt]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldLastUsedAt)
+				fieldSeen[upstreamaccount.FieldLastUsedAt] = struct{}{}
+			}
+		case "errorMessage":
+			if _, ok := fieldSeen[upstreamaccount.FieldErrorMessage]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldErrorMessage)
+				fieldSeen[upstreamaccount.FieldErrorMessage] = struct{}{}
+			}
+		case "rateLimitResetAt":
+			if _, ok := fieldSeen[upstreamaccount.FieldRateLimitResetAt]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldRateLimitResetAt)
+				fieldSeen[upstreamaccount.FieldRateLimitResetAt] = struct{}{}
+			}
+		case "overloadUntil":
+			if _, ok := fieldSeen[upstreamaccount.FieldOverloadUntil]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldOverloadUntil)
+				fieldSeen[upstreamaccount.FieldOverloadUntil] = struct{}{}
+			}
+		case "cooldownUntil":
+			if _, ok := fieldSeen[upstreamaccount.FieldCooldownUntil]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldCooldownUntil)
+				fieldSeen[upstreamaccount.FieldCooldownUntil] = struct{}{}
+			}
+		case "cooldownReason":
+			if _, ok := fieldSeen[upstreamaccount.FieldCooldownReason]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldCooldownReason)
+				fieldSeen[upstreamaccount.FieldCooldownReason] = struct{}{}
+			}
+		case "quotaLimitMicros":
+			if _, ok := fieldSeen[upstreamaccount.FieldQuotaLimitMicros]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldQuotaLimitMicros)
+				fieldSeen[upstreamaccount.FieldQuotaLimitMicros] = struct{}{}
+			}
+		case "quotaUsedMicros":
+			if _, ok := fieldSeen[upstreamaccount.FieldQuotaUsedMicros]; !ok {
+				selectedFields = append(selectedFields, upstreamaccount.FieldQuotaUsedMicros)
+				fieldSeen[upstreamaccount.FieldQuotaUsedMicros] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type upstreamaccountPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []UpstreamAccountPaginateOption
+}
+
+func newUpstreamAccountPaginateArgs(rv map[string]any) *upstreamaccountPaginateArgs {
+	args := &upstreamaccountPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &UpstreamAccountOrder{Field: &UpstreamAccountOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithUpstreamAccountOrder(order))
+			}
+		case *UpstreamAccountOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithUpstreamAccountOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*UpstreamAccountWhereInput); ok {
+		args.opts = append(args.opts, WithUpstreamAccountFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *UpstreamAccountPoolQuery) CollectFields(ctx context.Context, satisfies ...string) (*UpstreamAccountPoolQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *UpstreamAccountPoolQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(upstreamaccountpool.Columns))
+		selectedFields = []string{upstreamaccountpool.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "channel":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&ChannelClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, channelImplementors)...); err != nil {
+				return err
+			}
+			_q.withChannel = query
+			if _, ok := fieldSeen[upstreamaccountpool.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldChannelID)
+				fieldSeen[upstreamaccountpool.FieldChannelID] = struct{}{}
+			}
+
+		case "accounts":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UpstreamAccountClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, upstreamaccountImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedAccounts(alias, func(wq *UpstreamAccountQuery) {
+				*wq = *query
+			})
+		case "createdAt":
+			if _, ok := fieldSeen[upstreamaccountpool.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldCreatedAt)
+				fieldSeen[upstreamaccountpool.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[upstreamaccountpool.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldUpdatedAt)
+				fieldSeen[upstreamaccountpool.FieldUpdatedAt] = struct{}{}
+			}
+		case "channelID":
+			if _, ok := fieldSeen[upstreamaccountpool.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldChannelID)
+				fieldSeen[upstreamaccountpool.FieldChannelID] = struct{}{}
+			}
+		case "name":
+			if _, ok := fieldSeen[upstreamaccountpool.FieldName]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldName)
+				fieldSeen[upstreamaccountpool.FieldName] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[upstreamaccountpool.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldStatus)
+				fieldSeen[upstreamaccountpool.FieldStatus] = struct{}{}
+			}
+		case "priority":
+			if _, ok := fieldSeen[upstreamaccountpool.FieldPriority]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldPriority)
+				fieldSeen[upstreamaccountpool.FieldPriority] = struct{}{}
+			}
+		case "modelPatterns":
+			if _, ok := fieldSeen[upstreamaccountpool.FieldModelPatterns]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldModelPatterns)
+				fieldSeen[upstreamaccountpool.FieldModelPatterns] = struct{}{}
+			}
+		case "projectIds":
+			if _, ok := fieldSeen[upstreamaccountpool.FieldProjectIds]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldProjectIds)
+				fieldSeen[upstreamaccountpool.FieldProjectIds] = struct{}{}
+			}
+		case "remark":
+			if _, ok := fieldSeen[upstreamaccountpool.FieldRemark]; !ok {
+				selectedFields = append(selectedFields, upstreamaccountpool.FieldRemark)
+				fieldSeen[upstreamaccountpool.FieldRemark] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type upstreamaccountpoolPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []UpstreamAccountPoolPaginateOption
+}
+
+func newUpstreamAccountPoolPaginateArgs(rv map[string]any) *upstreamaccountpoolPaginateArgs {
+	args := &upstreamaccountpoolPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &UpstreamAccountPoolOrder{Field: &UpstreamAccountPoolOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithUpstreamAccountPoolOrder(order))
+			}
+		case *UpstreamAccountPoolOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithUpstreamAccountPoolOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*UpstreamAccountPoolWhereInput); ok {
+		args.opts = append(args.opts, WithUpstreamAccountPoolFilter(v.Filter))
 	}
 	return args
 }

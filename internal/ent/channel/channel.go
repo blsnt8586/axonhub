@@ -71,6 +71,10 @@ const (
 	EdgeChannelProbes = "channel_probes"
 	// EdgeChannelModelPrices holds the string denoting the channel_model_prices edge name in mutations.
 	EdgeChannelModelPrices = "channel_model_prices"
+	// EdgeUpstreamAccountPools holds the string denoting the upstream_account_pools edge name in mutations.
+	EdgeUpstreamAccountPools = "upstream_account_pools"
+	// EdgeUpstreamAccounts holds the string denoting the upstream_accounts edge name in mutations.
+	EdgeUpstreamAccounts = "upstream_accounts"
 	// EdgeProviderQuotaStatus holds the string denoting the provider_quota_status edge name in mutations.
 	EdgeProviderQuotaStatus = "provider_quota_status"
 	// Table holds the table name of the channel in the database.
@@ -110,6 +114,20 @@ const (
 	ChannelModelPricesInverseTable = "channel_model_prices"
 	// ChannelModelPricesColumn is the table column denoting the channel_model_prices relation/edge.
 	ChannelModelPricesColumn = "channel_id"
+	// UpstreamAccountPoolsTable is the table that holds the upstream_account_pools relation/edge.
+	UpstreamAccountPoolsTable = "upstream_account_pools"
+	// UpstreamAccountPoolsInverseTable is the table name for the UpstreamAccountPool entity.
+	// It exists in this package in order to avoid circular dependency with the "upstreamaccountpool" package.
+	UpstreamAccountPoolsInverseTable = "upstream_account_pools"
+	// UpstreamAccountPoolsColumn is the table column denoting the upstream_account_pools relation/edge.
+	UpstreamAccountPoolsColumn = "channel_id"
+	// UpstreamAccountsTable is the table that holds the upstream_accounts relation/edge.
+	UpstreamAccountsTable = "upstream_accounts"
+	// UpstreamAccountsInverseTable is the table name for the UpstreamAccount entity.
+	// It exists in this package in order to avoid circular dependency with the "upstreamaccount" package.
+	UpstreamAccountsInverseTable = "upstream_accounts"
+	// UpstreamAccountsColumn is the table column denoting the upstream_accounts relation/edge.
+	UpstreamAccountsColumn = "channel_id"
 	// ProviderQuotaStatusTable is the table that holds the provider_quota_status relation/edge.
 	ProviderQuotaStatusTable = "provider_quota_status"
 	// ProviderQuotaStatusInverseTable is the table name for the ProviderQuotaStatus entity.
@@ -442,6 +460,34 @@ func ByChannelModelPrices(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOptio
 	}
 }
 
+// ByUpstreamAccountPoolsCount orders the results by upstream_account_pools count.
+func ByUpstreamAccountPoolsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUpstreamAccountPoolsStep(), opts...)
+	}
+}
+
+// ByUpstreamAccountPools orders the results by upstream_account_pools terms.
+func ByUpstreamAccountPools(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUpstreamAccountPoolsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUpstreamAccountsCount orders the results by upstream_accounts count.
+func ByUpstreamAccountsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUpstreamAccountsStep(), opts...)
+	}
+}
+
+// ByUpstreamAccounts orders the results by upstream_accounts terms.
+func ByUpstreamAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUpstreamAccountsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProviderQuotaStatusField orders the results by provider_quota_status field.
 func ByProviderQuotaStatusField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -481,6 +527,20 @@ func newChannelModelPricesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ChannelModelPricesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ChannelModelPricesTable, ChannelModelPricesColumn),
+	)
+}
+func newUpstreamAccountPoolsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UpstreamAccountPoolsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountPoolsTable, UpstreamAccountPoolsColumn),
+	)
+}
+func newUpstreamAccountsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UpstreamAccountsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UpstreamAccountsTable, UpstreamAccountsColumn),
 	)
 }
 func newProviderQuotaStatusStep() *sqlgraph.Step {

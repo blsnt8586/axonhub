@@ -181,6 +181,14 @@ func (Channel) Edges() []ent.Edge {
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
 			),
+		edge.To("upstream_account_pools", UpstreamAccountPool.Type).
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+			),
+		edge.To("upstream_accounts", UpstreamAccount.Type).
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+			),
 		edge.To("provider_quota_status", ProviderQuotaStatus.Type).
 			Unique().
 			Annotations(

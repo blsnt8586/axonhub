@@ -117,6 +117,16 @@ func (r *channelResolver) LiveLimiterStats(ctx context.Context, obj *ent.Channel
 	}, nil
 }
 
+// UpstreamCredentialFallback is the resolver for the upstreamCredentialFallback field.
+func (r *channelResolver) UpstreamCredentialFallback(ctx context.Context, obj *ent.Channel) (bool, error) {
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil || !user.IsOwner || obj == nil {
+		return false, nil
+	}
+
+	return r.upstreamAccountService.ChannelUsesCredentialFallback(ctx, obj.ID)
+}
+
 // HeaderOverrideOperations is the resolver for the headerOverrideOperations field.
 func (r *channelSettingsResolver) HeaderOverrideOperations(ctx context.Context, obj *objects.ChannelSettings) ([]*objects.OverrideOperation, error) {
 	if obj == nil {
@@ -390,6 +400,143 @@ func (r *mutationResolver) DeleteDisabledChannelAPIKeys(ctx context.Context, cha
 	}
 
 	return result, nil
+}
+
+// CreateUpstreamAccountPool is the resolver for the createUpstreamAccountPool field.
+func (r *mutationResolver) CreateUpstreamAccountPool(ctx context.Context, input CreateUpstreamAccountPoolInput) (*ent.UpstreamAccountPool, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.upstreamAccountService.CreatePool(ctx, biz.CreateUpstreamAccountPoolParams{
+		ChannelID:     input.ChannelID.ID,
+		Name:          input.Name,
+		Status:        upstreamAccountPoolStatusOrDefault(input.Status),
+		Priority:      intOrDefault(input.Priority, 0),
+		ModelPatterns: input.ModelPatterns,
+		ProjectIDs:    input.ProjectIDs,
+		Remark:        input.Remark,
+	})
+}
+
+// UpdateUpstreamAccountPool is the resolver for the updateUpstreamAccountPool field.
+func (r *mutationResolver) UpdateUpstreamAccountPool(ctx context.Context, id objects.GUID, input UpdateUpstreamAccountPoolInput) (*ent.UpstreamAccountPool, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.upstreamAccountService.UpdatePool(ctx, id.ID, biz.UpdateUpstreamAccountPoolParams{
+		Name:          input.Name,
+		Status:        input.Status,
+		Priority:      input.Priority,
+		ModelPatterns: input.ModelPatterns,
+		ProjectIDs:    input.ProjectIDs,
+		Remark:        input.Remark,
+		ClearRemark:   boolOrDefault(input.ClearRemark, false),
+	})
+}
+
+// ArchiveUpstreamAccountPool is the resolver for the archiveUpstreamAccountPool field.
+func (r *mutationResolver) ArchiveUpstreamAccountPool(ctx context.Context, id objects.GUID) (*ent.UpstreamAccountPool, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.upstreamAccountService.ArchivePool(ctx, id.ID)
+}
+
+// CreateUpstreamAccount is the resolver for the createUpstreamAccount field.
+func (r *mutationResolver) CreateUpstreamAccount(ctx context.Context, input CreateUpstreamAccountInput) (*ent.UpstreamAccount, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+	if input.Credentials == nil {
+		return nil, fmt.Errorf("account credentials are required")
+	}
+
+	return r.upstreamAccountService.CreateAccount(ctx, biz.CreateUpstreamAccountParams{
+		ChannelID:        input.ChannelID.ID,
+		PoolID:           guidIDPtr(input.PoolID),
+		Name:             input.Name,
+		CredentialType:   upstreamAccountCredentialTypeOrDefault(input.CredentialType),
+		Credentials:      input.Credentials.ToCredentials(),
+		Status:           upstreamAccountStatusOrDefault(input.Status),
+		Schedulable:      boolOrDefault(input.Schedulable, true),
+		Priority:         intOrDefault(input.Priority, 0),
+		Weight:           intOrDefault(input.Weight, 100),
+		ConcurrencyLimit: intOrDefault(input.ConcurrencyLimit, 0),
+		ProxyConfig:      input.ProxyConfig,
+		RateMultiplier:   floatOrDefault(input.RateMultiplier, 1),
+		ExpiresAt:        input.ExpiresAt,
+		QuotaLimitMicros: intPtrToInt64OrDefault(input.QuotaLimitMicros, 0),
+		QuotaUsedMicros:  intPtrToInt64OrDefault(input.QuotaUsedMicros, 0),
+		ErrorMessage:     input.ErrorMessage,
+		RateLimitResetAt: input.RateLimitResetAt,
+		OverloadUntil:    input.OverloadUntil,
+		CooldownUntil:    input.CooldownUntil,
+		CooldownReason:   input.CooldownReason,
+	})
+}
+
+// UpdateUpstreamAccount is the resolver for the updateUpstreamAccount field.
+func (r *mutationResolver) UpdateUpstreamAccount(ctx context.Context, id objects.GUID, input UpdateUpstreamAccountInput) (*ent.UpstreamAccount, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	var credentials *objects.UpstreamAccountCredentials
+	if input.Credentials != nil {
+		creds := input.Credentials.ToCredentials()
+		credentials = &creds
+	}
+
+	return r.upstreamAccountService.UpdateAccount(ctx, id.ID, biz.UpdateUpstreamAccountParams{
+		PoolID:                guidIDPtr(input.PoolID),
+		ClearPool:             boolOrDefault(input.ClearPool, false),
+		Name:                  input.Name,
+		CredentialType:        input.CredentialType,
+		Credentials:           credentials,
+		Status:                input.Status,
+		Schedulable:           input.Schedulable,
+		Priority:              input.Priority,
+		Weight:                input.Weight,
+		ConcurrencyLimit:      input.ConcurrencyLimit,
+		ProxyConfig:           input.ProxyConfig,
+		ClearProxyConfig:      boolOrDefault(input.ClearProxyConfig, false),
+		RateMultiplier:        input.RateMultiplier,
+		ExpiresAt:             input.ExpiresAt,
+		ClearExpiresAt:        boolOrDefault(input.ClearExpiresAt, false),
+		QuotaLimitMicros:      intPtrToInt64Ptr(input.QuotaLimitMicros),
+		QuotaUsedMicros:       intPtrToInt64Ptr(input.QuotaUsedMicros),
+		ErrorMessage:          input.ErrorMessage,
+		ClearErrorMessage:     boolOrDefault(input.ClearErrorMessage, false),
+		RateLimitResetAt:      input.RateLimitResetAt,
+		ClearRateLimitResetAt: boolOrDefault(input.ClearRateLimitResetAt, false),
+		OverloadUntil:         input.OverloadUntil,
+		ClearOverloadUntil:    boolOrDefault(input.ClearOverloadUntil, false),
+		CooldownUntil:         input.CooldownUntil,
+		ClearCooldownUntil:    boolOrDefault(input.ClearCooldownUntil, false),
+		CooldownReason:        input.CooldownReason,
+		ClearCooldownReason:   boolOrDefault(input.ClearCooldownReason, false),
+	})
+}
+
+// ArchiveUpstreamAccount is the resolver for the archiveUpstreamAccount field.
+func (r *mutationResolver) ArchiveUpstreamAccount(ctx context.Context, id objects.GUID) (*ent.UpstreamAccount, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.upstreamAccountService.ArchiveAccount(ctx, id.ID)
+}
+
+// TestUpstreamAccount is the resolver for the testUpstreamAccount field.
+func (r *mutationResolver) TestUpstreamAccount(ctx context.Context, id objects.GUID) (*biz.UpstreamAccountTestResult, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.upstreamAccountService.TestAccount(ctx, id.ID)
 }
 
 // CreateAPIKey is the resolver for the createAPIKey field.
@@ -770,6 +917,24 @@ func (r *queryResolver) QueryChannels(ctx context.Context, input biz.QueryChanne
 	return r.channelService.QueryChannels(ctx, input)
 }
 
+// UpstreamAccountPools is the resolver for the upstreamAccountPools field.
+func (r *queryResolver) UpstreamAccountPools(ctx context.Context, channelID objects.GUID, includeArchived *bool) ([]*ent.UpstreamAccountPool, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.upstreamAccountService.ListPools(ctx, channelID.ID, boolOrDefault(includeArchived, false))
+}
+
+// UpstreamAccounts is the resolver for the upstreamAccounts field.
+func (r *queryResolver) UpstreamAccounts(ctx context.Context, channelID objects.GUID, includeArchived *bool) ([]*ent.UpstreamAccount, error) {
+	if err := requireOwner(ctx); err != nil {
+		return nil, err
+	}
+
+	return r.upstreamAccountService.ListAccounts(ctx, channelID.ID, boolOrDefault(includeArchived, false))
+}
+
 // APIKeyQuotaUsages is the resolver for the apiKeyQuotaUsages field.
 func (r *queryResolver) APIKeyQuotaUsages(ctx context.Context, apiKeyID objects.GUID) ([]*APIKeyProfileQuotaUsage, error) {
 	apiKey, err := r.client.APIKey.Get(ctx, apiKeyID.ID)
@@ -880,6 +1045,44 @@ func (r *traceResolver) UsageMetadata(ctx context.Context, obj *ent.Trace) (*biz
 	return r.traceService.UsageMetadata(ctx, obj.ID)
 }
 
+// HasCredentials is the resolver for the hasCredentials field.
+func (r *upstreamAccountResolver) HasCredentials(ctx context.Context, obj *ent.UpstreamAccount) (bool, error) {
+	if obj == nil {
+		return false, nil
+	}
+
+	return obj.Credentials.HasValue(), nil
+}
+
+// HasProxyConfig is the resolver for the hasProxyConfig field.
+func (r *upstreamAccountResolver) HasProxyConfig(ctx context.Context, obj *ent.UpstreamAccount) (bool, error) {
+	return obj != nil && obj.ProxyConfig != nil, nil
+}
+
+// EligibleNow is the resolver for the eligibleNow field.
+func (r *upstreamAccountResolver) EligibleNow(ctx context.Context, obj *ent.UpstreamAccount) (bool, error) {
+	eligible, _ := r.upstreamAccountService.AccountEligibility(obj, time.Now())
+	return eligible, nil
+}
+
+// IneligibleReason is the resolver for the ineligibleReason field.
+func (r *upstreamAccountResolver) IneligibleReason(ctx context.Context, obj *ent.UpstreamAccount) (*string, error) {
+	eligible, reason := r.upstreamAccountService.AccountEligibility(obj, time.Now())
+	if eligible || reason == "" {
+		return nil, nil
+	}
+
+	return &reason, nil
+}
+
+// AccountID is the resolver for the accountID field.
+func (r *upstreamAccountTestResultResolver) AccountID(ctx context.Context, obj *biz.UpstreamAccountTestResult) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeUpstreamAccount,
+		ID:   obj.AccountID,
+	}, nil
+}
+
 // ChannelSettings returns ChannelSettingsResolver implementation.
 func (r *Resolver) ChannelSettings() ChannelSettingsResolver { return &channelSettingsResolver{r} }
 
@@ -889,6 +1092,12 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Segment returns SegmentResolver implementation.
 func (r *Resolver) Segment() SegmentResolver { return &segmentResolver{r} }
 
+// UpstreamAccountTestResult returns UpstreamAccountTestResultResolver implementation.
+func (r *Resolver) UpstreamAccountTestResult() UpstreamAccountTestResultResolver {
+	return &upstreamAccountTestResultResolver{r}
+}
+
 type channelSettingsResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type segmentResolver struct{ *Resolver }
+type upstreamAccountTestResultResolver struct{ *Resolver }

@@ -1868,6 +1868,111 @@ var (
 			},
 		},
 	}
+	// UpstreamAccountsColumns holds the columns for the "upstream_accounts" table.
+	UpstreamAccountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
+		{Name: "name", Type: field.TypeString},
+		{Name: "credential_type", Type: field.TypeEnum, Enums: []string{"api_key", "oauth", "custom"}, Default: "api_key"},
+		{Name: "credentials", Type: field.TypeJSON},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled", "archived", "error"}, Default: "active"},
+		{Name: "schedulable", Type: field.TypeBool, Default: true},
+		{Name: "priority", Type: field.TypeInt, Default: 0},
+		{Name: "weight", Type: field.TypeInt, Default: 100},
+		{Name: "concurrency_limit", Type: field.TypeInt, Default: 0},
+		{Name: "proxy_config", Type: field.TypeJSON, Nullable: true},
+		{Name: "rate_multiplier", Type: field.TypeFloat64, Default: 1},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "rate_limit_reset_at", Type: field.TypeTime, Nullable: true},
+		{Name: "overload_until", Type: field.TypeTime, Nullable: true},
+		{Name: "cooldown_until", Type: field.TypeTime, Nullable: true},
+		{Name: "cooldown_reason", Type: field.TypeString, Nullable: true},
+		{Name: "quota_limit_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "quota_used_micros", Type: field.TypeInt64, Default: 0},
+		{Name: "channel_id", Type: field.TypeInt},
+		{Name: "pool_id", Type: field.TypeInt, Nullable: true},
+	}
+	// UpstreamAccountsTable holds the schema information for the "upstream_accounts" table.
+	UpstreamAccountsTable = &schema.Table{
+		Name:       "upstream_accounts",
+		Columns:    UpstreamAccountsColumns,
+		PrimaryKey: []*schema.Column{UpstreamAccountsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "upstream_accounts_channels_upstream_accounts",
+				Columns:    []*schema.Column{UpstreamAccountsColumns[23]},
+				RefColumns: []*schema.Column{ChannelsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "upstream_accounts_upstream_account_pools_accounts",
+				Columns:    []*schema.Column{UpstreamAccountsColumns[24]},
+				RefColumns: []*schema.Column{UpstreamAccountPoolsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "upstream_accounts_by_channel_status",
+				Unique:  false,
+				Columns: []*schema.Column{UpstreamAccountsColumns[23], UpstreamAccountsColumns[7]},
+			},
+			{
+				Name:    "upstream_accounts_by_channel_pool_status",
+				Unique:  false,
+				Columns: []*schema.Column{UpstreamAccountsColumns[23], UpstreamAccountsColumns[24], UpstreamAccountsColumns[7]},
+			},
+			{
+				Name:    "upstream_accounts_by_channel_priority_weight",
+				Unique:  false,
+				Columns: []*schema.Column{UpstreamAccountsColumns[23], UpstreamAccountsColumns[9], UpstreamAccountsColumns[10]},
+			},
+		},
+	}
+	// UpstreamAccountPoolsColumns holds the columns for the "upstream_account_pools" table.
+	UpstreamAccountPoolsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
+		{Name: "name", Type: field.TypeString},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"enabled", "disabled", "archived"}, Default: "enabled"},
+		{Name: "priority", Type: field.TypeInt, Default: 0},
+		{Name: "model_patterns", Type: field.TypeJSON, Nullable: true},
+		{Name: "project_ids", Type: field.TypeJSON, Nullable: true},
+		{Name: "remark", Type: field.TypeString, Nullable: true},
+		{Name: "channel_id", Type: field.TypeInt},
+	}
+	// UpstreamAccountPoolsTable holds the schema information for the "upstream_account_pools" table.
+	UpstreamAccountPoolsTable = &schema.Table{
+		Name:       "upstream_account_pools",
+		Columns:    UpstreamAccountPoolsColumns,
+		PrimaryKey: []*schema.Column{UpstreamAccountPoolsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "upstream_account_pools_channels_upstream_account_pools",
+				Columns:    []*schema.Column{UpstreamAccountPoolsColumns[10]},
+				RefColumns: []*schema.Column{ChannelsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "upstream_account_pools_by_channel_name",
+				Unique:  true,
+				Columns: []*schema.Column{UpstreamAccountPoolsColumns[10], UpstreamAccountPoolsColumns[4], UpstreamAccountPoolsColumns[3]},
+			},
+			{
+				Name:    "upstream_account_pools_by_channel_status",
+				Unique:  false,
+				Columns: []*schema.Column{UpstreamAccountPoolsColumns[10], UpstreamAccountPoolsColumns[5]},
+			},
+		},
+	}
 	// UsageBillingRecordsColumns holds the columns for the "usage_billing_records" table.
 	UsageBillingRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -2446,6 +2551,8 @@ var (
 		SystemsTable,
 		ThreadsTable,
 		TracesTable,
+		UpstreamAccountsTable,
+		UpstreamAccountPoolsTable,
 		UsageBillingRecordsTable,
 		UsageDailyAggregatesTable,
 		UsageHourlyAggregatesTable,
@@ -2517,6 +2624,9 @@ func init() {
 	ThreadsTable.ForeignKeys[0].RefTable = ProjectsTable
 	TracesTable.ForeignKeys[0].RefTable = ProjectsTable
 	TracesTable.ForeignKeys[1].RefTable = ThreadsTable
+	UpstreamAccountsTable.ForeignKeys[0].RefTable = ChannelsTable
+	UpstreamAccountsTable.ForeignKeys[1].RefTable = UpstreamAccountPoolsTable
+	UpstreamAccountPoolsTable.ForeignKeys[0].RefTable = ChannelsTable
 	UsageBillingRecordsTable.ForeignKeys[0].RefTable = BillingAccountsTable
 	UsageBillingRecordsTable.ForeignKeys[1].RefTable = LedgerTransactionsTable
 	UsageBillingRecordsTable.ForeignKeys[2].RefTable = UsageLogsTable

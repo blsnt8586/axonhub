@@ -98,6 +98,10 @@ type Tx struct {
 	Thread *ThreadClient
 	// Trace is the client for interacting with the Trace builders.
 	Trace *TraceClient
+	// UpstreamAccount is the client for interacting with the UpstreamAccount builders.
+	UpstreamAccount *UpstreamAccountClient
+	// UpstreamAccountPool is the client for interacting with the UpstreamAccountPool builders.
+	UpstreamAccountPool *UpstreamAccountPoolClient
 	// UsageBillingRecord is the client for interacting with the UsageBillingRecord builders.
 	UsageBillingRecord *UsageBillingRecordClient
 	// UsageDailyAggregate is the client for interacting with the UsageDailyAggregate builders.
@@ -288,6 +292,8 @@ func (tx *Tx) init() {
 	tx.System = NewSystemClient(tx.config)
 	tx.Thread = NewThreadClient(tx.config)
 	tx.Trace = NewTraceClient(tx.config)
+	tx.UpstreamAccount = NewUpstreamAccountClient(tx.config)
+	tx.UpstreamAccountPool = NewUpstreamAccountPoolClient(tx.config)
 	tx.UsageBillingRecord = NewUsageBillingRecordClient(tx.config)
 	tx.UsageDailyAggregate = NewUsageDailyAggregateClient(tx.config)
 	tx.UsageHourlyAggregate = NewUsageHourlyAggregateClient(tx.config)

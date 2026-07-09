@@ -55,6 +55,8 @@ import (
 	"github.com/looplj/axonhub/internal/ent/system"
 	"github.com/looplj/axonhub/internal/ent/thread"
 	"github.com/looplj/axonhub/internal/ent/trace"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccount"
+	"github.com/looplj/axonhub/internal/ent/upstreamaccountpool"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
 	"github.com/looplj/axonhub/internal/ent/usagedailyaggregate"
 	"github.com/looplj/axonhub/internal/ent/usagehourlyaggregate"
@@ -64,6 +66,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/userrole"
 	"github.com/looplj/axonhub/internal/ent/usersubscription"
 	"github.com/looplj/axonhub/internal/objects"
+	"github.com/looplj/axonhub/llm/httpclient"
 )
 
 const (
@@ -118,6 +121,8 @@ const (
 	TypeSystem                        = "System"
 	TypeThread                        = "Thread"
 	TypeTrace                         = "Trace"
+	TypeUpstreamAccount               = "UpstreamAccount"
+	TypeUpstreamAccountPool           = "UpstreamAccountPool"
 	TypeUsageBillingRecord            = "UsageBillingRecord"
 	TypeUsageDailyAggregate           = "UsageDailyAggregate"
 	TypeUsageHourlyAggregate          = "UsageHourlyAggregate"
@@ -16646,58 +16651,64 @@ func (m *BillingPriceRuleMutation) ResetEdge(name string) error {
 // ChannelMutation represents an operation that mutates the Channel nodes in the graph.
 type ChannelMutation struct {
 	config
-	op                           Op
-	typ                          string
-	id                           *int
-	created_at                   *time.Time
-	updated_at                   *time.Time
-	deleted_at                   *int
-	adddeleted_at                *int
-	_type                        *channel.Type
-	base_url                     *string
-	name                         *string
-	status                       *channel.Status
-	credentials                  *objects.ChannelCredentials
-	disabled_api_keys            *[]objects.DisabledAPIKey
-	appenddisabled_api_keys      []objects.DisabledAPIKey
-	supported_models             *[]string
-	appendsupported_models       []string
-	manual_models                *[]string
-	appendmanual_models          []string
-	auto_sync_supported_models   *bool
-	auto_sync_model_pattern      *string
-	tags                         *[]string
-	appendtags                   []string
-	default_test_model           *string
-	policies                     *objects.ChannelPolicies
-	settings                     **objects.ChannelSettings
-	ordering_weight              *int
-	addordering_weight           *int
-	error_message                *string
-	remark                       *string
-	endpoints                    *[]objects.ChannelEndpoint
-	appendendpoints              []objects.ChannelEndpoint
-	clearedFields                map[string]struct{}
-	requests                     map[int]struct{}
-	removedrequests              map[int]struct{}
-	clearedrequests              bool
-	executions                   map[int]struct{}
-	removedexecutions            map[int]struct{}
-	clearedexecutions            bool
-	usage_logs                   map[int]struct{}
-	removedusage_logs            map[int]struct{}
-	clearedusage_logs            bool
-	channel_probes               map[int]struct{}
-	removedchannel_probes        map[int]struct{}
-	clearedchannel_probes        bool
-	channel_model_prices         map[int]struct{}
-	removedchannel_model_prices  map[int]struct{}
-	clearedchannel_model_prices  bool
-	provider_quota_status        *int
-	clearedprovider_quota_status bool
-	done                         bool
-	oldValue                     func(context.Context) (*Channel, error)
-	predicates                   []predicate.Channel
+	op                            Op
+	typ                           string
+	id                            *int
+	created_at                    *time.Time
+	updated_at                    *time.Time
+	deleted_at                    *int
+	adddeleted_at                 *int
+	_type                         *channel.Type
+	base_url                      *string
+	name                          *string
+	status                        *channel.Status
+	credentials                   *objects.ChannelCredentials
+	disabled_api_keys             *[]objects.DisabledAPIKey
+	appenddisabled_api_keys       []objects.DisabledAPIKey
+	supported_models              *[]string
+	appendsupported_models        []string
+	manual_models                 *[]string
+	appendmanual_models           []string
+	auto_sync_supported_models    *bool
+	auto_sync_model_pattern       *string
+	tags                          *[]string
+	appendtags                    []string
+	default_test_model            *string
+	policies                      *objects.ChannelPolicies
+	settings                      **objects.ChannelSettings
+	ordering_weight               *int
+	addordering_weight            *int
+	error_message                 *string
+	remark                        *string
+	endpoints                     *[]objects.ChannelEndpoint
+	appendendpoints               []objects.ChannelEndpoint
+	clearedFields                 map[string]struct{}
+	requests                      map[int]struct{}
+	removedrequests               map[int]struct{}
+	clearedrequests               bool
+	executions                    map[int]struct{}
+	removedexecutions             map[int]struct{}
+	clearedexecutions             bool
+	usage_logs                    map[int]struct{}
+	removedusage_logs             map[int]struct{}
+	clearedusage_logs             bool
+	channel_probes                map[int]struct{}
+	removedchannel_probes         map[int]struct{}
+	clearedchannel_probes         bool
+	channel_model_prices          map[int]struct{}
+	removedchannel_model_prices   map[int]struct{}
+	clearedchannel_model_prices   bool
+	upstream_account_pools        map[int]struct{}
+	removedupstream_account_pools map[int]struct{}
+	clearedupstream_account_pools bool
+	upstream_accounts             map[int]struct{}
+	removedupstream_accounts      map[int]struct{}
+	clearedupstream_accounts      bool
+	provider_quota_status         *int
+	clearedprovider_quota_status  bool
+	done                          bool
+	oldValue                      func(context.Context) (*Channel, error)
+	predicates                    []predicate.Channel
 }
 
 var _ ent.Mutation = (*ChannelMutation)(nil)
@@ -18073,6 +18084,114 @@ func (m *ChannelMutation) ResetChannelModelPrices() {
 	m.removedchannel_model_prices = nil
 }
 
+// AddUpstreamAccountPoolIDs adds the "upstream_account_pools" edge to the UpstreamAccountPool entity by ids.
+func (m *ChannelMutation) AddUpstreamAccountPoolIDs(ids ...int) {
+	if m.upstream_account_pools == nil {
+		m.upstream_account_pools = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.upstream_account_pools[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUpstreamAccountPools clears the "upstream_account_pools" edge to the UpstreamAccountPool entity.
+func (m *ChannelMutation) ClearUpstreamAccountPools() {
+	m.clearedupstream_account_pools = true
+}
+
+// UpstreamAccountPoolsCleared reports if the "upstream_account_pools" edge to the UpstreamAccountPool entity was cleared.
+func (m *ChannelMutation) UpstreamAccountPoolsCleared() bool {
+	return m.clearedupstream_account_pools
+}
+
+// RemoveUpstreamAccountPoolIDs removes the "upstream_account_pools" edge to the UpstreamAccountPool entity by IDs.
+func (m *ChannelMutation) RemoveUpstreamAccountPoolIDs(ids ...int) {
+	if m.removedupstream_account_pools == nil {
+		m.removedupstream_account_pools = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.upstream_account_pools, ids[i])
+		m.removedupstream_account_pools[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUpstreamAccountPools returns the removed IDs of the "upstream_account_pools" edge to the UpstreamAccountPool entity.
+func (m *ChannelMutation) RemovedUpstreamAccountPoolsIDs() (ids []int) {
+	for id := range m.removedupstream_account_pools {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UpstreamAccountPoolsIDs returns the "upstream_account_pools" edge IDs in the mutation.
+func (m *ChannelMutation) UpstreamAccountPoolsIDs() (ids []int) {
+	for id := range m.upstream_account_pools {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUpstreamAccountPools resets all changes to the "upstream_account_pools" edge.
+func (m *ChannelMutation) ResetUpstreamAccountPools() {
+	m.upstream_account_pools = nil
+	m.clearedupstream_account_pools = false
+	m.removedupstream_account_pools = nil
+}
+
+// AddUpstreamAccountIDs adds the "upstream_accounts" edge to the UpstreamAccount entity by ids.
+func (m *ChannelMutation) AddUpstreamAccountIDs(ids ...int) {
+	if m.upstream_accounts == nil {
+		m.upstream_accounts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.upstream_accounts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUpstreamAccounts clears the "upstream_accounts" edge to the UpstreamAccount entity.
+func (m *ChannelMutation) ClearUpstreamAccounts() {
+	m.clearedupstream_accounts = true
+}
+
+// UpstreamAccountsCleared reports if the "upstream_accounts" edge to the UpstreamAccount entity was cleared.
+func (m *ChannelMutation) UpstreamAccountsCleared() bool {
+	return m.clearedupstream_accounts
+}
+
+// RemoveUpstreamAccountIDs removes the "upstream_accounts" edge to the UpstreamAccount entity by IDs.
+func (m *ChannelMutation) RemoveUpstreamAccountIDs(ids ...int) {
+	if m.removedupstream_accounts == nil {
+		m.removedupstream_accounts = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.upstream_accounts, ids[i])
+		m.removedupstream_accounts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUpstreamAccounts returns the removed IDs of the "upstream_accounts" edge to the UpstreamAccount entity.
+func (m *ChannelMutation) RemovedUpstreamAccountsIDs() (ids []int) {
+	for id := range m.removedupstream_accounts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UpstreamAccountsIDs returns the "upstream_accounts" edge IDs in the mutation.
+func (m *ChannelMutation) UpstreamAccountsIDs() (ids []int) {
+	for id := range m.upstream_accounts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUpstreamAccounts resets all changes to the "upstream_accounts" edge.
+func (m *ChannelMutation) ResetUpstreamAccounts() {
+	m.upstream_accounts = nil
+	m.clearedupstream_accounts = false
+	m.removedupstream_accounts = nil
+}
+
 // SetProviderQuotaStatusID sets the "provider_quota_status" edge to the ProviderQuotaStatus entity by id.
 func (m *ChannelMutation) SetProviderQuotaStatusID(id int) {
 	m.provider_quota_status = &id
@@ -18675,7 +18794,7 @@ func (m *ChannelMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ChannelMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 8)
 	if m.requests != nil {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -18690,6 +18809,12 @@ func (m *ChannelMutation) AddedEdges() []string {
 	}
 	if m.channel_model_prices != nil {
 		edges = append(edges, channel.EdgeChannelModelPrices)
+	}
+	if m.upstream_account_pools != nil {
+		edges = append(edges, channel.EdgeUpstreamAccountPools)
+	}
+	if m.upstream_accounts != nil {
+		edges = append(edges, channel.EdgeUpstreamAccounts)
 	}
 	if m.provider_quota_status != nil {
 		edges = append(edges, channel.EdgeProviderQuotaStatus)
@@ -18731,6 +18856,18 @@ func (m *ChannelMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case channel.EdgeUpstreamAccountPools:
+		ids := make([]ent.Value, 0, len(m.upstream_account_pools))
+		for id := range m.upstream_account_pools {
+			ids = append(ids, id)
+		}
+		return ids
+	case channel.EdgeUpstreamAccounts:
+		ids := make([]ent.Value, 0, len(m.upstream_accounts))
+		for id := range m.upstream_accounts {
+			ids = append(ids, id)
+		}
+		return ids
 	case channel.EdgeProviderQuotaStatus:
 		if id := m.provider_quota_status; id != nil {
 			return []ent.Value{*id}
@@ -18741,7 +18878,7 @@ func (m *ChannelMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ChannelMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 8)
 	if m.removedrequests != nil {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -18756,6 +18893,12 @@ func (m *ChannelMutation) RemovedEdges() []string {
 	}
 	if m.removedchannel_model_prices != nil {
 		edges = append(edges, channel.EdgeChannelModelPrices)
+	}
+	if m.removedupstream_account_pools != nil {
+		edges = append(edges, channel.EdgeUpstreamAccountPools)
+	}
+	if m.removedupstream_accounts != nil {
+		edges = append(edges, channel.EdgeUpstreamAccounts)
 	}
 	return edges
 }
@@ -18794,13 +18937,25 @@ func (m *ChannelMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case channel.EdgeUpstreamAccountPools:
+		ids := make([]ent.Value, 0, len(m.removedupstream_account_pools))
+		for id := range m.removedupstream_account_pools {
+			ids = append(ids, id)
+		}
+		return ids
+	case channel.EdgeUpstreamAccounts:
+		ids := make([]ent.Value, 0, len(m.removedupstream_accounts))
+		for id := range m.removedupstream_accounts {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ChannelMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 8)
 	if m.clearedrequests {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -18815,6 +18970,12 @@ func (m *ChannelMutation) ClearedEdges() []string {
 	}
 	if m.clearedchannel_model_prices {
 		edges = append(edges, channel.EdgeChannelModelPrices)
+	}
+	if m.clearedupstream_account_pools {
+		edges = append(edges, channel.EdgeUpstreamAccountPools)
+	}
+	if m.clearedupstream_accounts {
+		edges = append(edges, channel.EdgeUpstreamAccounts)
 	}
 	if m.clearedprovider_quota_status {
 		edges = append(edges, channel.EdgeProviderQuotaStatus)
@@ -18836,6 +18997,10 @@ func (m *ChannelMutation) EdgeCleared(name string) bool {
 		return m.clearedchannel_probes
 	case channel.EdgeChannelModelPrices:
 		return m.clearedchannel_model_prices
+	case channel.EdgeUpstreamAccountPools:
+		return m.clearedupstream_account_pools
+	case channel.EdgeUpstreamAccounts:
+		return m.clearedupstream_accounts
 	case channel.EdgeProviderQuotaStatus:
 		return m.clearedprovider_quota_status
 	}
@@ -18871,6 +19036,12 @@ func (m *ChannelMutation) ResetEdge(name string) error {
 		return nil
 	case channel.EdgeChannelModelPrices:
 		m.ResetChannelModelPrices()
+		return nil
+	case channel.EdgeUpstreamAccountPools:
+		m.ResetUpstreamAccountPools()
+		return nil
+	case channel.EdgeUpstreamAccounts:
+		m.ResetUpstreamAccounts()
 		return nil
 	case channel.EdgeProviderQuotaStatus:
 		m.ResetProviderQuotaStatus()
@@ -51746,6 +51917,3196 @@ func (m *TraceMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Trace edge %s", name)
+}
+
+// UpstreamAccountMutation represents an operation that mutates the UpstreamAccount nodes in the graph.
+type UpstreamAccountMutation struct {
+	config
+	op                    Op
+	typ                   string
+	id                    *int
+	created_at            *time.Time
+	updated_at            *time.Time
+	deleted_at            *int
+	adddeleted_at         *int
+	name                  *string
+	credential_type       *upstreamaccount.CredentialType
+	credentials           *objects.UpstreamAccountCredentials
+	status                *upstreamaccount.Status
+	schedulable           *bool
+	priority              *int
+	addpriority           *int
+	weight                *int
+	addweight             *int
+	concurrency_limit     *int
+	addconcurrency_limit  *int
+	proxy_config          **httpclient.ProxyConfig
+	rate_multiplier       *float64
+	addrate_multiplier    *float64
+	expires_at            *time.Time
+	last_used_at          *time.Time
+	error_message         *string
+	rate_limit_reset_at   *time.Time
+	overload_until        *time.Time
+	cooldown_until        *time.Time
+	cooldown_reason       *string
+	quota_limit_micros    *int64
+	addquota_limit_micros *int64
+	quota_used_micros     *int64
+	addquota_used_micros  *int64
+	clearedFields         map[string]struct{}
+	channel               *int
+	clearedchannel        bool
+	pool                  *int
+	clearedpool           bool
+	done                  bool
+	oldValue              func(context.Context) (*UpstreamAccount, error)
+	predicates            []predicate.UpstreamAccount
+}
+
+var _ ent.Mutation = (*UpstreamAccountMutation)(nil)
+
+// upstreamaccountOption allows management of the mutation configuration using functional options.
+type upstreamaccountOption func(*UpstreamAccountMutation)
+
+// newUpstreamAccountMutation creates new mutation for the UpstreamAccount entity.
+func newUpstreamAccountMutation(c config, op Op, opts ...upstreamaccountOption) *UpstreamAccountMutation {
+	m := &UpstreamAccountMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUpstreamAccount,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUpstreamAccountID sets the ID field of the mutation.
+func withUpstreamAccountID(id int) upstreamaccountOption {
+	return func(m *UpstreamAccountMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UpstreamAccount
+		)
+		m.oldValue = func(ctx context.Context) (*UpstreamAccount, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UpstreamAccount.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUpstreamAccount sets the old UpstreamAccount of the mutation.
+func withUpstreamAccount(node *UpstreamAccount) upstreamaccountOption {
+	return func(m *UpstreamAccountMutation) {
+		m.oldValue = func(context.Context) (*UpstreamAccount, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UpstreamAccountMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UpstreamAccountMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UpstreamAccountMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UpstreamAccountMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UpstreamAccount.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UpstreamAccountMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UpstreamAccountMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UpstreamAccountMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UpstreamAccountMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UpstreamAccountMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UpstreamAccountMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *UpstreamAccountMutation) SetDeletedAt(i int) {
+	m.deleted_at = &i
+	m.adddeleted_at = nil
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *UpstreamAccountMutation) DeletedAt() (r int, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldDeletedAt(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// AddDeletedAt adds i to the "deleted_at" field.
+func (m *UpstreamAccountMutation) AddDeletedAt(i int) {
+	if m.adddeleted_at != nil {
+		*m.adddeleted_at += i
+	} else {
+		m.adddeleted_at = &i
+	}
+}
+
+// AddedDeletedAt returns the value that was added to the "deleted_at" field in this mutation.
+func (m *UpstreamAccountMutation) AddedDeletedAt() (r int, exists bool) {
+	v := m.adddeleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *UpstreamAccountMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	m.adddeleted_at = nil
+}
+
+// SetChannelID sets the "channel_id" field.
+func (m *UpstreamAccountMutation) SetChannelID(i int) {
+	m.channel = &i
+}
+
+// ChannelID returns the value of the "channel_id" field in the mutation.
+func (m *UpstreamAccountMutation) ChannelID() (r int, exists bool) {
+	v := m.channel
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChannelID returns the old "channel_id" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldChannelID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChannelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChannelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChannelID: %w", err)
+	}
+	return oldValue.ChannelID, nil
+}
+
+// ResetChannelID resets all changes to the "channel_id" field.
+func (m *UpstreamAccountMutation) ResetChannelID() {
+	m.channel = nil
+}
+
+// SetPoolID sets the "pool_id" field.
+func (m *UpstreamAccountMutation) SetPoolID(i int) {
+	m.pool = &i
+}
+
+// PoolID returns the value of the "pool_id" field in the mutation.
+func (m *UpstreamAccountMutation) PoolID() (r int, exists bool) {
+	v := m.pool
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPoolID returns the old "pool_id" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldPoolID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPoolID: %w", err)
+	}
+	return oldValue.PoolID, nil
+}
+
+// ClearPoolID clears the value of the "pool_id" field.
+func (m *UpstreamAccountMutation) ClearPoolID() {
+	m.pool = nil
+	m.clearedFields[upstreamaccount.FieldPoolID] = struct{}{}
+}
+
+// PoolIDCleared returns if the "pool_id" field was cleared in this mutation.
+func (m *UpstreamAccountMutation) PoolIDCleared() bool {
+	_, ok := m.clearedFields[upstreamaccount.FieldPoolID]
+	return ok
+}
+
+// ResetPoolID resets all changes to the "pool_id" field.
+func (m *UpstreamAccountMutation) ResetPoolID() {
+	m.pool = nil
+	delete(m.clearedFields, upstreamaccount.FieldPoolID)
+}
+
+// SetName sets the "name" field.
+func (m *UpstreamAccountMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *UpstreamAccountMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *UpstreamAccountMutation) ResetName() {
+	m.name = nil
+}
+
+// SetCredentialType sets the "credential_type" field.
+func (m *UpstreamAccountMutation) SetCredentialType(ut upstreamaccount.CredentialType) {
+	m.credential_type = &ut
+}
+
+// CredentialType returns the value of the "credential_type" field in the mutation.
+func (m *UpstreamAccountMutation) CredentialType() (r upstreamaccount.CredentialType, exists bool) {
+	v := m.credential_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCredentialType returns the old "credential_type" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldCredentialType(ctx context.Context) (v upstreamaccount.CredentialType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCredentialType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCredentialType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCredentialType: %w", err)
+	}
+	return oldValue.CredentialType, nil
+}
+
+// ResetCredentialType resets all changes to the "credential_type" field.
+func (m *UpstreamAccountMutation) ResetCredentialType() {
+	m.credential_type = nil
+}
+
+// SetCredentials sets the "credentials" field.
+func (m *UpstreamAccountMutation) SetCredentials(oac objects.UpstreamAccountCredentials) {
+	m.credentials = &oac
+}
+
+// Credentials returns the value of the "credentials" field in the mutation.
+func (m *UpstreamAccountMutation) Credentials() (r objects.UpstreamAccountCredentials, exists bool) {
+	v := m.credentials
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCredentials returns the old "credentials" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldCredentials(ctx context.Context) (v objects.UpstreamAccountCredentials, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCredentials is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCredentials requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCredentials: %w", err)
+	}
+	return oldValue.Credentials, nil
+}
+
+// ResetCredentials resets all changes to the "credentials" field.
+func (m *UpstreamAccountMutation) ResetCredentials() {
+	m.credentials = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *UpstreamAccountMutation) SetStatus(u upstreamaccount.Status) {
+	m.status = &u
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *UpstreamAccountMutation) Status() (r upstreamaccount.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldStatus(ctx context.Context) (v upstreamaccount.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *UpstreamAccountMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetSchedulable sets the "schedulable" field.
+func (m *UpstreamAccountMutation) SetSchedulable(b bool) {
+	m.schedulable = &b
+}
+
+// Schedulable returns the value of the "schedulable" field in the mutation.
+func (m *UpstreamAccountMutation) Schedulable() (r bool, exists bool) {
+	v := m.schedulable
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchedulable returns the old "schedulable" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldSchedulable(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchedulable is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchedulable requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchedulable: %w", err)
+	}
+	return oldValue.Schedulable, nil
+}
+
+// ResetSchedulable resets all changes to the "schedulable" field.
+func (m *UpstreamAccountMutation) ResetSchedulable() {
+	m.schedulable = nil
+}
+
+// SetPriority sets the "priority" field.
+func (m *UpstreamAccountMutation) SetPriority(i int) {
+	m.priority = &i
+	m.addpriority = nil
+}
+
+// Priority returns the value of the "priority" field in the mutation.
+func (m *UpstreamAccountMutation) Priority() (r int, exists bool) {
+	v := m.priority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriority returns the old "priority" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldPriority(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPriority is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPriority requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriority: %w", err)
+	}
+	return oldValue.Priority, nil
+}
+
+// AddPriority adds i to the "priority" field.
+func (m *UpstreamAccountMutation) AddPriority(i int) {
+	if m.addpriority != nil {
+		*m.addpriority += i
+	} else {
+		m.addpriority = &i
+	}
+}
+
+// AddedPriority returns the value that was added to the "priority" field in this mutation.
+func (m *UpstreamAccountMutation) AddedPriority() (r int, exists bool) {
+	v := m.addpriority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPriority resets all changes to the "priority" field.
+func (m *UpstreamAccountMutation) ResetPriority() {
+	m.priority = nil
+	m.addpriority = nil
+}
+
+// SetWeight sets the "weight" field.
+func (m *UpstreamAccountMutation) SetWeight(i int) {
+	m.weight = &i
+	m.addweight = nil
+}
+
+// Weight returns the value of the "weight" field in the mutation.
+func (m *UpstreamAccountMutation) Weight() (r int, exists bool) {
+	v := m.weight
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWeight returns the old "weight" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldWeight(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWeight is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWeight requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWeight: %w", err)
+	}
+	return oldValue.Weight, nil
+}
+
+// AddWeight adds i to the "weight" field.
+func (m *UpstreamAccountMutation) AddWeight(i int) {
+	if m.addweight != nil {
+		*m.addweight += i
+	} else {
+		m.addweight = &i
+	}
+}
+
+// AddedWeight returns the value that was added to the "weight" field in this mutation.
+func (m *UpstreamAccountMutation) AddedWeight() (r int, exists bool) {
+	v := m.addweight
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetWeight resets all changes to the "weight" field.
+func (m *UpstreamAccountMutation) ResetWeight() {
+	m.weight = nil
+	m.addweight = nil
+}
+
+// SetConcurrencyLimit sets the "concurrency_limit" field.
+func (m *UpstreamAccountMutation) SetConcurrencyLimit(i int) {
+	m.concurrency_limit = &i
+	m.addconcurrency_limit = nil
+}
+
+// ConcurrencyLimit returns the value of the "concurrency_limit" field in the mutation.
+func (m *UpstreamAccountMutation) ConcurrencyLimit() (r int, exists bool) {
+	v := m.concurrency_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConcurrencyLimit returns the old "concurrency_limit" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldConcurrencyLimit(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConcurrencyLimit is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConcurrencyLimit requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConcurrencyLimit: %w", err)
+	}
+	return oldValue.ConcurrencyLimit, nil
+}
+
+// AddConcurrencyLimit adds i to the "concurrency_limit" field.
+func (m *UpstreamAccountMutation) AddConcurrencyLimit(i int) {
+	if m.addconcurrency_limit != nil {
+		*m.addconcurrency_limit += i
+	} else {
+		m.addconcurrency_limit = &i
+	}
+}
+
+// AddedConcurrencyLimit returns the value that was added to the "concurrency_limit" field in this mutation.
+func (m *UpstreamAccountMutation) AddedConcurrencyLimit() (r int, exists bool) {
+	v := m.addconcurrency_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConcurrencyLimit resets all changes to the "concurrency_limit" field.
+func (m *UpstreamAccountMutation) ResetConcurrencyLimit() {
+	m.concurrency_limit = nil
+	m.addconcurrency_limit = nil
+}
+
+// SetProxyConfig sets the "proxy_config" field.
+func (m *UpstreamAccountMutation) SetProxyConfig(hc *httpclient.ProxyConfig) {
+	m.proxy_config = &hc
+}
+
+// ProxyConfig returns the value of the "proxy_config" field in the mutation.
+func (m *UpstreamAccountMutation) ProxyConfig() (r *httpclient.ProxyConfig, exists bool) {
+	v := m.proxy_config
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProxyConfig returns the old "proxy_config" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldProxyConfig(ctx context.Context) (v *httpclient.ProxyConfig, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProxyConfig is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProxyConfig requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProxyConfig: %w", err)
+	}
+	return oldValue.ProxyConfig, nil
+}
+
+// ClearProxyConfig clears the value of the "proxy_config" field.
+func (m *UpstreamAccountMutation) ClearProxyConfig() {
+	m.proxy_config = nil
+	m.clearedFields[upstreamaccount.FieldProxyConfig] = struct{}{}
+}
+
+// ProxyConfigCleared returns if the "proxy_config" field was cleared in this mutation.
+func (m *UpstreamAccountMutation) ProxyConfigCleared() bool {
+	_, ok := m.clearedFields[upstreamaccount.FieldProxyConfig]
+	return ok
+}
+
+// ResetProxyConfig resets all changes to the "proxy_config" field.
+func (m *UpstreamAccountMutation) ResetProxyConfig() {
+	m.proxy_config = nil
+	delete(m.clearedFields, upstreamaccount.FieldProxyConfig)
+}
+
+// SetRateMultiplier sets the "rate_multiplier" field.
+func (m *UpstreamAccountMutation) SetRateMultiplier(f float64) {
+	m.rate_multiplier = &f
+	m.addrate_multiplier = nil
+}
+
+// RateMultiplier returns the value of the "rate_multiplier" field in the mutation.
+func (m *UpstreamAccountMutation) RateMultiplier() (r float64, exists bool) {
+	v := m.rate_multiplier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRateMultiplier returns the old "rate_multiplier" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldRateMultiplier(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRateMultiplier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRateMultiplier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRateMultiplier: %w", err)
+	}
+	return oldValue.RateMultiplier, nil
+}
+
+// AddRateMultiplier adds f to the "rate_multiplier" field.
+func (m *UpstreamAccountMutation) AddRateMultiplier(f float64) {
+	if m.addrate_multiplier != nil {
+		*m.addrate_multiplier += f
+	} else {
+		m.addrate_multiplier = &f
+	}
+}
+
+// AddedRateMultiplier returns the value that was added to the "rate_multiplier" field in this mutation.
+func (m *UpstreamAccountMutation) AddedRateMultiplier() (r float64, exists bool) {
+	v := m.addrate_multiplier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRateMultiplier resets all changes to the "rate_multiplier" field.
+func (m *UpstreamAccountMutation) ResetRateMultiplier() {
+	m.rate_multiplier = nil
+	m.addrate_multiplier = nil
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *UpstreamAccountMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *UpstreamAccountMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldExpiresAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (m *UpstreamAccountMutation) ClearExpiresAt() {
+	m.expires_at = nil
+	m.clearedFields[upstreamaccount.FieldExpiresAt] = struct{}{}
+}
+
+// ExpiresAtCleared returns if the "expires_at" field was cleared in this mutation.
+func (m *UpstreamAccountMutation) ExpiresAtCleared() bool {
+	_, ok := m.clearedFields[upstreamaccount.FieldExpiresAt]
+	return ok
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *UpstreamAccountMutation) ResetExpiresAt() {
+	m.expires_at = nil
+	delete(m.clearedFields, upstreamaccount.FieldExpiresAt)
+}
+
+// SetLastUsedAt sets the "last_used_at" field.
+func (m *UpstreamAccountMutation) SetLastUsedAt(t time.Time) {
+	m.last_used_at = &t
+}
+
+// LastUsedAt returns the value of the "last_used_at" field in the mutation.
+func (m *UpstreamAccountMutation) LastUsedAt() (r time.Time, exists bool) {
+	v := m.last_used_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastUsedAt returns the old "last_used_at" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldLastUsedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastUsedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastUsedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastUsedAt: %w", err)
+	}
+	return oldValue.LastUsedAt, nil
+}
+
+// ClearLastUsedAt clears the value of the "last_used_at" field.
+func (m *UpstreamAccountMutation) ClearLastUsedAt() {
+	m.last_used_at = nil
+	m.clearedFields[upstreamaccount.FieldLastUsedAt] = struct{}{}
+}
+
+// LastUsedAtCleared returns if the "last_used_at" field was cleared in this mutation.
+func (m *UpstreamAccountMutation) LastUsedAtCleared() bool {
+	_, ok := m.clearedFields[upstreamaccount.FieldLastUsedAt]
+	return ok
+}
+
+// ResetLastUsedAt resets all changes to the "last_used_at" field.
+func (m *UpstreamAccountMutation) ResetLastUsedAt() {
+	m.last_used_at = nil
+	delete(m.clearedFields, upstreamaccount.FieldLastUsedAt)
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (m *UpstreamAccountMutation) SetErrorMessage(s string) {
+	m.error_message = &s
+}
+
+// ErrorMessage returns the value of the "error_message" field in the mutation.
+func (m *UpstreamAccountMutation) ErrorMessage() (r string, exists bool) {
+	v := m.error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorMessage returns the old "error_message" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldErrorMessage(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorMessage: %w", err)
+	}
+	return oldValue.ErrorMessage, nil
+}
+
+// ClearErrorMessage clears the value of the "error_message" field.
+func (m *UpstreamAccountMutation) ClearErrorMessage() {
+	m.error_message = nil
+	m.clearedFields[upstreamaccount.FieldErrorMessage] = struct{}{}
+}
+
+// ErrorMessageCleared returns if the "error_message" field was cleared in this mutation.
+func (m *UpstreamAccountMutation) ErrorMessageCleared() bool {
+	_, ok := m.clearedFields[upstreamaccount.FieldErrorMessage]
+	return ok
+}
+
+// ResetErrorMessage resets all changes to the "error_message" field.
+func (m *UpstreamAccountMutation) ResetErrorMessage() {
+	m.error_message = nil
+	delete(m.clearedFields, upstreamaccount.FieldErrorMessage)
+}
+
+// SetRateLimitResetAt sets the "rate_limit_reset_at" field.
+func (m *UpstreamAccountMutation) SetRateLimitResetAt(t time.Time) {
+	m.rate_limit_reset_at = &t
+}
+
+// RateLimitResetAt returns the value of the "rate_limit_reset_at" field in the mutation.
+func (m *UpstreamAccountMutation) RateLimitResetAt() (r time.Time, exists bool) {
+	v := m.rate_limit_reset_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRateLimitResetAt returns the old "rate_limit_reset_at" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldRateLimitResetAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRateLimitResetAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRateLimitResetAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRateLimitResetAt: %w", err)
+	}
+	return oldValue.RateLimitResetAt, nil
+}
+
+// ClearRateLimitResetAt clears the value of the "rate_limit_reset_at" field.
+func (m *UpstreamAccountMutation) ClearRateLimitResetAt() {
+	m.rate_limit_reset_at = nil
+	m.clearedFields[upstreamaccount.FieldRateLimitResetAt] = struct{}{}
+}
+
+// RateLimitResetAtCleared returns if the "rate_limit_reset_at" field was cleared in this mutation.
+func (m *UpstreamAccountMutation) RateLimitResetAtCleared() bool {
+	_, ok := m.clearedFields[upstreamaccount.FieldRateLimitResetAt]
+	return ok
+}
+
+// ResetRateLimitResetAt resets all changes to the "rate_limit_reset_at" field.
+func (m *UpstreamAccountMutation) ResetRateLimitResetAt() {
+	m.rate_limit_reset_at = nil
+	delete(m.clearedFields, upstreamaccount.FieldRateLimitResetAt)
+}
+
+// SetOverloadUntil sets the "overload_until" field.
+func (m *UpstreamAccountMutation) SetOverloadUntil(t time.Time) {
+	m.overload_until = &t
+}
+
+// OverloadUntil returns the value of the "overload_until" field in the mutation.
+func (m *UpstreamAccountMutation) OverloadUntil() (r time.Time, exists bool) {
+	v := m.overload_until
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOverloadUntil returns the old "overload_until" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldOverloadUntil(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOverloadUntil is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOverloadUntil requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOverloadUntil: %w", err)
+	}
+	return oldValue.OverloadUntil, nil
+}
+
+// ClearOverloadUntil clears the value of the "overload_until" field.
+func (m *UpstreamAccountMutation) ClearOverloadUntil() {
+	m.overload_until = nil
+	m.clearedFields[upstreamaccount.FieldOverloadUntil] = struct{}{}
+}
+
+// OverloadUntilCleared returns if the "overload_until" field was cleared in this mutation.
+func (m *UpstreamAccountMutation) OverloadUntilCleared() bool {
+	_, ok := m.clearedFields[upstreamaccount.FieldOverloadUntil]
+	return ok
+}
+
+// ResetOverloadUntil resets all changes to the "overload_until" field.
+func (m *UpstreamAccountMutation) ResetOverloadUntil() {
+	m.overload_until = nil
+	delete(m.clearedFields, upstreamaccount.FieldOverloadUntil)
+}
+
+// SetCooldownUntil sets the "cooldown_until" field.
+func (m *UpstreamAccountMutation) SetCooldownUntil(t time.Time) {
+	m.cooldown_until = &t
+}
+
+// CooldownUntil returns the value of the "cooldown_until" field in the mutation.
+func (m *UpstreamAccountMutation) CooldownUntil() (r time.Time, exists bool) {
+	v := m.cooldown_until
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCooldownUntil returns the old "cooldown_until" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldCooldownUntil(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCooldownUntil is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCooldownUntil requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCooldownUntil: %w", err)
+	}
+	return oldValue.CooldownUntil, nil
+}
+
+// ClearCooldownUntil clears the value of the "cooldown_until" field.
+func (m *UpstreamAccountMutation) ClearCooldownUntil() {
+	m.cooldown_until = nil
+	m.clearedFields[upstreamaccount.FieldCooldownUntil] = struct{}{}
+}
+
+// CooldownUntilCleared returns if the "cooldown_until" field was cleared in this mutation.
+func (m *UpstreamAccountMutation) CooldownUntilCleared() bool {
+	_, ok := m.clearedFields[upstreamaccount.FieldCooldownUntil]
+	return ok
+}
+
+// ResetCooldownUntil resets all changes to the "cooldown_until" field.
+func (m *UpstreamAccountMutation) ResetCooldownUntil() {
+	m.cooldown_until = nil
+	delete(m.clearedFields, upstreamaccount.FieldCooldownUntil)
+}
+
+// SetCooldownReason sets the "cooldown_reason" field.
+func (m *UpstreamAccountMutation) SetCooldownReason(s string) {
+	m.cooldown_reason = &s
+}
+
+// CooldownReason returns the value of the "cooldown_reason" field in the mutation.
+func (m *UpstreamAccountMutation) CooldownReason() (r string, exists bool) {
+	v := m.cooldown_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCooldownReason returns the old "cooldown_reason" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldCooldownReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCooldownReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCooldownReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCooldownReason: %w", err)
+	}
+	return oldValue.CooldownReason, nil
+}
+
+// ClearCooldownReason clears the value of the "cooldown_reason" field.
+func (m *UpstreamAccountMutation) ClearCooldownReason() {
+	m.cooldown_reason = nil
+	m.clearedFields[upstreamaccount.FieldCooldownReason] = struct{}{}
+}
+
+// CooldownReasonCleared returns if the "cooldown_reason" field was cleared in this mutation.
+func (m *UpstreamAccountMutation) CooldownReasonCleared() bool {
+	_, ok := m.clearedFields[upstreamaccount.FieldCooldownReason]
+	return ok
+}
+
+// ResetCooldownReason resets all changes to the "cooldown_reason" field.
+func (m *UpstreamAccountMutation) ResetCooldownReason() {
+	m.cooldown_reason = nil
+	delete(m.clearedFields, upstreamaccount.FieldCooldownReason)
+}
+
+// SetQuotaLimitMicros sets the "quota_limit_micros" field.
+func (m *UpstreamAccountMutation) SetQuotaLimitMicros(i int64) {
+	m.quota_limit_micros = &i
+	m.addquota_limit_micros = nil
+}
+
+// QuotaLimitMicros returns the value of the "quota_limit_micros" field in the mutation.
+func (m *UpstreamAccountMutation) QuotaLimitMicros() (r int64, exists bool) {
+	v := m.quota_limit_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuotaLimitMicros returns the old "quota_limit_micros" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldQuotaLimitMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuotaLimitMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuotaLimitMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuotaLimitMicros: %w", err)
+	}
+	return oldValue.QuotaLimitMicros, nil
+}
+
+// AddQuotaLimitMicros adds i to the "quota_limit_micros" field.
+func (m *UpstreamAccountMutation) AddQuotaLimitMicros(i int64) {
+	if m.addquota_limit_micros != nil {
+		*m.addquota_limit_micros += i
+	} else {
+		m.addquota_limit_micros = &i
+	}
+}
+
+// AddedQuotaLimitMicros returns the value that was added to the "quota_limit_micros" field in this mutation.
+func (m *UpstreamAccountMutation) AddedQuotaLimitMicros() (r int64, exists bool) {
+	v := m.addquota_limit_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetQuotaLimitMicros resets all changes to the "quota_limit_micros" field.
+func (m *UpstreamAccountMutation) ResetQuotaLimitMicros() {
+	m.quota_limit_micros = nil
+	m.addquota_limit_micros = nil
+}
+
+// SetQuotaUsedMicros sets the "quota_used_micros" field.
+func (m *UpstreamAccountMutation) SetQuotaUsedMicros(i int64) {
+	m.quota_used_micros = &i
+	m.addquota_used_micros = nil
+}
+
+// QuotaUsedMicros returns the value of the "quota_used_micros" field in the mutation.
+func (m *UpstreamAccountMutation) QuotaUsedMicros() (r int64, exists bool) {
+	v := m.quota_used_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuotaUsedMicros returns the old "quota_used_micros" field's value of the UpstreamAccount entity.
+// If the UpstreamAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountMutation) OldQuotaUsedMicros(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuotaUsedMicros is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuotaUsedMicros requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuotaUsedMicros: %w", err)
+	}
+	return oldValue.QuotaUsedMicros, nil
+}
+
+// AddQuotaUsedMicros adds i to the "quota_used_micros" field.
+func (m *UpstreamAccountMutation) AddQuotaUsedMicros(i int64) {
+	if m.addquota_used_micros != nil {
+		*m.addquota_used_micros += i
+	} else {
+		m.addquota_used_micros = &i
+	}
+}
+
+// AddedQuotaUsedMicros returns the value that was added to the "quota_used_micros" field in this mutation.
+func (m *UpstreamAccountMutation) AddedQuotaUsedMicros() (r int64, exists bool) {
+	v := m.addquota_used_micros
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetQuotaUsedMicros resets all changes to the "quota_used_micros" field.
+func (m *UpstreamAccountMutation) ResetQuotaUsedMicros() {
+	m.quota_used_micros = nil
+	m.addquota_used_micros = nil
+}
+
+// ClearChannel clears the "channel" edge to the Channel entity.
+func (m *UpstreamAccountMutation) ClearChannel() {
+	m.clearedchannel = true
+	m.clearedFields[upstreamaccount.FieldChannelID] = struct{}{}
+}
+
+// ChannelCleared reports if the "channel" edge to the Channel entity was cleared.
+func (m *UpstreamAccountMutation) ChannelCleared() bool {
+	return m.clearedchannel
+}
+
+// ChannelIDs returns the "channel" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ChannelID instead. It exists only for internal usage by the builders.
+func (m *UpstreamAccountMutation) ChannelIDs() (ids []int) {
+	if id := m.channel; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetChannel resets all changes to the "channel" edge.
+func (m *UpstreamAccountMutation) ResetChannel() {
+	m.channel = nil
+	m.clearedchannel = false
+}
+
+// ClearPool clears the "pool" edge to the UpstreamAccountPool entity.
+func (m *UpstreamAccountMutation) ClearPool() {
+	m.clearedpool = true
+	m.clearedFields[upstreamaccount.FieldPoolID] = struct{}{}
+}
+
+// PoolCleared reports if the "pool" edge to the UpstreamAccountPool entity was cleared.
+func (m *UpstreamAccountMutation) PoolCleared() bool {
+	return m.PoolIDCleared() || m.clearedpool
+}
+
+// PoolIDs returns the "pool" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PoolID instead. It exists only for internal usage by the builders.
+func (m *UpstreamAccountMutation) PoolIDs() (ids []int) {
+	if id := m.pool; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPool resets all changes to the "pool" edge.
+func (m *UpstreamAccountMutation) ResetPool() {
+	m.pool = nil
+	m.clearedpool = false
+}
+
+// Where appends a list predicates to the UpstreamAccountMutation builder.
+func (m *UpstreamAccountMutation) Where(ps ...predicate.UpstreamAccount) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UpstreamAccountMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UpstreamAccountMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UpstreamAccount, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UpstreamAccountMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UpstreamAccountMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UpstreamAccount).
+func (m *UpstreamAccountMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UpstreamAccountMutation) Fields() []string {
+	fields := make([]string, 0, 24)
+	if m.created_at != nil {
+		fields = append(fields, upstreamaccount.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, upstreamaccount.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, upstreamaccount.FieldDeletedAt)
+	}
+	if m.channel != nil {
+		fields = append(fields, upstreamaccount.FieldChannelID)
+	}
+	if m.pool != nil {
+		fields = append(fields, upstreamaccount.FieldPoolID)
+	}
+	if m.name != nil {
+		fields = append(fields, upstreamaccount.FieldName)
+	}
+	if m.credential_type != nil {
+		fields = append(fields, upstreamaccount.FieldCredentialType)
+	}
+	if m.credentials != nil {
+		fields = append(fields, upstreamaccount.FieldCredentials)
+	}
+	if m.status != nil {
+		fields = append(fields, upstreamaccount.FieldStatus)
+	}
+	if m.schedulable != nil {
+		fields = append(fields, upstreamaccount.FieldSchedulable)
+	}
+	if m.priority != nil {
+		fields = append(fields, upstreamaccount.FieldPriority)
+	}
+	if m.weight != nil {
+		fields = append(fields, upstreamaccount.FieldWeight)
+	}
+	if m.concurrency_limit != nil {
+		fields = append(fields, upstreamaccount.FieldConcurrencyLimit)
+	}
+	if m.proxy_config != nil {
+		fields = append(fields, upstreamaccount.FieldProxyConfig)
+	}
+	if m.rate_multiplier != nil {
+		fields = append(fields, upstreamaccount.FieldRateMultiplier)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, upstreamaccount.FieldExpiresAt)
+	}
+	if m.last_used_at != nil {
+		fields = append(fields, upstreamaccount.FieldLastUsedAt)
+	}
+	if m.error_message != nil {
+		fields = append(fields, upstreamaccount.FieldErrorMessage)
+	}
+	if m.rate_limit_reset_at != nil {
+		fields = append(fields, upstreamaccount.FieldRateLimitResetAt)
+	}
+	if m.overload_until != nil {
+		fields = append(fields, upstreamaccount.FieldOverloadUntil)
+	}
+	if m.cooldown_until != nil {
+		fields = append(fields, upstreamaccount.FieldCooldownUntil)
+	}
+	if m.cooldown_reason != nil {
+		fields = append(fields, upstreamaccount.FieldCooldownReason)
+	}
+	if m.quota_limit_micros != nil {
+		fields = append(fields, upstreamaccount.FieldQuotaLimitMicros)
+	}
+	if m.quota_used_micros != nil {
+		fields = append(fields, upstreamaccount.FieldQuotaUsedMicros)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UpstreamAccountMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case upstreamaccount.FieldCreatedAt:
+		return m.CreatedAt()
+	case upstreamaccount.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case upstreamaccount.FieldDeletedAt:
+		return m.DeletedAt()
+	case upstreamaccount.FieldChannelID:
+		return m.ChannelID()
+	case upstreamaccount.FieldPoolID:
+		return m.PoolID()
+	case upstreamaccount.FieldName:
+		return m.Name()
+	case upstreamaccount.FieldCredentialType:
+		return m.CredentialType()
+	case upstreamaccount.FieldCredentials:
+		return m.Credentials()
+	case upstreamaccount.FieldStatus:
+		return m.Status()
+	case upstreamaccount.FieldSchedulable:
+		return m.Schedulable()
+	case upstreamaccount.FieldPriority:
+		return m.Priority()
+	case upstreamaccount.FieldWeight:
+		return m.Weight()
+	case upstreamaccount.FieldConcurrencyLimit:
+		return m.ConcurrencyLimit()
+	case upstreamaccount.FieldProxyConfig:
+		return m.ProxyConfig()
+	case upstreamaccount.FieldRateMultiplier:
+		return m.RateMultiplier()
+	case upstreamaccount.FieldExpiresAt:
+		return m.ExpiresAt()
+	case upstreamaccount.FieldLastUsedAt:
+		return m.LastUsedAt()
+	case upstreamaccount.FieldErrorMessage:
+		return m.ErrorMessage()
+	case upstreamaccount.FieldRateLimitResetAt:
+		return m.RateLimitResetAt()
+	case upstreamaccount.FieldOverloadUntil:
+		return m.OverloadUntil()
+	case upstreamaccount.FieldCooldownUntil:
+		return m.CooldownUntil()
+	case upstreamaccount.FieldCooldownReason:
+		return m.CooldownReason()
+	case upstreamaccount.FieldQuotaLimitMicros:
+		return m.QuotaLimitMicros()
+	case upstreamaccount.FieldQuotaUsedMicros:
+		return m.QuotaUsedMicros()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UpstreamAccountMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case upstreamaccount.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case upstreamaccount.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case upstreamaccount.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case upstreamaccount.FieldChannelID:
+		return m.OldChannelID(ctx)
+	case upstreamaccount.FieldPoolID:
+		return m.OldPoolID(ctx)
+	case upstreamaccount.FieldName:
+		return m.OldName(ctx)
+	case upstreamaccount.FieldCredentialType:
+		return m.OldCredentialType(ctx)
+	case upstreamaccount.FieldCredentials:
+		return m.OldCredentials(ctx)
+	case upstreamaccount.FieldStatus:
+		return m.OldStatus(ctx)
+	case upstreamaccount.FieldSchedulable:
+		return m.OldSchedulable(ctx)
+	case upstreamaccount.FieldPriority:
+		return m.OldPriority(ctx)
+	case upstreamaccount.FieldWeight:
+		return m.OldWeight(ctx)
+	case upstreamaccount.FieldConcurrencyLimit:
+		return m.OldConcurrencyLimit(ctx)
+	case upstreamaccount.FieldProxyConfig:
+		return m.OldProxyConfig(ctx)
+	case upstreamaccount.FieldRateMultiplier:
+		return m.OldRateMultiplier(ctx)
+	case upstreamaccount.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	case upstreamaccount.FieldLastUsedAt:
+		return m.OldLastUsedAt(ctx)
+	case upstreamaccount.FieldErrorMessage:
+		return m.OldErrorMessage(ctx)
+	case upstreamaccount.FieldRateLimitResetAt:
+		return m.OldRateLimitResetAt(ctx)
+	case upstreamaccount.FieldOverloadUntil:
+		return m.OldOverloadUntil(ctx)
+	case upstreamaccount.FieldCooldownUntil:
+		return m.OldCooldownUntil(ctx)
+	case upstreamaccount.FieldCooldownReason:
+		return m.OldCooldownReason(ctx)
+	case upstreamaccount.FieldQuotaLimitMicros:
+		return m.OldQuotaLimitMicros(ctx)
+	case upstreamaccount.FieldQuotaUsedMicros:
+		return m.OldQuotaUsedMicros(ctx)
+	}
+	return nil, fmt.Errorf("unknown UpstreamAccount field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UpstreamAccountMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case upstreamaccount.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case upstreamaccount.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case upstreamaccount.FieldDeletedAt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case upstreamaccount.FieldChannelID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChannelID(v)
+		return nil
+	case upstreamaccount.FieldPoolID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPoolID(v)
+		return nil
+	case upstreamaccount.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case upstreamaccount.FieldCredentialType:
+		v, ok := value.(upstreamaccount.CredentialType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCredentialType(v)
+		return nil
+	case upstreamaccount.FieldCredentials:
+		v, ok := value.(objects.UpstreamAccountCredentials)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCredentials(v)
+		return nil
+	case upstreamaccount.FieldStatus:
+		v, ok := value.(upstreamaccount.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case upstreamaccount.FieldSchedulable:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchedulable(v)
+		return nil
+	case upstreamaccount.FieldPriority:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriority(v)
+		return nil
+	case upstreamaccount.FieldWeight:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWeight(v)
+		return nil
+	case upstreamaccount.FieldConcurrencyLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConcurrencyLimit(v)
+		return nil
+	case upstreamaccount.FieldProxyConfig:
+		v, ok := value.(*httpclient.ProxyConfig)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProxyConfig(v)
+		return nil
+	case upstreamaccount.FieldRateMultiplier:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRateMultiplier(v)
+		return nil
+	case upstreamaccount.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	case upstreamaccount.FieldLastUsedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastUsedAt(v)
+		return nil
+	case upstreamaccount.FieldErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorMessage(v)
+		return nil
+	case upstreamaccount.FieldRateLimitResetAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRateLimitResetAt(v)
+		return nil
+	case upstreamaccount.FieldOverloadUntil:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOverloadUntil(v)
+		return nil
+	case upstreamaccount.FieldCooldownUntil:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCooldownUntil(v)
+		return nil
+	case upstreamaccount.FieldCooldownReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCooldownReason(v)
+		return nil
+	case upstreamaccount.FieldQuotaLimitMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuotaLimitMicros(v)
+		return nil
+	case upstreamaccount.FieldQuotaUsedMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuotaUsedMicros(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccount field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UpstreamAccountMutation) AddedFields() []string {
+	var fields []string
+	if m.adddeleted_at != nil {
+		fields = append(fields, upstreamaccount.FieldDeletedAt)
+	}
+	if m.addpriority != nil {
+		fields = append(fields, upstreamaccount.FieldPriority)
+	}
+	if m.addweight != nil {
+		fields = append(fields, upstreamaccount.FieldWeight)
+	}
+	if m.addconcurrency_limit != nil {
+		fields = append(fields, upstreamaccount.FieldConcurrencyLimit)
+	}
+	if m.addrate_multiplier != nil {
+		fields = append(fields, upstreamaccount.FieldRateMultiplier)
+	}
+	if m.addquota_limit_micros != nil {
+		fields = append(fields, upstreamaccount.FieldQuotaLimitMicros)
+	}
+	if m.addquota_used_micros != nil {
+		fields = append(fields, upstreamaccount.FieldQuotaUsedMicros)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UpstreamAccountMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case upstreamaccount.FieldDeletedAt:
+		return m.AddedDeletedAt()
+	case upstreamaccount.FieldPriority:
+		return m.AddedPriority()
+	case upstreamaccount.FieldWeight:
+		return m.AddedWeight()
+	case upstreamaccount.FieldConcurrencyLimit:
+		return m.AddedConcurrencyLimit()
+	case upstreamaccount.FieldRateMultiplier:
+		return m.AddedRateMultiplier()
+	case upstreamaccount.FieldQuotaLimitMicros:
+		return m.AddedQuotaLimitMicros()
+	case upstreamaccount.FieldQuotaUsedMicros:
+		return m.AddedQuotaUsedMicros()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UpstreamAccountMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case upstreamaccount.FieldDeletedAt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDeletedAt(v)
+		return nil
+	case upstreamaccount.FieldPriority:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPriority(v)
+		return nil
+	case upstreamaccount.FieldWeight:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddWeight(v)
+		return nil
+	case upstreamaccount.FieldConcurrencyLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConcurrencyLimit(v)
+		return nil
+	case upstreamaccount.FieldRateMultiplier:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRateMultiplier(v)
+		return nil
+	case upstreamaccount.FieldQuotaLimitMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddQuotaLimitMicros(v)
+		return nil
+	case upstreamaccount.FieldQuotaUsedMicros:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddQuotaUsedMicros(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccount numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UpstreamAccountMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(upstreamaccount.FieldPoolID) {
+		fields = append(fields, upstreamaccount.FieldPoolID)
+	}
+	if m.FieldCleared(upstreamaccount.FieldProxyConfig) {
+		fields = append(fields, upstreamaccount.FieldProxyConfig)
+	}
+	if m.FieldCleared(upstreamaccount.FieldExpiresAt) {
+		fields = append(fields, upstreamaccount.FieldExpiresAt)
+	}
+	if m.FieldCleared(upstreamaccount.FieldLastUsedAt) {
+		fields = append(fields, upstreamaccount.FieldLastUsedAt)
+	}
+	if m.FieldCleared(upstreamaccount.FieldErrorMessage) {
+		fields = append(fields, upstreamaccount.FieldErrorMessage)
+	}
+	if m.FieldCleared(upstreamaccount.FieldRateLimitResetAt) {
+		fields = append(fields, upstreamaccount.FieldRateLimitResetAt)
+	}
+	if m.FieldCleared(upstreamaccount.FieldOverloadUntil) {
+		fields = append(fields, upstreamaccount.FieldOverloadUntil)
+	}
+	if m.FieldCleared(upstreamaccount.FieldCooldownUntil) {
+		fields = append(fields, upstreamaccount.FieldCooldownUntil)
+	}
+	if m.FieldCleared(upstreamaccount.FieldCooldownReason) {
+		fields = append(fields, upstreamaccount.FieldCooldownReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UpstreamAccountMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UpstreamAccountMutation) ClearField(name string) error {
+	switch name {
+	case upstreamaccount.FieldPoolID:
+		m.ClearPoolID()
+		return nil
+	case upstreamaccount.FieldProxyConfig:
+		m.ClearProxyConfig()
+		return nil
+	case upstreamaccount.FieldExpiresAt:
+		m.ClearExpiresAt()
+		return nil
+	case upstreamaccount.FieldLastUsedAt:
+		m.ClearLastUsedAt()
+		return nil
+	case upstreamaccount.FieldErrorMessage:
+		m.ClearErrorMessage()
+		return nil
+	case upstreamaccount.FieldRateLimitResetAt:
+		m.ClearRateLimitResetAt()
+		return nil
+	case upstreamaccount.FieldOverloadUntil:
+		m.ClearOverloadUntil()
+		return nil
+	case upstreamaccount.FieldCooldownUntil:
+		m.ClearCooldownUntil()
+		return nil
+	case upstreamaccount.FieldCooldownReason:
+		m.ClearCooldownReason()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccount nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UpstreamAccountMutation) ResetField(name string) error {
+	switch name {
+	case upstreamaccount.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case upstreamaccount.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case upstreamaccount.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case upstreamaccount.FieldChannelID:
+		m.ResetChannelID()
+		return nil
+	case upstreamaccount.FieldPoolID:
+		m.ResetPoolID()
+		return nil
+	case upstreamaccount.FieldName:
+		m.ResetName()
+		return nil
+	case upstreamaccount.FieldCredentialType:
+		m.ResetCredentialType()
+		return nil
+	case upstreamaccount.FieldCredentials:
+		m.ResetCredentials()
+		return nil
+	case upstreamaccount.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case upstreamaccount.FieldSchedulable:
+		m.ResetSchedulable()
+		return nil
+	case upstreamaccount.FieldPriority:
+		m.ResetPriority()
+		return nil
+	case upstreamaccount.FieldWeight:
+		m.ResetWeight()
+		return nil
+	case upstreamaccount.FieldConcurrencyLimit:
+		m.ResetConcurrencyLimit()
+		return nil
+	case upstreamaccount.FieldProxyConfig:
+		m.ResetProxyConfig()
+		return nil
+	case upstreamaccount.FieldRateMultiplier:
+		m.ResetRateMultiplier()
+		return nil
+	case upstreamaccount.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	case upstreamaccount.FieldLastUsedAt:
+		m.ResetLastUsedAt()
+		return nil
+	case upstreamaccount.FieldErrorMessage:
+		m.ResetErrorMessage()
+		return nil
+	case upstreamaccount.FieldRateLimitResetAt:
+		m.ResetRateLimitResetAt()
+		return nil
+	case upstreamaccount.FieldOverloadUntil:
+		m.ResetOverloadUntil()
+		return nil
+	case upstreamaccount.FieldCooldownUntil:
+		m.ResetCooldownUntil()
+		return nil
+	case upstreamaccount.FieldCooldownReason:
+		m.ResetCooldownReason()
+		return nil
+	case upstreamaccount.FieldQuotaLimitMicros:
+		m.ResetQuotaLimitMicros()
+		return nil
+	case upstreamaccount.FieldQuotaUsedMicros:
+		m.ResetQuotaUsedMicros()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccount field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UpstreamAccountMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.channel != nil {
+		edges = append(edges, upstreamaccount.EdgeChannel)
+	}
+	if m.pool != nil {
+		edges = append(edges, upstreamaccount.EdgePool)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UpstreamAccountMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case upstreamaccount.EdgeChannel:
+		if id := m.channel; id != nil {
+			return []ent.Value{*id}
+		}
+	case upstreamaccount.EdgePool:
+		if id := m.pool; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UpstreamAccountMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UpstreamAccountMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UpstreamAccountMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedchannel {
+		edges = append(edges, upstreamaccount.EdgeChannel)
+	}
+	if m.clearedpool {
+		edges = append(edges, upstreamaccount.EdgePool)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UpstreamAccountMutation) EdgeCleared(name string) bool {
+	switch name {
+	case upstreamaccount.EdgeChannel:
+		return m.clearedchannel
+	case upstreamaccount.EdgePool:
+		return m.clearedpool
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UpstreamAccountMutation) ClearEdge(name string) error {
+	switch name {
+	case upstreamaccount.EdgeChannel:
+		m.ClearChannel()
+		return nil
+	case upstreamaccount.EdgePool:
+		m.ClearPool()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccount unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UpstreamAccountMutation) ResetEdge(name string) error {
+	switch name {
+	case upstreamaccount.EdgeChannel:
+		m.ResetChannel()
+		return nil
+	case upstreamaccount.EdgePool:
+		m.ResetPool()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccount edge %s", name)
+}
+
+// UpstreamAccountPoolMutation represents an operation that mutates the UpstreamAccountPool nodes in the graph.
+type UpstreamAccountPoolMutation struct {
+	config
+	op                   Op
+	typ                  string
+	id                   *int
+	created_at           *time.Time
+	updated_at           *time.Time
+	deleted_at           *int
+	adddeleted_at        *int
+	name                 *string
+	status               *upstreamaccountpool.Status
+	priority             *int
+	addpriority          *int
+	model_patterns       *[]string
+	appendmodel_patterns []string
+	project_ids          *[]int
+	appendproject_ids    []int
+	remark               *string
+	clearedFields        map[string]struct{}
+	channel              *int
+	clearedchannel       bool
+	accounts             map[int]struct{}
+	removedaccounts      map[int]struct{}
+	clearedaccounts      bool
+	done                 bool
+	oldValue             func(context.Context) (*UpstreamAccountPool, error)
+	predicates           []predicate.UpstreamAccountPool
+}
+
+var _ ent.Mutation = (*UpstreamAccountPoolMutation)(nil)
+
+// upstreamaccountpoolOption allows management of the mutation configuration using functional options.
+type upstreamaccountpoolOption func(*UpstreamAccountPoolMutation)
+
+// newUpstreamAccountPoolMutation creates new mutation for the UpstreamAccountPool entity.
+func newUpstreamAccountPoolMutation(c config, op Op, opts ...upstreamaccountpoolOption) *UpstreamAccountPoolMutation {
+	m := &UpstreamAccountPoolMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUpstreamAccountPool,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUpstreamAccountPoolID sets the ID field of the mutation.
+func withUpstreamAccountPoolID(id int) upstreamaccountpoolOption {
+	return func(m *UpstreamAccountPoolMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UpstreamAccountPool
+		)
+		m.oldValue = func(ctx context.Context) (*UpstreamAccountPool, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UpstreamAccountPool.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUpstreamAccountPool sets the old UpstreamAccountPool of the mutation.
+func withUpstreamAccountPool(node *UpstreamAccountPool) upstreamaccountpoolOption {
+	return func(m *UpstreamAccountPoolMutation) {
+		m.oldValue = func(context.Context) (*UpstreamAccountPool, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UpstreamAccountPoolMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UpstreamAccountPoolMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UpstreamAccountPoolMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UpstreamAccountPoolMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UpstreamAccountPool.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UpstreamAccountPoolMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UpstreamAccountPoolMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UpstreamAccountPoolMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UpstreamAccountPoolMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UpstreamAccountPoolMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UpstreamAccountPoolMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *UpstreamAccountPoolMutation) SetDeletedAt(i int) {
+	m.deleted_at = &i
+	m.adddeleted_at = nil
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *UpstreamAccountPoolMutation) DeletedAt() (r int, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldDeletedAt(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// AddDeletedAt adds i to the "deleted_at" field.
+func (m *UpstreamAccountPoolMutation) AddDeletedAt(i int) {
+	if m.adddeleted_at != nil {
+		*m.adddeleted_at += i
+	} else {
+		m.adddeleted_at = &i
+	}
+}
+
+// AddedDeletedAt returns the value that was added to the "deleted_at" field in this mutation.
+func (m *UpstreamAccountPoolMutation) AddedDeletedAt() (r int, exists bool) {
+	v := m.adddeleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *UpstreamAccountPoolMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	m.adddeleted_at = nil
+}
+
+// SetChannelID sets the "channel_id" field.
+func (m *UpstreamAccountPoolMutation) SetChannelID(i int) {
+	m.channel = &i
+}
+
+// ChannelID returns the value of the "channel_id" field in the mutation.
+func (m *UpstreamAccountPoolMutation) ChannelID() (r int, exists bool) {
+	v := m.channel
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChannelID returns the old "channel_id" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldChannelID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChannelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChannelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChannelID: %w", err)
+	}
+	return oldValue.ChannelID, nil
+}
+
+// ResetChannelID resets all changes to the "channel_id" field.
+func (m *UpstreamAccountPoolMutation) ResetChannelID() {
+	m.channel = nil
+}
+
+// SetName sets the "name" field.
+func (m *UpstreamAccountPoolMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *UpstreamAccountPoolMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *UpstreamAccountPoolMutation) ResetName() {
+	m.name = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *UpstreamAccountPoolMutation) SetStatus(u upstreamaccountpool.Status) {
+	m.status = &u
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *UpstreamAccountPoolMutation) Status() (r upstreamaccountpool.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldStatus(ctx context.Context) (v upstreamaccountpool.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *UpstreamAccountPoolMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetPriority sets the "priority" field.
+func (m *UpstreamAccountPoolMutation) SetPriority(i int) {
+	m.priority = &i
+	m.addpriority = nil
+}
+
+// Priority returns the value of the "priority" field in the mutation.
+func (m *UpstreamAccountPoolMutation) Priority() (r int, exists bool) {
+	v := m.priority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriority returns the old "priority" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldPriority(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPriority is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPriority requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriority: %w", err)
+	}
+	return oldValue.Priority, nil
+}
+
+// AddPriority adds i to the "priority" field.
+func (m *UpstreamAccountPoolMutation) AddPriority(i int) {
+	if m.addpriority != nil {
+		*m.addpriority += i
+	} else {
+		m.addpriority = &i
+	}
+}
+
+// AddedPriority returns the value that was added to the "priority" field in this mutation.
+func (m *UpstreamAccountPoolMutation) AddedPriority() (r int, exists bool) {
+	v := m.addpriority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPriority resets all changes to the "priority" field.
+func (m *UpstreamAccountPoolMutation) ResetPriority() {
+	m.priority = nil
+	m.addpriority = nil
+}
+
+// SetModelPatterns sets the "model_patterns" field.
+func (m *UpstreamAccountPoolMutation) SetModelPatterns(s []string) {
+	m.model_patterns = &s
+	m.appendmodel_patterns = nil
+}
+
+// ModelPatterns returns the value of the "model_patterns" field in the mutation.
+func (m *UpstreamAccountPoolMutation) ModelPatterns() (r []string, exists bool) {
+	v := m.model_patterns
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModelPatterns returns the old "model_patterns" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldModelPatterns(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModelPatterns is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModelPatterns requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModelPatterns: %w", err)
+	}
+	return oldValue.ModelPatterns, nil
+}
+
+// AppendModelPatterns adds s to the "model_patterns" field.
+func (m *UpstreamAccountPoolMutation) AppendModelPatterns(s []string) {
+	m.appendmodel_patterns = append(m.appendmodel_patterns, s...)
+}
+
+// AppendedModelPatterns returns the list of values that were appended to the "model_patterns" field in this mutation.
+func (m *UpstreamAccountPoolMutation) AppendedModelPatterns() ([]string, bool) {
+	if len(m.appendmodel_patterns) == 0 {
+		return nil, false
+	}
+	return m.appendmodel_patterns, true
+}
+
+// ClearModelPatterns clears the value of the "model_patterns" field.
+func (m *UpstreamAccountPoolMutation) ClearModelPatterns() {
+	m.model_patterns = nil
+	m.appendmodel_patterns = nil
+	m.clearedFields[upstreamaccountpool.FieldModelPatterns] = struct{}{}
+}
+
+// ModelPatternsCleared returns if the "model_patterns" field was cleared in this mutation.
+func (m *UpstreamAccountPoolMutation) ModelPatternsCleared() bool {
+	_, ok := m.clearedFields[upstreamaccountpool.FieldModelPatterns]
+	return ok
+}
+
+// ResetModelPatterns resets all changes to the "model_patterns" field.
+func (m *UpstreamAccountPoolMutation) ResetModelPatterns() {
+	m.model_patterns = nil
+	m.appendmodel_patterns = nil
+	delete(m.clearedFields, upstreamaccountpool.FieldModelPatterns)
+}
+
+// SetProjectIds sets the "project_ids" field.
+func (m *UpstreamAccountPoolMutation) SetProjectIds(i []int) {
+	m.project_ids = &i
+	m.appendproject_ids = nil
+}
+
+// ProjectIds returns the value of the "project_ids" field in the mutation.
+func (m *UpstreamAccountPoolMutation) ProjectIds() (r []int, exists bool) {
+	v := m.project_ids
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectIds returns the old "project_ids" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldProjectIds(ctx context.Context) (v []int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectIds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectIds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectIds: %w", err)
+	}
+	return oldValue.ProjectIds, nil
+}
+
+// AppendProjectIds adds i to the "project_ids" field.
+func (m *UpstreamAccountPoolMutation) AppendProjectIds(i []int) {
+	m.appendproject_ids = append(m.appendproject_ids, i...)
+}
+
+// AppendedProjectIds returns the list of values that were appended to the "project_ids" field in this mutation.
+func (m *UpstreamAccountPoolMutation) AppendedProjectIds() ([]int, bool) {
+	if len(m.appendproject_ids) == 0 {
+		return nil, false
+	}
+	return m.appendproject_ids, true
+}
+
+// ClearProjectIds clears the value of the "project_ids" field.
+func (m *UpstreamAccountPoolMutation) ClearProjectIds() {
+	m.project_ids = nil
+	m.appendproject_ids = nil
+	m.clearedFields[upstreamaccountpool.FieldProjectIds] = struct{}{}
+}
+
+// ProjectIdsCleared returns if the "project_ids" field was cleared in this mutation.
+func (m *UpstreamAccountPoolMutation) ProjectIdsCleared() bool {
+	_, ok := m.clearedFields[upstreamaccountpool.FieldProjectIds]
+	return ok
+}
+
+// ResetProjectIds resets all changes to the "project_ids" field.
+func (m *UpstreamAccountPoolMutation) ResetProjectIds() {
+	m.project_ids = nil
+	m.appendproject_ids = nil
+	delete(m.clearedFields, upstreamaccountpool.FieldProjectIds)
+}
+
+// SetRemark sets the "remark" field.
+func (m *UpstreamAccountPoolMutation) SetRemark(s string) {
+	m.remark = &s
+}
+
+// Remark returns the value of the "remark" field in the mutation.
+func (m *UpstreamAccountPoolMutation) Remark() (r string, exists bool) {
+	v := m.remark
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRemark returns the old "remark" field's value of the UpstreamAccountPool entity.
+// If the UpstreamAccountPool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UpstreamAccountPoolMutation) OldRemark(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRemark is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRemark requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRemark: %w", err)
+	}
+	return oldValue.Remark, nil
+}
+
+// ClearRemark clears the value of the "remark" field.
+func (m *UpstreamAccountPoolMutation) ClearRemark() {
+	m.remark = nil
+	m.clearedFields[upstreamaccountpool.FieldRemark] = struct{}{}
+}
+
+// RemarkCleared returns if the "remark" field was cleared in this mutation.
+func (m *UpstreamAccountPoolMutation) RemarkCleared() bool {
+	_, ok := m.clearedFields[upstreamaccountpool.FieldRemark]
+	return ok
+}
+
+// ResetRemark resets all changes to the "remark" field.
+func (m *UpstreamAccountPoolMutation) ResetRemark() {
+	m.remark = nil
+	delete(m.clearedFields, upstreamaccountpool.FieldRemark)
+}
+
+// ClearChannel clears the "channel" edge to the Channel entity.
+func (m *UpstreamAccountPoolMutation) ClearChannel() {
+	m.clearedchannel = true
+	m.clearedFields[upstreamaccountpool.FieldChannelID] = struct{}{}
+}
+
+// ChannelCleared reports if the "channel" edge to the Channel entity was cleared.
+func (m *UpstreamAccountPoolMutation) ChannelCleared() bool {
+	return m.clearedchannel
+}
+
+// ChannelIDs returns the "channel" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ChannelID instead. It exists only for internal usage by the builders.
+func (m *UpstreamAccountPoolMutation) ChannelIDs() (ids []int) {
+	if id := m.channel; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetChannel resets all changes to the "channel" edge.
+func (m *UpstreamAccountPoolMutation) ResetChannel() {
+	m.channel = nil
+	m.clearedchannel = false
+}
+
+// AddAccountIDs adds the "accounts" edge to the UpstreamAccount entity by ids.
+func (m *UpstreamAccountPoolMutation) AddAccountIDs(ids ...int) {
+	if m.accounts == nil {
+		m.accounts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.accounts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAccounts clears the "accounts" edge to the UpstreamAccount entity.
+func (m *UpstreamAccountPoolMutation) ClearAccounts() {
+	m.clearedaccounts = true
+}
+
+// AccountsCleared reports if the "accounts" edge to the UpstreamAccount entity was cleared.
+func (m *UpstreamAccountPoolMutation) AccountsCleared() bool {
+	return m.clearedaccounts
+}
+
+// RemoveAccountIDs removes the "accounts" edge to the UpstreamAccount entity by IDs.
+func (m *UpstreamAccountPoolMutation) RemoveAccountIDs(ids ...int) {
+	if m.removedaccounts == nil {
+		m.removedaccounts = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.accounts, ids[i])
+		m.removedaccounts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAccounts returns the removed IDs of the "accounts" edge to the UpstreamAccount entity.
+func (m *UpstreamAccountPoolMutation) RemovedAccountsIDs() (ids []int) {
+	for id := range m.removedaccounts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AccountsIDs returns the "accounts" edge IDs in the mutation.
+func (m *UpstreamAccountPoolMutation) AccountsIDs() (ids []int) {
+	for id := range m.accounts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAccounts resets all changes to the "accounts" edge.
+func (m *UpstreamAccountPoolMutation) ResetAccounts() {
+	m.accounts = nil
+	m.clearedaccounts = false
+	m.removedaccounts = nil
+}
+
+// Where appends a list predicates to the UpstreamAccountPoolMutation builder.
+func (m *UpstreamAccountPoolMutation) Where(ps ...predicate.UpstreamAccountPool) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UpstreamAccountPoolMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UpstreamAccountPoolMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UpstreamAccountPool, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UpstreamAccountPoolMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UpstreamAccountPoolMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UpstreamAccountPool).
+func (m *UpstreamAccountPoolMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UpstreamAccountPoolMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.created_at != nil {
+		fields = append(fields, upstreamaccountpool.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, upstreamaccountpool.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, upstreamaccountpool.FieldDeletedAt)
+	}
+	if m.channel != nil {
+		fields = append(fields, upstreamaccountpool.FieldChannelID)
+	}
+	if m.name != nil {
+		fields = append(fields, upstreamaccountpool.FieldName)
+	}
+	if m.status != nil {
+		fields = append(fields, upstreamaccountpool.FieldStatus)
+	}
+	if m.priority != nil {
+		fields = append(fields, upstreamaccountpool.FieldPriority)
+	}
+	if m.model_patterns != nil {
+		fields = append(fields, upstreamaccountpool.FieldModelPatterns)
+	}
+	if m.project_ids != nil {
+		fields = append(fields, upstreamaccountpool.FieldProjectIds)
+	}
+	if m.remark != nil {
+		fields = append(fields, upstreamaccountpool.FieldRemark)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UpstreamAccountPoolMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case upstreamaccountpool.FieldCreatedAt:
+		return m.CreatedAt()
+	case upstreamaccountpool.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case upstreamaccountpool.FieldDeletedAt:
+		return m.DeletedAt()
+	case upstreamaccountpool.FieldChannelID:
+		return m.ChannelID()
+	case upstreamaccountpool.FieldName:
+		return m.Name()
+	case upstreamaccountpool.FieldStatus:
+		return m.Status()
+	case upstreamaccountpool.FieldPriority:
+		return m.Priority()
+	case upstreamaccountpool.FieldModelPatterns:
+		return m.ModelPatterns()
+	case upstreamaccountpool.FieldProjectIds:
+		return m.ProjectIds()
+	case upstreamaccountpool.FieldRemark:
+		return m.Remark()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UpstreamAccountPoolMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case upstreamaccountpool.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case upstreamaccountpool.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case upstreamaccountpool.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case upstreamaccountpool.FieldChannelID:
+		return m.OldChannelID(ctx)
+	case upstreamaccountpool.FieldName:
+		return m.OldName(ctx)
+	case upstreamaccountpool.FieldStatus:
+		return m.OldStatus(ctx)
+	case upstreamaccountpool.FieldPriority:
+		return m.OldPriority(ctx)
+	case upstreamaccountpool.FieldModelPatterns:
+		return m.OldModelPatterns(ctx)
+	case upstreamaccountpool.FieldProjectIds:
+		return m.OldProjectIds(ctx)
+	case upstreamaccountpool.FieldRemark:
+		return m.OldRemark(ctx)
+	}
+	return nil, fmt.Errorf("unknown UpstreamAccountPool field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UpstreamAccountPoolMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case upstreamaccountpool.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case upstreamaccountpool.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case upstreamaccountpool.FieldDeletedAt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case upstreamaccountpool.FieldChannelID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChannelID(v)
+		return nil
+	case upstreamaccountpool.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case upstreamaccountpool.FieldStatus:
+		v, ok := value.(upstreamaccountpool.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case upstreamaccountpool.FieldPriority:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriority(v)
+		return nil
+	case upstreamaccountpool.FieldModelPatterns:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModelPatterns(v)
+		return nil
+	case upstreamaccountpool.FieldProjectIds:
+		v, ok := value.([]int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectIds(v)
+		return nil
+	case upstreamaccountpool.FieldRemark:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRemark(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountPool field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UpstreamAccountPoolMutation) AddedFields() []string {
+	var fields []string
+	if m.adddeleted_at != nil {
+		fields = append(fields, upstreamaccountpool.FieldDeletedAt)
+	}
+	if m.addpriority != nil {
+		fields = append(fields, upstreamaccountpool.FieldPriority)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UpstreamAccountPoolMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case upstreamaccountpool.FieldDeletedAt:
+		return m.AddedDeletedAt()
+	case upstreamaccountpool.FieldPriority:
+		return m.AddedPriority()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UpstreamAccountPoolMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case upstreamaccountpool.FieldDeletedAt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDeletedAt(v)
+		return nil
+	case upstreamaccountpool.FieldPriority:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPriority(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountPool numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UpstreamAccountPoolMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(upstreamaccountpool.FieldModelPatterns) {
+		fields = append(fields, upstreamaccountpool.FieldModelPatterns)
+	}
+	if m.FieldCleared(upstreamaccountpool.FieldProjectIds) {
+		fields = append(fields, upstreamaccountpool.FieldProjectIds)
+	}
+	if m.FieldCleared(upstreamaccountpool.FieldRemark) {
+		fields = append(fields, upstreamaccountpool.FieldRemark)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UpstreamAccountPoolMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UpstreamAccountPoolMutation) ClearField(name string) error {
+	switch name {
+	case upstreamaccountpool.FieldModelPatterns:
+		m.ClearModelPatterns()
+		return nil
+	case upstreamaccountpool.FieldProjectIds:
+		m.ClearProjectIds()
+		return nil
+	case upstreamaccountpool.FieldRemark:
+		m.ClearRemark()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountPool nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UpstreamAccountPoolMutation) ResetField(name string) error {
+	switch name {
+	case upstreamaccountpool.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case upstreamaccountpool.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case upstreamaccountpool.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case upstreamaccountpool.FieldChannelID:
+		m.ResetChannelID()
+		return nil
+	case upstreamaccountpool.FieldName:
+		m.ResetName()
+		return nil
+	case upstreamaccountpool.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case upstreamaccountpool.FieldPriority:
+		m.ResetPriority()
+		return nil
+	case upstreamaccountpool.FieldModelPatterns:
+		m.ResetModelPatterns()
+		return nil
+	case upstreamaccountpool.FieldProjectIds:
+		m.ResetProjectIds()
+		return nil
+	case upstreamaccountpool.FieldRemark:
+		m.ResetRemark()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountPool field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UpstreamAccountPoolMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.channel != nil {
+		edges = append(edges, upstreamaccountpool.EdgeChannel)
+	}
+	if m.accounts != nil {
+		edges = append(edges, upstreamaccountpool.EdgeAccounts)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UpstreamAccountPoolMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case upstreamaccountpool.EdgeChannel:
+		if id := m.channel; id != nil {
+			return []ent.Value{*id}
+		}
+	case upstreamaccountpool.EdgeAccounts:
+		ids := make([]ent.Value, 0, len(m.accounts))
+		for id := range m.accounts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UpstreamAccountPoolMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedaccounts != nil {
+		edges = append(edges, upstreamaccountpool.EdgeAccounts)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UpstreamAccountPoolMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case upstreamaccountpool.EdgeAccounts:
+		ids := make([]ent.Value, 0, len(m.removedaccounts))
+		for id := range m.removedaccounts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UpstreamAccountPoolMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedchannel {
+		edges = append(edges, upstreamaccountpool.EdgeChannel)
+	}
+	if m.clearedaccounts {
+		edges = append(edges, upstreamaccountpool.EdgeAccounts)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UpstreamAccountPoolMutation) EdgeCleared(name string) bool {
+	switch name {
+	case upstreamaccountpool.EdgeChannel:
+		return m.clearedchannel
+	case upstreamaccountpool.EdgeAccounts:
+		return m.clearedaccounts
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UpstreamAccountPoolMutation) ClearEdge(name string) error {
+	switch name {
+	case upstreamaccountpool.EdgeChannel:
+		m.ClearChannel()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountPool unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UpstreamAccountPoolMutation) ResetEdge(name string) error {
+	switch name {
+	case upstreamaccountpool.EdgeChannel:
+		m.ResetChannel()
+		return nil
+	case upstreamaccountpool.EdgeAccounts:
+		m.ResetAccounts()
+		return nil
+	}
+	return fmt.Errorf("unknown UpstreamAccountPool edge %s", name)
 }
 
 // UsageBillingRecordMutation represents an operation that mutates the UsageBillingRecord nodes in the graph.

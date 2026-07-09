@@ -30,6 +30,14 @@ import {
   testChannelAPIKeysPayloadSchema,
   TestAPIKeyResult,
   testAPIKeyResultSchema,
+  UpstreamAccount,
+  UpstreamAccountPool,
+  UpstreamAccountCredentialsInput,
+  upstreamAccountSchema,
+  upstreamAccountPoolSchema,
+  UpstreamAccountTestResult,
+  upstreamAccountTestResultSchema,
+  ProxyConfig,
 } from './schema';
 
 const QUERY_CHANNEL_NAMES_QUERY = `
@@ -1714,6 +1722,456 @@ export function useAllChannelTags(projectId?: string | null) {
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+const UPSTREAM_ACCOUNT_POOLS_QUERY = `
+  query UpstreamAccountPools($channelID: ID!, $includeArchived: Boolean) {
+    upstreamAccountPools(channelID: $channelID, includeArchived: $includeArchived) {
+      id
+      createdAt
+      updatedAt
+      channelID
+      name
+      status
+      priority
+      modelPatterns
+      projectIds
+      remark
+    }
+  }
+`;
+
+const UPSTREAM_ACCOUNTS_QUERY = `
+  query UpstreamAccounts($channelID: ID!, $includeArchived: Boolean) {
+    upstreamAccounts(channelID: $channelID, includeArchived: $includeArchived) {
+      id
+      createdAt
+      updatedAt
+      channelID
+      poolID
+      name
+      credentialType
+      status
+      schedulable
+      priority
+      weight
+      concurrencyLimit
+      rateMultiplier
+      expiresAt
+      lastUsedAt
+      errorMessage
+      rateLimitResetAt
+      overloadUntil
+      cooldownUntil
+      cooldownReason
+      quotaLimitMicros
+      quotaUsedMicros
+      hasCredentials
+      hasProxyConfig
+      eligibleNow
+      ineligibleReason
+    }
+  }
+`;
+
+const CREATE_UPSTREAM_ACCOUNT_POOL_MUTATION = `
+  mutation CreateUpstreamAccountPool($input: CreateUpstreamAccountPoolInput!) {
+    createUpstreamAccountPool(input: $input) {
+      id
+      createdAt
+      updatedAt
+      channelID
+      name
+      status
+      priority
+      modelPatterns
+      projectIds
+      remark
+    }
+  }
+`;
+
+const UPDATE_UPSTREAM_ACCOUNT_POOL_MUTATION = `
+  mutation UpdateUpstreamAccountPool($id: ID!, $input: UpdateUpstreamAccountPoolInput!) {
+    updateUpstreamAccountPool(id: $id, input: $input) {
+      id
+      createdAt
+      updatedAt
+      channelID
+      name
+      status
+      priority
+      modelPatterns
+      projectIds
+      remark
+    }
+  }
+`;
+
+const ARCHIVE_UPSTREAM_ACCOUNT_POOL_MUTATION = `
+  mutation ArchiveUpstreamAccountPool($id: ID!) {
+    archiveUpstreamAccountPool(id: $id) {
+      id
+      channelID
+      status
+    }
+  }
+`;
+
+const CREATE_UPSTREAM_ACCOUNT_MUTATION = `
+  mutation CreateUpstreamAccount($input: CreateUpstreamAccountInput!) {
+    createUpstreamAccount(input: $input) {
+      id
+      channelID
+      poolID
+      name
+      credentialType
+      status
+      schedulable
+      priority
+      weight
+      concurrencyLimit
+      rateMultiplier
+      expiresAt
+      quotaLimitMicros
+      quotaUsedMicros
+      hasCredentials
+      hasProxyConfig
+      eligibleNow
+      ineligibleReason
+    }
+  }
+`;
+
+const UPDATE_UPSTREAM_ACCOUNT_MUTATION = `
+  mutation UpdateUpstreamAccount($id: ID!, $input: UpdateUpstreamAccountInput!) {
+    updateUpstreamAccount(id: $id, input: $input) {
+      id
+      channelID
+      poolID
+      name
+      credentialType
+      status
+      schedulable
+      priority
+      weight
+      concurrencyLimit
+      rateMultiplier
+      expiresAt
+      lastUsedAt
+      errorMessage
+      rateLimitResetAt
+      overloadUntil
+      cooldownUntil
+      cooldownReason
+      quotaLimitMicros
+      quotaUsedMicros
+      hasCredentials
+      hasProxyConfig
+      eligibleNow
+      ineligibleReason
+    }
+  }
+`;
+
+const ARCHIVE_UPSTREAM_ACCOUNT_MUTATION = `
+  mutation ArchiveUpstreamAccount($id: ID!) {
+    archiveUpstreamAccount(id: $id) {
+      id
+      channelID
+      status
+      schedulable
+      eligibleNow
+      ineligibleReason
+    }
+  }
+`;
+
+const TEST_UPSTREAM_ACCOUNT_MUTATION = `
+  mutation TestUpstreamAccount($id: ID!) {
+    testUpstreamAccount(id: $id) {
+      accountID
+      success
+      eligible
+      message
+      ineligibleReason
+    }
+  }
+`;
+
+export interface CreateUpstreamAccountPoolInput {
+  channelID: string;
+  name: string;
+  status?: 'enabled' | 'disabled' | 'archived';
+  priority?: number;
+  modelPatterns?: string[];
+  projectIDs?: number[];
+  remark?: string;
+}
+
+export interface UpdateUpstreamAccountPoolInput {
+  name?: string;
+  status?: 'enabled' | 'disabled' | 'archived';
+  priority?: number;
+  modelPatterns?: string[];
+  projectIDs?: number[];
+  remark?: string;
+  clearRemark?: boolean;
+}
+
+export interface CreateUpstreamAccountInput {
+  channelID: string;
+  poolID?: string | null;
+  name: string;
+  credentialType?: 'api_key' | 'oauth' | 'custom';
+  credentials: UpstreamAccountCredentialsInput;
+  status?: 'active' | 'disabled' | 'archived' | 'error';
+  schedulable?: boolean;
+  priority?: number;
+  weight?: number;
+  concurrencyLimit?: number;
+  proxyConfig?: ProxyConfig | null;
+  rateMultiplier?: number;
+  expiresAt?: string | null;
+  quotaLimitMicros?: number;
+  quotaUsedMicros?: number;
+  errorMessage?: string | null;
+  rateLimitResetAt?: string | null;
+  overloadUntil?: string | null;
+  cooldownUntil?: string | null;
+  cooldownReason?: string | null;
+}
+
+export interface UpdateUpstreamAccountInput {
+  poolID?: string | null;
+  clearPool?: boolean;
+  name?: string;
+  credentialType?: 'api_key' | 'oauth' | 'custom';
+  credentials?: UpstreamAccountCredentialsInput;
+  status?: 'active' | 'disabled' | 'archived' | 'error';
+  schedulable?: boolean;
+  priority?: number;
+  weight?: number;
+  concurrencyLimit?: number;
+  proxyConfig?: ProxyConfig | null;
+  clearProxyConfig?: boolean;
+  rateMultiplier?: number;
+  expiresAt?: string | null;
+  clearExpiresAt?: boolean;
+  quotaLimitMicros?: number;
+  quotaUsedMicros?: number;
+  errorMessage?: string | null;
+  clearErrorMessage?: boolean;
+  rateLimitResetAt?: string | null;
+  clearRateLimitResetAt?: boolean;
+  overloadUntil?: string | null;
+  clearOverloadUntil?: boolean;
+  cooldownUntil?: string | null;
+  clearCooldownUntil?: boolean;
+  cooldownReason?: string | null;
+  clearCooldownReason?: boolean;
+}
+
+function invalidateUpstreamAccountQueries(queryClient: ReturnType<typeof useQueryClient>, channelID?: string | null) {
+  if (!channelID) {
+    queryClient.invalidateQueries({ queryKey: ['upstreamAccounts'] });
+    queryClient.invalidateQueries({ queryKey: ['upstreamAccountPools'] });
+    return;
+  }
+  queryClient.invalidateQueries({ queryKey: ['upstreamAccounts', channelID] });
+  queryClient.invalidateQueries({ queryKey: ['upstreamAccountPools', channelID] });
+  queryClient.invalidateQueries({ queryKey: ['channels'] });
+}
+
+export function useUpstreamAccountPools(channelID: string, options?: { enabled?: boolean; includeArchived?: boolean }) {
+  const { handleError } = useErrorHandler();
+
+  return useQuery({
+    queryKey: ['upstreamAccountPools', channelID, options?.includeArchived],
+    queryFn: async () => {
+      try {
+        const data = await graphqlRequest<{ upstreamAccountPools: UpstreamAccountPool[] }>(UPSTREAM_ACCOUNT_POOLS_QUERY, {
+          channelID,
+          includeArchived: options?.includeArchived ?? false,
+        });
+        return (data.upstreamAccountPools || []).map((pool) => upstreamAccountPoolSchema.parse(pool));
+      } catch (error) {
+        handleError(error, { context: 'Load Upstream Account Pools' });
+        throw error;
+      }
+    },
+    enabled: !!channelID && options?.enabled !== false,
+  });
+}
+
+export function useUpstreamAccounts(channelID: string, options?: { enabled?: boolean; includeArchived?: boolean }) {
+  const { handleError } = useErrorHandler();
+
+  return useQuery({
+    queryKey: ['upstreamAccounts', channelID, options?.includeArchived],
+    queryFn: async () => {
+      try {
+        const data = await graphqlRequest<{ upstreamAccounts: UpstreamAccount[] }>(UPSTREAM_ACCOUNTS_QUERY, {
+          channelID,
+          includeArchived: options?.includeArchived ?? false,
+        });
+        return (data.upstreamAccounts || []).map((account) => upstreamAccountSchema.parse(account));
+      } catch (error) {
+        handleError(error, { context: 'Load Upstream Accounts' });
+        throw error;
+      }
+    },
+    enabled: !!channelID && options?.enabled !== false,
+  });
+}
+
+export function useCreateUpstreamAccountPool() {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async (input: CreateUpstreamAccountPoolInput) => {
+      try {
+        const data = await graphqlRequest<{ createUpstreamAccountPool: UpstreamAccountPool }>(CREATE_UPSTREAM_ACCOUNT_POOL_MUTATION, { input });
+        return upstreamAccountPoolSchema.parse(data.createUpstreamAccountPool);
+      } catch (error) {
+        handleError(error, { context: 'Create Upstream Account Pool' });
+        throw error;
+      }
+    },
+    onSuccess: (pool) => {
+      invalidateUpstreamAccountQueries(queryClient, pool.channelID);
+      toast.success('Account pool saved');
+    },
+  });
+}
+
+export function useUpdateUpstreamAccountPool() {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: string; input: UpdateUpstreamAccountPoolInput }) => {
+      try {
+        const data = await graphqlRequest<{ updateUpstreamAccountPool: UpstreamAccountPool }>(UPDATE_UPSTREAM_ACCOUNT_POOL_MUTATION, { id, input });
+        return upstreamAccountPoolSchema.parse(data.updateUpstreamAccountPool);
+      } catch (error) {
+        handleError(error, { context: 'Update Upstream Account Pool' });
+        throw error;
+      }
+    },
+    onSuccess: (pool) => {
+      invalidateUpstreamAccountQueries(queryClient, pool.channelID);
+      toast.success('Account pool updated');
+    },
+  });
+}
+
+export function useArchiveUpstreamAccountPool() {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async ({ id, channelID }: { id: string; channelID: string }) => {
+      try {
+        const data = await graphqlRequest<{ archiveUpstreamAccountPool: UpstreamAccountPool }>(ARCHIVE_UPSTREAM_ACCOUNT_POOL_MUTATION, { id });
+        return { pool: upstreamAccountPoolSchema.partial().parse(data.archiveUpstreamAccountPool), channelID };
+      } catch (error) {
+        handleError(error, { context: 'Archive Upstream Account Pool' });
+        throw error;
+      }
+    },
+    onSuccess: ({ channelID }) => {
+      invalidateUpstreamAccountQueries(queryClient, channelID);
+      toast.success('Account pool archived');
+    },
+  });
+}
+
+export function useCreateUpstreamAccount() {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async (input: CreateUpstreamAccountInput) => {
+      try {
+        const data = await graphqlRequest<{ createUpstreamAccount: UpstreamAccount }>(CREATE_UPSTREAM_ACCOUNT_MUTATION, { input });
+        return upstreamAccountSchema.partial().parse(data.createUpstreamAccount);
+      } catch (error) {
+        handleError(error, { context: 'Create Upstream Account' });
+        throw error;
+      }
+    },
+    onSuccess: (account) => {
+      invalidateUpstreamAccountQueries(queryClient, account.channelID);
+      toast.success('Upstream account saved');
+    },
+  });
+}
+
+export function useUpdateUpstreamAccount() {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: string; input: UpdateUpstreamAccountInput }) => {
+      try {
+        const data = await graphqlRequest<{ updateUpstreamAccount: UpstreamAccount }>(UPDATE_UPSTREAM_ACCOUNT_MUTATION, { id, input });
+        return upstreamAccountSchema.parse(data.updateUpstreamAccount);
+      } catch (error) {
+        handleError(error, { context: 'Update Upstream Account' });
+        throw error;
+      }
+    },
+    onSuccess: (account) => {
+      invalidateUpstreamAccountQueries(queryClient, account.channelID);
+      toast.success('Upstream account updated');
+    },
+  });
+}
+
+export function useArchiveUpstreamAccount() {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async ({ id, channelID }: { id: string; channelID: string }) => {
+      try {
+        await graphqlRequest<{ archiveUpstreamAccount: Partial<UpstreamAccount> }>(ARCHIVE_UPSTREAM_ACCOUNT_MUTATION, { id });
+        return { channelID };
+      } catch (error) {
+        handleError(error, { context: 'Archive Upstream Account' });
+        throw error;
+      }
+    },
+    onSuccess: ({ channelID }) => {
+      invalidateUpstreamAccountQueries(queryClient, channelID);
+      toast.success('Upstream account archived');
+    },
+  });
+}
+
+export function useTestUpstreamAccount() {
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        const data = await graphqlRequest<{ testUpstreamAccount: UpstreamAccountTestResult }>(TEST_UPSTREAM_ACCOUNT_MUTATION, { id });
+        return upstreamAccountTestResultSchema.parse(data.testUpstreamAccount);
+      } catch (error) {
+        handleError(error, { context: 'Test Upstream Account' });
+        throw error;
+      }
+    },
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.ineligibleReason || result.message);
+      }
+    },
   });
 }
 

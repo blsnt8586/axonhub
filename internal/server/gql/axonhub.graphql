@@ -839,6 +839,105 @@ type DeleteDisabledAPIKeysPayload {
   message: String
 }
 
+input UpstreamAccountCredentialsInput {
+  apiKey: String
+  oauth: String
+  rawJson: String
+  headers: [HeaderEntryInput!]
+}
+
+input CreateUpstreamAccountPoolInput {
+  channelID: ID!
+  name: String!
+  status: UpstreamAccountPoolStatus
+  priority: Int
+  modelPatterns: [String!]
+  projectIDs: [Int!]
+  remark: String
+}
+
+input UpdateUpstreamAccountPoolInput {
+  name: String
+  status: UpstreamAccountPoolStatus
+  priority: Int
+  modelPatterns: [String!]
+  projectIDs: [Int!]
+  remark: String
+  clearRemark: Boolean
+}
+
+input CreateUpstreamAccountInput {
+  channelID: ID!
+  poolID: ID
+  name: String!
+  credentialType: UpstreamAccountCredentialType
+  credentials: UpstreamAccountCredentialsInput!
+  status: UpstreamAccountStatus
+  schedulable: Boolean
+  priority: Int
+  weight: Int
+  concurrencyLimit: Int
+  proxyConfig: ProxyConfigInput
+  rateMultiplier: Float
+  expiresAt: Time
+  quotaLimitMicros: Int
+  quotaUsedMicros: Int
+  errorMessage: String
+  rateLimitResetAt: Time
+  overloadUntil: Time
+  cooldownUntil: Time
+  cooldownReason: String
+}
+
+input UpdateUpstreamAccountInput {
+  poolID: ID
+  clearPool: Boolean
+  name: String
+  credentialType: UpstreamAccountCredentialType
+  credentials: UpstreamAccountCredentialsInput
+  status: UpstreamAccountStatus
+  schedulable: Boolean
+  priority: Int
+  weight: Int
+  concurrencyLimit: Int
+  proxyConfig: ProxyConfigInput
+  clearProxyConfig: Boolean
+  rateMultiplier: Float
+  expiresAt: Time
+  clearExpiresAt: Boolean
+  quotaLimitMicros: Int
+  quotaUsedMicros: Int
+  errorMessage: String
+  clearErrorMessage: Boolean
+  rateLimitResetAt: Time
+  clearRateLimitResetAt: Boolean
+  overloadUntil: Time
+  clearOverloadUntil: Boolean
+  cooldownUntil: Time
+  clearCooldownUntil: Boolean
+  cooldownReason: String
+  clearCooldownReason: Boolean
+}
+
+type UpstreamAccountTestResult {
+  accountID: ID!
+  success: Boolean!
+  eligible: Boolean!
+  message: String!
+  ineligibleReason: String
+}
+
+extend type UpstreamAccount {
+  hasCredentials: Boolean! @goField(forceResolver: true)
+  hasProxyConfig: Boolean! @goField(forceResolver: true)
+  eligibleNow: Boolean! @goField(forceResolver: true)
+  ineligibleReason: String @goField(forceResolver: true)
+}
+
+extend type Channel {
+  upstreamCredentialFallback: Boolean! @goField(forceResolver: true)
+}
+
 type Mutation {
   createChannel(input: CreateChannelInput!): Channel!
   duplicateChannel(sourceID: ID!, input: CreateChannelInput!): Channel!
@@ -869,6 +968,21 @@ type Mutation {
     channelID: ID!
     keys: [String!]!
   ): DeleteDisabledAPIKeysPayload!
+  createUpstreamAccountPool(
+    input: CreateUpstreamAccountPoolInput!
+  ): UpstreamAccountPool!
+  updateUpstreamAccountPool(
+    id: ID!
+    input: UpdateUpstreamAccountPoolInput!
+  ): UpstreamAccountPool!
+  archiveUpstreamAccountPool(id: ID!): UpstreamAccountPool!
+  createUpstreamAccount(input: CreateUpstreamAccountInput!): UpstreamAccount!
+  updateUpstreamAccount(
+    id: ID!
+    input: UpdateUpstreamAccountInput!
+  ): UpstreamAccount!
+  archiveUpstreamAccount(id: ID!): UpstreamAccount!
+  testUpstreamAccount(id: ID!): UpstreamAccountTestResult!
 
   createAPIKey(input: CreateAPIKeyInput!): APIKey!
   updateAPIKey(id: ID!, input: UpdateAPIKeyInput!): APIKey!
@@ -995,6 +1109,11 @@ extend type Query {
   hasTag: String
   """
   queryChannels(input: QueryChannelInput!): ChannelConnection!
+  upstreamAccountPools(
+    channelID: ID!
+    includeArchived: Boolean
+  ): [UpstreamAccountPool!]!
+  upstreamAccounts(channelID: ID!, includeArchived: Boolean): [UpstreamAccount!]!
 
   """
   Returns quota usage for profiles that have quota enabled for an API key.
