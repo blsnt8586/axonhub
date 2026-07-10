@@ -34,6 +34,7 @@ assert_contains "$quick_plan" "Production Compose configuration"
 assert_contains "$quick_plan" "GraphQL authorization and tenant isolation"
 assert_contains "$quick_plan" "Gateway billing lifecycle"
 assert_contains "$quick_plan" "Promo, payment, subscription, and affiliate self-service"
+assert_contains "$quick_plan" "User workspace migration and release role matrix"
 assert_not_contains "$quick_plan" "Fresh PostgreSQL and Docker deployment"
 
 full_plan="$($RELEASE_GATE --full --plan)"
@@ -44,6 +45,7 @@ assert_contains "$full_plan" "Runtime log redaction"
 assert_contains "$full_plan" "Fresh PostgreSQL and Docker deployment"
 assert_contains "$full_plan" "PostgreSQL backup and recovery"
 assert_contains "$full_plan" "Historical PostgreSQL upgrade matrix"
+assert_contains "$full_plan" "User workspace migration and release role matrix"
 
 if "$RELEASE_GATE" --unknown >/dev/null 2>&1; then
   echo "Unknown release-gate options must fail." >&2

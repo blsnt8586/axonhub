@@ -84,6 +84,8 @@ curl --fail http://127.0.0.1:8090/health
 - 应用日志、反向代理日志、Docker 日志驱动和外部采集器中没有完整 API Key、Cookie、支付密钥或数据库密码。
 - PostgreSQL、磁盘、连接池、HTTP 5xx、HTTP 402、计费失败和 Outbox 重试有告警。
 
+用户停用后还必须验证旧 JWT 和该用户的 `personal`/历史 `user` API Key 返回 401。Project `service_account` 不随创建者停用，离职或权限回收时需要单独审查和轮换。
+
 ## 回滚
 
 代码回滚与数据库恢复分开处理：
@@ -93,5 +95,7 @@ curl --fail http://127.0.0.1:8090/health
 3. 如果不兼容，停止所有实例，恢复发布前备份，再启动上一镜像。
 4. 将 `AXONHUB_BILLING_MODE` 降为 `warn` 或 `disabled`，避免异常价格或迁移状态继续阻断请求。
 5. 校验钱包余额、账本交易、订单、订阅、用量记录和 Outbox，再恢复流量。
+
+恢复验证应同时比较 Project ID、membership、API Key 标识、销售价格规则、Request、UsageLog 和 UsageBillingRecord，不能只比较钱包表数量。
 
 支付通知和账本写入有幂等约束，但回滚后仍应按订单号、请求 ID 和幂等键核对，不应直接修改钱包余额。

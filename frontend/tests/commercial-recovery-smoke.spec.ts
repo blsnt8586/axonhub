@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { graphqlRequest, injectAuthSession, signInViaApi, waitForBillingOverview } from './commercial-smoke.utils'
+import { graphqlRequest, injectAuthSession, openBillingView, signInViaApi, waitForBillingOverview } from './commercial-smoke.utils'
 
 declare const process: {
   env: Record<string, string | undefined>
@@ -81,7 +81,9 @@ test.describe('commercial recovery browser smoke', () => {
     await page.goto('/billing', { waitUntil: 'domcontentloaded' })
     await waitForBillingOverview(page)
 
+    await openBillingView(page, 'orders')
     await expect(page.getByText('paid', { exact: true }).first()).toBeVisible({ timeout: 20000 })
+    await openBillingView(page, 'subscriptions')
     await expect(page.getByText(activeSubscription!.node.plan.name).first()).toBeVisible({ timeout: 20000 })
   })
 })

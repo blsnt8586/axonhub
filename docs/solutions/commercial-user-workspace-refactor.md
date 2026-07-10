@@ -12,7 +12,7 @@ it does not add or renumber Stage 0-28.
 - [x] Review the current AxonHub frontend and backend authorization split.
 - [x] Define the target user, project, API key, billing, and administrator
   boundaries.
-- [ ] Complete Workstream W3-W8 below.
+- [x] Complete Workstream W3-W8 below.
 
 ## Review Snapshot
 
@@ -522,17 +522,56 @@ Acceptance:
 
 ### W8: Migration, Compatibility, And Release Gate
 
-- [ ] Backfill or derive consumer capabilities for existing memberships without
+- [x] Backfill or derive consumer capabilities for existing memberships without
   granting system scopes.
-- [ ] Preserve existing API keys, Project IDs, pricing rules, wallets, ledgers,
+- [x] Preserve existing API keys, Project IDs, pricing rules, wallets, ledgers,
   orders, subscriptions, and request history.
-- [ ] Keep old routes as temporary redirects where bookmarks or external docs
+- [x] Keep old routes as temporary redirects where bookmarks or external docs
   depend on them.
-- [ ] Add PostgreSQL upgrade acceptance from the pre-refactor schema and current
+- [x] Add PostgreSQL upgrade acceptance from the pre-refactor schema and current
   commercial data set.
-- [ ] Add a browser release gate for owner, existing user, newly registered
+- [x] Add a browser release gate for owner, existing user, newly registered
   user, project member, suspended user, and no-channel installation.
-- [ ] Update user documentation and administrator policy documentation.
+- [x] Update user documentation and administrator policy documentation.
+
+Status: [x] Completed
+
+Implementation notes:
+
+- Existing active memberships derive `consumeAI`, `manageOwnAPIKeys`, and
+  `viewOwnUsage` at runtime. No database scope backfill is performed, so an old
+  Project membership cannot accidentally acquire Project or system
+  administration privileges.
+- Personal and legacy user API keys now verify that their owning User is still
+  activated. Password login, JWT authentication, and user-owned keys all fail
+  after suspension. Project service-account keys remain independent operational
+  credentials and require separate administrator review. Expired frontend
+  sessions atomically clear both persisted and in-memory auth state before
+  redirecting to sign-in.
+- The compatibility audit keeps `/project/requests`, `/project/api-keys`, and
+  `/billing` valid. The consumer request path remains user-scoped, `/billing`
+  defaults to the wallet view, and Project request administration uses the new
+  `/project/request-admin` path. No unsupported route aliases were invented.
+- The four-baseline PostgreSQL upgrade matrix now compares memberships, hashed
+  API-key identity, pricing rules, wallets, ledgers, orders, payments,
+  subscriptions, and related commercial records across migrations and a second
+  idempotent restart.
+- PostgreSQL backup/restore acceptance now creates a real streamed AI request
+  and verifies Request, UsageLog, UsageBillingRecord, price snapshot, ledger,
+  API-key, pricing, order, and subscription data before and after `pg_dump`,
+  database recreation, and restore.
+- `commercial-release-roles.spec.ts` covers the system owner, a historical
+  empty-scope member, an ordinary Project member, a newly registered user, a
+  suspended user, legacy route compatibility, and a no-channel installation.
+  The quick commercial release gate runs this matrix together with core Go,
+  deployment, GraphQL isolation, gateway billing, and commercial self-service
+  acceptance.
+- English and Chinese self-service and access-policy guides document wallet
+  ownership, Project pricing context, the three authorization layers,
+  suspension behavior, no-channel behavior, service-account boundaries, and
+  PostgreSQL rollback requirements. The existing account-pool browser
+  acceptance remains green without changing scheduler, circuit-breaker, or
+  Orchestrator behavior.
 
 Acceptance:
 
@@ -583,3 +622,4 @@ records rather than synthetic UI data.
 | W1 | this commit | 2026-07-10 | Unified route authorization, fixed project-owner and localized Admin navigation behavior, added the user home landing and safe redirect handling, and added unit/browser regression coverage. |
 | W2 | this commit | 2026-07-10 | Added the tenant-scoped workspace summary, wallet/key/model/subscription/usage metrics, deterministic onboarding states, desktop/mobile browser coverage, GUID parsing, and missing Vite API proxies. |
 | W6 | this commit | 2026-07-11 | Added isolated user/project request and usage REST projections, consumer Requests/Usage/detail/export UI, wallet-ledger and Project-price reconciliation, streaming billing completion, low-token micro settlement, and cross-user/browser regression coverage. |
+| W8 | this commit | 2026-07-11 | Added historical capability derivation and role gates, suspended-user key and frontend-session invalidation, route compatibility coverage, four-baseline PostgreSQL migration and full dump/restore manifests, bilingual policy documentation, and unified release acceptance. |

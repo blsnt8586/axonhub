@@ -21,6 +21,8 @@ Welcome to the AxonHub documentation center! This index will help you quickly fi
 | [Permissions](guides/permissions.md) | Enterprise RBAC access control configuration |
 | [Load Balancing](guides/load-balance.md) | Smart routing and failover settings |
 | [Cost Tracking](guides/cost-tracking.md) | Real-time monitoring and usage analytics |
+| [Commercial Self-Service](guides/commercial-self-service.md) | User workspaces, personal keys, wallet, billing, and suspension behavior |
+| [Commercial Access Policy](guides/commercial-access-policy.md) | Administrator ownership, authorization, upgrade, and rollback policy |
 | [Request Tracing](guides/tracing.md) | Complete request traceability |
 | [Request Override](guides/request-override.md) | Dynamically modify request parameters |
 | [Prompt Protection Rules](guides/prompt-protection-rules.md) | Sensitive information filtering and protection |

@@ -21,6 +21,8 @@
 | [权限管理](guides/permissions.md) | 企业级 RBAC 访问控制配置 |
 | [负载均衡](guides/load-balance.md) | 智能路由和故障转移设置 |
 | [成本追踪](guides/cost-tracking.md) | 实时监控和用量分析 |
+| [商业自助使用](guides/commercial-self-service.md) | 用户工作空间、个人 Key、钱包、账单和停用行为 |
+| [商业权限与归属策略](guides/commercial-access-policy.md) | 管理员资源归属、授权、升级和回滚策略 |
 | [请求追踪](guides/tracing.md) | 完整的请求链路追踪 |
 | [请求覆盖](guides/request-override.md) | 动态修改请求参数 |
 | [提示词保护规则](guides/prompt-protection-rules.md) | 敏感信息过滤和保护 |

@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { getTokenFromStorage, removeTokenFromStorage } from '@/stores/authStore';
+import { getTokenFromStorage, useAuthStore } from '@/stores/authStore';
 import i18n from '@/lib/i18n';
 
 export class GraphQLRequestError extends Error {
@@ -43,6 +43,12 @@ function isForbiddenGraphQLError(error: any): boolean {
 
 export function isUnauthorizedGraphQLError(error: any): boolean {
   return error?.extensions?.code === 'UNAUTHENTICATED';
+}
+
+export function resetExpiredAuthSession() {
+  useAuthStore.getState().auth.reset();
+  toast.error(i18n.t('common.errors.sessionExpiredSignIn'));
+  window.location.assign('/sign-in');
 }
 
 // GraphQL client function with token support
@@ -89,10 +95,7 @@ export async function graphqlRequest<T>(
 
   // Handle explicit auth failures (401 only — 403 is a permission denial, not a session issue)
   if (response.status === 401) {
-    // Clear token and redirect to login
-    removeTokenFromStorage();
-    toast.error(i18n.t('common.errors.sessionExpiredSignIn'));
-    window.location.href = '/sign-in';
+    resetExpiredAuthSession();
     throw new GraphQLRequestError('Unauthorized', { status: response.status, isAuthError: true });
   }
 
@@ -131,10 +134,7 @@ export async function graphqlRequest<T>(
     const authError = result.errors.find(isUnauthorizedGraphQLError);
 
     if (authError) {
-      // Clear token and redirect to login
-      removeTokenFromStorage();
-      toast.error(i18n.t('common.errors.sessionExpiredSignIn'));
-      window.location.href = '/sign-in';
+      resetExpiredAuthSession();
       throw new GraphQLRequestError('Unauthorized', { status: 401, isAuthError: true });
     }
 

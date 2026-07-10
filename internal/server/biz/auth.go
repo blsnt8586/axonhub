@@ -217,6 +217,19 @@ func (s *AuthService) AuthenticateAPIKey(ctx context.Context, key string) (*ent.
 	if apiKey.ExpiresAt != nil && !apiKey.ExpiresAt.After(time.Now().UTC()) {
 		return nil, fmt.Errorf("api key expired: %w", ErrInvalidAPIKey)
 	}
+	if apiKey.UserID != 0 && (apiKey.Type == apikey.TypePersonal || apiKey.Type == apikey.TypeUser) {
+		owner, err := authz.RunWithSystemBypass(ctx, "auth-api-key-user", func(bypassCtx context.Context) (*ent.User, error) {
+			return s.entFromContext(bypassCtx).User.Query().
+				Where(user.IDEQ(apiKey.UserID)).
+				Only(bypassCtx)
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to get api key user: %w", err)
+		}
+		if owner.Status != user.StatusActivated {
+			return nil, fmt.Errorf("api key user not activated: %w", ErrInvalidAPIKey)
+		}
+	}
 
 	proj, err := apiKey.Project(ctx)
 	if err != nil {

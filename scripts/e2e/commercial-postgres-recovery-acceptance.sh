@@ -149,6 +149,12 @@ commercial_manifest() {
   psql_query "
     SELECT 'users|' || count(*) FROM users;
     SELECT 'projects|' || count(*) FROM projects;
+    SELECT 'user_projects|' || string_agg(id || ':' || user_id || ':' || project_id || ':' || is_owner || ':' || scopes::text, ';' ORDER BY id) FROM user_projects;
+    SELECT 'api_keys|' || string_agg(id || ':' || COALESCE(user_id, 0) || ':' || project_id || ':' || name || ':' || type || ':' || status || ':' || md5(key), ';' ORDER BY id) FROM api_keys;
+    SELECT 'billing_price_rules|' || string_agg(id || ':' || scope_type || ':' || scope_id || ':' || model_pattern || ':' || currency || ':' || priority || ':' || enabled || ':' || reference_id || ':' || price::text, ';' ORDER BY id) FROM billing_price_rules;
+    SELECT 'requests|' || string_agg(id || ':' || project_id || ':' || channel_id || ':' || api_key_id || ':' || model_id || ':' || status || ':' || source, ';' ORDER BY id) FROM requests;
+    SELECT 'usage_logs|' || string_agg(id || ':' || request_id || ':' || project_id || ':' || channel_id || ':' || COALESCE(api_key_id, 0) || ':' || model_id || ':' || total_tokens, ';' ORDER BY id) FROM usage_logs;
+    SELECT 'usage_billing_records|' || string_agg(id || ':' || usage_log_id || ':' || billing_account_id || ':' || project_id || ':' || COALESCE(user_id, 0) || ':' || COALESCE(api_key_id, 0) || ':' || model_id || ':' || charge_amount_micros || ':' || status || ':' || COALESCE(ledger_transaction_id, 0), ';' ORDER BY id) FROM usage_billing_records;
     SELECT 'billing_accounts|' || count(*) FROM billing_accounts;
     SELECT 'ledger_transactions|' || count(*) FROM ledger_transactions;
     SELECT 'ledger_entries|' || count(*) FROM ledger_entries;
@@ -214,6 +220,18 @@ run_commercial_smoke() {
   AXONHUB_E2E_USE_EXISTING_DB=true \
   AXONHUB_E2E_KEEP_DB=true \
     "$SCRIPT_DIR/e2e-test.sh" commercial-smoke.spec.ts
+}
+
+run_consumer_request_smoke() {
+  AXONHUB_ADMIN_EMAIL="$OWNER_EMAIL" \
+  AXONHUB_ADMIN_PASSWORD="$OWNER_PASSWORD" \
+  AXONHUB_PAYMENT_SECRET_KEY="$PAYMENT_SECRET" \
+  AXONHUB_E2E_DB_TYPE=postgres \
+  AXONHUB_E2E_DB_DIALECT=postgres \
+  AXONHUB_E2E_DB_DSN="host=localhost port=${POSTGRES_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DATABASE} sslmode=disable" \
+  AXONHUB_E2E_USE_EXISTING_DB=true \
+  AXONHUB_E2E_KEEP_DB=true \
+    "$SCRIPT_DIR/e2e-test.sh" commercial-self-service-closure.spec.ts --grep "keeps consumer navigation"
 }
 
 run_recovery_smoke() {
@@ -305,6 +323,9 @@ fi
 
 echo "Running the commercial browser lifecycle on the upgraded database..."
 run_commercial_smoke
+
+echo "Creating consumer request, usage, price-snapshot, and billing history on the upgraded database..."
+run_consumer_request_smoke
 
 RECOVERY_USER_EMAIL="$(psql_query "SELECT email FROM users WHERE email LIKE 'commercial-smoke-%@example.com' ORDER BY id DESC LIMIT 1")"
 if [[ -z "$RECOVERY_USER_EMAIL" ]]; then

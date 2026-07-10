@@ -433,6 +433,66 @@ func TestAuthService_AuthenticateAPIKey(t *testing.T) {
 	require.Contains(t, err.Error(), "api key project not valid")
 }
 
+func TestAuthService_AuthenticateAPIKeyRejectsDeactivatedUserOwnedKeys(t *testing.T) {
+	authService, client, cleanup := setupTestAuthService(t, xcache.Config{Mode: xcache.ModeMemory})
+	defer cleanup()
+	defer client.Close()
+
+	ctx := authz.WithTestBypass(ent.NewContext(context.Background(), client))
+	hashedPassword, err := HashPassword("test-password")
+	require.NoError(t, err)
+	keyOwner, err := client.User.Create().
+		SetEmail(fmt.Sprintf("deactivated-key-owner-%d@example.com", time.Now().UnixNano())).
+		SetPassword(hashedPassword).
+		SetStatus(user.StatusActivated).
+		Save(ctx)
+	require.NoError(t, err)
+	testProject, err := client.Project.Create().
+		SetName(uuid.NewString()).
+		SetStatus(project.StatusActive).
+		Save(ctx)
+	require.NoError(t, err)
+
+	createKey := func(name string, keyType apikey.Type) *ent.APIKey {
+		t.Helper()
+		keyValue, keyErr := GenerateAPIKey("ah")
+		require.NoError(t, keyErr)
+		row, keyErr := client.APIKey.Create().
+			SetKey(keyValue).
+			SetName(name).
+			SetType(keyType).
+			SetUser(keyOwner).
+			SetProject(testProject).
+			Save(ctx)
+		require.NoError(t, keyErr)
+		return row
+	}
+
+	personalKey := createKey("Personal Key", apikey.TypePersonal)
+	userKey := createKey("Legacy User Key", apikey.TypeUser)
+	serviceAccountKey := createKey("Project Service Account", apikey.TypeServiceAccount)
+
+	for _, key := range []*ent.APIKey{personalKey, userKey, serviceAccountKey} {
+		_, err = authService.AuthenticateAPIKey(ctx, key.Key)
+		require.NoError(t, err)
+	}
+
+	_, err = client.User.UpdateOneID(keyOwner.ID).
+		SetStatus(user.StatusDeactivated).
+		Save(ctx)
+	require.NoError(t, err)
+	authService.UserService = nil
+
+	for _, key := range []*ent.APIKey{personalKey, userKey} {
+		_, err = authService.AuthenticateAPIKey(ctx, key.Key)
+		require.ErrorIs(t, err, ErrInvalidAPIKey)
+		require.Contains(t, err.Error(), "api key user not activated")
+	}
+
+	_, err = authService.AuthenticateAPIKey(ctx, serviceAccountKey.Key)
+	require.NoError(t, err)
+}
+
 func TestAuthService_AuthenticateNoAuth(t *testing.T) {
 	cacheConfig := xcache.Config{}
 

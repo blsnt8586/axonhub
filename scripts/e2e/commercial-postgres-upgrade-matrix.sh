@@ -245,6 +245,16 @@ seed_common_commercial_data() {
     }')"
   response="$(graphql_request "$token" "$payload")"
   assert_graphql_success "$response" '.data.confirmManualPayment.id'
+
+  payload="$(jq -n \
+    --arg baseline "$baseline" \
+    '{
+      query: "mutation Stage25SavePrice($input: SaveBillingPriceRuleForm!) { saveBillingPriceRule(input: $input) { id enabled } }",
+      operationName: "Stage25SavePrice",
+      variables: {input: {scopeType: "global", scopeId: 0, modelPattern: ("stage25-" + $baseline + "-model"), price: {items: [{itemCode: "prompt_tokens", pricing: {mode: "usage_per_unit", usagePerUnit: "0.03"}}, {itemCode: "completion_tokens", pricing: {mode: "usage_per_unit", usagePerUnit: "0.06"}}]}, currency: "CNY", priority: 25, enabled: true, referenceId: ("stage25-" + $baseline + "-price")}}
+    }')"
+  response="$(graphql_request "$token" "$payload")"
+  assert_graphql_success "$response" '.data.saveBillingPriceRule.id'
 }
 
 seed_extended_commercial_data() {
@@ -302,6 +312,9 @@ commercial_manifest() {
   psql_query "$database" "
     SELECT 'users|' || string_agg(id || ':' || email || ':' || status || ':' || is_owner, ';' ORDER BY id) FROM users;
     SELECT 'projects|' || string_agg(id || ':' || name || ':' || status, ';' ORDER BY id) FROM projects;
+    SELECT 'user_projects|' || string_agg(id || ':' || user_id || ':' || project_id || ':' || is_owner || ':' || scopes::text, ';' ORDER BY id) FROM user_projects;
+    SELECT 'api_keys|' || string_agg(id || ':' || COALESCE(user_id, 0) || ':' || project_id || ':' || name || ':' || type || ':' || status || ':' || md5(key), ';' ORDER BY id) FROM api_keys;
+    SELECT 'billing_price_rules|' || string_agg(id || ':' || scope_type || ':' || scope_id || ':' || model_pattern || ':' || currency || ':' || priority || ':' || enabled || ':' || reference_id || ':' || price::text, ';' ORDER BY id) FROM billing_price_rules;
     SELECT 'billing_accounts|' || string_agg(id || ':' || owner_type || ':' || owner_id || ':' || currency || ':' || balance_micros || ':' || held_balance_micros || ':' || credit_limit_micros || ':' || status, ';' ORDER BY id) FROM billing_accounts;
     SELECT 'ledger_transactions|' || string_agg(id || ':' || billing_account_id || ':' || direction || ':' || amount_micros || ':' || currency || ':' || type || ':' || status || ':' || idempotency_key || ':' || reference_type || ':' || reference_id || ':' || memo, ';' ORDER BY id) FROM ledger_transactions;
     SELECT 'ledger_entries|' || string_agg(id || ':' || ledger_transaction_id || ':' || account_side || ':' || direction || ':' || amount_micros || ':' || currency, ';' ORDER BY id) FROM ledger_entries;

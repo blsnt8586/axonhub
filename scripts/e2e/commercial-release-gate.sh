@@ -60,6 +60,8 @@ add_step "Gateway billing lifecycle" \
   "./scripts/e2e/commercial-gateway-acceptance.sh"
 add_step "Promo, payment, subscription, and affiliate self-service" \
   "./scripts/e2e/commercial-self-service-acceptance.sh"
+add_step "User workspace migration and release role matrix" \
+  "./scripts/e2e/commercial-user-workspace-release-acceptance.sh"
 
 if [[ "$MODE" == "full" ]]; then
   add_step "Responsive browser acceptance" \
