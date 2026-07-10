@@ -358,7 +358,7 @@ Verification:
 - [x] Stage 9: Billing Notifications
 - [x] Stage 10: Production Operations And Security Closure
 - [ ] Stage 11: Production Deployment And End-to-End Acceptance
-- [ ] Stage 12+: Commercial Platform Enhancement Roadmap ([commercial-platform-enhancement-roadmap.md](./commercial-platform-enhancement-roadmap.md))
+- [x] Stage 12+: Commercial Platform Enhancement Roadmap ([commercial-platform-enhancement-roadmap.md](./commercial-platform-enhancement-roadmap.md))
 
 ## Stage 11: Production Deployment And End-to-End Acceptance
 
@@ -376,6 +376,8 @@ Tracking checklist:
 - [x] Complete browser-level admin billing acceptance.
 - [x] Complete browser-level user wallet and simulated recharge acceptance.
 - [x] Fix acceptance defects found during Stage 11 browser verification.
+- [x] Add and pass repeatable quick/full commercial release gates.
+- [x] Add a production Compose environment template and deployment runbook.
 - [x] Record unresolved production gaps explicitly in the production checklist.
 - [ ] Commit completed stage.
 

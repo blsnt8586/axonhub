@@ -39,8 +39,8 @@ learn from `new-api` and `sub2api` where they are stronger.
 - [x] Upstream account pools are first-class Channel resources with
   per-account credentials, schedulability, health, quota, cooldown, scheduling,
   switch history, monitoring, and browser-smoke coverage.
-- [ ] Long-range usage analytics still need production-grade aggregation tables
-  instead of depending only on detail rows and ad hoc queries.
+- [x] Long-range usage analytics use production-grade hourly and daily
+  aggregation tables while detail rows remain the audit source of truth.
 
 ## Stage 12: Public Registration And Onboarding
 

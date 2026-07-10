@@ -18,6 +18,7 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [x] Local dev public URL and callback URLs are aligned for the Stage 11 simulated ePay provider.
 - [x] ePay-compatible provider credentials are configured with write-only secrets in the browser.
 - [x] Commercial maintenance worker switches are explicitly reviewed in the admin console.
+- [x] A production-oriented Compose environment template documents billing, migration, database, binding, and log settings.
 
 ## Database And Migration
 
@@ -76,6 +77,8 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [x] `./scripts/e2e/commercial-gateway-acceptance.sh` passes.
 - [x] `./scripts/e2e/commercial-authz-acceptance.sh` passes.
 - [x] `./scripts/e2e/commercial-self-service-acceptance.sh` passes.
+- [x] `./scripts/e2e/commercial-release-gate.sh --quick` passes.
+- [x] `./scripts/e2e/commercial-release-gate.sh --full` passes.
 - [x] Health endpoint returns success while the app is running.
 - [x] GraphQL billing queries and mutations return expected authorization failures for non-owner users.
 - [x] User wallet, ledger, payment, usage, and subscription queries are scoped to the authenticated user.
@@ -86,6 +89,7 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [x] Current-fork Docker image starts with PostgreSQL-backed `docker-compose`.
 - [x] SQLite single-node deployment starts with a dedicated Stage 11 data file.
 - [x] Healthcheck is wired for container orchestration.
+- [x] Production deployment, migration, billing promotion, and rollback procedures are documented.
 - [x] AxonHub application logs do not contain provider secrets, payment notify secrets, or full API keys.
 - [ ] Reverse-proxy, container-runtime, and external log-collector samples do not contain secrets.
 - [ ] Large frontend chunk warning is reviewed and accepted or split before high-traffic production.

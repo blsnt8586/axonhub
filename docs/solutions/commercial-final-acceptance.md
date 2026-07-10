@@ -43,6 +43,7 @@ Stage 18 covers the production-facing commercial loop:
 | Runtime log redaction | `./scripts/e2e/commercial-log-redaction-acceptance.sh` | Debug application logs redact payment/provider secrets, JWTs, full service API keys, authorization headers, cookies, body credentials, DSN passwords, and query tokens while preserving safe diagnostic fields. |
 | Desktop/mobile responsive acceptance | `./scripts/e2e/commercial-responsive-acceptance.sh` | User billing, owner billing operations, upstream-account monitoring, and account detail pages pass desktop/mobile overflow and control-overlap checks with eight full-page screenshot attachments. |
 | Historical commercial upgrade matrix | `./scripts/e2e/commercial-postgres-upgrade-matrix.sh` | Stage 1, 2, 6, and 11 PostgreSQL databases preserve wallet, ledger, order, payment event, provider, redeem, plan, and subscription manifests; legacy provider keys become encrypted; and second startup is idempotent. |
+| Unified release gate | `./scripts/e2e/commercial-release-gate.sh --quick`, `./scripts/e2e/commercial-release-gate.sh --full` | The release commit executes the commercial checks as one fail-fast gate with named steps and elapsed times. |
 | Frontend compilation | `pnpm exec tsc --noEmit`, `pnpm build` from `frontend/` | The commercial UI remains type-safe and production-buildable. |
 
 `pnpm lint` was also run during Stage 18. It failed on existing repository-wide
@@ -209,6 +210,8 @@ transfers the resulting payable-based rebates to the inviter wallet.
 
 Use the project-specific production `.env` and verify that
 `AXONHUB_PAYMENT_SECRET_KEY` is set before saving real payment providers.
+The production template and rollout/rollback procedure are documented in
+`docs/zh/deployment/commercial-production.md`.
 
 ## Residual Production Risks
 

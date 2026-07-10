@@ -23,7 +23,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_BIND_ADDRESS:-0.0.0.0}:${POSTGRES_PORT:-5432}:5432"
     networks:
       - axonhub-network
     restart: unless-stopped
@@ -44,9 +44,22 @@ services:
       # 数据库配置可以通过环境变量设置，优先级高于配置文件
       AXONHUB_DB_DIALECT: postgres
       AXONHUB_DB_DSN: postgres://axonhub:${DB_PASSWORD:-axonhub_password}@postgres:5432/axonhub?sslmode=disable
+      AXONHUB_DB_DISABLE_AUTO_MIGRATION: ${AXONHUB_DB_DISABLE_AUTO_MIGRATION:-false}
+      AXONHUB_DB_MAX_OPEN_CONNS: ${AXONHUB_DB_MAX_OPEN_CONNS:-50}
+      AXONHUB_DB_MAX_IDLE_CONNS: ${AXONHUB_DB_MAX_IDLE_CONNS:-20}
       AXONHUB_PAYMENT_SECRET_KEY: ${AXONHUB_PAYMENT_SECRET_KEY:-}
+      AXONHUB_BILLING_MODE: ${AXONHUB_BILLING_MODE:-disabled}
+      AXONHUB_BILLING_SUBJECT: ${AXONHUB_BILLING_SUBJECT:-user}
+      AXONHUB_BILLING_CURRENCY: ${AXONHUB_BILLING_CURRENCY:-CNY}
+      AXONHUB_BILLING_ALLOW_NEGATIVE: ${AXONHUB_BILLING_ALLOW_NEGATIVE:-false}
+      AXONHUB_BILLING_BLOCK_WHEN_NO_PRICE_RULE: ${AXONHUB_BILLING_BLOCK_WHEN_NO_PRICE_RULE:-false}
+      AXONHUB_BILLING_OUTBOX_WORKER_INTERVAL_SECONDS: ${AXONHUB_BILLING_OUTBOX_WORKER_INTERVAL_SECONDS:-60}
+      AXONHUB_BILLING_OUTBOX_MAX_ATTEMPTS: ${AXONHUB_BILLING_OUTBOX_MAX_ATTEMPTS:-10}
+      AXONHUB_LOG_LEVEL: ${AXONHUB_LOG_LEVEL:-info}
+      AXONHUB_LOG_ENCODING: ${AXONHUB_LOG_ENCODING:-json}
+      AXONHUB_LOG_OUTPUT: ${AXONHUB_LOG_OUTPUT:-stdio}
     ports:
-      - "${AXONHUB_PORT:-8090}:8090"
+      - "${AXONHUB_BIND_ADDRESS:-0.0.0.0}:${AXONHUB_PORT:-8090}:8090"
     # Optional advanced configuration:
     # volumes:
     #   - ./config.yml:/app/config.yml:ro

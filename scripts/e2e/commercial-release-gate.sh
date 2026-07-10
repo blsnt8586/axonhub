@@ -52,6 +52,8 @@ add_step() {
 
 add_step "Core Go regression" \
   "go test ./conf ./internal/server/biz ./internal/server/gql ./internal/server/api ./internal/server/orchestrator -count=1"
+add_step "Production Compose configuration" \
+  "./scripts/e2e/commercial-deployment-config-test.sh"
 add_step "GraphQL authorization and tenant isolation" \
   "./scripts/e2e/commercial-authz-acceptance.sh"
 add_step "Gateway billing lifecycle" \
