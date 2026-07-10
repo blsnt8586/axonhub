@@ -28,5 +28,6 @@ var Module = fx.Module("api",
 	fx.Provide(NewUserWorkspaceHandlers),
 	fx.Provide(NewUserAPIKeyHandlers),
 	fx.Provide(NewUserPlaygroundHandlers),
+	fx.Provide(NewUserUsageHandlers),
 	fx.Invoke(initLogger),
 )

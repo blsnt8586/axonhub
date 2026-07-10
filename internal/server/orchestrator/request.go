@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/looplj/axonhub/internal/ent"
 	"github.com/looplj/axonhub/internal/ent/request"
 	"github.com/looplj/axonhub/internal/log"
 	"github.com/looplj/axonhub/internal/pkg/xcontext"
@@ -73,17 +74,24 @@ func (m *persistRequestMiddleware) OnOutboundLlmResponse(ctx context.Context, ll
 	if err != nil {
 		log.Warn(persistCtx, "Failed to create usage log from request", log.Cause(err))
 	}
-	if err == nil && usageLog != nil && state.UsageBillingProcessor != nil {
-		var holdIDs []int
-		if state.BillingHold != nil {
-			holdIDs = append(holdIDs, state.BillingHold.ID)
-		}
-		if _, err := state.UsageBillingProcessor.RequestUsageBilling(persistCtx, usageLog.ID, holdIDs...); err != nil {
-			log.Warn(persistCtx, "Failed to bill usage log", log.Int("usage_log_id", usageLog.ID), log.Cause(err))
-		}
+	if err == nil {
+		billPersistedUsage(persistCtx, state, usageLog)
 	}
 
 	return llmResp, nil
+}
+
+func billPersistedUsage(ctx context.Context, state *PersistenceState, usageLog *ent.UsageLog) {
+	if state == nil || usageLog == nil || state.UsageBillingProcessor == nil {
+		return
+	}
+	var holdIDs []int
+	if state.BillingHold != nil {
+		holdIDs = append(holdIDs, state.BillingHold.ID)
+	}
+	if _, err := state.UsageBillingProcessor.RequestUsageBilling(ctx, usageLog.ID, holdIDs...); err != nil {
+		log.Warn(ctx, "Failed to bill usage log", log.Int("usage_log_id", usageLog.ID), log.Cause(err))
+	}
 }
 
 func (m *persistRequestMiddleware) OnInboundRawResponse(ctx context.Context, httpResp *httpclient.Response) (*httpclient.Response, error) {

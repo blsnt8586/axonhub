@@ -180,6 +180,33 @@ func TestUsageBillingProcessorChargesUsageOnce(t *testing.T) {
 	require.Equal(t, int64(8_500_000), reloaded.BalanceMicros)
 }
 
+func TestUsageBillingProcessorRoundsLowTokenChargeToMicros(t *testing.T) {
+	t.Parallel()
+
+	client, ctx, processor, account := newUsageBillingTestProcessor(t, "usage_billing_low_token_rounding")
+	_, err := client.BillingPriceRule.Create().
+		SetScopeType(billingpricerule.ScopeTypeGlobal).
+		SetScopeID(0).
+		SetModelPattern("gpt-low-token").
+		SetPrice(testModelPrice("0.01")).
+		SetReferenceID("sell-low-token").
+		Save(ctx)
+	require.NoError(t, err)
+	ledgerSvc := NewLedgerService(LedgerServiceParams{Ent: client})
+	_, err = ledgerSvc.Credit(ctx, account.ID, decimal.RequireFromString("1"), ledgertransaction.TypePaymentRecharge, "low-token-credit")
+	require.NoError(t, err)
+
+	usageLog := createUsageLogForBillingTest(t, client, ctx, account.OwnerID, "gpt-low-token", 19, 65)
+	record, err := processor.BillUsage(ctx, usageLog.ID)
+	require.NoError(t, err)
+	require.Equal(t, usagebillingrecord.StatusCharged, record.Status)
+	require.Equal(t, int64(1), record.ChargeAmountMicros)
+
+	transaction, err := client.LedgerTransaction.Get(ctx, record.LedgerTransactionID)
+	require.NoError(t, err)
+	require.Equal(t, int64(1), transaction.AmountMicros)
+}
+
 func TestUsageBillingProcessorStoresRequestTypeFromUsageLogFormat(t *testing.T) {
 	t.Parallel()
 

@@ -87,6 +87,31 @@ func TestGatewayCommercialLifecycleEnforceChargesUserWalletWithProjectPriceRule(
 	require.Equal(t, 1, outbox.Attempts)
 }
 
+func TestGatewayCommercialLifecycleStreamingResponseCreatesCharge(t *testing.T) {
+	fixture := newCommercialGatewayFixture(t, biz.AdmissionModeEnforce)
+	fixture.createPriceRule(t, billingpricerule.ScopeTypeGlobal, 0, "1", "stream-global-v1")
+	fixture.creditWallet(t, "1", "gateway-stream-credit")
+	fixture.executor.streamEvents = []*httpclient.StreamEvent{
+		{Data: []byte(`{"id":"chatcmpl-stream","object":"chat.completion.chunk","model":"gpt-commercial","choices":[{"index":0,"delta":{"role":"assistant","content":"ok"},"finish_reason":null}]}`)},
+		{Data: []byte(`{"id":"chatcmpl-stream","object":"chat.completion.chunk","model":"gpt-commercial","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":5,"completion_tokens":2,"total_tokens":7}}`)},
+	}
+
+	result, err := fixture.orchestrator.Process(fixture.ctx, buildTestRequest(commercialGatewayModel, "streaming commercial acceptance", true))
+	require.NoError(t, err)
+	require.NotNil(t, result.ChatCompletionStream)
+	for result.ChatCompletionStream.Next() {
+		_ = result.ChatCompletionStream.Current()
+	}
+	require.NoError(t, result.ChatCompletionStream.Err())
+	require.NoError(t, result.ChatCompletionStream.Close())
+
+	record, err := fixture.client.UsageBillingRecord.Query().Only(fixture.ctx)
+	require.NoError(t, err)
+	require.Equal(t, usagebillingrecord.StatusCharged, record.Status)
+	require.Equal(t, int64(7), record.ChargeAmountMicros)
+	require.NotZero(t, record.LedgerTransactionID)
+}
+
 func TestGatewayCommercialLifecycleEnforceBlocksBeforeUpstream(t *testing.T) {
 	fixture := newCommercialGatewayFixture(t, biz.AdmissionModeEnforce)
 

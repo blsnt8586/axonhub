@@ -29,3 +29,12 @@ func TestBillingMoneyConversionRejectsNegative(t *testing.T) {
 	_, err := decimalToMicros(decimal.RequireFromString("-1"))
 	require.Error(t, err)
 }
+
+func TestUsageMoneyConversionRoundsPositiveSubMicrosUp(t *testing.T) {
+	t.Parallel()
+
+	micros, err := usageAmountToMicros(decimal.RequireFromString("0.00000149"))
+	require.NoError(t, err)
+	require.Equal(t, int64(2), micros)
+	require.True(t, roundUsageAmount(decimal.RequireFromString("0.00008192")).Equal(decimal.RequireFromString("0.000082")))
+}

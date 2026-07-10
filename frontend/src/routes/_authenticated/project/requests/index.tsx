@@ -1,14 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ProjectGuard } from '@/components/project-guard';
-import { RouteGuard } from '@/components/route-guard';
-import RequestsManagement from '@/features/requests';
+import UserRequestsPage from '@/features/user-usage/requests-page';
 
 function ProtectedProjectRequests() {
   return (
     <ProjectGuard>
-      <RouteGuard requiredScopes={['read_requests']} scopeLevel="any">
-        <RequestsManagement />
-      </RouteGuard>
+      <UserRequestsPage />
     </ProjectGuard>
   );
 }

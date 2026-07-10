@@ -23,6 +23,23 @@ func decimalToMicros(amount decimal.Decimal) (int64, error) {
 	return scaled.IntPart(), nil
 }
 
+func usageAmountToMicros(amount decimal.Decimal) (int64, error) {
+	if amount.IsNegative() {
+		return 0, fmt.Errorf("amount must be non-negative")
+	}
+	if amount.IsZero() {
+		return 0, nil
+	}
+	return decimalToMicros(amount.RoundCeil(billingMicrosScale))
+}
+
+func roundUsageAmount(amount decimal.Decimal) decimal.Decimal {
+	if !amount.IsPositive() {
+		return amount
+	}
+	return amount.RoundCeil(billingMicrosScale)
+}
+
 func microsToDecimal(micros int64) decimal.Decimal {
 	return decimal.NewFromInt(micros).Div(billingMicrosUnit)
 }

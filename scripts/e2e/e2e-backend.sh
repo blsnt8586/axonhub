@@ -225,6 +225,7 @@ case "${1:-}" in
     AXONHUB_LOG_OUTPUT="stdio" \
     AXONHUB_LOG_LEVEL="debug" \
     AXONHUB_LOG_ENCODING="console" \
+    AXONHUB_BILLING_MODE="${AXONHUB_E2E_BILLING_MODE:-warn}" \
     nohup "$BINARY_PATH" > "$LOG_FILE" 2>&1 &
     
     BACKEND_PID=$!

@@ -113,8 +113,6 @@ export const routeConfigs: RouteGroup[] = [
       },
       {
         path: '/project/requests',
-        requiredScopes: ['read_requests'],
-        mode: 'hidden',
       },
       {
         path: '/project/usage-logs',
@@ -123,9 +121,6 @@ export const routeConfigs: RouteGroup[] = [
       },
       {
         path: '/project/usage-stats',
-        requiredScopes: ['read_requests'],
-        mode: 'hidden',
-        requireProjectOwner: true,
       },
       {
         path: '/project/traces',
@@ -149,8 +144,6 @@ export const routeConfigs: RouteGroup[] = [
       },
       {
         path: '/project/playground',
-        requiredScopes: ['write_requests', 'read_channels'],
-        mode: 'hidden',
       },
     ],
   },

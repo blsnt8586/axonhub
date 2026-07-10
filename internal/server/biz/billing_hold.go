@@ -119,7 +119,7 @@ func (s *BillingHoldService) CreateRequestHold(ctx context.Context, input Create
 		UserID:           userID,
 		APIKeyID:         input.APIKeyID,
 		ModelID:          input.ModelID,
-		Amount:           amount,
+		Amount:           roundUsageAmount(amount),
 		Currency:         account.Currency,
 		IdempotencyKey:   fmt.Sprintf("billing_hold:request:%d", requestID),
 		ReferenceType:    "request",

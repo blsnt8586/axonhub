@@ -202,10 +202,11 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 	}
 
 	chargeItems, chargeTotal := ComputeUsageCost(usage, priceRule.Price)
-	chargeMicros, err := decimalToMicros(chargeTotal)
+	chargeMicros, err := usageAmountToMicros(chargeTotal)
 	if err != nil {
 		return nil, err
 	}
+	settlementAmount := microsToDecimal(chargeMicros)
 	if p.commercialLimitService != nil && usageLog.APIKeyID > 0 {
 		apiKey, err := p.entFromContext(ctx).APIKey.Get(ctx, usageLog.APIKeyID)
 		if err != nil {
@@ -291,7 +292,7 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 			}
 			hold, err := p.billingHoldService.CaptureHold(ctx, CaptureBillingHoldInput{
 				HoldID:        holdID,
-				Amount:        chargeTotal,
+				Amount:        settlementAmount,
 				Currency:      priceRule.Currency,
 				UsageLogID:    &usageLog.ID,
 				ReferenceType: "usage_billing_record",
@@ -308,7 +309,7 @@ func (p *UsageBillingProcessor) BillUsage(ctx context.Context, usageLogID int, h
 			ledgerTx, err := p.ledgerService.Post(ctx, LedgerPostInput{
 				BillingAccountID: account.ID,
 				Direction:        ledgertransaction.DirectionDebit,
-				Amount:           chargeTotal,
+				Amount:           settlementAmount,
 				Currency:         priceRule.Currency,
 				Type:             ledgertransaction.TypeUsageCharge,
 				IdempotencyKey:   idempotencyKey,

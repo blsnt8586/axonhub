@@ -42,6 +42,7 @@ type Handlers struct {
 	UserWorkspaces    *api.UserWorkspaceHandlers
 	UserAPIKeys       *api.UserAPIKeyHandlers
 	UserPlayground    *api.UserPlaygroundHandlers
+	UserUsage         *api.UserUsageHandlers
 }
 
 type Services struct {
@@ -159,6 +160,14 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			middleware.WithSource(request.SourcePlayground),
 			handlers.UserPlayground.Chat,
 		)
+		adminGroup.GET("/account/requests", handlers.UserUsage.MyRequests)
+		adminGroup.GET("/account/requests/export", handlers.UserUsage.ExportMyRequests)
+		adminGroup.GET("/account/requests/:request_id", handlers.UserUsage.MyRequest)
+		adminGroup.GET("/account/usage", handlers.UserUsage.MyUsage)
+		adminGroup.GET("/account/project-requests", handlers.UserUsage.ProjectRequests)
+		adminGroup.GET("/account/project-requests/export", handlers.UserUsage.ExportProjectRequests)
+		adminGroup.GET("/account/project-requests/:request_id", handlers.UserUsage.ProjectRequest)
+		adminGroup.GET("/account/project-usage", handlers.UserUsage.ProjectUsage)
 		adminGroup.GET("/users/:user_id/commercial-profile", handlers.CommercialProfile.GetUserProfile)
 
 		// Playground API with channel specification support

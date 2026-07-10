@@ -59,6 +59,12 @@ var (
 )
 
 var (
+	ErrUserUsageDenied               = errors.New("user usage access denied")
+	ErrUserUsageInvalidInput         = errors.New("invalid user usage request")
+	ErrUserUsageProjectAdminRequired = errors.New("project usage administration permission required")
+)
+
+var (
 	ErrUserPlaygroundDenied           = errors.New("user playground access denied")
 	ErrUserPlaygroundInvalid          = errors.New("invalid user playground request")
 	ErrUserPlaygroundKeyDisabled      = errors.New("user playground api key is not usable")

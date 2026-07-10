@@ -31,6 +31,10 @@ func New(config Config) *Server {
 	}
 
 	engine := gin.New()
+	// Object GUIDs contain slashes and are passed through encoded path parameters.
+	// Match against RawPath, then expose the decoded value to handlers.
+	engine.UseRawPath = true
+	engine.UnescapePathValues = true
 	engine.Use(middleware.Recovery())
 
 	return &Server{

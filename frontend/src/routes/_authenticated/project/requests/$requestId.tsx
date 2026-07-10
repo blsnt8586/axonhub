@@ -1,19 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ProjectGuard } from '@/components/project-guard';
-import { RouteGuard } from '@/components/route-guard';
-import RequestDetailPage from '@/features/requests/components/request-detail-page';
+import UserRequestDetailPage from '@/features/user-usage/request-detail';
 
 function ProtectedRequestDetail() {
   return (
     <ProjectGuard>
-      <RouteGuard requiredScopes={['read_requests']} scopeLevel="any">
-        <RequestDetailPage />
-      </RouteGuard>
+      <UserRequestDetailPage />
     </ProjectGuard>
   );
 }
 
 export const Route = createFileRoute('/_authenticated/project/requests/$requestId')({
-  validateSearch: (search: Record<string, unknown>) => search,
+  validateSearch: (search: Record<string, unknown>) => ({ scope: search.scope === 'project' ? ('project' as const) : ('mine' as const) }),
   component: ProtectedRequestDetail,
 });

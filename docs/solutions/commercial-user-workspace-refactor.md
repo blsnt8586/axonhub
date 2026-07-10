@@ -415,17 +415,53 @@ Acceptance:
 
 ### W6: User Requests, Usage, And Billing Projection
 
-- [ ] Define separate `my` and project-administration queries for request and
+- [x] Define separate `my` and project-administration queries for request and
   usage data.
-- [ ] Default ordinary users to their own requests, usage records, API keys,
+- [x] Default ordinary users to their own requests, usage records, API keys,
   model totals, spend, latency, and errors.
-- [ ] Allow project-wide visibility only through explicit project-admin
+- [x] Allow project-wide visibility only through explicit project-admin
   capability.
-- [ ] Keep trace internals, raw upstream payloads, Channel/account identifiers,
+- [x] Keep trace internals, raw upstream payloads, Channel/account identifiers,
   and sensitive errors out of the consumer projection.
-- [ ] Reuse hourly/daily aggregates for charts and detail records for audit.
-- [ ] Link every displayed charge to the user wallet ledger and Project price
+- [x] Reuse hourly/daily aggregates for charts and detail records for audit.
+- [x] Link every displayed charge to the user wallet ledger and Project price
   snapshot without changing wallet ownership.
+
+Status: [x] Completed
+
+Implementation notes:
+
+- Consumer endpoints are split into `/admin/account/requests`,
+  `/admin/account/usage`, detail/export variants, and explicit
+  `/admin/account/project-*` administration endpoints. Every request requires
+  an active Project membership; Project-wide access additionally requires
+  system ownership, `read_requests`, Project ownership, a direct Project scope,
+  or a Project role scope.
+- `mine` request queries require an API key owned by the authenticated user.
+  List, detail, aggregate, and CSV paths use the same ownership boundary, and
+  encoded object GUIDs are supported safely in path parameters.
+- The consumer projection includes the user's final request/response body,
+  personal key name, tokens, latency, settled charge, billing record, wallet
+  ledger transaction, and Project price snapshot. It omits request headers,
+  client IP, Trace and execution internals, Channel and upstream-account IDs,
+  raw upstream payloads/errors, upstream cost, and profit.
+- Request details reuse `RequestService` so database and external-storage
+  request/response bodies behave consistently. Charts use hourly aggregates for
+  ranges up to 48 hours and daily aggregates for longer ranges; model totals and
+  user charges come from the same aggregate rows.
+- The Requests and Usage routes are consumer capabilities for every Project
+  member. Only an explicitly authorized Project administrator sees the
+  `Mine`/`Project` switch, while the backend remains the final authorization
+  authority.
+- Real streaming browser acceptance exposed that the streaming persistence path
+  created `UsageLog` rows without invoking usage billing. Streaming and
+  non-streaming persistence now share the same billing trigger. Computed usage
+  charges are settled at micro-currency precision with positive sub-micro
+  amounts rounded up; manually entered commercial money values retain strict
+  six-decimal validation.
+- E2E billing defaults to `warn` through `AXONHUB_E2E_BILLING_MODE`, leaving the
+  production default unchanged while allowing browser tests to verify wallet,
+  ledger, billing-record, price-snapshot, and aggregate reconciliation.
 
 Acceptance:
 
@@ -514,3 +550,4 @@ records rather than synthetic UI data.
 | --- | --- | --- | --- |
 | W1 | this commit | 2026-07-10 | Unified route authorization, fixed project-owner and localized Admin navigation behavior, added the user home landing and safe redirect handling, and added unit/browser regression coverage. |
 | W2 | this commit | 2026-07-10 | Added the tenant-scoped workspace summary, wallet/key/model/subscription/usage metrics, deterministic onboarding states, desktop/mobile browser coverage, GUID parsing, and missing Vite API proxies. |
+| W6 | this commit | 2026-07-11 | Added isolated user/project request and usage REST projections, consumer Requests/Usage/detail/export UI, wallet-ledger and Project-price reconciliation, streaming billing completion, low-token micro settlement, and cross-user/browser regression coverage. |

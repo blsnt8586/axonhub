@@ -276,9 +276,11 @@ func (ts *OutboundPersistentStream) persistAggregatedResponse(ctx context.Contex
 
 	// Try to create usage log from aggregated response
 	if usage := meta.Usage; usage != nil {
-		_, err := ts.UsageLogService.CreateUsageLogFromRequest(ctx, ts.request, ts.requestExec, usage)
+		usageLog, err := ts.UsageLogService.CreateUsageLogFromRequest(ctx, ts.request, ts.requestExec, usage)
 		if err != nil {
 			log.Warn(ctx, "Failed to create usage log from request", log.Cause(err))
+		} else {
+			billPersistedUsage(ctx, ts.state, usageLog)
 		}
 	}
 
