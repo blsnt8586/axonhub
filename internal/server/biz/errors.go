@@ -57,3 +57,10 @@ var (
 	ErrAffiliateAlreadyBound     = errors.New("affiliate invitation already bound")
 	ErrAffiliateRebateFrozen     = errors.New("affiliate rebate is still frozen")
 )
+
+var (
+	ErrUserPlaygroundDenied           = errors.New("user playground access denied")
+	ErrUserPlaygroundInvalid          = errors.New("invalid user playground request")
+	ErrUserPlaygroundKeyDisabled      = errors.New("user playground api key is not usable")
+	ErrUserPlaygroundModelUnavailable = errors.New("user playground model is unavailable")
+)

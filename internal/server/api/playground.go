@@ -22,7 +22,8 @@ import (
 )
 
 type PlaygroundResponseError struct {
-	Status int `json:"-"`
+	Status int    `json:"-"`
+	Reason string `json:"reason,omitempty"`
 	Error  struct {
 		Code    int    `json:"code,omitempty"`
 		Message string `json:"message"`
@@ -55,6 +56,8 @@ type PlaygroundHandlers struct {
 	ChannelService             *biz.ChannelService
 	ChatCompletionOrchestrator *orchestrator.ChatCompletionOrchestrator
 }
+
+const consumerPlaygroundContextKey = "consumer_playground"
 
 func NewPlaygroundHandlers(params PlaygroundHandlersParams) *PlaygroundHandlers {
 	return &PlaygroundHandlers{
@@ -129,6 +132,7 @@ func (handlers *PlaygroundHandlers) HandleError(rawErr error) *PlaygroundRespons
 	if errors.As(rawErr, &quotaErr) {
 		return &PlaygroundResponseError{
 			Status: http.StatusServiceUnavailable,
+			Reason: "upstream_unavailable",
 			Error: struct {
 				Code    int    `json:"code,omitempty"`
 				Message string `json:"message"`
@@ -148,6 +152,7 @@ func (handlers *PlaygroundHandlers) HandleError(rawErr error) *PlaygroundRespons
 
 		return &PlaygroundResponseError{
 			Status: httpErr.StatusCode,
+			Reason: playgroundHTTPErrorReason(httpErr.StatusCode),
 			Error: struct {
 				Code    int    `json:"code,omitempty"`
 				Message string `json:"message"`
@@ -173,9 +178,11 @@ func (handlers *PlaygroundHandlers) HandleError(rawErr error) *PlaygroundRespons
 	}
 
 	if llmErr, ok := xerrors.As[*llm.ResponseError](rawErr); ok && llmErr != nil {
+		reason := playgroundLLMErrorReason(llmErr)
 		if llmErr.Detail.Message == "" {
 			return &PlaygroundResponseError{
 				Status: llmErr.StatusCode,
+				Reason: reason,
 				Error: struct {
 					Code    int    `json:"code,omitempty"`
 					Message string `json:"message"`
@@ -194,6 +201,7 @@ func (handlers *PlaygroundHandlers) HandleError(rawErr error) *PlaygroundRespons
 
 		return &PlaygroundResponseError{
 			Status: llmErr.StatusCode,
+			Reason: reason,
 			Error: struct {
 				Code    int    `json:"code,omitempty"`
 				Message string `json:"message"`
@@ -206,6 +214,7 @@ func (handlers *PlaygroundHandlers) HandleError(rawErr error) *PlaygroundRespons
 
 	return &PlaygroundResponseError{
 		Status: http.StatusInternalServerError,
+		Reason: "upstream_unavailable",
 		Error: struct {
 			Code    int    `json:"code,omitempty"`
 			Message string `json:"message"`
@@ -214,6 +223,26 @@ func (handlers *PlaygroundHandlers) HandleError(rawErr error) *PlaygroundRespons
 			Message: http.StatusText(http.StatusInternalServerError),
 		},
 	}
+}
+
+func playgroundHTTPErrorReason(status int) string {
+	if status == http.StatusTooManyRequests {
+		return "rate_limited"
+	}
+	if status >= http.StatusInternalServerError {
+		return "upstream_unavailable"
+	}
+	return ""
+}
+
+func playgroundLLMErrorReason(err *llm.ResponseError) string {
+	switch err.Detail.Code {
+	case string(biz.AdmissionCodeInsufficientBalance), string(biz.AdmissionCodeSubscriptionExhausted):
+		return "balance_insufficient"
+	case string(biz.AdmissionCodeAPIKeyBudgetExceeded):
+		return "key_disabled"
+	}
+	return playgroundHTTPErrorReason(err.StatusCode)
 }
 
 func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
@@ -235,15 +264,18 @@ func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
 		return
 	}
 
-	channelIDStr := c.Query("channel_id")
-	if channelIDStr == "" {
-		channelIDStr = c.GetHeader("X-Channel-ID")
-	}
+	var channelIDStr, projectIDStr string
+	if !c.GetBool(consumerPlaygroundContextKey) {
+		channelIDStr = c.Query("channel_id")
+		if channelIDStr == "" {
+			channelIDStr = c.GetHeader("X-Channel-ID")
+		}
 
-	// Extract project ID from header
-	projectIDStr := c.Query("project_id")
-	if projectIDStr == "" {
-		projectIDStr = c.GetHeader("X-Project-ID")
+		// Extract project ID from header
+		projectIDStr = c.Query("project_id")
+		if projectIDStr == "" {
+			projectIDStr = c.GetHeader("X-Project-ID")
+		}
 	}
 
 	// Parse and set project ID in context if provided

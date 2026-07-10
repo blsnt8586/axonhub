@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { IconTrash, IconRefresh } from '@tabler/icons-react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { MessageSquare, RefreshCcw, Copy } from 'lucide-react';
+import { AlertTriangle, Copy, KeyRound, MessageSquare, RefreshCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Actions, Action } from '@/components/ai-elements/actions';
@@ -22,15 +21,11 @@ import { PromptInput, PromptInputTextarea, PromptInputSubmit } from '@/component
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning';
 import { Response as UIResponse } from '@/components/ai-elements/response';
 import { AutoCompleteSelect } from '@/components/auto-complete-select';
-import { useQueryChannels } from '@/features/channels/data/channels';
-import { useQueryModels } from '@/features/models/data/models';
-
-type PlaygroundModelSource = 'channel' | 'model_gateway';
+import { PlaygroundBlockReason, usePlaygroundState } from './data';
 
 export default function Playground() {
   const { t } = useTranslation();
-  const [modelSource, setModelSource] = useState<PlaygroundModelSource>('channel');
-  const [selectedChannel, setSelectedChannel] = useState<string>('');
+  const [selectedKey, setSelectedKey] = useState('');
   const [model, setModel] = useState('');
   const [temperature, setTemperature] = useState(0.6);
   const [maxTokens, setMaxTokens] = useState(4096);
@@ -41,8 +36,7 @@ export default function Playground() {
   const temperatureRef = useRef(temperature);
   const maxTokensRef = useRef(maxTokens);
   const systemPromptRef = useRef(systemPrompt);
-  const selectedChannelRef = useRef(selectedChannel);
-  const modelSourceRef = useRef(modelSource);
+  const selectedKeyRef = useRef(selectedKey);
 
   // Keep refs synchronized with state
   useEffect(() => {
@@ -62,53 +56,23 @@ export default function Playground() {
   }, [systemPrompt]);
 
   useEffect(() => {
-    selectedChannelRef.current = selectedChannel;
-  }, [selectedChannel]);
-
-  useEffect(() => {
-    modelSourceRef.current = modelSource;
-  }, [modelSource]);
+    selectedKeyRef.current = selectedKey;
+  }, [selectedKey]);
 
   const { accessToken } = useAuthStore((state) => state.auth);
   const selectedProjectId = useSelectedProjectId();
-
-  // 获取 channels 数据
-  const { data: channelsData, isLoading: channelsLoading } = useQueryChannels({
-    first: 100,
-    orderBy: { field: 'ORDERING_WEIGHT', direction: 'DESC' },
-    where: {
-      statusIn: ['enabled', 'disabled'],
-    },
-  });
-  const isModelGatewaySource = modelSource === 'model_gateway';
-  const { data: modelsData, isLoading: modelsLoading } = useQueryModels(
-    {
-      first: 10000,
-      orderBy: { field: 'NAME', direction: 'ASC' },
-      where: {
-        statusIn: ['enabled'],
-        typeIn: ['chat'],
-      },
-    },
-    { enabled: isModelGatewaySource }
-  );
+  const { data: playgroundState, isLoading: playgroundLoading } = usePlaygroundState(selectedProjectId);
+  const [runtimeBlockReason, setRuntimeBlockReason] = useState<PlaygroundBlockReason>('none');
 
   const [input, setInput] = useState('');
 
   const { messages, sendMessage, status, setMessages, regenerate, stop } = useChat({
     transport: new DefaultChatTransport({
-      api: '/admin/playground/chat',
+      api: '/admin/account/playground/chat',
       credentials: 'include',
-      headers: () => {
-        const headers: Record<string, string> = {
-          Authorization: 'Bearer ' + accessToken,
-          'X-Project-ID': selectedProjectId || '',
-        };
-        if (modelSourceRef.current === 'channel' && selectedChannelRef.current) {
-          headers['X-Channel-ID'] = selectedChannelRef.current;
-        }
-        return headers;
-      },
+      headers: () => ({
+        Authorization: 'Bearer ' + accessToken,
+      }),
       body: () => {
         return {
           model: modelRef.current,
@@ -118,14 +82,19 @@ export default function Playground() {
         };
       },
       fetch: async (url, init) => {
-        const res = await fetch(url, init);
+        const requestURL = new URL(typeof url === 'string' ? url : url.toString(), window.location.origin);
+        requestURL.searchParams.set('projectId', selectedProjectId || '');
+        requestURL.searchParams.set('keyId', selectedKeyRef.current);
+        const res = await fetch(`${requestURL.pathname}${requestURL.search}`, init);
         if (!res.ok) {
           let message = res.statusText || 'Request failed';
           let code: number | undefined = res.status;
+          let reason: PlaygroundBlockReason | undefined;
           try {
             const body = await res.clone().json();
             const upstream = body?.error?.message || body?.message;
             const upstreamCode = typeof body?.error?.code === 'number' ? body.error.code : undefined;
+            reason = body?.reason || body?.error?.reason;
             if (upstream) message = upstream;
             if (typeof upstreamCode === 'number') code = upstreamCode;
           } catch {
@@ -134,6 +103,7 @@ export default function Playground() {
           const err: any = new Error(message);
           err.status = res.status;
           err.code = code;
+          err.reason = reason;
           err.response = res;
           throw err;
         }
@@ -144,6 +114,8 @@ export default function Playground() {
       const anyErr = error as any;
       const status = anyErr?.status;
       const codeFromError = typeof anyErr?.code === 'number' ? anyErr.code : undefined;
+      const reason = anyErr?.reason as PlaygroundBlockReason | undefined;
+      if (reason) setRuntimeBlockReason(reason);
 
       // If the error includes a fetch Response, try to parse JSON body
       const response: Response | undefined = anyErr?.response instanceof Response ? anyErr.response : undefined;
@@ -182,19 +154,54 @@ export default function Playground() {
   });
   const isLoading = status === 'submitted' || status === 'streaming';
   const hasUserMessage = useMemo(() => messages.some((m) => m.role === 'user'), [messages]);
+  const effectiveBlockReason = runtimeBlockReason !== 'none' ? runtimeBlockReason : playgroundState?.blockReason || 'none';
+  const canSend = Boolean(playgroundState?.canSend && selectedKey && model);
+
+  const keyOptions = useMemo(
+    () => (playgroundState?.apiKeys || []).filter((key) => key.usable).map((key) => ({ value: key.id, label: key.name })),
+    [playgroundState?.apiKeys]
+  );
+  const selectedKeyState = playgroundState?.apiKeys.find((key) => key.id === selectedKey);
+  const modelOptions = useMemo(() => {
+    const allowed = selectedKeyState?.allowedModelIds || [];
+    return (playgroundState?.models || [])
+      .filter(
+        (item) => item.modality === 'chat' && item.availability === 'available' && (allowed.length === 0 || allowed.includes(item.modelId))
+      )
+      .map((item) => ({ value: item.modelId, label: item.displayName || item.modelId }));
+  }, [playgroundState?.models, selectedKeyState?.allowedModelIds]);
+  const selectedModel = playgroundState?.models.find((item) => item.modelId === model);
+
+  useEffect(() => {
+    const current = playgroundState?.apiKeys.find((key) => key.id === selectedKey);
+    if (!current?.usable) {
+      setSelectedKey(playgroundState?.apiKeys.find((key) => key.usable)?.id || '');
+    }
+  }, [playgroundState?.apiKeys, selectedKey]);
+
+  useEffect(() => {
+    if (!modelOptions.some((option) => option.value === model)) {
+      setModel(modelOptions[0]?.value || '');
+    }
+  }, [model, modelOptions]);
+
+  useEffect(() => {
+    setRuntimeBlockReason('none');
+    setMessages([]);
+  }, [selectedProjectId, setMessages]);
 
   // Handle form submission
   const handleSubmit = useCallback(
     (message: { text?: string }, e: React.FormEvent) => {
       e.preventDefault();
-      // block submit while a request is in-flight
-      if (isLoading) return;
+      if (isLoading || !canSend) return;
       if (message.text?.trim()) {
+        setRuntimeBlockReason('none');
         sendMessage({ text: message.text });
         setInput('');
       }
     },
-    [sendMessage, selectedChannel, isLoading]
+    [canSend, isLoading, sendMessage]
   );
 
   const handleClear = useCallback(() => {
@@ -203,6 +210,7 @@ export default function Playground() {
 
   const handleRetry = useCallback(() => {
     if (messages.length === 0) return;
+    setRuntimeBlockReason('none');
 
     // 找到最后一个助手消息的索引
     let lastAssistantIndex = -1;
@@ -228,80 +236,6 @@ export default function Playground() {
     }
   }, [messages, regenerate, setMessages]);
 
-  // 渠道选项列表
-  const channelOptions = useMemo(() => {
-    if (!channelsData?.edges) return [];
-    return channelsData.edges
-      .filter((edge) => edge.node.supportedModels.length > 0)
-      .map((edge) => ({
-        value: edge.node.id,
-        label: edge.node.name,
-      }));
-  }, [channelsData]);
-
-  const modelPageModelOptions = useMemo(() => {
-    if (!modelsData?.edges) return [];
-    return modelsData.edges.map((edge) => {
-      const modelID = edge.node.modelID;
-      return {
-        value: modelID,
-        label: edge.node.name || modelID,
-      };
-    });
-  }, [modelsData]);
-
-  // 根据选中渠道过滤出模型列表
-  const modelOptions = useMemo(() => {
-    if (isModelGatewaySource) return modelPageModelOptions;
-    if (!channelsData?.edges || !selectedChannel) return [];
-    const channelEdge = channelsData.edges.find((edge) => edge.node.id === selectedChannel);
-    if (!channelEdge) return [];
-    return channelEdge.node.supportedModels.map((m) => ({
-      value: m,
-      label: m,
-    }));
-  }, [channelsData, isModelGatewaySource, modelPageModelOptions, selectedChannel]);
-
-  const selectedModelSourceLoading = isModelGatewaySource ? modelsLoading : channelsLoading;
-
-  // 处理渠道选择，自动选第一个模型
-  const handleChannelChange = useCallback(
-    (channelId: string) => {
-      setSelectedChannel(channelId);
-      const channelEdge = channelsData?.edges?.find((edge) => edge.node.id === channelId);
-      const firstModel = channelEdge?.node.supportedModels[0] ?? '';
-      setModel(firstModel);
-    },
-    [channelsData]
-  );
-
-  const handleModelSourceChange = useCallback(
-    (source: string) => {
-      const nextSource = source as PlaygroundModelSource;
-      setModelSource(nextSource);
-      if (nextSource === 'model_gateway') {
-        setModel(modelPageModelOptions[0]?.value ?? '');
-        return;
-      }
-      const channelEdge = channelsData?.edges?.find((edge) => edge.node.id === selectedChannel);
-      setModel(channelEdge?.node.supportedModels[0] ?? '');
-    },
-    [channelsData, modelPageModelOptions, selectedChannel]
-  );
-
-  // 初始化：默认选第一个渠道和第一个模型
-  useEffect(() => {
-    if (!selectedChannel && !channelsLoading && channelOptions.length > 0) {
-      handleChannelChange(channelOptions[0].value);
-    }
-  }, [channelOptions, channelsLoading, handleChannelChange, selectedChannel]);
-
-  useEffect(() => {
-    if (isModelGatewaySource && !model && modelPageModelOptions.length > 0) {
-      setModel(modelPageModelOptions[0].value);
-    }
-  }, [isModelGatewaySource, model, modelPageModelOptions]);
-
   return (
     <TooltipProvider>
       {/* {process.env.NODE_ENV === 'development' && (
@@ -322,7 +256,7 @@ export default function Playground() {
       <div className='bg-background flex h-screen w-full flex-col md:flex-row'>
         {/* Settings Sidebar */}
 
-        <div className='bg-card shadow-soft border-border m-4 flex max-h-[40vh] w-auto flex-col rounded-2xl border border-r md:max-h-none md:w-[340px] md:min-w-[280px] md:max-w-[400px]'>
+        <div className='bg-card shadow-soft border-border m-4 flex max-h-[44vh] w-auto flex-col rounded-lg border border-r md:max-h-none md:w-[340px] md:max-w-[400px] md:min-w-[280px]'>
           <div className='border-b p-4'>
             <h1 className='text-xl font-bold tracking-tight'>{t('playground.title')}</h1>
             <p className='text-muted-foreground mt-1 text-xs leading-relaxed'>{t('playground.description')}</p>
@@ -330,33 +264,34 @@ export default function Playground() {
 
           <ScrollArea className='min-h-0 flex-1 p-4'>
             <div className='space-y-6'>
-              <div className='space-y-3'>
-                <Label className='text-xs font-semibold'>{t('playground.settings.modelSource')}</Label>
-                <Tabs value={modelSource} onValueChange={handleModelSourceChange}>
-                  <TabsList className='grid w-full grid-cols-2'>
-                    <TabsTrigger value='channel'>{t('playground.settings.channel')}</TabsTrigger>
-                    <TabsTrigger value='model_gateway'>{t('playground.settings.modelGateway')}</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              {modelSource === 'channel' && (
-                <div className='space-y-3'>
-                  <Label htmlFor='channel' className='text-xs font-semibold'>
-                    {t('playground.settings.channel')}
-                  </Label>
-                  <AutoCompleteSelect
-                    selectedValue={selectedChannel}
-                    onSelectedValueChange={(v) => handleChannelChange(v)}
-                    items={channelOptions}
-                    isLoading={channelsLoading}
-                    emptyMessage={t('playground.errors.noChannelsAvailable')}
-                    placeholder={channelsLoading ? t('loading') : t('playground.settings.selectChannel')}
-                  />
+              {effectiveBlockReason !== 'none' && (
+                <div data-testid='playground-block-state' className='border-border bg-muted/40 flex gap-3 rounded-md border p-3'>
+                  <AlertTriangle className='text-muted-foreground mt-0.5 size-4 shrink-0' />
+                  <div className='min-w-0'>
+                    <p className='text-sm font-medium'>{t(`playground.blocks.${effectiveBlockReason}.title`)}</p>
+                    <p className='text-muted-foreground mt-1 text-xs leading-5'>
+                      {t(`playground.blocks.${effectiveBlockReason}.description`)}
+                    </p>
+                  </div>
                 </div>
               )}
 
-              <div className='space-y-3'>
+              <div data-testid='playground-key-select' className='space-y-3'>
+                <Label htmlFor='api-key' className='flex items-center gap-2 text-xs font-semibold'>
+                  <KeyRound className='size-3.5' />
+                  {t('playground.settings.apiKey')}
+                </Label>
+                <AutoCompleteSelect
+                  selectedValue={selectedKey}
+                  onSelectedValueChange={setSelectedKey}
+                  items={keyOptions}
+                  isLoading={playgroundLoading}
+                  emptyMessage={t('playground.errors.noUsableKeys')}
+                  placeholder={playgroundLoading ? t('loading') : t('playground.settings.selectApiKey')}
+                />
+              </div>
+
+              <div data-testid='playground-model-select' className='space-y-3'>
                 <Label htmlFor='model' className='text-xs font-semibold'>
                   {t('playground.settings.model')}
                 </Label>
@@ -364,21 +299,18 @@ export default function Playground() {
                   selectedValue={model}
                   onSelectedValueChange={(v) => setModel(v)}
                   items={modelOptions}
-                  isLoading={selectedModelSourceLoading}
+                  isLoading={playgroundLoading}
                   emptyMessage={t('playground.errors.noModelsAvailable')}
-                  placeholder={selectedModelSourceLoading ? t('loading') : t('playground.settings.selectModel')}
+                  placeholder={playgroundLoading ? t('loading') : t('playground.settings.selectModel')}
                 />
-                {selectedModelSourceLoading && <p className='text-muted-foreground text-[10px]'>{t('loading')}...</p>}
-                {!selectedModelSourceLoading && modelOptions.length > 0 && (
-                  <p className='text-muted-foreground text-[10px]'>
-                    {isModelGatewaySource
-                      ? t('playground.modelPageModelsAvailable', {
-                          count: modelOptions.length,
-                        })
-                      : t('playground.modelsAvailable', {
-                          count: modelOptions.length,
-                          channels: channelOptions.length,
-                        })}
+                {selectedModel && (
+                  <p className='text-muted-foreground text-[10px] leading-4'>
+                    {t('playground.modelSummary', {
+                      modality: selectedModel.modality,
+                      scope: selectedModel.priceRule?.scope || t('playground.price.unconfigured'),
+                      pattern: selectedModel.priceRule?.pattern || '-',
+                      currency: selectedModel.currency || '-',
+                    })}
                   </p>
                 )}
               </div>
@@ -442,7 +374,7 @@ export default function Playground() {
               onClick={handleRetry}
               variant='outline'
               className='h-9 w-full text-xs'
-              disabled={isLoading || messages.length === 0 || messages.every((msg) => msg.role !== 'assistant')}
+              disabled={!canSend || isLoading || messages.length === 0 || messages.every((msg) => msg.role !== 'assistant')}
             >
               <IconRefresh className='mr-2 h-3 w-3' />
               {isLoading
@@ -463,7 +395,7 @@ export default function Playground() {
 
         {/* Chat Area */}
         <div className='flex flex-1 flex-col p-4'>
-          <div className='shadow-soft border-border bg-card flex h-full flex-col rounded-2xl border p-6'>
+          <div className='shadow-soft border-border bg-card flex h-full flex-col rounded-lg border p-4 md:p-6'>
             <Conversation className='max-h-[50vh] flex-1 md:max-h-none'>
               <ConversationContent>
                 {messages.length === 0 ? (
@@ -527,13 +459,14 @@ export default function Playground() {
             <PromptInput onSubmit={handleSubmit} className='relative mt-4 w-full'>
               <PromptInputTextarea
                 value={input}
-                placeholder={t('playground.chat.typeMessage')}
+                placeholder={canSend ? t('playground.chat.typeMessage') : t('playground.chat.blockedPlaceholder')}
                 onChange={(e) => setInput(e.currentTarget.value)}
+                disabled={!canSend}
                 className='pr-16'
               />
               <PromptInputSubmit
                 status={status}
-                disabled={status === 'ready' ? !input.trim() : false}
+                disabled={status === 'ready' ? !canSend || !input.trim() : false}
                 // className='absolute right-2 top-1/2 -translate-y-1/2'
                 className='absolute right-3 bottom-3'
                 onClick={(e) => {

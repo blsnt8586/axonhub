@@ -51,15 +51,7 @@ func WithAPIKeyConfig(auth *biz.AuthService, config *APIKeyConfig) gin.HandlerFu
 			return
 		}
 
-		ctx := contexts.WithAPIKey(c.Request.Context(), apiKey)
-
-		if apiKey.Edges.Project != nil {
-			ctx = contexts.WithProjectID(ctx, apiKey.Edges.Project.ID)
-		}
-
-		ctx = withSessionScopeForAPIKey(ctx, apiKey)
-
-		ctx, err = withAPIKeyPrincipal(ctx, apiKey)
+		ctx, err := ContextWithAPIKey(c.Request.Context(), apiKey)
 		if err != nil {
 			AbortWithError(c, http.StatusUnauthorized, errors.New("Invalid authentication context"))
 			return
@@ -142,14 +134,7 @@ func WithOpenAPIAuth(auth *biz.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		ctx := contexts.WithAPIKey(c.Request.Context(), apiKey)
-		if apiKey.Edges.Project != nil {
-			ctx = contexts.WithProjectID(ctx, apiKey.Edges.Project.ID)
-		}
-
-		ctx = withSessionScopeForAPIKey(ctx, apiKey)
-
-		ctx, err = withAPIKeyPrincipal(ctx, apiKey)
+		ctx, err := ContextWithAPIKey(c.Request.Context(), apiKey)
 		if err != nil {
 			AbortWithError(c, http.StatusUnauthorized, errors.New("Invalid authentication context"))
 			return
@@ -186,16 +171,7 @@ func WithGeminiKeyAuth(auth *biz.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		// 将 API key entity 保存到 context 中
-		ctx := contexts.WithAPIKey(c.Request.Context(), apiKey)
-
-		if apiKey.Edges.Project != nil {
-			ctx = contexts.WithProjectID(ctx, apiKey.Edges.Project.ID)
-		}
-
-		ctx = withSessionScopeForAPIKey(ctx, apiKey)
-
-		ctx, err = withAPIKeyPrincipal(ctx, apiKey)
+		ctx, err := ContextWithAPIKey(c.Request.Context(), apiKey)
 		if err != nil {
 			AbortWithError(c, http.StatusUnauthorized, errors.New("Invalid authentication context"))
 			return
@@ -222,6 +198,34 @@ func withSessionScopeForAPIKey(ctx context.Context, key *ent.APIKey) context.Con
 		scope += ":project:" + strconv.Itoa(key.Edges.Project.ID)
 	}
 	return shared.WithSessionScope(ctx, scope)
+}
+
+// ContextWithAPIKey installs the complete runtime identity used by API-key
+// requests. Consumer surfaces that select a user-owned key server-side must use
+// this helper so authorization, request attribution, quotas, and billing see the
+// same principal as the public API path.
+func ContextWithAPIKey(ctx context.Context, key *ent.APIKey) (context.Context, error) {
+	ctx = contextWithAPIKeyRuntime(ctx, key)
+	return withAPIKeyPrincipal(ctx, key)
+}
+
+// ContextWithUserOwnedAPIKey performs the constrained user-to-key delegation
+// used by first-party consumer tools. Ownership must already be verified by the
+// caller and is checked again against the authenticated user principal here.
+func ContextWithUserOwnedAPIKey(ctx context.Context, user *ent.User, key *ent.APIKey) (context.Context, error) {
+	if user == nil || key == nil || key.UserID != user.ID || key.Edges.Project == nil {
+		return ctx, errors.New("invalid user-owned api key context")
+	}
+	ctx = contextWithAPIKeyRuntime(ctx, key)
+	return authz.WithUserAPIKeyDelegation(ctx, user.ID, key.ID, key.Edges.Project.ID)
+}
+
+func contextWithAPIKeyRuntime(ctx context.Context, key *ent.APIKey) context.Context {
+	ctx = contexts.WithAPIKey(ctx, key)
+	if key.Edges.Project != nil {
+		ctx = contexts.WithProjectID(ctx, key.Edges.Project.ID)
+	}
+	return withSessionScopeForAPIKey(ctx, key)
 }
 
 func withUserPrincipal(ctx context.Context, user *ent.User) (context.Context, error) {

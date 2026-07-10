@@ -367,15 +367,44 @@ Acceptance:
 
 ### W5: Playground And Model Catalog
 
-- [ ] Make Playground a project-consumer capability using selected Project and a
+- [x] Make Playground a project-consumer capability using selected Project and a
   user-owned key or an equivalent server-side user principal.
-- [ ] Add a consumer-safe model catalog containing model ID, modality,
+- [x] Add a consumer-safe model catalog containing model ID, modality,
   availability, public price, and applicable project multiplier/rule summary.
-- [ ] Do not query global Channel administration from Playground.
-- [ ] Add explicit no-model, insufficient-balance, key-disabled, rate-limited,
+- [x] Do not query global Channel administration from Playground.
+- [x] Add explicit no-model, insufficient-balance, key-disabled, rate-limited,
   and upstream-unavailable states.
-- [ ] Preserve Orchestrator retry, circuit breaker, account-pool switching, and
+- [x] Preserve Orchestrator retry, circuit breaker, account-pool switching, and
   cross-Channel behavior.
+
+Status: [x] Completed
+
+Implementation notes:
+
+- Consumer Playground uses `/admin/account/playground` and
+  `/admin/account/playground/chat`; the existing administrator Playground route
+  remains available for operational use.
+- The state endpoint verifies Project membership, lists only the authenticated
+  user's personal/user keys in that Project, evaluates expiry and IP policy,
+  applies key model restrictions, and checks commercial admission without
+  exposing Channel or upstream-account data.
+- The model catalog returns model ID, display name, modality, availability,
+  public price, currency, and only the effective global/project rule scope and
+  pattern. Internal price references and upstream costs are omitted.
+- A constrained authz delegation converts an authenticated user principal to a
+  key principal only when the selected key belongs to that same user. The
+  resulting request therefore reuses API-key quotas, request attribution,
+  wallet billing, commercial key limits, and session scoping.
+- Consumer chat removes all client-supplied Channel selection and invokes the
+  existing `ChatCompletionOrchestrator`. Retry, circuit breaker, account-pool
+  switching, cross-Channel selection, tracing, holds, and usage billing remain
+  in the original request path.
+- The frontend no longer queries global Channels or Models. It selects a usable
+  personal key and chat model from the consumer state, shows deterministic
+  blocking states, and remains usable without horizontal overflow at 390px.
+- Browser acceptance creates an enabled `openai_fake` Channel, sends a streaming
+  response through the real Orchestrator, verifies the no-model state before
+  provisioning, and checks that Playground issues no Channel/Model admin query.
 
 Acceptance:
 

@@ -132,7 +132,9 @@ func createUserAPIKeyHandlerRow(t *testing.T, ctx context.Context, client *ent.C
 
 func withUserAPIKeyHandlerUser(user *ent.User) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Request = c.Request.WithContext(contexts.WithUser(c.Request.Context(), user))
+		ctx := contexts.WithUser(c.Request.Context(), user)
+		ctx = authz.NewUserContext(ctx, user.ID)
+		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
 }

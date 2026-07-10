@@ -436,6 +436,20 @@ func TestPlaygroundHandleError_QuotaExhausted_Returns503(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, errResp.Status)
 	assert.Equal(t, http.StatusServiceUnavailable, errResp.Error.Code)
 	assert.Equal(t, "all channels quota exhausted for model gpt-4", errResp.Error.Message)
+	assert.Equal(t, "upstream_unavailable", errResp.Reason)
+}
+
+func TestPlaygroundHandleError_ClassifiesCommercialAndRateLimitErrors(t *testing.T) {
+	handlers := &PlaygroundHandlers{}
+
+	billing := handlers.HandleError(&llm.ResponseError{
+		StatusCode: http.StatusPaymentRequired,
+		Detail:     llm.ErrorDetail{Code: string(biz.AdmissionCodeInsufficientBalance), Message: "insufficient billing balance"},
+	})
+	assert.Equal(t, "balance_insufficient", billing.Reason)
+
+	rateLimited := handlers.HandleError(&httpclient.Error{StatusCode: http.StatusTooManyRequests})
+	assert.Equal(t, "rate_limited", rateLimited.Reason)
 }
 
 func TestPlaygroundHandleError_OtherError_Returns500(t *testing.T) {

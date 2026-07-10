@@ -111,6 +111,22 @@ func WithPrincipal(ctx context.Context, p Principal) (context.Context, error) {
 	return context.WithValue(ctx, principalKey{}, p), nil
 }
 
+// WithUserAPIKeyDelegation replaces an authenticated user principal with an
+// API-key principal only when the key belongs to that same user. This explicit
+// transition is used by first-party consumer tools that select a user-owned key
+// server-side without exposing its secret to the browser.
+func WithUserAPIKeyDelegation(ctx context.Context, userID, apiKeyID, projectID int) (context.Context, error) {
+	if userID <= 0 || apiKeyID <= 0 || projectID <= 0 {
+		return ctx, fmt.Errorf("authz: invalid user api key delegation")
+	}
+	existing, ok := GetPrincipal(ctx)
+	if !ok || existing.Type != PrincipalTypeUser || existing.UserID == nil || *existing.UserID != userID {
+		return ctx, fmt.Errorf("authz: user api key delegation requires matching user principal")
+	}
+	principal := Principal{Type: PrincipalTypeAPIKey, APIKeyID: &apiKeyID, ProjectID: &projectID}
+	return context.WithValue(ctx, principalKey{}, principal), nil
+}
+
 // principalEqual compares if two Principals are equal.
 func principalEqual(a, b Principal) bool {
 	if a.Type != b.Type {

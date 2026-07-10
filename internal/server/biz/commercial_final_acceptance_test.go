@@ -175,7 +175,7 @@ func TestCommercialOperationsFinalAcceptanceUserCommercialLifecycle(t *testing.T
 		}).
 		Save(ctx)
 	require.NoError(t, err)
-	require.Equal(t, apikey.TypeUser, apiKeyRow.Type)
+	require.Equal(t, apikey.TypePersonal, apiKeyRow.Type)
 	decision, err := admissionSvc.Check(ctx, AdmissionCheckInput{
 		Subject:               UserBillingSubject(registered.User.ID),
 		ProjectID:             registered.Project.ID,

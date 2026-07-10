@@ -41,6 +41,7 @@ type Handlers struct {
 	WorkspaceSummary  *api.UserWorkspaceSummaryHandlers
 	UserWorkspaces    *api.UserWorkspaceHandlers
 	UserAPIKeys       *api.UserAPIKeyHandlers
+	UserPlayground    *api.UserPlaygroundHandlers
 }
 
 type Services struct {
@@ -151,6 +152,13 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		adminGroup.DELETE("/account/api-keys", handlers.UserAPIKeys.Archive)
 		adminGroup.POST("/account/api-keys/rotate", handlers.UserAPIKeys.Rotate)
 		adminGroup.GET("/account/api-key-models", handlers.UserAPIKeys.Models)
+		adminGroup.GET("/account/playground", handlers.UserPlayground.State)
+		adminGroup.POST(
+			"/account/playground/chat",
+			middleware.WithTimeout(server.Config.LLMRequestTimeout),
+			middleware.WithSource(request.SourcePlayground),
+			handlers.UserPlayground.Chat,
+		)
 		adminGroup.GET("/users/:user_id/commercial-profile", handlers.CommercialProfile.GetUserProfile)
 
 		// Playground API with channel specification support
