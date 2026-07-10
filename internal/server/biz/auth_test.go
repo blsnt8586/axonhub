@@ -410,6 +410,18 @@ func TestAuthService_AuthenticateAPIKey(t *testing.T) {
 	// Synchronously invalidate the cache for testing
 	authService.APIKeyService.APIKeyCache.Invalidate(buildAPIKeyCacheKey(apiKeyString))
 
+	// Enabled keys are still rejected after their configured expiration time.
+	_, err = client.APIKey.UpdateOneID(apiKey.ID).SetExpiresAt(time.Now().Add(-time.Minute)).Save(ctx)
+	require.NoError(t, err)
+	authService.APIKeyService.APIKeyCache.Invalidate(buildAPIKeyCacheKey(apiKeyString))
+	_, err = authService.AuthenticateAPIKey(ctx, apiKeyString)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "api key expired")
+
+	_, err = client.APIKey.UpdateOneID(apiKey.ID).ClearExpiresAt().Save(ctx)
+	require.NoError(t, err)
+	authService.APIKeyService.APIKeyCache.Invalidate(buildAPIKeyCacheKey(apiKeyString))
+
 	// Then archive the project (making it inactive)
 	_, err = client.Project.UpdateOneID(testProject.ID).
 		SetStatus(project.StatusArchived).

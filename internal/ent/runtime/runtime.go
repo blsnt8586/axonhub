@@ -121,6 +121,10 @@ func init() {
 	apikeyDescCommercialLimits := apikeyFields[8].Descriptor()
 	// apikey.DefaultCommercialLimits holds the default value on creation for the commercial_limits field.
 	apikey.DefaultCommercialLimits = apikeyDescCommercialLimits.Default.(*objects.APIKeyCommercialLimits)
+	// apikeyDescIPAllowlist is the schema descriptor for ip_allowlist field.
+	apikeyDescIPAllowlist := apikeyFields[10].Descriptor()
+	// apikey.DefaultIPAllowlist holds the default value on creation for the ip_allowlist field.
+	apikey.DefaultIPAllowlist = apikeyDescIPAllowlist.Default.([]string)
 	apikeyprofiletemplateMixin := schema.APIKeyProfileTemplate{}.Mixin()
 	apikeyprofiletemplate.Policy = privacy.NewPolicies(schema.APIKeyProfileTemplate{})
 	apikeyprofiletemplate.Hooks[0] = func(next ent.Mutator) ent.Mutator {

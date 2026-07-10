@@ -16,6 +16,7 @@ import (
 	"github.com/looplj/axonhub/internal/authz"
 	"github.com/looplj/axonhub/internal/contexts"
 	"github.com/looplj/axonhub/internal/ent"
+	"github.com/looplj/axonhub/internal/ent/apikey"
 	"github.com/looplj/axonhub/internal/ent/ledgertransaction"
 	"github.com/looplj/axonhub/internal/ent/project"
 	"github.com/looplj/axonhub/internal/ent/user"
@@ -295,9 +296,11 @@ func (s *RegistrationService) Register(ctx context.Context, input RegisterUserIn
 					apiKeyName = defaultRegistrationAPIKeyName
 				}
 
+				personalType := apikey.TypePersonal
 				createdAPIKey, err := s.APIKeyService.CreateAPIKey(userCtx, ent.CreateAPIKeyInput{
 					Name:      apiKeyName,
 					ProjectID: createdProject.ID,
+					Type:      &personalType,
 				})
 				if err != nil {
 					return fmt.Errorf("failed to create registration api key: %w", err)

@@ -1,14 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ProjectGuard } from '@/components/project-guard';
-import { RouteGuard } from '@/components/route-guard';
-import ApiKeys from '@/features/apikeys';
+import PersonalAPIKeys from '@/features/personal-api-keys';
 
 function ProtectedProjectApiKeys() {
   return (
     <ProjectGuard>
-      <RouteGuard requiredScopes={['read_api_keys']} scopeLevel='project'>
-        <ApiKeys />
-      </RouteGuard>
+      <PersonalAPIKeys />
     </ProjectGuard>
   );
 }

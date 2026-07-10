@@ -157,6 +157,44 @@ func (_u *APIKeyUpdate) ClearCommercialLimits() *APIKeyUpdate {
 	return _u
 }
 
+// SetExpiresAt sets the "expires_at" field.
+func (_u *APIKeyUpdate) SetExpiresAt(v time.Time) *APIKeyUpdate {
+	_u.mutation.SetExpiresAt(v)
+	return _u
+}
+
+// SetNillableExpiresAt sets the "expires_at" field if the given value is not nil.
+func (_u *APIKeyUpdate) SetNillableExpiresAt(v *time.Time) *APIKeyUpdate {
+	if v != nil {
+		_u.SetExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (_u *APIKeyUpdate) ClearExpiresAt() *APIKeyUpdate {
+	_u.mutation.ClearExpiresAt()
+	return _u
+}
+
+// SetIPAllowlist sets the "ip_allowlist" field.
+func (_u *APIKeyUpdate) SetIPAllowlist(v []string) *APIKeyUpdate {
+	_u.mutation.SetIPAllowlist(v)
+	return _u
+}
+
+// AppendIPAllowlist appends value to the "ip_allowlist" field.
+func (_u *APIKeyUpdate) AppendIPAllowlist(v []string) *APIKeyUpdate {
+	_u.mutation.AppendIPAllowlist(v)
+	return _u
+}
+
+// ClearIPAllowlist clears the value of the "ip_allowlist" field.
+func (_u *APIKeyUpdate) ClearIPAllowlist() *APIKeyUpdate {
+	_u.mutation.ClearIPAllowlist()
+	return _u
+}
+
 // AddRequestIDs adds the "requests" edge to the Request entity by IDs.
 func (_u *APIKeyUpdate) AddRequestIDs(ids ...int) *APIKeyUpdate {
 	_u.mutation.AddRequestIDs(ids...)
@@ -319,6 +357,23 @@ func (_u *APIKeyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.CommercialLimitsCleared() {
 		_spec.ClearField(apikey.FieldCommercialLimits, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ExpiresAt(); ok {
+		_spec.SetField(apikey.FieldExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiresAtCleared() {
+		_spec.ClearField(apikey.FieldExpiresAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.IPAllowlist(); ok {
+		_spec.SetField(apikey.FieldIPAllowlist, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedIPAllowlist(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, apikey.FieldIPAllowlist, value)
+		})
+	}
+	if _u.mutation.IPAllowlistCleared() {
+		_spec.ClearField(apikey.FieldIPAllowlist, field.TypeJSON)
 	}
 	if _u.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -509,6 +564,44 @@ func (_u *APIKeyUpdateOne) SetCommercialLimits(v *objects.APIKeyCommercialLimits
 // ClearCommercialLimits clears the value of the "commercial_limits" field.
 func (_u *APIKeyUpdateOne) ClearCommercialLimits() *APIKeyUpdateOne {
 	_u.mutation.ClearCommercialLimits()
+	return _u
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (_u *APIKeyUpdateOne) SetExpiresAt(v time.Time) *APIKeyUpdateOne {
+	_u.mutation.SetExpiresAt(v)
+	return _u
+}
+
+// SetNillableExpiresAt sets the "expires_at" field if the given value is not nil.
+func (_u *APIKeyUpdateOne) SetNillableExpiresAt(v *time.Time) *APIKeyUpdateOne {
+	if v != nil {
+		_u.SetExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (_u *APIKeyUpdateOne) ClearExpiresAt() *APIKeyUpdateOne {
+	_u.mutation.ClearExpiresAt()
+	return _u
+}
+
+// SetIPAllowlist sets the "ip_allowlist" field.
+func (_u *APIKeyUpdateOne) SetIPAllowlist(v []string) *APIKeyUpdateOne {
+	_u.mutation.SetIPAllowlist(v)
+	return _u
+}
+
+// AppendIPAllowlist appends value to the "ip_allowlist" field.
+func (_u *APIKeyUpdateOne) AppendIPAllowlist(v []string) *APIKeyUpdateOne {
+	_u.mutation.AppendIPAllowlist(v)
+	return _u
+}
+
+// ClearIPAllowlist clears the value of the "ip_allowlist" field.
+func (_u *APIKeyUpdateOne) ClearIPAllowlist() *APIKeyUpdateOne {
+	_u.mutation.ClearIPAllowlist()
 	return _u
 }
 
@@ -704,6 +797,23 @@ func (_u *APIKeyUpdateOne) sqlSave(ctx context.Context) (_node *APIKey, err erro
 	}
 	if _u.mutation.CommercialLimitsCleared() {
 		_spec.ClearField(apikey.FieldCommercialLimits, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ExpiresAt(); ok {
+		_spec.SetField(apikey.FieldExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiresAtCleared() {
+		_spec.ClearField(apikey.FieldExpiresAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.IPAllowlist(); ok {
+		_spec.SetField(apikey.FieldIPAllowlist, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedIPAllowlist(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, apikey.FieldIPAllowlist, value)
+		})
+	}
+	if _u.mutation.IPAllowlistCleared() {
+		_spec.ClearField(apikey.FieldIPAllowlist, field.TypeJSON)
 	}
 	if _u.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{

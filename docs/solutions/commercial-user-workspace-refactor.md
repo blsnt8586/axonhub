@@ -313,15 +313,50 @@ Acceptance:
 
 ### W4: User-Owned API Key Lifecycle
 
-- [ ] Add explicit self-service API key operations whose ownership checks are
+- [x] Add explicit self-service API key operations whose ownership checks are
   `current user + selected Project`, independent of global key administration.
-- [ ] Keep service-account/shared-key management under project administration.
-- [ ] Support name, status, rotation, expiry, model restrictions, IP allowlist,
+- [x] Keep service-account/shared-key management under project administration.
+- [x] Support name, status, rotation, expiry, model restrictions, IP allowlist,
   commercial budget, and request/rate limits where the runtime enforces them.
-- [ ] Display the full secret only at creation/rotation and keep stored/listed
+- [x] Display the full secret only at creation/rotation and keep stored/listed
   values masked.
-- [ ] Add usable-model and public-price selectors without Channel secrets.
-- [ ] Preserve AxonHub API Key Profile mapping and restrictions.
+- [x] Add usable-model and public-price selectors without Channel secrets.
+- [x] Preserve AxonHub API Key Profile mapping and restrictions.
+
+Implemented:
+
+- Consumer operations use `/admin/account/api-keys` and require both Project and
+  API Key GUIDs. Every read and mutation first verifies the authenticated user is
+  an active Project member, then queries with `user_id + project_id + api_key_id`.
+  A user cannot infer or mutate another member's key even inside a shared Project.
+- Newly registered default keys and self-service keys use the existing `personal`
+  type. Legacy user-owned `user` keys remain visible through the same strictly
+  owner-scoped projection for compatibility.
+- Create and rotate responses return the full secret once. List/update responses
+  expose only a prefix/suffix mask. Rotation invalidates old and new cache keys;
+  archive acts as consumer deletion while retaining request and billing history.
+- API Key schema now stores optional `expires_at` and normalized IP/CIDR
+  `ip_allowlist` values. Expiration is checked by `AuthenticateAPIKey`; every HTTP
+  API-key middleware also validates `ClientIP` before installing the principal.
+- Allowed model IDs and request limits are projected into the active AxonHub API
+  Key Profile. Model mappings, Channel filters, load-balancing strategy, token
+  quota, and cost quota fields that are not edited by the consumer are preserved.
+  Request windows map to the existing all-time, rolling minute/hour, and calendar
+  day quota periods already enforced by the Orchestrator quota middleware.
+- Total, daily, monthly, and single-request commercial budgets reuse
+  `APIKeyCommercialLimits`; admission and billing continue charging the user's
+  wallet and reject over-budget requests in the real request path.
+- `/admin/account/api-key-models` returns only available model IDs and the
+  effective Project/global sell-price rule. It does not return Channel IDs,
+  provider credentials, upstream cost, account-pool state, or circuit-breaker
+  diagnostics.
+- `/project/api-keys` is now the personal-key workspace. Existing project/shared
+  key management remains available to authorized owners at
+  `/project/api-keys/shared`, and system administration remains unchanged.
+- Browser acceptance registers two ordinary users, verifies cross-user mutation
+  returns 403, creates a restricted key, proves an IP mismatch returns 401 on a
+  real `/v1/chat/completions` request, and covers edit, disable, rotate, archive,
+  one-time secret display, console errors, and `390x844` overflow.
 
 Acceptance:
 

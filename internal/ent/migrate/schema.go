@@ -21,6 +21,8 @@ var (
 		{Name: "scopes", Type: field.TypeJSON, Nullable: true},
 		{Name: "profiles", Type: field.TypeJSON, Nullable: true},
 		{Name: "commercial_limits", Type: field.TypeJSON, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "ip_allowlist", Type: field.TypeJSON, Nullable: true},
 		{Name: "project_id", Type: field.TypeInt, Default: 1},
 		{Name: "user_id", Type: field.TypeInt, Nullable: true},
 	}
@@ -32,13 +34,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "api_keys_projects_api_keys",
-				Columns:    []*schema.Column{APIKeysColumns[11]},
+				Columns:    []*schema.Column{APIKeysColumns[13]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "api_keys_users_api_keys",
-				Columns:    []*schema.Column{APIKeysColumns[12]},
+				Columns:    []*schema.Column{APIKeysColumns[14]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -47,12 +49,12 @@ var (
 			{
 				Name:    "api_keys_by_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[12]},
+				Columns: []*schema.Column{APIKeysColumns[14]},
 			},
 			{
 				Name:    "api_keys_by_project_id",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[11]},
+				Columns: []*schema.Column{APIKeysColumns[13]},
 			},
 			{
 				Name:    "api_keys_by_key",

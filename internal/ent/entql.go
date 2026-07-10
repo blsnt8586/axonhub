@@ -91,6 +91,8 @@ var schemaGraph = func() *sqlgraph.Schema {
 			apikey.FieldScopes:           {Type: field.TypeJSON, Column: apikey.FieldScopes},
 			apikey.FieldProfiles:         {Type: field.TypeJSON, Column: apikey.FieldProfiles},
 			apikey.FieldCommercialLimits: {Type: field.TypeJSON, Column: apikey.FieldCommercialLimits},
+			apikey.FieldExpiresAt:        {Type: field.TypeTime, Column: apikey.FieldExpiresAt},
+			apikey.FieldIPAllowlist:      {Type: field.TypeJSON, Column: apikey.FieldIPAllowlist},
 		},
 	}
 	graph.Nodes[1] = &sqlgraph.Node{
@@ -3674,6 +3676,16 @@ func (f *APIKeyFilter) WhereProfiles(p entql.BytesP) {
 // WhereCommercialLimits applies the entql json.RawMessage predicate on the commercial_limits field.
 func (f *APIKeyFilter) WhereCommercialLimits(p entql.BytesP) {
 	f.Where(p.Field(apikey.FieldCommercialLimits))
+}
+
+// WhereExpiresAt applies the entql time.Time predicate on the expires_at field.
+func (f *APIKeyFilter) WhereExpiresAt(p entql.TimeP) {
+	f.Where(p.Field(apikey.FieldExpiresAt))
+}
+
+// WhereIPAllowlist applies the entql json.RawMessage predicate on the ip_allowlist field.
+func (f *APIKeyFilter) WhereIPAllowlist(p entql.BytesP) {
+	f.Where(p.Field(apikey.FieldIPAllowlist))
 }
 
 // WhereHasUser applies a predicate to check if query has an edge user.

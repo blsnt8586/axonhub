@@ -100,6 +100,9 @@ export const routeConfigs: RouteGroup[] = [
     routes: [
       {
         path: '/project/api-keys',
+      },
+      {
+        path: '/project/api-keys/shared',
         requiredScopes: ['read_api_keys'],
         mode: 'hidden',
       },

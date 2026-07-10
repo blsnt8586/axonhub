@@ -45,6 +45,10 @@ type APIKey struct {
 	Profiles *objects.APIKeyProfiles `json:"profiles,omitempty"`
 	// Commercial spend limits for this API key. The user wallet remains the payer.
 	CommercialLimits *objects.APIKeyCommercialLimits `json:"commercial_limits,omitempty"`
+	// Optional expiration time enforced during API authentication.
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	// Optional IP or CIDR allowlist enforced during API authentication.
+	IPAllowlist []string `json:"ip_allowlist,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the APIKeyQuery when eager-loading is set.
 	Edges        APIKeyEdges `json:"edges"`
@@ -104,13 +108,13 @@ func (*APIKey) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case apikey.FieldScopes, apikey.FieldProfiles, apikey.FieldCommercialLimits:
+		case apikey.FieldScopes, apikey.FieldProfiles, apikey.FieldCommercialLimits, apikey.FieldIPAllowlist:
 			values[i] = new([]byte)
 		case apikey.FieldID, apikey.FieldDeletedAt, apikey.FieldUserID, apikey.FieldProjectID:
 			values[i] = new(sql.NullInt64)
 		case apikey.FieldKey, apikey.FieldName, apikey.FieldType, apikey.FieldStatus:
 			values[i] = new(sql.NullString)
-		case apikey.FieldCreatedAt, apikey.FieldUpdatedAt:
+		case apikey.FieldCreatedAt, apikey.FieldUpdatedAt, apikey.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -211,6 +215,21 @@ func (_m *APIKey) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field commercial_limits: %w", err)
 				}
 			}
+		case apikey.FieldExpiresAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field expires_at", values[i])
+			} else if value.Valid {
+				_m.ExpiresAt = new(time.Time)
+				*_m.ExpiresAt = value.Time
+			}
+		case apikey.FieldIPAllowlist:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field ip_allowlist", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.IPAllowlist); err != nil {
+					return fmt.Errorf("unmarshal field ip_allowlist: %w", err)
+				}
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -297,6 +316,14 @@ func (_m *APIKey) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("commercial_limits=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CommercialLimits))
+	builder.WriteString(", ")
+	if v := _m.ExpiresAt; v != nil {
+		builder.WriteString("expires_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("ip_allowlist=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IPAllowlist))
 	builder.WriteByte(')')
 	return builder.String()
 }

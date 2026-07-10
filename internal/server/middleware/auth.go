@@ -35,7 +35,7 @@ func WithAPIKeyConfig(auth *biz.AuthService, config *APIKeyConfig) gin.HandlerFu
 
 		var apiKey *ent.APIKey
 		if err == nil {
-			apiKey, err = auth.AuthenticateAPIKey(c.Request.Context(), key)
+			apiKey, err = auth.AuthenticateAPIKeyForRequest(c.Request.Context(), key, c.ClientIP())
 		}
 		if err != nil {
 			apiKey, err = auth.AuthenticateNoAuth(c.Request.Context())
@@ -126,7 +126,7 @@ func WithOpenAPIAuth(auth *biz.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		apiKey, err := auth.AuthenticateAPIKey(c.Request.Context(), key)
+		apiKey, err := auth.AuthenticateAPIKeyForRequest(c.Request.Context(), key, c.ClientIP())
 		if err != nil {
 			if ent.IsNotFound(err) || errors.Is(err, biz.ErrInvalidAPIKey) {
 				AbortWithError(c, http.StatusUnauthorized, errors.New("Invalid API key"))
@@ -175,7 +175,7 @@ func WithGeminiKeyAuth(auth *biz.AuthService) gin.HandlerFunc {
 			}
 		}
 
-		apiKey, err := auth.AuthenticateAPIKey(c.Request.Context(), key)
+		apiKey, err := auth.AuthenticateAPIKeyForRequest(c.Request.Context(), key, c.ClientIP())
 		if err != nil {
 			if ent.IsNotFound(err) || errors.Is(err, biz.ErrInvalidAPIKey) {
 				AbortWithError(c, http.StatusUnauthorized, biz.ErrInvalidAPIKey)

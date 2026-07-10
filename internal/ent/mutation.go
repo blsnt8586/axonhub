@@ -138,32 +138,35 @@ const (
 // APIKeyMutation represents an operation that mutates the APIKey nodes in the graph.
 type APIKeyMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *int
-	created_at        *time.Time
-	updated_at        *time.Time
-	deleted_at        *int
-	adddeleted_at     *int
-	key               *string
-	name              *string
-	_type             *apikey.Type
-	status            *apikey.Status
-	scopes            *[]string
-	appendscopes      []string
-	profiles          **objects.APIKeyProfiles
-	commercial_limits **objects.APIKeyCommercialLimits
-	clearedFields     map[string]struct{}
-	user              *int
-	cleareduser       bool
-	project           *int
-	clearedproject    bool
-	requests          map[int]struct{}
-	removedrequests   map[int]struct{}
-	clearedrequests   bool
-	done              bool
-	oldValue          func(context.Context) (*APIKey, error)
-	predicates        []predicate.APIKey
+	op                 Op
+	typ                string
+	id                 *int
+	created_at         *time.Time
+	updated_at         *time.Time
+	deleted_at         *int
+	adddeleted_at      *int
+	key                *string
+	name               *string
+	_type              *apikey.Type
+	status             *apikey.Status
+	scopes             *[]string
+	appendscopes       []string
+	profiles           **objects.APIKeyProfiles
+	commercial_limits  **objects.APIKeyCommercialLimits
+	expires_at         *time.Time
+	ip_allowlist       *[]string
+	appendip_allowlist []string
+	clearedFields      map[string]struct{}
+	user               *int
+	cleareduser        bool
+	project            *int
+	clearedproject     bool
+	requests           map[int]struct{}
+	removedrequests    map[int]struct{}
+	clearedrequests    bool
+	done               bool
+	oldValue           func(context.Context) (*APIKey, error)
+	predicates         []predicate.APIKey
 }
 
 var _ ent.Mutation = (*APIKeyMutation)(nil)
@@ -784,6 +787,120 @@ func (m *APIKeyMutation) ResetCommercialLimits() {
 	delete(m.clearedFields, apikey.FieldCommercialLimits)
 }
 
+// SetExpiresAt sets the "expires_at" field.
+func (m *APIKeyMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *APIKeyMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the APIKey entity.
+// If the APIKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *APIKeyMutation) OldExpiresAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (m *APIKeyMutation) ClearExpiresAt() {
+	m.expires_at = nil
+	m.clearedFields[apikey.FieldExpiresAt] = struct{}{}
+}
+
+// ExpiresAtCleared returns if the "expires_at" field was cleared in this mutation.
+func (m *APIKeyMutation) ExpiresAtCleared() bool {
+	_, ok := m.clearedFields[apikey.FieldExpiresAt]
+	return ok
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *APIKeyMutation) ResetExpiresAt() {
+	m.expires_at = nil
+	delete(m.clearedFields, apikey.FieldExpiresAt)
+}
+
+// SetIPAllowlist sets the "ip_allowlist" field.
+func (m *APIKeyMutation) SetIPAllowlist(s []string) {
+	m.ip_allowlist = &s
+	m.appendip_allowlist = nil
+}
+
+// IPAllowlist returns the value of the "ip_allowlist" field in the mutation.
+func (m *APIKeyMutation) IPAllowlist() (r []string, exists bool) {
+	v := m.ip_allowlist
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIPAllowlist returns the old "ip_allowlist" field's value of the APIKey entity.
+// If the APIKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *APIKeyMutation) OldIPAllowlist(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIPAllowlist is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIPAllowlist requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIPAllowlist: %w", err)
+	}
+	return oldValue.IPAllowlist, nil
+}
+
+// AppendIPAllowlist adds s to the "ip_allowlist" field.
+func (m *APIKeyMutation) AppendIPAllowlist(s []string) {
+	m.appendip_allowlist = append(m.appendip_allowlist, s...)
+}
+
+// AppendedIPAllowlist returns the list of values that were appended to the "ip_allowlist" field in this mutation.
+func (m *APIKeyMutation) AppendedIPAllowlist() ([]string, bool) {
+	if len(m.appendip_allowlist) == 0 {
+		return nil, false
+	}
+	return m.appendip_allowlist, true
+}
+
+// ClearIPAllowlist clears the value of the "ip_allowlist" field.
+func (m *APIKeyMutation) ClearIPAllowlist() {
+	m.ip_allowlist = nil
+	m.appendip_allowlist = nil
+	m.clearedFields[apikey.FieldIPAllowlist] = struct{}{}
+}
+
+// IPAllowlistCleared returns if the "ip_allowlist" field was cleared in this mutation.
+func (m *APIKeyMutation) IPAllowlistCleared() bool {
+	_, ok := m.clearedFields[apikey.FieldIPAllowlist]
+	return ok
+}
+
+// ResetIPAllowlist resets all changes to the "ip_allowlist" field.
+func (m *APIKeyMutation) ResetIPAllowlist() {
+	m.ip_allowlist = nil
+	m.appendip_allowlist = nil
+	delete(m.clearedFields, apikey.FieldIPAllowlist)
+}
+
 // ClearUser clears the "user" edge to the User entity.
 func (m *APIKeyMutation) ClearUser() {
 	m.cleareduser = true
@@ -926,7 +1043,7 @@ func (m *APIKeyMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *APIKeyMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 14)
 	if m.created_at != nil {
 		fields = append(fields, apikey.FieldCreatedAt)
 	}
@@ -963,6 +1080,12 @@ func (m *APIKeyMutation) Fields() []string {
 	if m.commercial_limits != nil {
 		fields = append(fields, apikey.FieldCommercialLimits)
 	}
+	if m.expires_at != nil {
+		fields = append(fields, apikey.FieldExpiresAt)
+	}
+	if m.ip_allowlist != nil {
+		fields = append(fields, apikey.FieldIPAllowlist)
+	}
 	return fields
 }
 
@@ -995,6 +1118,10 @@ func (m *APIKeyMutation) Field(name string) (ent.Value, bool) {
 		return m.Profiles()
 	case apikey.FieldCommercialLimits:
 		return m.CommercialLimits()
+	case apikey.FieldExpiresAt:
+		return m.ExpiresAt()
+	case apikey.FieldIPAllowlist:
+		return m.IPAllowlist()
 	}
 	return nil, false
 }
@@ -1028,6 +1155,10 @@ func (m *APIKeyMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldProfiles(ctx)
 	case apikey.FieldCommercialLimits:
 		return m.OldCommercialLimits(ctx)
+	case apikey.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	case apikey.FieldIPAllowlist:
+		return m.OldIPAllowlist(ctx)
 	}
 	return nil, fmt.Errorf("unknown APIKey field %s", name)
 }
@@ -1121,6 +1252,20 @@ func (m *APIKeyMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCommercialLimits(v)
 		return nil
+	case apikey.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	case apikey.FieldIPAllowlist:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIPAllowlist(v)
+		return nil
 	}
 	return fmt.Errorf("unknown APIKey field %s", name)
 }
@@ -1178,6 +1323,12 @@ func (m *APIKeyMutation) ClearedFields() []string {
 	if m.FieldCleared(apikey.FieldCommercialLimits) {
 		fields = append(fields, apikey.FieldCommercialLimits)
 	}
+	if m.FieldCleared(apikey.FieldExpiresAt) {
+		fields = append(fields, apikey.FieldExpiresAt)
+	}
+	if m.FieldCleared(apikey.FieldIPAllowlist) {
+		fields = append(fields, apikey.FieldIPAllowlist)
+	}
 	return fields
 }
 
@@ -1203,6 +1354,12 @@ func (m *APIKeyMutation) ClearField(name string) error {
 		return nil
 	case apikey.FieldCommercialLimits:
 		m.ClearCommercialLimits()
+		return nil
+	case apikey.FieldExpiresAt:
+		m.ClearExpiresAt()
+		return nil
+	case apikey.FieldIPAllowlist:
+		m.ClearIPAllowlist()
 		return nil
 	}
 	return fmt.Errorf("unknown APIKey nullable field %s", name)
@@ -1247,6 +1404,12 @@ func (m *APIKeyMutation) ResetField(name string) error {
 		return nil
 	case apikey.FieldCommercialLimits:
 		m.ResetCommercialLimits()
+		return nil
+	case apikey.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	case apikey.FieldIPAllowlist:
+		m.ResetIPAllowlist()
 		return nil
 	}
 	return fmt.Errorf("unknown APIKey field %s", name)

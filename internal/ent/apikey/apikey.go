@@ -43,6 +43,10 @@ const (
 	FieldProfiles = "profiles"
 	// FieldCommercialLimits holds the string denoting the commercial_limits field in the database.
 	FieldCommercialLimits = "commercial_limits"
+	// FieldExpiresAt holds the string denoting the expires_at field in the database.
+	FieldExpiresAt = "expires_at"
+	// FieldIPAllowlist holds the string denoting the ip_allowlist field in the database.
+	FieldIPAllowlist = "ip_allowlist"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// EdgeProject holds the string denoting the project edge name in mutations.
@@ -89,6 +93,8 @@ var Columns = []string{
 	FieldScopes,
 	FieldProfiles,
 	FieldCommercialLimits,
+	FieldExpiresAt,
+	FieldIPAllowlist,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -126,6 +132,8 @@ var (
 	DefaultProfiles *objects.APIKeyProfiles
 	// DefaultCommercialLimits holds the default value on creation for the "commercial_limits" field.
 	DefaultCommercialLimits *objects.APIKeyCommercialLimits
+	// DefaultIPAllowlist holds the default value on creation for the "ip_allowlist" field.
+	DefaultIPAllowlist []string
 )
 
 // Type defines the type for the "type" enum field.
@@ -234,6 +242,11 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByExpiresAt orders the results by the expires_at field.
+func ByExpiresAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpiresAt, opts...).ToFunc()
 }
 
 // ByUserField orders the results by user field.

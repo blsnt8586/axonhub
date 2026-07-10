@@ -77,6 +77,16 @@ func (APIKey) Fields() []ent.Field {
 			Default(&objects.APIKeyCommercialLimits{}).
 			Optional().
 			Comment("Commercial spend limits for this API key. The user wallet remains the payer."),
+		field.Time("expires_at").
+			Optional().
+			Nillable().
+			Annotations(entgql.Skip()).
+			Comment("Optional expiration time enforced during API authentication."),
+		field.Strings("ip_allowlist").
+			Default([]string{}).
+			Optional().
+			Annotations(entgql.Skip()).
+			Comment("Optional IP or CIDR allowlist enforced during API authentication."),
 	}
 }
 

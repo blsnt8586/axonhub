@@ -60,6 +60,7 @@ import { Route as AuthenticatedAdminBillingIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedProjectTracesTraceIdRouteImport } from './routes/_authenticated/project/traces/$traceId'
 import { Route as AuthenticatedProjectThreadsThreadIdRouteImport } from './routes/_authenticated/project/threads/$threadId'
 import { Route as AuthenticatedProjectRequestsRequestIdRouteImport } from './routes/_authenticated/project/requests/$requestId'
+import { Route as AuthenticatedProjectApiKeysSharedRouteImport } from './routes/_authenticated/project/api-keys/shared'
 import { Route as AuthenticatedChannelsAccountsAccountIdRouteImport } from './routes/_authenticated/channels/accounts/$accountId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -350,6 +351,12 @@ const AuthenticatedProjectRequestsRequestIdRoute =
     path: '/project/requests/$requestId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProjectApiKeysSharedRoute =
+  AuthenticatedProjectApiKeysSharedRouteImport.update({
+    id: '/project/api-keys/shared',
+    path: '/project/api-keys/shared',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedChannelsAccountsAccountIdRoute =
   AuthenticatedChannelsAccountsAccountIdRouteImport.update({
     id: '/channels/accounts/$accountId',
@@ -395,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/channels/accounts/$accountId': typeof AuthenticatedChannelsAccountsAccountIdRoute
+  '/project/api-keys/shared': typeof AuthenticatedProjectApiKeysSharedRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
@@ -447,6 +455,7 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersIndexRoute
   '/workspaces': typeof AuthenticatedWorkspacesIndexRoute
   '/channels/accounts/$accountId': typeof AuthenticatedChannelsAccountsAccountIdRoute
+  '/project/api-keys/shared': typeof AuthenticatedProjectApiKeysSharedRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
@@ -502,6 +511,7 @@ export interface FileRoutesById {
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/_authenticated/channels/accounts/$accountId': typeof AuthenticatedChannelsAccountsAccountIdRoute
+  '/_authenticated/project/api-keys/shared': typeof AuthenticatedProjectApiKeysSharedRoute
   '/_authenticated/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/_authenticated/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/_authenticated/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
@@ -557,6 +567,7 @@ export interface FileRouteTypes {
     | '/users/'
     | '/workspaces/'
     | '/channels/accounts/$accountId'
+    | '/project/api-keys/shared'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
     | '/project/traces/$traceId'
@@ -609,6 +620,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/workspaces'
     | '/channels/accounts/$accountId'
+    | '/project/api-keys/shared'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
     | '/project/traces/$traceId'
@@ -663,6 +675,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users/'
     | '/_authenticated/workspaces/'
     | '/_authenticated/channels/accounts/$accountId'
+    | '/_authenticated/project/api-keys/shared'
     | '/_authenticated/project/requests/$requestId'
     | '/_authenticated/project/threads/$threadId'
     | '/_authenticated/project/traces/$traceId'
@@ -1052,6 +1065,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectRequestsRequestIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/project/api-keys/shared': {
+      id: '/_authenticated/project/api-keys/shared'
+      path: '/project/api-keys/shared'
+      fullPath: '/project/api-keys/shared'
+      preLoaderRoute: typeof AuthenticatedProjectApiKeysSharedRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/channels/accounts/$accountId': {
       id: '/_authenticated/channels/accounts/$accountId'
       path: '/channels/accounts/$accountId'
@@ -1108,6 +1128,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedWorkspacesIndexRoute: typeof AuthenticatedWorkspacesIndexRoute
   AuthenticatedChannelsAccountsAccountIdRoute: typeof AuthenticatedChannelsAccountsAccountIdRoute
+  AuthenticatedProjectApiKeysSharedRoute: typeof AuthenticatedProjectApiKeysSharedRoute
   AuthenticatedProjectRequestsRequestIdRoute: typeof AuthenticatedProjectRequestsRequestIdRoute
   AuthenticatedProjectThreadsThreadIdRoute: typeof AuthenticatedProjectThreadsThreadIdRoute
   AuthenticatedProjectTracesTraceIdRoute: typeof AuthenticatedProjectTracesTraceIdRoute
@@ -1151,6 +1172,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWorkspacesIndexRoute: AuthenticatedWorkspacesIndexRoute,
   AuthenticatedChannelsAccountsAccountIdRoute:
     AuthenticatedChannelsAccountsAccountIdRoute,
+  AuthenticatedProjectApiKeysSharedRoute:
+    AuthenticatedProjectApiKeysSharedRoute,
   AuthenticatedProjectRequestsRequestIdRoute:
     AuthenticatedProjectRequestsRequestIdRoute,
   AuthenticatedProjectThreadsThreadIdRoute:

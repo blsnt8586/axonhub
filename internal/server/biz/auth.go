@@ -214,6 +214,9 @@ func (s *AuthService) AuthenticateAPIKey(ctx context.Context, key string) (*ent.
 	if apiKey.Status != apikey.StatusEnabled {
 		return nil, fmt.Errorf("api key not enabled: %w", ErrInvalidAPIKey)
 	}
+	if apiKey.ExpiresAt != nil && !apiKey.ExpiresAt.After(time.Now().UTC()) {
+		return nil, fmt.Errorf("api key expired: %w", ErrInvalidAPIKey)
+	}
 
 	proj, err := apiKey.Project(ctx)
 	if err != nil {
@@ -228,6 +231,17 @@ func (s *AuthService) AuthenticateAPIKey(ctx context.Context, key string) (*ent.
 		return nil, fmt.Errorf("noauth api key is only available when api auth is disabled: %w", ErrInvalidAPIKey)
 	}
 
+	return apiKey, nil
+}
+
+func (s *AuthService) AuthenticateAPIKeyForRequest(ctx context.Context, key, clientIP string) (*ent.APIKey, error) {
+	apiKey, err := s.AuthenticateAPIKey(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if err := ValidateAPIKeyRequestAccess(apiKey, clientIP, time.Now().UTC()); err != nil {
+		return nil, err
+	}
 	return apiKey, nil
 }
 

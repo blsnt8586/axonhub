@@ -35,6 +35,8 @@ var (
 	ErrWorkspaceCreationDisabled = errors.New("self-service workspace creation is disabled")
 	ErrWorkspaceLimitReached     = errors.New("workspace limit reached")
 	ErrWorkspaceInvalidName      = errors.New("workspace name must be between 1 and 80 characters")
+	ErrUserAPIKeyDenied          = errors.New("user api key access denied")
+	ErrUserAPIKeyInvalidInput    = errors.New("invalid user api key input")
 	ErrBillingPriceNotFound      = errors.New("billing price not found")
 	ErrInsufficientBalance       = errors.New("insufficient billing balance")
 	ErrPaymentOrderNotFound      = errors.New("payment order not found")

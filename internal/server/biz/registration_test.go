@@ -163,7 +163,7 @@ func TestRegistrationService_RegisterCreatesDefaultProjectAndAPIKey(t *testing.T
 	require.NotNil(t, result.APIKey)
 	require.Equal(t, "Starter", result.Project.Name)
 	require.Equal(t, "Starter Key", result.APIKey.Name)
-	require.Equal(t, apikey.TypeUser, result.APIKey.Type)
+	require.Equal(t, apikey.TypePersonal, result.APIKey.Type)
 	require.Equal(t, result.User.ID, result.APIKey.UserID)
 	require.Equal(t, result.Project.ID, result.APIKey.ProjectID)
 

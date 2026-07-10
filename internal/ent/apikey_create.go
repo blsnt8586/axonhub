@@ -154,6 +154,26 @@ func (_c *APIKeyCreate) SetCommercialLimits(v *objects.APIKeyCommercialLimits) *
 	return _c
 }
 
+// SetExpiresAt sets the "expires_at" field.
+func (_c *APIKeyCreate) SetExpiresAt(v time.Time) *APIKeyCreate {
+	_c.mutation.SetExpiresAt(v)
+	return _c
+}
+
+// SetNillableExpiresAt sets the "expires_at" field if the given value is not nil.
+func (_c *APIKeyCreate) SetNillableExpiresAt(v *time.Time) *APIKeyCreate {
+	if v != nil {
+		_c.SetExpiresAt(*v)
+	}
+	return _c
+}
+
+// SetIPAllowlist sets the "ip_allowlist" field.
+func (_c *APIKeyCreate) SetIPAllowlist(v []string) *APIKeyCreate {
+	_c.mutation.SetIPAllowlist(v)
+	return _c
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (_c *APIKeyCreate) SetUser(v *User) *APIKeyCreate {
 	return _c.SetUserID(v.ID)
@@ -258,6 +278,10 @@ func (_c *APIKeyCreate) defaults() error {
 		v := apikey.DefaultCommercialLimits
 		_c.mutation.SetCommercialLimits(v)
 	}
+	if _, ok := _c.mutation.IPAllowlist(); !ok {
+		v := apikey.DefaultIPAllowlist
+		_c.mutation.SetIPAllowlist(v)
+	}
 	return nil
 }
 
@@ -360,6 +384,14 @@ func (_c *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.CommercialLimits(); ok {
 		_spec.SetField(apikey.FieldCommercialLimits, field.TypeJSON, value)
 		_node.CommercialLimits = value
+	}
+	if value, ok := _c.mutation.ExpiresAt(); ok {
+		_spec.SetField(apikey.FieldExpiresAt, field.TypeTime, value)
+		_node.ExpiresAt = &value
+	}
+	if value, ok := _c.mutation.IPAllowlist(); ok {
+		_spec.SetField(apikey.FieldIPAllowlist, field.TypeJSON, value)
+		_node.IPAllowlist = value
 	}
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -595,6 +627,42 @@ func (u *APIKeyUpsert) ClearCommercialLimits() *APIKeyUpsert {
 	return u
 }
 
+// SetExpiresAt sets the "expires_at" field.
+func (u *APIKeyUpsert) SetExpiresAt(v time.Time) *APIKeyUpsert {
+	u.Set(apikey.FieldExpiresAt, v)
+	return u
+}
+
+// UpdateExpiresAt sets the "expires_at" field to the value that was provided on create.
+func (u *APIKeyUpsert) UpdateExpiresAt() *APIKeyUpsert {
+	u.SetExcluded(apikey.FieldExpiresAt)
+	return u
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (u *APIKeyUpsert) ClearExpiresAt() *APIKeyUpsert {
+	u.SetNull(apikey.FieldExpiresAt)
+	return u
+}
+
+// SetIPAllowlist sets the "ip_allowlist" field.
+func (u *APIKeyUpsert) SetIPAllowlist(v []string) *APIKeyUpsert {
+	u.Set(apikey.FieldIPAllowlist, v)
+	return u
+}
+
+// UpdateIPAllowlist sets the "ip_allowlist" field to the value that was provided on create.
+func (u *APIKeyUpsert) UpdateIPAllowlist() *APIKeyUpsert {
+	u.SetExcluded(apikey.FieldIPAllowlist)
+	return u
+}
+
+// ClearIPAllowlist clears the value of the "ip_allowlist" field.
+func (u *APIKeyUpsert) ClearIPAllowlist() *APIKeyUpsert {
+	u.SetNull(apikey.FieldIPAllowlist)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -797,6 +865,48 @@ func (u *APIKeyUpsertOne) UpdateCommercialLimits() *APIKeyUpsertOne {
 func (u *APIKeyUpsertOne) ClearCommercialLimits() *APIKeyUpsertOne {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearCommercialLimits()
+	})
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (u *APIKeyUpsertOne) SetExpiresAt(v time.Time) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetExpiresAt(v)
+	})
+}
+
+// UpdateExpiresAt sets the "expires_at" field to the value that was provided on create.
+func (u *APIKeyUpsertOne) UpdateExpiresAt() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateExpiresAt()
+	})
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (u *APIKeyUpsertOne) ClearExpiresAt() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearExpiresAt()
+	})
+}
+
+// SetIPAllowlist sets the "ip_allowlist" field.
+func (u *APIKeyUpsertOne) SetIPAllowlist(v []string) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetIPAllowlist(v)
+	})
+}
+
+// UpdateIPAllowlist sets the "ip_allowlist" field to the value that was provided on create.
+func (u *APIKeyUpsertOne) UpdateIPAllowlist() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateIPAllowlist()
+	})
+}
+
+// ClearIPAllowlist clears the value of the "ip_allowlist" field.
+func (u *APIKeyUpsertOne) ClearIPAllowlist() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearIPAllowlist()
 	})
 }
 
@@ -1168,6 +1278,48 @@ func (u *APIKeyUpsertBulk) UpdateCommercialLimits() *APIKeyUpsertBulk {
 func (u *APIKeyUpsertBulk) ClearCommercialLimits() *APIKeyUpsertBulk {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearCommercialLimits()
+	})
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (u *APIKeyUpsertBulk) SetExpiresAt(v time.Time) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetExpiresAt(v)
+	})
+}
+
+// UpdateExpiresAt sets the "expires_at" field to the value that was provided on create.
+func (u *APIKeyUpsertBulk) UpdateExpiresAt() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateExpiresAt()
+	})
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (u *APIKeyUpsertBulk) ClearExpiresAt() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearExpiresAt()
+	})
+}
+
+// SetIPAllowlist sets the "ip_allowlist" field.
+func (u *APIKeyUpsertBulk) SetIPAllowlist(v []string) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetIPAllowlist(v)
+	})
+}
+
+// UpdateIPAllowlist sets the "ip_allowlist" field to the value that was provided on create.
+func (u *APIKeyUpsertBulk) UpdateIPAllowlist() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateIPAllowlist()
+	})
+}
+
+// ClearIPAllowlist clears the value of the "ip_allowlist" field.
+func (u *APIKeyUpsertBulk) ClearIPAllowlist() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearIPAllowlist()
 	})
 }
 
