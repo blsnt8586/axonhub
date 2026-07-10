@@ -25,5 +25,6 @@ var Module = fx.Module("api",
 	fx.Provide(NewPaymentHandlers),
 	fx.Provide(NewUserCommercialProfileHandlers),
 	fx.Provide(NewUserWorkspaceSummaryHandlers),
+	fx.Provide(NewUserWorkspaceHandlers),
 	fx.Invoke(initLogger),
 )

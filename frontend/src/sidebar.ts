@@ -16,6 +16,7 @@ import {
   IconWallet,
   IconCreditCard,
   IconServer,
+  IconStack2,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -133,6 +134,11 @@ export function useSidebarData(): SidebarData {
           title: t('sidebar.items.home'),
           url: '/home',
           icon: IconLayoutDashboard,
+        } as NavLink,
+        {
+          title: t('sidebar.items.workspaces'),
+          url: '/workspaces',
+          icon: IconStack2,
         } as NavLink,
         {
           title: t('sidebar.items.apiKeys'),

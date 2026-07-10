@@ -268,15 +268,42 @@ Acceptance:
 
 ### W3: Workspace Selection And Membership Projection
 
-- [ ] Treat Project as a user workspace in consumer copy and navigation while
+- [x] Treat Project as a user workspace in consumer copy and navigation while
   retaining Project terminology in administrator configuration.
-- [ ] Return a dedicated membership projection: Project ID/name/status,
+- [x] Return a dedicated membership projection: Project ID/name/status,
   membership owner flag, consumer capabilities, and administration capabilities.
-- [ ] Make selected-Project initialization deterministic after registration,
+- [x] Make selected-Project initialization deterministic after registration,
   login, storage loss, Project archive, or membership removal.
-- [ ] Add a consumer workspace page for listing and switching memberships.
-- [ ] Decide project creation policy through a commercial setting; do not reuse
+- [x] Add a consumer workspace page for listing and switching memberships.
+- [x] Decide project creation policy through a commercial setting; do not reuse
   the global `write_projects` scope as the only self-service policy switch.
+
+Implemented:
+
+- `GET /admin/account/workspaces` returns only the authenticated user's active
+  memberships. Project IDs use AxonHub GUIDs and the response excludes Channels,
+  upstream accounts, credentials, circuit-breaker state, and scheduling details.
+- Consumer capabilities (`consumeAI`, `manageOwnAPIKeys`, and `viewOwnUsage`) are
+  separated from Project administration capabilities. Administration capability
+  calculation merges Project ownership, direct membership scopes, and assigned
+  Project-role scopes without adding any system scope to an ordinary user.
+- `POST /admin/account/workspaces` uses `ProjectService.CreateProject`, preserving
+  the existing Admin/Developer/Viewer roles and owner membership. The operation
+  runs transactionally, trims and validates names, enforces the per-user active
+  workspace limit, and invalidates the authenticated user cache after creation.
+- The independent `workspace_settings` system value defaults to self-service
+  creation disabled and one active workspace per user. System owners can manage
+  it under the registration settings UI through `/admin/system/workspaces`.
+- The consumer `/workspaces` page lists, switches, and conditionally creates
+  workspaces. The header switcher consumes the same safe REST projection instead
+  of the administrator-oriented Project GraphQL query.
+- Selection recovery is a unit-tested pure function: retain a valid active
+  selection, otherwise use the server default, otherwise the first active
+  membership, otherwise clear storage. Creating a workspace refreshes both the
+  workspace projection and `me` membership cache before protected routes are used.
+- Browser acceptance covers disabled creation (API 403 and disabled UI), owner
+  policy UI visibility, stale local-storage recovery, successful self-service
+  creation, automatic selection, member cache refresh, and `390x844` overflow.
 
 Acceptance:
 

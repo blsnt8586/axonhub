@@ -22,6 +22,7 @@ import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authInitializationRouteImport } from './routes/(auth)/initialization'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as AuthenticatedWorkspacesIndexRouteImport } from './routes/_authenticated/workspaces/index'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedSystemIndexRouteImport } from './routes/_authenticated/system/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
@@ -124,6 +125,12 @@ const AuthenticatedSettingsRouteRoute =
   AuthenticatedSettingsRouteRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWorkspacesIndexRoute =
+  AuthenticatedWorkspacesIndexRouteImport.update({
+    id: '/workspaces/',
+    path: '/workspaces/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
@@ -386,6 +393,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/system/': typeof AuthenticatedSystemIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
+  '/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/channels/accounts/$accountId': typeof AuthenticatedChannelsAccountsAccountIdRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -437,6 +445,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/system': typeof AuthenticatedSystemIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/workspaces': typeof AuthenticatedWorkspacesIndexRoute
   '/channels/accounts/$accountId': typeof AuthenticatedChannelsAccountsAccountIdRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -491,6 +500,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/system/': typeof AuthenticatedSystemIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/_authenticated/channels/accounts/$accountId': typeof AuthenticatedChannelsAccountsAccountIdRoute
   '/_authenticated/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/_authenticated/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -545,6 +555,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/system/'
     | '/users/'
+    | '/workspaces/'
     | '/channels/accounts/$accountId'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
@@ -596,6 +607,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/system'
     | '/users'
+    | '/workspaces'
     | '/channels/accounts/$accountId'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
@@ -649,6 +661,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/system/'
     | '/_authenticated/users/'
+    | '/_authenticated/workspaces/'
     | '/_authenticated/channels/accounts/$accountId'
     | '/_authenticated/project/requests/$requestId'
     | '/_authenticated/project/threads/$threadId'
@@ -771,6 +784,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/workspaces/': {
+      id: '/_authenticated/workspaces/'
+      path: '/workspaces'
+      fullPath: '/workspaces/'
+      preLoaderRoute: typeof AuthenticatedWorkspacesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/users/': {
@@ -1086,6 +1106,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRolesIndexRoute: typeof AuthenticatedRolesIndexRoute
   AuthenticatedSystemIndexRoute: typeof AuthenticatedSystemIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedWorkspacesIndexRoute: typeof AuthenticatedWorkspacesIndexRoute
   AuthenticatedChannelsAccountsAccountIdRoute: typeof AuthenticatedChannelsAccountsAccountIdRoute
   AuthenticatedProjectRequestsRequestIdRoute: typeof AuthenticatedProjectRequestsRequestIdRoute
   AuthenticatedProjectThreadsThreadIdRoute: typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -1127,6 +1148,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRolesIndexRoute: AuthenticatedRolesIndexRoute,
   AuthenticatedSystemIndexRoute: AuthenticatedSystemIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedWorkspacesIndexRoute: AuthenticatedWorkspacesIndexRoute,
   AuthenticatedChannelsAccountsAccountIdRoute:
     AuthenticatedChannelsAccountsAccountIdRoute,
   AuthenticatedProjectRequestsRequestIdRoute:
