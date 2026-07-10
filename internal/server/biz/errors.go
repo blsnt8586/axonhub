@@ -31,6 +31,7 @@ var (
 	ErrBillingAccountFrozen    = errors.New("billing account is frozen")
 	ErrBillingAccountClosed    = errors.New("billing account is closed")
 	ErrCommercialProfileDenied = errors.New("commercial profile access denied")
+	ErrWorkspaceProjectDenied  = errors.New("workspace project access denied")
 	ErrBillingPriceNotFound    = errors.New("billing price not found")
 	ErrInsufficientBalance     = errors.New("insufficient billing balance")
 	ErrPaymentOrderNotFound    = errors.New("payment order not found")

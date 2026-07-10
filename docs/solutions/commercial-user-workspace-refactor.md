@@ -12,7 +12,7 @@ it does not add or renumber Stage 0-28.
 - [x] Review the current AxonHub frontend and backend authorization split.
 - [x] Define the target user, project, API key, billing, and administrator
   boundaries.
-- [ ] Complete Workstream W2-W8 below.
+- [ ] Complete Workstream W3-W8 below.
 
 ## Review Snapshot
 
@@ -230,14 +230,35 @@ Acceptance:
 
 ### W2: User Dashboard And Onboarding State
 
-- [ ] Add an authenticated user dashboard route and summary query.
-- [ ] Show wallet available balance, active Project, API key count, today's
+- [x] Add an authenticated user dashboard route and summary query.
+- [x] Show wallet available balance, active Project, API key count, today's
   requests/consumption, active subscription, and usable model count.
-- [ ] Add action-oriented empty states for no Project, no API key, no available
-  model, zero balance, pending approval, and disabled account.
-- [ ] Link directly to API key creation, wallet recharge, model catalog, usage,
-  and Playground.
-- [ ] Keep administrator operational metrics on the existing admin dashboard.
+- [x] Add action-oriented empty states for no Project, no API key, no available
+  model, zero balance, and inactive or approval-required accounts.
+- [x] Link directly to API key management, wallet recharge, usage, and
+  Playground; show model availability here and defer the full catalog to W5.
+- [x] Keep administrator operational metrics on the existing admin dashboard.
+
+Status: [x] Completed
+
+Implementation notes:
+
+- The authenticated summary endpoint accepts an AxonHub Project GUID, verifies
+  membership before using an internal privacy bypass, and returns no Channel
+  identifiers, credentials, or scheduling internals.
+- API key and request counts are restricted to the current user and selected
+  Project. Active subscriptions and wallet availability are evaluated together.
+- Available model count is derived from enabled Channel model entries after
+  applying the active Project profile's Channel ID/tag restrictions.
+- Onboarding reports one deterministic blocking reason: inactive user, missing
+  Project, missing enabled key, no available model, unavailable billing account,
+  insufficient balance, or ready.
+- The frontend no longer loads the complete commercial-profile detail payload
+  for the home page.
+- Vite now proxies `/admin/account/` and `/admin/users/`, fixing local browser
+  requests that previously returned the frontend HTML shell instead of JSON.
+- Browser acceptance covers the no-model state and horizontal overflow at a
+  `390x844` viewport.
 
 Acceptance:
 
@@ -401,3 +422,4 @@ records rather than synthetic UI data.
 | Workstream | Commit | Date | Notes |
 | --- | --- | --- | --- |
 | W1 | this commit | 2026-07-10 | Unified route authorization, fixed project-owner and localized Admin navigation behavior, added the user home landing and safe redirect handling, and added unit/browser regression coverage. |
+| W2 | this commit | 2026-07-10 | Added the tenant-scoped workspace summary, wallet/key/model/subscription/usage metrics, deterministic onboarding states, desktop/mobile browser coverage, GUID parsing, and missing Vite API proxies. |

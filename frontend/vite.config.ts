@@ -8,6 +8,8 @@ import tanstackRouter from '@tanstack/router-plugin/vite';
 const backendAdminPathPrefixes = [
   '/admin/system/',
   '/admin/auth/',
+  '/admin/account/',
+  '/admin/users/',
   '/admin/graphql',
   '/admin/playground',
   '/admin/codex/',

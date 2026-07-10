@@ -10,6 +10,12 @@ import {
 test.describe('commercial user workspace', () => {
   test('new user lands on the self-service workspace and can open consumer routes', async ({ page, request }) => {
     test.setTimeout(60_000)
+    const pageErrors: string[] = []
+    const consoleErrors: string[] = []
+    page.on('pageerror', (error) => pageErrors.push(error.message))
+    page.on('console', (message) => {
+      if (message.type() === 'error') consoleErrors.push(message.text())
+    })
 
     const adminSession = await signInViaApi(request)
     await enableCommercialRegistration(request, adminSession.token)
@@ -59,13 +65,28 @@ test.describe('commercial user workspace', () => {
     await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
     await page.getByTestId('sign-in-email').fill(email)
     await page.getByTestId('sign-in-password').fill(password)
+    const summaryResponsePromise = page.waitForResponse(
+      (response) => new URL(response.url()).pathname === '/admin/account/workspace-summary'
+    )
     await Promise.all([
       page.waitForURL((url) => url.pathname === '/home', { timeout: 20_000 }),
       page.getByTestId('sign-in-submit').click(),
     ])
+    const summaryResponse = await summaryResponsePromise
+    const summaryPayload = await summaryResponse.json()
+    expect(summaryResponse.ok(), JSON.stringify(summaryPayload, null, 2)).toBeTruthy()
+    expect(summaryPayload.onboarding, JSON.stringify(summaryPayload, null, 2)).toBeDefined()
 
+    await page.waitForTimeout(1_000)
+    expect(pageErrors).toEqual([])
+    expect(consoleErrors).toEqual([])
+    expect(page.url()).toContain('/home')
     await expect(page.getByTestId('user-home')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByText(/Access Denied|拒绝访问/i)).toHaveCount(0)
+    await expect(page.getByTestId('workspace-api-key-count')).toContainText(/1/)
+    await expect(page.getByTestId('workspace-model-count')).toContainText('0')
+    await expect(page.getByTestId('workspace-state-model_unavailable')).toBeVisible()
+    await expect(page.getByRole('button', { name: /Playground/i })).toBeDisabled()
 
     for (const href of ['/channels', '/channels/accounts', '/admin/billing', '/users', '/roles', '/system']) {
       await expect(page.locator(`a[href="${href}"]`)).toHaveCount(0)
@@ -77,5 +98,14 @@ test.describe('commercial user workspace', () => {
 
     await page.goto('/project/playground', { waitUntil: 'domcontentloaded' })
     await expect(page.getByText(/Access Denied|拒绝访问/i)).toHaveCount(0)
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/home', { waitUntil: 'domcontentloaded' })
+    await expect(page.getByTestId('user-home')).toBeVisible({ timeout: 20_000 })
+    const mobileLayout = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+    }))
+    expect(mobileLayout.documentWidth).toBeLessThanOrEqual(mobileLayout.viewportWidth)
   })
 })
