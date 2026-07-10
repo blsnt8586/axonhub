@@ -3,8 +3,8 @@
 Date: 2026-07-09
 
 This document is the Stage 18 acceptance record for the commercial AxonHub fork,
-updated with Stage 19-24 browser-smoke, Docker/PostgreSQL, recovery, log
-redaction, and responsive evidence. It
+updated with Stage 19-25 browser-smoke, Docker/PostgreSQL, recovery, log
+redaction, responsive, and historical commercial-upgrade evidence. It
 verifies the added commercial modules as one product flow instead of only as
 isolated services.
 
@@ -42,6 +42,7 @@ Stage 18 covers the production-facing commercial loop:
 | Historical migration and recovery | `./scripts/e2e/commercial-postgres-recovery-acceptance.sh` | A pre-commercial PostgreSQL database preserves legacy records during current-fork migration; the upgraded commercial database survives a real dump, drop, recreate, and restore cycle; and the restored user can read wallet, paid-order, and active-subscription state in the browser. |
 | Runtime log redaction | `./scripts/e2e/commercial-log-redaction-acceptance.sh` | Debug application logs redact payment/provider secrets, JWTs, full service API keys, authorization headers, cookies, body credentials, DSN passwords, and query tokens while preserving safe diagnostic fields. |
 | Desktop/mobile responsive acceptance | `./scripts/e2e/commercial-responsive-acceptance.sh` | User billing, owner billing operations, upstream-account monitoring, and account detail pages pass desktop/mobile overflow and control-overlap checks with eight full-page screenshot attachments. |
+| Historical commercial upgrade matrix | `./scripts/e2e/commercial-postgres-upgrade-matrix.sh` | Stage 1, 2, 6, and 11 PostgreSQL databases preserve wallet, ledger, order, payment event, provider, redeem, plan, and subscription manifests; legacy provider keys become encrypted; and second startup is idempotent. |
 | Frontend compilation | `pnpm exec tsc --noEmit`, `pnpm build` from `frontend/` | The commercial UI remains type-safe and production-buildable. |
 
 `pnpm lint` was also run during Stage 18. It failed on existing repository-wide
@@ -152,6 +153,18 @@ PostgreSQL dump, drops and recreates the database, restores it, compares core
 records, and runs a restored-user browser smoke. The dump is also checked for
 the simulated ePay secret in plaintext.
 
+Stage 25 broadens the historical database evidence from a pre-commercial
+baseline to four commercial schema generations:
+
+```bash
+./scripts/e2e/commercial-postgres-upgrade-matrix.sh
+```
+
+Each historical binary creates its own business records through the APIs that
+existed at that commit. The current fork then migrates the database, encrypts
+legacy plaintext provider keys transactionally, compares row-level commercial
+manifests, and repeats startup to detect duplicate migration effects.
+
 Use the project-specific production `.env` and verify that
 `AXONHUB_PAYMENT_SECRET_KEY` is set before saving real payment providers.
 
@@ -165,9 +178,10 @@ Use the project-specific production `.env` and verify that
   build pass, but repository-wide lint needs a separate cleanup stage.
 - Fresh PostgreSQL startup, current-fork Docker builds, Compose healthchecks,
   pre-commercial database upgrade, backup/restore, migration coverage, and
-  application restart persistence are automated. Upgrade testing from an older
-  commercial fork snapshot and a production-scale backup/restore drill remain
-  deployment acceptance tasks.
+  application restart persistence are automated. Historical commercial upgrades
+  are covered across Stage 1, 2, 6, and 11. A production-scale upgrade and
+  backup/restore drill with the real deployment dataset remains a deployment
+  acceptance task.
 - Frontend production build may keep Vite's large chunk warning. This is not a
   functional failure, but should be reviewed before high-traffic deployment.
 - Application log redaction is covered with debug-level runtime canaries, and

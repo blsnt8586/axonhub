@@ -272,8 +272,8 @@ Verification:
 ## Stage 18: Commercial Operations Final Acceptance
 
 Status: [x] Completed - automated backend, browser, Docker, and fresh PostgreSQL
-acceptance are recorded in `commercial-final-acceptance.md`; production data
-upgrade and external log-sink sampling remain release gates.
+acceptance are recorded in `commercial-final-acceptance.md`; production-scale
+upgrade rehearsal and external log-sink sampling remain release gates.
 
 Goal: verify the enhanced commercial platform as a coherent product, not only a
 set of backend features.
@@ -582,6 +582,66 @@ Verification:
 - [x] Playwright setup plus responsive suite: 2 tests passed.
 - [x] Eight desktop/mobile page states passed overflow and overlap assertions.
 
+## Stage 25: Historical Commercial PostgreSQL Upgrade Matrix
+
+Status: [x] Completed
+
+Goal: prove that databases created by multiple earlier commercial stages can be
+upgraded to the current fork without losing business records, duplicating ledger
+effects, or retaining legacy plaintext payment-provider keys.
+
+Upgrade baselines:
+
+- [x] Stage 1 `94106a72`: wallet holds and pre-authorization era.
+- [x] Stage 2 `bf4368b5`: hardened payment-order lifecycle era.
+- [x] Stage 6 `261e482a`: redeem-code and subscription era.
+- [x] Stage 11 `185594ee`: production-operations acceptance era.
+
+Historical data preparation:
+
+- [x] Build every baseline from the local Git history in an isolated temporary
+  directory.
+- [x] Start every historical binary against its own PostgreSQL database and
+  initialize a real owner and default project.
+- [x] Use each baseline's own GraphQL APIs to create a user wallet balance,
+  ledger entries, a confirmed manual recharge order, payment event, and ePay
+  provider.
+- [x] For Stage 6 and Stage 11, additionally create and redeem a code, create a
+  subscription plan, and purchase an active subscription.
+
+Migration hardening:
+
+- [x] Detect legacy plaintext ePay keys during commercial defaults startup and
+  replace them with `enc:v1:` encrypted values.
+- [x] Validate provider configuration before rewriting it.
+- [x] Migrate all legacy provider keys in one transaction so an invalid provider
+  rolls back earlier provider updates instead of leaving a partial migration.
+- [x] Leave already-encrypted provider configs unchanged across repeated
+  startups.
+- [x] Log only provider ID/name when a legacy secret is migrated.
+
+Data verification:
+
+- [x] Compare stable row-level manifests for users, projects, billing accounts,
+  ledger transactions, ledger entries, payment orders, payment events, and
+  provider metadata before and after every upgrade.
+- [x] Compare redeem codes, plans, and user subscriptions for baselines where
+  those modules existed.
+- [x] Confirm the legacy plaintext provider key is absent and `enc:v1:` is
+  present after upgrade.
+- [x] Restart the current fork a second time and confirm manifests remain
+  unchanged, proving migration idempotency and no duplicate balance posting.
+- [x] Clean up the dedicated PostgreSQL container and all historical build
+  artifacts without touching unrelated services.
+
+Verification:
+
+- [x] `go test ./internal/server/biz -run 'TestCommercialOperationsEnsureDefaults' -count=1`
+- [x] `go test ./internal/server/biz -count=1`
+- [x] `./scripts/e2e/commercial-postgres-upgrade-matrix.sh`
+- [x] Stage 1, Stage 2, Stage 6, and Stage 11 upgrade acceptance passed.
+- [x] Four second-start manifests matched their first upgraded manifests.
+
 ## Completion Log
 
 Append one line per completed enhancement stage.
@@ -597,3 +657,4 @@ Append one line per completed enhancement stage.
 | Stage 22 | this commit | 2026-07-10 | Added pre-commercial PostgreSQL upgrade acceptance, real pg_dump/drop/restore validation, commercial data manifest comparison, backup secret scanning, and restored-user browser smoke. |
 | Stage 23 | this commit | 2026-07-10 | Added final-write-boundary structured log redaction, nested request/error sanitization, focused logger tests, and runtime canary scanning across GraphQL and webhook paths. |
 | Stage 24 | this commit | 2026-07-10 | Added desktop/mobile commercial responsive smoke, realistic billing/account seed data, full-page overflow and control-overlap detection, account-link route verification, and eight screenshot attachments. |
+| Stage 25 | this commit | 2026-07-10 | Added Stage 1/2/6/11 PostgreSQL upgrade matrix, historical API data seeding, row-level commercial manifest comparison, transactional legacy provider-key encryption, and second-start idempotency checks. |

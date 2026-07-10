@@ -133,6 +133,17 @@ screenshot evidence.
 ./scripts/e2e/commercial-responsive-acceptance.sh
 ```
 
+#### `e2e/commercial-postgres-upgrade-matrix.sh`
+
+Builds the Stage 1, Stage 2, Stage 6, and Stage 11 commercial commits, seeds
+wallet, ledger, payment, provider, redeem, and subscription data through each
+version's own APIs, upgrades every PostgreSQL database to the current fork, and
+compares stable business manifests across migration and a second restart.
+
+```bash
+./scripts/e2e/commercial-postgres-upgrade-matrix.sh
+```
+
 **功能：**
 - 自动检测最近的稳定版本
 - 批量运行迁移测试

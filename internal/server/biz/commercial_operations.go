@@ -2,7 +2,9 @@ package biz
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.uber.org/fx"
@@ -12,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
 	"github.com/looplj/axonhub/internal/log"
+	"github.com/looplj/axonhub/internal/objects"
 )
 
 const defaultCommercialSettingKey = "default"
@@ -111,18 +114,66 @@ func (s *CommercialOperationsService) EnsureDefaults(ctx context.Context) error 
 		return err
 	}
 
-	providers, err := s.entFromContext(ctx).PaymentProviderInstance.Query().
-		Where(paymentproviderinstance.ProviderTypeEQ(paymentproviderinstance.ProviderTypeEpay)).
-		All(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to check payment provider config migration safety: %w", err)
-	}
-	for _, provider := range providers {
-		if _, err := parseEPayConfig(provider.Config); err != nil {
-			return fmt.Errorf("payment provider %q has invalid epay config: %w", provider.Name, err)
+	migratedProviders := make([]*ent.PaymentProviderInstance, 0)
+	if err := s.RunInTransaction(ctx, func(txCtx context.Context) error {
+		providers, err := s.entFromContext(txCtx).PaymentProviderInstance.Query().
+			Where(paymentproviderinstance.ProviderTypeEQ(paymentproviderinstance.ProviderTypeEpay)).
+			Order(ent.Asc(paymentproviderinstance.FieldID)).
+			All(txCtx)
+		if err != nil {
+			return fmt.Errorf("failed to check payment provider config migration safety: %w", err)
 		}
+		for _, provider := range providers {
+			migrated, err := s.ensureEPayProviderSecretEncrypted(txCtx, provider)
+			if err != nil {
+				return fmt.Errorf("payment provider %q has invalid epay config: %w", provider.Name, err)
+			}
+			if migrated {
+				migratedProviders = append(migratedProviders, provider)
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+	for _, provider := range migratedProviders {
+		log.Info(ctx, "encrypted legacy payment provider secret",
+			log.Int("payment_provider_id", provider.ID),
+			log.String("payment_provider_name", provider.Name))
 	}
 	return nil
+}
+
+func (s *CommercialOperationsService) ensureEPayProviderSecretEncrypted(ctx context.Context, provider *ent.PaymentProviderInstance) (bool, error) {
+	var stored EPayConfig
+	if err := json.Unmarshal(provider.Config, &stored); err != nil {
+		return false, fmt.Errorf("failed to decode stored epay config: %w", err)
+	}
+
+	parsed, err := ParseEPayConfig(provider.Config)
+	if err != nil {
+		return false, err
+	}
+	if strings.HasPrefix(stored.Key, encryptedPaymentSecretPrefix) {
+		return false, nil
+	}
+
+	encrypted, err := encryptEPayConfig(*parsed)
+	if err != nil {
+		return false, fmt.Errorf("failed to encrypt legacy epay key: %w", err)
+	}
+	raw, err := json.Marshal(encrypted)
+	if err != nil {
+		return false, fmt.Errorf("failed to encode encrypted epay config: %w", err)
+	}
+
+	if _, err := s.entFromContext(ctx).PaymentProviderInstance.UpdateOneID(provider.ID).
+		SetConfig(objects.JSONRawMessage(raw)).
+		Save(ctx); err != nil {
+		return false, fmt.Errorf("failed to persist encrypted epay config: %w", err)
+	}
+
+	return true, nil
 }
 
 func (s *CommercialOperationsService) SaveSetting(ctx context.Context, input SaveCommercialSettingInput) (*ent.CommercialSetting, error) {

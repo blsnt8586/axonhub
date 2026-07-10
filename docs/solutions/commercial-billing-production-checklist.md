@@ -23,7 +23,9 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 
 - [x] Fresh PostgreSQL database can auto-migrate all commercial and upstream-account tables.
 - [x] Pre-commercial PostgreSQL database can migrate without losing owner, user, project, or system records.
-- [ ] Existing commercial fork database can migrate without losing wallet, ledger, order, or provider records.
+- [x] Stage 1, Stage 2, Stage 6, and Stage 11 commercial databases migrate without losing wallet, ledger, order, provider, redeem, or subscription records.
+- [x] Legacy plaintext ePay provider keys are encrypted transactionally during current-version startup.
+- [ ] Production-scale database upgrade is rehearsed with the deployment dataset and measured downtime.
 - [ ] Rollback point is tagged before enabling `warn` or `enforce` billing mode.
 - [x] PostgreSQL backup and restore procedure is tested with commercial tables included.
 

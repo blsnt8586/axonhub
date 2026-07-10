@@ -2,6 +2,8 @@ package biz
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,7 +14,105 @@ import (
 	"github.com/looplj/axonhub/internal/ent/affiliaterebate"
 	"github.com/looplj/axonhub/internal/ent/commercialsetting"
 	"github.com/looplj/axonhub/internal/ent/enttest"
+	"github.com/looplj/axonhub/internal/ent/paymentproviderinstance"
+	"github.com/looplj/axonhub/internal/objects"
 )
+
+func TestCommercialOperationsEnsureDefaultsEncryptsLegacyEPaySecretsIdempotently(t *testing.T) {
+	t.Setenv("AXONHUB_PAYMENT_SECRET_KEY", "commercial-operations-legacy-migration-key")
+
+	client, ctx, svc := newCommercialOperationsTestService(t, "commercial_legacy_epay_encryption")
+	defer client.Close()
+
+	legacySecret := "stage25-legacy-plaintext-epay-key"
+	legacyConfig, err := json.Marshal(EPayConfig{
+		GatewayURL: "https://legacy-pay.example.com/submit.php",
+		PID:        "stage25-pid",
+		Key:        legacySecret,
+		NotifyURL:  "https://axon.example.com/payment/notify/epay",
+		ReturnURL:  "https://axon.example.com/billing",
+		Type:       "alipay",
+		SiteName:   "AxonHub Legacy",
+	})
+	require.NoError(t, err)
+
+	provider, err := client.PaymentProviderInstance.Create().
+		SetName("Stage 25 Legacy ePay").
+		SetProviderType(paymentproviderinstance.ProviderTypeEpay).
+		SetStatus(paymentproviderinstance.StatusEnabled).
+		SetCurrency("CNY").
+		SetConfig(objects.JSONRawMessage(legacyConfig)).
+		Save(ctx)
+	require.NoError(t, err)
+	require.Contains(t, string(provider.Config), legacySecret)
+
+	require.NoError(t, svc.EnsureDefaults(ctx))
+
+	migrated, err := client.PaymentProviderInstance.Get(ctx, provider.ID)
+	require.NoError(t, err)
+	require.NotContains(t, string(migrated.Config), legacySecret)
+
+	var stored EPayConfig
+	require.NoError(t, json.Unmarshal(migrated.Config, &stored))
+	require.True(t, strings.HasPrefix(stored.Key, encryptedPaymentSecretPrefix))
+
+	parsed, err := ParseEPayConfig(migrated.Config)
+	require.NoError(t, err)
+	require.Equal(t, legacySecret, parsed.Key)
+
+	firstEncryptedConfig := string(migrated.Config)
+	require.NoError(t, svc.EnsureDefaults(ctx))
+
+	migratedAgain, err := client.PaymentProviderInstance.Get(ctx, provider.ID)
+	require.NoError(t, err)
+	require.Equal(t, firstEncryptedConfig, string(migratedAgain.Config))
+}
+
+func TestCommercialOperationsEnsureDefaultsRollsBackLegacyProviderMigrationOnInvalidConfig(t *testing.T) {
+	t.Setenv("AXONHUB_PAYMENT_SECRET_KEY", "commercial-operations-legacy-rollback-key")
+
+	client, ctx, svc := newCommercialOperationsTestService(t, "commercial_legacy_epay_rollback")
+	defer client.Close()
+
+	legacySecret := "stage25-rollback-plaintext-epay-key"
+	validConfig, err := json.Marshal(EPayConfig{
+		GatewayURL: "https://legacy-pay.example.com/submit.php",
+		PID:        "stage25-valid-pid",
+		Key:        legacySecret,
+		NotifyURL:  "https://axon.example.com/payment/notify/epay",
+		ReturnURL:  "https://axon.example.com/billing",
+	})
+	require.NoError(t, err)
+
+	validProvider, err := client.PaymentProviderInstance.Create().
+		SetName("Stage 25 Valid Legacy ePay").
+		SetProviderType(paymentproviderinstance.ProviderTypeEpay).
+		SetConfig(objects.JSONRawMessage(validConfig)).
+		Save(ctx)
+	require.NoError(t, err)
+
+	invalidConfig, err := json.Marshal(EPayConfig{
+		GatewayURL: "https://legacy-pay.example.com/submit.php",
+		PID:        "stage25-invalid-pid",
+		NotifyURL:  "https://axon.example.com/payment/notify/epay",
+		ReturnURL:  "https://axon.example.com/billing",
+	})
+	require.NoError(t, err)
+	_, err = client.PaymentProviderInstance.Create().
+		SetName("Stage 25 Invalid Legacy ePay").
+		SetProviderType(paymentproviderinstance.ProviderTypeEpay).
+		SetConfig(objects.JSONRawMessage(invalidConfig)).
+		Save(ctx)
+	require.NoError(t, err)
+
+	err = svc.EnsureDefaults(ctx)
+	require.ErrorContains(t, err, "epay key is required")
+
+	reloaded, err := client.PaymentProviderInstance.Get(ctx, validProvider.ID)
+	require.NoError(t, err)
+	require.Contains(t, string(reloaded.Config), legacySecret)
+	require.NotContains(t, string(reloaded.Config), encryptedPaymentSecretPrefix)
+}
 
 func TestCommercialOperationsGetOrCreateSettingIsIdempotent(t *testing.T) {
 	t.Parallel()
