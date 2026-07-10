@@ -89,6 +89,17 @@
 ./scripts/migration/migration-test-all.sh --skip-e2e
 ```
 
+#### `e2e/commercial-postgres-acceptance.sh`
+
+Builds the current backend and Docker image, runs the commercial and upstream
+account browser smoke suites against PostgreSQL, verifies the required
+commercial/account-pool tables and seeded records, restarts the backend against
+the preserved database, and checks the Docker Compose health endpoint.
+
+```bash
+./scripts/e2e/commercial-postgres-acceptance.sh
+```
+
 **功能：**
 - 自动检测最近的稳定版本
 - 批量运行迁移测试

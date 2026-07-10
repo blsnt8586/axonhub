@@ -21,7 +21,7 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 
 ## Database And Migration
 
-- [ ] Fresh database can auto-migrate all commercial tables.
+- [x] Fresh PostgreSQL database can auto-migrate all commercial and upstream-account tables.
 - [ ] Existing database can migrate without losing wallet, ledger, order, or provider records.
 - [ ] Rollback point is tagged before enabling `warn` or `enforce` billing mode.
 - [ ] Backup and restore procedure is tested with commercial tables included.
@@ -74,9 +74,9 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 
 ## Deployment Verification
 
-- [ ] Docker image starts with PostgreSQL-backed `docker-compose`.
+- [x] Current-fork Docker image starts with PostgreSQL-backed `docker-compose`.
 - [x] SQLite single-node deployment starts with a dedicated Stage 11 data file.
-- [ ] Healthcheck is wired for container orchestration.
+- [x] Healthcheck is wired for container orchestration.
 - [ ] Logs do not contain provider secrets, payment notify secrets, or full API keys.
 - [ ] Large frontend chunk warning is reviewed and accepted or split before high-traffic production.
 

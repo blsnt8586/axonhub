@@ -271,9 +271,10 @@ Verification:
 
 ## Stage 18: Commercial Operations Final Acceptance
 
-Status: [x] Completed - automated backend acceptance added; Docker/PostgreSQL
-and browser smoke remain release-gate checks in
-`commercial-final-acceptance.md`.
+Status: [x] Completed - automated backend, browser, Docker, and fresh PostgreSQL
+acceptance are recorded in `commercial-final-acceptance.md`; production data
+upgrade, backup/restore, log sampling, and responsive checks remain release
+gates.
 
 Goal: verify the enhanced commercial platform as a coherent product, not only a
 set of backend features.
@@ -283,7 +284,7 @@ Backend acceptance:
 - [x] Public registration, login, wallet recharge, redeem, subscription purchase,
   API key limits, billing admission, usage billing, account-pool scheduling, and
   account switching work together.
-- [ ] Docker/PostgreSQL startup works with all commercial and account-pool tables.
+- [x] Docker/PostgreSQL startup works with all commercial and account-pool tables.
 - [x] SQLite single-node development mode still works.
 - [ ] Runtime logs do not contain payment secrets, upstream account secrets, or
   full API keys.
@@ -392,6 +393,51 @@ Verification:
 - [x] Browser smoke confirms account pools can be managed as first-class
   operator resources and monitored outside the Channel detail dialog.
 
+## Stage 21: Docker/PostgreSQL Commercial Production Acceptance
+
+Status: [x] Completed
+
+Goal: verify that the current fork builds as a production container, starts
+against a fresh PostgreSQL database, runs the commercial browser flows on
+PostgreSQL, and preserves data across an application restart.
+
+Deployment scope:
+
+- [x] Build the frontend with the repository's locked pnpm configuration and a
+  Node.js version supported by pnpm 11.
+- [x] Build the current fork as `axonhub:local` instead of starting the upstream
+  published image.
+- [x] Make the development Compose ports configurable so acceptance can run
+  without interfering with existing services.
+- [x] Pass `AXONHUB_PAYMENT_SECRET_KEY` through Compose for production payment
+  provider encryption.
+- [x] Keep custom `config.yml` mounting optional so the default stack starts
+  from a clean checkout.
+
+Automated acceptance:
+
+- [x] Add `scripts/e2e/commercial-postgres-acceptance.sh` to provision an
+  isolated PostgreSQL instance and run both commercial and account-pool browser
+  smoke suites against it.
+- [x] Verify commercial, aggregate, and upstream-account tables are created by
+  fresh-database migrations.
+- [x] Verify wallet, payment order, subscription, pool, and account smoke data
+  is persisted in PostgreSQL.
+- [x] Restart the backend against the retained test database and verify health.
+- [x] Build the production Docker image, start the Compose stack, wait for
+  container healthchecks, and verify the isolated `/health` endpoint.
+- [x] Clean up Stage 21 containers, networks, and volumes without touching
+  unrelated local services.
+
+Verification:
+
+- [x] `./scripts/e2e/commercial-postgres-acceptance.sh`
+- [x] PostgreSQL browser smoke: 3 tests passed.
+- [x] Docker image frontend and Go production builds passed.
+- [x] Compose PostgreSQL and AxonHub containers became healthy.
+- [x] All required commercial and upstream-account tables were present after
+  Compose startup.
+
 ## Completion Log
 
 Append one line per completed enhancement stage.
@@ -403,3 +449,4 @@ Append one line per completed enhancement stage.
 | Stage 18 | this commit | 2026-07-09 | Added final commercial lifecycle acceptance test, Stage 18 acceptance evidence, and release-gate checklist for remaining deployment/browser smoke. |
 | Stage 19 | this commit | 2026-07-09 | Added commercial Playwright smoke automation for owner billing, public registration, user wallet, redeem, subscription purchase, and simulated ePay recharge; fixed subscription GraphQL edge resolution across transaction boundaries. |
 | Stage 20 | this commit | 2026-07-09 | Added account-pool browser smoke automation for Channel account-pool management, write-only account credentials, account monitoring, and account detail pages; aligned the roadmap baseline with completed account-pool stages. |
+| Stage 21 | this commit | 2026-07-10 | Added isolated PostgreSQL commercial acceptance, persistent-data restart checks, current-fork Docker builds, Compose health verification, and fresh commercial/account-pool migration checks. |

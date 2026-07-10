@@ -23,7 +23,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     networks:
       - axonhub-network
     restart: unless-stopped
@@ -35,19 +35,21 @@ services:
 
   # AxonHub 主服务
   axonhub:
-    image: looplj/axonhub:latest
+    image: axonhub:local
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: axonhub-app
     environment:
       # 数据库配置可以通过环境变量设置，优先级高于配置文件
       AXONHUB_DB_DIALECT: postgres
       AXONHUB_DB_DSN: postgres://axonhub:${DB_PASSWORD:-axonhub_password}@postgres:5432/axonhub?sslmode=disable
+      AXONHUB_PAYMENT_SECRET_KEY: ${AXONHUB_PAYMENT_SECRET_KEY:-}
     ports:
-      - "8090:8090"
-    volumes:
-      # 配置文件挂载 - 用于复杂配置，如缓存、日志、监控等
-      # 参考: https://github.com/looplj/axonhub/blob/main/docs/deployment/configuration.md
-      - ./config.yml:/app/config.yml:ro
-      # - axonhub_data:/data
+      - "${AXONHUB_PORT:-8090}:8090"
+    # Optional advanced configuration:
+    # volumes:
+    #   - ./config.yml:/app/config.yml:ro
     networks:
       - axonhub-network
     depends_on:

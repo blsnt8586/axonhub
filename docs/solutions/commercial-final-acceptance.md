@@ -3,8 +3,9 @@
 Date: 2026-07-09
 
 This document is the Stage 18 acceptance record for the commercial AxonHub fork,
-updated with Stage 19 browser-smoke evidence. It verifies the added commercial
-modules as one product flow instead of only as isolated services.
+updated with Stage 19-21 browser-smoke and Docker/PostgreSQL evidence. It
+verifies the added commercial modules as one product flow instead of only as
+isolated services.
 
 ## Acceptance Scope
 
@@ -36,6 +37,7 @@ Stage 18 covers the production-facing commercial loop:
 | GraphQL authorization | `internal/server/gql/*_test.go` | Owner/user resolver boundaries and secret redaction are covered for billing and upstream account surfaces. |
 | Commercial browser smoke | `./scripts/e2e/e2e-test.sh commercial-smoke.spec.ts` | Owner billing console entry, public registration, user wallet rendering, redeem-code redemption, subscription purchase, and simulated ePay recharge are covered in Playwright. |
 | Account-pool browser smoke | `./scripts/e2e/e2e-test.sh upstream-accounts-smoke.spec.ts` | Channel account-pool dialog, pool creation, write-only account credential creation, monitoring list, and account detail views are covered in Playwright. |
+| PostgreSQL and Docker acceptance | `./scripts/e2e/commercial-postgres-acceptance.sh` | Both browser smoke suites pass against PostgreSQL, commercial/account-pool data is persisted, an application restart retains database health, the current fork image builds, Compose services become healthy, and fresh-database migrations create the required tables. |
 | Frontend compilation | `pnpm exec tsc --noEmit`, `pnpm build` from `frontend/` | The commercial UI remains type-safe and production-buildable. |
 
 `pnpm lint` was also run during Stage 18. It failed on existing repository-wide
@@ -122,14 +124,19 @@ SQLite development mode:
 
 Docker/PostgreSQL:
 
-- Must still be run before production enablement because Stage 18 did not start
-  a PostgreSQL-backed Docker stack.
-- Required command shape:
+- Stage 21 adds repeatable acceptance for a fresh PostgreSQL database and the
+  current fork's production Docker image.
+- Run the complete isolated acceptance with:
 
 ```bash
-docker compose up --build
-go test ./internal/server/... -count=1
+./scripts/e2e/commercial-postgres-acceptance.sh
 ```
+
+The script runs browser smoke against PostgreSQL, verifies persisted commercial
+and account-pool rows, restarts the application against the retained database,
+builds `axonhub:local`, starts an isolated Compose stack, waits for healthchecks,
+and verifies all required fresh-database migrations. It cleans up only its own
+test containers, network, and volume.
 
 Use the project-specific production `.env` and verify that
 `AXONHUB_PAYMENT_SECRET_KEY` is set before saving real payment providers.
@@ -141,8 +148,10 @@ Use the project-specific production `.env` and verify that
   mobile, and production-provider checks remain manual release tasks.
 - Full frontend lint is not yet a clean release gate. Typecheck and production
   build pass, but repository-wide lint needs a separate cleanup stage.
-- Docker/PostgreSQL startup and backup/restore are still deployment acceptance
-  tasks, not unit-test evidence.
+- Fresh PostgreSQL startup, current-fork Docker builds, Compose healthchecks,
+  migration coverage, and application restart persistence are automated.
+  Existing production database upgrade and backup/restore drills remain manual
+  deployment acceptance tasks.
 - Frontend production build may keep Vite's large chunk warning. This is not a
   functional failure, but should be reviewed before high-traffic deployment.
 - Logs must be reviewed in a real running environment with production log
@@ -156,7 +165,7 @@ are true:
 
 - Backend focused tests pass.
 - Frontend typecheck and production build pass.
-- Docker/PostgreSQL stack starts and healthcheck passes.
+- Stage 21 Docker/PostgreSQL acceptance passes for the release commit.
 - Automated commercial and account-pool browser smoke passes, and remaining
   manual browser checklist items pass for real API traffic and responsive
   layouts.
