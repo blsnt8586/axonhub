@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/password-input';
-import { useSignIn, useOIDCProviders, useOIDCAuthorize } from '@/features/auth/data/auth';
+import { useSignIn, useOIDCProviders, useOIDCAuthorize, useRegistrationStatus } from '@/features/auth/data/auth';
 import { LogIn } from 'lucide-react';
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
@@ -28,6 +28,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const [rememberMe, setRememberMe] = useState(false);
   const { data: oidcProviders } = useOIDCProviders();
   const oidcAuthorizeMutation = useOIDCAuthorize();
+  const { data: registrationStatus } = useRegistrationStatus();
 
   const formSchema = createFormSchema(t);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -129,6 +130,18 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
             )}
           </Button>
         </form>
+      )}
+
+      {registrationStatus?.enabled && (
+        <p className='mt-6 text-center text-sm text-slate-600'>
+          {t('auth.signIn.links.noAccount')}{' '}
+          <Link
+            to='/sign-up'
+            className='font-medium text-slate-800 underline underline-offset-4 transition-colors hover:text-slate-600'
+          >
+            {t('auth.signIn.links.createAccount')}
+          </Link>
+        </p>
       )}
         
         {oidcProviders && oidcProviders.length > 0 && (

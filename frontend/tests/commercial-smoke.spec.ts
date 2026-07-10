@@ -59,7 +59,12 @@ test.describe('commercial browser smoke', () => {
     const userContext = await browser.newContext()
     const userPage = await userContext.newPage()
 
-    await userPage.goto('/sign-up', { waitUntil: 'domcontentloaded' })
+    await userPage.goto('/sign-in', { waitUntil: 'domcontentloaded' })
+    const createAccountLink = userPage.getByRole('link', { name: /Create account|创建账户/i })
+    await expect(createAccountLink).toBeVisible({ timeout: 20000 })
+    await createAccountLink.click()
+    await expect(userPage).toHaveURL(/\/sign-up$/)
+    await expect(userPage.getByRole('textbox', { name: /Confirm Password|确认密码/i })).toBeVisible()
     await userPage.getByRole('textbox', { name: /^Email$/i }).fill(userEmail)
     await userPage.getByRole('textbox', { name: /^Password$/i }).fill(userPassword)
     await userPage.getByRole('textbox', { name: /Confirm Password|确认密码/i }).fill(userPassword)

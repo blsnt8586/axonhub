@@ -282,6 +282,8 @@
   "auth.signIn.validation.passwordMinLength": "Password must be at least 8 characters",
   "auth.signIn.validation.passwordPattern": "Password must contain uppercase, lowercase, and numbers",
   "auth.signIn.links.forgotPassword": "Forgot password?",
+  "auth.signIn.links.noAccount": "Don't have an account?",
+  "auth.signIn.links.createAccount": "Create account",
   "auth.signIn.footer.agreement": "By signing in, you agree to our Terms of Service and Privacy Policy",
   "auth.signUp.submit": "Create Account",
   "auth.signUp.creating": "Creating...",
