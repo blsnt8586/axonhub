@@ -111,6 +111,17 @@ commercial records, and verifies the restored user wallet in Playwright.
 ./scripts/e2e/commercial-postgres-recovery-acceptance.sh
 ```
 
+#### `e2e/commercial-log-redaction-acceptance.sh`
+
+Starts an isolated debug-logging AxonHub instance, creates commercial payment
+and service-account credentials, sends sensitive header/query/body canaries
+through GraphQL and webhook logging paths, and fails if any full secret appears
+in the runtime log. Non-sensitive markers must remain visible.
+
+```bash
+./scripts/e2e/commercial-log-redaction-acceptance.sh
+```
+
 **功能：**
 - 自动检测最近的稳定版本
 - 批量运行迁移测试

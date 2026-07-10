@@ -171,6 +171,7 @@ func New(config Config) *Logger {
 
 	// Build core with DebugLevel enabler; per-level gating is handled by Logger methods.
 	core := zapcore.NewCore(encoder, ws, zapcore.DebugLevel)
+	core = newRedactingCore(core)
 
 	opts := []zap.Option{zap.AddStacktrace(zapcore.DPanicLevel), zap.ErrorOutput(zapcore.AddSync(os.Stderr))}
 	if config.SkipLevel != 0 {

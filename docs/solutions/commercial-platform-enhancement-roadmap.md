@@ -273,8 +273,7 @@ Verification:
 
 Status: [x] Completed - automated backend, browser, Docker, and fresh PostgreSQL
 acceptance are recorded in `commercial-final-acceptance.md`; production data
-upgrade, backup/restore, log sampling, and responsive checks remain release
-gates.
+upgrade, external log-sink sampling, and responsive checks remain release gates.
 
 Goal: verify the enhanced commercial platform as a coherent product, not only a
 set of backend features.
@@ -286,7 +285,7 @@ Backend acceptance:
   account switching work together.
 - [x] Docker/PostgreSQL startup works with all commercial and account-pool tables.
 - [x] SQLite single-node development mode still works.
-- [ ] Runtime logs do not contain payment secrets, upstream account secrets, or
+- [x] Runtime logs do not contain payment secrets, upstream account secrets, or
   full API keys.
 - [x] Persisted payment provider config does not contain ePay secrets in
   plaintext.
@@ -485,6 +484,55 @@ Verification:
 - [x] Restored user could sign in and read wallet, paid order, and active
   subscription state.
 
+## Stage 23: Production Log Secret Redaction And Runtime Audit
+
+Status: [x] Completed
+
+Goal: prevent application logs from exposing commercial payment secrets,
+upstream credentials, API keys, authentication tokens, cookies, passwords, or
+database credentials, including at debug level.
+
+Backend scope:
+
+- [x] Add a redacting zap core at the final application log write boundary so
+  existing and future logger call sites use the same policy.
+- [x] Redact sensitive field names after punctuation/case normalization,
+  including authorization, API key, token, password, secret, credential,
+  cookie, DSN, and provider-key variants.
+- [x] Recursively sanitize reflected maps, structs, slices, JSON bodies,
+  GraphQL variables, request headers, and object marshalers while preserving
+  non-sensitive diagnostic fields.
+- [x] Sanitize free-form log messages, errors, DSN URLs, Bearer values, OpenAI
+  style `sk-` keys, Google API keys, and JWT-shaped values.
+- [x] Apply redaction to fields attached through `WithFields` and logger names,
+  not only fields passed directly to one log statement.
+
+Runtime acceptance:
+
+- [x] Add `scripts/e2e/commercial-log-redaction-acceptance.sh` with an isolated
+  SQLite application and debug file logging.
+- [x] Save an ePay-compatible provider with a canary key through GraphQL so raw
+  GraphQL variables exercise the redactor.
+- [x] Create a real service-account API key and use it in an Authorization
+  header against the webhook debug path.
+- [x] Send API key, Cookie, query token, password, secret, and PostgreSQL DSN
+  canaries through logged request structures.
+- [x] Fail when any full canary appears in the runtime log, require redaction
+  markers, and require a non-sensitive marker to remain visible.
+- [x] Keep external reverse-proxy, container-runtime, and log-collector sampling
+  as a production deployment check because those systems do not use AxonHub's
+  logger core.
+
+Verification:
+
+- [x] `go test ./internal/log -count=1`
+- [x] `go test ./internal/server/api ./internal/server/gql ./internal/server/biz ./internal/server/orchestrator -count=1`
+- [x] `./scripts/e2e/commercial-log-redaction-acceptance.sh`
+- [x] Runtime scan confirmed owner password, payment encryption key, ePay key,
+  admin JWT, service API key, X-API-Key, Cookie, body password/secret, DSN
+  password, and query token were absent from application logs.
+- [x] Runtime logs retained `[REDACTED]` markers and non-sensitive request data.
+
 ## Completion Log
 
 Append one line per completed enhancement stage.
@@ -498,3 +546,4 @@ Append one line per completed enhancement stage.
 | Stage 20 | this commit | 2026-07-09 | Added account-pool browser smoke automation for Channel account-pool management, write-only account credentials, account monitoring, and account detail pages; aligned the roadmap baseline with completed account-pool stages. |
 | Stage 21 | this commit | 2026-07-10 | Added isolated PostgreSQL commercial acceptance, persistent-data restart checks, current-fork Docker builds, Compose health verification, and fresh commercial/account-pool migration checks. |
 | Stage 22 | this commit | 2026-07-10 | Added pre-commercial PostgreSQL upgrade acceptance, real pg_dump/drop/restore validation, commercial data manifest comparison, backup secret scanning, and restored-user browser smoke. |
+| Stage 23 | this commit | 2026-07-10 | Added final-write-boundary structured log redaction, nested request/error sanitization, focused logger tests, and runtime canary scanning across GraphQL and webhook paths. |

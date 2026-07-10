@@ -3,7 +3,8 @@
 Date: 2026-07-09
 
 This document is the Stage 18 acceptance record for the commercial AxonHub fork,
-updated with Stage 19-22 browser-smoke and Docker/PostgreSQL evidence. It
+updated with Stage 19-23 browser-smoke, Docker/PostgreSQL, recovery, and log
+redaction evidence. It
 verifies the added commercial modules as one product flow instead of only as
 isolated services.
 
@@ -39,6 +40,7 @@ Stage 18 covers the production-facing commercial loop:
 | Account-pool browser smoke | `./scripts/e2e/e2e-test.sh upstream-accounts-smoke.spec.ts` | Channel account-pool dialog, pool creation, write-only account credential creation, monitoring list, and account detail views are covered in Playwright. |
 | PostgreSQL and Docker acceptance | `./scripts/e2e/commercial-postgres-acceptance.sh` | Both browser smoke suites pass against PostgreSQL, commercial/account-pool data is persisted, an application restart retains database health, the current fork image builds, Compose services become healthy, and fresh-database migrations create the required tables. |
 | Historical migration and recovery | `./scripts/e2e/commercial-postgres-recovery-acceptance.sh` | A pre-commercial PostgreSQL database preserves legacy records during current-fork migration; the upgraded commercial database survives a real dump, drop, recreate, and restore cycle; and the restored user can read wallet, paid-order, and active-subscription state in the browser. |
+| Runtime log redaction | `./scripts/e2e/commercial-log-redaction-acceptance.sh` | Debug application logs redact payment/provider secrets, JWTs, full service API keys, authorization headers, cookies, body credentials, DSN passwords, and query tokens while preserving safe diagnostic fields. |
 | Frontend compilation | `pnpm exec tsc --noEmit`, `pnpm build` from `frontend/` | The commercial UI remains type-safe and production-buildable. |
 
 `pnpm lint` was also run during Stage 18. It failed on existing repository-wide
@@ -168,10 +170,11 @@ Use the project-specific production `.env` and verify that
   deployment acceptance tasks.
 - Frontend production build may keep Vite's large chunk warning. This is not a
   functional failure, but should be reviewed before high-traffic deployment.
-- Logs must be reviewed in a real running environment with production log
-  sinks; unit tests only verify that persisted provider config does not contain
-  payment secrets in plaintext. Stage 22 additionally verifies that the
-  simulated ePay secret does not appear in a plain PostgreSQL dump.
+- Application log redaction is covered with debug-level runtime canaries, and
+  Stage 22 verifies that the simulated ePay secret does not appear in a plain
+  PostgreSQL dump. Production reverse proxies, container runtimes, and external
+  log collectors still require sampling because their logs do not pass through
+  AxonHub's redacting logger core.
 
 ## Recommended Release Gate
 
@@ -184,6 +187,7 @@ are true:
 - Automated commercial and account-pool browser smoke passes, and remaining
   manual browser checklist items pass for real API traffic and responsive
   layouts.
-- Log sampling confirms no payment secrets, upstream account secrets, or full
-  API keys are emitted.
+- Automated AxonHub log-redaction acceptance passes, and production external
+  log-sink sampling confirms no secrets are emitted outside the application
+  logger.
 - A database backup and rollback point exist.

@@ -78,7 +78,8 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [x] Current-fork Docker image starts with PostgreSQL-backed `docker-compose`.
 - [x] SQLite single-node deployment starts with a dedicated Stage 11 data file.
 - [x] Healthcheck is wired for container orchestration.
-- [ ] Logs do not contain provider secrets, payment notify secrets, or full API keys.
+- [x] AxonHub application logs do not contain provider secrets, payment notify secrets, or full API keys.
+- [ ] Reverse-proxy, container-runtime, and external log-collector samples do not contain secrets.
 - [ ] Large frontend chunk warning is reviewed and accepted or split before high-traffic production.
 
 ## Stage 11 Acceptance Defects Resolved
