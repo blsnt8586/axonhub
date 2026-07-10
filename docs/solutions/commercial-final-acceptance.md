@@ -3,8 +3,8 @@
 Date: 2026-07-09
 
 This document is the Stage 18 acceptance record for the commercial AxonHub fork,
-updated with Stage 19-23 browser-smoke, Docker/PostgreSQL, recovery, and log
-redaction evidence. It
+updated with Stage 19-24 browser-smoke, Docker/PostgreSQL, recovery, log
+redaction, and responsive evidence. It
 verifies the added commercial modules as one product flow instead of only as
 isolated services.
 
@@ -41,6 +41,7 @@ Stage 18 covers the production-facing commercial loop:
 | PostgreSQL and Docker acceptance | `./scripts/e2e/commercial-postgres-acceptance.sh` | Both browser smoke suites pass against PostgreSQL, commercial/account-pool data is persisted, an application restart retains database health, the current fork image builds, Compose services become healthy, and fresh-database migrations create the required tables. |
 | Historical migration and recovery | `./scripts/e2e/commercial-postgres-recovery-acceptance.sh` | A pre-commercial PostgreSQL database preserves legacy records during current-fork migration; the upgraded commercial database survives a real dump, drop, recreate, and restore cycle; and the restored user can read wallet, paid-order, and active-subscription state in the browser. |
 | Runtime log redaction | `./scripts/e2e/commercial-log-redaction-acceptance.sh` | Debug application logs redact payment/provider secrets, JWTs, full service API keys, authorization headers, cookies, body credentials, DSN passwords, and query tokens while preserving safe diagnostic fields. |
+| Desktop/mobile responsive acceptance | `./scripts/e2e/commercial-responsive-acceptance.sh` | User billing, owner billing operations, upstream-account monitoring, and account detail pages pass desktop/mobile overflow and control-overlap checks with eight full-page screenshot attachments. |
 | Frontend compilation | `pnpm exec tsc --noEmit`, `pnpm build` from `frontend/` | The commercial UI remains type-safe and production-buildable. |
 
 `pnpm lint` was also run during Stage 18. It failed on existing repository-wide
@@ -111,11 +112,9 @@ Owner flow:
 - Run maintenance manually and confirm the audit log row appears.
 - Verify ePay and upstream account secrets are write-only in the browser.
 
-Responsive smoke:
-
-- Repeat the wallet and owner monitoring views at desktop width.
-- Repeat the same key views at a mobile width and confirm forms, tables, and
-  dialogs remain usable without overlapping controls.
+Responsive smoke is automated for user billing, owner billing Operations,
+upstream-account monitoring, and account detail at desktop and mobile widths.
+Broader device/browser coverage remains a release-specific decision.
 
 ## Deployment Acceptance
 
@@ -158,9 +157,10 @@ Use the project-specific production `.env` and verify that
 
 ## Residual Production Risks
 
-- Browser commercial smoke is now automated for the core owner/user billing loop
-  and the owner account-pool management/monitoring loop. Deeper API-traffic,
-  mobile, and production-provider checks remain manual release tasks.
+- Browser commercial smoke is automated for the core owner/user billing loop,
+  owner account-pool management/monitoring, and desktop/mobile responsive
+  layouts. Deeper real API-traffic and production-provider checks remain manual
+  release tasks.
 - Full frontend lint is not yet a clean release gate. Typecheck and production
   build pass, but repository-wide lint needs a separate cleanup stage.
 - Fresh PostgreSQL startup, current-fork Docker builds, Compose healthchecks,

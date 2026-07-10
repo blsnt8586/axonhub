@@ -122,6 +122,17 @@ in the runtime log. Non-sensitive markers must remain visible.
 ./scripts/e2e/commercial-log-redaction-acceptance.sh
 ```
 
+#### `e2e/commercial-responsive-acceptance.sh`
+
+Type-checks and builds the frontend, seeds commercial billing and upstream
+account data, then runs desktop and mobile Playwright checks for document
+overflow, overlapping controls, key workflow reachability, and full-page
+screenshot evidence.
+
+```bash
+./scripts/e2e/commercial-responsive-acceptance.sh
+```
+
 **功能：**
 - 自动检测最近的稳定版本
 - 批量运行迁移测试

@@ -23,6 +23,7 @@ export type AuthSession = {
 
 export type CommercialSeed = {
   redeemCode: string
+  planId: string
   planName: string
   providerName: string
 }
@@ -125,7 +126,9 @@ export async function seedCommercialAssets(
   )
 
   const planName = `Smoke Plan ${slug}`
-  await graphqlRequest(
+  const plan = await graphqlRequest<{
+    saveSubscriptionPlan: { id: string }
+  }>(
     request,
     adminToken,
     `
@@ -223,6 +226,7 @@ export async function seedCommercialAssets(
 
   return {
     redeemCode: redeem.createRedeemCodes[0].code,
+    planId: plan.saveSubscriptionPlan.id,
     planName,
     providerName,
   }

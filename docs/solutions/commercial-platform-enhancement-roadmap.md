@@ -273,7 +273,7 @@ Verification:
 
 Status: [x] Completed - automated backend, browser, Docker, and fresh PostgreSQL
 acceptance are recorded in `commercial-final-acceptance.md`; production data
-upgrade, external log-sink sampling, and responsive checks remain release gates.
+upgrade and external log-sink sampling remain release gates.
 
 Goal: verify the enhanced commercial platform as a coherent product, not only a
 set of backend features.
@@ -299,7 +299,8 @@ Frontend acceptance:
   redeem, subscription purchase, and paid order visibility.
 - [x] Owner browser smoke confirms the commercial billing console entry and core
   commercial operation tabs.
-- [ ] Desktop and mobile layouts are usable.
+- [x] Desktop and mobile layouts are usable for core commercial and account
+  monitoring workflows.
 - [x] Production build passes.
 
 Verification:
@@ -533,6 +534,54 @@ Verification:
   password, and query token were absent from application logs.
 - [x] Runtime logs retained `[REDACTED]` markers and non-sensitive request data.
 
+## Stage 24: Desktop And Mobile Commercial Responsive Acceptance
+
+Status: [x] Completed
+
+Goal: verify that normal-user billing and owner commercial/account-monitoring
+workflows remain usable without horizontal page overflow or overlapping
+controls on desktop and mobile viewports.
+
+Frontend test scope:
+
+- [x] Seed a registered normal user with signup credit, redeemed balance, and an
+  active subscription through the real registration and GraphQL APIs.
+- [x] Seed an owner-visible Channel, upstream account pool, and upstream account
+  so monitoring and detail pages contain realistic data.
+- [x] Verify `/billing`, `/admin/billing`, `/channels/accounts`, and the linked
+  account detail route at `1440x1000` and `390x844`.
+- [x] Confirm recharge, redeem, subscription, admin Operations, monitoring, and
+  account-detail controls are visible and reachable.
+- [x] Detect document-level horizontal overflow for each page state.
+- [x] Detect intersections between rendered buttons, inputs, textareas, selects,
+  and tabs across the full page, not only the initial viewport.
+- [x] Attach eight full-page screenshots to the Playwright report for visual
+  review.
+- [x] Use the real account link from the monitoring table for detail navigation
+  so route encoding matches production behavior.
+
+Visual review:
+
+- [x] Mobile wallet metrics stack without clipping and long explanatory text
+  wraps inside the viewport.
+- [x] Mobile billing-admin tabs remain horizontally scrollable and the
+  Operations tab can be brought into view and activated.
+- [x] Mobile upstream-account metrics and filters stack without document
+  overflow.
+- [x] Long Channel and upstream-account names wrap on the account detail page
+  without covering navigation or actions.
+- [x] No production frontend component changes were required after automated
+  and screenshot review.
+
+Verification:
+
+- [x] `pnpm exec tsc --noEmit`
+- [x] `pnpm build`
+- [x] `./scripts/e2e/e2e-test.sh commercial-responsive-smoke.spec.ts`
+- [x] `./scripts/e2e/commercial-responsive-acceptance.sh`
+- [x] Playwright setup plus responsive suite: 2 tests passed.
+- [x] Eight desktop/mobile page states passed overflow and overlap assertions.
+
 ## Completion Log
 
 Append one line per completed enhancement stage.
@@ -547,3 +596,4 @@ Append one line per completed enhancement stage.
 | Stage 21 | this commit | 2026-07-10 | Added isolated PostgreSQL commercial acceptance, persistent-data restart checks, current-fork Docker builds, Compose health verification, and fresh commercial/account-pool migration checks. |
 | Stage 22 | this commit | 2026-07-10 | Added pre-commercial PostgreSQL upgrade acceptance, real pg_dump/drop/restore validation, commercial data manifest comparison, backup secret scanning, and restored-user browser smoke. |
 | Stage 23 | this commit | 2026-07-10 | Added final-write-boundary structured log redaction, nested request/error sanitization, focused logger tests, and runtime canary scanning across GraphQL and webhook paths. |
+| Stage 24 | this commit | 2026-07-10 | Added desktop/mobile commercial responsive smoke, realistic billing/account seed data, full-page overflow and control-overlap detection, account-link route verification, and eight screenshot attachments. |

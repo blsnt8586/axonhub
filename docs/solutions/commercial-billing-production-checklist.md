@@ -41,10 +41,10 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [x] User can open the wallet page and see balance, held amount, credit limit, and available amount.
 - [x] User can create a recharge checkout.
 - [x] Simulated ePay notification credits the user wallet once and stays idempotent on retry.
-- [ ] User can redeem a valid redeem code.
+- [x] User can redeem a valid redeem code.
 - [ ] User can apply a valid promo code to recharge or subscription checkout.
 - [ ] User can bind an affiliate invite code once.
-- [ ] User can buy a subscription plan.
+- [x] User can buy a subscription plan.
 - [ ] Subscription quota is consumed before wallet fallback where applicable.
 
 ## Gateway Acceptance
@@ -64,7 +64,7 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [x] Browser login flow works on the dev server.
 - [x] Admin billing operation controls render without console-blocking errors.
 - [x] User billing page renders without console-blocking errors.
-- [ ] Responsive layout is usable at desktop and mobile widths.
+- [x] Responsive layout is usable at desktop and mobile widths for billing and upstream-account monitoring.
 
 ## Backend Verification
 
