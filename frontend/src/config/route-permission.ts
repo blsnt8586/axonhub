@@ -11,6 +11,7 @@ export interface RouteConfig {
 }
 
 export interface RouteGroup {
+  id: 'admin' | 'project' | 'settings';
   title: string;
   scopeLevel?: ScopeLevel; // 路由组的默认权限级别
   routes: RouteConfig[];
@@ -19,6 +20,7 @@ export interface RouteGroup {
 // 定义所有路由的权限配置
 export const routeConfigs: RouteGroup[] = [
   {
+    id: 'admin',
     title: 'Admin',
     scopeLevel: 'system', // Admin 路由组只能通过 system-level 权限访问
     routes: [
@@ -89,6 +91,7 @@ export const routeConfigs: RouteGroup[] = [
     ],
   },
   {
+    id: 'project',
     title: 'Project',
     scopeLevel: 'any', // Project 路由组可以通过 system-level 或 project-level 权限访问
     routes: [
@@ -140,11 +143,13 @@ export const routeConfigs: RouteGroup[] = [
       },
       {
         path: '/project/playground',
-        // Playground is accessible to all users
+        requiredScopes: ['write_requests', 'read_channels'],
+        mode: 'hidden',
       },
     ],
   },
   {
+    id: 'settings',
     title: 'Settings',
     routes: [
       {

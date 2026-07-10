@@ -12,7 +12,7 @@ it does not add or renumber Stage 0-28.
 - [x] Review the current AxonHub frontend and backend authorization split.
 - [x] Define the target user, project, API key, billing, and administrator
   boundaries.
-- [ ] Complete Workstream W1-W8 below.
+- [ ] Complete Workstream W2-W8 below.
 
 ## Review Snapshot
 
@@ -196,15 +196,28 @@ scope, updates this checklist, and ends in one rollback-friendly Git commit.
 
 ### W1: Capability Model And Post-Login Landing
 
-- [ ] Extract a pure frontend route-capability evaluator with tests.
-- [ ] Make project-owner semantics match the backend project-scope rules.
-- [ ] Mark consumer, project-admin, and system-admin routes explicitly.
-- [ ] Remove contradictory route declarations, especially Playground being
+- [x] Extract a pure frontend route-capability evaluator with tests.
+- [x] Make project-owner semantics match the backend project-scope rules.
+- [x] Mark consumer, project-admin, and system-admin routes explicitly.
+- [x] Remove contradictory route declarations, especially Playground being
   declared public in one file but scope-protected in another.
-- [ ] Redirect ordinary users to a user dashboard instead of directly to
+- [x] Redirect ordinary users to a user dashboard instead of directly to
   Playground; preserve an explicit requested redirect after login.
-- [ ] Add Playwright coverage for a newly registered user reaching an accessible
+- [x] Add Playwright coverage for a newly registered user reaching an accessible
   first screen without system scopes.
+
+Status: [x] Completed
+
+Implementation notes:
+
+- Route and sidebar authorization now share one project-owner-aware evaluator.
+- Navigation groups use stable IDs instead of translated titles, preventing
+  localized Admin navigation from bypassing role filtering.
+- Ordinary users land on `/home`; system owners retain the operations dashboard.
+- Internal post-login redirects are preserved while external and
+  protocol-relative redirects are rejected.
+- `/home` exposes only user commercial summary and consumer actions; it does not
+  query or expose Channel administration.
 
 Acceptance:
 
@@ -382,3 +395,9 @@ testable capability model and a valid post-login landing. W4 precedes W5 so the
 Playground uses a proven user-owned credential boundary. W6 follows the real
 request path so usage visibility is tested against actual ownership and billing
 records rather than synthetic UI data.
+
+## Workstream Completion Log
+
+| Workstream | Commit | Date | Notes |
+| --- | --- | --- | --- |
+| W1 | this commit | 2026-07-10 | Unified route authorization, fixed project-owner and localized Admin navigation behavior, added the user home landing and safe redirect handling, and added unit/browser regression coverage. |

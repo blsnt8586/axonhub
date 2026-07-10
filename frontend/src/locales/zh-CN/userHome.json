@@ -1,0 +1,17 @@
+{
+  "sidebar.items.home": "首页",
+  "userHome.title": "用户工作台",
+  "userHome.description": "集中管理 AI 访问、用量和账户资金。",
+  "userHome.noProject.title": "没有可用工作空间",
+  "userHome.noProject.description": "当前账户尚未加入有效项目。如果这不符合预期，请联系平台管理员。",
+  "userHome.metrics.available": "可用余额",
+  "userHome.metrics.requests": "请求数",
+  "userHome.metrics.today": "今日消费",
+  "userHome.metrics.project": "当前工作空间",
+  "userHome.metrics.notSelected": "未选择",
+  "userHome.loadError.title": "账户摘要暂不可用",
+  "userHome.loadError.description": "工作空间仍可使用，请刷新页面重试商业摘要。",
+  "userHome.actions.apiKeys": "API 密钥",
+  "userHome.actions.playground": "Playground",
+  "userHome.actions.billing": "钱包与账单"
+}

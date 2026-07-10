@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
+import { getSafeInternalRedirect } from '@/config/post-sign-in';
 import { graphqlRequest } from '@/gql/graphql';
 import { ME_QUERY } from '@/gql/users';
 import { toast } from 'sonner';
@@ -48,7 +49,7 @@ export function useMe(enabled = true) {
   return query;
 }
 
-export function useSignIn() {
+export function useSignIn(requestedRedirect?: string) {
   const { setUser, setAccessToken } = useAuthStore((state) => state.auth);
   const router = useRouter();
 
@@ -73,9 +74,15 @@ export function useSignIn() {
 
       toast.success(i18n.t('common.success.signedIn'));
 
-      // Redirect based on user role
-      // Owner users go to dashboard, non-owner users go to requests page
-      const redirectPath = data.user.isOwner ? '/' : '/project/playground';
+      const safeRedirect = getSafeInternalRedirect(requestedRedirect, window.location.origin);
+      if (safeRedirect) {
+        window.location.assign(safeRedirect);
+        return;
+      }
+
+      // System owners use the operations dashboard. Ordinary users land on
+      // their self-service workspace instead of a permission-sensitive page.
+      const redirectPath = data.user.isOwner ? '/' : '/home';
       router.navigate({ to: redirectPath });
     },
     onError: (error: any) => {
@@ -132,7 +139,6 @@ export function useSignOut() {
   };
 }
 
-
 export function useOIDCProviders() {
   return useQuery({
     queryKey: ['oidc-providers'],
@@ -174,7 +180,7 @@ export function useOIDCExchange() {
     },
     onSuccess: (response) => {
       const data = response.data;
-      
+
       // Store token in localStorage
       setTokenToStorage(data.token);
 
@@ -192,7 +198,7 @@ export function useOIDCExchange() {
       toast.success(i18n.t('common.success.signedIn'));
 
       // Redirect based on user role
-      const redirectPath = data.user.isOwner ? '/' : '/project/playground';
+      const redirectPath = data.user.isOwner ? '/' : '/home';
       router.navigate({ to: redirectPath });
     },
     onError: (error: unknown) => {

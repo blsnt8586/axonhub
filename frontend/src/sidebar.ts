@@ -65,6 +65,7 @@ export function useSidebarData(): SidebarData {
   // 原始导航组配置
   const rawNavGroups: NavGroup[] = [
     {
+      id: 'admin',
       title: t('sidebar.groups.admin'),
       items: [
         {
@@ -125,8 +126,14 @@ export function useSidebarData(): SidebarData {
       ],
     },
     {
+      id: 'project',
       title: t('sidebar.groups.project'),
       items: [
+        {
+          title: t('sidebar.items.home'),
+          url: '/home',
+          icon: IconLayoutDashboard,
+        } as NavLink,
         {
           title: t('sidebar.items.apiKeys'),
           url: '/project/api-keys',
@@ -181,6 +188,7 @@ export function useSidebarData(): SidebarData {
       ],
     },
     {
+      id: 'settings',
       title: t('sidebar.groups.settings'),
       items: [
         {

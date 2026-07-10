@@ -1,0 +1,17 @@
+{
+  "sidebar.items.home": "Home",
+  "userHome.title": "Workspace home",
+  "userHome.description": "Manage your AI access, usage, and account from one place.",
+  "userHome.noProject.title": "No active workspace",
+  "userHome.noProject.description": "Your account is not currently attached to an active project. Contact the platform administrator if this is unexpected.",
+  "userHome.metrics.available": "Available balance",
+  "userHome.metrics.requests": "Requests",
+  "userHome.metrics.today": "Today's consumption",
+  "userHome.metrics.project": "Active workspace",
+  "userHome.metrics.notSelected": "Not selected",
+  "userHome.loadError.title": "Account summary unavailable",
+  "userHome.loadError.description": "The workspace is still available. Refresh the page to retry loading the commercial summary.",
+  "userHome.actions.apiKeys": "API keys",
+  "userHome.actions.playground": "Playground",
+  "userHome.actions.billing": "Wallet and billing"
+}

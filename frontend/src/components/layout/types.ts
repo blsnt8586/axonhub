@@ -33,6 +33,7 @@ type NavCollapsible = BaseNavItem & {
 type NavItem = NavCollapsible | NavLink;
 
 interface NavGroup {
+  id: string;
   title: string;
   items: NavItem[];
 }
