@@ -36,6 +36,7 @@ test.describe('commercial responsive browser smoke', () => {
     const seed = await seedResponsiveData(request)
 
     for (const viewport of viewports) {
+      await verifySignUp(browser, viewport, testInfo)
       await verifyUserBilling(browser, seed.userSession, viewport, testInfo)
       await verifyAdminBilling(browser, seed.adminSession, viewport, testInfo)
       const accountHref = await verifyAccountMonitoring(browser, seed, viewport, testInfo)
@@ -43,6 +44,28 @@ test.describe('commercial responsive browser smoke', () => {
     }
   })
 })
+
+async function verifySignUp(browser: Browser, viewport: ViewportCase, testInfo: TestInfo) {
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: viewport.name === 'mobile' ? 2 : 1,
+  })
+  const page = await context.newPage()
+  await page.goto('/sign-up', { waitUntil: 'domcontentloaded' })
+
+  const authCard = page.getByTestId('auth-card')
+  await expect(authCard).toBeVisible({ timeout: 20000 })
+  await expect(page.getByText(/Create your account|创建账户/i, { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Create Account|创建账户/i })).toBeVisible()
+
+  const cardBounds = await authCard.boundingBox()
+  expect(cardBounds).toBeTruthy()
+  expect(cardBounds!.width).toBeLessThanOrEqual(viewport.name === 'desktop' ? 560 : viewport.width - 16)
+  expect(cardBounds!.x).toBeGreaterThanOrEqual(viewport.name === 'desktop' ? viewport.width / 2 : 0)
+
+  await assertResponsiveLayout(page, `sign-up-${viewport.name}`, testInfo)
+  await context.close()
+}
 
 async function seedResponsiveData(request: APIRequestContext): Promise<ResponsiveSeed> {
   const slug = uniqueCommercialSlug('responsive-smoke')
@@ -309,6 +332,11 @@ async function assertResponsiveLayout(page: Page, name: string, testInfo: TestIn
         const left = candidates[leftIndex]
         const right = candidates[rightIndex]
         if (left.element.contains(right.element) || right.element.contains(left.element)) continue
+        const sameParent = left.element.parentElement === right.element.parentElement
+        const inputButtonPair =
+          (left.element.tagName === 'INPUT' && right.element.tagName === 'BUTTON') ||
+          (left.element.tagName === 'BUTTON' && right.element.tagName === 'INPUT')
+        if (sameParent && inputButtonPair && left.element.parentElement?.classList.contains('relative')) continue
 
         const overlapWidth = Math.min(left.right, right.right) - Math.max(left.left, right.left)
         const overlapHeight = Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top)

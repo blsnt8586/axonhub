@@ -1,39 +1,44 @@
 import { Link } from '@tanstack/react-router';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 import AuthLayout from '../auth-layout';
+import TwoColumnAuth from '../components/two-column-auth';
+import AnimatedLineBackground from '../sign-in/components/animated-line-background';
 import { SignUpForm } from './components/sign-up-form';
 
 export default function SignUp() {
+  const { t } = useTranslation();
+
   return (
     <AuthLayout>
-      <Card className='gap-4'>
-        <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>Create an account</CardTitle>
-          <CardDescription>
-            Enter your email and password to create an account. <br />
-            Already have an account?{' '}
-            <Link to='/sign-in' className='hover:text-primary underline underline-offset-4'>
-              Sign In
-            </Link>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SignUpForm />
-        </CardContent>
-        <CardFooter>
-          <p className='text-muted-foreground px-8 text-center text-sm'>
-            By creating an account, you agree to our{' '}
-            <a href='/terms' className='hover:text-primary underline underline-offset-4'>
-              Terms of Service
+      <AnimatedLineBackground key='optimized-layout' />
+      <TwoColumnAuth
+        title={t('auth.signUp.title')}
+        description={t('auth.signUp.description')}
+        rightMaxWidthClassName='max-w-lg'
+        rightFooter={
+          <p className='text-xs leading-relaxed text-slate-500 sm:text-sm'>
+            {t('auth.signUp.termsPrefix')}{' '}
+            <a href='/terms' className='font-medium text-slate-700 underline underline-offset-4 hover:text-slate-900'>
+              {t('auth.signUp.termsOfService')}
             </a>{' '}
-            and{' '}
-            <a href='/privacy' className='hover:text-primary underline underline-offset-4'>
-              Privacy Policy
+            {t('auth.signUp.and')}{' '}
+            <a href='/privacy' className='font-medium text-slate-700 underline underline-offset-4 hover:text-slate-900'>
+              {t('auth.signUp.privacyPolicy')}
             </a>
-            .
+            {t('auth.signUp.termsSuffix')}
           </p>
-        </CardFooter>
-      </Card>
+        }
+      >
+        <div className='space-y-6'>
+          <SignUpForm />
+          <p className='text-center text-sm text-slate-600'>
+            {t('auth.signUp.haveAccount')}{' '}
+            <Link to='/sign-in' className='font-medium text-slate-800 underline underline-offset-4 hover:text-slate-600'>
+              {t('auth.signUp.signIn')}
+            </Link>
+          </p>
+        </div>
+      </TwoColumnAuth>
     </AuthLayout>
   );
 }

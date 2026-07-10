@@ -59,18 +59,31 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className={cn('grid gap-3', className)} {...props}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className={cn('grid gap-5', className)}
+        data-testid='sign-up-form'
+        {...props}
+      >
         {registrationDisabled && (
-          <div className='text-muted-foreground rounded-md border p-3 text-sm'>{t('auth.signUp.disabled')}</div>
+          <div className='rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900'>
+            {t('auth.signUp.disabled')}
+          </div>
         )}
         <FormField
           control={form.control}
           name='email'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className='text-sm font-medium text-slate-700'>{t('auth.signIn.form.email.label')}</FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input
+                  type='email'
+                  autoComplete='email'
+                  placeholder='name@example.com'
+                  className='border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus-visible:ring-slate-400'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -81,9 +94,14 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name='password'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className='text-sm font-medium text-slate-700'>{t('auth.signIn.form.password.label')}</FormLabel>
               <FormControl>
-                <PasswordInput placeholder='********' {...field} />
+                <PasswordInput
+                  autoComplete='new-password'
+                  placeholder='********'
+                  className='border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus-within:ring-1 focus-within:ring-slate-400'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -94,15 +112,23 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name='confirmPassword'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('users.form.confirmPassword')}</FormLabel>
+              <FormLabel className='text-sm font-medium text-slate-700'>{t('users.form.confirmPassword')}</FormLabel>
               <FormControl>
-                <PasswordInput placeholder='********' {...field} />
+                <PasswordInput
+                  autoComplete='new-password'
+                  placeholder='********'
+                  className='border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus-within:ring-1 focus-within:ring-slate-400'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button className='mt-2' disabled={isLoading || !!registrationDisabled}>
+        <Button
+          className='mt-2 w-full bg-slate-800 font-medium text-white shadow-lg transition-colors hover:bg-slate-700 focus-visible:ring-slate-500'
+          disabled={isLoading || !!registrationDisabled}
+        >
           {register.isPending ? t('auth.signUp.creating') : t('auth.signUp.submit')}
         </Button>
 

@@ -2,6 +2,7 @@ import type React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AutoRouterDiagram from '../sign-in/components/auto-router-diagram';
+import '../sign-in/login-styles.css';
 
 export interface TwoColumnAuthProps {
   title: React.ReactNode;
@@ -66,6 +67,7 @@ export default function TwoColumnAuth({
 
         <div id='auth-card-wrapper' data-testid='auth-card-wrapper' className={`relative z-10 w-full ${rightMaxWidthClassName} px-6 py-8 sm:px-8 sm:py-12`}>
           <Card
+            data-testid='auth-card'
             className='animate-fade-in-up border-slate-200/60 bg-white/90 text-slate-800 shadow-xl shadow-slate-900/10 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:shadow-slate-900/15'
             style={
               {
