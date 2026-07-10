@@ -1,0 +1,19 @@
+{
+  "modelCatalog.title": "Models & Prices",
+  "modelCatalog.description": "Models available in the selected workspace and their customer-facing prices.",
+  "modelCatalog.available": "Available for personal API keys",
+  "modelCatalog.loadFailed": "Failed to load the model catalog",
+  "modelCatalog.empty": "No models are currently available in this workspace.",
+  "modelCatalog.noPrice": "No public price is configured",
+  "modelCatalog.customPrice": "Custom pricing",
+  "modelCatalog.perMillion": "{{amount}} / 1M",
+  "modelCatalog.items.prompt_tokens": "Input tokens",
+  "modelCatalog.items.completion_tokens": "Output tokens",
+  "modelCatalog.items.prompt_cached_tokens": "Cached input tokens",
+  "modelCatalog.items.prompt_write_cached_tokens": "Cache write tokens",
+  "modelCatalog.items.cached_tokens": "Cached input tokens",
+  "modelCatalog.items.image": "Image generation",
+  "modelCatalog.items.video": "Video generation",
+  "modelCatalog.items.audio": "Audio",
+  "modelCatalog.items.usage": "Usage"
+}

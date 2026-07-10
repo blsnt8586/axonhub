@@ -4,6 +4,7 @@ import {
   enableCommercialRegistration,
   graphqlRequest,
   injectAuthSession,
+  openBillingView,
   seedCommercialAssets,
   signInViaApi,
   uniqueCommercialSlug,
@@ -216,8 +217,11 @@ async function verifyUserBilling(browser: Browser, session: AuthSession, viewpor
   await page.goto('/billing', { waitUntil: 'domcontentloaded' })
   await waitForBillingOverview(page)
 
+  await openBillingView(page, 'recharge')
   await expect(page.locator('#billing-recharge-amount')).toBeVisible()
+  await openBillingView(page, 'redeem')
   await expect(page.locator('#billing-redeem-code')).toBeVisible()
+  await openBillingView(page, 'subscriptions')
   await expect(page.locator('#billing-subscription-promo')).toBeVisible()
   await expect(page.getByText('active', { exact: true }).first()).toBeVisible()
 

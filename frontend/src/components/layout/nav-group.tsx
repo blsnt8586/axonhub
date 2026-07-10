@@ -24,7 +24,7 @@ import {
 } from '../ui/dropdown-menu';
 import { NavCollapsible, NavItem, NavLink, type NavGroup } from './types';
 
-export function NavGroup({ title, items }: NavGroup) {
+export function NavGroup({ id, title, items }: NavGroup) {
   const { state, isMobile } = useSidebar();
   const href = useLocation({ select: (location) => location.href });
 
@@ -45,7 +45,7 @@ export function NavGroup({ title, items }: NavGroup) {
   }
 
   return (
-    <SidebarGroup>
+    <SidebarGroup data-testid={`sidebar-group-${id}`}>
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
       <SidebarMenu>
         {visibleItems.map((item) => {

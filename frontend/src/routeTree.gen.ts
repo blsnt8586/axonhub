@@ -52,8 +52,10 @@ import { Route as AuthenticatedProjectTracesIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedProjectThreadsIndexRouteImport } from './routes/_authenticated/project/threads/index'
 import { Route as AuthenticatedProjectRolesIndexRouteImport } from './routes/_authenticated/project/roles/index'
 import { Route as AuthenticatedProjectRequestsIndexRouteImport } from './routes/_authenticated/project/requests/index'
+import { Route as AuthenticatedProjectRequestAdminIndexRouteImport } from './routes/_authenticated/project/request-admin/index'
 import { Route as AuthenticatedProjectPromptsIndexRouteImport } from './routes/_authenticated/project/prompts/index'
 import { Route as AuthenticatedProjectPlaygroundIndexRouteImport } from './routes/_authenticated/project/playground/index'
+import { Route as AuthenticatedProjectModelsIndexRouteImport } from './routes/_authenticated/project/models/index'
 import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_authenticated/project/api-keys/index'
 import { Route as AuthenticatedChannelsAccountsIndexRouteImport } from './routes/_authenticated/channels/accounts/index'
 import { Route as AuthenticatedAdminBillingIndexRouteImport } from './routes/_authenticated/admin/billing/index'
@@ -303,6 +305,12 @@ const AuthenticatedProjectRequestsIndexRoute =
     path: '/project/requests/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProjectRequestAdminIndexRoute =
+  AuthenticatedProjectRequestAdminIndexRouteImport.update({
+    id: '/project/request-admin/',
+    path: '/project/request-admin/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProjectPromptsIndexRoute =
   AuthenticatedProjectPromptsIndexRouteImport.update({
     id: '/project/prompts/',
@@ -313,6 +321,12 @@ const AuthenticatedProjectPlaygroundIndexRoute =
   AuthenticatedProjectPlaygroundIndexRouteImport.update({
     id: '/project/playground/',
     path: '/project/playground/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectModelsIndexRoute =
+  AuthenticatedProjectModelsIndexRouteImport.update({
+    id: '/project/models/',
+    path: '/project/models/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProjectApiKeysIndexRoute =
@@ -409,8 +423,10 @@ export interface FileRoutesByFullPath {
   '/admin/billing/': typeof AuthenticatedAdminBillingIndexRoute
   '/channels/accounts/': typeof AuthenticatedChannelsAccountsIndexRoute
   '/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
+  '/project/models/': typeof AuthenticatedProjectModelsIndexRoute
   '/project/playground/': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
+  '/project/request-admin/': typeof AuthenticatedProjectRequestAdminIndexRoute
   '/project/requests/': typeof AuthenticatedProjectRequestsIndexRoute
   '/project/roles/': typeof AuthenticatedProjectRolesIndexRoute
   '/project/threads/': typeof AuthenticatedProjectThreadsIndexRoute
@@ -462,8 +478,10 @@ export interface FileRoutesByTo {
   '/admin/billing': typeof AuthenticatedAdminBillingIndexRoute
   '/channels/accounts': typeof AuthenticatedChannelsAccountsIndexRoute
   '/project/api-keys': typeof AuthenticatedProjectApiKeysIndexRoute
+  '/project/models': typeof AuthenticatedProjectModelsIndexRoute
   '/project/playground': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/project/prompts': typeof AuthenticatedProjectPromptsIndexRoute
+  '/project/request-admin': typeof AuthenticatedProjectRequestAdminIndexRoute
   '/project/requests': typeof AuthenticatedProjectRequestsIndexRoute
   '/project/roles': typeof AuthenticatedProjectRolesIndexRoute
   '/project/threads': typeof AuthenticatedProjectThreadsIndexRoute
@@ -518,8 +536,10 @@ export interface FileRoutesById {
   '/_authenticated/admin/billing/': typeof AuthenticatedAdminBillingIndexRoute
   '/_authenticated/channels/accounts/': typeof AuthenticatedChannelsAccountsIndexRoute
   '/_authenticated/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
+  '/_authenticated/project/models/': typeof AuthenticatedProjectModelsIndexRoute
   '/_authenticated/project/playground/': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/_authenticated/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
+  '/_authenticated/project/request-admin/': typeof AuthenticatedProjectRequestAdminIndexRoute
   '/_authenticated/project/requests/': typeof AuthenticatedProjectRequestsIndexRoute
   '/_authenticated/project/roles/': typeof AuthenticatedProjectRolesIndexRoute
   '/_authenticated/project/threads/': typeof AuthenticatedProjectThreadsIndexRoute
@@ -574,8 +594,10 @@ export interface FileRouteTypes {
     | '/admin/billing/'
     | '/channels/accounts/'
     | '/project/api-keys/'
+    | '/project/models/'
     | '/project/playground/'
     | '/project/prompts/'
+    | '/project/request-admin/'
     | '/project/requests/'
     | '/project/roles/'
     | '/project/threads/'
@@ -627,8 +649,10 @@ export interface FileRouteTypes {
     | '/admin/billing'
     | '/channels/accounts'
     | '/project/api-keys'
+    | '/project/models'
     | '/project/playground'
     | '/project/prompts'
+    | '/project/request-admin'
     | '/project/requests'
     | '/project/roles'
     | '/project/threads'
@@ -682,8 +706,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/billing/'
     | '/_authenticated/channels/accounts/'
     | '/_authenticated/project/api-keys/'
+    | '/_authenticated/project/models/'
     | '/_authenticated/project/playground/'
     | '/_authenticated/project/prompts/'
+    | '/_authenticated/project/request-admin/'
     | '/_authenticated/project/requests/'
     | '/_authenticated/project/roles/'
     | '/_authenticated/project/threads/'
@@ -1009,6 +1035,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/project/request-admin/': {
+      id: '/_authenticated/project/request-admin/'
+      path: '/project/request-admin'
+      fullPath: '/project/request-admin/'
+      preLoaderRoute: typeof AuthenticatedProjectRequestAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/project/prompts/': {
       id: '/_authenticated/project/prompts/'
       path: '/project/prompts'
@@ -1021,6 +1054,13 @@ declare module '@tanstack/react-router' {
       path: '/project/playground'
       fullPath: '/project/playground/'
       preLoaderRoute: typeof AuthenticatedProjectPlaygroundIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/project/models/': {
+      id: '/_authenticated/project/models/'
+      path: '/project/models'
+      fullPath: '/project/models/'
+      preLoaderRoute: typeof AuthenticatedProjectModelsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/project/api-keys/': {
@@ -1135,8 +1175,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminBillingIndexRoute: typeof AuthenticatedAdminBillingIndexRoute
   AuthenticatedChannelsAccountsIndexRoute: typeof AuthenticatedChannelsAccountsIndexRoute
   AuthenticatedProjectApiKeysIndexRoute: typeof AuthenticatedProjectApiKeysIndexRoute
+  AuthenticatedProjectModelsIndexRoute: typeof AuthenticatedProjectModelsIndexRoute
   AuthenticatedProjectPlaygroundIndexRoute: typeof AuthenticatedProjectPlaygroundIndexRoute
   AuthenticatedProjectPromptsIndexRoute: typeof AuthenticatedProjectPromptsIndexRoute
+  AuthenticatedProjectRequestAdminIndexRoute: typeof AuthenticatedProjectRequestAdminIndexRoute
   AuthenticatedProjectRequestsIndexRoute: typeof AuthenticatedProjectRequestsIndexRoute
   AuthenticatedProjectRolesIndexRoute: typeof AuthenticatedProjectRolesIndexRoute
   AuthenticatedProjectThreadsIndexRoute: typeof AuthenticatedProjectThreadsIndexRoute
@@ -1184,9 +1226,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChannelsAccountsIndexRoute:
     AuthenticatedChannelsAccountsIndexRoute,
   AuthenticatedProjectApiKeysIndexRoute: AuthenticatedProjectApiKeysIndexRoute,
+  AuthenticatedProjectModelsIndexRoute: AuthenticatedProjectModelsIndexRoute,
   AuthenticatedProjectPlaygroundIndexRoute:
     AuthenticatedProjectPlaygroundIndexRoute,
   AuthenticatedProjectPromptsIndexRoute: AuthenticatedProjectPromptsIndexRoute,
+  AuthenticatedProjectRequestAdminIndexRoute:
+    AuthenticatedProjectRequestAdminIndexRoute,
   AuthenticatedProjectRequestsIndexRoute:
     AuthenticatedProjectRequestsIndexRoute,
   AuthenticatedProjectRolesIndexRoute: AuthenticatedProjectRolesIndexRoute,

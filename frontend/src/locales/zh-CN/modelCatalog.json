@@ -1,0 +1,19 @@
+{
+  "modelCatalog.title": "模型与价格",
+  "modelCatalog.description": "查看当前工作空间可用的模型及面向用户的销售价格。",
+  "modelCatalog.available": "可用于个人 API 密钥",
+  "modelCatalog.loadFailed": "模型目录加载失败",
+  "modelCatalog.empty": "当前工作空间暂时没有可用模型。",
+  "modelCatalog.noPrice": "尚未配置公开价格",
+  "modelCatalog.customPrice": "自定义计价",
+  "modelCatalog.perMillion": "{{amount}} / 百万",
+  "modelCatalog.items.prompt_tokens": "输入 Token",
+  "modelCatalog.items.completion_tokens": "输出 Token",
+  "modelCatalog.items.prompt_cached_tokens": "缓存输入 Token",
+  "modelCatalog.items.prompt_write_cached_tokens": "缓存写入 Token",
+  "modelCatalog.items.cached_tokens": "缓存输入 Token",
+  "modelCatalog.items.image": "图像生成",
+  "modelCatalog.items.video": "视频生成",
+  "modelCatalog.items.audio": "音频",
+  "modelCatalog.items.usage": "用量"
+}

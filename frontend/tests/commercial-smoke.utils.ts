@@ -335,6 +335,23 @@ export async function waitForBillingOverview(page: Page) {
   )
 }
 
+export type BillingView =
+  | 'wallet'
+  | 'recharge'
+  | 'orders'
+  | 'subscriptions'
+  | 'redeem'
+  | 'affiliate'
+  | 'notifications'
+  | 'ledger'
+  | 'usage'
+
+export async function openBillingView(page: Page, view: BillingView) {
+  await page.getByTestId(`billing-view-${view}-tab`).evaluate((button: HTMLButtonElement) => button.click())
+  await expect(page).toHaveURL(new RegExp(`[?&]view=${view}(?:&|$)`))
+  await expect(page.getByTestId(`billing-${view}-view`)).toBeVisible()
+}
+
 function authHeaders(token: string) {
   return {
     Authorization: `Bearer ${token}`,

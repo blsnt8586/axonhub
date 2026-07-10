@@ -471,15 +471,47 @@ Acceptance:
 
 ### W7: Navigation And Commercial Self-Service Closure
 
-- [ ] Reorganize ordinary-user navigation into Home, Workspaces, API Keys,
+- [x] Reorganize ordinary-user navigation into Home, Workspaces, API Keys,
   Playground, Usage, Models & Prices, Wallet & Billing, and Profile.
-- [ ] Keep Project administration in a separate conditional group.
-- [ ] Keep system administration completely absent for normal users.
-- [ ] Split the current oversized billing page into scannable wallet, recharge,
+- [x] Keep Project administration in a separate conditional group.
+- [x] Keep system administration completely absent for normal users.
+- [x] Split the current oversized billing page into scannable wallet, recharge,
   orders, subscriptions, redeem, affiliate, notifications, ledger, and usage
   views while retaining one accounting source of truth.
-- [ ] Verify desktop and mobile navigation, overflow, loading, empty, error, and
+- [x] Verify desktop and mobile navigation, overflow, loading, empty, error, and
   disabled states.
+
+Status: [x] Completed
+
+Implementation notes:
+
+- The primary Workspace navigation now has exactly eight consumer entries:
+  Home, Workspaces, personal API Keys, Playground, Usage, Models & Prices,
+  Wallet & Billing, and Profile. Project administration is rendered as a
+  separate permission-aware group, while system administration remains a
+  system-scope-only group and is absent for ordinary users.
+- Project request administration moved to `/project/request-admin`; the
+  consumer `/project/requests` projection remains user-scoped. Existing Project
+  owners and explicitly authorized members retain the original request,
+  Trace, Thread, member, role, prompt, and shared-key administration surfaces.
+- `/project/models` reuses the personal-key model catalog endpoint and exposes
+  only models available in the selected Project plus customer-facing price
+  items and currency. Channel, upstream-account, routing, cost, and profit data
+  remain outside the consumer projection.
+- `/billing` is now a URL-driven shell with `wallet`, `recharge`, `orders`,
+  `subscriptions`, `redeem`, `affiliate`, `notifications`, `ledger`, and
+  `usage` views. All views continue to read the same `MyBillingOverview` query
+  and use the existing billing mutations, so wallet balance, ledger, orders,
+  subscriptions, notifications, and usage charges keep one accounting source
+  of truth. The old `/billing` URL remains valid and defaults to `wallet`.
+- Browser acceptance covers registration, personal-key creation, model and
+  price discovery, a streaming request through an `openai_fake` Channel,
+  consumer usage, settled billing records, wallet ledger visibility, all nine
+  billing views, subscription and recharge entry points, Project/System admin
+  compatibility, loading, empty, disabled, and forced error states.
+- Desktop and 390x844 mobile checks cover billing navigation overflow and page
+  width. Existing commercial lifecycle tests continue through the simulated
+  ePay checkout, promo, redeem, subscription, affiliate, and paid-order flows.
 
 Acceptance:
 

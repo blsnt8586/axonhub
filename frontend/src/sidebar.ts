@@ -17,6 +17,7 @@ import {
   IconCreditCard,
   IconServer,
   IconStack2,
+  IconUserCircle,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -65,6 +66,20 @@ export function useSidebarData(): SidebarData {
 
   // 原始导航组配置
   const rawNavGroups: NavGroup[] = [
+    {
+      id: 'workspace',
+      title: t('sidebar.groups.workspace'),
+      items: [
+        { title: t('sidebar.items.home'), url: '/home', icon: IconLayoutDashboard } as NavLink,
+        { title: t('sidebar.items.workspaces'), url: '/workspaces', icon: IconStack2 } as NavLink,
+        { title: t('sidebar.items.apiKeys'), url: '/project/api-keys', icon: IconKey } as NavLink,
+        { title: t('sidebar.items.playground'), url: '/project/playground', icon: IconRobot } as NavLink,
+        { title: t('sidebar.items.usageStats'), url: '/project/usage-stats', icon: IconChartBar } as NavLink,
+        { title: t('sidebar.items.modelsAndPrices'), url: '/project/models', icon: IconAi } as NavLink,
+        { title: t('sidebar.items.billing'), url: '/billing', icon: IconWallet } as NavLink,
+        { title: t('sidebar.items.profile'), url: '/settings/profile', icon: IconUserCircle } as NavLink,
+      ],
+    },
     {
       id: 'admin',
       title: t('sidebar.groups.admin'),
@@ -119,6 +134,11 @@ export function useSidebarData(): SidebarData {
           url: '/admin/billing',
           icon: IconCreditCard,
         } as NavLink,
+        {
+          title: t('sidebar.items.system'),
+          url: '/system',
+          icon: IconSettings,
+        } as NavLink,
         // {
         //   title: 'Permission Demo',
         //   url: '/permission-demo',
@@ -128,38 +148,15 @@ export function useSidebarData(): SidebarData {
     },
     {
       id: 'project',
-      title: t('sidebar.groups.project'),
+      title: t('sidebar.groups.projectAdmin'),
       items: [
-        {
-          title: t('sidebar.items.home'),
-          url: '/home',
-          icon: IconLayoutDashboard,
-        } as NavLink,
-        {
-          title: t('sidebar.items.workspaces'),
-          url: '/workspaces',
-          icon: IconStack2,
-        } as NavLink,
-        {
-          title: t('sidebar.items.apiKeys'),
-          url: '/project/api-keys',
-          icon: IconKey,
-        } as NavLink,
+        { title: t('sidebar.items.sharedApiKeys'), url: '/project/api-keys/shared', icon: IconKey } as NavLink,
         {
           title: t('sidebar.items.prompts'),
           url: '/project/prompts',
           icon: IconNote,
         } as NavLink,
-        {
-          title: t('sidebar.items.requests'),
-          url: '/project/requests',
-          icon: IconActivity,
-        } as NavLink,
-        {
-          title: t('sidebar.items.usageStats'),
-          url: '/project/usage-stats',
-          icon: IconChartBar,
-        } as NavLink,
+        { title: t('sidebar.items.requests'), url: '/project/request-admin', icon: IconActivity } as NavLink,
         // {
         //   title: t('sidebar.items.usageLogs'),
         //   url: '/project/usage-logs',
@@ -175,7 +172,6 @@ export function useSidebarData(): SidebarData {
           url: '/project/threads',
           icon: IconBaselineDensityMedium,
         } as NavLink,
-
         {
           title: t('sidebar.items.users'),
           url: '/project/users',
@@ -186,43 +182,6 @@ export function useSidebarData(): SidebarData {
           url: '/project/roles',
           icon: IconShield,
         } as NavLink,
-        {
-          title: t('sidebar.items.playground'),
-          url: '/project/playground',
-          icon: IconRobot,
-        } as NavLink,
-      ],
-    },
-    {
-      id: 'settings',
-      title: t('sidebar.groups.settings'),
-      items: [
-        {
-          title: t('sidebar.items.billing'),
-          url: '/billing',
-          icon: IconWallet,
-        } as NavLink,
-        {
-          title: t('sidebar.items.system'),
-          url: '/system',
-          icon: IconSettings,
-          mobileOnly: true,
-        } as NavLink,
-        // {
-        //   title: 'Account',
-        //   url: '/settings/account',
-        //   icon: IconTool,
-        // } as NavLink,
-        // {
-        //   title: 'Appearance',
-        //   url: '/settings/appearance',
-        //   icon: IconPalette,
-        // } as NavLink,
-        // {
-        //   title: 'Notifications',
-        //   url: '/settings/notifications',
-        //   icon: IconNotification,
-        // } as NavLink,
       ],
     },
   ];

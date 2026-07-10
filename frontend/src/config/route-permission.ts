@@ -11,7 +11,7 @@ export interface RouteConfig {
 }
 
 export interface RouteGroup {
-  id: 'admin' | 'project' | 'settings';
+  id: string;
   title: string;
   scopeLevel?: ScopeLevel; // 路由组的默认权限级别
   routes: RouteConfig[];
@@ -20,13 +20,25 @@ export interface RouteGroup {
 // 定义所有路由的权限配置
 export const routeConfigs: RouteGroup[] = [
   {
+    id: 'workspace',
+    title: 'Workspace',
+    scopeLevel: 'any',
+    routes: [
+      { path: '/home' },
+      { path: '/workspaces' },
+      { path: '/project/api-keys' },
+      { path: '/project/playground' },
+      { path: '/project/usage-stats' },
+      { path: '/project/models' },
+      { path: '/billing' },
+      { path: '/settings/profile' },
+    ],
+  },
+  {
     id: 'admin',
     title: 'Admin',
     scopeLevel: 'system', // Admin 路由组只能通过 system-level 权限访问
     routes: [
-      {
-        path: '/workspaces',
-      },
       {
         path: '/',
         requiredScopes: ['read_dashboard'],
@@ -95,12 +107,9 @@ export const routeConfigs: RouteGroup[] = [
   },
   {
     id: 'project',
-    title: 'Project',
+    title: 'Project Administration',
     scopeLevel: 'any', // Project 路由组可以通过 system-level 或 project-level 权限访问
     routes: [
-      {
-        path: '/project/api-keys',
-      },
       {
         path: '/project/api-keys/shared',
         requiredScopes: ['read_api_keys'],
@@ -112,15 +121,14 @@ export const routeConfigs: RouteGroup[] = [
         mode: 'hidden',
       },
       {
-        path: '/project/requests',
-      },
-      {
         path: '/project/usage-logs',
         requiredScopes: ['read_requests'],
         mode: 'hidden',
       },
       {
-        path: '/project/usage-stats',
+        path: '/project/request-admin',
+        requiredScopes: ['read_requests'],
+        mode: 'hidden',
       },
       {
         path: '/project/traces',
@@ -141,9 +149,6 @@ export const routeConfigs: RouteGroup[] = [
         path: '/project/roles',
         requiredScopes: ['read_roles'],
         mode: 'hidden',
-      },
-      {
-        path: '/project/playground',
       },
     ],
   },
