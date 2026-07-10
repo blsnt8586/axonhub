@@ -165,6 +165,20 @@ existed at that commit. The current fork then migrates the database, encrypts
 legacy plaintext provider keys transactionally, compares row-level commercial
 manifests, and repeats startup to detect duplicate migration effects.
 
+Stage 26 adds real gateway-path commercial billing acceptance:
+
+```bash
+./scripts/e2e/commercial-gateway-acceptance.sh
+```
+
+The suite executes `ChatCompletionOrchestrator.Process` with a user API key,
+project context, OpenAI request/response transformation, real request and usage
+persistence, billing admission, wallet holds, usage billing, and outbox worker
+recovery. It proves enforce-mode HTTP 402 blocking before upstream execution,
+warn-mode continuation, project price precedence, user-wallet ownership,
+subscription-first coverage, exhausted-subscription wallet fallback, and one
+final charge after cross-channel retry.
+
 Use the project-specific production `.env` and verify that
 `AXONHUB_PAYMENT_SECRET_KEY` is set before saving real payment providers.
 
@@ -172,8 +186,9 @@ Use the project-specific production `.env` and verify that
 
 - Browser commercial smoke is automated for the core owner/user billing loop,
   owner account-pool management/monitoring, and desktop/mobile responsive
-  layouts. Deeper real API-traffic and production-provider checks remain manual
-  release tasks.
+  layouts. Gateway traffic is automated with real orchestration and mocked
+  upstream responses; production-provider and external-network checks remain
+  manual release tasks.
 - Full frontend lint is not yet a clean release gate. Typecheck and production
   build pass, but repository-wide lint needs a separate cleanup stage.
 - Fresh PostgreSQL startup, current-fork Docker builds, Compose healthchecks,
@@ -204,4 +219,5 @@ are true:
 - Automated AxonHub log-redaction acceptance passes, and production external
   log-sink sampling confirms no secrets are emitted outside the application
   logger.
+- Automated gateway commercial acceptance passes for the release commit.
 - A database backup and rollback point exist.

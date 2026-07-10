@@ -144,6 +144,19 @@ compares stable business manifests across migration and a second restart.
 ./scripts/e2e/commercial-postgres-upgrade-matrix.sh
 ```
 
+#### `e2e/commercial-gateway-acceptance.sh`
+
+Runs the real chat-completion orchestrator with a user API key and mocked
+OpenAI-compatible upstream responses. It verifies enforce-mode HTTP 402
+admission, warn-mode routing and outbox recovery, project price precedence,
+subscription-first consumption, wallet fallback, billing holds, idempotent
+usage charging, and cross-channel retry behavior. It then runs the complete
+orchestrator and billing service package suites.
+
+```bash
+./scripts/e2e/commercial-gateway-acceptance.sh
+```
+
 **功能：**
 - 自动检测最近的稳定版本
 - 批量运行迁移测试

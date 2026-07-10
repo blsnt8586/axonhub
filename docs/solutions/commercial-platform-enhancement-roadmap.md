@@ -642,6 +642,46 @@ Verification:
 - [x] Stage 1, Stage 2, Stage 6, and Stage 11 upgrade acceptance passed.
 - [x] Four second-start manifests matched their first upgraded manifests.
 
+## Stage 26: Gateway Commercial Billing End-To-End Acceptance
+
+Status: [x] Completed
+
+Goal: prove that commercial billing is enforced from the real
+`ChatCompletionOrchestrator.Process` path without replacing or weakening
+AxonHub's existing channel scheduling and retry behavior.
+
+Gateway lifecycle:
+
+- [x] Execute a real OpenAI-compatible chat-completion request with project and
+  user API key context through inbound transformation, admission, candidate
+  selection, mocked upstream execution, usage persistence, and usage billing.
+- [x] Verify `billing.mode=enforce` rejects a zero-balance user with HTTP 402
+  before request persistence, candidate execution, or usage creation.
+- [x] Verify project price rules take precedence over global rules while the
+  resulting debit remains attached to the API key owner's user wallet.
+- [x] Verify request billing holds are captured for the actual charge and leave
+  no residual held balance after a successful response.
+- [x] Verify `billing.mode=warn` continues upstream routing when the wallet is
+  empty, records a failed outbox event, and charges once after wallet repair and
+  worker retry.
+
+Subscription and scheduling compatibility:
+
+- [x] Verify an active matching subscription consumes included quota before the
+  wallet and does not create a wallet hold.
+- [x] Verify an exhausted subscription with wallet fallback enabled returns to
+  wallet hold/capture billing without mutating consumed subscription quota.
+- [x] Verify an upstream 500 can switch to a second Channel under the existing
+  retry policy while producing one usage billing record and one usage debit.
+- [x] Keep the acceptance implementation in tests and scripts; no production UI
+  change is required because Stage 26 validates an existing gateway contract.
+
+Verification:
+
+- [x] `go test ./internal/server/orchestrator -run 'TestGatewayCommercialLifecycle' -count=1`
+- [x] `go test ./internal/server/orchestrator ./internal/server/biz -count=1`
+- [x] `./scripts/e2e/commercial-gateway-acceptance.sh`
+
 ## Completion Log
 
 Append one line per completed enhancement stage.
@@ -658,3 +698,4 @@ Append one line per completed enhancement stage.
 | Stage 23 | this commit | 2026-07-10 | Added final-write-boundary structured log redaction, nested request/error sanitization, focused logger tests, and runtime canary scanning across GraphQL and webhook paths. |
 | Stage 24 | this commit | 2026-07-10 | Added desktop/mobile commercial responsive smoke, realistic billing/account seed data, full-page overflow and control-overlap detection, account-link route verification, and eight screenshot attachments. |
 | Stage 25 | this commit | 2026-07-10 | Added Stage 1/2/6/11 PostgreSQL upgrade matrix, historical API data seeding, row-level commercial manifest comparison, transactional legacy provider-key encryption, and second-start idempotency checks. |
+| Stage 26 | this commit | 2026-07-10 | Added real orchestrator commercial billing acceptance for enforce/warn modes, project pricing, user wallets, holds, subscriptions, outbox recovery, and cross-channel retry compatibility. |

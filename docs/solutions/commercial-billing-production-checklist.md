@@ -47,17 +47,17 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [ ] User can apply a valid promo code to recharge or subscription checkout.
 - [ ] User can bind an affiliate invite code once.
 - [x] User can buy a subscription plan.
-- [ ] Subscription quota is consumed before wallet fallback where applicable.
+- [x] Subscription quota is consumed before wallet fallback where applicable.
 
 ## Gateway Acceptance
 
-- [ ] API key creation supports commercial limits.
-- [ ] Request admission uses user wallet by default.
-- [ ] Project price rules affect the computed charge.
-- [ ] Insufficient user balance is rejected in `enforce` mode.
-- [ ] `warn` mode records billing failures without blocking upstream routing.
-- [ ] Failed usage billing outbox rows can be retried after balance or price-rule repair.
-- [ ] Existing AxonHub scheduling and circuit-breaker behavior remains intact.
+- [x] API key creation supports commercial limits.
+- [x] Request admission uses user wallet by default.
+- [x] Project price rules affect the computed charge.
+- [x] Insufficient user balance is rejected in `enforce` mode before upstream execution.
+- [x] `warn` mode records billing failures without blocking upstream routing.
+- [x] Failed usage billing outbox rows can be retried after balance or price-rule repair.
+- [x] Existing AxonHub retry and cross-channel scheduling behavior remains intact.
 
 ## Frontend Verification
 
@@ -72,6 +72,7 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 
 - [x] `go test ./conf ./internal/server/biz ./internal/server/gql ./internal/server/api -count=1` passes.
 - [x] `go test ./internal/server/orchestrator -run BillingAdmission -count=1` passes.
+- [x] `./scripts/e2e/commercial-gateway-acceptance.sh` passes.
 - [x] Health endpoint returns success while the app is running.
 - [ ] GraphQL billing queries and mutations return expected authorization failures for non-owner users.
 
