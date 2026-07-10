@@ -438,6 +438,53 @@ Verification:
 - [x] All required commercial and upstream-account tables were present after
   Compose startup.
 
+## Stage 22: Historical Migration And PostgreSQL Recovery Acceptance
+
+Status: [x] Completed
+
+Goal: verify that an existing pre-commercial AxonHub PostgreSQL database can be
+upgraded without losing legacy records, and that the resulting commercial
+database can be backed up, destroyed, restored, and used through the browser.
+
+Historical upgrade scope:
+
+- [x] Build the pre-commercial baseline commit `26584ccf` from the local Git
+  history in an isolated temporary directory.
+- [x] Initialize the historical schema with an owner, default project, and
+  system settings.
+- [x] Start the current fork against the same PostgreSQL database and allow the
+  normal application migration path to create commercial and account-pool
+  tables.
+- [x] Compare the legacy owner identity and legacy user, project, and system
+  counts before and after migration.
+- [x] Run the normal commercial browser lifecycle on the upgraded database.
+
+Backup and recovery scope:
+
+- [x] Create a real plain-format `pg_dump` with ownership and privilege metadata
+  excluded for portable restoration.
+- [x] Reject the backup if the simulated ePay provider secret appears in
+  plaintext.
+- [x] Drop and recreate the isolated test database before restoring the dump.
+- [x] Compare wallet, ledger, payment, provider, subscription, redeem, user, and
+  project manifests before and after restore.
+- [x] Add browser smoke that signs in as the restored normal user and verifies
+  an active wallet, paid order, and active subscription through GraphQL and the
+  billing page.
+- [x] Clean up the dedicated PostgreSQL container and temporary backup/build
+  artifacts without touching unrelated services.
+
+Verification:
+
+- [x] `./scripts/e2e/commercial-postgres-recovery-acceptance.sh`
+- [x] Upgraded-database commercial browser smoke: 2 tests passed.
+- [x] Restored-database commercial recovery browser smoke: 2 tests passed.
+- [x] Pre-commercial owner, project, user, and system manifests matched across
+  migration.
+- [x] Commercial record manifests matched across backup and restore.
+- [x] Restored user could sign in and read wallet, paid order, and active
+  subscription state.
+
 ## Completion Log
 
 Append one line per completed enhancement stage.
@@ -450,3 +497,4 @@ Append one line per completed enhancement stage.
 | Stage 19 | this commit | 2026-07-09 | Added commercial Playwright smoke automation for owner billing, public registration, user wallet, redeem, subscription purchase, and simulated ePay recharge; fixed subscription GraphQL edge resolution across transaction boundaries. |
 | Stage 20 | this commit | 2026-07-09 | Added account-pool browser smoke automation for Channel account-pool management, write-only account credentials, account monitoring, and account detail pages; aligned the roadmap baseline with completed account-pool stages. |
 | Stage 21 | this commit | 2026-07-10 | Added isolated PostgreSQL commercial acceptance, persistent-data restart checks, current-fork Docker builds, Compose health verification, and fresh commercial/account-pool migration checks. |
+| Stage 22 | this commit | 2026-07-10 | Added pre-commercial PostgreSQL upgrade acceptance, real pg_dump/drop/restore validation, commercial data manifest comparison, backup secret scanning, and restored-user browser smoke. |

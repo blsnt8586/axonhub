@@ -100,6 +100,17 @@ the preserved database, and checks the Docker Compose health endpoint.
 ./scripts/e2e/commercial-postgres-acceptance.sh
 ```
 
+#### `e2e/commercial-postgres-recovery-acceptance.sh`
+
+Builds a pre-commercial AxonHub baseline, initializes a historical PostgreSQL
+database, upgrades it with the current fork, runs the commercial browser
+lifecycle, performs a real `pg_dump`/drop/recreate/restore cycle, compares core
+commercial records, and verifies the restored user wallet in Playwright.
+
+```bash
+./scripts/e2e/commercial-postgres-recovery-acceptance.sh
+```
+
 **功能：**
 - 自动检测最近的稳定版本
 - 批量运行迁移测试

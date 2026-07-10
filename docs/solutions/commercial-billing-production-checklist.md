@@ -22,9 +22,10 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 ## Database And Migration
 
 - [x] Fresh PostgreSQL database can auto-migrate all commercial and upstream-account tables.
-- [ ] Existing database can migrate without losing wallet, ledger, order, or provider records.
+- [x] Pre-commercial PostgreSQL database can migrate without losing owner, user, project, or system records.
+- [ ] Existing commercial fork database can migrate without losing wallet, ledger, order, or provider records.
 - [ ] Rollback point is tagged before enabling `warn` or `enforce` billing mode.
-- [ ] Backup and restore procedure is tested with commercial tables included.
+- [x] PostgreSQL backup and restore procedure is tested with commercial tables included.
 
 ## Owner Acceptance
 
