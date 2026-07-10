@@ -1,0 +1,384 @@
+# AxonHub Commercial User Workspace Refactor
+
+This document defines the user-facing commercial workspace refactor that closes
+the product-model gap found after public registration was enabled. It is a
+subordinate workstream of the existing commercial production acceptance work;
+it does not add or renumber Stage 0-28.
+
+## Status
+
+- [x] Review the ordinary-user model in `sub2api`.
+- [x] Review the ordinary-user model in `new-api`.
+- [x] Review the current AxonHub frontend and backend authorization split.
+- [x] Define the target user, project, API key, billing, and administrator
+  boundaries.
+- [ ] Complete Workstream W1-W8 below.
+
+## Review Snapshot
+
+The comparison is based on these local repository snapshots:
+
+| Project | Commit | Role in this review |
+| --- | --- | --- |
+| `sub2api` | `17b6481f` | User-owned keys, groups, usage, subscriptions, purchase, and account-pool boundary |
+| `new-api` | `becc18e3` | Fixed user console, token controls, user logs, wallet, registration defaults, and subscription purchase |
+| `axonhub` | `1285770d` | Project workspace, RBAC, routing, circuit breaker, account pools, tracing, and commercial modules |
+
+These are implementation snapshots, not permanent claims about upstream latest
+versions.
+
+## Comparative Findings
+
+### sub2api ordinary-user model
+
+`sub2api` has no Project entity. Its commercial ownership chain is:
+
+```text
+User
+  -> Balance
+  -> User-owned API Keys
+  -> Key-selected Group
+  -> Usage attributed by user_id, api_key_id, and group_id
+```
+
+An authenticated ordinary user receives a fixed product surface: dashboard,
+API keys, usage, available channels, monitoring, subscriptions, purchase,
+orders, redeem, affiliate, and profile. Basic product access is not granted by
+administrator-assigned scopes.
+
+API key create, list, update, and delete operations are always filtered by the
+authenticated user ID. A user can select only Groups that are public, explicitly
+allowed for that user, or unlocked by an active subscription. Channel secrets,
+upstream accounts, account pools, proxies, and scheduler administration remain
+administrator-only.
+
+### new-api ordinary-user model
+
+`new-api` also has no Project entity. Its commercial ownership chain is:
+
+```text
+User
+  -> User quota / wallet-like balance
+  -> User-owned Tokens
+  -> Token-selected Group and model/IP/quota restrictions
+  -> Logs and aggregate usage attributed by user_id and token_id
+```
+
+The frontend exposes Playground, overview/dashboard, API keys, common/task
+usage logs, wallet, and profile to every authenticated user. The Admin navigation
+group is role-gated separately. Token, model, group, log, top-up, and
+subscription-self routes use user authentication rather than administrator
+permissions.
+
+Token CRUD enforces `user_id` in the query and mutation paths. A token supports
+status, expiry, finite or unlimited quota, model restrictions, allowed IPs,
+Group selection, and optional cross-Group retry. Users can query only their
+usable Groups and enabled models. User logs are filtered by `logs.user_id`;
+administrator log routes are separate.
+
+Registration creates a normal user in the default Group and applies the
+configured new-user quota. It can optionally create a default token. Wallet
+recharge, redemption, affiliate transfer, payment history, subscription plan
+listing, self subscription state, and subscription purchase are authenticated
+user operations. Channel, global model, user, redemption-code issuance,
+subscription-plan administration, and system settings are administrator
+operations.
+
+### Shared lesson from sub2api and new-api
+
+Both systems distinguish product capabilities from administration permissions:
+
+- An authenticated active user can consume AI, manage their own credentials,
+  inspect their own usage, and manage their own money without receiving admin
+  scopes.
+- User resource isolation is expressed by ownership filters such as `user_id`,
+  not by exposing global administrator queries and relying on frontend hiding.
+- Groups or plans decide availability and price behavior; they do not transfer
+  ownership of the user wallet or administrator control of upstream channels.
+- Administrator capabilities are separate routes and menus.
+
+## Current AxonHub Defect
+
+AxonHub registration correctly creates:
+
+```text
+User
+  -> BillingAccount owned by User
+  -> default Project membership with is_owner=true
+  -> optional user API Key owned by User and Project
+```
+
+The backend authorization rule already treats a system owner or project owner
+as having project-level scopes inside that project. The frontend independently
+reimplemented the check and considered only the membership `scopes` array.
+Consequently, a valid membership such as:
+
+```json
+{
+  "isOwner": true,
+  "scopes": []
+}
+```
+
+was rejected by `RouteGuard`. Login then redirected every non-system-owner to
+`/project/playground`, so the first post-login screen became Access Denied.
+
+This is not a registration-data defect and must not be fixed by granting system
+scopes such as `read_channels`, `read_system`, or `read_billing` to new users.
+
+## Target Product Model
+
+AxonHub keeps Project because it provides useful workspace, isolation, pricing,
+and collaboration semantics missing from the other two systems:
+
+```text
+User
+  -> user-owned wallet and commercial account
+  -> one or more Project memberships
+       -> user-owned API Keys scoped to the Project
+       -> requests, traces, usage, prompts, and project price rules
+  -> recharge orders, subscriptions, redeem history, and affiliate records
+
+Administrator
+  -> Channels and provider credentials
+  -> upstream account pools and scheduling
+  -> circuit breakers and global routing
+  -> global model catalog and price rules
+  -> all users, wallets, payment providers, and operations
+```
+
+### Capability layers
+
+The frontend and backend must use three explicit capability layers:
+
+1. **Authenticated user capability**: profile, wallet, recharge, orders,
+   subscriptions, redeem, affiliate, and user dashboard.
+2. **Project consumer capability**: project switch, own API keys, Playground,
+   own requests, own usage, usable models, and prices. Membership is required;
+   administrator system scopes are not.
+3. **Project/system administration capability**: project members and roles,
+   shared/service-account keys, project configuration, Channels, upstream
+   accounts, routing, global prices, payment providers, and all-user reports.
+
+Project ownership remains meaningful for managing that workspace, but the
+ordinary-user navigation defaults to the consumer surface. Being the owner of a
+self-created Project does not make the user a system administrator.
+
+### Resource visibility
+
+| Resource | Ordinary user | Project owner/admin | System owner/admin |
+| --- | --- | --- | --- |
+| User wallet and orders | Own only | Own only | Any user through admin operations |
+| Subscription and redeem history | Own only | Own only | Global administration |
+| Projects | Memberships only | Owned/member Projects | All Projects |
+| Personal/user API keys | Own keys in selected Project | Project keys allowed by project role | All keys |
+| Requests and usage | Own by default | Project-wide when authorized | Global/project-wide |
+| Usable models and public prices | Read consumer projection | Read project projection | Configure global catalog and prices |
+| Channels and upstream accounts | No secret or scheduler access | No system access | Full administration |
+| Project users, roles, shared keys | No default access | Project administration | Full administration |
+
+## Non-Goals
+
+- Do not replace AxonHub Orchestrator, Channel selection, circuit breaker,
+  account pools, tracing, request storage, or provider transformations.
+- Do not copy new-api's integer quota ledger over the existing wallet, ledger,
+  hold, usage billing, and subscription accounting.
+- Do not remove Project or move wallet ownership to Project.
+- Do not grant normal users system-level administrator scopes.
+- Do not expose Channel IDs, credentials, account health internals, or routing
+  controls through consumer model/price APIs.
+- Do not maintain a second authorization truth in React components.
+
+## Implementation Workstreams
+
+Each workstream uses TDD, changes backend and frontend together when both are in
+scope, updates this checklist, and ends in one rollback-friendly Git commit.
+
+### W1: Capability Model And Post-Login Landing
+
+- [ ] Extract a pure frontend route-capability evaluator with tests.
+- [ ] Make project-owner semantics match the backend project-scope rules.
+- [ ] Mark consumer, project-admin, and system-admin routes explicitly.
+- [ ] Remove contradictory route declarations, especially Playground being
+  declared public in one file but scope-protected in another.
+- [ ] Redirect ordinary users to a user dashboard instead of directly to
+  Playground; preserve an explicit requested redirect after login.
+- [ ] Add Playwright coverage for a newly registered user reaching an accessible
+  first screen without system scopes.
+
+Acceptance:
+
+- A registered user with `isOwner=true` and `scopes=[]` for the default Project
+  does not see Access Denied on consumer routes.
+- The same user cannot see or open Channels, upstream accounts, admin billing,
+  global users, roles, or system settings.
+- A non-owner project member receives only the consumer and project permissions
+  actually allowed by the target resource policy.
+
+### W2: User Dashboard And Onboarding State
+
+- [ ] Add an authenticated user dashboard route and summary query.
+- [ ] Show wallet available balance, active Project, API key count, today's
+  requests/consumption, active subscription, and usable model count.
+- [ ] Add action-oriented empty states for no Project, no API key, no available
+  model, zero balance, pending approval, and disabled account.
+- [ ] Link directly to API key creation, wallet recharge, model catalog, usage,
+  and Playground.
+- [ ] Keep administrator operational metrics on the existing admin dashboard.
+
+Acceptance:
+
+- Dashboard data is limited to the current user and selected Project.
+- Empty installations explain unavailable service without exposing Channel
+  configuration or producing a permission error.
+
+### W3: Workspace Selection And Membership Projection
+
+- [ ] Treat Project as a user workspace in consumer copy and navigation while
+  retaining Project terminology in administrator configuration.
+- [ ] Return a dedicated membership projection: Project ID/name/status,
+  membership owner flag, consumer capabilities, and administration capabilities.
+- [ ] Make selected-Project initialization deterministic after registration,
+  login, storage loss, Project archive, or membership removal.
+- [ ] Add a consumer workspace page for listing and switching memberships.
+- [ ] Decide project creation policy through a commercial setting; do not reuse
+  the global `write_projects` scope as the only self-service policy switch.
+
+Acceptance:
+
+- A user can switch among all and only their memberships.
+- Stale selected Project IDs recover to an active membership.
+- Self-service Project creation, when disabled, is absent in both API and UI.
+
+### W4: User-Owned API Key Lifecycle
+
+- [ ] Add explicit self-service API key operations whose ownership checks are
+  `current user + selected Project`, independent of global key administration.
+- [ ] Keep service-account/shared-key management under project administration.
+- [ ] Support name, status, rotation, expiry, model restrictions, IP allowlist,
+  commercial budget, and request/rate limits where the runtime enforces them.
+- [ ] Display the full secret only at creation/rotation and keep stored/listed
+  values masked.
+- [ ] Add usable-model and public-price selectors without Channel secrets.
+- [ ] Preserve AxonHub API Key Profile mapping and restrictions.
+
+Acceptance:
+
+- Users cannot list, read, update, rotate, or delete another user's personal
+  keys, including inside a shared Project.
+- A key cannot target a Project outside the user's membership.
+- Key limits are enforced in the real request path, not only displayed in UI.
+
+### W5: Playground And Model Catalog
+
+- [ ] Make Playground a project-consumer capability using selected Project and a
+  user-owned key or an equivalent server-side user principal.
+- [ ] Add a consumer-safe model catalog containing model ID, modality,
+  availability, public price, and applicable project multiplier/rule summary.
+- [ ] Do not query global Channel administration from Playground.
+- [ ] Add explicit no-model, insufficient-balance, key-disabled, rate-limited,
+  and upstream-unavailable states.
+- [ ] Preserve Orchestrator retry, circuit breaker, account-pool switching, and
+  cross-Channel behavior.
+
+Acceptance:
+
+- A new user can send a request when the platform has an available model and the
+  user's commercial account permits it.
+- An installation with no available model shows a deterministic empty state,
+  not Access Denied.
+
+### W6: User Requests, Usage, And Billing Projection
+
+- [ ] Define separate `my` and project-administration queries for request and
+  usage data.
+- [ ] Default ordinary users to their own requests, usage records, API keys,
+  model totals, spend, latency, and errors.
+- [ ] Allow project-wide visibility only through explicit project-admin
+  capability.
+- [ ] Keep trace internals, raw upstream payloads, Channel/account identifiers,
+  and sensitive errors out of the consumer projection.
+- [ ] Reuse hourly/daily aggregates for charts and detail records for audit.
+- [ ] Link every displayed charge to the user wallet ledger and Project price
+  snapshot without changing wallet ownership.
+
+Acceptance:
+
+- Cross-user and cross-Project isolation tests cover list, detail, aggregate,
+  export, and guessed-ID access.
+- Displayed user totals reconcile with usage billing and ledger records.
+
+### W7: Navigation And Commercial Self-Service Closure
+
+- [ ] Reorganize ordinary-user navigation into Home, Workspaces, API Keys,
+  Playground, Usage, Models & Prices, Wallet & Billing, and Profile.
+- [ ] Keep Project administration in a separate conditional group.
+- [ ] Keep system administration completely absent for normal users.
+- [ ] Split the current oversized billing page into scannable wallet, recharge,
+  orders, subscriptions, redeem, affiliate, notifications, ledger, and usage
+  views while retaining one accounting source of truth.
+- [ ] Verify desktop and mobile navigation, overflow, loading, empty, error, and
+  disabled states.
+
+Acceptance:
+
+- A normal user can complete registration -> login -> create key -> inspect
+  models/prices -> call AI -> inspect usage/charge -> recharge or subscribe.
+- An administrator can still configure and operate all existing AxonHub
+  commercial and routing modules.
+
+### W8: Migration, Compatibility, And Release Gate
+
+- [ ] Backfill or derive consumer capabilities for existing memberships without
+  granting system scopes.
+- [ ] Preserve existing API keys, Project IDs, pricing rules, wallets, ledgers,
+  orders, subscriptions, and request history.
+- [ ] Keep old routes as temporary redirects where bookmarks or external docs
+  depend on them.
+- [ ] Add PostgreSQL upgrade acceptance from the pre-refactor schema and current
+  commercial data set.
+- [ ] Add a browser release gate for owner, existing user, newly registered
+  user, project member, suspended user, and no-channel installation.
+- [ ] Update user documentation and administrator policy documentation.
+
+Acceptance:
+
+- Upgrade, restart, rollback-compatible backup, backend tests, frontend tests,
+  production build, and Playwright gates pass.
+- Existing AxonHub routing and account-pool acceptance remains green.
+
+## TDD And Commit Protocol
+
+For each workstream:
+
+1. Add a failing backend unit/integration test or pure frontend unit test for
+   the intended authorization and ownership behavior.
+2. Implement the smallest domain change that makes the focused test pass.
+3. Add or update the React route, state, and UI behavior.
+4. Run TypeScript checking and production build.
+5. Rebuild `scripts/e2e/axonhub-e2e` before backend-dependent Playwright tests.
+6. Run the focused Playwright specification in desktop and mobile viewports
+   where the work changes navigation or layout.
+7. Run `git diff --check`, update the workstream checkbox, and commit only that
+   workstream.
+
+Required final release gate:
+
+```text
+go test ./internal/server/biz ./internal/server/gql ./internal/server/api ./internal/scopes -count=1
+pnpm --dir frontend test:unit
+pnpm --dir frontend exec tsc --noEmit
+pnpm --dir frontend build
+./scripts/e2e/e2e-test.sh commercial-user-workspace-smoke.spec.ts
+./scripts/e2e/e2e-test.sh commercial-smoke.spec.ts
+./scripts/e2e/e2e-test.sh upstream-accounts-smoke.spec.ts
+```
+
+## Immediate Refactor Order
+
+The implementation order is W1 -> W2 -> W3 -> W4 -> W5 -> W6 -> W7 -> W8.
+W1 is intentionally first because every later page depends on a single,
+testable capability model and a valid post-login landing. W4 precedes W5 so the
+Playground uses a proven user-owned credential boundary. W6 follows the real
+request path so usage visibility is tested against actual ownership and billing
+records rather than synthetic UI data.
