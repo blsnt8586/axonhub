@@ -26,6 +26,8 @@ export type CommercialSeed = {
   planId: string
   planName: string
   providerName: string
+  rechargePromoCode: string
+  subscriptionPromoCode: string
 }
 
 const defaultAdminEmail = process.env.AXONHUB_ADMIN_EMAIL || 'my@example.com'
@@ -70,6 +72,16 @@ export async function enableCommercialRegistration(request: APIRequestContext, a
     },
   })
 
+  expect(response.ok(), await response.text()).toBeTruthy()
+}
+
+export async function registerCommercialUser(
+  request: APIRequestContext,
+  input: { email: string; password: string; firstName?: string; lastName?: string }
+) {
+  const response = await request.post(`${apiBaseURL()}/admin/auth/register`, {
+    data: input,
+  })
   expect(response.ok(), await response.text()).toBeTruthy()
 }
 
@@ -195,6 +207,74 @@ export async function seedCommercialAssets(
     }
   )
 
+  const promoSuffix = slug.replace(/[^a-zA-Z0-9]/g, '').slice(-10).toUpperCase()
+  const rechargePromoCode = `R${promoSuffix}`
+  const subscriptionPromoCode = `S${promoSuffix}`
+  for (const promo of [
+    {
+      code: rechargePromoCode,
+      discountType: 'amount',
+      discountAmount: '0.50',
+      discountPercentBps: 0,
+      scope: 'recharge',
+    },
+    {
+      code: subscriptionPromoCode,
+      discountType: 'percent',
+      discountAmount: '0',
+      discountPercentBps: 1000,
+      scope: 'subscription',
+    },
+  ]) {
+    await graphqlRequest(
+      request,
+      adminToken,
+      `
+        mutation SavePromoCode($input: SavePromoCodeInput!) {
+          savePromoCode(input: $input) {
+            id
+            code
+            status
+          }
+        }
+      `,
+      {
+        input: {
+          ...promo,
+          currency: 'CNY',
+          status: 'active',
+          maxUses: 20,
+          perUserLimit: 1,
+          notes: `Playwright commercial promo ${slug}`,
+        },
+      }
+    )
+  }
+
+  await graphqlRequest(
+    request,
+    adminToken,
+    `
+      mutation SaveAffiliateSetting($input: SaveAffiliateSettingInput!) {
+        saveAffiliateSetting(input: $input) {
+          id
+          enabled
+          defaultRebateRateBps
+          freezeDays
+        }
+      }
+    `,
+    {
+      input: {
+        enabled: true,
+        defaultRebateRateBps: 1000,
+        freezeDays: 0,
+        minTransferAmount: '0',
+        currency: 'CNY',
+      },
+    }
+  )
+
   const providerName = `Smoke ePay ${slug}`
   await graphqlRequest(
     request,
@@ -229,6 +309,8 @@ export async function seedCommercialAssets(
     planId: plan.saveSubscriptionPlan.id,
     planName,
     providerName,
+    rechargePromoCode,
+    subscriptionPromoCode,
   }
 }
 

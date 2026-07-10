@@ -183,6 +183,7 @@ func (r *mutationResolver) CreateMyEPayRechargeCheckout(ctx context.Context, inp
 			Currency:           stringValue(input.Currency),
 			Subject:            stringValue(input.Subject),
 			Metadata:           input.Metadata,
+			PromoCode:          stringValue(input.PromoCode),
 		})
 	})
 	if err != nil {

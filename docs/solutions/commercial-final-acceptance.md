@@ -193,6 +193,20 @@ write path where `createMyEPayRechargeCheckout` previously accepted an
 unrelated `projectId`; non-owner users now need explicit project membership,
 while project-less wallet recharge remains unchanged.
 
+Stage 28 closes the promo and affiliate self-service transaction loop:
+
+```bash
+./scripts/e2e/commercial-self-service-acceptance.sh
+```
+
+The acceptance fixes recharge promo forwarding from GraphQL to the payment
+service and proves the distinction between payable amount and wallet credit. A
+discounted recharge charges the reduced amount but credits the original wallet
+amount after verified notification; discounted subscriptions debit only their
+payable amount. The browser suite binds a real invite code, purchases a
+discounted subscription, completes a discounted simulated ePay recharge, and
+transfers the resulting payable-based rebates to the inviter wallet.
+
 Use the project-specific production `.env` and verify that
 `AXONHUB_PAYMENT_SECRET_KEY` is set before saving real payment providers.
 
@@ -235,5 +249,7 @@ are true:
   logger.
 - Automated gateway commercial acceptance passes for the release commit.
 - Automated commercial GraphQL authorization acceptance passes for the release
+  commit.
+- Automated promo and affiliate self-service acceptance passes for the release
   commit.
 - A database backup and rollback point exist.

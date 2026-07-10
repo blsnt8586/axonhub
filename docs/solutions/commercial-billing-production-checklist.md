@@ -44,8 +44,9 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [x] User can create a recharge checkout.
 - [x] Simulated ePay notification credits the user wallet once and stays idempotent on retry.
 - [x] User can redeem a valid redeem code.
-- [ ] User can apply a valid promo code to recharge or subscription checkout.
-- [ ] User can bind an affiliate invite code once.
+- [x] User can apply a valid promo code to recharge or subscription checkout.
+- [x] User can bind an affiliate invite code once.
+- [x] Affiliate rebates are based on payable amounts and can be transferred to the inviter wallet once.
 - [x] User can buy a subscription plan.
 - [x] Subscription quota is consumed before wallet fallback where applicable.
 
@@ -74,6 +75,7 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [x] `go test ./internal/server/orchestrator -run BillingAdmission -count=1` passes.
 - [x] `./scripts/e2e/commercial-gateway-acceptance.sh` passes.
 - [x] `./scripts/e2e/commercial-authz-acceptance.sh` passes.
+- [x] `./scripts/e2e/commercial-self-service-acceptance.sh` passes.
 - [x] Health endpoint returns success while the app is running.
 - [x] GraphQL billing queries and mutations return expected authorization failures for non-owner users.
 - [x] User wallet, ledger, payment, usage, and subscription queries are scoped to the authenticated user.

@@ -842,11 +842,19 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 	billingAuditSvc := biz.NewBillingAuditService(biz.BillingAuditServiceParams{Ent: client})
 	ledgerSvc := biz.NewLedgerService(biz.LedgerServiceParams{Ent: client})
 	pricingSvc := biz.NewPricingService(biz.PricingServiceParams{Ent: client})
+	promoCodeSvc := biz.NewPromoCodeService(biz.PromoCodeServiceParams{Ent: client})
+	affiliateSvc := biz.NewAffiliateService(biz.AffiliateServiceParams{
+		Ent:                   client,
+		BillingAccountService: billingAccountSvc,
+		LedgerService:         ledgerSvc,
+	})
 	paymentSvc := biz.NewPaymentService(biz.PaymentServiceParams{
 		Ent:                   client,
 		BillingAccountService: billingAccountSvc,
 		LedgerService:         ledgerSvc,
 		ProviderRegistry:      biz.NewPaymentProviderRegistry(),
+		PromoCodeService:      promoCodeSvc,
+		AffiliateService:      affiliateSvc,
 	})
 	commercialOperationsSvc := biz.NewCommercialOperationsService(biz.CommercialOperationsServiceParams{
 		Ent:                 client,
@@ -857,6 +865,8 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 		Ent:                   client,
 		BillingAccountService: billingAccountSvc,
 		LedgerService:         ledgerSvc,
+		PromoCodeService:      promoCodeSvc,
+		AffiliateService:      affiliateSvc,
 	})
 
 	resolver := &Resolver{
@@ -866,6 +876,8 @@ func setupBillingResolversTest(t *testing.T, name string) (*mutationResolver, *q
 		commercialOperationsService: commercialOperationsSvc,
 		paymentService:              paymentSvc,
 		pricingService:              pricingSvc,
+		promoCodeService:            promoCodeSvc,
+		affiliateService:            affiliateSvc,
 		subscriptionService:         subscriptionSvc,
 	}
 

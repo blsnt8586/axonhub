@@ -169,6 +169,18 @@ attaching recharge orders to projects where they have no membership.
 ./scripts/e2e/commercial-authz-acceptance.sh
 ```
 
+#### `e2e/commercial-self-service-acceptance.sh`
+
+Runs backend and browser acceptance for the customer transaction loop. It
+verifies recharge and subscription promo codes, payable-versus-wallet-credit
+accounting, invite binding, payment/subscription affiliate rebates, repeated
+payment notification idempotency, rebate transfer idempotency, frontend request
+variables, TypeScript, and the production frontend build.
+
+```bash
+./scripts/e2e/commercial-self-service-acceptance.sh
+```
+
 **功能：**
 - 自动检测最近的稳定版本
 - 批量运行迁移测试
