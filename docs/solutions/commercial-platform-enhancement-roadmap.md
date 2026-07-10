@@ -682,6 +682,47 @@ Verification:
 - [x] `go test ./internal/server/orchestrator ./internal/server/biz -count=1`
 - [x] `./scripts/e2e/commercial-gateway-acceptance.sh`
 
+## Stage 27: Commercial GraphQL Authorization And Tenant Isolation
+
+Status: [x] Completed
+
+Goal: prove that the commercial GraphQL API keeps self-service data scoped to
+the authenticated user, keeps operator surfaces owner-only, and prevents
+cross-project writes from user-controlled IDs.
+
+Authorization coverage:
+
+- [x] Execute self-service commercial queries through a real gqlgen HTTP
+  handler and verify `myBillingAccount` and `myLedgerTransactions` only return
+  the authenticated user's account and ledger rows.
+- [x] Verify a normal user cannot call another user's `userBillingAccount`, any
+  `admin*` commercial query, or Ent's generated unscoped `billingAccounts`
+  collection.
+- [x] Exercise 24 owner-only query entry points covering wallets, ledger,
+  usage, holds, orders, events, redeem codes, promo codes, affiliates,
+  notifications, subscriptions, reports, CSV export, and commercial settings.
+- [x] Exercise 30 owner-only mutation entry points covering payment operations,
+  wallet adjustment, redeem/promo management, subscription administration,
+  affiliate administration, notifications, settings, maintenance, holds, and
+  price rules.
+
+Cross-project hardening:
+
+- [x] Require a non-owner user to have a `UserProject` membership before
+  accepting `projectId` in `createMyEPayRechargeCheckout`.
+- [x] Preserve owner access to arbitrary projects and preserve project-less user
+  wallet recharge used by the current frontend.
+- [x] Return the same generic project-access error for missing and unrelated
+  projects so the user-facing mutation does not become a project enumeration
+  endpoint.
+- [x] Verify denied cross-project checkout creates no payment order.
+
+Verification:
+
+- [x] `go test ./internal/server/gql -run 'TestCommercial' -count=1`
+- [x] `go test ./internal/server/gql ./internal/server/api ./internal/server/biz -count=1`
+- [x] `./scripts/e2e/commercial-authz-acceptance.sh`
+
 ## Completion Log
 
 Append one line per completed enhancement stage.
@@ -699,3 +740,4 @@ Append one line per completed enhancement stage.
 | Stage 24 | this commit | 2026-07-10 | Added desktop/mobile commercial responsive smoke, realistic billing/account seed data, full-page overflow and control-overlap detection, account-link route verification, and eight screenshot attachments. |
 | Stage 25 | this commit | 2026-07-10 | Added Stage 1/2/6/11 PostgreSQL upgrade matrix, historical API data seeding, row-level commercial manifest comparison, transactional legacy provider-key encryption, and second-start idempotency checks. |
 | Stage 26 | this commit | 2026-07-10 | Added real orchestrator commercial billing acceptance for enforce/warn modes, project pricing, user wallets, holds, subscriptions, outbox recovery, and cross-channel retry compatibility. |
+| Stage 27 | this commit | 2026-07-10 | Added commercial GraphQL owner/user authorization matrices, real HTTP tenant-isolation acceptance, and project-membership enforcement for user recharge orders. |

@@ -17,9 +17,12 @@ import (
 	"github.com/looplj/axonhub/internal/ent/paymentorder"
 	"github.com/looplj/axonhub/internal/ent/redeemcode"
 	"github.com/looplj/axonhub/internal/ent/usagebillingrecord"
+	"github.com/looplj/axonhub/internal/ent/userproject"
 	"github.com/looplj/axonhub/internal/objects"
 	"github.com/looplj/axonhub/internal/server/biz"
 )
+
+var errBillingProjectAccessRequired = errors.New("permission denied: project access required")
 
 func requireBillingUser(ctx context.Context) (*ent.User, error) {
 	user, ok := contexts.GetUser(ctx)
@@ -39,6 +42,32 @@ func requireUserGUID(value objects.GUID) (int, error) {
 	}
 
 	return value.ID, nil
+}
+
+func requireBillingProjectAccess(ctx context.Context, client *ent.Client, user *ent.User, projectID int) error {
+	if projectID <= 0 {
+		return errBillingProjectAccessRequired
+	}
+	if user.IsOwner {
+		return nil
+	}
+
+	allowed, err := authz.RunWithSystemBypass(ctx, "billing-project-access", func(ctx context.Context) (bool, error) {
+		return client.UserProject.Query().
+			Where(
+				userproject.UserIDEQ(user.ID),
+				userproject.ProjectIDEQ(projectID),
+			).
+			Exist(ctx)
+	})
+	if err != nil {
+		return fmt.Errorf("check billing project access: %w", err)
+	}
+	if !allowed {
+		return errBillingProjectAccessRequired
+	}
+
+	return nil
 }
 
 func (r *queryResolver) userBillingAccount(ctx context.Context, userID int) (*ent.BillingAccount, error) {

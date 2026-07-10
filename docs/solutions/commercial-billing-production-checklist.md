@@ -73,8 +73,11 @@ This checklist tracks Stage 11 production deployment and end-to-end acceptance f
 - [x] `go test ./conf ./internal/server/biz ./internal/server/gql ./internal/server/api -count=1` passes.
 - [x] `go test ./internal/server/orchestrator -run BillingAdmission -count=1` passes.
 - [x] `./scripts/e2e/commercial-gateway-acceptance.sh` passes.
+- [x] `./scripts/e2e/commercial-authz-acceptance.sh` passes.
 - [x] Health endpoint returns success while the app is running.
-- [ ] GraphQL billing queries and mutations return expected authorization failures for non-owner users.
+- [x] GraphQL billing queries and mutations return expected authorization failures for non-owner users.
+- [x] User wallet, ledger, payment, usage, and subscription queries are scoped to the authenticated user.
+- [x] User recharge orders cannot be attached to projects where the user has no membership.
 
 ## Deployment Verification
 

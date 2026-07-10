@@ -179,6 +179,20 @@ warn-mode continuation, project price precedence, user-wallet ownership,
 subscription-first coverage, exhausted-subscription wallet fallback, and one
 final charge after cross-channel retry.
 
+Stage 27 adds commercial GraphQL authorization and tenant-isolation acceptance:
+
+```bash
+./scripts/e2e/commercial-authz-acceptance.sh
+```
+
+The suite runs self-service queries through a real gqlgen HTTP handler, checks
+the full owner-only query and mutation surface, rejects direct generated
+commercial collections for ordinary users, and confirms that user-owned wallet
+and ledger data cannot cross user boundaries. It also fixes a cross-project
+write path where `createMyEPayRechargeCheckout` previously accepted an
+unrelated `projectId`; non-owner users now need explicit project membership,
+while project-less wallet recharge remains unchanged.
+
 Use the project-specific production `.env` and verify that
 `AXONHUB_PAYMENT_SECRET_KEY` is set before saving real payment providers.
 
@@ -220,4 +234,6 @@ are true:
   log-sink sampling confirms no secrets are emitted outside the application
   logger.
 - Automated gateway commercial acceptance passes for the release commit.
+- Automated commercial GraphQL authorization acceptance passes for the release
+  commit.
 - A database backup and rollback point exist.

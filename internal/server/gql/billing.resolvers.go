@@ -165,6 +165,9 @@ func (r *mutationResolver) CreateMyEPayRechargeCheckout(ctx context.Context, inp
 			return nil, fmt.Errorf("projectId must be a Project ID")
 		}
 		projectID = input.ProjectID.ID
+		if err := requireBillingProjectAccess(ctx, r.client, user, projectID); err != nil {
+			return nil, err
+		}
 	}
 	if input.ProviderInstanceID != nil && input.ProviderInstanceID.Type != ent.TypePaymentProviderInstance {
 		return nil, fmt.Errorf("providerInstanceId must be a PaymentProviderInstance ID")

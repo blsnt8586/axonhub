@@ -157,6 +157,18 @@ orchestrator and billing service package suites.
 ./scripts/e2e/commercial-gateway-acceptance.sh
 ```
 
+#### `e2e/commercial-authz-acceptance.sh`
+
+Runs commercial GraphQL authorization and tenant-isolation checks through both
+resolver calls and a real gqlgen HTTP handler. It verifies user-owned wallet and
+ledger reads, rejects cross-user and generated collection access, exercises all
+owner-only commercial query/mutation entry points, and prevents users from
+attaching recharge orders to projects where they have no membership.
+
+```bash
+./scripts/e2e/commercial-authz-acceptance.sh
+```
+
 **功能：**
 - 自动检测最近的稳定版本
 - 批量运行迁移测试

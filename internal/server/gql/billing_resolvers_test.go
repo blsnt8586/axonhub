@@ -136,6 +136,11 @@ func TestBillingResolversUpsertEPayPaymentProvider(t *testing.T) {
 func TestBillingResolversUserCanCreateMyEPayRechargeCheckout(t *testing.T) {
 	mutationResolver, _, ctx, client, _, project := setupBillingResolversTest(t, "billing_resolver_my_checkout")
 	user := createBillingResolverUser(t, ctx, client, false)
+	_, err := client.UserProject.Create().
+		SetUserID(user.ID).
+		SetProjectID(project.ID).
+		Save(ctx)
+	require.NoError(t, err)
 
 	provider, err := mutationResolver.paymentService.GetOrCreateSimulatedEPayProvider(ctx, "https://axon.example.com")
 	require.NoError(t, err)
@@ -165,6 +170,45 @@ func TestBillingResolversUserCanCreateMyEPayRechargeCheckout(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, billingaccount.OwnerTypeUser, account.OwnerType)
 	require.Equal(t, user.ID, account.OwnerID)
+}
+
+func TestBillingResolversRejectsMyEPayCheckoutForUnrelatedProject(t *testing.T) {
+	mutationResolver, _, ctx, client, _, project := setupBillingResolversTest(t, "billing_resolver_my_checkout_cross_project")
+	user := createBillingResolverUser(t, ctx, client, false)
+	provider, err := mutationResolver.paymentService.GetOrCreateSimulatedEPayProvider(ctx, "https://axon.example.com")
+	require.NoError(t, err)
+
+	userCtx := contexts.WithUser(ctx, user)
+	_, err = mutationResolver.CreateMyEPayRechargeCheckout(userCtx, CreateMyEPayRechargeCheckoutInput{
+		ProjectID:          &objects.GUID{Type: ent.TypeProject, ID: project.ID},
+		Amount:             decimal.RequireFromString("20.00"),
+		ProviderInstanceID: &objects.GUID{Type: ent.TypePaymentProviderInstance, ID: provider.ID},
+	})
+	require.ErrorIs(t, err, errBillingProjectAccessRequired)
+
+	orderCount, err := client.PaymentOrder.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Zero(t, orderCount)
+}
+
+func TestBillingResolversOwnerCanCreateMyEPayCheckoutForAnyProject(t *testing.T) {
+	mutationResolver, _, ctx, client, owner, project := setupBillingResolversTest(t, "billing_resolver_owner_checkout_project")
+	provider, err := mutationResolver.paymentService.GetOrCreateSimulatedEPayProvider(ctx, "https://axon.example.com")
+	require.NoError(t, err)
+
+	ownerCtx := contexts.WithUser(ctx, owner)
+	checkout, err := mutationResolver.CreateMyEPayRechargeCheckout(ownerCtx, CreateMyEPayRechargeCheckoutInput{
+		ProjectID:          &objects.GUID{Type: ent.TypeProject, ID: project.ID},
+		Amount:             decimal.RequireFromString("20.00"),
+		ProviderInstanceID: &objects.GUID{Type: ent.TypePaymentProviderInstance, ID: provider.ID},
+	})
+	require.NoError(t, err)
+
+	order, err := client.PaymentOrder.Query().
+		Where(paymentorder.OrderNoEQ(checkout.OrderNo)).
+		Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, project.ID, order.ProjectID)
 }
 
 func TestBillingResolversRejectsMyEPayCheckoutWithoutUser(t *testing.T) {
